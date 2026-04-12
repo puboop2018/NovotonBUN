@@ -21,7 +21,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Services;
 
-use Tygh\Addons\NovotonHolidays\NovotonApiInterface;
+use Tygh\Addons\NovotonHolidays\Api\Contracts\ReservationApiClientInterface;
 use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\TravelCore\TravelConstants;
 use Tygh\Addons\NovotonHolidays\Repository\BookingRepositoryInterface;
@@ -32,13 +32,16 @@ use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
 class BookingSubmissionService implements BookingSubmissionServiceInterface
 {
     private readonly BookingRepositoryInterface $bookingRepo;
-    private readonly NovotonApiInterface $api;
+    private readonly ReservationApiClientInterface $reservations;
     private readonly GuestDataNormalizer $guestDataNormalizer;
 
-    public function __construct(BookingRepositoryInterface $bookingRepo, NovotonApiInterface $api, ?GuestDataNormalizer $guestDataNormalizer = null)
-    {
+    public function __construct(
+        BookingRepositoryInterface $bookingRepo,
+        ReservationApiClientInterface $reservations,
+        ?GuestDataNormalizer $guestDataNormalizer = null
+    ) {
         $this->bookingRepo = $bookingRepo;
-        $this->api = $api;
+        $this->reservations = $reservations;
         $this->guestDataNormalizer = $guestDataNormalizer ?? new GuestDataNormalizer();
     }
 
@@ -728,7 +731,7 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
         }
 
         try {
-            $response = $this->api->createReservation($apiData);
+            $response = $this->reservations->createReservation($apiData);
 
             if ($response) {
                 $novotonId     = (string) ($response->IdNum   ?? '');

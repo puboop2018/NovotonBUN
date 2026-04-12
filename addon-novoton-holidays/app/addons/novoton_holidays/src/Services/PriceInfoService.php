@@ -22,6 +22,8 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Services;
 
+use Tygh\Addons\NovotonHolidays\Api\Contracts\PricingApiClientInterface;
+use Tygh\Addons\NovotonHolidays\NovotonApi;
 use Tygh\Addons\NovotonHolidays\Repository\HotelPackageRepository;
 use Tygh\Addons\NovotonHolidays\Repository\HotelPackageRepositoryInterface;
 use Tygh\Addons\NovotonHolidays\Repository\HotelRepository;
@@ -30,7 +32,7 @@ use Tygh\Addons\TravelCore\Services\CurrencyService;
 
 class PriceInfoService implements PriceInfoServiceInterface
 {
-    private \Tygh\Addons\NovotonHolidays\NovotonApi $api;
+    private readonly PricingApiClientInterface $pricing;
 
     private float $commission;
 
@@ -45,9 +47,10 @@ class PriceInfoService implements PriceInfoServiceInterface
      */
     public function __construct(
         ?HotelPackageRepositoryInterface $packageRepo = null,
-        ?HotelRepositoryInterface $hotelRepo = null
+        ?HotelRepositoryInterface $hotelRepo = null,
+        ?PricingApiClientInterface $pricing = null,
     ) {
-        $this->api = fn_novoton_holidays_get_api();
+        $this->pricing = $pricing ?? (new NovotonApi())->pricing();
         $this->commission = ConfigProvider::getCommission();
         $this->debug = ConfigProvider::isDebugLogging();
         $this->packageRepo = $packageRepo ?? new HotelPackageRepository();
@@ -76,7 +79,7 @@ class PriceInfoService implements PriceInfoServiceInterface
         // Fallback: Call API directly (for first-time or if cron hasn't run)
         $this->log('PriceInfo fallback to API', ['hotel_id' => $hotelId, 'package' => $packageName]);
 
-        $response = $this->api->getPriceInfo($hotelId, $packageName, $lang);
+        $response = $this->pricing->getPriceInfo($hotelId, $packageName, $lang);
 
         if (!$response) {
             return null;

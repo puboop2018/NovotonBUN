@@ -46,7 +46,7 @@ class ResInfoCommand extends AbstractCronCommand
                     continue;
                 }
 
-                $response = $this->api->getReservationInfo($reservation_id);
+                $response = $this->api->reservations()->getReservationInfo($reservation_id);
 
                 if (!$response || !isset($response->Status)) {
                     $this->output("  No response from API");

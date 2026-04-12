@@ -94,7 +94,7 @@ use Tygh\Addons\TravelCore\TravelConstants;
         try {
             $api_for_hotel = fn_novoton_holidays_get_api();
             if ($api_for_hotel) {
-                $api_hotel_info = $api_for_hotel->getHotelInfo($bookingData['hotel_id']);
+                $api_hotel_info = $api_for_hotel->hotels()->getHotelInfo($bookingData['hotel_id']);
                 if ($api_hotel_info) {
                     $hotel_data['hotel_name'] = (string) ($api_hotel_info->Hotel ?? '');
                     $hotel_data['city']       = (string) ($api_hotel_info->City ?? '');
@@ -162,7 +162,7 @@ use Tygh\Addons\TravelCore\TravelConstants;
     ];
     
     $api = fn_novoton_holidays_get_api();
-    $priceData = $api ? $api->getRoomPrice($priceParams) : null;
+    $priceData = $api ? $api->pricing()->getRoomPrice($priceParams) : null;
 
     // A80: Server-side price validation - safety net
     // If we have children and API returns no data, abort booking
@@ -209,7 +209,7 @@ use Tygh\Addons\TravelCore\TravelConstants;
         if (isset($priceData->Price)) {
             $rawPrice = (float)((string)$priceData->Price);
             $base_price = $rawPrice;
-            $api_price = fn_novoton_holidays_get_api()->applyCommission($rawPrice);
+            $api_price = fn_novoton_holidays_get_api()->pricing()->applyCommission($rawPrice);
 
             // Remember the price the customer saw on the form before any correction
             $customer_visible_price = $total_price;
@@ -295,16 +295,14 @@ use Tygh\Addons\TravelCore\TravelConstants;
         }
 
         // Extract terms from API response using xpath (more reliable than direct property access)
-        if ($priceData instanceof \SimpleXMLElement) {
-            $termsPayment = $priceData->xpath('//TermsOfPayment');
-            $termsCancellation = $priceData->xpath('//TermsOfCancellation');
+        $termsPayment = $priceData->xpath('//TermsOfPayment');
+        $termsCancellation = $priceData->xpath('//TermsOfCancellation');
 
-            if (!empty($termsPayment[0])) {
-                $terms_of_payment = $termsPayment[0]->asXML();
-            }
-            if (!empty($termsCancellation[0])) {
-                $terms_of_cancellation = $termsCancellation[0]->asXML();
-            }
+        if (!empty($termsPayment[0])) {
+            $terms_of_payment = $termsPayment[0]->asXML();
+        }
+        if (!empty($termsCancellation[0])) {
+            $terms_of_cancellation = $termsCancellation[0]->asXML();
         }
 
         // Extract remark and important info

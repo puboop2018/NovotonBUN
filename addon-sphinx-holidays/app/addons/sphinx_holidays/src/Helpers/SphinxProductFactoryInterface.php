@@ -9,6 +9,15 @@ namespace Tygh\Addons\SphinxHolidays\Helpers;
 interface SphinxProductFactoryInterface
 {
     /**
+     * Preload valid CS-Cart country codes into an internal cache.
+     *
+     * Cron commands call this once before a batch of createFromHotel()
+     * calls so the factory can validate country codes without hitting
+     * the database on every iteration.
+     */
+    public function loadValidCountryCodes(): void;
+
+    /**
      * Create a CS-Cart product from a Sphinx hotel row.
      *
      * Category structure: Root Category (from settings) → Country (dynamic).

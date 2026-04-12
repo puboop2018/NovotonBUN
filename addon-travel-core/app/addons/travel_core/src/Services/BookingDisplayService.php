@@ -3,13 +3,15 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\TravelCore\Services;
 
+use Tygh\Addons\TravelCore\Contracts\BookingDisplayServiceInterface;
+
 /**
  * Booking Display Service
  *
  * Formats travel booking data for display in cart, checkout, and order pages.
  * Provider-agnostic — works with any travel provider through the registry.
  */
-class BookingDisplayService
+class BookingDisplayService implements BookingDisplayServiceInterface
 {
     /**
      * Add booking display data to a cart product.
@@ -27,6 +29,7 @@ class BookingDisplayService
      * @param array|null $cart Cart data
      * @param array $config Provider-specific configuration overrides
      */
+    #[\Override]
     public static function addBookingDisplayData(array &$product, ?array $cart = null, array $config = []): void
     {
         $extra = $product['extra'] ?? [];

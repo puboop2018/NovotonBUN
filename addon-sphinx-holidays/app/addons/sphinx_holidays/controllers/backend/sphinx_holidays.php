@@ -190,7 +190,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             return [CONTROLLER_STATUS_REDIRECT, 'sphinx_holidays.hotels'];
         }
 
-        $hotelIds = array_map('intval', $hotelIds);
+        // sphinx_hotels.hotel_id is VARCHAR(100) (e.g. "s1-hotel-123") — keep as strings.
+        $hotelIds = array_map('strval', $hotelIds);
         $hotelRepo = Container::getHotelRepository();
         $affected = $hotelRepo->bulkUpdateStatus($hotelIds, $status);
         fn_set_notification('N', __('notice'), __('sphinx_holidays.hotels_updated') . ': ' . $affected);

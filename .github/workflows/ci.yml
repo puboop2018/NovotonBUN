@@ -1,0 +1,66 @@
+name: Static Analysis & Tests
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+    branches: [main]
+
+jobs:
+  phpstan:
+    name: PHPStan (level 6)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          tools: composer:v2
+
+      - name: Install root dependencies (PHPStan)
+        run: composer install --no-progress --no-interaction
+
+      - name: Run PHPStan
+        run: vendor/bin/phpstan analyse --memory-limit=1G --no-progress
+
+  phpunit:
+    name: PHPUnit (novoton)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: addon-novoton-holidays/app/addons/novoton_holidays
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: simplexml, curl, mbstring
+          tools: composer:v2
+
+      - name: Install addon dependencies
+        run: composer install --no-progress --no-interaction
+
+      - name: Run PHPUnit
+        run: vendor/bin/phpunit --colors=always
+
+  lint:
+    name: PHP Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+
+      - name: Lint all PHP files
+        run: |
+          find addon-novoton-holidays/app/addons/novoton_holidays/src \
+               addon-travel-core/app/addons/travel_core/src \
+               addon-sphinx-holidays/app/addons/sphinx_holidays/src \
+               -name '*.php' -print0 | xargs -0 -n 50 php -l

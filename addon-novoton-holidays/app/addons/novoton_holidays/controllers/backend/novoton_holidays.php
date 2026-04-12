@@ -261,13 +261,15 @@ if ($mode === 'list_facilities') {
     $count = count($facilities);
     $last_sync = $facilityRepo->getLastSyncedAt();
 
-    // Build feature type options with CS-Cart feature names for the dropdown
-    // Show all feature types so admins can classify facilities into any category
+    // Build feature type options with CS-Cart feature names for the dropdown.
+    // Show all feature types so admins can classify facilities into any category.
+    // Feature IDs are stored under addons.travel_core.feature_id_<type> settings
+    // (see travel_core/func.php fn_settings_variants_addons_travel_core_feature_id_*).
     $facility_feature_types = \Tygh\Addons\NovotonHolidays\Constants::VALID_FEATURE_TYPES;
     $feature_type_options = [];
     foreach ($facility_feature_types as $ft) {
-        $settingKey = \Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_TO_SETTING[$ft] ?? '';
-        $featureId = $settingKey ? (int) Registry::get($settingKey) : 0;
+        $settingKey = 'addons.travel_core.feature_id_' . $ft;
+        $featureId = (int) Registry::get($settingKey);
         $label = ucwords(str_replace('_', ' ', $ft));
         if ($featureId > 0) {
             $featureName = db_get_field(
@@ -323,7 +325,7 @@ if ($mode === 'room_price') {
                 'children' => is_array($_REQUEST['children'] ?? []) ? ($_REQUEST['children'] ?? []) : []
             ];
 
-            $result = $api->getRoomPrice($params);
+            $result = $api->pricing()->getRoomPrice($params);
 
             Tygh::$app['view']->assign('result', $result);
             Tygh::$app['view']->assign('last_request', $api->getLastRequestFormatted());
@@ -358,11 +360,12 @@ if ($mode === 'test_hotel_request') {
         try {
             $api = new NovotonApi();
 
-            $hotel_info = $api->getHotelInfo($hotel_id);
+            $hotels = $api->hotels();
+            $hotel_info = $hotels->getHotelInfo($hotel_id);
             $last_request = $api->getLastRequestFormatted();
             $last_response = $api->getLastResponse();
 
-            $hotel_desc = $api->getHotelDescription($hotel_id, 'UK', true);
+            $hotel_desc = $hotels->getHotelDescription($hotel_id, 'UK', true);
 
             Tygh::$app['view']->assign('hotel_info', $hotel_info);
             Tygh::$app['view']->assign('hotel_desc', $hotel_desc);
@@ -401,7 +404,7 @@ if ($mode === 'test_alternative_rs') {
                 'children' => (int)($_REQUEST['children'] ?? 0),
             ];
 
-            $results = $api->searchAvailability($params);
+            $results = $api->availability()->searchAvailability($params);
 
             Tygh::$app['view']->assign('results', $results);
             Tygh::$app['view']->assign('last_request', $api->getLastRequestFormatted());

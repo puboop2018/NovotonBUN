@@ -13,7 +13,6 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
 use Tygh\Addons\SphinxHolidays\Services\Container;
 use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
-use Tygh\Addons\TravelCore\Services\CommissionCalculator;
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -38,14 +37,7 @@ try {
         exit;
     }
 
-    $newPrice = (float)($verifyResult['price'] ?? 0);
-    $commission = ConfigProvider::getCommission();
-    $roundPrices = ConfigProvider::shouldRoundPrices();
-
-    if ($commission > 0 && $newPrice > 0) {
-        $calculator = new CommissionCalculator($commission, $roundPrices);
-        $newPrice = $calculator->apply($newPrice);
-    }
+    $newPrice = Container::getCartService()->applyCommission((float)($verifyResult['price'] ?? 0));
 
     $priceDiff = $newPrice - $original_price;
     $currency = ConfigProvider::getDefaultCurrency();

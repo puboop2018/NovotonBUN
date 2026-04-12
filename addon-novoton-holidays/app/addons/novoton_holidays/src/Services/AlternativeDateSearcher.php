@@ -12,7 +12,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Services;
 
-class AlternativeDateSearcher
+class AlternativeDateSearcher implements AlternativeDateSearcherInterface
 {
     /** Maximum total API calls across all dates/rooms/boards to prevent runaway loops */
     private const MAX_API_CALLS = 50;
@@ -48,6 +48,7 @@ class AlternativeDateSearcher
      *   check_out: string
      * }
      */
+    #[\Override]
     public function search(
         string $hotelId,
         string $checkIn,
@@ -88,6 +89,10 @@ class AlternativeDateSearcher
         if (!$api) {
             return ['results' => [], 'check_in' => '', 'check_out' => ''];
         }
+        // Bind the pricing sub-client once so every call inside this method
+        // goes through the narrow PricingApiClientInterface rather than the
+        // deprecated NovotonApi facade methods.
+        $pricing = $api->pricing();
 
         // Pre-extract room IDs/names for the batch
         $roomData = [];
@@ -147,7 +152,7 @@ class AlternativeDateSearcher
             $apiCallCount += count($batchRequests);
 
             // Send all room×board requests for this date in parallel
-            $batchResponses = $api->getRoomPriceBatch($batchRequests);
+            $batchResponses = $pricing->getRoomPriceBatch($batchRequests);
 
             // Process responses: find first valid board per room
             $foundRoomIds = [];
@@ -163,7 +168,7 @@ class AlternativeDateSearcher
                     continue;
                 }
 
-                $priceData = $response['data'] ?? false;
+                $priceData = $response['data'];
                 if ($priceData && isset($priceData->Price)) {
                     $rawPrice = (float) ((string) $priceData->Price);
                     if ($rawPrice > 0) {
@@ -171,7 +176,7 @@ class AlternativeDateSearcher
                         $foundRoomIds[$ri] = true;
                         $altCheckIn  = $tryCheckIn;
                         $altCheckOut = $tryCheckOut;
-                        $altPrice     = $api->applyCommission($rawPrice);
+                        $altPrice     = $pricing->applyCommission($rawPrice);
                         $altResults[] = [
                             'room'            => $rd['original'],
                             'room_id'         => $rd['id'],
@@ -209,6 +214,7 @@ class AlternativeDateSearcher
     /**
      * @return string[]
      */
+    #[\Override]
     public function getDebugLog(): array
     {
         return $this->debugLog;

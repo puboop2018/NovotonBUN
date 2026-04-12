@@ -41,6 +41,9 @@ if ($mode === 'health') {
     ];
 
     $issues = [];
+    $hotelRepo = null;
+    $bookingRepo = null;
+    $syncLogRepo = null;
 
     // 1. Database connectivity
     try {
@@ -131,6 +134,9 @@ if ($mode === 'health') {
 
     // 4. Recent sync status
     try {
+        if ($syncLogRepo === null) {
+            throw new \RuntimeException('SyncLogRepository unavailable (database check failed above)');
+        }
         $recent = $syncLogRepo->findRecent(1);
         $last_sync = !empty($recent) ? $recent[0] : null;
 
@@ -169,6 +175,9 @@ if ($mode === 'health') {
 
     // 5. Key metrics
     try {
+        if ($bookingRepo === null || $hotelRepo === null) {
+            throw new \RuntimeException('Repositories unavailable (database check failed above)');
+        }
         $recent_bookings = $bookingRepo->count(['check_in_from' => date('Y-m-d H:i:s', strtotime('-24 hours'))]);
         $pending_bookings = $bookingRepo->count(['status' => 'pending']);
         $failed_bookings = $bookingRepo->count(['status' => 'failed']);

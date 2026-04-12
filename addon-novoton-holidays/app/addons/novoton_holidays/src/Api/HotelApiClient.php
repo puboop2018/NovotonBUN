@@ -2,10 +2,11 @@
 declare(strict_types=1);
 namespace Tygh\Addons\NovotonHolidays\Api;
 
+use Tygh\Addons\NovotonHolidays\Api\Contracts\HotelApiClientInterface;
 use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\Exceptions\XmlParsingException;
 
-class HotelApiClient extends ApiClientBase
+class HotelApiClient extends ApiClientBase implements HotelApiClientInterface
 {
     protected array $noCacheFunctions = [
         Constants::API_FUNCTION_HOTEL_LIST,
@@ -15,8 +16,9 @@ class HotelApiClient extends ApiClientBase
     /**
      * 1. hotel_list - List with hotel names
      *
-     * @return \SimpleXMLElement|false
+     * @return \SimpleXMLElement
      */
+    #[\Override]
     public function getHotelList(string $country = '%', string $city = '%', string $hotel = '%', string $hotelType = '%'): \SimpleXMLElement
     {
         $country = empty($country) ? '%' : $country;
@@ -40,8 +42,9 @@ class HotelApiClient extends ApiClientBase
     /**
      * 2. hotelinfo - Information for hotel services
      *
-     * @return \SimpleXMLElement|false
+     * @return \SimpleXMLElement
      */
+    #[\Override]
     public function getHotelInfo(string $hotelId, string $lang = 'UK'): \SimpleXMLElement
     {
         $xml = $this->xmlHeader() . '
@@ -58,6 +61,7 @@ class HotelApiClient extends ApiClientBase
      * @param array $hotelIds Array of hotel IDs
      * @return array hotel_id => SimpleXMLElement|false
      */
+    #[\Override]
     public function getHotelInfoBatch(array $hotelIds, string $lang = 'UK', int $concurrency = 5): array
     {
         if (empty($hotelIds)) {
@@ -96,8 +100,9 @@ class HotelApiClient extends ApiClientBase
     /**
      * 5. hotel_description - Description of hotel
      *
-     * @return \SimpleXMLElement|false
+     * @return \SimpleXMLElement
      */
+    #[\Override]
     public function getHotelDescription(string $hotelId, string $lang = 'UK', bool $includePackage = false): \SimpleXMLElement
     {
         $packageXml = $includePackage ? '<PackageDescription>Yes</PackageDescription>' : '';
@@ -114,8 +119,9 @@ class HotelApiClient extends ApiClientBase
     /**
      * 6. hotel_images - Pictures of hotel
      *
-     * @return \SimpleXMLElement|false
+     * @return \SimpleXMLElement
      */
+    #[\Override]
     public function getHotelImages(string $hotelId, string $lang = 'UK'): \SimpleXMLElement
     {
         $xml = $this->xmlHeader() . '
@@ -129,8 +135,9 @@ class HotelApiClient extends ApiClientBase
     /**
      * 27. hotel_facilities - Hotel facilities
      *
-     * @return \SimpleXMLElement|false
+     * @return \SimpleXMLElement
      */
+    #[\Override]
     public function getHotelFacilities(string $hotelId): \SimpleXMLElement
     {
         $xml = $this->xmlHeader() . '
@@ -144,8 +151,9 @@ class HotelApiClient extends ApiClientBase
     /**
      * 26. list_facilities - List all facilities
      *
-     * @return \SimpleXMLElement|false
+     * @return \SimpleXMLElement
      */
+    #[\Override]
     public function listFacilities(): \SimpleXMLElement
     {
         $xml = $this->xmlHeader() . '

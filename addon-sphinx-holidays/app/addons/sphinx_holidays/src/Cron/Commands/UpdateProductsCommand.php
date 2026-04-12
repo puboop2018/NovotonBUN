@@ -21,11 +21,13 @@ class UpdateProductsCommand extends AbstractSyncCommand
 {
     private const BATCH_SIZE = 200;
 
+    #[\Override]
     public static function getDescription(): string
     {
         return 'Update CS-Cart products when Sphinx hotel data changes';
     }
 
+    #[\Override]
     public function execute(array $params = []): array
     {
         $featureAssigner = Container::getFeatureAssigner();
@@ -86,6 +88,7 @@ class UpdateProductsCommand extends AbstractSyncCommand
                 if ($result) {
                     $otherLanguages = array_diff($configuredLanguages, [$primaryLang]);
                     foreach ($otherLanguages as $lc) {
+                        $fullDescription = $product_data['full_description'] ?? '';
                         db_query(
                             "INSERT INTO ?:product_descriptions (product_id, lang_code, product, full_description, short_description, page_title, meta_description, meta_keywords)
                              VALUES (?i, ?s, ?s, ?s, ?s, ?s, ?s, ?s)
@@ -162,75 +165,6 @@ class UpdateProductsCommand extends AbstractSyncCommand
              ORDER BY h.country_code ASC, h.hotel_id ASC ?p",
             $condition, $limitClause
         );
-    }
-
-    /**
-     * Build the placeholder map for SEO template rendering.
-     */
-    private static function buildPlaceholders(array $hotel): array
-    {
-        // Extract facility names from JSON
-        $facilities = [];
-        if (!empty($hotel['facilities_json'])) {
-            $facilitiesData = is_string($hotel['facilities_json']) ? json_decode($hotel['facilities_json'], true) : $hotel['facilities_json'];
-            if (is_array($facilitiesData)) {
-                foreach ($facilitiesData as $f) {
-                    $name = is_array($f) ? ($f['name'] ?? $f['title'] ?? '') : (string) $f;
-                    if ($name !== '') {
-                        $facilities[] = $name;
-                    }
-                }
-            }
-        }
-
-        // Extract board names from JSON
-        $boards = [];
-        if (!empty($hotel['boards_json'])) {
-            $boardsData = is_string($hotel['boards_json']) ? json_decode($hotel['boards_json'], true) : $hotel['boards_json'];
-            if (is_array($boardsData)) {
-                $boards = array_map('strval', $boardsData);
-            }
-        }
-
-        return [
-            'name'           => $hotel['name'] ?? '',
-            'classification' => $hotel['classification'] ?? '',
-            'stars_emoji'    => fn_travel_core_build_star_emoji((int) ($hotel['classification'] ?? 0)),
-            'city'           => $hotel['destination_name'] ?? '',
-            'country'        => $hotel['country_name'] ?? '',
-            'region'         => $hotel['region_name'] ?? '',
-            'property_type'  => $hotel['property_type'] ?? 'hotel',
-            'description'    => $hotel['description'] ?? '',
-            'rating'         => $hotel['rating'] ?? '',
-            'facilities'     => $facilities,
-            'boards'         => $boards,
-            'board_types'    => $boards,
-            'latitude'       => $hotel['latitude'] ?? '',
-            'longitude'      => $hotel['longitude'] ?? '',
-            'year'           => date('Y'),
-        ];
-    }
-
-    /**
-     * Ensure an SEO slug is unique, excluding the current product's own entry.
-     */
-    private static function ensureUniqueSeoName(string $slug, string $hotelId, int $productId): string
-    {
-        if ($slug === '') {
-            return '';
-        }
-
-        $exists = db_get_field(
-            "SELECT name FROM ?:seo_names WHERE name = ?s AND type = 'p' AND object_id != ?i LIMIT 1",
-            $slug,
-            $productId
-        );
-
-        if ($exists) {
-            return $slug . '-' . $hotelId;
-        }
-
-        return $slug;
     }
 
 }

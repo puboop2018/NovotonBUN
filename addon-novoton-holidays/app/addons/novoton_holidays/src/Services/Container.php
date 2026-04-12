@@ -19,6 +19,12 @@ namespace Tygh\Addons\NovotonHolidays\Services;
 
 use Tygh\Addons\NovotonHolidays\Repository\HotelRepository;
 use Tygh\Addons\NovotonHolidays\Repository\HotelRepositoryInterface;
+use Tygh\Addons\NovotonHolidays\Repository\HotelSearchRepository;
+use Tygh\Addons\NovotonHolidays\Repository\HotelSearchRepositoryInterface;
+use Tygh\Addons\NovotonHolidays\Repository\HotelReportingRepository;
+use Tygh\Addons\NovotonHolidays\Repository\HotelReportingRepositoryInterface;
+use Tygh\Addons\NovotonHolidays\Repository\HotelCacheRepository;
+use Tygh\Addons\NovotonHolidays\Repository\HotelCacheRepositoryInterface;
 use Tygh\Addons\NovotonHolidays\Repository\BookingRepository;
 use Tygh\Addons\NovotonHolidays\Repository\BookingRepositoryInterface;
 use Tygh\Addons\NovotonHolidays\Repository\FacilityRepository;
@@ -38,7 +44,9 @@ use Tygh\Addons\NovotonHolidays\Helpers\DatabaseIterator;
 use Tygh\Addons\NovotonHolidays\Helpers\DatabaseIteratorInterface;
 use Tygh\Addons\NovotonHolidays\Helpers\ProductFactory;
 use Tygh\Addons\NovotonHolidays\Helpers\ProductFactoryInterface;
-use Tygh\Addons\NovotonHolidays\Helpers\BatchedHotelInfoSync;
+use Tygh\Addons\NovotonHolidays\Helpers\BatchedHotelFacilitiesSyncV2;
+use Tygh\Addons\NovotonHolidays\Helpers\BatchedHotelInfoSyncV2;
+use Tygh\Addons\NovotonHolidays\Helpers\BatchedPriceInfoSyncV2;
 use Tygh\Addons\NovotonHolidays\Helpers\SyncInterface;
 use Tygh\Addons\NovotonHolidays\NovotonApi;
 
@@ -103,7 +111,27 @@ class Container
 
     public function hotelRepository(): HotelRepositoryInterface
     {
-        return $this->resolve('hotelRepository', fn() => new HotelRepository());
+        return $this->resolve('hotelRepository', fn() => new HotelRepository(
+            $this->hotelSearchRepository(),
+            $this->hotelReportingRepository(),
+            $this->hotelCacheRepository(),
+            $this->hotelPackageRepository(),
+        ));
+    }
+
+    public function hotelSearchRepository(): HotelSearchRepositoryInterface
+    {
+        return $this->resolve('hotelSearchRepository', fn() => new HotelSearchRepository());
+    }
+
+    public function hotelReportingRepository(): HotelReportingRepositoryInterface
+    {
+        return $this->resolve('hotelReportingRepository', fn() => new HotelReportingRepository());
+    }
+
+    public function hotelCacheRepository(): HotelCacheRepositoryInterface
+    {
+        return $this->resolve('hotelCacheRepository', fn() => new HotelCacheRepository());
     }
 
     public function bookingRepository(): BookingRepositoryInterface
@@ -139,9 +167,8 @@ class Container
     {
         return $this->resolve('bookingService', fn() => new BookingService(
             $this->guestDataService(),
-            $this->roomPriceService(),
             $this->bookingRepository(),
-            $this->novotonApi(),
+            $this->novotonApi()->pricing(),
             $this->hotelRepository()
         ));
     }
@@ -160,7 +187,9 @@ class Container
 
     public function roomPriceService(): RoomPriceServiceInterface
     {
-        return $this->resolve('roomPriceService', fn() => new RoomPriceService());
+        return $this->resolve('roomPriceService', fn() => new RoomPriceService(
+            pricing: $this->novotonApi()->pricing(),
+        ));
     }
 
     public function securityService(): SecurityServiceInterface
@@ -171,11 +200,6 @@ class Container
     public function cacheService(): CacheServiceInterface
     {
         return $this->resolve('cacheService', fn() => new CacheService());
-    }
-
-    public function validationHelper(): \Tygh\Addons\TravelCore\Services\ValidationHelper
-    {
-        return $this->resolve('validationHelper', fn() => new \Tygh\Addons\TravelCore\Services\ValidationHelper());
     }
 
     public function priceInfoService(): PriceInfoServiceInterface
@@ -195,7 +219,9 @@ class Container
 
     public function cronService(): CronServiceInterface
     {
-        return $this->resolve('cronService', fn() => new CronService());
+        return $this->resolve('cronService', fn() => new CronService(
+            reservations: $this->novotonApi()->reservations(),
+        ));
     }
 
     public function searchParameterNormalizer(): SearchParameterNormalizer
@@ -216,7 +242,8 @@ class Container
     public function alternativeRequestService(): AlternativeRequestServiceInterface
     {
         return $this->resolve('alternativeRequestService', fn() => new AlternativeRequestService(
-            $this->securityService()
+            $this->securityService(),
+            $this->novotonApi()->reservations()
         ));
     }
 
@@ -224,7 +251,7 @@ class Container
     {
         return $this->resolve('bookingSubmissionService', fn() => new BookingSubmissionService(
             $this->bookingRepository(),
-            $this->novotonApi()
+            $this->novotonApi()->reservations()
         ));
     }
 
@@ -296,13 +323,48 @@ class Container
     }
 
     /**
-     * BatchedHotelInfoSync is NOT a singleton — new instance each call.
+     * BatchedHotelFacilitiesSyncV2 is the AbstractBatchedSync-based
+     * replacement for BatchedHotelFacilitiesSync. Not a singleton —
+     * new instance each call.
      */
-    public function batchedHotelInfoSync(): SyncInterface
+    public function batchedHotelFacilitiesSyncV2(): SyncInterface
     {
-        if (isset($this->overrides['batchedHotelInfoSync'])) {
-            return ($this->overrides['batchedHotelInfoSync'])();
+        if (isset($this->overrides['batchedHotelFacilitiesSyncV2'])) {
+            return ($this->overrides['batchedHotelFacilitiesSyncV2'])();
         }
-        return new BatchedHotelInfoSync();
+        return new BatchedHotelFacilitiesSyncV2();
+    }
+
+    /**
+     * BatchedPriceInfoSyncV2 is the AbstractBatchedSync-based replacement
+     * for BatchedPriceInfoSync.
+     *
+     * Returns the concrete class (not SyncInterface) because callers need
+     * access to `setStaleHours()`, which is not part of SyncInterface.
+     * Not a singleton — new instance each call.
+     */
+    public function batchedPriceInfoSyncV2(): BatchedPriceInfoSyncV2
+    {
+        if (isset($this->overrides['batchedPriceInfoSyncV2'])) {
+            return ($this->overrides['batchedPriceInfoSyncV2'])();
+        }
+        return new BatchedPriceInfoSyncV2();
+    }
+
+    /**
+     * BatchedHotelInfoSyncV2 is the AbstractBatchedSync-based replacement
+     * for BatchedHotelInfoSync.
+     *
+     * Returns SyncInterface — unlike BatchedPriceInfoSyncV2, the hotel-info
+     * helper has no concrete-only setters, so callers get the loose
+     * coupling of the interface type.
+     * Not a singleton — new instance each call.
+     */
+    public function batchedHotelInfoSyncV2(): SyncInterface
+    {
+        if (isset($this->overrides['batchedHotelInfoSyncV2'])) {
+            return ($this->overrides['batchedHotelInfoSyncV2'])();
+        }
+        return new BatchedHotelInfoSyncV2();
     }
 }

@@ -33,6 +33,20 @@ abstract class AbstractCronCommand
     abstract public static function getDescription(): string;
 
     /**
+     * Cron mode identifiers this command handles.
+     *
+     * Novoton's CronDispatcher uses this to register commands by mode.
+     * Sphinx commands that don't use the mode concept inherit the empty
+     * default and are registered by other means.
+     *
+     * @return string[]
+     */
+    public static function getModes(): array
+    {
+        return [];
+    }
+
+    /**
      * Set a callback for output messages (used in web/CLI contexts).
      */
     public function setOutputCallback(\Closure $callback): void
@@ -42,11 +56,17 @@ abstract class AbstractCronCommand
 
     /**
      * Emit an output message via the callback, or fall back to fn_log_event.
+     *
+     * The `$addNewline` flag supports prompt-style output where a command
+     * wants to emit a partial line ("[hotel] processing... ") followed by
+     * a completion marker on the same line ("OK"). The callback receives
+     * the flag as a second argument; callbacks that don't care about line
+     * breaks can ignore it.
      */
-    protected function output(string $message): void
+    protected function output(string $message, bool $addNewline = true): void
     {
         if ($this->outputCallback !== null) {
-            ($this->outputCallback)($message);
+            ($this->outputCallback)($message, $addNewline);
             return;
         }
 

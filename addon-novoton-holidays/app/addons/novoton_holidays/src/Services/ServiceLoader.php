@@ -62,13 +62,6 @@ function _nvt_cache_service(): \Tygh\Addons\NovotonHolidays\Services\CacheServic
 }
 
 /**
- * @return \Tygh\Addons\TravelCore\Services\ValidationHelper
- */
-function _nvt_validation_helper(): \Tygh\Addons\TravelCore\Services\ValidationHelper {
-    return Container::getInstance()->validationHelper();
-}
-
-/**
  * @return \Tygh\Addons\TravelCore\Services\CurrencyService
  */
 function _nvt_currency_service(): \Tygh\Addons\TravelCore\Services\CurrencyService {
@@ -186,11 +179,4 @@ function _nvt_alternative_request_repo(): \Tygh\Addons\NovotonHolidays\Repositor
  */
 function _nvt_db_iterator(): \Tygh\Addons\NovotonHolidays\Helpers\DatabaseIteratorInterface {
     return Container::getInstance()->databaseIterator();
-}
-
-/**
- * @return \Tygh\Addons\NovotonHolidays\Helpers\SyncInterface
- */
-function _nvt_batched_hotelinfo_sync(): \Tygh\Addons\NovotonHolidays\Helpers\SyncInterface {
-    return Container::getInstance()->batchedHotelInfoSync();
 }

@@ -19,12 +19,6 @@ use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 
 class DatabaseHelper implements DatabaseHelperInterface
 {
-    /** @var array Lookup cache for product codes -> product IDs */
-    private array $productCodeCache = [];
-
-    /** @var array Lookup cache for hotel IDs -> hotel data */
-    private array $hotelCache = [];
-
     /**
      * Batch update hotels has_room_price flag after room_price API checks
      *
@@ -359,12 +353,4 @@ class DatabaseHelper implements DatabaseHelperInterface
         return $matches[0] ?? null;
     }
 
-    /**
-     * Clear lookup caches
-     */
-    public function clearCache(): void
-    {
-        $this->productCodeCache = [];
-        $this->hotelCache = [];
-    }
 }

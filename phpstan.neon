@@ -1,0 +1,108 @@
+# Use a baseline file for the existing debt. New code is expected to be
+# clean; legacy warnings stay in the baseline until addressed in focused
+# cleanup PRs.
+#
+# Regenerate with:
+#   vendor/bin/phpstan analyse --generate-baseline
+includes:
+    - phpstan-baseline.neon
+
+parameters:
+    # Level 6 enforces union return types, stricter parameter checking, and
+    # catches PHPDoc/native type drift. Legacy debt is baselined (1668 items);
+    # all NEW code must pass level 6 cleanly.
+    #
+    # History:
+    #   Level 5: installed 2026-04-12, baseline driven 214 -> 94
+    #   Level 6: upgraded 2026-04-12, baseline 1668 (new code is clean-slate)
+    level: 6
+
+    # Analyse all three addons in a single run so cross-addon type mismatches
+    # (e.g. novoton services typed against travel_core contracts) surface.
+    paths:
+        - addon-novoton-holidays/app/addons/novoton_holidays/src
+        - addon-novoton-holidays/app/addons/novoton_holidays/controllers
+        - addon-novoton-holidays/app/addons/novoton_holidays/functions
+        - addon-novoton-holidays/app/addons/novoton_holidays/hooks
+        - addon-travel-core/app/addons/travel_core/src
+        - addon-travel-core/app/addons/travel_core/controllers
+        - addon-travel-core/app/addons/travel_core/functions
+        - addon-travel-core/app/addons/travel_core/hooks
+        - addon-sphinx-holidays/app/addons/sphinx_holidays/src
+        - addon-sphinx-holidays/app/addons/sphinx_holidays/controllers
+
+    # Scan additional files/directories for symbol discovery without analysing
+    # them. Novoton's Constants.php sits at the addon root (PSR-4 mapped to ""
+    # in its composer.json) so PHPStan needs to index it explicitly.
+    scanFiles:
+        - addon-novoton-holidays/app/addons/novoton_holidays/Constants.php
+    scanDirectories:
+        - addon-novoton-holidays/app/addons/novoton_holidays/src
+        - addon-travel-core/app/addons/travel_core/src
+        - addon-sphinx-holidays/app/addons/sphinx_holidays/src
+
+    excludePaths:
+        - '*/vendor/*'
+        - '*/tests/*'
+        - '*/var/*'
+
+    # Keep the output focused on real issues; don't complain when a legacy
+    # ignoreErrors pattern no longer matches anything.
+    reportUnmatchedIgnoredErrors: false
+
+    ignoreErrors:
+        # ── CS-Cart global procedural API ───────────────────────────────────
+        # CS-Cart ships hundreds of fn_*, db_*, __(), and addon-specific
+        # _nvt_*/_sphinx_* helper functions via func.php / functions/
+        # Can't stub them all individually.
+        - '#Function db_\w+ not found\.#'
+        - '#Function fn_\w+ not found\.#'
+        - '#Function _nvt_\w+ not found\.#'
+        - '#Function _sphinx_\w+ not found\.#'
+        - '#Function __ not found\.#'
+
+        # ── CS-Cart core classes (PHPStan 2.x phrasing) ─────────────────────
+        # PHPStan 2.x emits "on an unknown class X" rather than "Class X not
+        # found". Match both forms to be safe.
+        - '#unknown class Tygh\\Registry#'
+        - '#unknown class Tygh\\Tygh#'
+        - '#unknown class Tygh\\Http#'
+        - '#unknown class Tygh\\Mailer#'
+        - '#unknown class Tygh\\Languages#'
+        - '#unknown class Tygh\\Storage#'
+        - '#unknown class Tygh\\Enum#'
+        - '#unknown class Tygh\\Settings#'
+        # Bare "Tygh" — CS-Cart exposes \Tygh as a global class alias for
+        # Tygh\Tygh. Callers write `Tygh::$app['view']->assign(...)`.
+        - '#unknown class Tygh\.#'
+        - '#Class Tygh\\Registry not found\.#'
+        - '#Class Tygh\\Tygh not found\.#'
+        - '#Class Tygh\\Http not found\.#'
+        - '#Class Tygh\\Mailer\\\w+ not found\.#'
+        - '#Class Tygh\\Languages\\\w+ not found\.#'
+        - '#Class Tygh\\Storage not found\.#'
+        - '#Class Tygh\\Enum\\\w+ not found\.#'
+        - '#Class Tygh\\Settings not found\.#'
+
+        # ── CS-Cart constants ───────────────────────────────────────────────
+        - '#Constant DIR_ROOT not found\.#'
+        - '#Constant CONSOLE not found\.#'
+        - '#Constant AREA not found\.#'
+        - '#Constant CART_LANGUAGE not found\.#'
+        - '#Constant CONTROLLER_STATUS_\w+ not found\.#'
+        - '#Constant DESCR_SL not found\.#'
+        - '#Constant ACCOUNT_TYPE_\w+ not found\.#'
+
+        # ── CS-Cart controller globals ─────────────────────────────────────
+        # Controller files are top-level procedural code dispatched by CS-Cart
+        # with $mode, $action, $auth, $_REQUEST already set up in the outer
+        # scope. PHPStan sees them as "might not be defined".
+        -
+            message: '#Variable \$mode might not be defined\.#'
+            path: '*/controllers/*'
+        -
+            message: '#Variable \$action might not be defined\.#'
+            path: '*/controllers/*'
+        -
+            message: '#Variable \$auth might not be defined\.#'
+            path: '*/controllers/*'

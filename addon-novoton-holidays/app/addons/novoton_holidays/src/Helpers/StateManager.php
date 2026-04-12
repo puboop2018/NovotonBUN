@@ -28,12 +28,6 @@ class StateManager implements StateManagerInterface
     private string $stateFile;
 
     /**
-     * State name identifier
-     * @var string
-     */
-    private string $stateName;
-
-    /**
      * Lock file handle
      * @var resource|null
      */
@@ -63,8 +57,6 @@ class StateManager implements StateManagerInterface
      */
     public function __construct(string $stateName)
     {
-        $this->stateName = $stateName;
-
         // Ensure cache directory exists
         DirectoryManager::ensureCacheDir();
 

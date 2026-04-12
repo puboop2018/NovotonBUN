@@ -3,9 +3,11 @@ declare(strict_types=1);
 /**
  * Shared output callback pattern for sync classes.
  *
- * Replaces the identical private output() + output_callback property
- * that was copy-pasted across BatchedHotelInfoSync, BatchedPriceInfoSync,
- * and BatchedHotelFacilitiesSync.
+ * Extracted originally from the three legacy Batched*Sync helpers (now
+ * deleted in PR #11 of the audit). Still in use by HotelSync and
+ * AdminCronService — those two classes keep the trait alive even
+ * though the original Batched*Sync consumers have moved to the
+ * AbstractBatchedSync + SyncLogger pipeline.
  *
  * Usage:
  *   class MySync {

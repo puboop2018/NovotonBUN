@@ -2,6 +2,7 @@
 declare(strict_types=1);
 namespace Tygh\Addons\NovotonHolidays\Api;
 
+use Tygh\Addons\NovotonHolidays\Api\Contracts\AvailabilityApiClientInterface;
 use Tygh\Addons\TravelCore\Services\CommissionCalculator;
 use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\NovotonHttpClient;
@@ -10,7 +11,7 @@ use Tygh\Addons\NovotonHolidays\Services\CacheService;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Helpers\DebugLogger;
 
-class AvailabilityApiClient extends ApiClientBase
+class AvailabilityApiClient extends ApiClientBase implements AvailabilityApiClientInterface
 {
     private readonly CommissionCalculator $commissionCalculator;
 
@@ -34,6 +35,7 @@ class AvailabilityApiClient extends ApiClientBase
      *
      * @return array Associative array of room_id => quota value
      */
+    #[\Override]
     public function getHotelQuotaAll(string $hotelId, string $checkIn, string $checkOut): array
     {
         $cacheParams = ['hotel_id' => $hotelId, 'check_in' => $checkIn, 'check_out' => $checkOut];
@@ -92,6 +94,7 @@ class AvailabilityApiClient extends ApiClientBase
      *
      * @return \SimpleXMLElement
      */
+    #[\Override]
     public function getHotelQuota(string $hotelId, string $roomId, string $checkIn, string $checkOut, string $roomType = ''): \SimpleXMLElement
     {
         $xml = $this->buildHotelQuotaXml($hotelId, $roomId, $checkIn, $checkOut, $roomType);
@@ -106,8 +109,9 @@ class AvailabilityApiClient extends ApiClientBase
     /**
      * 21. hotel_quota_add - Allotments additional
      *
-     * @return \SimpleXMLElement|false
+     * @return \SimpleXMLElement
      */
+    #[\Override]
     public function getHotelQuotaAdditional(string $hotelId, string $roomId, string $checkIn, string $checkOut): \SimpleXMLElement
     {
         $xml = $this->buildHotelQuotaXml($hotelId, $roomId, $checkIn, $checkOut);
@@ -156,10 +160,15 @@ class AvailabilityApiClient extends ApiClientBase
     }
 
     /**
-     * Search availability using frmsearch API endpoint
+     * Search availability using frmsearch API endpoint.
      *
-     * @return array Search results
+     * NOTE: Returned `total_price` and `price_per_night` values already have
+     * commission applied (see `parseSearchResults()` below). Callers must NOT
+     * call `applyCommission()` on those values a second time.
+     *
+     * @return array Search results (commission applied)
      */
+    #[\Override]
     public function searchAvailability(array $params): array
     {
         $xml = $this->buildSearchXml($params);
@@ -178,11 +187,14 @@ class AvailabilityApiClient extends ApiClientBase
      * Batch availability search using curl_multi.
      *
      * Sends multiple frmsearch requests in parallel and returns parsed results.
+     * Same commission caveat as `searchAvailability()` — prices come out with
+     * commission already applied; do not re-apply.
      *
      * @param array<string, array> $paramsList Keyed array: key => search params
      * @param int $concurrency Max simultaneous requests
      * @return array<string, array> key => parsed search results array
      */
+    #[\Override]
     public function searchAvailabilityBatch(array $paramsList, int $concurrency = 5): array
     {
         if (empty($paramsList)) {

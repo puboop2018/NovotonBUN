@@ -125,8 +125,8 @@ class CronDispatcher implements CronDispatcherInterface
             $command = new $class();
 
             // Set output callback to echo progress and keep lock file fresh
-            $command->setOutputCallback(function (string $message) use ($lockFile) {
-                echo $message . "\n";
+            $command->setOutputCallback(function (string $message, bool $addNewline = true) use ($lockFile) {
+                echo $message . ($addNewline ? "\n" : '');
                 if (ob_get_level() > 0) {
                     ob_flush();
                 }

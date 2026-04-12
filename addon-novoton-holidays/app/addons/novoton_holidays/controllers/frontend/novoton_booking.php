@@ -140,13 +140,11 @@ function _nvt_get_cached_hotel_info($hotel_id, $force = false) {
         return null;
     }
 
-    $hotelInfo = $api->getHotelInfo($hotel_id);
+    $hotelInfo = $api->hotels()->getHotelInfo($hotel_id);
 
     // Cache the XML string (30 minutes - hotel room/board structure doesn't change often)
-    if ($hotelInfo instanceof \SimpleXMLElement) {
-        $cache = _nvt_get_cache_service();
-        $cache->set($cache_key, $hotelInfo->asXML(), 1800);
-    }
+    $cache = _nvt_get_cache_service();
+    $cache->set($cache_key, $hotelInfo->asXML(), 1800);
 
     return $hotelInfo;
 }

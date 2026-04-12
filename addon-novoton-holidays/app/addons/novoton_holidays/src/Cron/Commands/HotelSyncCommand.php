@@ -74,7 +74,7 @@ class HotelSyncCommand extends AbstractCronCommand
             }
         }
 
-        $this->logComplete($mode, $stats ?? []);
-        return ['success' => true, 'stats' => $stats ?? []];
+        $this->logComplete($mode, $stats);
+        return ['success' => true, 'stats' => $stats];
     }
 }

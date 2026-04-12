@@ -125,19 +125,14 @@ try {
     }
 
     // Apply commission to pricing.selling_price
-    $commission = ConfigProvider::getCommission();
-    $roundPrices = ConfigProvider::shouldRoundPrices();
-
-    if ($commission > 0) {
-        $calculator = new \Tygh\Addons\TravelCore\Services\CommissionCalculator($commission, $roundPrices);
-        foreach ($allResults as &$result) {
-            if (isset($result['pricing']['selling_price'])) {
-                $result['pricing']['original_selling_price'] = $result['pricing']['selling_price'];
-                $result['pricing']['selling_price'] = $calculator->apply((float)$result['pricing']['selling_price']);
-            }
+    $cartService = Container::getCartService();
+    foreach ($allResults as &$result) {
+        if (isset($result['pricing']['selling_price'])) {
+            $result['pricing']['original_selling_price'] = $result['pricing']['selling_price'];
+            $result['pricing']['selling_price'] = $cartService->applyCommission((float)$result['pricing']['selling_price']);
         }
-        unset($result);
     }
+    unset($result);
 
     $view->assign('sphinx_package_results', $allResults);
     $view->assign('sphinx_package_params', [

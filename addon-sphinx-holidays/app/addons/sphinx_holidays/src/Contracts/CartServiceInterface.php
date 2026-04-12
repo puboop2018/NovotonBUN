@@ -1,0 +1,93 @@
+<?php
+declare(strict_types=1);
+
+namespace Tygh\Addons\SphinxHolidays\Contracts;
+
+/**
+ * Contract for the Sphinx shared cart service.
+ *
+ * Encapsulates the logic shared across all Sphinx add-to-cart controllers
+ * (hotel, circuit, experience, package): rate limiting, duplicate detection,
+ * commission calculation, product resolution, guest validation, booking
+ * upsert, and CS-Cart cart assembly.
+ */
+interface CartServiceInterface
+{
+    /**
+     * Check rate limit for the current user/session.
+     * Returns a controller redirect tuple if the limit is exceeded, or null.
+     *
+     * @return array|null
+     */
+    public function checkRateLimit(string $errorRedirect = 'index.index'): ?array;
+
+    /**
+     * Check for an existing pending booking with the same offer_id.
+     * Returns a redirect array if a duplicate is found, null otherwise.
+     *
+     * @return array|null
+     */
+    public function checkDuplicate(string $offerId, string $redirectUrl = 'checkout.cart'): ?array;
+
+    /**
+     * Apply configured commission (if any) to a price.
+     */
+    public function applyCommission(float $price): float;
+
+    /**
+     * Sanitize raw guest data and run server-side validation.
+     *
+     * @return array{guests_data: array, guest_list: string, holder_name: string}|false
+     */
+    public function parseGuests(array $rawGuests, string $dateRef): array|false;
+
+    /**
+     * Resolve a CS-Cart product_id from an entity ID (hotel_id, circuit_id, etc.).
+     */
+    public function resolveProductId(string $entityId, int $providedId = 0): int;
+
+    /**
+     * Create or update a booking record using the findRecentUnassigned pattern.
+     * Returns the booking_id.
+     */
+    public function upsertBooking(
+        array $record,
+        string $entityId,
+        string $checkIn,
+        string $checkOut,
+        string $holderName,
+    ): int;
+
+    /**
+     * Assemble the product entry in the CS-Cart cart and persist it.
+     * Returns the controller redirect tuple.
+     *
+     * @return array
+     */
+    public function addToCartAndRedirect(
+        int $productId,
+        float $totalPrice,
+        string $apiCurrency,
+        array $productExtra,
+        string $successMessage,
+        string $redirectUrl = 'checkout.cart',
+    ): array;
+
+    /**
+     * Build the base booking record fields shared across all 4 booking types.
+     *
+     * @return array<string, mixed>
+     */
+    public function buildBaseBookingRecord(
+        int $productId,
+        string $entityId,
+        string $offerId,
+        string $hotelName,
+        array $parsedGuests,
+        array $contact,
+        float $basePrice,
+        float $totalPrice,
+        string $currency,
+        array $apiResponse,
+    ): array;
+}

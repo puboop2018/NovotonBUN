@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays\Services;
 
+use Tygh\Addons\SphinxHolidays\Contracts\ExperienceSyncServiceInterface;
 use Tygh\Addons\SphinxHolidays\Repository\ExperienceRepository;
 use Tygh\Addons\SphinxHolidays\SphinxApi;
 
@@ -11,7 +12,7 @@ use Tygh\Addons\SphinxHolidays\SphinxApi;
  *
  * @since 1.2.0
  */
-class ExperienceSyncService extends AbstractSyncService
+class ExperienceSyncService extends AbstractSyncService implements ExperienceSyncServiceInterface
 {
     private const UPSERT_BATCH_SIZE = 100;
     private const PER_PAGE = 1000;
@@ -21,6 +22,7 @@ class ExperienceSyncService extends AbstractSyncService
         parent::__construct($api);
     }
 
+    #[\Override]
     protected function getSyncType(): string
     {
         return 'experiences';
@@ -31,6 +33,7 @@ class ExperienceSyncService extends AbstractSyncService
      *
      * @return array{success: bool, total: int, synced: int, failed: int, duration_ms: int, error: string}
      */
+    #[\Override]
     public function sync(): array
     {
         return $this->runSync(true);

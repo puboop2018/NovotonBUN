@@ -724,7 +724,7 @@ if ($mode === 'compare') {
     echo '<h2>API Price Comparison</h2>';
 
     $api = new NovotonApi();
-    $apiResult = $api->getRoomPrice([
+    $apiResult = $api->pricing()->getRoomPrice([
         'hotel_id' => $hotel_id,
         'room_id' => $room_id,
         'board_id' => $board_id,

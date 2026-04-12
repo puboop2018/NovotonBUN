@@ -13,9 +13,10 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Services;
 
+use Tygh\Addons\NovotonHolidays\Api\Contracts\NovotonApiKitInterface;
 use Tygh\Addons\NovotonHolidays\Constants;
 
-class HotelAvailabilitySearcher
+class HotelAvailabilitySearcher implements HotelAvailabilitySearcherInterface
 {
     /** @var SearchServiceInterface */
     private readonly SearchServiceInterface $searchService;
@@ -45,11 +46,13 @@ class HotelAvailabilitySearcher
      *   all_room_results: array,
      *   is_multi_room: bool,
      *   multi_room_total_options: int,
+     *   no_availability: bool,
      *   max_room_capacity: array,
      *   early_booking_discounts: array,
      *   early_booking_range: array
      * }
      */
+    #[\Override]
     public function search(array $params): array
     {
         $hotelId  = $params['hotel_id'];
@@ -86,6 +89,10 @@ class HotelAvailabilitySearcher
         $roomTypeMap = $this->buildRoomTypeMap($rooms);
 
         // ── API client ──────────────────────────────────────────────
+        // Typed as the narrow kit interface so this method can only
+        // reach the five domain sub-clients (+ debugInfo) and never
+        // falls back to the deprecated NovotonApi facade methods.
+        /** @var NovotonApiKitInterface|null $api */
         $api = fn_novoton_holidays_get_api();
         if (!$api) {
             fn_set_notification('W', __('warning'),
@@ -113,6 +120,7 @@ class HotelAvailabilitySearcher
     /**
      * @return string[]
      */
+    #[\Override]
     public function getDebugLog(): array
     {
         return $this->debugLog;
@@ -121,6 +129,7 @@ class HotelAvailabilitySearcher
     /**
      * @return \SimpleXMLElement[]  The rooms XML nodes (for alternative search)
      */
+    #[\Override]
     public function getRooms(string $hotelId): array
     {
         $hotelInfo = _nvt_get_cached_hotel_info($hotelId);
@@ -133,6 +142,7 @@ class HotelAvailabilitySearcher
     /**
      * @return string[]  Board type identifiers
      */
+    #[\Override]
     public function getBoardTypes(string $hotelId, string $mealPlan = ''): array
     {
         $hotelInfo = _nvt_get_cached_hotel_info($hotelId);
@@ -147,7 +157,7 @@ class HotelAvailabilitySearcher
     // =====================================================================
 
     private function searchMultiRoom(
-        $api,
+        NovotonApiKitInterface $api,
         string $hotelId,
         string $checkIn,
         string $checkOut,
@@ -194,7 +204,7 @@ class HotelAvailabilitySearcher
         }
 
         // Execute ALL room requests in parallel via curl_multi
-        $batchResponses = $api->getRoomPriceBatch($batchRequests, count($batchRequests));
+        $batchResponses = $api->pricing()->getRoomPriceBatch($batchRequests, count($batchRequests));
 
         // Process batch results
         $allRoomResults = [];
@@ -207,8 +217,8 @@ class HotelAvailabilitySearcher
             $occupancyStr = $meta['occupancy'];
             $roomResults  = [];
 
-            $priceData = $response['data'] ?? false;
-            $rawXml    = $response['rawXml'] ?? '';
+            $priceData = $response['data'];
+            $rawXml    = $response['rawXml'];
 
             if ($priceData && !empty($rawXml)) {
                 $this->log("  Room #{$roomNum}: API response received (parsing...)");
@@ -258,7 +268,7 @@ class HotelAvailabilitySearcher
     // =====================================================================
 
     private function searchSingleRoom(
-        $api,
+        NovotonApiKitInterface $api,
         string $hotelId,
         string $checkIn,
         string $checkOut,
@@ -288,19 +298,20 @@ class HotelAvailabilitySearcher
             'children'    => $singleRoomChildren,
         ];
 
-        $priceData = $api->getRoomPrice($priceParams);
+        $pricing = $api->pricing();
+        $priceData = $pricing->getRoomPrice($priceParams);
 
         $this->logSingleRoomDebug($api, $hotelId, $priceParams);
 
         $results = [];
         if ($priceData) {
-            $rawXml = $api->getLastResponse();
+            $rawXml = $api->debugInfo()->lastResponse;
             $this->log("=== PARSING ROOM_PRICE RESPONSE ===");
 
             // Fetch room quota for all rooms
             $quotaMap = [];
             try {
-                $quotaMap = $api->getHotelQuotaAll($hotelId, $checkIn, $checkOut);
+                $quotaMap = $api->availability()->getHotelQuotaAll($hotelId, $checkIn, $checkOut);
                 $this->log("=== ROOM QUOTA (hotel_quota API) ===");
                 foreach ($quotaMap as $qRoom => $qValue) {
                     $this->log("  {$qRoom}: {$qValue}");
@@ -526,54 +537,56 @@ class HotelAvailabilitySearcher
             $this->log("Has rooms: " . (isset($hotelInfo->rooms) ? 'YES' : 'NO'));
             $this->log("Has board: " . (isset($hotelInfo->board) ? 'YES' : 'NO'));
             $this->log("Has packages: " . (isset($hotelInfo->packages) ? 'YES' : 'NO'));
-            if ($hotelInfo instanceof \SimpleXMLElement) {
-                $rawXml = $hotelInfo->asXML();
-                $this->log("=== RAW HOTELINFO XML (truncated) ===");
-                $this->log(substr(htmlspecialchars($rawXml), 0, 2000));
-            }
+            $rawXml = $hotelInfo->asXML();
+            $this->log("=== RAW HOTELINFO XML (truncated) ===");
+            $this->log(substr(htmlspecialchars($rawXml), 0, 2000));
         } else {
             $this->log("ERROR: No hotel info returned from API");
         }
     }
 
-    private function logApiError($api, string $prefix = ''): void
+    private function logApiError(NovotonApiKitInterface $api, string $prefix = ''): void
     {
         if (!$this->debug) {
             return;
         }
         $this->log($prefix . "API Response: EMPTY or FALSE");
-        if ($api) {
-            $lastError = $api->getLastError();
-            if ($lastError) {
-                $this->log($prefix . "API Error: " . $lastError);
-            }
-            $cs = $api->getCircuitStatus();
+        $lastError = $api->debugInfo()->lastError;
+        if ($lastError !== '') {
+            $this->log($prefix . "API Error: " . $lastError);
+        }
+        // Circuit-breaker state isn't on the narrow kit interface — re-query
+        // the concrete facade singleton for diagnostic output only.
+        $concrete = fn_novoton_holidays_get_api();
+        if ($concrete) {
+            $cs = $concrete->getCircuitStatus();
             if ($cs['is_open']) {
                 $this->log($prefix . "CIRCUIT BREAKER IS OPEN!");
             }
         }
     }
 
-    private function logSingleRoomDebug($api, string $hotelId, array $priceParams): void
+    private function logSingleRoomDebug(NovotonApiKitInterface $api, string $hotelId, array $priceParams): void
     {
-        if (!$this->debug || !$api) {
+        if (!$this->debug) {
             return;
         }
 
-        $lastReq = $api->getLastRequestFormatted();
+        $debugInfo = $api->debugInfo();
+        $lastReq = $debugInfo->lastRequestFormatted;
         $this->log("  -> API Request Params: hotel_id={$hotelId}, check_in="
             . ($lastReq['check_in'] ?? '') . ", check_out=" . ($lastReq['check_out'] ?? '')
             . ", adults=" . ($priceParams['adults'] ?? 2));
         $this->log("  -> Children ages: " . json_encode($priceParams['children'] ?? []));
 
-        $fullRequest = $api->getLastRequest();
-        if ($fullRequest) {
+        $fullRequest = $debugInfo->lastRequest;
+        if ($fullRequest !== '') {
             $masked = preg_replace('/<psw>[^<]*<\/psw>/', '<psw>***</psw>', $fullRequest);
             $this->log("  -> Full XML Request: " . substr(htmlspecialchars($masked), 0, 1500));
         }
 
-        $rawResponse = $api->getLastResponse();
-        if ($rawResponse) {
+        $rawResponse = $debugInfo->lastResponse;
+        if ($rawResponse !== '') {
             $this->log("  -> Raw Response (first 2000 chars): " . substr(htmlspecialchars($rawResponse), 0, 2000));
         } else {
             $this->logApiError($api, "  -> ");

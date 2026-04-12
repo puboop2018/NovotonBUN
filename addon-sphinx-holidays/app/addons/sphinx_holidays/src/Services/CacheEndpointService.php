@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays\Services;
 
+use Tygh\Addons\SphinxHolidays\Contracts\CacheEndpointServiceInterface;
 use Tygh\Addons\SphinxHolidays\SphinxApi;
 use Tygh\Addons\TravelCore\Services\CommissionCalculator;
 
@@ -13,7 +14,7 @@ use Tygh\Addons\TravelCore\Services\CommissionCalculator;
  * applies commission markup, and stores results in local DB cache
  * for frontend widget display.
  */
-class CacheEndpointService
+class CacheEndpointService implements CacheEndpointServiceInterface
 {
     /** Cache TTL for deals in seconds (default 4 hours) */
     private const DEALS_CACHE_TTL = 14400;
@@ -30,6 +31,7 @@ class CacheEndpointService
      * @param array $filters {destination_id?: int, stars?: int, limit?: int, sort_by?: string}
      * @return array Normalized deal entries with commission-applied prices
      */
+    #[\Override]
     public function getHotelDeals(array $filters = []): array
     {
         $cacheKey = 'deals:hotels:' . md5(json_encode($filters));
@@ -58,6 +60,7 @@ class CacheEndpointService
      * @param array $filters {destination_id?: int, type?: string, limit?: int}
      * @return array Normalized deal entries with commission-applied prices
      */
+    #[\Override]
     public function getPackageDeals(array $filters = []): array
     {
         $cacheKey = 'deals:packages:' . md5(json_encode($filters));
@@ -85,6 +88,7 @@ class CacheEndpointService
      *
      * @return array Stats: {hotels_count, packages_count, errors}
      */
+    #[\Override]
     public function refreshAll(): array
     {
         $stats = ['hotels_count' => 0, 'packages_count' => 0, 'errors' => 0];

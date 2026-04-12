@@ -2,6 +2,7 @@
 declare(strict_types=1);
 namespace Tygh\Addons\NovotonHolidays\Api;
 
+use Tygh\Addons\NovotonHolidays\Api\Contracts\PricingApiClientInterface;
 use Tygh\Addons\TravelCore\Services\CommissionCalculator;
 use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\NovotonHttpClient;
@@ -10,7 +11,7 @@ use Tygh\Addons\NovotonHolidays\Services\CacheService;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Exceptions\XmlParsingException;
 
-class PricingApiClient extends ApiClientBase
+class PricingApiClient extends ApiClientBase implements PricingApiClientInterface
 {
     private readonly CommissionCalculator $commissionCalculator;
 
@@ -32,6 +33,7 @@ class PricingApiClient extends ApiClientBase
         ];
     }
 
+    #[\Override]
     public function applyCommission(float $price): float
     {
         return $this->commissionCalculator->apply($price);
@@ -45,6 +47,7 @@ class PricingApiClient extends ApiClientBase
      * @param array $params Same parameters as getRoomPrice()
      * @return string XML request body
      */
+    #[\Override]
     public function buildRoomPriceXml(array $params): string
     {
         $roomId = $params['room_id'] ?? '';
@@ -86,6 +89,7 @@ class PricingApiClient extends ApiClientBase
      * @param int $concurrency Max simultaneous requests (default 5)
      * @return array<string, array{data: \SimpleXMLElement|false, rawXml: string}> key => result
      */
+    #[\Override]
     public function getRoomPriceBatch(array $requestParams, int $concurrency = 5): array
     {
         $concurrency = max(1, min(50, $concurrency));
@@ -171,8 +175,9 @@ class PricingApiClient extends ApiClientBase
     /**
      * 3. room_price - Accommodation prices (REAL-TIME RATES)
      *
-     * @return \SimpleXMLElement|false
+     * @return \SimpleXMLElement
      */
+    #[\Override]
     public function getRoomPrice(array $params): \SimpleXMLElement|false
     {
         $bypassCache = !empty($params['nocache']);
@@ -243,8 +248,9 @@ class PricingApiClient extends ApiClientBase
     /**
      * Get room prices for an entire resort
      *
-     * @return \SimpleXMLElement|false
+     * @return \SimpleXMLElement
      */
+    #[\Override]
     public function getRoomPriceByResort(array $params): \SimpleXMLElement|false
     {
         $resort = $params['resort'] ?? '';
@@ -338,8 +344,9 @@ class PricingApiClient extends ApiClientBase
     /**
      * Get room prices for an entire resort - RAW response (no XML parsing)
      *
-     * @return string|false Raw XML response
+     * @return string Raw XML response
      */
+    #[\Override]
     public function getRoomPriceByResortRaw(array $params): string
     {
         $resort = $params['resort'] ?? '';
@@ -380,8 +387,9 @@ class PricingApiClient extends ApiClientBase
     /**
      * 13. priceinfo - Season prices request
      *
-     * @return \SimpleXMLElement|false
+     * @return \SimpleXMLElement
      */
+    #[\Override]
     public function getPriceInfo(string $hotelId, string $packageName, string $lang = 'UK'): \SimpleXMLElement
     {
         $xml = $this->xmlHeader() . '
@@ -397,8 +405,9 @@ class PricingApiClient extends ApiClientBase
     /**
      * 10. spo - EB (Early booking), extras and other discounts
      *
-     * @return \SimpleXMLElement|false
+     * @return \SimpleXMLElement
      */
+    #[\Override]
     public function getSpecialOffers(string $hotelId, string $packageName = '', string $lang = 'UK'): \SimpleXMLElement
     {
         $packageXml = $packageName ? '<PackageName>' . htmlspecialchars($packageName) . '</PackageName>' : '';

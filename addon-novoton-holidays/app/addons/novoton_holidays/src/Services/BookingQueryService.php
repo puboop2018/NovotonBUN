@@ -22,7 +22,7 @@ use Tygh\Addons\TravelCore\ValueObjects\BoardType;
 use Tygh\Addons\TravelCore\ValueObjects\RoomType;
 use Tygh\Addons\NovotonHolidays\Repository\BookingRepositoryInterface;
 
-class BookingQueryService
+class BookingQueryService implements BookingQueryServiceInterface
 {
     private readonly BookingRepositoryInterface $bookingRepository;
     private readonly GuestDataNormalizer $guestDataNormalizer;
@@ -38,6 +38,7 @@ class BookingQueryService
     /**
      * Get booking statistics
      */
+    #[\Override]
     public function getStats(): array
     {
         return [
@@ -57,6 +58,7 @@ class BookingQueryService
      * @param array $params Filter parameters
      * @return array Unified bookings list
      */
+    #[\Override]
     public function getUnifiedBookings(array $params = []): array
     {
         $bookings_raw = $this->queryUnifiedBookings($params);

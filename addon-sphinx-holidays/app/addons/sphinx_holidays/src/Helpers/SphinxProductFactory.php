@@ -37,6 +37,7 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
     /**
      * Load valid CS-Cart country codes (call once before processing batches).
      */
+    #[\Override]
     public function loadValidCountryCodes(): void
     {
         if (empty($this->validCountryCodes)) {
@@ -50,6 +51,7 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
     /**
      * {@inheritdoc}
      */
+    #[\Override]
     public function createFromHotel(array $hotel, array $hierarchy): array
     {
         $hotelId = $hotel['hotel_id'];
@@ -196,6 +198,7 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
 
         // Replicate descriptions to other configured languages
         $otherLanguages = array_diff($configuredLanguages, [$primaryLang]);
+        $fullDescription = $productData['full_description'] ?? '';
         foreach ($otherLanguages as $lc) {
             db_query(
                 "INSERT INTO ?:product_descriptions (product_id, lang_code, product, full_description, short_description, page_title, meta_description, meta_keywords)
@@ -225,6 +228,7 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
     /**
      * {@inheritdoc}
      */
+    #[\Override]
     public function resolveCountryName(array $hotel, array $hierarchy): string
     {
         $countryName = ($hierarchy['country'] ?? '') ?: ($hotel['country_name'] ?? '');
@@ -290,27 +294,4 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
         ];
     }
 
-    /**
-     * Ensure an SEO slug is unique in the seo_names table.
-     *
-     * If the slug already exists, appends the hotel_id to make it unique.
-     * This prevents CS-Cart from generating "-en" suffix notices on the frontend.
-     */
-    private static function ensureUniqueSeoName(string $slug, string $hotelId): string
-    {
-        if ($slug === '') {
-            return '';
-        }
-
-        $exists = db_get_field(
-            "SELECT name FROM ?:seo_names WHERE name = ?s AND type = 'p' LIMIT 1",
-            $slug
-        );
-
-        if ($exists) {
-            return $slug . '-' . $hotelId;
-        }
-
-        return $slug;
-    }
 }

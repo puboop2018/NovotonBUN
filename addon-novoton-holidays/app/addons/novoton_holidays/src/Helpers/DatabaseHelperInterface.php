@@ -114,9 +114,4 @@ interface DatabaseHelperInterface
      * @return string|null
      */
     public function extractHotelId(string $productCode): ?string;
-
-    /**
-     * Clear lookup caches.
-     */
-    public function clearCache(): void;
 }

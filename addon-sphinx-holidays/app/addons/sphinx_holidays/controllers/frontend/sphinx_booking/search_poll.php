@@ -17,9 +17,7 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
 use Tygh\Tygh;
 use Tygh\Addons\SphinxHolidays\Services\Container;
-use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
 use Tygh\Addons\SphinxHolidays\Services\CacheService;
-use Tygh\Addons\TravelCore\Services\CommissionCalculator;
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -46,26 +44,23 @@ try {
     $nextCursor = $pollResponse['next_cursor'] ?? null;
 
     // Apply commission to each result
-    $commission = ConfigProvider::getCommission();
-    if ($commission > 0 && !empty($results)) {
-        $calculator = new CommissionCalculator($commission, ConfigProvider::shouldRoundPrices());
-        foreach ($results as &$result) {
-            if (isset($result['price'])) {
-                $result['original_price'] = $result['price'];
-                $result['price'] = $calculator->apply((float) $result['price']);
-            }
-            if (!empty($result['offers'])) {
-                foreach ($result['offers'] as &$offer) {
-                    if (isset($offer['price'])) {
-                        $offer['original_price'] = $offer['price'];
-                        $offer['price'] = $calculator->apply((float) $offer['price']);
-                    }
-                }
-                unset($offer);
-            }
+    $cartService = Container::getCartService();
+    foreach ($results as &$result) {
+        if (isset($result['price'])) {
+            $result['original_price'] = $result['price'];
+            $result['price'] = $cartService->applyCommission((float) $result['price']);
         }
-        unset($result);
+        if (!empty($result['offers'])) {
+            foreach ($result['offers'] as &$offer) {
+                if (isset($offer['price'])) {
+                    $offer['original_price'] = $offer['price'];
+                    $offer['price'] = $cartService->applyCommission((float) $offer['price']);
+                }
+            }
+            unset($offer);
+        }
     }
+    unset($result);
 
     // Strip to display-relevant fields only (API payloads can be multi-MB)
     $templateFields = [

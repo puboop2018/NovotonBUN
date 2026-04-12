@@ -17,7 +17,6 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 use Tygh\Tygh;
 use Tygh\Addons\SphinxHolidays\Services\Container;
 use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
-use Tygh\Addons\TravelCore\Services\CommissionCalculator;
 
 $view = Tygh::$app['view'];
 
@@ -49,15 +48,9 @@ try {
     $offer = $verifyResult['data'];
 
     // Apply commission
-    $commission = ConfigProvider::getCommission();
-    $roundPrices = ConfigProvider::shouldRoundPrices();
     $sellingPrice = (float)($offer['pricing']['selling_price'] ?? 0);
     $basePrice = $sellingPrice;
-
-    if ($commission > 0 && $sellingPrice > 0) {
-        $calculator = new CommissionCalculator($commission, $roundPrices);
-        $sellingPrice = $calculator->apply($sellingPrice);
-    }
+    $sellingPrice = Container::getCartService()->applyCommission($sellingPrice);
 
     // Parse hotel info
     $hotel = $offer['hotel'] ?? [];

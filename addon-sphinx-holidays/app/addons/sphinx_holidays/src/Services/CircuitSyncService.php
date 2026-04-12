@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays\Services;
 
+use Tygh\Addons\SphinxHolidays\Contracts\CircuitSyncServiceInterface;
 use Tygh\Addons\SphinxHolidays\Repository\CircuitRepository;
 use Tygh\Addons\SphinxHolidays\SphinxApi;
 
@@ -14,7 +15,7 @@ use Tygh\Addons\SphinxHolidays\SphinxApi;
  *
  * @since 1.2.0
  */
-class CircuitSyncService extends AbstractSyncService
+class CircuitSyncService extends AbstractSyncService implements CircuitSyncServiceInterface
 {
     private const UPSERT_BATCH_SIZE = 100;
     private const PER_PAGE = 1000;
@@ -24,6 +25,7 @@ class CircuitSyncService extends AbstractSyncService
         parent::__construct($api);
     }
 
+    #[\Override]
     protected function getSyncType(): string
     {
         return 'circuits';
@@ -34,6 +36,7 @@ class CircuitSyncService extends AbstractSyncService
      *
      * @return array{success: bool, total: int, synced: int, failed: int, duration_ms: int, error: string}
      */
+    #[\Override]
     public function sync(): array
     {
         return $this->runSync(true);

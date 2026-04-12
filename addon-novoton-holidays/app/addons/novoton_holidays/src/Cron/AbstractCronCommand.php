@@ -18,12 +18,18 @@ use Tygh\Addons\TravelCore\Cron\AbstractCronCommand as BaseCommand;
  */
 abstract class AbstractCronCommand extends BaseCommand
 {
-    protected \Tygh\Addons\NovotonHolidays\NovotonApi $api;
+    /**
+     * Narrow kit interface so subclasses can only reach the five
+     * domain sub-clients (hotels, pricing, availability, reservations,
+     * destinations) and can no longer call the deprecated flat
+     * NovotonApi facade methods directly.
+     */
+    protected \Tygh\Addons\NovotonHolidays\Api\Contracts\NovotonApiKitInterface $api;
     protected ?\Tygh\Addons\NovotonHolidays\Helpers\SyncLogger $logger;
     protected array $params = [];
 
     public function __construct(
-        \Tygh\Addons\NovotonHolidays\NovotonApi $api,
+        \Tygh\Addons\NovotonHolidays\Api\Contracts\NovotonApiKitInterface $api,
         ?\Tygh\Addons\NovotonHolidays\Helpers\SyncLogger $logger,
         array $params = [],
     ) {
@@ -32,13 +38,15 @@ abstract class AbstractCronCommand extends BaseCommand
         $this->logger = $logger;
         $this->params = $params;
 
-        // Wire SyncLogger as the output callback for the base class
+        // Wire SyncLogger as the output callback for the base class.
+        // Forward the optional newline flag so prompt-style output (partial
+        // line + completion marker) renders correctly in CLI/web contexts.
         if ($this->logger !== null) {
-            $this->setOutputCallback(fn(string $msg) => $this->logger->output($msg));
+            $this->setOutputCallback(
+                fn(string $msg, bool $addNewline = true) => $this->logger->output($msg, $addNewline)
+            );
         }
     }
-
-    abstract public static function getModes(): array;
 
     protected function getParam(string $key, mixed $default = null): mixed
     {

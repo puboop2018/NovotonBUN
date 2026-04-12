@@ -14,7 +14,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Services;
 
-class DiscountCalculator
+class DiscountCalculator implements DiscountCalculatorInterface
 {
     private PriceInfoParser $parser;
 
@@ -29,6 +29,7 @@ class DiscountCalculator
     /**
      * Calculate Early Booking discount
      */
+    #[\Override]
     public function calculateEarlyBookingDiscount(string $bookingDate, string $checkIn, int $nights, array $basePrice, array $fees): array
     {
         $priceinfo = $this->parser->getPriceinfo();
@@ -111,6 +112,7 @@ class DiscountCalculator
     /**
      * Calculate Reduction (free nights)
      */
+    #[\Override]
     public function calculateReduction(string $checkIn, int $nights, array $seasonsByNight, array $occupancy, string $roomId, string $boardId, array $basePrice = [], array $fees = []): array
     {
         $priceinfo = $this->parser->getPriceinfo();
@@ -230,6 +232,7 @@ class DiscountCalculator
      * FromDate-ToDate range, the guest only pays for MaxDays nights instead
      * of the actual nights. The discount is the value of the excess nights.
      */
+    #[\Override]
     public function calculateReductionPeriod(string $checkIn, int $nights, array $basePrice): array
     {
         $priceinfo = $this->parser->getPriceinfo();
@@ -303,6 +306,7 @@ class DiscountCalculator
      *
      * Applied as a flat percentage off the subtotal (base + fees - EB/reduction).
      */
+    #[\Override]
     public function calculateReductionPercAdditional(float $subtotal): array
     {
         $priceinfo = $this->parser->getPriceinfo();
@@ -358,6 +362,7 @@ class DiscountCalculator
      *
      * Supports date restrictions, room type filtering, minimum stay, and Type.
      */
+    #[\Override]
     public function calculateReductionPercMarketing(
         string $bookingDate,
         string $checkIn,
@@ -481,6 +486,7 @@ class DiscountCalculator
     /**
      * Apply priority rules to select best discount scenario
      */
+    #[\Override]
     public function applyPriorityRules(array $basePrice, array $fees, array $ebDiscount, array $reduction, array $reductionPeriod = []): array
     {
         $priceinfo = $this->parser->getPriceinfo();

@@ -17,7 +17,6 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 use Tygh\Tygh;
 use Tygh\Addons\SphinxHolidays\Services\Container;
 use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
-use Tygh\Addons\TravelCore\Services\CommissionCalculator;
 
 $view = Tygh::$app['view'];
 
@@ -67,15 +66,9 @@ try {
     $offer_id = $quote['offer_id'] ?? '';
 
     // Apply commission
-    $commission = ConfigProvider::getCommission();
-    $roundPrices = ConfigProvider::shouldRoundPrices();
     $sellingPrice = (float)($quote['pricing']['selling_price'] ?? 0);
     $basePrice = $sellingPrice;
-
-    if ($commission > 0 && $sellingPrice > 0) {
-        $calculator = new CommissionCalculator($commission, $roundPrices);
-        $sellingPrice = $calculator->apply($sellingPrice);
-    }
+    $sellingPrice = Container::getCartService()->applyCommission($sellingPrice);
 
     $view->assign('sphinx_experience_booking', [
         'offer_id' => $offer_id,

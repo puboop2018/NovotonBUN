@@ -2,15 +2,17 @@
 declare(strict_types=1);
 namespace Tygh\Addons\NovotonHolidays\Api;
 
+use Tygh\Addons\NovotonHolidays\Api\Contracts\DestinationApiClientInterface;
 use Tygh\Addons\NovotonHolidays\Constants;
 
-class DestinationApiClient extends ApiClientBase
+class DestinationApiClient extends ApiClientBase implements DestinationApiClientInterface
 {
     /**
      * 16. resort_list - Destinations List
      *
-     * @return \SimpleXMLElement|false
+     * @return \SimpleXMLElement
      */
+    #[\Override]
     public function getResortList(string $country = '', string $lang = 'UK'): \SimpleXMLElement
     {
         $xml = $this->xmlHeader() . '
@@ -24,8 +26,9 @@ class DestinationApiClient extends ApiClientBase
     /**
      * 25. offers_update - Updated/New Offers
      *
-     * @return \SimpleXMLElement|false
+     * @return \SimpleXMLElement
      */
+    #[\Override]
     public function getOffersUpdate(string $dateTime, string $country = '', string $resort = '', string $hotel = ''): \SimpleXMLElement
     {
         $xml = $this->xmlHeader() . '
@@ -43,8 +46,9 @@ class DestinationApiClient extends ApiClientBase
     /**
      * 24. kickback_RS - Check for kickback (commission)
      *
-     * @return \SimpleXMLElement|false
+     * @return \SimpleXMLElement
      */
+    #[\Override]
     public function getKickbackInfo(string $lang = 'UK'): \SimpleXMLElement
     {
         $xml = $this->xmlHeader() . '

@@ -132,6 +132,36 @@ class SphinxApi
     }
 
     /**
+     * Get a priced quote for a specific circuit departure.
+     *
+     * @param array $params {circuit_id, departure_date, occupancy, departure_id?}
+     */
+    public function getCircuitQuote(array $params): ?array
+    {
+        return $this->client->post('/api/v1/circuits/quote', $params);
+    }
+
+    /**
+     * Customize a circuit (add optional services before booking).
+     *
+     * @param array $data {offer_id, service_codes}
+     */
+    public function customizeCircuit(array $data): ?array
+    {
+        return $this->client->post('/api/v1/circuits/customize', $data);
+    }
+
+    /**
+     * Book a circuit.
+     *
+     * @param array $bookingData {offer_id, price, currency, occupancy, reference_code?}
+     */
+    public function bookCircuit(array $bookingData): ?array
+    {
+        return $this->client->post('/api/v1/circuits/book', $bookingData);
+    }
+
+    /**
      * Get experience rates (paginated, filterable by destination/month/date range).
      *
      * @param array $params {destinatons, months, from, to, pagination}
@@ -139,6 +169,26 @@ class SphinxApi
     public function getExperienceRates(array $params): ?array
     {
         return $this->client->post('/api/v1/experiences/rates', $params);
+    }
+
+    /**
+     * Get a priced quote for a specific experience departure.
+     *
+     * @param array $params {experience_id, departure_date, occupancy}
+     */
+    public function getExperienceQuote(array $params): ?array
+    {
+        return $this->client->post('/api/v1/experiences/quote', $params);
+    }
+
+    /**
+     * Book an experience.
+     *
+     * @param array $bookingData {offer_id, price, currency, occupancy, reference_code?}
+     */
+    public function bookExperience(array $bookingData): ?array
+    {
+        return $this->client->post('/api/v1/experiences/book', $bookingData);
     }
 
     // ── Hotel Search & Booking ──

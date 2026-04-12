@@ -5,11 +5,13 @@ namespace Tygh\Addons\SphinxHolidays\Cron\Commands;
 
 class AuditFacilitiesCommand extends AbstractSyncCommand
 {
+    #[\Override]
     public static function getDescription(): string
     {
         return 'Audit unmapped facility IDs from Sphinx hotels (report only, no changes)';
     }
 
+    #[\Override]
     public function execute(array $params = []): array
     {
         $this->output("Scanning sphinx_hotels.facilities_json for all facility IDs...");

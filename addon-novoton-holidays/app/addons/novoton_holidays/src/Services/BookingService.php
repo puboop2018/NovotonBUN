@@ -12,6 +12,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Services;
 
+use Tygh\Addons\NovotonHolidays\Api\Contracts\PricingApiClientInterface;
 use Tygh\Addons\NovotonHolidays\Repository\BookingRepositoryInterface;
 use Tygh\Addons\NovotonHolidays\Repository\HotelRepositoryInterface;
 use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
@@ -20,11 +21,7 @@ use Tygh\Tygh;
 
 class BookingService implements BookingServiceInterface
 {
-    private \Tygh\Addons\NovotonHolidays\NovotonApi $api;
-
     private \Tygh\Addons\TravelCore\Contracts\GuestDataServiceInterface $guestService;
-
-    private RoomPriceServiceInterface $priceService;
 
     private BookingRepositoryInterface $bookingRepo;
 
@@ -43,25 +40,29 @@ class BookingService implements BookingServiceInterface
     /**
      * Constructor — all dependencies must be injected explicitly.
      *
+     * The `$pricing` sub-client is only forwarded to the internally-constructed
+     * PriceVerificationService. BookingService itself does not call the Novoton
+     * API directly; narrowing the type from NovotonApi to PricingApiClientInterface
+     * eliminates a dependency on the 46-method facade.
+     *
      * Use Container::bookingService() to get a properly wired instance.
      */
     public function __construct(
         \Tygh\Addons\TravelCore\Contracts\GuestDataServiceInterface $guestService,
-        RoomPriceServiceInterface $priceService,
         BookingRepositoryInterface $bookingRepo,
-        \Tygh\Addons\NovotonHolidays\NovotonApi $api,
+        PricingApiClientInterface $pricing,
         ?HotelRepositoryInterface $hotelRepo = null,
-        ?GuestDataNormalizer $guestDataNormalizer = null
+        ?GuestDataNormalizer $guestDataNormalizer = null,
+        ?CartAssemblyService $cartAssembly = null,
+        ?RoomsDataParser $roomsParser = null,
     ) {
-        $this->api = $api;
         $this->guestService = $guestService;
-        $this->priceService = $priceService;
         $this->bookingRepo = $bookingRepo;
         $this->hotelRepo = $hotelRepo ?? new \Tygh\Addons\NovotonHolidays\Repository\HotelRepository();
         $this->guestDataNormalizer = $guestDataNormalizer ?? new GuestDataNormalizer();
-        $this->cartAssembly = new CartAssemblyService();
-        $this->roomsParser = new RoomsDataParser();
-        $this->priceVerifier = new PriceVerificationService($api);
+        $this->cartAssembly = $cartAssembly ?? new CartAssemblyService();
+        $this->roomsParser = $roomsParser ?? new RoomsDataParser();
+        $this->priceVerifier = new PriceVerificationService($pricing);
         $this->debug = ConfigProvider::isDebugLogging();
     }
     

@@ -18,11 +18,13 @@ use Tygh\Addons\SphinxHolidays\Services\CacheEndpointService;
  */
 class CacheRefreshCommand extends AbstractSyncCommand
 {
+    #[\Override]
     public static function getDescription(): string
     {
         return 'Refresh cached hotel & package deals from Sphinx cache endpoints';
     }
 
+    #[\Override]
     public function execute(array $params = []): array
     {
         $this->output('Starting cache refresh...');

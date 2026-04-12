@@ -23,6 +23,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Helpers;
 
+use Tygh\Addons\NovotonHolidays\Api\Contracts\NovotonApiKitInterface;
 use Tygh\Addons\NovotonHolidays\NovotonApi;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Services\Container;
@@ -31,16 +32,14 @@ use Tygh\Addons\NovotonHolidays\Services\PathResolver;
 abstract class AbstractBatchedSync implements SyncInterface
 {
     /**
-     * State manager
-     * @var StateManager
+     * State manager (interface-typed for testability).
      */
-    protected StateManager $state;
+    protected StateManagerInterface $state;
 
     /**
-     * Logger
-     * @var SyncLogger
+     * Logger (interface-typed for testability).
      */
-    protected SyncLogger $logger;
+    protected SyncLoggerInterface $logger;
 
     /**
      * API instance
@@ -85,15 +84,29 @@ abstract class AbstractBatchedSync implements SyncInterface
     protected int $itemTimeoutWarning = 30;
 
     /**
-     * Constructor
+     * Constructor with optional DI.
+     *
+     * Collaborators are interface-typed and default to the concrete
+     * StateManager / SyncLogger so existing subclasses that call
+     * `parent::__construct()` with no arguments keep working unchanged.
+     * Unit tests inject in-memory fakes or mocks.
      */
-    public function __construct()
-    {
-        $this->batchSize = ConfigProvider::DEFAULT_BATCH_SIZE;
-        $this->maxExecutionTime = ConfigProvider::DEFAULT_MAX_EXECUTION_TIME;
+    public function __construct(
+        ?StateManagerInterface $state = null,
+        ?SyncLoggerInterface $logger = null,
+    ) {
+        $this->batchSize = ConfigProvider::getCronBatchSize();
+        $this->maxExecutionTime = ConfigProvider::getCronMaxExecutionTime();
 
-        $this->state = new StateManager($this->getSyncName());
-        $this->logger = new SyncLogger($this->getSyncName());
+        $this->state = $state ?? new StateManager($this->getSyncName());
+        $this->logger = $logger ?? new SyncLogger($this->getSyncName());
+
+        // CLI runs have no web-request timeout; matching the legacy
+        // Batched*Sync helpers, default to unlimited mode under CLI so
+        // artificial batching doesn't slow down ad-hoc operator runs.
+        if ($this->isCliEnvironment()) {
+            $this->unlimited = true;
+        }
     }
 
     /**
@@ -169,11 +182,22 @@ abstract class AbstractBatchedSync implements SyncInterface
     }
 
     /**
-     * Get API instance
+     * Get the API kit for this sync.
      *
-     * @return NovotonApi
+     * Return type is deliberately narrowed to NovotonApiKitInterface —
+     * the concrete NovotonApi facade carries 29 @deprecated flat
+     * delegate methods, and subclasses must not reach for them.
+     * Route every call through a sub-client accessor:
+     *
+     *     $this->getApi()->hotels()->getHotelInfoBatch(...)
+     *     $this->getApi()->pricing()->getPriceInfo(...)
+     *     $this->getApi()->destinations()->getOffersUpdate(...)
+     *
+     * NovotonApi implements NovotonApiKitInterface (added in PR #4),
+     * so returning `$this->api` (a concrete NovotonApi instance) from
+     * this narrowed method is valid by covariance.
      */
-    protected function getApi(): NovotonApi
+    protected function getApi(): NovotonApiKitInterface
     {
         if ($this->api === null) {
             $srcDir = PathResolver::getPath('src');
@@ -220,6 +244,68 @@ abstract class AbstractBatchedSync implements SyncInterface
     protected function isLimitReached(): bool
     {
         return $this->isTimeLimitReached() || $this->isMemoryLimitReached();
+    }
+
+    /**
+     * Sleep between processed items to avoid hammering the upstream API.
+     *
+     * Overridable in subclasses (and unit-test doubles) to change the delay
+     * or skip it entirely. Default reads ConfigProvider::API_DELAY_MS.
+     */
+    protected function sleepBetweenItems(): void
+    {
+        usleep(ConfigProvider::API_DELAY_MS * 1000);
+    }
+
+    /**
+     * Hook called once per batch, right after it is loaded and before the
+     * per-item processing loop starts. Default is a no-op.
+     *
+     * Subclasses override this to pre-fetch auxiliary data for the whole
+     * batch in a single query — for example, a hotel-name map so every
+     * processItem() call doesn't re-query the database.
+     *
+     * @param array<int, string|int> $batch The item IDs in this batch
+     */
+    protected function preBatch(array $batch): void
+    {
+    }
+
+    /**
+     * Whether the base class should retry failed items once, after the
+     * normal per-item processing loop completes.
+     *
+     * Subclasses opt in by returning true. Retry runs exactly once per
+     * sync (guarded by the `retry_done` state flag), takes items from
+     * `state->load()['error_ids']`, feeds each back through processItem(),
+     * and sleeps sleepBetweenRetries() between attempts.
+     */
+    protected function shouldRetryFailedItems(): bool
+    {
+        return false;
+    }
+
+    /**
+     * Sleep between retry attempts.
+     *
+     * Default 500 ms, matching Constants::API_DELAY_BACKOFF used by the
+     * legacy Batched*Sync helpers this base class is slated to replace.
+     * Tests override this to skip the sleep entirely.
+     */
+    protected function sleepBetweenRetries(): void
+    {
+        usleep(500_000);
+    }
+
+    /**
+     * Whether the current process is running under the PHP CLI SAPI.
+     *
+     * Factored out as a protected method so unit tests can override it —
+     * PHP_SAPI itself is not mockable at runtime.
+     */
+    protected function isCliEnvironment(): bool
+    {
+        return PHP_SAPI === 'cli';
     }
 
     /**
@@ -347,6 +433,10 @@ abstract class AbstractBatchedSync implements SyncInterface
                 break;
             }
 
+            // Hook: subclasses can pre-fetch auxiliary data (e.g. hotel names)
+            // for the whole batch here to avoid N+1 queries inside processItem.
+            $this->preBatch($batch);
+
             // Accumulate counters per batch to avoid per-item file I/O
             $batchProcessed = 0;
             $batchSynced = 0;
@@ -387,7 +477,7 @@ abstract class AbstractBatchedSync implements SyncInterface
                 }
 
                 // Small delay to avoid API rate limits
-                usleep(ConfigProvider::API_DELAY_MS * 1000);
+                $this->sleepBetweenItems();
             }
 
             // Save state once per batch instead of per item
@@ -399,6 +489,9 @@ abstract class AbstractBatchedSync implements SyncInterface
 
         // Check if complete
         if ($offset >= $total) {
+            if ($this->shouldRetryFailedItems()) {
+                $this->retryFailedItems();
+            }
             return $this->completeSync();
         }
 
@@ -416,6 +509,78 @@ abstract class AbstractBatchedSync implements SyncInterface
             'errors_this_run' => $errorsThisRun,
             'estimated_runs_remaining' => $runsRemaining,
         ];
+    }
+
+    /**
+     * Retry every item currently in `state['error_ids']` once.
+     *
+     * Called from resumeSync() when the normal processing loop has
+     * reached offset >= total, only if the subclass returned true from
+     * shouldRetryFailedItems(). Guarded by the `retry_done` state flag so
+     * a resume after retry does not repeat the loop.
+     *
+     * Semantics match the legacy Batched*Sync helpers:
+     *   - recovered IDs are removed from error_ids
+     *   - synced counter increments by the number of recoveries
+     *   - errors counter decrements by the number of recoveries
+     *   - retry_done is set to true regardless of whether the retry
+     *     loop completed or exited early due to a resource limit
+     */
+    private function retryFailedItems(): void
+    {
+        $state = $this->state->load();
+
+        if (!empty($state['retry_done'])) {
+            return;
+        }
+
+        $errorIds = array_values(array_unique(array_map('strval', $state['error_ids'] ?? [])));
+
+        if (empty($errorIds)) {
+            $state['retry_done'] = true;
+            $this->state->save($state);
+            return;
+        }
+
+        $this->logger->output("\nRetrying " . count($errorIds) . " failed items...");
+
+        $recoveredIds = [];
+
+        foreach ($errorIds as $retryId) {
+            if ($this->isLimitReached()) {
+                $this->logger->output("Retry stopped early: resource limit reached.");
+                break;
+            }
+
+            $this->sleepBetweenRetries();
+
+            $result = $this->processItem($retryId);
+
+            if (!empty($result['success'])) {
+                $recoveredIds[] = $retryId;
+                $this->logger->output("  [{$retryId}] retry OK");
+            } else {
+                $msg = (string) ($result['message'] ?? '');
+                $this->logger->output("  [{$retryId}] retry failed" . ($msg !== '' ? ": {$msg}" : ''));
+            }
+        }
+
+        // Re-read state in case processItem() mutated it via side effects,
+        // then patch in the retry outcome.
+        $recoveredCount = count($recoveredIds);
+        $freshState = $this->state->load();
+        $freshState['synced']   = (int) ($freshState['synced'] ?? 0) + $recoveredCount;
+        $freshState['errors']   = max(0, (int) ($freshState['errors'] ?? 0) - $recoveredCount);
+        $freshState['error_ids'] = array_values(array_diff(
+            $freshState['error_ids'] ?? [],
+            $recoveredIds,
+        ));
+        $freshState['retry_done'] = true;
+        $this->state->save($freshState);
+
+        if ($recoveredCount > 0) {
+            $this->logger->output("Recovered {$recoveredCount} items on retry.");
+        }
     }
 
     /**

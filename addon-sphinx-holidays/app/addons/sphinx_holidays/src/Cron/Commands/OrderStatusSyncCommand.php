@@ -17,11 +17,13 @@ use Tygh\Addons\SphinxHolidays\Services\OrderStatusSyncService;
  */
 class OrderStatusSyncCommand extends AbstractSyncCommand
 {
+    #[\Override]
     public static function getDescription(): string
     {
         return 'Check Sphinx booking statuses via Orders API';
     }
 
+    #[\Override]
     public function execute(array $params = []): array
     {
         $api = Container::getApi();

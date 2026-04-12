@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays\Services;
 
+use Tygh\Addons\SphinxHolidays\Contracts\BookingRetryServiceInterface;
 use Tygh\Addons\SphinxHolidays\SphinxApi;
 use Tygh\Addons\SphinxHolidays\Repository\SphinxBookingRepository;
 use Tygh\Addons\TravelCore\TravelConstants;
@@ -16,7 +17,7 @@ use Tygh\Addons\TravelCore\TravelConstants;
  * @package SphinxHolidays
  * @since   1.2.0
  */
-class BookingRetryService
+class BookingRetryService implements BookingRetryServiceInterface
 {
     public function __construct(
         private readonly SphinxApi $api,
@@ -30,6 +31,7 @@ class BookingRetryService
      * @param int $bookingId The sphinx_bookings.booking_id
      * @return array{success: bool, message: string, booking_ref: string|null}
      */
+    #[\Override]
     public function retry(int $bookingId): array
     {
         $booking = $this->repo->findById($bookingId);
@@ -135,58 +137,28 @@ class BookingRetryService
      */
     private function submitBooking(string $type, string $offerId, float $price, string $currency, array $booking, array $guestsData): array
     {
-        switch ($type) {
-            case 'circuit':
-                $occupancy = \fn_sphinx_holidays_build_room_occupancy($guestsData, $booking);
-                $payload = [
-                    'offer_id' => $offerId,
-                    'price' => $price,
-                    'currency' => $currency,
-                    'occupancy' => $occupancy,
-                ];
-                if (!empty($booking['order_id'])) {
-                    $payload['reference_code'] = (string)$booking['order_id'];
-                }
-                return $this->api->bookCircuit($payload) ?: [];
+        // Experiences use a flat occupancy; everything else uses room-based
+        $occupancy = $type === 'experience'
+            ? \fn_sphinx_holidays_build_flat_occupancy($guestsData)
+            : \fn_sphinx_holidays_build_room_occupancy($guestsData, $booking);
 
-            case 'package':
-                $occupancy = \fn_sphinx_holidays_build_room_occupancy($guestsData, $booking);
-                $payload = [
-                    'offer_id' => $offerId,
-                    'price' => $price,
-                    'currency' => $currency,
-                    'occupancy' => $occupancy,
-                ];
-                if (!empty($booking['order_id'])) {
-                    $payload['reference_code'] = (string)$booking['order_id'];
-                }
-                return $this->api->bookPackage($payload) ?: [];
-
-            case 'experience':
-                $occupancy = \fn_sphinx_holidays_build_flat_occupancy($guestsData);
-                $payload = [
-                    'offer_id' => $offerId,
-                    'price' => $price,
-                    'currency' => $currency,
-                    'occupancy' => $occupancy,
-                ];
-                if (!empty($booking['order_id'])) {
-                    $payload['reference_code'] = (string)$booking['order_id'];
-                }
-                return $this->api->bookExperience($payload) ?: [];
-
-            default: // hotel
-                $occupancy = \fn_sphinx_holidays_build_room_occupancy($guestsData, $booking);
-                $payload = [
-                    'offer_id' => $offerId,
-                    'price' => $price,
-                    'currency' => $currency,
-                    'occupancy' => $occupancy,
-                ];
-                if (!empty($booking['order_id'])) {
-                    $payload['reference_code'] = (string)$booking['order_id'];
-                }
-                return $this->api->bookHotel($payload) ?: [];
+        $payload = [
+            'offer_id'  => $offerId,
+            'price'     => $price,
+            'currency'  => $currency,
+            'occupancy' => $occupancy,
+        ];
+        if (!empty($booking['order_id'])) {
+            $payload['reference_code'] = (string) $booking['order_id'];
         }
+
+        $result = match ($type) {
+            'circuit'    => $this->api->bookCircuit($payload),
+            'package'    => $this->api->bookPackage($payload),
+            'experience' => $this->api->bookExperience($payload),
+            default      => $this->api->bookHotel($payload),
+        };
+
+        return $result ?: [];
     }
 }

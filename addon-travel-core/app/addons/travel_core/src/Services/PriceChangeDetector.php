@@ -12,9 +12,10 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\TravelCore\Services;
 
+use Tygh\Addons\TravelCore\Contracts\PriceChangeDetectorInterface;
 use Tygh\Tygh;
 
-class PriceChangeDetector
+class PriceChangeDetector implements PriceChangeDetectorInterface
 {
     /** Default tolerance threshold (percentage). Changes below this are silent. */
     private const DEFAULT_TOLERANCE_PERCENT = 1.0;
@@ -33,6 +34,7 @@ class PriceChangeDetector
     /**
      * Analyse a price change and return structured display data.
      */
+    #[\Override]
     public function analyse(
         float  $oldPrice,
         float  $newPrice,
@@ -48,13 +50,11 @@ class PriceChangeDetector
         $tolerance   = $this->getTolerancePercent();
         $significant = $percent >= $tolerance && abs($difference) > self::MIN_ABSOLUTE_DIFFERENCE;
 
-        if ($difference > 0) {
-            $direction = 'increase';
-        } elseif ($difference < 0) {
-            $direction = 'decrease';
-        } else {
-            $direction = 'none';
-        }
+        $direction = match (true) {
+            $difference > 0 => 'increase',
+            $difference < 0 => 'decrease',
+            default         => 'none',
+        };
 
         $badgeType = 'none';
         if ($significant) {
@@ -79,6 +79,7 @@ class PriceChangeDetector
     /**
      * Check if a price change is significant enough to show to the user.
      */
+    #[\Override]
     public function isSignificant(float $oldPrice, float $newPrice): bool
     {
         if ($oldPrice <= 0) {
@@ -92,6 +93,7 @@ class PriceChangeDetector
     /**
      * Store a price change alert in the session.
      */
+    #[\Override]
     public function storeAlert(array $alertData, string $cartId = ''): void
     {
         $alerts = Tygh::$app['session'][self::SESSION_KEY] ?? [];
@@ -103,6 +105,7 @@ class PriceChangeDetector
     /**
      * Retrieve and clear all pending price change alerts from the session.
      */
+    #[\Override]
     public function consumeAlerts(): array
     {
         $alerts = Tygh::$app['session'][self::SESSION_KEY] ?? [];
@@ -113,6 +116,7 @@ class PriceChangeDetector
     /**
      * Retrieve pending alerts without clearing them.
      */
+    #[\Override]
     public function peekAlerts(): array
     {
         return Tygh::$app['session'][self::SESSION_KEY] ?? [];

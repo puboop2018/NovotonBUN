@@ -25,6 +25,9 @@ var/tmp/
 *.swo
 *~
 
+# Claude Code worktrees (temporary agent sandboxes)
+.claude/
+
 # Package Managers
 vendor/
 node_modules/

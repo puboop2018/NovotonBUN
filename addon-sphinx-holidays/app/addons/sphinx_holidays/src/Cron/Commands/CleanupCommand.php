@@ -10,11 +10,13 @@ namespace Tygh\Addons\SphinxHolidays\Cron\Commands;
  */
 class CleanupCommand extends AbstractSyncCommand
 {
+    #[\Override]
     public static function getDescription(): string
     {
         return 'Clean up orphan bookings, old sync logs, and expired cache entries';
     }
 
+    #[\Override]
     public function execute(array $params = []): array
     {
         $startMs = (int)(microtime(true) * 1000);

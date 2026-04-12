@@ -17,7 +17,7 @@ class DestinationRepository
      * Lightweight parent lookup cache: id → [name, type, parent_id].
      * Loaded once via loadParentLookup(), reused across resolveHierarchies() calls.
      *
-     * @var array<int, array{name: string, type: string, parent_id: int}>|null
+     * @var array<int, array{name: string, type: string, parent_id: int, country_code: string}>|null
      */
     private ?array $parentLookup = null;
 

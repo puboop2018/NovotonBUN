@@ -187,7 +187,7 @@ if ($mode === 'check_prices') {
         $grand_total_hotels += $total_hotels;
 
         $resorts = [];
-        $resort_list_response = $api->getResortList($country);
+        $resort_list_response = $api->destinations()->getResortList($country);
         if ($resort_list_response) {
             foreach ($resort_list_response->xpath('//Resort') as $r) {
                 $name = trim((string)$r);
@@ -221,7 +221,7 @@ if ($mode === 'check_prices') {
                 flush();
 
                 try {
-                    $xml = $api->getRoomPriceByResort([
+                    $xml = $api->pricing()->getRoomPriceByResort([
                         'resort'    => $resort_name,
                         'check_in'  => $check_in,
                         'check_out' => $check_out,
@@ -493,7 +493,7 @@ if ($mode === 'check_prices_hotel') {
 
             try {
                 // Use nocache to get fresh results
-                $result = $api->getRoomPrice([
+                $result = $api->pricing()->getRoomPrice([
                     'hotel_id'  => $hotel_id,
                     'check_in'  => $check_in,
                     'check_out' => $check_out,
@@ -619,8 +619,8 @@ if ($mode === 'room_price') {
                 'children' => is_array($_REQUEST['children'] ?? []) ? ($_REQUEST['children'] ?? []) : []
             ];
             
-            $result = $api->getRoomPrice($params);
-            
+            $result = $api->pricing()->getRoomPrice($params);
+
             Tygh::$app['view']->assign('result', $result);
             Tygh::$app['view']->assign('last_request', $api->getLastRequestFormatted());
             Tygh::$app['view']->assign('last_response', $api->getLastResponse());

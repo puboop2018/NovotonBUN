@@ -17,7 +17,7 @@ use Tygh\Addons\TravelCore\ValueObjects\RoomType;
  * @package NovotonHolidays
  * @since   3.4.0
  */
-class CartAssemblyService
+class CartAssemblyService implements CartAssemblyServiceInterface
 {
     /**
      * Assemble the full cart product array for a Novoton booking.
@@ -31,6 +31,7 @@ class CartAssemblyService
      * @param array $roomsData   Parsed rooms data
      * @return array Cart product entry with 'extra' containing all booking metadata
      */
+    #[\Override]
     public function assembleCartProduct(
         int $productId,
         int $bookingId,
@@ -118,6 +119,7 @@ class CartAssemblyService
      * @param array $guestsData Parsed guest data
      * @return array Enriched rooms data
      */
+    #[\Override]
     public function enrichRoomsData(array $roomsData, array $guestsData): array
     {
         foreach ($roomsData as $roomIdx => &$room) {
@@ -175,6 +177,7 @@ class CartAssemblyService
      * @param array $bookingData Additional data from form
      * @return array Cart extra array
      */
+    #[\Override]
     public function buildCartExtra(array $booking, array $bookingData): array
     {
         return [
