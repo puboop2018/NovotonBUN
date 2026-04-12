@@ -14,7 +14,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Services;
 
-class FeeCalculator
+class FeeCalculator implements FeeCalculatorInterface
 {
     private PriceInfoParser $parser;
 
@@ -29,6 +29,7 @@ class FeeCalculator
     /**
      * Calculate fees (extras_daily, handling_fee, company_fee, etc.)
      */
+    #[\Override]
     public function calculateFees(array $occupancy, string $checkIn, int $nights, string $roomId, string $boardId): array
     {
         $fees = [
@@ -93,6 +94,7 @@ class FeeCalculator
      *
      * @return array<string> Upper-cased, trimmed age-type strings (e.g. "ADULT", "3 RD ADULT", "CHD 2-11.99")
      */
+    #[\Override]
     public function collectSeasonPriceAgeTypes(string $roomId, string $boardId): array
     {
         static $ageTypeMap = [

@@ -21,7 +21,7 @@ use Tygh\Addons\TravelCore\TravelConstants;
 use Tygh\Addons\NovotonHolidays\Helpers\OutputWriterTrait;
 use Tygh\Addons\NovotonHolidays\Repository\CacheRepository;
 
-class AdminCronService
+class AdminCronService implements AdminCronServiceInterface
 {
     use OutputWriterTrait;
 
@@ -39,6 +39,7 @@ class AdminCronService
      *
      * @return array{success: bool, message: string}
      */
+    #[\Override]
     public function syncHotels(): array
     {
         $countries = fn_novoton_holidays_parse_countries();
@@ -86,6 +87,7 @@ class AdminCronService
      *
      * @return array{success: bool, message: string}
      */
+    #[\Override]
     public function checkPrices(): array
     {
         $hotelRepo = $this->container->hotelRepository();
@@ -130,6 +132,7 @@ class AdminCronService
      *
      * @return array{success: bool, message: string}
      */
+    #[\Override]
     public function syncFacilities(): array
     {
         $response = $this->api->hotels()->listFacilities();
@@ -164,6 +167,7 @@ class AdminCronService
      * @param int      $limit    Max hotels per country
      * @return array{success: bool, message: string}
      */
+    #[\Override]
     public function addProducts(array $countries, int $limit): array
     {
         $hotelRepo   = $this->container->hotelRepository();
@@ -241,6 +245,7 @@ class AdminCronService
      *
      * @return array{success: bool, message: string}
      */
+    #[\Override]
     public function checkOffers(string $country): array
     {
         $syncLogRepo = $this->container->syncLogRepository();
@@ -270,6 +275,7 @@ class AdminCronService
      * @param string $type "requests" or "bookings"
      * @return array{success: bool, message: string}
      */
+    #[\Override]
     public function checkAlternatives(string $type): array
     {
         if ($type === 'requests') {
@@ -295,6 +301,7 @@ class AdminCronService
      *
      * @return array{success: bool, message: string}
      */
+    #[\Override]
     public function notifyAlternatives(): array
     {
         $altRequestRepo = $this->container->alternativeRequestRepository();
@@ -315,6 +322,7 @@ class AdminCronService
      *
      * @return array{success: bool, message: string}
      */
+    #[\Override]
     public function cleanup(): array
     {
         $bookingRepo = $this->container->bookingRepository();
@@ -338,6 +346,7 @@ class AdminCronService
      * @param int $days Requests older than this many days are expired
      * @return array{success: bool, message: string}
      */
+    #[\Override]
     public function expireRequests(int $days): array
     {
         $altRequestRepo = $this->container->alternativeRequestRepository();
