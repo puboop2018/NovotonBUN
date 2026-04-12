@@ -64,7 +64,7 @@ class PriceInfoService implements PriceInfoServiceInterface
      * @param string $hotelId Hotel ID
      * @param string $packageName Package name
      * @param string $lang Language
-     * @return array|null Parsed price info
+     * @return array<string, mixed>|null Parsed price info
      */
     public function getPriceInfo(string $hotelId, string $packageName, string $lang = 'UK'): ?array
     {
@@ -255,7 +255,7 @@ class PriceInfoService implements PriceInfoServiceInterface
      *
      * @param string $hotelId Hotel ID
      * @param string|null $date Date to check (default: today)
-     * @return array|null Active discount or null
+     * @return array<string, mixed>|null Active discount or null
      */
     public function getActiveEarlyBooking(string $hotelId, ?string $date = null): ?array
     {
@@ -505,8 +505,8 @@ class PriceInfoService implements PriceInfoServiceInterface
      *
      * Picks the minimum total across all rooms for each season.
      *
-     * @param array $seasonPrices season_price rows
-     * @param array $seasons      seasons array
+     * @param array<string, mixed> $seasonPrices season_price rows
+     * @param array<string, mixed> $seasons      seasons array
      * @param int   $adults       number of adults
      * @return array [seasonNum => cheapestRoomTotal]
      */
@@ -639,7 +639,7 @@ class PriceInfoService implements PriceInfoServiceInterface
     /**
      * Extract prices from priceinfo response
      *
-     * @param array $priceinfo Priceinfo data
+     * @param array<string, mixed> $priceinfo Priceinfo data
      * @return array Prices grouped by room
      */
     private function extractPricesFromPriceInfo(array $priceinfo): array
@@ -660,7 +660,7 @@ class PriceInfoService implements PriceInfoServiceInterface
     /**
      * Format priceinfo for display
      *
-     * @param array $priceinfo Raw priceinfo data
+     * @param array<string, mixed> $priceinfo Raw priceinfo data
      * @param string $hotelId Hotel ID
      * @return array Formatted priceinfo
      */
@@ -707,7 +707,7 @@ class PriceInfoService implements PriceInfoServiceInterface
     /**
      * Group prices by room
      *
-     * @param array $prices Array of price records
+     * @param array<string, mixed> $prices Array of price records
      * @return array Prices grouped by room
      */
     private function groupPricesByRoom(array $prices): array
@@ -746,7 +746,7 @@ class PriceInfoService implements PriceInfoServiceInterface
      * Log debug message
      *
      * @param string $message Message
-     * @param array $context Context data
+     * @param array<string, mixed> $context Context data
      */
     private function log(string $message, array $context = []): void
     {

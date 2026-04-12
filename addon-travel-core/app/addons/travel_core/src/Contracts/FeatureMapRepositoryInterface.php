@@ -16,7 +16,7 @@ interface FeatureMapRepositoryInterface
     /**
      * Find a mapping by alias match (exact > prefix > contains priority).
      *
-     * @return array|null Mapping row with map_id, feature_type, canonical_code, display names, variant info
+     * @return array<string, mixed>|null Mapping row with map_id, feature_type, canonical_code, display names, variant info
      */
     public function findByAlias(string $apiSource, string $featureType, string $apiValue): ?array;
 

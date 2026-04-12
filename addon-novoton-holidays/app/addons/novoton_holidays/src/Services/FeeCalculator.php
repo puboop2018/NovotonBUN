@@ -136,7 +136,7 @@ class FeeCalculator implements FeeCalculatorInterface
     /**
      * Calculate extras_daily fees
      *
-     * @param array $seasonAgeTypes Resolved IdAge values from season_price for the booked room/board.
+     * @param array<string, mixed> $seasonAgeTypes Resolved IdAge values from season_price for the booked room/board.
      *                              Entries whose IdAge does not correlate are skipped.
      */
     private function calculateExtrasDaily(array $occupancy, string $checkIn, int $nights, array $seasonAgeTypes = []): float
@@ -198,7 +198,7 @@ class FeeCalculator implements FeeCalculatorInterface
     /**
      * Calculate handling_fee
      *
-     * @param array $seasonAgeTypes Resolved IdAge values from season_price for the booked room/board.
+     * @param array<string, mixed> $seasonAgeTypes Resolved IdAge values from season_price for the booked room/board.
      *                              Only handling_fee entries whose IdAge correlates with one of these
      *                              are considered.
      */

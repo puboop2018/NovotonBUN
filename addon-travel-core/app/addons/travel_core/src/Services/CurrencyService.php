@@ -107,7 +107,7 @@ class CurrencyService implements CurrencyServiceInterface
     /**
      * Convert all price fields in a search results array from API currency to display currency.
      *
-     * @param array $results Search results array
+     * @param array<string, mixed> $results Search results array
      * @return array Results with converted prices
      */
     #[\Override]

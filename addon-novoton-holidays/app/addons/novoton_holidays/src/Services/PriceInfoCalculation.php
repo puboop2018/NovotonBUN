@@ -89,7 +89,7 @@ class PriceInfoCalculation implements PriceInfoCalculationInterface
     /**
      * Calculate price for a booking
      *
-     * @param array $params Calculation parameters:
+     * @param array<string, mixed> $params Calculation parameters:
      *   - hotel_id: Hotel ID
      *   - package_name: Package name
      *   - check_in: Check-in date (Y-m-d)

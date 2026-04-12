@@ -17,7 +17,7 @@ interface PriceInfoCalculationInterface
     /**
      * Calculate price for a booking.
      *
-     * @param array $params Calculation parameters:
+     * @param array<string, mixed> $params Calculation parameters:
      *   - hotel_id: Hotel ID
      *   - package_name: Package name
      *   - check_in: Check-in date (Y-m-d)
@@ -41,7 +41,7 @@ interface PriceInfoCalculationInterface
     /**
      * Get debug log.
      *
-     * @return array
+     * @return array<string, mixed>
      */
     public function getDebugLog(): array;
 
@@ -50,7 +50,7 @@ interface PriceInfoCalculationInterface
      *
      * @param string $checkIn
      * @param int    $nights
-     * @return array
+     * @return array<string, mixed>
      */
     public function verifySeasonPriceMapping(string $checkIn, int $nights): array;
 
@@ -59,7 +59,7 @@ interface PriceInfoCalculationInterface
      *
      * @param string $roomId
      * @param string $boardId
-     * @return array
+     * @return array<string, mixed>
      */
     public function getSamplePrices(string $roomId, string $boardId): array;
 

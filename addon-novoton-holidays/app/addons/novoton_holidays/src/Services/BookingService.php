@@ -69,7 +69,7 @@ class BookingService implements BookingServiceInterface
     /**
      * Create a new booking record
      * 
-     * @param array $bookingData Booking data from form
+     * @param array<string, mixed> $bookingData Booking data from form
      * @param int $product_id Associated product ID
      * @return int Booking ID
      */
@@ -158,7 +158,7 @@ class BookingService implements BookingServiceInterface
      * Update existing booking
      * 
      * @param int $booking_id Booking ID
-     * @param array $data Data to update
+     * @param array<string, mixed> $data Data to update
      * @return bool Success
      */
     public function updateBooking(int $booking_id, array $data): bool
@@ -178,7 +178,7 @@ class BookingService implements BookingServiceInterface
      * Get booking by ID
      * 
      * @param int $booking_id Booking ID
-     * @return array|null Booking data
+     * @return array<string, mixed>|null Booking data
      */
     public function getBooking(int $booking_id): ?array
     {
@@ -222,7 +222,7 @@ class BookingService implements BookingServiceInterface
      * 
      * @param int $booking_id Booking ID
      * @param int $product_id Product ID
-     * @param array $bookingData Additional booking data
+     * @param array<string, mixed> $bookingData Additional booking data
      * @return bool Success
      */
     public function addToCart(int $booking_id, int $product_id, array $bookingData): bool
@@ -261,7 +261,7 @@ class BookingService implements BookingServiceInterface
     /**
      * Parse rooms data from booking form
      * 
-     * @param array $bookingData Form data
+     * @param array<string, mixed> $bookingData Form data
      * @return array Parsed rooms data
      */
     public function parseRoomsData(array $bookingData): array
@@ -288,7 +288,7 @@ class BookingService implements BookingServiceInterface
      * validates that a price is returned, applies commission, and
      * extracts terms of payment/cancellation from the response.
      *
-     * @param array $params {hotel_id, room_id, board_id, check_in, check_out, adults, children_ages: int[]}
+     * @param array<string, mixed> $params {hotel_id, room_id, board_id, check_in, check_out, adults, children_ages: int[]}
      * @return array{success: bool, total_price: float, base_price: float, terms_of_payment: string, terms_of_cancellation: string, remark: string, important: string, error: string}
      */
     public function verifyPrice(array $params): array
@@ -304,11 +304,11 @@ class BookingService implements BookingServiceInterface
      *
      * @param int $productId CS-Cart product ID
      * @param int $bookingId Novoton booking ID
-     * @param array $bookingData Raw form data
-     * @param array $hotelInfo Hotel data from repository
-     * @param array $guestsData Parsed guest data
-     * @param array $priceResult Result from verifyPrice()
-     * @param array $roomsData Parsed rooms data
+     * @param array<string, mixed> $bookingData Raw form data
+     * @param array<string, mixed> $hotelInfo Hotel data from repository
+     * @param array<string, mixed> $guestsData Parsed guest data
+     * @param array<string, mixed> $priceResult Result from verifyPrice()
+     * @param array<string, mixed> $roomsData Parsed rooms data
      * @return array Cart product entry with 'extra' containing all booking metadata
      */
     public function assembleCartProduct(
@@ -331,8 +331,8 @@ class BookingService implements BookingServiceInterface
      * Adds children_ages_str and room_type_display to each room entry,
      * and syncs children ages from guest form data back to rooms.
      *
-     * @param array $roomsData Rooms data array
-     * @param array $guestsData Parsed guest data
+     * @param array<string, mixed> $roomsData Rooms data array
+     * @param array<string, mixed> $guestsData Parsed guest data
      * @return array Enriched rooms data
      */
     public function enrichRoomsData(array $roomsData, array $guestsData): array
@@ -364,7 +364,7 @@ class BookingService implements BookingServiceInterface
      * Log debug message
      *
      * @param string $message Message
-     * @param array $context Context
+     * @param array<string, mixed> $context Context
      */
     private function log(string $message, array $context = []): void
     {

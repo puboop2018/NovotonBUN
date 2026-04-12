@@ -61,7 +61,7 @@ interface SearchServiceInterface
     /**
      * Calculate discount range from a list of early booking discounts.
      *
-     * @param array $discounts From getEarlyBookingDiscounts()
+     * @param array<string, mixed> $discounts From getEarlyBookingDiscounts()
      * @return array {min, max, all} or empty
      */
     public static function getDiscountRange(array $discounts): array;
@@ -69,7 +69,7 @@ interface SearchServiceInterface
     /**
      * Deduplicate results, keeping the lowest price for each room/board/package.
      *
-     * @param array $results
+     * @param array<string, mixed> $results
      * @return array Deduplicated results (re-indexed)
      */
     public static function deduplicateResults(array $results): array;

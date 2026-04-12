@@ -24,7 +24,7 @@ interface GuestDataNormalizerInterface
      * Decode a JSON string or pass through an array unchanged.
      *
      * @param array|string $raw
-     * @return array
+     * @return array<string, mixed>
      */
     public function decode(array|string $raw): array;
 
@@ -43,7 +43,7 @@ interface GuestDataNormalizerInterface
      *
      * Keyed format uses string keys matching "room{N}_{type}_{I}".
      *
-     * @param array $data
+     * @param array<string, mixed> $data
      * @return bool
      */
     public function isKeyedFormat(array $data): bool;
@@ -53,7 +53,7 @@ interface GuestDataNormalizerInterface
      *
      * Array format uses sequential numeric keys with guest entries.
      *
-     * @param array $data
+     * @param array<string, mixed> $data
      * @return bool
      */
     public function isArrayFormat(array $data): bool;

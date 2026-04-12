@@ -25,9 +25,9 @@ class BookingDisplayService implements BookingDisplayServiceInterface
      *   - 'board_name_formatter' (callable) Board name formatter: fn(string): string (default: null)
      *   - 'room_name_formatter'  (callable) Room name formatter: fn(array room_data): string (default: null)
      *
-     * @param array $product Cart product (by reference)
+     * @param array<string, mixed> $product Cart product (by reference)
      * @param array|null $cart Cart data
-     * @param array $config Provider-specific configuration overrides
+     * @param array<string, mixed> $config Provider-specific configuration overrides
      */
     #[\Override]
     public static function addBookingDisplayData(array &$product, ?array $cart = null, array $config = []): void
@@ -162,7 +162,7 @@ class BookingDisplayService implements BookingDisplayServiceInterface
      * Build room display string for multi-room bookings.
      *
      * @param string $defaultName Default room name
-     * @param array $rooms_data Per-room data
+     * @param array<string, mixed> $rooms_data Per-room data
      * @param callable|null $formatter Optional formatter: fn(array $room): string
      */
     private static function buildMultiRoomDisplay(string $defaultName, array $rooms_data, ?callable $formatter = null): string
@@ -194,7 +194,7 @@ class BookingDisplayService implements BookingDisplayServiceInterface
      * Build board display string for multi-room bookings.
      *
      * @param string $defaultBoard Default board name
-     * @param array $rooms_data Per-room data
+     * @param array<string, mixed> $rooms_data Per-room data
      * @param callable|null $formatter Optional formatter: fn(string $boardId): string
      */
     private static function buildMultiBoardDisplay(string $defaultBoard, array $rooms_data, ?callable $formatter = null): string

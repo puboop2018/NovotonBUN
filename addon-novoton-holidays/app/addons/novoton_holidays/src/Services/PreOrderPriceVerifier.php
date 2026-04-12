@@ -34,7 +34,7 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
     /**
      * Verify all Novoton booking products in the cart against live API prices.
      *
-     * @param array $cart CS-Cart cart array
+     * @param array<string, mixed> $cart CS-Cart cart array
      * @return array{allow: bool, corrections: array, notifications: array}
      *   - allow: always true (we correct, never block)
      *   - corrections: cart_id => ['api_price' => float, 'api_price_raw' => float]
@@ -164,10 +164,10 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
     /**
      * Look up the session price cache written by add_to_cart.
      *
-     * @param array $extra   Cart product extra data
+     * @param array<string, mixed> $extra   Cart product extra data
      * @param int[] $childrenAges Parsed children ages
      * @param int   $ttl     Max age in seconds
-     * @return array|null    Cached entry or null if miss/stale
+     * @return array<string, mixed>|null    Cached entry or null if miss/stale
      */
     private function getCachedPrice(array $extra, array $childrenAges, int $ttl): ?array
     {

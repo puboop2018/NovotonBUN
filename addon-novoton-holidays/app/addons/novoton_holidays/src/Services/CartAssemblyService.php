@@ -24,11 +24,11 @@ class CartAssemblyService implements CartAssemblyServiceInterface
      *
      * @param int   $productId   CS-Cart product ID
      * @param int   $bookingId   Novoton booking ID
-     * @param array $bookingData Raw form data
-     * @param array $hotelInfo   Hotel data from repository
-     * @param array $guestsData  Parsed guest data
-     * @param array $priceResult Result from verifyPrice()
-     * @param array $roomsData   Parsed rooms data
+     * @param array<string, mixed> $bookingData Raw form data
+     * @param array<string, mixed> $hotelInfo   Hotel data from repository
+     * @param array<string, mixed> $guestsData  Parsed guest data
+     * @param array<string, mixed> $priceResult Result from verifyPrice()
+     * @param array<string, mixed> $roomsData   Parsed rooms data
      * @return array Cart product entry with 'extra' containing all booking metadata
      */
     #[\Override]
@@ -115,8 +115,8 @@ class CartAssemblyService implements CartAssemblyServiceInterface
      * Adds children_ages_str and room_type_display to each room entry,
      * and syncs children ages from guest form data back to rooms.
      *
-     * @param array $roomsData  Rooms data array
-     * @param array $guestsData Parsed guest data
+     * @param array<string, mixed> $roomsData  Rooms data array
+     * @param array<string, mixed> $guestsData Parsed guest data
      * @return array Enriched rooms data
      */
     #[\Override]
@@ -173,8 +173,8 @@ class CartAssemblyService implements CartAssemblyServiceInterface
      *
      * Used by addToCart() for the simpler path (existing booking → cart).
      *
-     * @param array $booking     Booking record from DB
-     * @param array $bookingData Additional data from form
+     * @param array<string, mixed> $booking     Booking record from DB
+     * @param array<string, mixed> $bookingData Additional data from form
      * @return array Cart extra array
      */
     #[\Override]

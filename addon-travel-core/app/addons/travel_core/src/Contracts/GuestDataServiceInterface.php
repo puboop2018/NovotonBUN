@@ -18,7 +18,7 @@ interface GuestDataServiceInterface extends GuestParserInterface, GuestDisplayIn
     /**
      * Get guests grouped by room
      *
-     * @param array $guests_data Guests data
+     * @param array<string, mixed> $guests_data Guests data
      * @return array Guests by room [room_num => [guests]]
      */
     public function getGuestsByRoom(array $guests_data): array;
@@ -26,7 +26,7 @@ interface GuestDataServiceInterface extends GuestParserInterface, GuestDisplayIn
     /**
      * Get guest counts per room
      *
-     * @param array $guests_data Guests data
+     * @param array<string, mixed> $guests_data Guests data
      * @return array Room counts [room_num => [adults, children]]
      */
     public function getRoomCounts(array $guests_data): array;
@@ -34,7 +34,7 @@ interface GuestDataServiceInterface extends GuestParserInterface, GuestDisplayIn
     /**
      * Merge guest data from multiple sources
      *
-     * @param array $sources Array of guest data sources
+     * @param array<string, mixed> $sources Array of guest data sources
      * @return array Merged guests data
      */
     public function merge(array ...$sources): array;
@@ -42,7 +42,7 @@ interface GuestDataServiceInterface extends GuestParserInterface, GuestDisplayIn
     /**
      * Parse date of birth from guest form data.
      *
-     * @param array $guest Guest form data
+     * @param array<string, mixed> $guest Guest form data
      * @return string YYYY-MM-DD or '' if invalid/missing
      */
     public static function parseDob(array $guest): string;
@@ -53,7 +53,7 @@ interface GuestDataServiceInterface extends GuestParserInterface, GuestDisplayIn
      * @param array  $guests   Raw guests array from form
      * @param string $checkIn  Check-in date for child age validation
      * @param string $provider Provider name for log messages
-     * @return array|false Parsed result or false if validation fails
+     * @return array<string, mixed>|false Parsed result or false if validation fails
      */
     public static function parseAndValidateGuests(
         array $guests,

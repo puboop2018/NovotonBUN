@@ -214,8 +214,8 @@ class CronService implements CronServiceInterface
     /**
      * Send alternatives notification email
      *
-     * @param array $request Original request
-     * @param array $alternatives Found alternatives
+     * @param array<string, mixed> $request Original request
+     * @param array<string, mixed> $alternatives Found alternatives
      */
     private function sendAlternativesEmail(array $request, array $alternatives): void
     {
@@ -235,8 +235,8 @@ class CronService implements CronServiceInterface
     /**
      * Format alternatives email body
      *
-     * @param array $request Original request
-     * @param array $alternatives Found alternatives
+     * @param array<string, mixed> $request Original request
+     * @param array<string, mixed> $alternatives Found alternatives
      * @return string Email body
      */
     private function formatAlternativesEmail(array $request, array $alternatives): string
@@ -258,7 +258,7 @@ class CronService implements CronServiceInterface
     /**
      * Get countries configured for sync
      *
-     * @return array
+     * @return array<string, mixed>
      */
     public function getCountries(): array
     {

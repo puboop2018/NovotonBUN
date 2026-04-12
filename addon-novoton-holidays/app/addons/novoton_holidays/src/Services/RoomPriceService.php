@@ -90,7 +90,7 @@ class RoomPriceService implements RoomPriceServiceInterface
     /**
      * Calculate total price for rooms
      * 
-     * @param array $rooms_data Rooms with prices
+     * @param array<string, mixed> $rooms_data Rooms with prices
      * @return float Total price
      */
     public function calculateTotal(array $rooms_data): float
@@ -140,8 +140,8 @@ class RoomPriceService implements RoomPriceServiceInterface
     /**
      * Get room price from API
      * 
-     * @param array $params Price request parameters
-     * @return array|null Price data [price, base_price, availability]
+     * @param array<string, mixed> $params Price request parameters
+     * @return array<string, mixed>|null Price data [price, base_price, availability]
      */
     public function getRoomPrice(array $params): ?array
     {
@@ -182,7 +182,7 @@ class RoomPriceService implements RoomPriceServiceInterface
     /**
      * Get multiple room prices
      * 
-     * @param array $rooms_params Array of room parameters
+     * @param array<string, mixed> $rooms_params Array of room parameters
      * @return array Prices by room index
      */
     public function getMultipleRoomPrices(array $rooms_params): array
@@ -344,7 +344,7 @@ class RoomPriceService implements RoomPriceServiceInterface
     /**
      * Build cache key for price request
      * 
-     * @param array $params Request parameters
+     * @param array<string, mixed> $params Request parameters
      * @return string Cache key
      */
     private function buildCacheKey(array $params): string
@@ -366,7 +366,7 @@ class RoomPriceService implements RoomPriceServiceInterface
      * Log debug message
      * 
      * @param string $message Message
-     * @param array $context Context
+     * @param array<string, mixed> $context Context
      */
     private function log(string $message, array $context = []): void
     {

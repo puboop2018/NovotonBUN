@@ -40,7 +40,7 @@ class HotelAvailabilitySearcher implements HotelAvailabilitySearcherInterface
     /**
      * Search a specific hotel for room availability.
      *
-     * @param array $params Normalized params from SearchParameterNormalizer
+     * @param array<string, mixed> $params Normalized params from SearchParameterNormalizer
      * @return array{
      *   results: array,
      *   all_room_results: array,

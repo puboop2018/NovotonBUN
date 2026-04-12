@@ -205,7 +205,7 @@ class DiagnosticsService implements DiagnosticsServiceInterface
     /**
      * Test room price API call.
      *
-     * @param array $params {hotel_id, room_id, board_id, check_in, check_out, adults}
+     * @param array<string, mixed> $params {hotel_id, room_id, board_id, check_in, check_out, adults}
      * @return array{
      *   success: bool,
      *   result: mixed,
@@ -278,7 +278,7 @@ class DiagnosticsService implements DiagnosticsServiceInterface
     /**
      * Test availability search API call.
      *
-     * @param array $params {hotel_id?, check_in, check_out, adults, children}
+     * @param array<string, mixed> $params {hotel_id?, check_in, check_out, adults, children}
      * @return array{success: bool, results: array, count: int, error: string}
      */
     public function testSearch(array $params): array

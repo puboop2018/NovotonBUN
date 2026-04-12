@@ -65,7 +65,7 @@ class GuestDataNormalizer implements GuestDataNormalizerInterface
      * Decode a JSON string or pass through an array unchanged.
      *
      * @param array|string $raw
-     * @return array
+     * @return array<string, mixed>
      */
     #[\Override]
     public function decode($raw): array
@@ -98,7 +98,7 @@ class GuestDataNormalizer implements GuestDataNormalizerInterface
      *
      * Keyed format uses string keys matching "room{N}_{type}_{I}".
      *
-     * @param array $data
+     * @param array<string, mixed> $data
      * @return bool
      */
     #[\Override]
@@ -126,7 +126,7 @@ class GuestDataNormalizer implements GuestDataNormalizerInterface
      *
      * Array format uses sequential numeric keys with guest entries.
      *
-     * @param array $data
+     * @param array<string, mixed> $data
      * @return bool
      */
     #[\Override]
@@ -153,7 +153,7 @@ class GuestDataNormalizer implements GuestDataNormalizerInterface
      *
      * Groups guests by room, then assigns keys like "room1_adult_1".
      *
-     * @param array $guests Indexed array of guest entries
+     * @param array<string, mixed> $guests Indexed array of guest entries
      * @return array Canonical keyed array
      */
     private function convertArrayToKeyed(array $guests): array
@@ -211,7 +211,7 @@ class GuestDataNormalizer implements GuestDataNormalizerInterface
     /**
      * Ensure all guest entries have the full set of canonical fields.
      *
-     * @param array $data Keyed guest data
+     * @param array<string, mixed> $data Keyed guest data
      * @return array Keyed guest data with all fields populated
      */
     private function ensureFields(array $data): array
@@ -235,7 +235,7 @@ class GuestDataNormalizer implements GuestDataNormalizerInterface
      * If api_name is missing, build it from first_name + last_name.
      * If first_name/last_name are missing, try to parse from name/api_name.
      *
-     * @param array $guest Single guest entry
+     * @param array<string, mixed> $guest Single guest entry
      * @return array Guest entry with derived name fields
      */
     private static function deriveNameFields(array $guest): array

@@ -56,7 +56,7 @@ class SearchService implements SearchServiceInterface
     /**
      * Parse search parameters from request
      * 
-     * @param array $request Request parameters
+     * @param array<string, mixed> $request Request parameters
      * @return array Normalized search parameters
      */
     public function parseSearchParams(array $request): array
@@ -109,7 +109,7 @@ class SearchService implements SearchServiceInterface
     /**
      * Parse children ages from request
      * 
-     * @param array $request Request data
+     * @param array<string, mixed> $request Request data
      * @param int $children_count Number of children
      * @return array Children ages
      */
@@ -130,7 +130,7 @@ class SearchService implements SearchServiceInterface
     /**
      * Calculate totals from rooms data
      * 
-     * @param array $rooms_data Rooms configuration
+     * @param array<string, mixed> $rooms_data Rooms configuration
      * @return array Totals [adults, children, ages]
      */
     public function calculateRoomTotals(array $rooms_data): array
@@ -175,7 +175,7 @@ class SearchService implements SearchServiceInterface
      * Build cache key for search
      * 
      * @param string $prefix Key prefix
-     * @param array $params Parameters to hash
+     * @param array<string, mixed> $params Parameters to hash
      * @return string Cache key
      */
     private function buildCacheKey(string $prefix, array $params): string
@@ -496,7 +496,7 @@ class SearchService implements SearchServiceInterface
     /**
      * Calculate discount range from a list of early booking discounts.
      *
-     * @param array $discounts From getEarlyBookingDiscounts()
+     * @param array<string, mixed> $discounts From getEarlyBookingDiscounts()
      * @return array {min, max, all} or empty
      */
     public static function getDiscountRange(array $discounts): array
@@ -527,7 +527,7 @@ class SearchService implements SearchServiceInterface
      * a single row: the standard (non-extras) entry is kept as the base, and
      * the promotional price / label are attached as extras_price / extras_label.
      *
-     * @param array $results
+     * @param array<string, mixed> $results
      * @return array Deduplicated results (re-indexed)
      */
     public static function deduplicateResults(array $results): array
@@ -583,7 +583,7 @@ class SearchService implements SearchServiceInterface
      * Log debug message
      *
      * @param string $message Log message
-     * @param array $context Additional context
+     * @param array<string, mixed> $context Additional context
      */
     private function log(string $message, array $context = []): void
     {

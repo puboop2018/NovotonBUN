@@ -238,8 +238,8 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
     /**
      * Build the placeholder map for SEO template rendering from Sphinx hotel data.
      *
-     * @param array $hotel     Hotel row from sphinx_hotels table
-     * @param array $hierarchy Destination hierarchy (country, region, city)
+     * @param array<string, mixed> $hotel     Hotel row from sphinx_hotels table
+     * @param array<string, mixed> $hierarchy Destination hierarchy (country, region, city)
      * @return array<string, string|array> Key => value map (keys without braces)
      */
     public static function buildPlaceholders(array $hotel, array $hierarchy = []): array

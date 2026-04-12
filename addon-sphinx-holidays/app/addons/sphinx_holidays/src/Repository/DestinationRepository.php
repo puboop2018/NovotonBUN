@@ -24,7 +24,7 @@ class DestinationRepository
     /**
      * Upsert a batch of destinations (INSERT ... ON DUPLICATE KEY UPDATE).
      *
-     * @param array $destinations Array of destination rows, each with keys matching DB columns
+     * @param array<string, mixed> $destinations Array of destination rows, each with keys matching DB columns
      * @return int Number of rows affected
      */
     public function upsertBatch(array $destinations): int

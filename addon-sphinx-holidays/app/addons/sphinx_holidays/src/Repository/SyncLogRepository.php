@@ -14,7 +14,7 @@ class SyncLogRepository
      * Get recent sync log entries, ordered by most recent first.
      *
      * @param int $limit Maximum number of entries to return
-     * @return array
+     * @return array<string, mixed>
      */
     public function getRecent(int $limit = 10): array
     {

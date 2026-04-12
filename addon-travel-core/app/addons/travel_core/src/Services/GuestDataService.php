@@ -27,7 +27,7 @@ class GuestDataService implements GuestDataServiceInterface
      * Accepts any supported format (keyed, indexed-array, or JSON string)
      * and always returns canonical keyed format via GuestDataNormalizer.
      *
-     * @param array $bookingData Booking form data
+     * @param array<string, mixed> $bookingData Booking form data
      * @return array Parsed guests data in canonical keyed format
      */
     #[\Override]
@@ -52,7 +52,7 @@ class GuestDataService implements GuestDataServiceInterface
     /**
      * Format name for API (FirstName LastName)
      *
-     * @param array $guest Guest data
+     * @param array<string, mixed> $guest Guest data
      * @return string Formatted API name
      */
     #[\Override]
@@ -78,7 +78,7 @@ class GuestDataService implements GuestDataServiceInterface
     /**
      * Build comma-separated guest list
      *
-     * @param array $guests_data Guests data (keyed array)
+     * @param array<string, mixed> $guests_data Guests data (keyed array)
      * @return string Guest list
      */
     #[\Override]
@@ -101,8 +101,8 @@ class GuestDataService implements GuestDataServiceInterface
     /**
      * Get holder name from guests data
      *
-     * @param array $guests_data Guests data
-     * @param array $bookingData Fallback booking data
+     * @param array<string, mixed> $guests_data Guests data
+     * @param array<string, mixed> $bookingData Fallback booking data
      * @return string Holder name
      */
     #[\Override]
@@ -143,7 +143,7 @@ class GuestDataService implements GuestDataServiceInterface
     /**
      * Get guests grouped by room
      *
-     * @param array $guests_data Guests data
+     * @param array<string, mixed> $guests_data Guests data
      * @return array Guests by room [room_num => [guests]]
      */
     #[\Override]
@@ -178,7 +178,7 @@ class GuestDataService implements GuestDataServiceInterface
     /**
      * Get guest counts per room
      *
-     * @param array $guests_data Guests data
+     * @param array<string, mixed> $guests_data Guests data
      * @return array Room counts [room_num => [adults, children]]
      */
     #[\Override]
@@ -211,7 +211,7 @@ class GuestDataService implements GuestDataServiceInterface
     /**
      * Format guests for display
      *
-     * @param array $guests_data Guests data
+     * @param array<string, mixed> $guests_data Guests data
      * @return array Display-formatted guests
      */
     #[\Override]
@@ -244,7 +244,7 @@ class GuestDataService implements GuestDataServiceInterface
     /**
      * Validate guests data
      *
-     * @param array $guests_data Guests data
+     * @param array<string, mixed> $guests_data Guests data
      * @param int $expected_adults Expected adult count
      * @param int $expected_children Expected children count
      * @return array Validation result [valid, errors]
@@ -362,7 +362,7 @@ class GuestDataService implements GuestDataServiceInterface
     /**
      * Merge guest data from multiple sources
      *
-     * @param array $sources Array of guest data sources
+     * @param array<string, mixed> $sources Array of guest data sources
      * @return array Merged guests data
      */
     #[\Override]
@@ -401,7 +401,7 @@ class GuestDataService implements GuestDataServiceInterface
      *   - $guest['dob_day'] + $guest['dob_month'] + $guest['dob_year'] (component)
      *   - $guest['birthday'] as YYYY-MM-DD
      *
-     * @param array $guest Guest form data
+     * @param array<string, mixed> $guest Guest form data
      * @return string YYYY-MM-DD or '' if invalid/missing
      */
     #[\Override]
@@ -476,7 +476,7 @@ class GuestDataService implements GuestDataServiceInterface
      * @param array  $guests   Raw guests array from form
      * @param string $checkIn  Check-in date (YYYY-MM-DD) for child age validation
      * @param string $provider Provider name for log/notification messages ('novoton'|'sphinx')
-     * @return array|false Parsed result array or false if validation fails
+     * @return array<string, mixed>|false Parsed result array or false if validation fails
      */
     #[\Override]
     public static function parseAndValidateGuests(

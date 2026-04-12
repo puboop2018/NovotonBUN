@@ -318,9 +318,9 @@ class SphinxBookingRepository
     /**
      * Find bookings eligible for status check (linked to order, non-terminal, recent).
      *
-     * @param array $terminalStatuses Statuses to exclude
+     * @param array<string, mixed> $terminalStatuses Statuses to exclude
      * @param int $daysBack How many days back to look
-     * @return array
+     * @return array<string, mixed>
      */
     public function findForStatusCheck(array $terminalStatuses, int $daysBack = 90): array
     {

@@ -76,7 +76,7 @@ class ErrorHandler
      *
      * @param string $code Error code
      * @param string $message Custom message (optional)
-     * @param array $context Additional context
+     * @param array<string, mixed> $context Additional context
      */
     public static function addError(string $code, string $message = '', array $context = []): void
     {
@@ -118,7 +118,7 @@ class ErrorHandler
     /**
      * Get first error
      * 
-     * @return array|null First error or null
+     * @return array<string, mixed>|null First error or null
      */
     public static function getFirstError(): ?array
     {
@@ -154,7 +154,7 @@ class ErrorHandler
      * 
      * @param string $code Error code
      * @param string $message Custom message
-     * @param array $data Additional data
+     * @param array<string, mixed> $data Additional data
      * @return array Response array
      */
     public static function createResponse(string $code, string $message = '', array $data = []): array
@@ -172,7 +172,7 @@ class ErrorHandler
     /**
      * Create success response for AJAX
      * 
-     * @param array $data Response data
+     * @param array<string, mixed> $data Response data
      * @param string $message Success message
      * @return array Response array
      */
@@ -213,7 +213,7 @@ class ErrorHandler
      * 
      * @param string $code Error code
      * @param string $message Message
-     * @param array $context Context
+     * @param array<string, mixed> $context Context
      */
     private static function logError(string $code, string $message, array $context): void
     {
@@ -226,8 +226,8 @@ class ErrorHandler
     /**
      * Validate required fields
      * 
-     * @param array $data Data to validate
-     * @param array $required Required field names
+     * @param array<string, mixed> $data Data to validate
+     * @param array<string, mixed> $required Required field names
      * @return array [valid => bool, missing => array]
      */
     public static function validateRequired(array $data, array $required): array
@@ -249,7 +249,7 @@ class ErrorHandler
     /**
      * Format validation errors as user-friendly message
      * 
-     * @param array $errors Validation errors
+     * @param array<string, mixed> $errors Validation errors
      * @param string $lang Language
      * @return string Formatted message
      */

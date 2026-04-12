@@ -49,7 +49,7 @@ class DestinationSyncCommand extends AbstractSyncCommand
     /**
      * Execute the destination sync.
      *
-     * @param array $params CLI parameters:
+     * @param array<string, mixed> $params CLI parameters:
      *   'full'   => 1  Force full re-sync
      *   'status' => 1  Show progress without running
      *   'reset'  => 1  Clear state, start fresh

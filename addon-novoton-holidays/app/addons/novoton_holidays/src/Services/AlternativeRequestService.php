@@ -76,7 +76,7 @@ class AlternativeRequestService implements AlternativeRequestServiceInterface
      * Calls the Novoton hotel_request API, stores the request in the database
      * (encrypting PII fields), and sends a confirmation email.
      *
-     * @param array $params {
+     * @param array<string, mixed> $params {
      *   hotel_id: string,
      *   hotel_name: string,
      *   check_in: string,

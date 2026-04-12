@@ -35,7 +35,7 @@ class SecurityService implements SecurityServiceInterface
     /**
      * Validate booking data
      * 
-     * @param array $data Booking data
+     * @param array<string, mixed> $data Booking data
      * @return array [valid => bool, errors => array]
      */
     public function validateBookingData(array $data): array
@@ -127,7 +127,7 @@ class SecurityService implements SecurityServiceInterface
     /**
      * Validate search parameters
      * 
-     * @param array $params Search parameters
+     * @param array<string, mixed> $params Search parameters
      * @return array [valid => bool, errors => array, sanitized => array]
      */
     public function validateSearchParams(array $params): array
@@ -221,7 +221,7 @@ class SecurityService implements SecurityServiceInterface
     /**
      * Validate and sanitize guest data
      * 
-     * @param array $guests Guest data
+     * @param array<string, mixed> $guests Guest data
      * @return array Sanitized guest data
      */
     public function sanitizeGuestData(array $guests): array
@@ -423,7 +423,7 @@ class SecurityService implements SecurityServiceInterface
      * Log security event
      * 
      * @param string $event Event type
-     * @param array $data Event data
+     * @param array<string, mixed> $data Event data
      */
     public function logSecurityEvent(string $event, array $data = []): void
     {

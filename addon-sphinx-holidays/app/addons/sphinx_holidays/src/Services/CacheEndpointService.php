@@ -28,7 +28,7 @@ class CacheEndpointService implements CacheEndpointServiceInterface
     /**
      * Get hotel deals with commission applied.
      *
-     * @param array $filters {destination_id?: int, stars?: int, limit?: int, sort_by?: string}
+     * @param array<string, mixed> $filters {destination_id?: int, stars?: int, limit?: int, sort_by?: string}
      * @return array Normalized deal entries with commission-applied prices
      */
     #[\Override]
@@ -57,7 +57,7 @@ class CacheEndpointService implements CacheEndpointServiceInterface
     /**
      * Get package deals with commission applied.
      *
-     * @param array $filters {destination_id?: int, type?: string, limit?: int}
+     * @param array<string, mixed> $filters {destination_id?: int, type?: string, limit?: int}
      * @return array Normalized deal entries with commission-applied prices
      */
     #[\Override]

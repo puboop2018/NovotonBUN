@@ -68,7 +68,7 @@ class BookingRepository implements BookingRepositoryInterface
      *
      * @param int  $booking_id
      * @param bool $force  Bypass cache (e.g. after an update)
-     * @return array|null Hydrated booking or null
+     * @return array<string, mixed>|null Hydrated booking or null
      */
     public function findByIdHydrated(int $booking_id, bool $force = false): ?array
     {
@@ -98,8 +98,8 @@ class BookingRepository implements BookingRepositoryInterface
      * Call this instead of scattered json_decode() calls to ensure
      * each field is decoded exactly once.
      *
-     * @param array $booking Raw DB row
-     * @return array Booking with rooms_data_parsed, guests_data_parsed
+     * @param array<string, mixed> $booking Raw DB row
+     * @return array<string, mixed> Booking with rooms_data_parsed, guests_data_parsed
      */
     public static function hydrateJsonFields(array $booking): array
     {
@@ -455,7 +455,7 @@ class BookingRepository implements BookingRepositoryInterface
      *
      * @param array  $product_ids Product IDs
      * @param array  $statuses    Optional status filter (default: pending + confirmed)
-     * @return array Booking rows
+     * @return array<string, mixed> Booking rows
      */
     public function findByProductIds(array $product_ids, array $statuses = [TravelConstants::STATUS_PENDING, TravelConstants::STATUS_CONFIRMED], string $session_id = '', int $user_id = 0): array
     {
@@ -547,8 +547,8 @@ class BookingRepository implements BookingRepositoryInterface
     /**
      * Find bookings for multiple order IDs in a single batch query.
      *
-     * @param array $order_ids
-     * @return array Booking summary rows
+     * @param array<string, mixed> $order_ids
+     * @return array<string, mixed> Booking summary rows
      */
     public function findByOrderIds(array $order_ids): array
     {
@@ -728,7 +728,7 @@ class BookingRepository implements BookingRepositoryInterface
      *
      * @param string $condition Extra WHERE conditions (must start with " AND ...")
      * @param int    $limit
-     * @return array
+     * @return array<string, mixed>
      */
     public function findForAdminList(string $condition = '', int $limit = 500): array
     {

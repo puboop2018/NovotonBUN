@@ -24,6 +24,7 @@ class SphinxApi
 
     /**
      * Test API connectivity (no auth required).
+     * @return array<string, mixed>|null
      */
     public function ping(): ?array
     {
@@ -32,6 +33,7 @@ class SphinxApi
 
     /**
      * Get authenticated user profile.
+     * @return array<string, mixed>|null
      */
     public function me(): ?array
     {
@@ -44,6 +46,7 @@ class SphinxApi
      * Get all destinations (paginated).
      *
      * @param string|null $updatedSince Only return destinations updated since this ISO 8601 datetime
+     * @return array<string, mixed>|null
      */
     public function getDestinations(int $page = 1, int $perPage = 1000, ?string $updatedSince = null): ?array
     {
@@ -56,6 +59,7 @@ class SphinxApi
 
     /**
      * Get a single destination by ID.
+     * @return array<string, mixed>|null
      */
     public function getDestination(int $id): ?array
     {
@@ -67,6 +71,7 @@ class SphinxApi
      *
      * @param string|null $updatedSince Only return hotels updated since this ISO 8601 datetime
      * @param int[] $destinationIds Only return hotels belonging to these destination IDs
+     * @return array<string, mixed>|null
      */
     public function getHotels(int $page = 1, int $perPage = 1000, ?string $updatedSince = null, array $destinationIds = []): ?array
     {
@@ -82,6 +87,7 @@ class SphinxApi
 
     /**
      * Get a single hotel by ID.
+     * @return array<string, mixed>|null
      */
     public function getHotel(string $id): ?array
     {
@@ -90,6 +96,7 @@ class SphinxApi
 
     /**
      * Get all package routes.
+     * @return array<string, mixed>|null
      */
     public function getPackageRoutes(int $page = 1, int $perPage = 1000): ?array
     {
@@ -101,6 +108,7 @@ class SphinxApi
 
     /**
      * Get all circuits (paginated).
+     * @return array<string, mixed>|null
      */
     public function getCircuits(int $page = 1, int $perPage = 1000): ?array
     {
@@ -112,6 +120,7 @@ class SphinxApi
 
     /**
      * Get all experiences (paginated).
+     * @return array<string, mixed>|null
      */
     public function getExperiences(int $page = 1, int $perPage = 1000): ?array
     {
@@ -124,7 +133,8 @@ class SphinxApi
     /**
      * Get circuit rates (paginated, filterable by destination/transport/month).
      *
-     * @param array $params {destinatons, transport_types, months, pagination}
+     * @param array<string, mixed> $params {destinatons, transport_types, months, pagination}
+     * @return array<string, mixed>|null
      */
     public function getCircuitRates(array $params): ?array
     {
@@ -134,7 +144,8 @@ class SphinxApi
     /**
      * Get a priced quote for a specific circuit departure.
      *
-     * @param array $params {circuit_id, departure_date, occupancy, departure_id?}
+     * @param array<string, mixed> $params {circuit_id, departure_date, occupancy, departure_id?}
+     * @return array<string, mixed>|null
      */
     public function getCircuitQuote(array $params): ?array
     {
@@ -144,7 +155,8 @@ class SphinxApi
     /**
      * Customize a circuit (add optional services before booking).
      *
-     * @param array $data {offer_id, service_codes}
+     * @param array<string, mixed> $data {offer_id, service_codes}
+     * @return array<string, mixed>|null
      */
     public function customizeCircuit(array $data): ?array
     {
@@ -154,7 +166,8 @@ class SphinxApi
     /**
      * Book a circuit.
      *
-     * @param array $bookingData {offer_id, price, currency, occupancy, reference_code?}
+     * @param array<string, mixed> $bookingData {offer_id, price, currency, occupancy, reference_code?}
+     * @return array<string, mixed>|null
      */
     public function bookCircuit(array $bookingData): ?array
     {
@@ -164,7 +177,8 @@ class SphinxApi
     /**
      * Get experience rates (paginated, filterable by destination/month/date range).
      *
-     * @param array $params {destinatons, months, from, to, pagination}
+     * @param array<string, mixed> $params {destinatons, months, from, to, pagination}
+     * @return array<string, mixed>|null
      */
     public function getExperienceRates(array $params): ?array
     {
@@ -174,7 +188,8 @@ class SphinxApi
     /**
      * Get a priced quote for a specific experience departure.
      *
-     * @param array $params {experience_id, departure_date, occupancy}
+     * @param array<string, mixed> $params {experience_id, departure_date, occupancy}
+     * @return array<string, mixed>|null
      */
     public function getExperienceQuote(array $params): ?array
     {
@@ -184,7 +199,8 @@ class SphinxApi
     /**
      * Book an experience.
      *
-     * @param array $bookingData {offer_id, price, currency, occupancy, reference_code?}
+     * @param array<string, mixed> $bookingData {offer_id, price, currency, occupancy, reference_code?}
+     * @return array<string, mixed>|null
      */
     public function bookExperience(array $bookingData): ?array
     {
@@ -196,8 +212,9 @@ class SphinxApi
     /**
      * Initiate a hotel search.
      *
-     * @param array $params {destination_id, check_in, check_out, occupancy, currency, ...}
-     * @return array|null {search_id, ...}
+     * @param array<string, mixed> $params {destination_id, check_in, check_out, occupancy, currency, ...}
+     * @return array<string, mixed>|null {search_id, ...}
+     * @return array<string, mixed>|null
      */
     public function searchHotels(array $params): ?array
     {
@@ -209,6 +226,7 @@ class SphinxApi
      *
      * @param string $searchId Search ID from searchHotels()
      * @param string|null $cursor Cursor for pagination
+     * @return array<string, mixed>|null
      */
     public function getHotelResults(string $searchId, ?string $cursor = null): ?array
     {
@@ -223,6 +241,7 @@ class SphinxApi
      * Verify a hotel offer before booking.
      *
      * @param string $offerId Offer ID from search results
+     * @return array<string, mixed>|null
      */
     public function verifyHotelOffer(string $offerId): ?array
     {
@@ -236,7 +255,8 @@ class SphinxApi
      * and 'sphinx_booking' => true in the cart product extras. The travel_booking
      * flag enables travel_core shared hooks (rooms_data decode, display formatting).
      *
-     * @param array $bookingData {offer_id, guests, contact, ...}
+     * @param array<string, mixed> $bookingData {offer_id, guests, contact, ...}
+     * @return array<string, mixed>|null
      */
     public function bookHotel(array $bookingData): ?array
     {
@@ -248,7 +268,8 @@ class SphinxApi
     /**
      * Initiate a package search.
      *
-     * @param array $params {departure_id, destination_id, date, nights, occupancy, ...}
+     * @param array<string, mixed> $params {departure_id, destination_id, date, nights, occupancy, ...}
+     * @return array<string, mixed>|null
      */
     public function searchPackages(array $params): ?array
     {
@@ -257,6 +278,7 @@ class SphinxApi
 
     /**
      * Get package search results (cursor-based polling).
+     * @return array<string, mixed>|null
      */
     public function getPackageResults(string $searchId, ?string $cursor = null): ?array
     {
@@ -269,6 +291,7 @@ class SphinxApi
 
     /**
      * Verify a package offer.
+     * @return array<string, mixed>|null
      */
     public function verifyPackageOffer(string $offerId): ?array
     {
@@ -277,6 +300,8 @@ class SphinxApi
 
     /**
      * Customize a package (add optional services).
+     * @param array<string, mixed> $data
+     * @return array<string, mixed>|null
      */
     public function customizePackage(array $data): ?array
     {
@@ -285,6 +310,8 @@ class SphinxApi
 
     /**
      * Book a package.
+     * @param array<string, mixed> $bookingData
+     * @return array<string, mixed>|null
      */
     public function bookPackage(array $bookingData): ?array
     {
@@ -296,7 +323,8 @@ class SphinxApi
     /**
      * Get all orders (paginated).
      *
-     * @param array $filters Optional filters (e.g. ['reference_code' => '123'])
+     * @param array<string, mixed> $filters Optional filters (e.g. ['reference_code' => '123'])
+     * @return array<string, mixed>|null
      */
     public function getOrders(int $page = 1, int $perPage = 50, array $filters = []): ?array
     {
@@ -308,6 +336,7 @@ class SphinxApi
 
     /**
      * Get a single order by ID.
+     * @return array<string, mixed>|null
      */
     public function getOrder(string $orderId): ?array
     {
@@ -318,6 +347,8 @@ class SphinxApi
 
     /**
      * Pre-cache hotel data.
+     * @param array<string, mixed> $params
+     * @return array<string, mixed>|null
      */
     public function cacheHotels(array $params): ?array
     {
@@ -326,6 +357,8 @@ class SphinxApi
 
     /**
      * Pre-cache package data.
+     * @param array<string, mixed> $params
+     * @return array<string, mixed>|null
      */
     public function cachePackages(array $params): ?array
     {

@@ -32,7 +32,7 @@ interface CronServiceInterface
     /**
      * Get countries configured for sync.
      *
-     * @return array
+     * @return array<string, mixed>
      */
     public function getCountries(): array;
 }

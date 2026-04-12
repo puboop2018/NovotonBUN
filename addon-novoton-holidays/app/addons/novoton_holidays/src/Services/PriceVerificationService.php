@@ -39,7 +39,7 @@ class PriceVerificationService implements PriceVerificationServiceInterface
      * validates that a price is returned, applies commission, and
      * extracts terms of payment/cancellation from the response.
      *
-     * @param array $params {hotel_id, room_id, board_id, check_in, check_out, adults, children_ages: int[]}
+     * @param array<string, mixed> $params {hotel_id, room_id, board_id, check_in, check_out, adults, children_ages: int[]}
      * @return array{success: bool, total_price: float, base_price: float, terms_of_payment: string, terms_of_cancellation: string, remark: string, important: string, error: string}
      */
     #[\Override]

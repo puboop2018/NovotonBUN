@@ -50,8 +50,8 @@ interface BookingRepositoryInterface
     /**
      * Decode JSON fields on a raw booking row in-place.
      *
-     * @param array $booking Raw DB row
-     * @return array Booking with rooms_data_parsed, guests_data_parsed
+     * @param array<string, mixed> $booking Raw DB row
+     * @return array<string, mixed> Booking with rooms_data_parsed, guests_data_parsed
      */
     public static function hydrateJsonFields(array $booking): array;
 
