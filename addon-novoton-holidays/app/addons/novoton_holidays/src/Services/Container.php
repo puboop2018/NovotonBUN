@@ -167,7 +167,6 @@ class Container
     {
         return $this->resolve('bookingService', fn() => new BookingService(
             $this->guestDataService(),
-            $this->roomPriceService(),
             $this->bookingRepository(),
             $this->novotonApi()->pricing(),
             $this->hotelRepository()

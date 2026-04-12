@@ -31,9 +31,6 @@ use Tygh\Tygh;
 
 class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
 {
-    /** Default session-cache TTL in seconds */
-    private const DEFAULT_CACHE_TTL = 180;
-
     /**
      * Verify all Novoton booking products in the cart against live API prices.
      *

@@ -23,8 +23,6 @@ class BookingService implements BookingServiceInterface
 {
     private \Tygh\Addons\TravelCore\Contracts\GuestDataServiceInterface $guestService;
 
-    private RoomPriceServiceInterface $priceService;
-
     private BookingRepositoryInterface $bookingRepo;
 
     private HotelRepositoryInterface $hotelRepo;
@@ -51,14 +49,12 @@ class BookingService implements BookingServiceInterface
      */
     public function __construct(
         \Tygh\Addons\TravelCore\Contracts\GuestDataServiceInterface $guestService,
-        RoomPriceServiceInterface $priceService,
         BookingRepositoryInterface $bookingRepo,
         PricingApiClientInterface $pricing,
         ?HotelRepositoryInterface $hotelRepo = null,
         ?GuestDataNormalizer $guestDataNormalizer = null
     ) {
         $this->guestService = $guestService;
-        $this->priceService = $priceService;
         $this->bookingRepo = $bookingRepo;
         $this->hotelRepo = $hotelRepo ?? new \Tygh\Addons\NovotonHolidays\Repository\HotelRepository();
         $this->guestDataNormalizer = $guestDataNormalizer ?? new GuestDataNormalizer();

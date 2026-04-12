@@ -31,7 +31,6 @@ class HotelSync
     private AdultOnlyDetector $adultOnlyDetector;
     private PropertyTypeDetector $propertyTypeDetector;
     private array $selectedCountries;
-    private array $productPrefixes;
     private array $stats;
 
     /**
@@ -48,7 +47,6 @@ class HotelSync
         $this->adultOnlyDetector = new AdultOnlyDetector();
         $this->propertyTypeDetector = new PropertyTypeDetector();
         $this->selectedCountries = ConfigProvider::getSelectedCountries();
-        $this->productPrefixes = ConfigProvider::getProductCodePrefixes();
 
         $this->stats = [
             'hotels_processed' => 0,

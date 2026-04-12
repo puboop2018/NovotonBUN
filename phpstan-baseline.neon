@@ -187,12 +187,6 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Api/PricingApiClient.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Cron\\Commands\\AddProductsCommand\:\:buildPlaceholders\(\) is unused\.$#'
-			identifier: method.unused
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/AddProductsCommand.php
-
-		-
 			message: '#^Call to function is_array\(\) with array will always evaluate to true\.$#'
 			identifier: function.alreadyNarrowedType
 			count: 3
@@ -227,30 +221,6 @@ parameters:
 			identifier: argument.type
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/BatchedPriceInfoSyncV2.php
-
-		-
-			message: '#^Property Tygh\\Addons\\NovotonHolidays\\Helpers\\DatabaseHelper\:\:\$hotelCache is never read, only written\.$#'
-			identifier: property.onlyWritten
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/DatabaseHelper.php
-
-		-
-			message: '#^Property Tygh\\Addons\\NovotonHolidays\\Helpers\\DatabaseHelper\:\:\$productCodeCache is never read, only written\.$#'
-			identifier: property.onlyWritten
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/DatabaseHelper.php
-
-		-
-			message: '#^Property Tygh\\Addons\\NovotonHolidays\\Helpers\\StateManager\:\:\$stateName is never read, only written\.$#'
-			identifier: property.onlyWritten
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/StateManager.php
-
-		-
-			message: '#^Property Tygh\\Addons\\NovotonHolidays\\HotelSync\:\:\$productPrefixes is never read, only written\.$#'
-			identifier: property.onlyWritten
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/HotelSync.php
 
 		-
 			message: '#^Property Tygh\\Addons\\NovotonHolidays\\NovotonApi\:\:\$cache \(Tygh\\Addons\\NovotonHolidays\\Services\\CacheService\|null\) does not accept Tygh\\Addons\\NovotonHolidays\\Services\\CacheServiceInterface\.$#'
@@ -295,12 +265,6 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingQueryService.php
 
 		-
-			message: '#^Property Tygh\\Addons\\NovotonHolidays\\Services\\BookingService\:\:\$priceService is never read, only written\.$#'
-			identifier: property.onlyWritten
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingService.php
-
-		-
 			message: '#^Binary operation "\." between ''Booking error \('' and array results in an error\.$#'
 			identifier: binaryOp.invalid
 			count: 1
@@ -335,18 +299,6 @@ parameters:
 			identifier: varTag.nativeType
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/HotelAvailabilitySearcher.php
-
-		-
-			message: '#^Trait Tygh\\Addons\\NovotonHolidays\\Services\\LoggerTrait is used zero times and is not analysed\.$#'
-			identifier: trait.unused
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/LoggerTrait.php
-
-		-
-			message: '#^Constant Tygh\\Addons\\NovotonHolidays\\Services\\PreOrderPriceVerifier\:\:DEFAULT_CACHE_TTL is unused\.$#'
-			identifier: classConstant.unused
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PreOrderPriceVerifier.php
 
 		-
 			message: '#^Call to function is_string\(\) with non\-falsy\-string will always evaluate to true\.$#'
@@ -451,12 +403,6 @@ parameters:
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Api/SphinxHttpClient.php
 
 		-
-			message: '#^Call to an undefined method Tygh\\Addons\\SphinxHolidays\\Helpers\\SphinxProductFactoryInterface\:\:loadValidCountryCodes\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/AddProductsCommand.php
-
-		-
 			message: '#^Match expression does not handle remaining value\: string$#'
 			identifier: match.unhandled
 			count: 1
@@ -469,12 +415,6 @@ parameters:
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/AssignBoardsCommand.php
 
 		-
-			message: '#^Constant Tygh\\Addons\\SphinxHolidays\\Cron\\Commands\\DiscoverBoardsCommand\:\:DEFAULT_BATCH_SIZE is unused\.$#'
-			identifier: classConstant.unused
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/DiscoverBoardsCommand.php
-
-		-
 			message: '#^Used function fn_log_event not found\.$#'
 			identifier: function.notFound
 			count: 1
@@ -485,24 +425,6 @@ parameters:
 			identifier: empty.variable
 			count: 1
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/DiscoverBoardsCommand.php
-
-		-
-			message: '#^Static method Tygh\\Addons\\SphinxHolidays\\Cron\\Commands\\UpdateProductsCommand\:\:buildPlaceholders\(\) is unused\.$#'
-			identifier: method.unused
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/UpdateProductsCommand.php
-
-		-
-			message: '#^Static method Tygh\\Addons\\SphinxHolidays\\Cron\\Commands\\UpdateProductsCommand\:\:ensureUniqueSeoName\(\) is unused\.$#'
-			identifier: method.unused
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/UpdateProductsCommand.php
-
-		-
-			message: '#^Static method Tygh\\Addons\\SphinxHolidays\\Helpers\\SphinxProductFactory\:\:ensureUniqueSeoName\(\) is unused\.$#'
-			identifier: method.unused
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Helpers/SphinxProductFactory.php
 
 		-
 			message: '#^Strict comparison using \=\=\= between 0 and 0 will always evaluate to true\.$#'
@@ -563,24 +485,6 @@ parameters:
 			identifier: parameter.notFound
 			count: 1
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/HotelSyncService.php
-
-		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Services\\SphinxFeatureAssigner\:\:resolveHotelFacilities\(\) should return array\<int, array\{id\: string, name\: string, mapping\: array\|null\}\> but returns array\<string, array\>\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/SphinxFeatureAssigner.php
-
-		-
-			message: '#^Property Tygh\\Addons\\SphinxHolidays\\Services\\SphinxFeatureAssigner\:\:\$resolvedFacilitiesCache \(array\<string, array\>\|null\) does not accept list\<array\<string, array\|string\|null\>\>\.$#'
-			identifier: assign.propertyType
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/SphinxFeatureAssigner.php
-
-		-
-			message: '#^Property Tygh\\Addons\\SphinxHolidays\\Services\\SphinxFeatureAssigner\:\:\$resolvedFacilitiesCache \(array\<string, array\>\|null\) is never assigned array\<string, array\> so it can be removed from the property type\.$#'
-			identifier: property.unusedType
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/SphinxFeatureAssigner.php
 
 		-
 			message: '#^Offset ''message'' on array\{type\: string, title\: string, message\: string\} on left side of \?\? always exists and is not nullable\.$#'

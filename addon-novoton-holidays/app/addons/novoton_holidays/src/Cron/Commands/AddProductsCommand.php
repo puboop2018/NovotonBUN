@@ -290,51 +290,6 @@ class AddProductsCommand extends AbstractCronCommand
         }
     }
 
-    /**
-     * Build the placeholder map for SEO template rendering from Novoton hotel data.
-     */
-    private function buildPlaceholders(array $hotel, string $displayName, string $description = ''): array
-    {
-        // Load facility names from DB
-        $facilities = [];
-        if (!empty($hotel['hotel_id'])) {
-            $facilities = db_get_fields(
-                "SELECT f.facility_name_en FROM ?:novoton_hotel_facilities hf
-                 JOIN ?:novoton_facilities f ON f.facility_id = hf.facility_id
-                 WHERE hf.hotel_id = ?s AND f.facility_name_en != ''
-                 LIMIT 5",
-                $hotel['hotel_id']
-            ) ?: [];
-        }
-
-        // Min price from packages table
-        $min_price = '';
-        if (!empty($hotel['hotel_id'])) {
-            $min_price = db_get_field(
-                "SELECT MIN(min_price) FROM ?:novoton_hotel_packages WHERE hotel_id = ?s AND min_price > 0",
-                $hotel['hotel_id']
-            ) ?: '';
-        }
-
-        return [
-            'name'          => $displayName,
-            'raw_name'      => $hotel['hotel_name'] ?? '',
-            'city'          => $hotel['city'] ?? '',
-            'country'       => $hotel['country'] ?? '',
-            'region'        => $hotel['region'] ?? '',
-            'star_rating'   => $hotel['star_rating'] ?? '',
-            'stars_emoji'   => fn_travel_core_build_star_emoji((int) ($hotel['star_rating'] ?? 0)),
-            'hotel_type'    => $hotel['hotel_type'] ?? '',
-            'property_type' => $hotel['property_type'] ?? 'hotel',
-            'year'          => date('Y'),
-            'description'   => $description,
-            'facilities'    => $facilities,
-            'latitude'      => $hotel['latitude'] ?? '',
-            'longitude'     => $hotel['longitude'] ?? '',
-            'min_price'     => $min_price,
-        ];
-    }
-
     private function getExcludedResorts(): array
     {
         $paramVal = $this->getParam('exclude_resorts');

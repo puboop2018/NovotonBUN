@@ -29,7 +29,7 @@ class SphinxFeatureAssigner implements SphinxFeatureAssignerInterface
     /** @var array<string, int> featureId:variantName → variant_id cache */
     private array $locationVariantCache = [];
 
-    /** @var array<string, array>|null Cached resolved facility data for current hotel */
+    /** @var list<array{id: string, name: string, mapping: mixed}>|null Cached resolved facility data for current hotel */
     private ?array $resolvedFacilitiesCache = null;
 
     /** @var string|null Hash of the facilities_json that was cached */

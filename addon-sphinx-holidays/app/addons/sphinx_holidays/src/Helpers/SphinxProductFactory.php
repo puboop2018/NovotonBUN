@@ -291,27 +291,4 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
         ];
     }
 
-    /**
-     * Ensure an SEO slug is unique in the seo_names table.
-     *
-     * If the slug already exists, appends the hotel_id to make it unique.
-     * This prevents CS-Cart from generating "-en" suffix notices on the frontend.
-     */
-    private static function ensureUniqueSeoName(string $slug, string $hotelId): string
-    {
-        if ($slug === '') {
-            return '';
-        }
-
-        $exists = db_get_field(
-            "SELECT name FROM ?:seo_names WHERE name = ?s AND type = 'p' LIMIT 1",
-            $slug
-        );
-
-        if ($exists) {
-            return $slug . '-' . $hotelId;
-        }
-
-        return $slug;
-    }
 }

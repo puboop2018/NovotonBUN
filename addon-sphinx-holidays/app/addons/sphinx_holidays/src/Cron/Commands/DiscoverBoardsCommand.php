@@ -48,7 +48,6 @@ class DiscoverBoardsCommand extends AbstractSyncCommand
     private const POLL_MAX_ATTEMPTS = 20;
 
     /** Batch configuration */
-    private const DEFAULT_BATCH_SIZE = 10;          // destinations per cron run
     private const DEFAULT_MAX_TIME = 300;            // 5 minutes
     private const STALE_HOURS = 6;                   // clear abandoned state after 6h
 
