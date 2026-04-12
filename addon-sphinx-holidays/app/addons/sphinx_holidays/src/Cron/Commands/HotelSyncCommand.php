@@ -22,6 +22,7 @@ use Tygh\Addons\SphinxHolidays\Services\HotelSyncService;
  */
 class HotelSyncCommand extends AbstractSyncCommand
 {
+    #[\Override]
     public static function getDescription(): string
     {
         return 'Sync hotels from Sphinx API (filtered by selected destinations)';
@@ -32,6 +33,7 @@ class HotelSyncCommand extends AbstractSyncCommand
      *
      * @param array $params CLI parameters. 'country' overrides settings.
      */
+    #[\Override]
     public function execute(array $params = []): array
     {
         $api = Container::getApi();

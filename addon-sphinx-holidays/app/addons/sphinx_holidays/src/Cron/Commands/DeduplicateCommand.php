@@ -19,11 +19,13 @@ use Tygh\Addons\SphinxHolidays\Repository\HotelRepository;
  */
 class DeduplicateCommand extends AbstractSyncCommand
 {
+    #[\Override]
     public static function getDescription(): string
     {
         return 'Find and merge duplicate hotels (same name + property_type + classification + region)';
     }
 
+    #[\Override]
     public function execute(array $params = []): array
     {
         $startMs = (int)(microtime(true) * 1000);

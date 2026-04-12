@@ -37,6 +37,7 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
     /**
      * Load valid CS-Cart country codes (call once before processing batches).
      */
+    #[\Override]
     public function loadValidCountryCodes(): void
     {
         if (empty($this->validCountryCodes)) {
@@ -50,6 +51,7 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
     /**
      * {@inheritdoc}
      */
+    #[\Override]
     public function createFromHotel(array $hotel, array $hierarchy): array
     {
         $hotelId = $hotel['hotel_id'];
@@ -226,6 +228,7 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
     /**
      * {@inheritdoc}
      */
+    #[\Override]
     public function resolveCountryName(array $hotel, array $hierarchy): string
     {
         $countryName = ($hierarchy['country'] ?? '') ?: ($hotel['country_name'] ?? '');

@@ -54,11 +54,13 @@ class AssignBoardsCommand extends AbstractSyncCommand
         'country_code' => '',
     ];
 
+    #[\Override]
     public static function getDescription(): string
     {
         return 'Assign discovered board/meal types as CS-Cart product features (batched with resume)';
     }
 
+    #[\Override]
     public function execute(array $params = []): array
     {
         // Handle reset

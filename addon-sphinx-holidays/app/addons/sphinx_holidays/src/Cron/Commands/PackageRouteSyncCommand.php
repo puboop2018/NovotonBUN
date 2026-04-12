@@ -16,11 +16,13 @@ use Tygh\Addons\SphinxHolidays\Services\PackageRouteSyncService;
  */
 class PackageRouteSyncCommand extends AbstractSyncCommand
 {
+    #[\Override]
     public static function getDescription(): string
     {
         return 'Sync package routes (flight/bus) from Sphinx static API';
     }
 
+    #[\Override]
     public function execute(array $params = []): array
     {
         $api = Container::getApi();

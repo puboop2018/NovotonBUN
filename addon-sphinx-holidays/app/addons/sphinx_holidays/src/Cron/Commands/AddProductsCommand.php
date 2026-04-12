@@ -46,11 +46,13 @@ class AddProductsCommand extends AbstractSyncCommand
         'country'         => '',
     ];
 
+    #[\Override]
     public static function getDescription(): string
     {
         return 'Create CS-Cart products from unlinked Sphinx hotels (retry_skipped=1 to retry previously skipped)';
     }
 
+    #[\Override]
     public function execute(array $params = []): array
     {
         // Handle reset — clears state file

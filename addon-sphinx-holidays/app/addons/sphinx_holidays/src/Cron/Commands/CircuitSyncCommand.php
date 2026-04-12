@@ -13,11 +13,13 @@ use Tygh\Addons\SphinxHolidays\Services\CircuitSyncService;
  */
 class CircuitSyncCommand extends AbstractSyncCommand
 {
+    #[\Override]
     public static function getDescription(): string
     {
         return 'Sync circuit catalog from Sphinx static API';
     }
 
+    #[\Override]
     public function execute(array $params = []): array
     {
         $api = Container::getApi();

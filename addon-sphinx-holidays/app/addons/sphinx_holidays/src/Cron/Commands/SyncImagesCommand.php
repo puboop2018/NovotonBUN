@@ -22,11 +22,13 @@ class SyncImagesCommand extends AbstractSyncCommand
 {
     private const BATCH_SIZE = 50;
 
+    #[\Override]
     public static function getDescription(): string
     {
         return 'Download and attach hotel images to CS-Cart products';
     }
 
+    #[\Override]
     public function execute(array $params = []): array
     {
         $startMs = (int)(microtime(true) * 1000);

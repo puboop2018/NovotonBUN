@@ -25,6 +25,7 @@ class BookingAdminProvider implements BookingAdminProviderInterface
         $this->repo = $repo ?? new SphinxBookingRepository();
     }
 
+    #[\Override]
     public function getDisplayData(string $providerBookingId): array
     {
         $booking = $this->repo->findById((int) $providerBookingId);
@@ -80,6 +81,7 @@ class BookingAdminProvider implements BookingAdminProviderInterface
         return $display;
     }
 
+    #[\Override]
     public function checkStatus(string $providerBookingId): array
     {
         $bookingId = (int) $providerBookingId;
@@ -99,6 +101,7 @@ class BookingAdminProvider implements BookingAdminProviderInterface
         return $result;
     }
 
+    #[\Override]
     public function getAvailableActions(array $booking): array
     {
         $actions = [];
@@ -121,6 +124,7 @@ class BookingAdminProvider implements BookingAdminProviderInterface
         return $actions;
     }
 
+    #[\Override]
     public function getProviderViewUrl(string $providerBookingId): ?string
     {
         // Sphinx doesn't have its own admin bookings controller,
@@ -128,6 +132,7 @@ class BookingAdminProvider implements BookingAdminProviderInterface
         return null;
     }
 
+    #[\Override]
     public function handleAction(string $action, array $request): array
     {
         // Sphinx has no provider-specific POST actions yet
@@ -137,6 +142,7 @@ class BookingAdminProvider implements BookingAdminProviderInterface
         ];
     }
 
+    #[\Override]
     public function getProviderTabs(array $booking): array
     {
         // Sphinx has no provider-specific tabs

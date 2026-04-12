@@ -40,6 +40,7 @@ class DestinationSyncCommand extends AbstractSyncCommand
         'updated_since' => null,
     ];
 
+    #[\Override]
     public static function getDescription(): string
     {
         return 'Sync destinations (countries, regions, cities) from Sphinx API — with resume support';
@@ -54,6 +55,7 @@ class DestinationSyncCommand extends AbstractSyncCommand
      *   'reset'  => 1  Clear state, start fresh
      * @return array{success: bool, stats: array}
      */
+    #[\Override]
     public function execute(array $params = []): array
     {
         // Handle reset

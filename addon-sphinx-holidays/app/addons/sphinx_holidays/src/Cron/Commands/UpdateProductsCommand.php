@@ -21,11 +21,13 @@ class UpdateProductsCommand extends AbstractSyncCommand
 {
     private const BATCH_SIZE = 200;
 
+    #[\Override]
     public static function getDescription(): string
     {
         return 'Update CS-Cart products when Sphinx hotel data changes';
     }
 
+    #[\Override]
     public function execute(array $params = []): array
     {
         $featureAssigner = Container::getFeatureAssigner();

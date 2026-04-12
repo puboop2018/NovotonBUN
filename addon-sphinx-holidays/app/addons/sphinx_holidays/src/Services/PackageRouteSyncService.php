@@ -27,6 +27,7 @@ class PackageRouteSyncService extends AbstractSyncService
         parent::__construct($api);
     }
 
+    #[\Override]
     protected function getSyncType(): string
     {
         return 'package_routes';
@@ -47,6 +48,7 @@ class PackageRouteSyncService extends AbstractSyncService
         ]);
     }
 
+    #[\Override]
     protected function doSync(bool $fullSync, array $stats, array $context): array
     {
         // Package routes use region/resort-level arrival IDs that may not appear

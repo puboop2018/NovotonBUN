@@ -21,6 +21,7 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
     /**
      * {@inheritdoc}
      */
+    #[\Override]
     public function verify(array $cart): array
     {
         $result = [

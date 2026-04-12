@@ -22,6 +22,7 @@ class ExperienceSyncService extends AbstractSyncService implements ExperienceSyn
         parent::__construct($api);
     }
 
+    #[\Override]
     protected function getSyncType(): string
     {
         return 'experiences';

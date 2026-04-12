@@ -28,6 +28,7 @@ class SecurityService implements SecurityServiceInterface
     /**
      * {@inheritdoc}
      */
+    #[\Override]
     public function validateBookingData(array $data): array
     {
         $errors = [];
@@ -83,6 +84,7 @@ class SecurityService implements SecurityServiceInterface
     /**
      * {@inheritdoc}
      */
+    #[\Override]
     public function validateSearchParams(array $params): array
     {
         $sanitized = [];
@@ -117,6 +119,7 @@ class SecurityService implements SecurityServiceInterface
     /**
      * {@inheritdoc}
      */
+    #[\Override]
     public function checkBookingRateLimit(string $identifier): bool
     {
         $cacheKey = 'sphinx_rate_booking_' . md5($identifier);
@@ -150,6 +153,7 @@ class SecurityService implements SecurityServiceInterface
     /**
      * {@inheritdoc}
      */
+    #[\Override]
     public function sanitizeGuestData(array $guests): array
     {
         $sanitized = [];

@@ -69,11 +69,13 @@ class DiscoverBoardsCommand extends AbstractSyncCommand
         'country_codes'   => [],
     ];
 
+    #[\Override]
     public static function getDescription(): string
     {
         return 'Discover available board/meal types per hotel via live search API (batched with resume)';
     }
 
+    #[\Override]
     public function execute(array $params = []): array
     {
         // Handle reset

@@ -25,6 +25,7 @@ class CircuitSyncService extends AbstractSyncService implements CircuitSyncServi
         parent::__construct($api);
     }
 
+    #[\Override]
     protected function getSyncType(): string
     {
         return 'circuits';

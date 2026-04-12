@@ -43,6 +43,7 @@ class SphinxFeatureAssigner implements SphinxFeatureAssignerInterface
     /**
      * Assign all features from a sphinx_hotels row to a CS-Cart product.
      */
+    #[\Override]
     public function assignAll(int $productId, array $hotel): void
     {
         // Reset per-hotel facility cache

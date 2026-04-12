@@ -24,6 +24,7 @@ class DestinationSyncService extends AbstractSyncService implements DestinationS
         parent::__construct($api);
     }
 
+    #[\Override]
     protected function getSyncType(): string
     {
         return 'destinations';
@@ -35,6 +36,7 @@ class DestinationSyncService extends AbstractSyncService implements DestinationS
      * @param bool $fullSync Force full re-fetch (ignores updated_since)
      * @return array{success: bool, total: int, synced: int, failed: int, duration_ms: int, error: string, sync_mode: string}
      */
+    #[\Override]
     public function sync(bool $fullSync = false): array
     {
         return $this->runSync($fullSync);

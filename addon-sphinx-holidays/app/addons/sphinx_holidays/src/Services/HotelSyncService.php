@@ -41,6 +41,7 @@ class HotelSyncService extends AbstractSyncService implements HotelSyncServiceIn
         $this->normalizer = $normalizer ?? Container::getNormalizer();
     }
 
+    #[\Override]
     protected function getSyncType(): string
     {
         return 'hotels';
@@ -54,6 +55,7 @@ class HotelSyncService extends AbstractSyncService implements HotelSyncServiceIn
      * @param bool $fullSync Force full re-fetch (ignores updated_since)
      * @return array{success: bool, total: int, synced: int, skipped: int, failed: int, duration_ms: int, error: string, sync_mode: string}
      */
+    #[\Override]
     public function sync(array $countryCodes = [], array $extraDestinationIds = [], bool $fullSync = false): array
     {
         return $this->runSync($fullSync, [
@@ -62,6 +64,7 @@ class HotelSyncService extends AbstractSyncService implements HotelSyncServiceIn
         ]);
     }
 
+    #[\Override]
     protected function doSync(bool $fullSync, array $stats, array $context): array
     {
         $countryCodes = $context['country_codes'] ?? [];
