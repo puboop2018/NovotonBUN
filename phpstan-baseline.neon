@@ -49,6 +49,30 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_prices.php
 
 		-
+			message: '#^Offset ''error'' on array\{success\: bool, file_path\: string, count\: int, error\: string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_tools.php
+
+		-
+			message: '#^Offset ''error'' on array\{success\: false, file_path\: string, count\: int, error\: string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_tools.php
+
+		-
+			message: '#^Offset ''file_path'' on array\{success\: true, file_path\: string, count\: int, error\: string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_tools.php
+
+		-
+			message: '#^Offset ''filename'' on \*NEVER\* on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_tools.php
+
+		-
 			message: '#^Offset ''last_http_code'' does not exist on array\{success\: false, config\: non\-empty\-array, message\: string, hotels_count\: int, sample_hotel\: array\|null, error\: string\}\.$#'
 			identifier: offsetAccess.notFound
 			count: 1
@@ -187,67 +211,25 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_cron.php
 
 		-
-			message: '#^Function fn_novoton_holidays_check_reservation_status\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
+			message: '#^Function fn_novoton_holidays_check_reservation_status\(\) should return array\{success\: bool, checked\: int, changed\: int, error\?\: string\} but returns array\{success\: false, error\: ''API not available''\}\.$#'
+			identifier: return.type
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/bookings.php
 
 		-
-			message: '#^Function fn_novoton_holidays_cron_resinfo\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
+			message: '#^Function fn_novoton_holidays_check_reservation_status\(\) should return array\{success\: bool, checked\: int, changed\: int, error\?\: string\} but returns array\{success\: true, checked\: int\<0, max\>, updated\: int\<0, max\>, details\: array\<array\{error\: string\}\|array\{old\: mixed, new\: mixed, novoton\: string\}\>\}\.$#'
+			identifier: return.type
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/bookings.php
 
 		-
-			message: '#^Function fn_novoton_holidays_decrypt_request_pii\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
+			message: '#^Function fn_novoton_holidays_cron_resinfo\(\) should return array\{success\: bool, synced\: int, added\: int, updated\: int, errors\: int, countries\: array\<string, mixed\>, error\?\: string\} but returns array\{success\: false, error\: ''API not available''\}\.$#'
+			identifier: return.type
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/bookings.php
-
-		-
-			message: '#^Function fn_novoton_holidays_decrypt_requests_pii\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/bookings.php
-
-		-
-			message: '#^Function fn_novoton_holidays_get_alternatives\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/bookings.php
-
-		-
-			message: '#^Function fn_novoton_holidays_get_order_bookings\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/bookings.php
-
-		-
-			message: '#^Function fn_novoton_holidays_request_alternatives\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/bookings.php
-
-		-
-			message: '#^Function fn_novoton_holidays_generate_hotel_features_csv\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/email.php
 
 		-
 			message: '#^Function fn_novoton_holidays_generate_hotel_features_xml\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/email.php
-
-		-
-			message: '#^Function fn_novoton_holidays_send_import_report_email\(\) has parameter \$results with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/email.php
-
-		-
-			message: '#^Function fn_novoton_holidays_send_import_report_email\(\) has parameter \$summary with no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/email.php
@@ -2709,6 +2691,18 @@ parameters:
 		-
 			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\BookingAdminProvider\:\:handleUpdateNovotonId\(\) has parameter \$request with no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingAdminProvider.php
+
+		-
+			message: '#^Offset ''changed'' on array\{success\: bool, synced\: int, added\: int, updated\: int, errors\: int, countries\: array\<string, mixed\>, error\?\: string\} on left side of \?\? does not exist\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingAdminProvider.php
+
+		-
+			message: '#^Offset ''checked'' on array\{success\: bool, synced\: int, added\: int, updated\: int, errors\: int, countries\: array\<string, mixed\>, error\?\: string\} on left side of \?\? does not exist\.$#'
+			identifier: nullCoalesce.offset
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingAdminProvider.php
 

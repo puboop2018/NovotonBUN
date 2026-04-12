@@ -29,7 +29,7 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
  * back to the original value in that case.
  *
  * @param array<string, mixed> $request  Single row from novoton_alternative_requests
- * @return array          Same row with decrypted PII fields
+ * @return array<string, mixed>          Same row with decrypted PII fields
  */
 function fn_novoton_holidays_decrypt_request_pii(array $request): array
 {
@@ -65,8 +65,8 @@ function fn_novoton_holidays_decrypt_request_pii(array $request): array
 /**
  * Decrypt PII fields on an array of alternative request rows.
  *
- * @param array<string, mixed> $requests  Array of rows from novoton_alternative_requests
- * @return array           Same rows with decrypted PII fields
+ * @param list<array<string, mixed>> $requests  Array of rows from novoton_alternative_requests
+ * @return list<array<string, mixed>>           Same rows with decrypted PII fields
  */
 function fn_novoton_holidays_decrypt_requests_pii(array $requests): array
 {
@@ -80,7 +80,7 @@ function fn_novoton_holidays_decrypt_requests_pii(array $requests): array
  * Check reservation status from Novoton API
  * 
  * @param int $booking_id Booking ID (0 = check all pending)
- * @return array Result
+ * @return array{success: bool, checked: int, changed: int, error?: string}
  */
 function fn_novoton_holidays_check_reservation_status($booking_id = 0): array
 {
@@ -147,7 +147,7 @@ function fn_novoton_holidays_check_reservation_status($booking_id = 0): array
  * Request alternatives for a booking
  * 
  * @param int $booking_id Booking ID
- * @return array Result
+ * @return array{success: bool, request_id?: int, error?: string, message?: string}
  */
 function fn_novoton_holidays_request_alternatives($booking_id): array
 {
@@ -189,7 +189,7 @@ function fn_novoton_holidays_request_alternatives($booking_id): array
  * Get alternatives for a booking
  * 
  * @param int $booking_id Booking ID
- * @return array Alternatives data
+ * @return array<string, mixed> Alternatives data (decoded JSON)
  */
 function fn_novoton_holidays_get_alternatives($booking_id): array
 {
@@ -209,7 +209,7 @@ function fn_novoton_holidays_get_alternatives($booking_id): array
  * Get bookings for an order
  * 
  * @param int $order_id Order ID
- * @return array Bookings
+ * @return list<array<string, mixed>> Booking rows
  */
 function fn_novoton_holidays_get_order_bookings($order_id): array
 {
@@ -220,7 +220,7 @@ function fn_novoton_holidays_get_order_bookings($order_id): array
 /**
  * Cron: Sync hotels from ResInfo API
  * 
- * @return array Result
+ * @return array{success: bool, synced: int, added: int, updated: int, errors: int, countries: array<string, mixed>, error?: string}
  */
 function fn_novoton_holidays_cron_resinfo(): array
 {

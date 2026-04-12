@@ -88,10 +88,10 @@ function fn_novoton_holidays_generate_import_csv_report($results, $import_type =
  * Uses the 'novoton_holidays_import_report' email template registered in addon.xml.
  * Works for all cron job types — hotel_list, hotel_info, room_price, etc.
  *
- * @param array  $summary     Summary statistics: added, updated, skipped, errors, duration, plus any extra keys
+ * @param array<string, mixed>  $summary     Summary statistics: added, updated, skipped, errors, duration, plus any extra keys
  * @param string $import_type Type identifier: hotel_list, hotel_info, room_price, offers_update, add_products, facilities, resinfo, manual
  * @param string $country     Country code or comma-separated list
- * @param array  $results     Optional detailed results for CSV attachment (empty = no attachment)
+ * @param array<string, mixed>  $results     Optional detailed results for CSV attachment (empty = no attachment)
  * @return bool Success
  */
 function fn_novoton_holidays_send_import_report_email($results, $import_type, $summary, $country = ''): bool
@@ -330,7 +330,7 @@ function fn_novoton_holidays_cleanup_old_reports($dir, $days = 7): void
 /**
  * Generate hotel features CSV for CS-Cart import
  * 
- * @return array ['success' => bool, 'file_path' => string, 'count' => int, 'error' => string]
+ * @return array{success: bool, file_path: string, count: int, error: string}
  */
 function fn_novoton_holidays_generate_hotel_features_csv(): array
 {
