@@ -358,11 +358,13 @@ class HotelAvailabilitySearcher implements HotelAvailabilitySearcherInterface
     // Hotel-info extraction helpers
     // =====================================================================
 
+    /** @return array<string, mixed> */
     private function extractRooms(\SimpleXMLElement $hotelInfo): array
     {
         return $hotelInfo->xpath('//rooms') ?: [];
     }
 
+    /** @return array<string, mixed> */
     private function extractBoardTypes(\SimpleXMLElement $hotelInfo, string $mealPlan): array
     {
         $boardTypes = [];
@@ -402,6 +404,7 @@ class HotelAvailabilitySearcher implements HotelAvailabilitySearcherInterface
         return $boardTypes;
     }
 
+    /** @return array<string, mixed> */
     private function extractPackages(\SimpleXMLElement $hotelInfo): array
     {
         $packages = [];
@@ -422,6 +425,7 @@ class HotelAvailabilitySearcher implements HotelAvailabilitySearcherInterface
         return $packages;
     }
 
+    /** @return array<string, mixed> */
     private function buildRoomTypeMap(array $rooms): array
     {
         $map = [];
@@ -447,6 +451,7 @@ class HotelAvailabilitySearcher implements HotelAvailabilitySearcherInterface
     // Utility helpers
     // =====================================================================
 
+    /** @return array<string, mixed> */
     private function calculateMaxCapacity(array $results): array
     {
         $maxAdults   = 0;
@@ -471,6 +476,7 @@ class HotelAvailabilitySearcher implements HotelAvailabilitySearcherInterface
         ];
     }
 
+    /** @return array<string, mixed> */
     private function cleanChildrenAges(array $raw): array
     {
         $clean = [];
@@ -482,6 +488,7 @@ class HotelAvailabilitySearcher implements HotelAvailabilitySearcherInterface
         return $clean;
     }
 
+    /** @return array<string, mixed> */
     private function emptyResult(): array
     {
         return [

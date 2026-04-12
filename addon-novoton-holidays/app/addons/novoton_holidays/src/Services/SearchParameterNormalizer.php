@@ -246,6 +246,7 @@ class SearchParameterNormalizer
         return [$totalAdults, $totalChildren, $allAges];
     }
 
+    /** @return array<string, mixed> */
     private function parseCommaAges(string $raw): array
     {
         $ages = [];

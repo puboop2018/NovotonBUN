@@ -25,6 +25,7 @@ class BookingAdminProvider implements BookingAdminProviderInterface
         $this->bookingRepo = $bookingRepo ?? new BookingRepository();
     }
 
+    /** @return array<string, mixed> */
     public function getDisplayData(string $providerBookingId): array
     {
         $booking = $this->bookingRepo->findById((int) $providerBookingId);
@@ -63,6 +64,7 @@ class BookingAdminProvider implements BookingAdminProviderInterface
         return $display;
     }
 
+    /** @return array<string, mixed> */
     public function checkStatus(string $providerBookingId): array
     {
         $bookingId = (int) $providerBookingId;
@@ -91,6 +93,7 @@ class BookingAdminProvider implements BookingAdminProviderInterface
         ];
     }
 
+    /** @return array<string, mixed> */
     public function getAvailableActions(array $booking): array
     {
         $actions = [];
@@ -136,6 +139,7 @@ class BookingAdminProvider implements BookingAdminProviderInterface
         return 'travel_bookings.view?booking_id=' . (int) $providerBookingId;
     }
 
+    /** @return array<string, mixed> */
     public function handleAction(string $action, array $request): array
     {
         switch ($action) {
@@ -162,6 +166,7 @@ class BookingAdminProvider implements BookingAdminProviderInterface
         }
     }
 
+    /** @return array<string, mixed> */
     public function getProviderTabs(array $booking): array
     {
         $tabs = [];
@@ -200,6 +205,7 @@ class BookingAdminProvider implements BookingAdminProviderInterface
         return $url;
     }
 
+    /** @return array<string, mixed> */
     private function handleResinfo(array $request): array
     {
         $bookingId = (int) ($request['booking_id'] ?? 0);
@@ -215,6 +221,7 @@ class BookingAdminProvider implements BookingAdminProviderInterface
         ];
     }
 
+    /** @return array<string, mixed> */
     private function handleRequestAlternatives(array $request): array
     {
         $bookingId = (int) ($request['booking_id'] ?? 0);
@@ -238,6 +245,7 @@ class BookingAdminProvider implements BookingAdminProviderInterface
         return ['redirect' => 'travel_bookings.manage'];
     }
 
+    /** @return array<string, mixed> */
     private function handleCheckAllStatus(): array
     {
         $results = fn_novoton_holidays_cron_resinfo();
@@ -255,6 +263,7 @@ class BookingAdminProvider implements BookingAdminProviderInterface
         ];
     }
 
+    /** @return array<string, mixed> */
     private function handleCleanupOrphans(): array
     {
         $bookingRepo = Container::getInstance()->bookingRepository();
@@ -274,6 +283,7 @@ class BookingAdminProvider implements BookingAdminProviderInterface
         ];
     }
 
+    /** @return array<string, mixed> */
     private function handleUpdateNovotonId(array $request): array
     {
         $bookingId = (int) ($request['booking_id'] ?? 0);

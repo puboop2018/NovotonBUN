@@ -486,6 +486,7 @@ class DiscoverBoardsCommand extends AbstractSyncCommand
 
     // ─── Helpers ─────────────────────────────────────────────────────────────
 
+    /** @return array<string, mixed> */
     private function resolveCountryCodes(array $params): array
     {
         if (!empty($params['country'])) {
