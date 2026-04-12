@@ -16,7 +16,7 @@ class HotelApiClient extends ApiClientBase implements HotelApiClientInterface
     /**
      * 1. hotel_list - List with hotel names
      *
-     * @return \SimpleXMLElement|false
+     * @return \SimpleXMLElement
      */
     #[\Override]
     public function getHotelList(string $country = '%', string $city = '%', string $hotel = '%', string $hotelType = '%'): \SimpleXMLElement
@@ -42,7 +42,7 @@ class HotelApiClient extends ApiClientBase implements HotelApiClientInterface
     /**
      * 2. hotelinfo - Information for hotel services
      *
-     * @return \SimpleXMLElement|false
+     * @return \SimpleXMLElement
      */
     #[\Override]
     public function getHotelInfo(string $hotelId, string $lang = 'UK'): \SimpleXMLElement
@@ -100,7 +100,7 @@ class HotelApiClient extends ApiClientBase implements HotelApiClientInterface
     /**
      * 5. hotel_description - Description of hotel
      *
-     * @return \SimpleXMLElement|false
+     * @return \SimpleXMLElement
      */
     #[\Override]
     public function getHotelDescription(string $hotelId, string $lang = 'UK', bool $includePackage = false): \SimpleXMLElement
@@ -119,7 +119,7 @@ class HotelApiClient extends ApiClientBase implements HotelApiClientInterface
     /**
      * 6. hotel_images - Pictures of hotel
      *
-     * @return \SimpleXMLElement|false
+     * @return \SimpleXMLElement
      */
     #[\Override]
     public function getHotelImages(string $hotelId, string $lang = 'UK'): \SimpleXMLElement
@@ -135,7 +135,7 @@ class HotelApiClient extends ApiClientBase implements HotelApiClientInterface
     /**
      * 27. hotel_facilities - Hotel facilities
      *
-     * @return \SimpleXMLElement|false
+     * @return \SimpleXMLElement
      */
     #[\Override]
     public function getHotelFacilities(string $hotelId): \SimpleXMLElement
@@ -151,7 +151,7 @@ class HotelApiClient extends ApiClientBase implements HotelApiClientInterface
     /**
      * 26. list_facilities - List all facilities
      *
-     * @return \SimpleXMLElement|false
+     * @return \SimpleXMLElement
      */
     #[\Override]
     public function listFacilities(): \SimpleXMLElement

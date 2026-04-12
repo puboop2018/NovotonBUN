@@ -168,7 +168,7 @@ class AlternativeDateSearcher implements AlternativeDateSearcherInterface
                     continue;
                 }
 
-                $priceData = $response['data'] ?? false;
+                $priceData = $response['data'];
                 if ($priceData && isset($priceData->Price)) {
                     $rawPrice = (float) ((string) $priceData->Price);
                     if ($rawPrice > 0) {

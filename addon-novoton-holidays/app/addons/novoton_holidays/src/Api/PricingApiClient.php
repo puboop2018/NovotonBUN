@@ -175,7 +175,7 @@ class PricingApiClient extends ApiClientBase implements PricingApiClientInterfac
     /**
      * 3. room_price - Accommodation prices (REAL-TIME RATES)
      *
-     * @return \SimpleXMLElement|false
+     * @return \SimpleXMLElement
      */
     #[\Override]
     public function getRoomPrice(array $params): \SimpleXMLElement|false
@@ -248,7 +248,7 @@ class PricingApiClient extends ApiClientBase implements PricingApiClientInterfac
     /**
      * Get room prices for an entire resort
      *
-     * @return \SimpleXMLElement|false
+     * @return \SimpleXMLElement
      */
     #[\Override]
     public function getRoomPriceByResort(array $params): \SimpleXMLElement|false
@@ -344,7 +344,7 @@ class PricingApiClient extends ApiClientBase implements PricingApiClientInterfac
     /**
      * Get room prices for an entire resort - RAW response (no XML parsing)
      *
-     * @return string|false Raw XML response
+     * @return string Raw XML response
      */
     #[\Override]
     public function getRoomPriceByResortRaw(array $params): string
@@ -387,7 +387,7 @@ class PricingApiClient extends ApiClientBase implements PricingApiClientInterfac
     /**
      * 13. priceinfo - Season prices request
      *
-     * @return \SimpleXMLElement|false
+     * @return \SimpleXMLElement
      */
     #[\Override]
     public function getPriceInfo(string $hotelId, string $packageName, string $lang = 'UK'): \SimpleXMLElement
@@ -405,7 +405,7 @@ class PricingApiClient extends ApiClientBase implements PricingApiClientInterfac
     /**
      * 10. spo - EB (Early booking), extras and other discounts
      *
-     * @return \SimpleXMLElement|false
+     * @return \SimpleXMLElement
      */
     #[\Override]
     public function getSpecialOffers(string $hotelId, string $packageName = '', string $lang = 'UK'): \SimpleXMLElement

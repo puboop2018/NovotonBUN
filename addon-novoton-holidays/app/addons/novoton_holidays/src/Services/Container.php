@@ -203,11 +203,6 @@ class Container
         return $this->resolve('cacheService', fn() => new CacheService());
     }
 
-    public function validationHelper(): \Tygh\Addons\TravelCore\Services\ValidationHelper
-    {
-        return $this->resolve('validationHelper', fn() => new \Tygh\Addons\TravelCore\Services\ValidationHelper());
-    }
-
     public function priceInfoService(): PriceInfoServiceInterface
     {
         return $this->resolve('priceInfoService', fn() => new PriceInfoService());

@@ -10,7 +10,7 @@ class DestinationApiClient extends ApiClientBase implements DestinationApiClient
     /**
      * 16. resort_list - Destinations List
      *
-     * @return \SimpleXMLElement|false
+     * @return \SimpleXMLElement
      */
     #[\Override]
     public function getResortList(string $country = '', string $lang = 'UK'): \SimpleXMLElement
@@ -26,7 +26,7 @@ class DestinationApiClient extends ApiClientBase implements DestinationApiClient
     /**
      * 25. offers_update - Updated/New Offers
      *
-     * @return \SimpleXMLElement|false
+     * @return \SimpleXMLElement
      */
     #[\Override]
     public function getOffersUpdate(string $dateTime, string $country = '', string $resort = '', string $hotel = ''): \SimpleXMLElement
@@ -46,7 +46,7 @@ class DestinationApiClient extends ApiClientBase implements DestinationApiClient
     /**
      * 24. kickback_RS - Check for kickback (commission)
      *
-     * @return \SimpleXMLElement|false
+     * @return \SimpleXMLElement
      */
     #[\Override]
     public function getKickbackInfo(string $lang = 'UK'): \SimpleXMLElement

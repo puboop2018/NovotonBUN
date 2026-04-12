@@ -216,8 +216,8 @@ class HotelAvailabilitySearcher implements HotelAvailabilitySearcherInterface
             $occupancyStr = $meta['occupancy'];
             $roomResults  = [];
 
-            $priceData = $response['data'] ?? false;
-            $rawXml    = $response['rawXml'] ?? '';
+            $priceData = $response['data'];
+            $rawXml    = $response['rawXml'];
 
             if ($priceData && !empty($rawXml)) {
                 $this->log("  Room #{$roomNum}: API response received (parsing...)");
@@ -536,11 +536,9 @@ class HotelAvailabilitySearcher implements HotelAvailabilitySearcherInterface
             $this->log("Has rooms: " . (isset($hotelInfo->rooms) ? 'YES' : 'NO'));
             $this->log("Has board: " . (isset($hotelInfo->board) ? 'YES' : 'NO'));
             $this->log("Has packages: " . (isset($hotelInfo->packages) ? 'YES' : 'NO'));
-            if ($hotelInfo instanceof \SimpleXMLElement) {
-                $rawXml = $hotelInfo->asXML();
-                $this->log("=== RAW HOTELINFO XML (truncated) ===");
-                $this->log(substr(htmlspecialchars($rawXml), 0, 2000));
-            }
+            $rawXml = $hotelInfo->asXML();
+            $this->log("=== RAW HOTELINFO XML (truncated) ===");
+            $this->log(substr(htmlspecialchars($rawXml), 0, 2000));
         } else {
             $this->log("ERROR: No hotel info returned from API");
         }

@@ -108,11 +108,9 @@ class HotelSync
                     continue;
                 }
 
-                // Handle single hotel vs multiple
+                // SimpleXML's child accessor already iterates all sibling
+                // <hotelinfo> elements — no need to normalise for scalar.
                 $hotels = $hotelList->hotelinfo;
-                if (!is_array($hotels) && !($hotels instanceof \Traversable)) {
-                    $hotels = [$hotels];
-                }
 
                 // Collect hotel data for batch insert
                 $batchData = [];

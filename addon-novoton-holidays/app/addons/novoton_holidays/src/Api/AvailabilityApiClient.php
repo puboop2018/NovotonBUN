@@ -109,7 +109,7 @@ class AvailabilityApiClient extends ApiClientBase implements AvailabilityApiClie
     /**
      * 21. hotel_quota_add - Allotments additional
      *
-     * @return \SimpleXMLElement|false
+     * @return \SimpleXMLElement
      */
     #[\Override]
     public function getHotelQuotaAdditional(string $hotelId, string $roomId, string $checkIn, string $checkOut): \SimpleXMLElement

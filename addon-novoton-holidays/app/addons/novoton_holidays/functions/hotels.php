@@ -361,15 +361,11 @@ function fn_novoton_holidays_get_hotel_prices(int $product_id, bool $force = fal
  */
 function fn_novoton_holidays_get_package_priceinfo(string $hotel_id, string $package_id): ?array
 {
-    if ($hotel_id === null || $package_id === null) {
-        return null;
-    }
-
     $pkg = db_get_row(
         "SELECT priceinfo_data FROM ?:novoton_hotel_packages
          WHERE hotel_id = ?s AND package_id = ?s",
-        (string) $hotel_id,
-        (string) $package_id
+        $hotel_id,
+        $package_id
     );
 
     if (empty($pkg) || empty($pkg['priceinfo_data'])) {
@@ -391,15 +387,11 @@ function fn_novoton_holidays_get_package_priceinfo(string $hotel_id, string $pac
  */
 function fn_novoton_holidays_get_package_priceinfo_by_name(string $hotel_id, string $package_name): ?array
 {
-    if ($hotel_id === null || $package_name === null) {
-        return null;
-    }
-
     $pkg = db_get_row(
         "SELECT priceinfo_data FROM ?:novoton_hotel_packages
          WHERE hotel_id = ?s AND package_name = ?s",
-        (string) $hotel_id,
-        (string) $package_name
+        $hotel_id,
+        $package_name
     );
 
     if (empty($pkg) || empty($pkg['priceinfo_data'])) {
@@ -621,10 +613,9 @@ function fn_novoton_holidays_sync_facilities_list(): array
  */
 function fn_novoton_holidays_sync_hotel_facilities(string $hotel_id): bool
 {
-    if ($hotel_id === null || $hotel_id === '') {
+    if ($hotel_id === '') {
         return false;
     }
-    $hotel_id = (string) $hotel_id;
 
     $api = fn_novoton_holidays_get_api();
     if (!$api) {
@@ -684,10 +675,9 @@ function fn_novoton_holidays_sync_hotel_facilities(string $hotel_id): bool
  */
 function fn_novoton_holidays_get_hotel_facilities(string $hotel_id, string $lang = 'en'): array
 {
-    if ($hotel_id === null || $hotel_id === '') {
+    if ($hotel_id === '') {
         return [];
     }
-    $hotel_id = (string) $hotel_id;
 
     $allowed = ['ro' => 'facility_name_ro', 'en' => 'facility_name_en'];
     $col = $allowed[$lang] ?? $allowed['en'];
@@ -712,10 +702,9 @@ function fn_novoton_holidays_get_hotel_facilities(string $hotel_id, string $lang
  */
 function fn_novoton_holidays_get_hotel_facilities_by_type(string $hotel_id, string $facility_type, string $lang = 'en'): array
 {
-    if ($hotel_id === null || $hotel_id === '') {
+    if ($hotel_id === '') {
         return [];
     }
-    $hotel_id = (string) $hotel_id;
 
     $allowed = ['ro' => 'facility_name_ro', 'en' => 'facility_name_en'];
     $col = $allowed[$lang] ?? $allowed['en'];

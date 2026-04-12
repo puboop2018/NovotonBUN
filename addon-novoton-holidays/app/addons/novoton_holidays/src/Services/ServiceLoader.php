@@ -62,13 +62,6 @@ function _nvt_cache_service(): \Tygh\Addons\NovotonHolidays\Services\CacheServic
 }
 
 /**
- * @return \Tygh\Addons\TravelCore\Services\ValidationHelper
- */
-function _nvt_validation_helper(): \Tygh\Addons\TravelCore\Services\ValidationHelper {
-    return Container::getInstance()->validationHelper();
-}
-
-/**
  * @return \Tygh\Addons\TravelCore\Services\CurrencyService
  */
 function _nvt_currency_service(): \Tygh\Addons\TravelCore\Services\CurrencyService {

@@ -127,7 +127,7 @@ class OffersUpdateCommand extends AbstractCronCommand
             }
 
             // Build placeholder map for SEO templates
-            $hotel_data_for_seo = array_merge($existing ?? [], [
+            $hotel_data_for_seo = array_merge($existing, [
                 'hotel_name' => $raw_name,
                 'country'    => $existing['country'] ?? $country,
             ]);

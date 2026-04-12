@@ -67,6 +67,10 @@ parameters:
         - '#unknown class Tygh\\Languages#'
         - '#unknown class Tygh\\Storage#'
         - '#unknown class Tygh\\Enum#'
+        - '#unknown class Tygh\\Settings#'
+        # Bare "Tygh" — CS-Cart exposes \Tygh as a global class alias for
+        # Tygh\Tygh. Callers write `Tygh::$app['view']->assign(...)`.
+        - '#unknown class Tygh\.#'
         - '#Class Tygh\\Registry not found\.#'
         - '#Class Tygh\\Tygh not found\.#'
         - '#Class Tygh\\Http not found\.#'
@@ -74,6 +78,7 @@ parameters:
         - '#Class Tygh\\Languages\\\w+ not found\.#'
         - '#Class Tygh\\Storage not found\.#'
         - '#Class Tygh\\Enum\\\w+ not found\.#'
+        - '#Class Tygh\\Settings not found\.#'
 
         # ── CS-Cart constants ───────────────────────────────────────────────
         - '#Constant DIR_ROOT not found\.#'

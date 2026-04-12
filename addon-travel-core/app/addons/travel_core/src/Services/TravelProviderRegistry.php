@@ -21,7 +21,7 @@ class TravelProviderRegistry
      */
     public const KNOWN_PROVIDER_ADDONS = ['novoton_holidays', 'sphinx_holidays'];
 
-    /** @var array<string, array{name: string, label: string, normalizer: ProviderNormalizerInterface, booking_admin_provider?: BookingAdminProviderInterface, status_sync_callback?: callable, single_status_callback?: callable}> */
+    /** @var array<string, array{name: string, label: string, normalizer: ProviderNormalizerInterface, booking_admin_provider?: BookingAdminProviderInterface, status_sync_callback?: callable, single_status_callback?: callable, scan_config?: array{table: string, id_col: string, json_col: string}}> */
     private static array $providers = [];
 
     /**

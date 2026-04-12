@@ -31,24 +31,6 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_diagnostic.php
 
 		-
-			message: '#^Variable \$bookingRepo might not be defined\.$#'
-			identifier: variable.undefined
-			count: 3
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_diagnostic.php
-
-		-
-			message: '#^Variable \$hotelRepo might not be defined\.$#'
-			identifier: variable.undefined
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_diagnostic.php
-
-		-
-			message: '#^Variable \$syncLogRepo might not be defined\.$#'
-			identifier: variable.undefined
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_diagnostic.php
-
-		-
 			message: '#^Access to undefined constant Tygh\\Addons\\NovotonHolidays\\Constants\:\:FEATURE_TYPE_TO_SETTING\.$#'
 			identifier: classConstant.notFound
 			count: 1
@@ -59,12 +41,6 @@ parameters:
 			identifier: greater.alwaysTrue
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_prices.php
-
-		-
-			message: '#^Call to static method instance\(\) on an unknown class Tygh\\Settings\.$#'
-			identifier: class.notFound
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_seo_templates.php
 
 		-
 			message: '#^Offset ''last_http_code'' does not exist on array\{success\: false, config\: non\-empty\-array, message\: string, hotels_count\: int, sample_hotel\: array\|null, error\: string\}\.$#'
@@ -107,18 +83,6 @@ parameters:
 			identifier: empty.offset
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_tools.php
-
-		-
-			message: '#^Instanceof between SimpleXMLElement and SimpleXMLElement will always evaluate to true\.$#'
-			identifier: instanceof.alwaysTrue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking.php
-
-		-
-			message: '#^Instanceof between SimpleXMLElement and SimpleXMLElement will always evaluate to true\.$#'
-			identifier: instanceof.alwaysTrue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/add_to_cart.php
 
 		-
 			message: '#^Offset ''room_id'' on non\-empty\-array\<mixed\> in empty\(\) always exists and is not falsy\.$#'
@@ -205,18 +169,6 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/hotels.php
 
 		-
-			message: '#^Result of \|\| is always false\.$#'
-			identifier: booleanOr.alwaysFalse
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/hotels.php
-
-		-
-			message: '#^Strict comparison using \=\=\= between string and null will always evaluate to false\.$#'
-			identifier: identical.alwaysFalse
-			count: 7
-			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/hotels.php
-
-		-
 			message: '#^Variable \$country on left side of \?\? always exists and is not nullable\.$#'
 			identifier: nullCoalesce.variable
 			count: 1
@@ -229,68 +181,14 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/hotels.php
 
 		-
-			message: '#^PHPDoc tag @return with type SimpleXMLElement\|false is not subtype of native type SimpleXMLElement\.$#'
-			identifier: return.phpDocType
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Api/AvailabilityApiClient.php
-
-		-
-			message: '#^PHPDoc tag @return with type SimpleXMLElement\|false is not subtype of native type SimpleXMLElement\.$#'
-			identifier: return.phpDocType
-			count: 3
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Api/DestinationApiClient.php
-
-		-
-			message: '#^PHPDoc tag @return with type SimpleXMLElement\|false is not subtype of native type SimpleXMLElement\.$#'
-			identifier: return.phpDocType
-			count: 6
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Api/HotelApiClient.php
-
-		-
 			message: '#^Comparison operation "\>" between int\<1, max\> and 0 is always true\.$#'
 			identifier: greater.alwaysTrue
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Api/PricingApiClient.php
 
 		-
-			message: '#^PHPDoc tag @return with type SimpleXMLElement\|false is not subtype of native type SimpleXMLElement\.$#'
-			identifier: return.phpDocType
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Api/PricingApiClient.php
-
-		-
-			message: '#^PHPDoc tag @return with type string\|false is not subtype of native type string\.$#'
-			identifier: return.phpDocType
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Api/PricingApiClient.php
-
-		-
-			message: '#^PHPDoc tag @return with type SimpleXMLElement\|false is not subtype of native type SimpleXMLElement\.$#'
-			identifier: return.phpDocType
-			count: 5
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Api/ReservationApiClient.php
-
-		-
-			message: '#^PHPDoc tag @return with type array\|SimpleXMLElement\|false is not subtype of native type array\|SimpleXMLElement\.$#'
-			identifier: return.phpDocType
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Api/ReservationApiClient.php
-
-		-
-			message: '#^PHPDoc tag @return with type string\|false is not subtype of native type string\.$#'
-			identifier: return.phpDocType
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Api/ReservationApiClient.php
-
-		-
 			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Cron\\Commands\\AddProductsCommand\:\:buildPlaceholders\(\) is unused\.$#'
 			identifier: method.unused
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/AddProductsCommand.php
-
-		-
-			message: '#^Variable \$allFacilityIds on left side of \?\? always exists and is not nullable\.$#'
-			identifier: nullCoalesce.variable
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/AddProductsCommand.php
 
@@ -307,20 +205,8 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/DataSyncCommand.php
 
 		-
-			message: '#^Variable \$stats on left side of \?\? always exists and is not nullable\.$#'
-			identifier: nullCoalesce.variable
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/HotelSyncCommand.php
-
-		-
 			message: '#^Ternary operator condition is always false\.$#'
 			identifier: ternary.alwaysFalse
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/OffersUpdateCommand.php
-
-		-
-			message: '#^Variable \$existing on left side of \?\? always exists and is not nullable\.$#'
-			identifier: nullCoalesce.variable
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/OffersUpdateCommand.php
 
@@ -361,26 +247,8 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/StateManager.php
 
 		-
-			message: '#^Call to function is_array\(\) with SimpleXMLElement will always evaluate to false\.$#'
-			identifier: function.impossibleType
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/HotelSync.php
-
-		-
-			message: '#^Instanceof between SimpleXMLElement and Traversable will always evaluate to true\.$#'
-			identifier: instanceof.alwaysTrue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/HotelSync.php
-
-		-
 			message: '#^Property Tygh\\Addons\\NovotonHolidays\\HotelSync\:\:\$productPrefixes is never read, only written\.$#'
 			identifier: property.onlyWritten
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/HotelSync.php
-
-		-
-			message: '#^Result of && is always false\.$#'
-			identifier: booleanAnd.alwaysFalse
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/HotelSync.php
 
@@ -421,12 +289,6 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/AdminCronService.php
 
 		-
-			message: '#^Offset ''data'' on array\{data\: SimpleXMLElement\|false, rawXml\: string\} on left side of \?\? always exists and is not nullable\.$#'
-			identifier: nullCoalesce.offset
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/AlternativeDateSearcher.php
-
-		-
 			message: '#^Call to function is_array\(\) with non\-empty\-array will always evaluate to true\.$#'
 			identifier: function.alreadyNarrowedType
 			count: 1
@@ -443,18 +305,6 @@ parameters:
 			identifier: binaryOp.invalid
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingSubmissionService.php
-
-		-
-			message: '#^Instantiated class Tygh\\Addons\\TravelCore\\Services\\ValidationHelper not found\.$#'
-			identifier: class.notFound
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/Container.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\Container\:\:validationHelper\(\) has invalid return type Tygh\\Addons\\TravelCore\\Services\\ValidationHelper\.$#'
-			identifier: class.notFound
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/Container.php
 
 		-
 			message: '#^Comparison operation "\>" between int\<2, max\> and 0 is always true\.$#'
@@ -475,26 +325,8 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/FeeCalculator.php
 
 		-
-			message: '#^Instanceof between SimpleXMLElement and SimpleXMLElement will always evaluate to true\.$#'
-			identifier: instanceof.alwaysTrue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/HotelAvailabilitySearcher.php
-
-		-
 			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\SearchServiceInterface\:\:parseRoomPriceResponse\(\) invoked with 7 parameters, 9 required\.$#'
 			identifier: arguments.count
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/HotelAvailabilitySearcher.php
-
-		-
-			message: '#^Offset ''data'' on array\{data\: SimpleXMLElement\|false, rawXml\: string\} on left side of \?\? always exists and is not nullable\.$#'
-			identifier: nullCoalesce.offset
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/HotelAvailabilitySearcher.php
-
-		-
-			message: '#^Offset ''rawXml'' on array\{data\: SimpleXMLElement\|false, rawXml\: string\} on left side of \?\? always exists and is not nullable\.$#'
-			identifier: nullCoalesce.offset
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/HotelAvailabilitySearcher.php
 
@@ -523,12 +355,6 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoService.php
 
 		-
-			message: '#^Instanceof between SimpleXMLElement and SimpleXMLElement will always evaluate to true\.$#'
-			identifier: instanceof.alwaysTrue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceVerificationService.php
-
-		-
 			message: '#^Variable \$seasons in empty\(\) always exists and is not falsy\.$#'
 			identifier: empty.variable
 			count: 1
@@ -553,12 +379,6 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SearchService.php
 
 		-
-			message: '#^Function _nvt_validation_helper\(\) has invalid return type Tygh\\Addons\\TravelCore\\Services\\ValidationHelper\.$#'
-			identifier: class.notFound
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/ServiceLoader.php
-
-		-
 			message: '#^Expression on left side of \?\? is not nullable\.$#'
 			identifier: nullCoalesce.expr
 			count: 1
@@ -581,12 +401,6 @@ parameters:
 			identifier: argument.type
 			count: 1
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/backend/sphinx_holidays.php
-
-		-
-			message: '#^Call to static method instance\(\) on an unknown class Tygh\\Settings\.$#'
-			identifier: class.notFound
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/backend/sphinx_seo_templates.php
 
 		-
 			message: '#^Call to an undefined method Tygh\\Addons\\SphinxHolidays\\SphinxApi\:\:customizeCircuit\(\)\.$#'
@@ -769,12 +583,6 @@ parameters:
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/SphinxFeatureAssigner.php
 
 		-
-			message: '#^Call to static method instance\(\) on an unknown class Tygh\\Settings\.$#'
-			identifier: class.notFound
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/controllers/backend/travel_booking_styles.php
-
-		-
 			message: '#^Offset ''message'' on array\{type\: string, title\: string, message\: string\} on left side of \?\? always exists and is not nullable\.$#'
 			identifier: nullCoalesce.offset
 			count: 1
@@ -841,12 +649,6 @@ parameters:
 			path: addon-travel-core/app/addons/travel_core/controllers/backend/travel_feature_mappings.php
 
 		-
-			message: '#^Access to static property \$app on an unknown class Tygh\.$#'
-			identifier: class.notFound
-			count: 3
-			path: addon-travel-core/app/addons/travel_core/controllers/backend/travel_tools.php
-
-		-
 			message: '#^Strict comparison using \=\=\= between ''exchange_rates'' and ''exchange_rates'' will always evaluate to true\.$#'
 			identifier: identical.alwaysTrue
 			count: 1
@@ -887,21 +689,3 @@ parameters:
 			identifier: empty.offset
 			count: 1
 			path: addon-travel-core/app/addons/travel_core/src/Services/GuestDataService.php
-
-		-
-			message: '#^Offset ''scan_config'' does not exist on array\{name\: string, label\: string, normalizer\: Tygh\\Addons\\TravelCore\\Contracts\\ProviderNormalizerInterface, booking_admin_provider\?\: Tygh\\Addons\\TravelCore\\Contracts\\BookingAdminProviderInterface, status_sync_callback\?\: callable\(\)\: mixed, single_status_callback\?\: callable\(\)\: mixed\}\.$#'
-			identifier: offsetAccess.notFound
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Services/TravelProviderRegistry.php
-
-		-
-			message: '#^Offset ''scan_config'' on array\{name\: string, label\: string, normalizer\: Tygh\\Addons\\TravelCore\\Contracts\\ProviderNormalizerInterface, booking_admin_provider\?\: Tygh\\Addons\\TravelCore\\Contracts\\BookingAdminProviderInterface, status_sync_callback\?\: callable\(\)\: mixed, single_status_callback\?\: callable\(\)\: mixed\} in empty\(\) does not exist\.$#'
-			identifier: empty.offset
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Services/TravelProviderRegistry.php
-
-		-
-			message: '#^Offset ''scan_config'' on array\{name\: string, label\: string, normalizer\: Tygh\\Addons\\TravelCore\\Contracts\\ProviderNormalizerInterface, booking_admin_provider\?\: Tygh\\Addons\\TravelCore\\Contracts\\BookingAdminProviderInterface, status_sync_callback\?\: callable\(\)\: mixed, single_status_callback\?\: callable\(\)\: mixed\} on left side of \?\? does not exist\.$#'
-			identifier: nullCoalesce.offset
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Services/TravelProviderRegistry.php

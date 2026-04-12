@@ -12,7 +12,7 @@ class ReservationApiClient extends ApiClientBase implements ReservationApiClient
     /**
      * 7. hotel_res_RQ - Reservation request
      *
-     * @return \SimpleXMLElement|false
+     * @return \SimpleXMLElement
      */
     #[\Override]
     public function createReservation(array $bookingData): \SimpleXMLElement
@@ -102,7 +102,7 @@ class ReservationApiClient extends ApiClientBase implements ReservationApiClient
     /**
      * 15. resinfo - Reservations Info
      *
-     * @return \SimpleXMLElement|false
+     * @return \SimpleXMLElement
      */
     #[\Override]
     public function getReservationInfo(string $idNum = '', string $confirmAgency = '', string $lang = 'UK'): \SimpleXMLElement
@@ -122,7 +122,7 @@ class ReservationApiClient extends ApiClientBase implements ReservationApiClient
     /**
      * 22. hotel_request - Request alternatives when no prices available
      *
-     * @return \SimpleXMLElement|array|false
+     * @return \SimpleXMLElement|array
      */
     #[\Override]
     public function createHotelRequest(array $requestData, string $lang = 'UK', bool $returnXml = false): \SimpleXMLElement|array
@@ -166,7 +166,7 @@ class ReservationApiClient extends ApiClientBase implements ReservationApiClient
     /**
      * 23. alternative_RS - Check for available requested alternatives
      *
-     * @return \SimpleXMLElement|false
+     * @return \SimpleXMLElement
      */
     #[\Override]
     public function getAlternatives(string $idNum, string $lang = 'UK'): \SimpleXMLElement
@@ -188,7 +188,7 @@ class ReservationApiClient extends ApiClientBase implements ReservationApiClient
     /**
      * 8. hotel_acc_RQ_html - Invoice as HTML
      *
-     * @return string|false
+     * @return string
      */
     #[\Override]
     public function getInvoiceHtml(string $idNum, string $lang = 'UK'): string
@@ -205,7 +205,7 @@ class ReservationApiClient extends ApiClientBase implements ReservationApiClient
     /**
      * 9. hotel_acc_RQ - Invoice as XML
      *
-     * @return \SimpleXMLElement|false
+     * @return \SimpleXMLElement
      */
     #[\Override]
     public function getInvoiceXml(string $idNum, string $lang = 'UK'): \SimpleXMLElement
@@ -222,7 +222,7 @@ class ReservationApiClient extends ApiClientBase implements ReservationApiClient
     /**
      * 14. list_invoices - List Invoices
      *
-     * @return \SimpleXMLElement|false
+     * @return \SimpleXMLElement
      */
     #[\Override]
     public function listInvoices(string $arrFrom = '', string $arrTo = '', string $lang = 'UK'): \SimpleXMLElement

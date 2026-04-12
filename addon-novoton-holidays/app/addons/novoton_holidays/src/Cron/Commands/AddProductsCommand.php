@@ -255,7 +255,7 @@ class AddProductsCommand extends AbstractCronCommand
 
         // Travel Group — derived from facility codes + hotel flags (not from API)
         $resolvedFacilityCodes = [];
-        foreach ($allFacilityIds ?? [] as $fid) {
+        foreach ($allFacilityIds as $fid) {
             $code = $normalizer->normalizeFacilityCode($fid);
             if ($code !== null) {
                 $mapping = \Tygh\Addons\TravelCore\Services\FeatureMapper::resolveFacility('novoton', $code);

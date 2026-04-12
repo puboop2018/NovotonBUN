@@ -82,15 +82,13 @@ class PriceVerificationService implements PriceVerificationServiceInterface
         // Extract terms
         $termsOfPayment = '';
         $termsOfCancellation = '';
-        if ($priceData instanceof \SimpleXMLElement) {
-            $tp = $priceData->xpath('//TermsOfPayment');
-            $tc = $priceData->xpath('//TermsOfCancellation');
-            if (!empty($tp[0])) {
-                $termsOfPayment = $tp[0]->asXML();
-            }
-            if (!empty($tc[0])) {
-                $termsOfCancellation = $tc[0]->asXML();
-            }
+        $tp = $priceData->xpath('//TermsOfPayment');
+        $tc = $priceData->xpath('//TermsOfCancellation');
+        if (!empty($tp[0])) {
+            $termsOfPayment = $tp[0]->asXML();
+        }
+        if (!empty($tc[0])) {
+            $termsOfCancellation = $tc[0]->asXML();
         }
 
         return [

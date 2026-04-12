@@ -295,16 +295,14 @@ use Tygh\Addons\TravelCore\TravelConstants;
         }
 
         // Extract terms from API response using xpath (more reliable than direct property access)
-        if ($priceData instanceof \SimpleXMLElement) {
-            $termsPayment = $priceData->xpath('//TermsOfPayment');
-            $termsCancellation = $priceData->xpath('//TermsOfCancellation');
+        $termsPayment = $priceData->xpath('//TermsOfPayment');
+        $termsCancellation = $priceData->xpath('//TermsOfCancellation');
 
-            if (!empty($termsPayment[0])) {
-                $terms_of_payment = $termsPayment[0]->asXML();
-            }
-            if (!empty($termsCancellation[0])) {
-                $terms_of_cancellation = $termsCancellation[0]->asXML();
-            }
+        if (!empty($termsPayment[0])) {
+            $terms_of_payment = $termsPayment[0]->asXML();
+        }
+        if (!empty($termsCancellation[0])) {
+            $terms_of_cancellation = $termsCancellation[0]->asXML();
         }
 
         // Extract remark and important info
