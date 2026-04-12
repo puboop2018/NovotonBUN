@@ -14,11 +14,13 @@ declare(strict_types=1);
  *
  * @package NovotonHolidays
  * @since   3.7.0
- * @phpstan-type HotelRow = array<string, mixed>
  */
 
 namespace Tygh\Addons\NovotonHolidays\Repository;
 
+/**
+ * @phpstan-type HotelRow = array<string, mixed>
+ */
 interface HotelSearchRepositoryInterface
 {
     /**

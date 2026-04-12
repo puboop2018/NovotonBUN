@@ -1111,43 +1111,13 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelReportingRepository.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findAll\(\) should return list\<array\<string, mixed\>\> but returns list\<Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\>\.$#'
+			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findByCountryIndexed\(\) should return list\<array\<string, mixed\>\> but returns array\<string, array\<string, mixed\>\>\.$#'
 			identifier: return.type
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findAllForListing\(\) should return list\<array\<string, mixed\>\> but returns list\<Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\>\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findByCountry\(\) should return list\<array\<string, mixed\>\> but returns list\<Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\>\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findByCountryForListing\(\) should return list\<array\<string, mixed\>\> but returns list\<Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\>\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findByCountryIndexed\(\) should return list\<array\<string, mixed\>\> but returns array\<string, Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\>\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findByCountryWithLimit\(\) should return list\<array\<string, mixed\>\> but returns list\<Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\>\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findForImport\(\) should return array\<string, mixed\> but returns list\<Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\>\.$#'
+			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findForImport\(\) should return array\<string, mixed\> but returns list\<array\<string, mixed\>\>\.$#'
 			identifier: return.type
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
@@ -1159,55 +1129,55 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findLinkedForSeo\(\) should return array\<string, mixed\> but returns list\<Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\>\.$#'
+			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findLinkedForSeo\(\) should return array\<string, mixed\> but returns list\<array\<string, mixed\>\>\.$#'
 			identifier: return.type
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findNeedingPriceCheck\(\) should return array\<string, mixed\> but returns list\<Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\>\.$#'
+			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findNeedingPriceCheck\(\) should return array\<string, mixed\> but returns list\<array\<string, mixed\>\>\.$#'
 			identifier: return.type
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findNeedingPriceUpdate\(\) should return array\<string, mixed\> but returns list\<Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\>\.$#'
+			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findNeedingPriceUpdate\(\) should return array\<string, mixed\> but returns list\<array\<string, mixed\>\>\.$#'
 			identifier: return.type
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findUnlinkedForAdmin\(\) should return array\<string, mixed\> but returns list\<Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\>\.$#'
+			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findUnlinkedForAdmin\(\) should return array\<string, mixed\> but returns list\<array\<string, mixed\>\>\.$#'
 			identifier: return.type
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findUnlinkedWithPrices\(\) should return array\<string, mixed\> but returns list\<Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\>\.$#'
+			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findUnlinkedWithPrices\(\) should return array\<string, mixed\> but returns list\<array\<string, mixed\>\>\.$#'
 			identifier: return.type
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findWithPriceinfoData\(\) should return array\<string, mixed\> but returns list\<Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\>\.$#'
+			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findWithPriceinfoData\(\) should return array\<string, mixed\> but returns list\<array\<string, mixed\>\>\.$#'
 			identifier: return.type
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findWithPricesForExport\(\) should return array\<string, mixed\> but returns list\<Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\>\.$#'
+			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findWithPricesForExport\(\) should return array\<string, mixed\> but returns list\<array\<string, mixed\>\>\.$#'
 			identifier: return.type
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findWithProductsSortedByStaleness\(\) should return array\<string, mixed\> but returns list\<Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\>\.$#'
+			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findWithProductsSortedByStaleness\(\) should return array\<string, mixed\> but returns list\<array\<string, mixed\>\>\.$#'
 			identifier: return.type
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findWithoutPackages\(\) should return array\<string, mixed\> but returns list\<Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\>\.$#'
+			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findWithoutPackages\(\) should return array\<string, mixed\> but returns list\<array\<string, mixed\>\>\.$#'
 			identifier: return.type
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
@@ -1369,7 +1339,7 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepository.php
 
 		-
-			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepository\:\:findForImport\(\) should be compatible with return type \(list\<Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findForImport\(\)$#'
+			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepository\:\:findForImport\(\) should be compatible with return type \(list\<array\<string, mixed\>\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findForImport\(\)$#'
 			identifier: method.childReturnType
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepository.php
@@ -1381,190 +1351,64 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepository.php
 
 		-
-			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepository\:\:findLinkedForSeo\(\) should be compatible with return type \(list\<Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findLinkedForSeo\(\)$#'
+			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepository\:\:findLinkedForSeo\(\) should be compatible with return type \(list\<array\<string, mixed\>\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findLinkedForSeo\(\)$#'
 			identifier: method.childReturnType
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepository.php
 
 		-
-			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepository\:\:findNeedingPriceCheck\(\) should be compatible with return type \(list\<Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findNeedingPriceCheck\(\)$#'
+			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepository\:\:findNeedingPriceCheck\(\) should be compatible with return type \(list\<array\<string, mixed\>\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findNeedingPriceCheck\(\)$#'
 			identifier: method.childReturnType
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepository.php
 
 		-
-			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepository\:\:findNeedingPriceUpdate\(\) should be compatible with return type \(list\<Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findNeedingPriceUpdate\(\)$#'
+			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepository\:\:findNeedingPriceUpdate\(\) should be compatible with return type \(list\<array\<string, mixed\>\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findNeedingPriceUpdate\(\)$#'
 			identifier: method.childReturnType
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepository.php
 
 		-
-			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepository\:\:findUnlinkedForAdmin\(\) should be compatible with return type \(list\<Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findUnlinkedForAdmin\(\)$#'
+			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepository\:\:findUnlinkedForAdmin\(\) should be compatible with return type \(list\<array\<string, mixed\>\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findUnlinkedForAdmin\(\)$#'
 			identifier: method.childReturnType
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepository.php
 
 		-
-			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepository\:\:findUnlinkedWithPrices\(\) should be compatible with return type \(list\<Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findUnlinkedWithPrices\(\)$#'
+			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepository\:\:findUnlinkedWithPrices\(\) should be compatible with return type \(list\<array\<string, mixed\>\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findUnlinkedWithPrices\(\)$#'
 			identifier: method.childReturnType
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepository.php
 
 		-
-			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepository\:\:findWithPriceinfoData\(\) should be compatible with return type \(list\<Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findWithPriceinfoData\(\)$#'
+			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepository\:\:findWithPriceinfoData\(\) should be compatible with return type \(list\<array\<string, mixed\>\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findWithPriceinfoData\(\)$#'
 			identifier: method.childReturnType
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepository.php
 
 		-
-			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepository\:\:findWithPricesForExport\(\) should be compatible with return type \(list\<Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findWithPricesForExport\(\)$#'
+			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepository\:\:findWithPricesForExport\(\) should be compatible with return type \(list\<array\<string, mixed\>\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findWithPricesForExport\(\)$#'
 			identifier: method.childReturnType
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepository.php
 
 		-
-			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepository\:\:findWithProductsSortedByStaleness\(\) should be compatible with return type \(list\<Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findWithProductsSortedByStaleness\(\)$#'
+			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepository\:\:findWithProductsSortedByStaleness\(\) should be compatible with return type \(list\<array\<string, mixed\>\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findWithProductsSortedByStaleness\(\)$#'
 			identifier: method.childReturnType
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepository.php
 
 		-
-			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepository\:\:findWithoutPackages\(\) should be compatible with return type \(list\<Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findWithoutPackages\(\)$#'
+			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepository\:\:findWithoutPackages\(\) should be compatible with return type \(list\<array\<string, mixed\>\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findWithoutPackages\(\)$#'
 			identifier: method.childReturnType
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepository.php
 
 		-
-			message: '#^Return type \(list\<array\<string, mixed\>\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepository\:\:findAll\(\) should be compatible with return type \(list\<Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findAll\(\)$#'
+			message: '#^Return type \(list\<array\<string, mixed\>\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepository\:\:findByCountryIndexed\(\) should be compatible with return type \(array\<string, array\<string, mixed\>\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findByCountryIndexed\(\)$#'
 			identifier: method.childReturnType
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepository.php
-
-		-
-			message: '#^Return type \(list\<array\<string, mixed\>\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepository\:\:findAllForListing\(\) should be compatible with return type \(list\<Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findAllForListing\(\)$#'
-			identifier: method.childReturnType
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepository.php
-
-		-
-			message: '#^Return type \(list\<array\<string, mixed\>\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepository\:\:findByCountry\(\) should be compatible with return type \(list\<Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findByCountry\(\)$#'
-			identifier: method.childReturnType
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepository.php
-
-		-
-			message: '#^Return type \(list\<array\<string, mixed\>\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepository\:\:findByCountryForListing\(\) should be compatible with return type \(list\<Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findByCountryForListing\(\)$#'
-			identifier: method.childReturnType
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepository.php
-
-		-
-			message: '#^Return type \(list\<array\<string, mixed\>\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepository\:\:findByCountryIndexed\(\) should be compatible with return type \(array\<string, Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findByCountryIndexed\(\)$#'
-			identifier: method.childReturnType
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepository.php
-
-		-
-			message: '#^Return type \(list\<array\<string, mixed\>\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepository\:\:findByCountryWithLimit\(\) should be compatible with return type \(list\<Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findByCountryWithLimit\(\)$#'
-			identifier: method.childReturnType
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findAll\(\) has invalid return type Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\.$#'
-			identifier: class.notFound
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findAllForListing\(\) has invalid return type Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\.$#'
-			identifier: class.notFound
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findByCountry\(\) has invalid return type Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\.$#'
-			identifier: class.notFound
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findByCountryForListing\(\) has invalid return type Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\.$#'
-			identifier: class.notFound
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findByCountryIndexed\(\) has invalid return type Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\.$#'
-			identifier: class.notFound
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findByCountryWithLimit\(\) has invalid return type Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\.$#'
-			identifier: class.notFound
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findForImport\(\) has invalid return type Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\.$#'
-			identifier: class.notFound
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findLinkedForSeo\(\) has invalid return type Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\.$#'
-			identifier: class.notFound
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findNeedingPriceCheck\(\) has invalid return type Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\.$#'
-			identifier: class.notFound
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findNeedingPriceUpdate\(\) has invalid return type Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\.$#'
-			identifier: class.notFound
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findUnlinkedForAdmin\(\) has invalid return type Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\.$#'
-			identifier: class.notFound
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findUnlinkedWithPrices\(\) has invalid return type Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\.$#'
-			identifier: class.notFound
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findWithPriceinfoData\(\) has invalid return type Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\.$#'
-			identifier: class.notFound
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findWithPricesForExport\(\) has invalid return type Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\.$#'
-			identifier: class.notFound
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findWithProductsSortedByStaleness\(\) has invalid return type Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\.$#'
-			identifier: class.notFound
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findWithoutPackages\(\) has invalid return type Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\.$#'
-			identifier: class.notFound
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepositoryInterface.php
 
 		-
 			message: '#^Parameter \#1 \$requests of function fn_novoton_holidays_decrypt_requests_pii expects list\<array\<string, mixed\>\>, array\<string, mixed\> given\.$#'
