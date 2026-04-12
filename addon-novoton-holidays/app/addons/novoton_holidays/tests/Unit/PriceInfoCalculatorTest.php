@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\NovotonHolidays\Tests\Unit;
 
 use PHPUnit\Framework\TestCase;
+use Tygh\Addons\NovotonHolidays\Services\DiscountCalculator;
 use Tygh\Addons\NovotonHolidays\Services\PriceInfoCalculator;
 use Tygh\Addons\NovotonHolidays\Services\PriceInfoParser;
 
@@ -277,7 +278,7 @@ class PriceInfoCalculatorTest extends TestCase
 
     // ── applyPriorityRules ──────────────────────────────────────────────
 
-    private function makeCalcWithPriority(string $priority, string $priorityEB, string $priorityEXT): PriceInfoCalculator
+    private function makeCalcWithPriority(string $priority, string $priorityEB, string $priorityEXT): DiscountCalculator
     {
         $parser = $this->createMock(PriceInfoParser::class);
         $parser->method('getPriceinfo')->willReturn([
@@ -286,7 +287,7 @@ class PriceInfoCalculatorTest extends TestCase
             'PriorityEXT' => $priorityEXT,
         ]);
 
-        return new PriceInfoCalculator($parser, 0.0);
+        return new DiscountCalculator($parser);
     }
 
     public function testPriorityNoCombinesDiscounts(): void
@@ -451,7 +452,7 @@ class PriceInfoCalculatorTest extends TestCase
             ],
         ]);
 
-        $calc = new PriceInfoCalculator($parser, 0.0);
+        $calc = new DiscountCalculator($parser);
         $result = $calc->calculateReductionPercAdditional(1000.0);
 
         $this->assertTrue($result['applicable']);
@@ -470,7 +471,7 @@ class PriceInfoCalculatorTest extends TestCase
             ],
         ]);
 
-        $calc = new PriceInfoCalculator($parser, 0.0);
+        $calc = new DiscountCalculator($parser);
         $result = $calc->calculateReductionPercAdditional(1000.0);
 
         $this->assertTrue($result['applicable']);
@@ -483,7 +484,7 @@ class PriceInfoCalculatorTest extends TestCase
         $parser = $this->createMock(PriceInfoParser::class);
         $parser->method('getPriceinfo')->willReturn([]);
 
-        $calc = new PriceInfoCalculator($parser, 0.0);
+        $calc = new DiscountCalculator($parser);
         $result = $calc->calculateReductionPercAdditional(1000.0);
 
         $this->assertFalse($result['applicable']);
@@ -498,7 +499,7 @@ class PriceInfoCalculatorTest extends TestCase
             'reduction_perc_additional' => ['Perc' => '5', 'Name' => 'Solo promo'],
         ]);
 
-        $calc = new PriceInfoCalculator($parser, 0.0);
+        $calc = new DiscountCalculator($parser);
         $result = $calc->calculateReductionPercAdditional(200.0);
 
         $this->assertTrue($result['applicable']);
@@ -526,7 +527,7 @@ class PriceInfoCalculatorTest extends TestCase
             ],
         ]);
 
-        $calc = new PriceInfoCalculator($parser, 0.0);
+        $calc = new DiscountCalculator($parser);
         $result = $calc->calculateReductionPercMarketing(
             '2025-09-01',  // booking date within range
             '2026-01-15',  // check-in within travel range
@@ -556,7 +557,7 @@ class PriceInfoCalculatorTest extends TestCase
             ],
         ]);
 
-        $calc = new PriceInfoCalculator($parser, 0.0);
+        $calc = new DiscountCalculator($parser);
 
         // Booking date is outside range
         $result = $calc->calculateReductionPercMarketing('2025-11-15', '2026-01-15', 7, 'DBL', 1000.0);
@@ -579,7 +580,7 @@ class PriceInfoCalculatorTest extends TestCase
             ],
         ]);
 
-        $calc = new PriceInfoCalculator($parser, 0.0);
+        $calc = new DiscountCalculator($parser);
 
         // Check-in is outside travel range
         $result = $calc->calculateReductionPercMarketing('2025-09-01', '2026-05-01', 7, 'DBL', 1000.0);
@@ -604,7 +605,7 @@ class PriceInfoCalculatorTest extends TestCase
             ],
         ]);
 
-        $calc = new PriceInfoCalculator($parser, 0.0);
+        $calc = new DiscountCalculator($parser);
 
         // DBL is in the allowed list
         $result = $calc->calculateReductionPercMarketing('2025-09-01', '2026-01-15', 7, 'DBL', 1000.0);
@@ -633,7 +634,7 @@ class PriceInfoCalculatorTest extends TestCase
             ],
         ]);
 
-        $calc = new PriceInfoCalculator($parser, 0.0);
+        $calc = new DiscountCalculator($parser);
 
         // 5 nights < 7 minimum
         $result = $calc->calculateReductionPercMarketing('2025-09-01', '2026-01-15', 5, 'DBL', 1000.0);
@@ -655,7 +656,7 @@ class PriceInfoCalculatorTest extends TestCase
             ],
         ]);
 
-        $calc = new PriceInfoCalculator($parser, 0.0);
+        $calc = new DiscountCalculator($parser);
         $result = $calc->calculateReductionPercMarketing('2025-09-01', '2026-01-15', 7, 'DBL', 1000.0);
 
         $this->assertTrue($result['applicable']);
@@ -681,7 +682,7 @@ class PriceInfoCalculatorTest extends TestCase
             ],
         ]);
 
-        $calc = new PriceInfoCalculator($parser, 0.0);
+        $calc = new DiscountCalculator($parser);
 
         // 14 nights, but only pay for 10
         $basePrice = [
@@ -713,7 +714,7 @@ class PriceInfoCalculatorTest extends TestCase
             ],
         ]);
 
-        $calc = new PriceInfoCalculator($parser, 0.0);
+        $calc = new DiscountCalculator($parser);
 
         // 7 nights — outside the 14-20 range
         $result = $calc->calculateReductionPeriod('2026-03-01', 7, ['total' => 350, 'by_night' => []]);
@@ -735,7 +736,7 @@ class PriceInfoCalculatorTest extends TestCase
             ],
         ]);
 
-        $calc = new PriceInfoCalculator($parser, 0.0);
+        $calc = new DiscountCalculator($parser);
 
         // March check-in is outside June-August range
         $result = $calc->calculateReductionPeriod('2026-03-01', 14, ['total' => 700, 'by_night' => []]);
@@ -751,7 +752,7 @@ class PriceInfoCalculatorTest extends TestCase
             ],
         ]);
 
-        $calc = new PriceInfoCalculator($parser, 0.0);
+        $calc = new DiscountCalculator($parser);
 
         // No by_night breakdown, uses average
         $result = $calc->calculateReductionPeriod('2026-03-01', 14, ['total' => 700.0]);
@@ -766,7 +767,7 @@ class PriceInfoCalculatorTest extends TestCase
         $parser = $this->createMock(PriceInfoParser::class);
         $parser->method('getPriceinfo')->willReturn([]);
 
-        $calc = new PriceInfoCalculator($parser, 0.0);
+        $calc = new DiscountCalculator($parser);
         $result = $calc->calculateReductionPeriod('2026-03-01', 14, ['total' => 700.0]);
 
         $this->assertFalse($result['applicable']);
@@ -794,7 +795,7 @@ class PriceInfoCalculatorTest extends TestCase
             'EXTToBoard' => 'No',
         ]);
 
-        $calc = new PriceInfoCalculator($parser, 0.0);
+        $calc = new DiscountCalculator($parser);
 
         // Check-in Jan 10, 7 nights → stay is Jan 10-17, overlaps with Jan 15-20
         $basePrice = ['total' => 700.0, 'by_night' => array_fill(0, 7, ['price' => 100.0])];
@@ -824,7 +825,7 @@ class PriceInfoCalculatorTest extends TestCase
             'EXTToBoard' => 'No',
         ]);
 
-        $calc = new PriceInfoCalculator($parser, 0.0);
+        $calc = new DiscountCalculator($parser);
 
         // Check-in Jan 10 is BEFORE range — with Arrival mode, this should be rejected
         $basePrice = ['total' => 700.0, 'by_night' => array_fill(0, 7, ['price' => 100.0])];
