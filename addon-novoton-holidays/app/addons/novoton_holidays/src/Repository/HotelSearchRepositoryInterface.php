@@ -14,79 +14,78 @@ declare(strict_types=1);
  *
  * @package NovotonHolidays
  * @since   3.7.0
+ * @phpstan-type HotelRow = array<string, mixed>
  */
 
 namespace Tygh\Addons\NovotonHolidays\Repository;
 
 interface HotelSearchRepositoryInterface
 {
-    /** Find all hotels matching optional filters, with pagination (listing columns only). */
+    /**
+     * Find all hotels matching optional filters, with pagination.
+     * @param array<string, mixed> $filters
+     * @return list<HotelRow>
+     */
     public function findAll(array $filters = [], int $limit = 0, int $offset = 0): array;
 
-    /** Alias for findAll — kept for backward compat with the admin listing callers. */
+    /**
+     * Alias for findAll — kept for backward compat with the admin listing callers.
+     * @param array<string, mixed> $filters
+     * @return list<HotelRow>
+     */
     public function findAllForListing(array $filters = [], int $limit = 0, int $offset = 0): array;
 
-    /** Find every hotel in a country (listing columns only). */
+    /** @return list<HotelRow> */
     public function findByCountry(string $country): array;
 
-    /** Alias for findByCountry — kept for backward compat. */
+    /** @return list<HotelRow> */
     public function findByCountryForListing(string $country): array;
 
-    /**
-     * Find hotels in a country, indexed by hotel_id.
-     *
-     * @return array<string, array>
-     */
+    /** @return array<string, HotelRow> */
     public function findByCountryIndexed(string $country): array;
 
-    /** Find hotels by country with optional limit (minimal columns). */
+    /** @return list<HotelRow> */
     public function findByCountryWithLimit(string $country, int $limit = 0): array;
 
-    /** Find hotels that have no package records linked in novoton_hotel_packages. */
+    /** @return list<HotelRow> */
     public function findWithoutPackages(int $limit = 0): array;
 
     /**
-     * Find hotels that have prices but no linked CS-Cart product.
-     *
-     * @param string[] $excludeResorts
+     * @param list<string> $excludeResorts
+     * @return list<HotelRow>
      */
     public function findUnlinkedWithPrices(string $country, array $excludeResorts = [], int $limit = 0): array;
 
-    /** Find unlinked hotels for the "view hotels to add" admin page. */
+    /** @return list<HotelRow> */
     public function findUnlinkedForAdmin(string $country, string $filter = 'prices', int $limit = 500): array;
 
-    /** Find hotels whose last price check is older than $daysStale. */
+    /** @return list<HotelRow> */
     public function findNeedingPriceCheck(int $daysStale = 7, int $limit = 100): array;
 
-    /** Find hotels that have prices but a stale last price check. */
+    /** @return list<HotelRow> */
     public function findNeedingPriceUpdate(int $staleHours = 24, int $limit = 100): array;
 
-    /** Find hotels with linked products, ordered by stalest price check first. */
+    /** @return list<HotelRow> */
     public function findWithProductsSortedByStaleness(int $limit = 50): array;
 
-    /** Find hotels with active prices for CSV export. */
+    /** @return list<HotelRow> */
     public function findWithPricesForExport(string $country): array;
 
     /**
-     * Find hotels for bulk import (supports all-columns projection).
-     *
-     * @param string[] $selectedResorts
+     * @param list<string> $selectedResorts
+     * @return list<HotelRow>
      */
     public function findForImport(string $country, string $importMode = 'new_only', array $selectedResorts = [], int $limit = 0): array;
 
-    /**
-     * Find hotel IDs that have priceinfo data in their packages.
-     *
-     * @return string[]
-     */
+    /** @return list<string> */
     public function findIdsWithPriceinfoData(): array;
 
-    /** Find hotels linked to products (for SEO bulk apply), paginated. */
+    /** @return list<HotelRow> */
     public function findLinkedForSeo(int $offset, int $batch): array;
 
-    /** Find hotels that have priceinfo data (joined with packages), for price comparison listing. */
+    /** @return list<HotelRow> */
     public function findWithPriceinfoData(int $limit = 200): array;
 
-    /** Count hotels matching optional filters (same filter shape as findAll). */
+    /** @param array<string, mixed> $filters */
     public function count(array $filters = []): int;
 }

@@ -2455,18 +2455,6 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepository.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepository\:\:count\(\) has parameter \$filters with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepository\:\:create\(\) has parameter \$data with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepository.php
-
-		-
 			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepository\:\:filterNullValues\(\) has parameter \$data with no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
@@ -2479,43 +2467,7 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepository.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepository\:\:findAllForExport\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepository\:\:findByHotelId\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepository\:\:findById\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepository\:\:findByIdWithOwnership\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepository.php
-
-		-
 			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepository\:\:findByNovotonStatus\(\) has parameter \$statuses with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepository\:\:findByNovotonStatus\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepository\:\:findByOrderId\(\) return type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepository.php
@@ -2529,84 +2481,6 @@ parameters:
 		-
 			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepository\:\:findByProductIds\(\) has parameter \$statuses with no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepository\:\:findBySessionId\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepository\:\:findByUserId\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepository\:\:findExisting\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepository\:\:findPending\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepository\:\:findRqWithoutAlternatives\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepository\:\:findUnassignedByHotelDates\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepository\:\:findWithOrderDetails\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepository\:\:findWithReservationId\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepository\:\:getStats\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepository\:\:getTerms\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepository\:\:getUnifiedBookings\(\) has parameter \$params with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepository\:\:getUnifiedBookings\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepository\:\:storeApiData\(\) has parameter \$request with no type specified\.$#'
-			identifier: missingType.parameter
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepository.php
 
@@ -2629,8 +2503,8 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepository.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepository\:\:update\(\) has parameter \$data with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
+			message: '#^Parameter \#1 \$order_ids \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepository\:\:findByOrderIds\(\) should be compatible with parameter \$order_ids \(list\<int\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepositoryInterface\:\:findByOrderIds\(\)$#'
+			identifier: method.childParameterType
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepository.php
 
@@ -2641,188 +2515,26 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepository.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepositoryInterface\:\:count\(\) has parameter \$filters with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
+			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepository\:\:findByOrderIds\(\) should be compatible with return type \(list\<array\<string, mixed\>\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepositoryInterface\:\:findByOrderIds\(\)$#'
+			identifier: method.childReturnType
 			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepositoryInterface.php
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepository.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepositoryInterface\:\:create\(\) has parameter \$data with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
+			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepository\:\:findByProductIds\(\) should be compatible with return type \(list\<array\<string, mixed\>\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepositoryInterface\:\:findByProductIds\(\)$#'
+			identifier: method.childReturnType
 			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepositoryInterface.php
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepository.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepositoryInterface\:\:findAllForExport\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
+			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepository\:\:findForAdminList\(\) should be compatible with return type \(list\<array\<string, mixed\>\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepositoryInterface\:\:findForAdminList\(\)$#'
+			identifier: method.childReturnType
 			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepositoryInterface\:\:findByHotelId\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepositoryInterface\:\:findById\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepositoryInterface\:\:findByIdHydrated\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepositoryInterface\:\:findByIdWithOwnership\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepositoryInterface\:\:findByNovotonStatus\(\) has parameter \$statuses with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepositoryInterface\:\:findByNovotonStatus\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepositoryInterface\:\:findByOrderId\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepositoryInterface\:\:findByOrderIds\(\) has parameter \$order_ids with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepositoryInterface\:\:findByOrderIds\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepositoryInterface\:\:findByProductIds\(\) has parameter \$product_ids with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepositoryInterface\:\:findByProductIds\(\) has parameter \$statuses with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepositoryInterface\:\:findByProductIds\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepositoryInterface\:\:findBySessionId\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepositoryInterface\:\:findByUserId\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepositoryInterface\:\:findExisting\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepositoryInterface\:\:findForAdminList\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepositoryInterface\:\:findPending\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepositoryInterface\:\:findRqWithoutAlternatives\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepositoryInterface\:\:findUnassignedByHotelDates\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepositoryInterface\:\:findWithOrderDetails\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepositoryInterface\:\:findWithReservationId\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepositoryInterface\:\:getStats\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepositoryInterface\:\:getTerms\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepositoryInterface\:\:getUnifiedBookings\(\) has parameter \$params with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepositoryInterface\:\:getUnifiedBookings\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepositoryInterface\:\:storeApiData\(\) has parameter \$request with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepositoryInterface.php
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepository.php
 
 		-
 			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepositoryInterface\:\:storeApiData\(\) has parameter \$response with no type specified\.$#'
 			identifier: missingType.parameter
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepositoryInterface\:\:update\(\) has parameter \$data with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepositoryInterface.php
 
@@ -3055,18 +2767,6 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelReportingRepository.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:count\(\) has parameter \$filters with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:countWithoutPackagesByCountry\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
-
-		-
 			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:filterNullValues\(\) has parameter \$data with no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
@@ -3079,466 +2779,100 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findAll\(\) has parameter \$filters with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
+			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findAll\(\) should return list\<array\<string, mixed\>\> but returns list\<Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\>\.$#'
+			identifier: return.type
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findAll\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
+			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findAllForListing\(\) should return list\<array\<string, mixed\>\> but returns list\<Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\>\.$#'
+			identifier: return.type
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findAllForListing\(\) has parameter \$filters with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
+			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findByCountry\(\) should return list\<array\<string, mixed\>\> but returns list\<Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\>\.$#'
+			identifier: return.type
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findAllForListing\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
+			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findByCountryForListing\(\) should return list\<array\<string, mixed\>\> but returns list\<Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\>\.$#'
+			identifier: return.type
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findBasicById\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
+			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findByCountryIndexed\(\) should return array\<string, array\<string, mixed\>\> but returns array\<string, Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\>\.$#'
+			identifier: return.type
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findByCountry\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
+			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findByCountryWithLimit\(\) should return list\<array\<string, mixed\>\> but returns list\<Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\>\.$#'
+			identifier: return.type
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findByCountryForListing\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
+			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findForImport\(\) should return list\<array\<string, mixed\>\> but returns list\<Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\>\.$#'
+			identifier: return.type
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findByCountryIndexed\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
+			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findLinkedForSeo\(\) should return list\<array\<string, mixed\>\> but returns list\<Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\>\.$#'
+			identifier: return.type
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findByCountryWithLimit\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
+			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findNeedingPriceCheck\(\) should return list\<array\<string, mixed\>\> but returns list\<Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\>\.$#'
+			identifier: return.type
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findById\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
+			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findNeedingPriceUpdate\(\) should return list\<array\<string, mixed\>\> but returns list\<Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\>\.$#'
+			identifier: return.type
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findByProductId\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
+			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findUnlinkedForAdmin\(\) should return list\<array\<string, mixed\>\> but returns list\<Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\>\.$#'
+			identifier: return.type
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findForImport\(\) has parameter \$selectedResorts with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
+			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findUnlinkedWithPrices\(\) should return list\<array\<string, mixed\>\> but returns list\<Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\>\.$#'
+			identifier: return.type
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findForImport\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
+			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findWithPriceinfoData\(\) should return list\<array\<string, mixed\>\> but returns list\<Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\>\.$#'
+			identifier: return.type
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findIdsWithPriceinfoData\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
+			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findWithPricesForExport\(\) should return list\<array\<string, mixed\>\> but returns list\<Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\>\.$#'
+			identifier: return.type
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findLinkedForSeo\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
+			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findWithProductsSortedByStaleness\(\) should return list\<array\<string, mixed\>\> but returns list\<Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\>\.$#'
+			identifier: return.type
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findNeedingPriceCheck\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
+			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findWithoutPackages\(\) should return list\<array\<string, mixed\>\> but returns list\<Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\>\.$#'
+			identifier: return.type
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findNeedingPriceUpdate\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findUnlinkedForAdmin\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findUnlinkedWithPrices\(\) has parameter \$excludeResorts with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findUnlinkedWithPrices\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findWithPriceinfoData\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findWithPricesForExport\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findWithProductsSortedByStaleness\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:findWithoutPackages\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:getCountries\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:getCountriesWithPriceCounts\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:getCountryCityPairs\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:getPackages\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:getPackagesForListing\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:getResortStatsByCountry\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:getResorts\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:insert\(\) has parameter \$data with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:save\(\) has parameter \$data with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:savePackage\(\) has parameter \$data with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:update\(\) has parameter \$data with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepository\:\:upsert\(\) has parameter \$data with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepositoryInterface\:\:count\(\) has parameter \$filters with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepositoryInterface\:\:countWithoutPackagesByCountry\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepositoryInterface\:\:findAll\(\) has parameter \$filters with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepositoryInterface\:\:findAll\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepositoryInterface\:\:findAllForListing\(\) has parameter \$filters with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepositoryInterface\:\:findAllForListing\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepositoryInterface\:\:findBasicById\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepositoryInterface\:\:findByCountry\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepositoryInterface\:\:findByCountryForListing\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepositoryInterface\:\:findByCountryIndexed\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepositoryInterface\:\:findByCountryWithLimit\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepositoryInterface\:\:findById\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepositoryInterface\:\:findByProductId\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepositoryInterface\:\:findForImport\(\) has parameter \$selectedResorts with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepositoryInterface\:\:findForImport\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepositoryInterface\:\:findIdsWithPriceinfoData\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepositoryInterface\:\:findLinkedForSeo\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepositoryInterface\:\:findNeedingPriceCheck\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepositoryInterface\:\:findNeedingPriceUpdate\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepositoryInterface\:\:findUnlinkedForAdmin\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepositoryInterface\:\:findUnlinkedWithPrices\(\) has parameter \$excludeResorts with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepositoryInterface\:\:findUnlinkedWithPrices\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepositoryInterface\:\:findWithPriceinfoData\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepositoryInterface\:\:findWithPricesForExport\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepositoryInterface\:\:findWithProductsSortedByStaleness\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepositoryInterface\:\:findWithoutPackages\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepositoryInterface\:\:getAllIds\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepositoryInterface\:\:getCountries\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepositoryInterface\:\:getCountriesWithPriceCounts\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepositoryInterface\:\:getCountryCityPairs\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepositoryInterface\:\:getLocationsByIds\(\) has parameter \$hotel_ids with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepositoryInterface\:\:getLocationsByIds\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepositoryInterface\:\:getPackages\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepositoryInterface\:\:getPackagesForListing\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepositoryInterface\:\:getResortStatsByCountry\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepositoryInterface\:\:getResorts\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepositoryInterface\:\:insert\(\) has parameter \$data with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepositoryInterface\:\:save\(\) has parameter \$data with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepositoryInterface\:\:savePackage\(\) has parameter \$data with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepositoryInterface\:\:update\(\) has parameter \$data with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepositoryInterface\:\:upsert\(\) has parameter \$data with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepositoryInterface.php
 
 		-
 			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepository\:\:buildWhereClause\(\) has parameter \$filters with no value type specified in iterable type array\.$#'
@@ -3547,230 +2881,194 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepository.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepository\:\:count\(\) has parameter \$filters with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
+			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepository\:\:findAll\(\) has invalid return type Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\.$#'
+			identifier: class.notFound
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepository.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepository\:\:findAll\(\) has parameter \$filters with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
+			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepository\:\:findAllForListing\(\) has invalid return type Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\.$#'
+			identifier: class.notFound
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepository.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepository\:\:findAll\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
+			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepository\:\:findByCountry\(\) has invalid return type Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\.$#'
+			identifier: class.notFound
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepository.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepository\:\:findAllForListing\(\) has parameter \$filters with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
+			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepository\:\:findByCountryForListing\(\) has invalid return type Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\.$#'
+			identifier: class.notFound
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepository.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepository\:\:findAllForListing\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
+			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepository\:\:findByCountryIndexed\(\) has invalid return type Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\.$#'
+			identifier: class.notFound
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepository.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepository\:\:findByCountry\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
+			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepository\:\:findByCountryWithLimit\(\) has invalid return type Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\.$#'
+			identifier: class.notFound
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepository.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepository\:\:findByCountryForListing\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
+			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepository\:\:findForImport\(\) has invalid return type Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\.$#'
+			identifier: class.notFound
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepository.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepository\:\:findByCountryIndexed\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
+			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepository\:\:findLinkedForSeo\(\) has invalid return type Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\.$#'
+			identifier: class.notFound
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepository.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepository\:\:findByCountryWithLimit\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
+			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepository\:\:findNeedingPriceCheck\(\) has invalid return type Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\.$#'
+			identifier: class.notFound
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepository.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepository\:\:findForImport\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
+			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepository\:\:findNeedingPriceUpdate\(\) has invalid return type Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\.$#'
+			identifier: class.notFound
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepository.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepository\:\:findLinkedForSeo\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
+			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepository\:\:findUnlinkedForAdmin\(\) has invalid return type Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\.$#'
+			identifier: class.notFound
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepository.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepository\:\:findNeedingPriceCheck\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
+			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepository\:\:findUnlinkedWithPrices\(\) has invalid return type Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\.$#'
+			identifier: class.notFound
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepository.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepository\:\:findNeedingPriceUpdate\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
+			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepository\:\:findWithPriceinfoData\(\) has invalid return type Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\.$#'
+			identifier: class.notFound
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepository.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepository\:\:findUnlinkedForAdmin\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
+			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepository\:\:findWithPricesForExport\(\) has invalid return type Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\.$#'
+			identifier: class.notFound
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepository.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepository\:\:findUnlinkedWithPrices\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
+			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepository\:\:findWithProductsSortedByStaleness\(\) has invalid return type Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\.$#'
+			identifier: class.notFound
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepository.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepository\:\:findWithPriceinfoData\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
+			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepository\:\:findWithoutPackages\(\) has invalid return type Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\.$#'
+			identifier: class.notFound
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepository.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepository\:\:findWithPricesForExport\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepository\:\:findWithProductsSortedByStaleness\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepository\:\:findWithoutPackages\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:count\(\) has parameter \$filters with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
+			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findAll\(\) has invalid return type Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\.$#'
+			identifier: class.notFound
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepositoryInterface.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findAll\(\) has parameter \$filters with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
+			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findAllForListing\(\) has invalid return type Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\.$#'
+			identifier: class.notFound
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepositoryInterface.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findAll\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
+			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findByCountry\(\) has invalid return type Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\.$#'
+			identifier: class.notFound
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepositoryInterface.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findAllForListing\(\) has parameter \$filters with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
+			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findByCountryForListing\(\) has invalid return type Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\.$#'
+			identifier: class.notFound
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepositoryInterface.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findAllForListing\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
+			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findByCountryIndexed\(\) has invalid return type Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\.$#'
+			identifier: class.notFound
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepositoryInterface.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findByCountry\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
+			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findByCountryWithLimit\(\) has invalid return type Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\.$#'
+			identifier: class.notFound
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepositoryInterface.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findByCountryForListing\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
+			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findForImport\(\) has invalid return type Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\.$#'
+			identifier: class.notFound
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepositoryInterface.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findByCountryIndexed\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
+			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findLinkedForSeo\(\) has invalid return type Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\.$#'
+			identifier: class.notFound
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepositoryInterface.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findByCountryWithLimit\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
+			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findNeedingPriceCheck\(\) has invalid return type Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\.$#'
+			identifier: class.notFound
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepositoryInterface.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findForImport\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
+			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findNeedingPriceUpdate\(\) has invalid return type Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\.$#'
+			identifier: class.notFound
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepositoryInterface.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findLinkedForSeo\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
+			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findUnlinkedForAdmin\(\) has invalid return type Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\.$#'
+			identifier: class.notFound
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepositoryInterface.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findNeedingPriceCheck\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
+			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findUnlinkedWithPrices\(\) has invalid return type Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\.$#'
+			identifier: class.notFound
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepositoryInterface.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findNeedingPriceUpdate\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
+			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findWithPriceinfoData\(\) has invalid return type Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\.$#'
+			identifier: class.notFound
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepositoryInterface.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findUnlinkedForAdmin\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
+			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findWithPricesForExport\(\) has invalid return type Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\.$#'
+			identifier: class.notFound
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepositoryInterface.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findUnlinkedWithPrices\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
+			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findWithProductsSortedByStaleness\(\) has invalid return type Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\.$#'
+			identifier: class.notFound
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepositoryInterface.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findWithPriceinfoData\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findWithPricesForExport\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findWithProductsSortedByStaleness\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepositoryInterface.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findWithoutPackages\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
+			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepositoryInterface\:\:findWithoutPackages\(\) has invalid return type Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRow\.$#'
+			identifier: class.notFound
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepositoryInterface.php
 
