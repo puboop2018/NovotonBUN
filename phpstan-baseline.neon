@@ -325,12 +325,6 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/TermsFormatter.php
 
 		-
-			message: '#^Call to an undefined method Tygh\\Addons\\SphinxHolidays\\SphinxApi\:\:customizeCircuit\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/frontend/sphinx_booking/circuit_add_to_cart.php
-
-		-
 			message: '#^Offset ''room_id'' on array\{room_id\: mixed, room_name\: mixed, adults\: int, children\: int, childrenAges\?\: mixed\} on left side of \?\? always exists and is not nullable\.$#'
 			identifier: nullCoalesce.offset
 			count: 2
@@ -341,18 +335,6 @@ parameters:
 			identifier: nullCoalesce.offset
 			count: 1
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/frontend/sphinx_booking/circuit_add_to_cart.php
-
-		-
-			message: '#^Call to an undefined method Tygh\\Addons\\SphinxHolidays\\SphinxApi\:\:getCircuitQuote\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/frontend/sphinx_booking/circuit_booking_form.php
-
-		-
-			message: '#^Call to an undefined method Tygh\\Addons\\SphinxHolidays\\SphinxApi\:\:getExperienceQuote\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/frontend/sphinx_booking/experience_booking_form.php
 
 		-
 			message: '#^Comparison operation "\>" between \*NEVER\* and 0 results in an error\.$#'
@@ -413,18 +395,6 @@ parameters:
 			identifier: nullCoalesce.offset
 			count: 1
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Repository/DestinationWhitelistRepository.php
-
-		-
-			message: '#^Call to an undefined method Tygh\\Addons\\SphinxHolidays\\SphinxApi\:\:bookCircuit\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/BookingRetryService.php
-
-		-
-			message: '#^Call to an undefined method Tygh\\Addons\\SphinxHolidays\\SphinxApi\:\:bookExperience\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/BookingRetryService.php
 
 		-
 			message: '#^Call to function is_array\(\) with non\-empty\-array will always evaluate to true\.$#'
