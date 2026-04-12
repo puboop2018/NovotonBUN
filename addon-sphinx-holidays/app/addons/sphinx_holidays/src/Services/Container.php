@@ -100,6 +100,12 @@ class Container
         return self::resolve('featureAssigner', static fn() => new SphinxFeatureAssigner(self::getNormalizer()));
     }
 
+    public static function getCartService(): CartService
+    {
+        /** @var CartService */
+        return self::resolve('cartService', static fn() => new CartService());
+    }
+
     // ═══════════════════════════════════════════════════════════════════
     // REPOSITORIES
     // ═══════════════════════════════════════════════════════════════════

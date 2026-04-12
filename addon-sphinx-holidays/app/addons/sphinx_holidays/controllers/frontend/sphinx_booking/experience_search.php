@@ -14,7 +14,6 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 use Tygh\Tygh;
 use Tygh\Addons\SphinxHolidays\Services\Container;
 use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
-use Tygh\Addons\TravelCore\Services\CommissionCalculator;
 
 try {
     $api = Container::getApi();
@@ -49,19 +48,14 @@ try {
     $meta = $response['meta'] ?? [];
 
     // Apply commission
-    $commission = ConfigProvider::getCommission();
-    $roundPrices = ConfigProvider::shouldRoundPrices() ? 'Y' : 'N';
-
-    if ($commission > 0 && !empty($allResults)) {
-        $calculator = new CommissionCalculator($commission, $roundPrices);
-        foreach ($allResults as &$result) {
-            if (isset($result['pricing']['selling_price'])) {
-                $result['pricing']['original_price'] = $result['pricing']['selling_price'];
-                $result['pricing']['selling_price'] = $calculator->apply((float)$result['pricing']['selling_price']);
-            }
+    $cartService = Container::getCartService();
+    foreach ($allResults as &$result) {
+        if (isset($result['pricing']['selling_price'])) {
+            $result['pricing']['original_price'] = $result['pricing']['selling_price'];
+            $result['pricing']['selling_price'] = $cartService->applyCommission((float)$result['pricing']['selling_price']);
         }
-        unset($result);
     }
+    unset($result);
 
     $view->assign('sphinx_experience_results', $allResults);
     $view->assign('sphinx_experience_meta', $meta);
