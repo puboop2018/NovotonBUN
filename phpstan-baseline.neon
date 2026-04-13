@@ -3985,6 +3985,12 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/auth_hooks.php
 
 		-
+			message: '#^Call to function is_array\(\) with array\<string, mixed\> will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 2
+			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/cart_hooks.php
+
+		-
 			message: '#^Cannot access an offset on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
@@ -3999,7 +4005,7 @@ parameters:
 		-
 			message: '#^Cannot access offset ''board_id'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
-			count: 2
+			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/cart_hooks.php
 
 		-
@@ -4035,7 +4041,7 @@ parameters:
 		-
 			message: '#^Cannot access offset ''extra'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
-			count: 2
+			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/cart_hooks.php
 
 		-
@@ -4071,13 +4077,13 @@ parameters:
 		-
 			message: '#^Cannot access offset ''novoton_booking'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
-			count: 3
+			count: 2
 			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/cart_hooks.php
 
 		-
 			message: '#^Cannot access offset ''novoton_booking_id'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
-			count: 3
+			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/cart_hooks.php
 
 		-
@@ -4093,27 +4099,15 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/cart_hooks.php
 
 		-
-			message: '#^Cannot access offset ''product_id'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/cart_hooks.php
-
-		-
 			message: '#^Cannot access offset ''room_id'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
-			count: 2
+			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/cart_hooks.php
 
 		-
 			message: '#^Cannot access offset ''room_name'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
-			count: 3
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/cart_hooks.php
-
-		-
-			message: '#^Cannot access offset ''room_type'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
+			count: 2
 			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/cart_hooks.php
 
 		-
@@ -4171,18 +4165,6 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/cart_hooks.php
 
 		-
-			message: '#^Cannot cast mixed to int\.$#'
-			identifier: cast.int
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/cart_hooks.php
-
-		-
-			message: '#^Parameter \#1 \$boardId of function fn_novoton_holidays_format_board_name expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/cart_hooks.php
-
-		-
 			message: '#^Parameter \#1 \$data of method Tygh\\Addons\\TravelCore\\Services\\GuestDataNormalizer\:\:toJson\(\) expects array\<string, mixed\>\|string, mixed given\.$#'
 			identifier: argument.type
 			count: 1
@@ -4201,13 +4183,13 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/cart_hooks.php
 
 		-
-			message: '#^Parameter \#1 \$product of function _nvt_inject_booking_into_cart_product expects array\<string, mixed\>, mixed given\.$#'
+			message: '#^Parameter \#1 \$product of function _nvt_inject_booking_into_cart_product expects array\<string, mixed\>, array\<mixed\> given\.$#'
 			identifier: argument.type
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/cart_hooks.php
 
 		-
-			message: '#^Parameter \#1 \$product of function fn_novoton_holidays_add_booking_display_data expects array\<string, mixed\>, mixed given\.$#'
+			message: '#^Parameter \#1 \$product of function fn_novoton_holidays_add_booking_display_data expects array\<string, mixed\>, array\<mixed\> given\.$#'
 			identifier: argument.type
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/cart_hooks.php
@@ -4219,33 +4201,9 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/cart_hooks.php
 
 		-
-			message: '#^Parameter \#1 \$roomId of function fn_novoton_holidays_format_room_type expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/cart_hooks.php
-
-		-
 			message: '#^Parameter \#2 \$haystack of function in_array expects array, mixed given\.$#'
 			identifier: argument.type
 			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/cart_hooks.php
-
-		-
-			message: '#^Parameter \#2 \$roomType of function fn_novoton_holidays_format_room_type expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/cart_hooks.php
-
-		-
-			message: '#^Parameter \#3 \$subject of function str_replace expects array\<string\>\|string, mixed given\.$#'
-			identifier: argument.type
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/cart_hooks.php
-
-		-
-			message: '#^Possibly invalid array key type mixed\.$#'
-			identifier: offsetAccess.invalidOffset
-			count: 3
 			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/cart_hooks.php
 
 		-
