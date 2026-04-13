@@ -216,7 +216,7 @@ class CronService implements CronServiceInterface
      * Send alternatives notification email
      *
      * @param array<string, mixed> $request Original request
-     * @param array<string, mixed> $alternatives Found alternatives
+     * @param list<array<string, mixed>> $alternatives Found alternatives
      */
     private function sendAlternativesEmail(array $request, array $alternatives): void
     {
@@ -237,7 +237,7 @@ class CronService implements CronServiceInterface
      * Format alternatives email body
      *
      * @param array<string, mixed> $request Original request
-     * @param array<string, mixed> $alternatives Found alternatives
+     * @param list<array<string, mixed>> $alternatives Found alternatives
      * @return string Email body
      */
     private function formatAlternativesEmail(array $request, array $alternatives): string

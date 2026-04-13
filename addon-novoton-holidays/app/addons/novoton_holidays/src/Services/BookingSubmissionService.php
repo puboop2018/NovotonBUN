@@ -555,7 +555,7 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
      * Extract a guest name from the guestsData array.
      *
      * Prefers api_name (First Last format) over display_name/name.
-     * @param array<string, mixed> $guestsData
+     * @param list<array<string, mixed>> $guestsData
      */
     private function extractGuestName(array $guestsData, string $guestKey): string
     {
@@ -578,8 +578,8 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
     /**
      * Construct the Novoton reservation API request payload.
      * @param array<string, mixed> $group
-     * @param array<string, mixed> $allGuests
-     * @param array<string, mixed> $apiRooms
+     * @param list<array<string, mixed>> $allGuests
+     * @param list<array<string, mixed>> $apiRooms
      * @param array<string, mixed> $bookingData
      * @return array<string, mixed>
      */
@@ -622,7 +622,7 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
      *
      * @return array<string, mixed> Column => value map for novoton_bookings
      * @param array<string, mixed> $group
-     * @param array<string, mixed> $allGuests
+     * @param list<array<string, mixed>> $allGuests
      * @param array<string, mixed> $bookingData
      * @param array<string, mixed> $product
      * @param array<string, mixed> $apiData

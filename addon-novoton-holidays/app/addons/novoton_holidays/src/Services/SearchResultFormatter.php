@@ -23,7 +23,7 @@ class SearchResultFormatter implements SearchResultFormatterInterface
     /**
      * Assign all search-result template variables.
      *
-     * @param array<string, mixed> $results        Primary result rows
+     * @param list<array<string, mixed>> $results        Primary result rows
      * @param array<string, mixed> $novotonParams  Template params (from normalizer)
      * @param array<string, mixed> $searchResult   Output from HotelAvailabilitySearcher::search()
      * @param array<string, mixed> $altResult      Output from AlternativeDateSearcher::search()
@@ -330,7 +330,7 @@ class SearchResultFormatter implements SearchResultFormatterInterface
     }
 
     /**
-     * @param array<string, mixed> $results
+     * @param list<array<string, mixed>> $results
      * @param array<string, mixed> $searchParams
      */
     /** @param object $view @param list<array<string, mixed>> $results @param array<string, mixed> $searchParams */

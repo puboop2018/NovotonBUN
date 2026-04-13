@@ -94,7 +94,7 @@ class PriceInfoSync
     /**
      * Sync priceinfo for a single product
      * V3: Writes priceinfo to novoton_hotel_packages table
-     * @param array<string, int> $stats
+     * @param array<string, int|list<string>> $stats
      */
     public function syncProductPrices(int $productId, array &$stats): bool
     {
@@ -298,7 +298,7 @@ class PriceInfoSync
     /**
      * Check for products in API but not in CS-Cart
      * Optimized: Fetches all matching products once instead of querying per hotel
-     * @param array<string, int> $stats
+     * @param array<string, int|list<string>> $stats
      */
     private function checkMissingProducts(array &$stats): void
     {

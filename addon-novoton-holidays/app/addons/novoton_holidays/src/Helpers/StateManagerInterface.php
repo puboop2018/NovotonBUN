@@ -59,7 +59,7 @@ interface StateManagerInterface
      * @param int   $processed
      * @param int   $synced
      * @param int   $errors
-     * @param array<string, mixed> $errorIds
+     * @param list<string> $errorIds
      * @return array<string, mixed> Updated state
      */
     public function updateProgress(int $processed, int $synced, int $errors, array $errorIds = []): array;

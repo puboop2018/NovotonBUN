@@ -255,7 +255,7 @@ class StateManager implements StateManagerInterface
      * @param int $processed Number of items processed
      * @param int $synced Number of items successfully synced
      * @param int $errors Number of errors
-     * @param array<string, mixed> $errorIds IDs of items with errors
+     * @param list<string> $errorIds IDs of items with errors
      * @return array<string, mixed> Updated state
      */
     public function updateProgress(int $processed, int $synced, int $errors, array $errorIds = []): array

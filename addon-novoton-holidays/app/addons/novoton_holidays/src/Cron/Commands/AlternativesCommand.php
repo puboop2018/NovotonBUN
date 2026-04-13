@@ -223,7 +223,7 @@ class AlternativesCommand extends AbstractCronCommand
 
     /**
      * @param array<string, mixed> $request
-     * @param array<string, mixed> $alternatives
+     * @param list<array<string, mixed>> $alternatives
      */
     private function sendAlternativeEmail(array $request, array $alternatives): bool
     {
