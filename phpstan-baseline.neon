@@ -12121,31 +12121,13 @@ parameters:
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/DiscoverBoardsCommand.php
 
 		-
-			message: '#^Binary operation "\+\=" between mixed and int results in an error\.$#'
-			identifier: assignOp.invalid
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/DiscoverBoardsCommand.php
-
-		-
-			message: '#^Binary operation "\+\=" between mixed and int\<1, max\> results in an error\.$#'
-			identifier: assignOp.invalid
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/DiscoverBoardsCommand.php
-
-		-
 			message: '#^Binary operation "\-" between mixed and mixed results in an error\.$#'
 			identifier: binaryOp.invalid
-			count: 2
+			count: 1
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/DiscoverBoardsCommand.php
 
 		-
 			message: '#^Binary operation "\." between mixed and ''sphinx_discover…'' results in an error\.$#'
-			identifier: binaryOp.invalid
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/DiscoverBoardsCommand.php
-
-		-
-			message: '#^Binary operation "/" between \(float\|int\) and mixed results in an error\.$#'
 			identifier: binaryOp.invalid
 			count: 1
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/DiscoverBoardsCommand.php
@@ -12159,35 +12141,11 @@ parameters:
 		-
 			message: '#^Binary operation "/" between mixed and mixed results in an error\.$#'
 			identifier: binaryOp.invalid
-			count: 2
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/DiscoverBoardsCommand.php
-
-		-
-			message: '#^Cannot access offset ''board_name'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/DiscoverBoardsCommand.php
-
-		-
-			message: '#^Cannot access offset ''hotel_id'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/DiscoverBoardsCommand.php
 
 		-
 			message: '#^Cannot access offset ''items_synced'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/DiscoverBoardsCommand.php
-
-		-
-			message: '#^Cannot access offset ''meal_name'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/DiscoverBoardsCommand.php
-
-		-
-			message: '#^Cannot access offset ''meal_type_name'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/DiscoverBoardsCommand.php
@@ -12199,33 +12157,9 @@ parameters:
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/DiscoverBoardsCommand.php
 
 		-
-			message: '#^Cannot access offset mixed on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/DiscoverBoardsCommand.php
-
-		-
 			message: '#^Cannot access offset string on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 2
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/DiscoverBoardsCommand.php
-
-		-
-			message: '#^Cannot cast mixed to int\.$#'
-			identifier: cast.int
-			count: 3
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/DiscoverBoardsCommand.php
-
-		-
-			message: '#^Cannot cast mixed to string\.$#'
-			identifier: cast.string
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/DiscoverBoardsCommand.php
-
-		-
-			message: '#^Cannot use \+\+ on mixed\.$#'
-			identifier: postInc.type
-			count: 5
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/DiscoverBoardsCommand.php
 
 		-
@@ -12241,15 +12175,9 @@ parameters:
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/DiscoverBoardsCommand.php
 
 		-
-			message: '#^Parameter \#1 \$array of function arsort expects array, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/DiscoverBoardsCommand.php
-
-		-
 			message: '#^Parameter \#1 \$datetime of function strtotime expects string, mixed given\.$#'
 			identifier: argument.type
-			count: 3
+			count: 2
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/DiscoverBoardsCommand.php
 
 		-
@@ -12277,18 +12205,6 @@ parameters:
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/DiscoverBoardsCommand.php
 
 		-
-			message: '#^Part \$count \(mixed\) of encapsed string cannot be cast to string\.$#'
-			identifier: encapsedStringPart.nonString
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/DiscoverBoardsCommand.php
-
-		-
-			message: '#^Part \$destId \(mixed\) of encapsed string cannot be cast to string\.$#'
-			identifier: encapsedStringPart.nonString
-			count: 5
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/DiscoverBoardsCommand.php
-
-		-
 			message: '#^Part \$lastRun\[''items_synced''\] \(mixed\) of encapsed string cannot be cast to string\.$#'
 			identifier: encapsedStringPart.nonString
 			count: 1
@@ -12303,31 +12219,31 @@ parameters:
 		-
 			message: '#^Part \$state\[''hotels_updated''\] \(mixed\) of encapsed string cannot be cast to string\.$#'
 			identifier: encapsedStringPart.nonString
-			count: 3
+			count: 1
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/DiscoverBoardsCommand.php
 
 		-
 			message: '#^Part \$state\[''last_run_at''\] \(mixed\) of encapsed string cannot be cast to string\.$#'
 			identifier: encapsedStringPart.nonString
-			count: 2
+			count: 1
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/DiscoverBoardsCommand.php
 
 		-
 			message: '#^Part \$state\[''offers_found''\] \(mixed\) of encapsed string cannot be cast to string\.$#'
 			identifier: encapsedStringPart.nonString
-			count: 2
+			count: 1
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/DiscoverBoardsCommand.php
 
 		-
 			message: '#^Part \$state\[''processed''\] \(mixed\) of encapsed string cannot be cast to string\.$#'
 			identifier: encapsedStringPart.nonString
-			count: 3
+			count: 1
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/DiscoverBoardsCommand.php
 
 		-
 			message: '#^Part \$state\[''search_errors''\] \(mixed\) of encapsed string cannot be cast to string\.$#'
 			identifier: encapsedStringPart.nonString
-			count: 2
+			count: 1
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/DiscoverBoardsCommand.php
 
 		-
@@ -12344,12 +12260,6 @@ parameters:
 
 		-
 			message: '#^Part \$state\[''total''\] \(mixed\) of encapsed string cannot be cast to string\.$#'
-			identifier: encapsedStringPart.nonString
-			count: 3
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/DiscoverBoardsCommand.php
-
-		-
-			message: '#^Part \$total \(mixed\) of encapsed string cannot be cast to string\.$#'
 			identifier: encapsedStringPart.nonString
 			count: 1
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/DiscoverBoardsCommand.php

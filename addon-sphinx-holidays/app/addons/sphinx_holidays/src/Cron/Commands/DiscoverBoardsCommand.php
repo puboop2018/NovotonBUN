@@ -6,6 +6,7 @@ namespace Tygh\Addons\SphinxHolidays\Cron\Commands;
 use Tygh\Addons\SphinxHolidays\Api\SphinxNormalizer;
 use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
 use Tygh\Addons\SphinxHolidays\Services\Container;
+use Tygh\Addons\TravelCore\Helpers\ValidationHelpers;
 
 /**
  * Cron command: discover available board/meal types per hotel via live search.
@@ -97,15 +98,18 @@ class DiscoverBoardsCommand extends AbstractSyncCommand
         $state = $this->loadState();
 
         // Check for in-progress state
-        if ($state['status'] === 'in_progress') {
+        $stateStatus = ValidationHelpers::toString($state['status'] ?? 'idle');
+        if ($stateStatus === 'in_progress') {
             if ($this->isStale($state)) {
-                $this->output("Stale state detected (no activity since {$state['last_run_at']}). Clearing and starting fresh.");
+                $this->output("Stale state detected (no activity since " . ValidationHelpers::toString($state['last_run_at'] ?? '') . "). Clearing and starting fresh.");
                 $this->clearState();
                 $state = self::DEFAULT_STATE;
             } else {
                 // Resume from where we left off
-                $pct = $state['total'] > 0 ? round($state['processed'] / $state['total'] * 100, 1) : 0;
-                $this->output("Resuming board discovery: {$state['processed']}/{$state['total']} ({$pct}%) done");
+                $sTotal = ValidationHelpers::toInt($state['total'] ?? 0);
+                $sProcessed = ValidationHelpers::toInt($state['processed'] ?? 0);
+                $pct = $sTotal > 0 ? round($sProcessed / $sTotal * 100, 1) : 0;
+                $this->output("Resuming board discovery: {$sProcessed}/{$sTotal} ({$pct}%) done");
                 return $this->processBatch($state, $params);
             }
         }
@@ -154,7 +158,7 @@ class DiscoverBoardsCommand extends AbstractSyncCommand
      */
     private function processBatch(array $state, array $params): array
     {
-        $maxTime = max(60, (int) ($params['max_time'] ?? self::DEFAULT_MAX_TIME));
+        $maxTime = max(60, ValidationHelpers::toInt($params['max_time'] ?? self::DEFAULT_MAX_TIME));
         $unlimited = !empty($params['unlimited']);
         $debug = !empty($params['debug']);
         $startTime = time();
@@ -168,8 +172,10 @@ class DiscoverBoardsCommand extends AbstractSyncCommand
         $checkOut = date('Y-m-d', strtotime('+' . (self::SEARCH_DAYS_AHEAD + self::SEARCH_NIGHTS) . ' days'));
         $currency = ConfigProvider::getDefaultCurrency();
 
-        $offset = $state['processed'];
-        $total = $state['total'];
+        $offset = ValidationHelpers::toInt($state['processed'] ?? 0);
+        $total = ValidationHelpers::toInt($state['total'] ?? 0);
+        /** @var list<mixed> $destIds */
+        $destIds = is_array($state['destination_ids'] ?? null) ? $state['destination_ids'] : [];
         $processedThisRun = 0;
 
         while ($offset < $total) {
@@ -180,11 +186,11 @@ class DiscoverBoardsCommand extends AbstractSyncCommand
                 break;
             }
 
-            $destId = $state['destination_ids'][$offset];
+            $destId = ValidationHelpers::toInt($destIds[$offset] ?? 0);
 
             // Initiate search for this destination
             $searchResponse = $api->searchHotels([
-                'destination_id' => (int) $destId,
+                'destination_id' => $destId,
                 'check_in'       => $checkIn,
                 'check_out'      => $checkOut,
                 'occupancy'      => [['adults' => self::SEARCH_ADULTS, 'children_ages' => []]],
@@ -192,7 +198,7 @@ class DiscoverBoardsCommand extends AbstractSyncCommand
             ]);
 
             if ($searchResponse === null) {
-                $state['search_errors']++;
+                $state['search_errors'] = ValidationHelpers::toInt($state['search_errors'] ?? 0) + 1;
                 if ($state['search_errors'] <= 5) {
                     $this->output("  [WARN] Search init failed for destination {$destId}");
                 }
@@ -207,7 +213,7 @@ class DiscoverBoardsCommand extends AbstractSyncCommand
 
             $cursor = $searchResponse['cursor'] ?? $searchResponse['search_id'] ?? null;
             if ($cursor === null) {
-                $state['search_errors']++;
+                $state['search_errors'] = ValidationHelpers::toInt($state['search_errors'] ?? 0) + 1;
                 $offset++;
                 $state['processed'] = $offset;
                 $state['last_run_at'] = date('Y-m-d H:i:s');
@@ -225,7 +231,7 @@ class DiscoverBoardsCommand extends AbstractSyncCommand
             }
 
             if (!empty($destOffers)) {
-                $state['offers_found'] += count($destOffers);
+                $state['offers_found'] = ValidationHelpers::toInt($state['offers_found'] ?? 0) + count($destOffers);
 
                 // Get known hotel_ids for this destination
                 $knownHotels = $hotelRepo->getHotelIdsByDestination((int) $destId);
@@ -246,13 +252,16 @@ class DiscoverBoardsCommand extends AbstractSyncCommand
                 $debugSkipNoMeal = 0;
                 $debugSkipNormalize = 0;
                 foreach ($destOffers as $offer) {
-                    $hotelId = (string) ($offer['hotel_id'] ?? '');
+                    if (!is_array($offer)) {
+                        continue;
+                    }
+                    $hotelId = ValidationHelpers::toString($offer['hotel_id'] ?? '');
                     if ($hotelId === '' || !isset($knownHotels[$hotelId])) {
                         if ($hotelId === '') { $debugSkipNoId++; } else { $debugSkipUnknown++; }
                         continue;
                     }
 
-                    $rawMeal = $offer['meal_type_name'] ?? $offer['meal_name'] ?? $offer['board_name'] ?? '';
+                    $rawMeal = ValidationHelpers::toString($offer['meal_type_name'] ?? $offer['meal_name'] ?? $offer['board_name'] ?? '');
                     if ($rawMeal === '') {
                         $debugSkipNoMeal++;
                         continue;
@@ -285,7 +294,7 @@ class DiscoverBoardsCommand extends AbstractSyncCommand
 
                 // Update DB immediately for this destination (not batched at the end)
                 if (!empty($boardsByHotel)) {
-                    $state['hotels_updated'] += $hotelRepo->updateBoardsBatch($boardsByHotel);
+                    $state['hotels_updated'] = ValidationHelpers::toInt($state['hotels_updated'] ?? 0) + $hotelRepo->updateBoardsBatch($boardsByHotel);
                 }
             } elseif ($debug) {
                 $this->output("  [DEBUG] dest={$destId}: 0 offers (empty search result)");
@@ -302,7 +311,8 @@ class DiscoverBoardsCommand extends AbstractSyncCommand
             // Progress output every 10 destinations
             if ($offset % 10 === 0 || $offset === $total) {
                 $pct = round($offset / $total * 100, 1);
-                $this->output("  {$offset}/{$total} ({$pct}%) — {$state['hotels_updated']} hotels updated");
+                $hotelsUpdated = ValidationHelpers::toInt($state['hotels_updated'] ?? 0);
+                $this->output("  {$offset}/{$total} ({$pct}%) — {$hotelsUpdated} hotels updated");
             }
 
             usleep(self::DELAY_BETWEEN_DESTINATIONS_MS);
@@ -337,35 +347,43 @@ class DiscoverBoardsCommand extends AbstractSyncCommand
      */
     private function completeSync(array $state): array
     {
-        $durationSeconds = !empty($state['started_at'])
-            ? time() - strtotime($state['started_at'])
+        $startedAt = ValidationHelpers::toString($state['started_at'] ?? '');
+        $durationSeconds = !empty($startedAt)
+            ? time() - (int) strtotime($startedAt)
             : 0;
+
+        $sTotal = ValidationHelpers::toInt($state['total'] ?? 0);
+        $sProcessed = ValidationHelpers::toInt($state['processed'] ?? 0);
+        $sHotelsUpdated = ValidationHelpers::toInt($state['hotels_updated'] ?? 0);
+        $sOffersFound = ValidationHelpers::toInt($state['offers_found'] ?? 0);
+        $sSearchErrors = ValidationHelpers::toInt($state['search_errors'] ?? 0);
 
         // Log to sphinx_sync_log
         db_query(
             "INSERT INTO ?:sphinx_sync_log (sync_type, status, items_total, items_synced, items_failed, error_message, sync_mode, duration_ms, started_at, completed_at)
              VALUES ('discover_boards', 'completed', ?i, ?i, ?i, '', 'full', ?i, ?s, NOW())",
-            $state['total'],
-            $state['hotels_updated'],
-            $state['search_errors'],
+            $sTotal,
+            $sHotelsUpdated,
+            $sSearchErrors,
             $durationSeconds * 1000,
-            $state['started_at']
+            $startedAt
         );
 
         // Summary output
         $this->output('');
         $this->output('Board Discovery Complete:');
-        $this->output("  Destinations searched: {$state['processed']}/{$state['total']}");
-        $this->output("  Total search offers: {$state['offers_found']}");
-        $this->output("  Hotels updated (boards_json): {$state['hotels_updated']}");
-        $this->output("  Search errors: {$state['search_errors']}");
+        $this->output("  Destinations searched: {$sProcessed}/{$sTotal}");
+        $this->output("  Total search offers: {$sOffersFound}");
+        $this->output("  Hotels updated (boards_json): {$sHotelsUpdated}");
+        $this->output("  Search errors: {$sSearchErrors}");
         $this->output('  Duration: ' . $this->formatDuration($durationSeconds));
 
-        if (!empty($state['boards_found'])) {
-            arsort($state['boards_found']);
+        $boardsFound = is_array($state['boards_found'] ?? null) ? $state['boards_found'] : [];
+        if (!empty($boardsFound)) {
+            arsort($boardsFound);
             $this->output('  Board distribution:');
-            foreach ($state['boards_found'] as $code => $count) {
-                $this->output("    {$code}: {$count} offers");
+            foreach ($boardsFound as $code => $count) {
+                $this->output("    " . (string) $code . ": " . ValidationHelpers::toInt($count) . " offers");
             }
         }
 
@@ -387,11 +405,11 @@ class DiscoverBoardsCommand extends AbstractSyncCommand
             'success' => true,
             'status'  => 'completed',
             'stats'   => [
-                'destinations_total' => $state['total'],
-                'hotels_updated'     => $state['hotels_updated'],
-                'offers_found'       => $state['offers_found'],
-                'search_errors'      => $state['search_errors'],
-                'boards_found'       => $state['boards_found'],
+                'destinations_total' => $sTotal,
+                'hotels_updated'     => $sHotelsUpdated,
+                'offers_found'       => $sOffersFound,
+                'search_errors'      => $sSearchErrors,
+                'boards_found'       => $boardsFound,
                 'duration_seconds'   => $durationSeconds,
             ],
         ];
@@ -405,7 +423,7 @@ class DiscoverBoardsCommand extends AbstractSyncCommand
     {
         $state = $this->loadState();
 
-        if ($state['status'] === 'idle') {
+        if (ValidationHelpers::toString($state['status'] ?? 'idle') === 'idle') {
             $this->output('Board Discovery Status: idle (no sync in progress)');
 
             // Check last completed run from sphinx_sync_log
