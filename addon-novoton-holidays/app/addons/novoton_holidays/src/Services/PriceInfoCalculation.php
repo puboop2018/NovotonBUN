@@ -108,8 +108,8 @@ class PriceInfoCalculation implements PriceInfoCalculationInterface
         $this->log('Params', $params);
 
         // Load data
-        $hotelId = $params['hotel_id'] ?? '';
-        $packageName = $params['package_name'] ?? '';
+        $hotelId = PriceInfoFormatter::toScalar($params['hotel_id'] ?? '');
+        $packageName = PriceInfoFormatter::toScalar($params['package_name'] ?? '');
 
         if (empty($hotelId) || empty($packageName)) {
             return PriceInfoFormatter::errorResult('Missing hotel_id or package_name', $this->debugLog, $this->debug);
@@ -126,17 +126,17 @@ class PriceInfoCalculation implements PriceInfoCalculationInterface
         $this->parser->parseChildAgeBands();
 
         // Extract parameters
-        $checkIn = $params['check_in'] ?? date('Y-m-d', strtotime('+' . Constants::DEFAULT_CHECKIN_DAYS_AHEAD . ' days'));
-        $nights = (int)($params['nights'] ?? 7);
-        $roomId = $params['room_id'] ?? '';
-        $boardId = $params['board_id'] ?? '';
-        $adults = (int)($params['adults'] ?? 2);
+        $checkIn = PriceInfoFormatter::toScalar($params['check_in'] ?? date('Y-m-d', strtotime('+' . Constants::DEFAULT_CHECKIN_DAYS_AHEAD . ' days')));
+        $nights = PriceInfoFormatter::toInt($params['nights'] ?? 7);
+        $roomId = PriceInfoFormatter::toScalar($params['room_id'] ?? '');
+        $boardId = PriceInfoFormatter::toScalar($params['board_id'] ?? '');
+        $adults = PriceInfoFormatter::toInt($params['adults'] ?? 2);
         $childrenAges = $params['children_ages'] ?? [];
-        $bookingDate = $params['booking_date'] ?? date('Y-m-d');
+        $bookingDate = PriceInfoFormatter::toScalar($params['booking_date'] ?? date('Y-m-d'));
 
 
         if (!is_array($childrenAges)) {
-            $childrenAges = !empty($childrenAges) ? explode(',', $childrenAges) : [];
+            $childrenAges = !empty($childrenAges) ? explode(',', PriceInfoFormatter::toScalar($childrenAges)) : [];
         }
         $childrenAges = array_values(array_map('intval', $childrenAges));
         $numChildren = count($childrenAges);
@@ -195,50 +195,57 @@ class PriceInfoCalculation implements PriceInfoCalculationInterface
         $finalPrice = $this->discountCalculator->applyPriorityRules($basePrice, $fees, $ebDiscount, $reduction, $reductionPeriod);
         $this->log('Final price calculation', $finalPrice);
 
+        $finalPriceTotal = PriceInfoFormatter::toFloat($finalPrice['total'] ?? 0);
+
         // Step 8b: Apply reduction_perc_marketing (booking/travel date restricted)
         $percMarketing = $this->discountCalculator->calculateReductionPercMarketing(
-            $bookingDate, $checkIn, $nights, $roomId, $finalPrice['total']
+            $bookingDate, $checkIn, $nights, $roomId, $finalPriceTotal
         );
         $this->log('Reduction Perc Marketing', $percMarketing);
 
+        $percMarketingDiscount = !empty($percMarketing['applicable']) ? PriceInfoFormatter::toFloat($percMarketing['discount'] ?? 0) : 0.0;
+
         // Step 8c: Apply reduction_perc_additional (flat promo discount)
-        $subtotalAfterMarketing = $finalPrice['total'] - ($percMarketing['applicable'] ? $percMarketing['discount'] : 0);
-        $percAdditional = $this->discountCalculator->calculateReductionPercAdditional(max(0, $subtotalAfterMarketing));
+        $subtotalAfterMarketing = $finalPriceTotal - $percMarketingDiscount;
+        $percAdditional = $this->discountCalculator->calculateReductionPercAdditional(max(0.0, $subtotalAfterMarketing));
         $this->log('Reduction Perc Additional', $percAdditional);
 
+        $percAdditionalDiscount = !empty($percAdditional['applicable']) ? PriceInfoFormatter::toFloat($percAdditional['discount'] ?? 0) : 0.0;
+
         // Step 8d: Compute final total after all percentage discounts
-        $totalAfterPercDiscounts = $finalPrice['total'];
-        if ($percMarketing['applicable']) {
-            $totalAfterPercDiscounts -= $percMarketing['discount'];
+        $totalAfterPercDiscounts = $finalPriceTotal;
+        if (!empty($percMarketing['applicable'])) {
+            $totalAfterPercDiscounts -= $percMarketingDiscount;
         }
-        if ($percAdditional['applicable']) {
-            $totalAfterPercDiscounts -= $percAdditional['discount'];
+        if (!empty($percAdditional['applicable'])) {
+            $totalAfterPercDiscounts -= $percAdditionalDiscount;
         }
-        $totalAfterPercDiscounts = max(0, $totalAfterPercDiscounts);
+        $totalAfterPercDiscounts = max(0.0, $totalAfterPercDiscounts);
 
         // Step 9: Apply commission
         $priceWithCommission = $this->calculator->applyCommission($totalAfterPercDiscounts);
 
-        $priceinfo = $this->parser->getPriceinfo();
+        $priceinfo = $this->parser->getPriceinfo() ?? [];
+        $basePriceTotal = PriceInfoFormatter::toFloat($basePrice['total'] ?? 0);
         $result = [
             'success' => true,
             'price' => round($priceWithCommission, 2),
             'price_without_commission' => round($totalAfterPercDiscounts, 2),
             'commission' => $this->commission,
             'breakdown' => [
-                'base_price' => round($basePrice['total'], 2),
+                'base_price' => round($basePriceTotal, 2),
                 'base_per_night' => $basePrice['by_night'] ?? [],
                 'base_per_person' => $basePrice['by_person'] ?? [],
                 'base_per_person_per_night' => $basePrice['by_person_by_night'] ?? [],
                 'matched_rows' => $basePrice['matched_rows'] ?? [],
                 'fees' => [
-                    'extras_daily' => round($fees['extras_daily'] ?? 0, 2),
-                    'extras_single' => round($fees['extras_single'] ?? 0, 2),
-                    'extras_rooms' => round($fees['extras_rooms'] ?? 0, 2),
-                    'extras_board' => round($fees['extras_board'] ?? 0, 2),
-                    'handling_fee' => round($fees['handling_fee'] ?? 0, 2),
-                    'company_fee' => round($fees['company_fee'] ?? 0, 2),
-                    'total_fees' => round($fees['total'] ?? 0, 2)
+                    'extras_daily' => round(PriceInfoFormatter::toFloat($fees['extras_daily'] ?? 0), 2),
+                    'extras_single' => round(PriceInfoFormatter::toFloat($fees['extras_single'] ?? 0), 2),
+                    'extras_rooms' => round(PriceInfoFormatter::toFloat($fees['extras_rooms'] ?? 0), 2),
+                    'extras_board' => round(PriceInfoFormatter::toFloat($fees['extras_board'] ?? 0), 2),
+                    'handling_fee' => round(PriceInfoFormatter::toFloat($fees['handling_fee'] ?? 0), 2),
+                    'company_fee' => round(PriceInfoFormatter::toFloat($fees['company_fee'] ?? 0), 2),
+                    'total_fees' => round(PriceInfoFormatter::toFloat($fees['total'] ?? 0), 2)
                 ],
                 'fees_detail' => $fees,
                 'discounts' => [
@@ -249,16 +256,16 @@ class PriceInfoCalculation implements PriceInfoCalculationInterface
                     'reduction_perc_marketing' => $percMarketing
                 ],
                 'priority_rules' => [
-                    'priority' => $priceinfo['Priority'] ?? 'No',
-                    'priority_eb' => $priceinfo['PriorityEB'] ?? 'No',
-                    'priority_ext' => $priceinfo['PriorityEXT'] ?? 'No',
+                    'priority' => PriceInfoFormatter::toScalar($priceinfo['Priority'] ?? 'No'),
+                    'priority_eb' => PriceInfoFormatter::toScalar($priceinfo['PriorityEB'] ?? 'No'),
+                    'priority_ext' => PriceInfoFormatter::toScalar($priceinfo['PriorityEXT'] ?? 'No'),
                     'scenarios' => $finalPrice['scenarios'] ?? []
                 ],
-                'applied_discount' => $finalPrice['applied_discount'],
+                'applied_discount' => $finalPrice['applied_discount'] ?? 'none',
                 'discount_amount' => round(
-                    ($finalPrice['discount_amount'] ?? 0) +
-                    ($percMarketing['applicable'] ? $percMarketing['discount'] : 0) +
-                    ($percAdditional['applicable'] ? $percAdditional['discount'] : 0),
+                    PriceInfoFormatter::toFloat($finalPrice['discount_amount'] ?? 0) +
+                    $percMarketingDiscount +
+                    $percAdditionalDiscount,
                     2
                 )
             ],
