@@ -66,13 +66,19 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
         // PricingApiClientInterface rather than the deprecated facade.
         $pricing = null;
 
-        foreach ($cart['products'] as $cartId => $product) {
-            if (empty($product['extra']['novoton_booking'])) {
+        $cartProducts = is_array($cart['products'] ?? null) ? $cart['products'] : [];
+        foreach ($cartProducts as $cartId => $product) {
+            if (!is_array($product)) {
+                continue;
+            }
+            /** @var array<string, mixed> $pExtra */
+            $pExtra = is_array($product['extra'] ?? null) ? $product['extra'] : [];
+            if (empty($pExtra['novoton_booking'])) {
                 continue;
             }
 
-            $extra     = $product['extra'];
-            $formPrice = (float) ($extra['total_price'] ?? $product['price'] ?? 0);
+            $extra     = $pExtra;
+            $formPrice = PriceInfoFormatter::toFloat($extra['total_price'] ?? $product['price'] ?? 0);
 
             if ($formPrice <= 0) {
                 continue;
@@ -84,14 +90,14 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
             $cached = $this->getCachedPrice($extra, $childrenAges, $cacheTtl);
 
             if ($cached !== null) {
-                $apiPriceWithCommission = (float) $cached['api_price'];
-                $rawApiPrice            = (float) $cached['api_price_raw'];
+                $apiPriceWithCommission = PriceInfoFormatter::toFloat($cached['api_price'] ?? 0);
+                $rawApiPrice            = PriceInfoFormatter::toFloat($cached['api_price_raw'] ?? 0);
 
                 if ($debug) {
                     fn_log_event('general', 'runtime', [
                         'message'  => 'PreOrderPriceVerifier: using session-cached price (Silent Sync)',
-                        'hotel_id' => $extra['hotel_id'] ?? '',
-                        'age_sec'  => time() - (int) $cached['timestamp'],
+                        'hotel_id' => PriceInfoFormatter::toScalar($extra['hotel_id'] ?? ''),
+                        'age_sec'  => time() - PriceInfoFormatter::toInt($cached['timestamp'] ?? 0),
                         'api_price' => $apiPriceWithCommission,
                     ]);
                 }
@@ -109,13 +115,13 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
                 }
 
                 $priceParams = [
-                    'hotel_id'    => $extra['hotel_id'] ?? '',
-                    'room_id'     => $extra['room_id'] ?? '',
-                    'board_id'    => $extra['board_id'] ?? '',
+                    'hotel_id'    => PriceInfoFormatter::toScalar($extra['hotel_id'] ?? ''),
+                    'room_id'     => PriceInfoFormatter::toScalar($extra['room_id'] ?? ''),
+                    'board_id'    => PriceInfoFormatter::toScalar($extra['board_id'] ?? ''),
                     'star_rating' => '',
-                    'check_in'    => $extra['check_in'] ?? '',
-                    'check_out'   => $extra['check_out'] ?? '',
-                    'adults'      => (int) ($extra['adults'] ?? 2),
+                    'check_in'    => PriceInfoFormatter::toScalar($extra['check_in'] ?? ''),
+                    'check_out'   => PriceInfoFormatter::toScalar($extra['check_out'] ?? ''),
+                    'adults'      => PriceInfoFormatter::toInt($extra['adults'] ?? 2),
                     'children'    => $childrenAges,
                 ];
 
@@ -179,21 +185,24 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
         $agesStr = implode(',', $childrenAges);
 
         $cacheKey = md5(implode('|', [
-            $extra['hotel_id'] ?? '',
-            $extra['room_id'] ?? '',
-            $extra['board_id'] ?? '',
-            $extra['check_in'] ?? '',
-            $extra['check_out'] ?? '',
-            (int) ($extra['adults'] ?? 2),
+            PriceInfoFormatter::toScalar($extra['hotel_id'] ?? ''),
+            PriceInfoFormatter::toScalar($extra['room_id'] ?? ''),
+            PriceInfoFormatter::toScalar($extra['board_id'] ?? ''),
+            PriceInfoFormatter::toScalar($extra['check_in'] ?? ''),
+            PriceInfoFormatter::toScalar($extra['check_out'] ?? ''),
+            PriceInfoFormatter::toInt($extra['adults'] ?? 2),
             $agesStr,
         ]));
 
-        if (!isset($sessionCache[$cacheKey])) {
+        if (!is_array($sessionCache) || !isset($sessionCache[$cacheKey])) {
             return null;
         }
 
         $entry = $sessionCache[$cacheKey];
-        $age   = time() - (int) ($entry['timestamp'] ?? 0);
+        if (!is_array($entry)) {
+            return null;
+        }
+        $age   = time() - PriceInfoFormatter::toInt($entry['timestamp'] ?? 0);
 
         if ($age > $ttl) {
             return null; // stale
@@ -217,16 +226,16 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
         array  $extra,
         $cartId
     ): array {
-        $cartId = (string) $cartId;
-        $hotelId   = $extra['hotel_id'] ?? '';
-        $hotelName = $extra['hotel_name'] ?? '';
-        $roomId    = $extra['room_id'] ?? '';
-        $boardId   = $extra['board_id'] ?? '';
-        $checkIn   = $extra['check_in'] ?? '';
-        $checkOut  = $extra['check_out'] ?? '';
-        $adults    = (int) ($extra['adults'] ?? 2);
-        $children  = (int) ($extra['children'] ?? 0);
-        $childrenAges = $extra['children_ages'] ?? '';
+        $cartId = PriceInfoFormatter::toScalar($cartId);
+        $hotelId   = PriceInfoFormatter::toScalar($extra['hotel_id'] ?? '');
+        $hotelName = PriceInfoFormatter::toScalar($extra['hotel_name'] ?? '');
+        $roomId    = PriceInfoFormatter::toScalar($extra['room_id'] ?? '');
+        $boardId   = PriceInfoFormatter::toScalar($extra['board_id'] ?? '');
+        $checkIn   = PriceInfoFormatter::toScalar($extra['check_in'] ?? '');
+        $checkOut  = PriceInfoFormatter::toScalar($extra['check_out'] ?? '');
+        $adults    = PriceInfoFormatter::toInt($extra['adults'] ?? 2);
+        $children  = PriceInfoFormatter::toInt($extra['children'] ?? 0);
+        $childrenAges = PriceInfoFormatter::toScalar($extra['children_ages'] ?? '');
 
         $notificationData = [
             'hotel_id'      => $hotelId,
