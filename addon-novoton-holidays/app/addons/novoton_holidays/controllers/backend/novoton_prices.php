@@ -189,7 +189,7 @@ if ($mode === 'check_prices') {
         $resorts = [];
         $resort_list_response = $api->destinations()->getResortList($country);
         if ($resort_list_response) {
-            foreach ($resort_list_response->xpath('//Resort') as $r) {
+            foreach ($resort_list_response->xpath('//Resort') ?: [] as $r) {
                 $name = trim((string)$r);
                 if (!empty($name)) {
                     $resorts[] = $name;
@@ -640,7 +640,7 @@ if ($mode === 'download_active_prices_csv') {
         return [CONTROLLER_STATUS_DENIED];
     }
     
-    $country = preg_replace('/[^A-Z]/', '', strtoupper($_REQUEST['country'] ?? 'BULGARIA'));
+    $country = (string) preg_replace('/[^A-Z]/', '', strtoupper($_REQUEST['country'] ?? 'BULGARIA'));
 
     $hotelRepo = Container::getInstance()->hotelRepository();
     $hotels = $hotelRepo->findWithPricesForExport($country);

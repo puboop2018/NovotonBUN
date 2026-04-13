@@ -179,7 +179,7 @@ if ($mode === 'recompute_calendar_prices') {
  */
 if ($mode === 'add_hotels_as_products') {
     try {
-        $country = preg_replace('/[^A-Z\s]/', '', strtoupper($_REQUEST['country'] ?? 'BULGARIA'));
+        $country = (string) preg_replace('/[^A-Z\s]/', '', strtoupper($_REQUEST['country'] ?? 'BULGARIA'));
 
         $hotelRepo = Container::getInstance()->hotelRepository();
 
@@ -227,7 +227,7 @@ if ($mode === 'view_hotels_to_add') {
         return [CONTROLLER_STATUS_DENIED];
     }
 
-    $country = preg_replace('/[^A-Z\s]/', '', strtoupper($_REQUEST['country'] ?? 'BULGARIA'));
+    $country = (string) preg_replace('/[^A-Z\s]/', '', strtoupper($_REQUEST['country'] ?? 'BULGARIA'));
     $filter = in_array($_REQUEST['filter'] ?? '', ['prices', 'packages']) ? $_REQUEST['filter'] : 'prices';
 
     $hotelRepo = Container::getInstance()->hotelRepository();

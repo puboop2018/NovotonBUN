@@ -338,7 +338,7 @@ class PricingApiClient extends ApiClientBase implements PricingApiClientInterfac
         }
 
         // Multiple root elements detected — strip XML declaration and wrap
-        $body = preg_replace('/<\?xml[^?]*\?>\s*/', '', $response);
+        $body = (string) preg_replace('/<\?xml[^?]*\?>\s*/', '', $response);
         return '<?xml version="1.0" encoding="windows-1251"?><' . $wrapperName . '>'
             . trim($body)
             . '</' . $wrapperName . '>';

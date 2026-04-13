@@ -51,7 +51,7 @@ if ($mode === 'add_hotels_as_products') {
         fn_novoton_holidays_stream_page_open('Adding Hotels as Products');
         echo '<div class="log">';
         
-        $country = preg_replace('/[^A-Z\s]/', '', strtoupper($_REQUEST['country'] ?? 'BULGARIA'));
+        $country = (string) preg_replace('/[^A-Z\s]/', '', strtoupper($_REQUEST['country'] ?? 'BULGARIA'));
         $category_id = (int)($_REQUEST['category_id'] ?? 0);
         $import_mode = in_array($_REQUEST['import_mode'] ?? '', ['new_only', 'update']) ? $_REQUEST['import_mode'] : 'new_only';
         $limit = max(0, min(5000, (int)($_REQUEST['limit'] ?? 0)));

@@ -114,7 +114,7 @@ function fn_novoton_holidays_normalize_resort_name($name): string
     $name = strtoupper(trim($name));
     $name = str_replace('&', 'AND', $name);
     $name = str_replace(['.', ',', '-', "'", '"'], ' ', $name);
-    $name = preg_replace('/\s+/', ' ', $name);
+    $name = (string) preg_replace('/\s+/', ' ', $name);
     return trim($name);
 }
 
@@ -475,7 +475,7 @@ function fn_novoton_holidays_format_hotel_display_name(string $hotel_name, strin
     // Fix common patterns after Title Case (Roman numerals, &)
     $name = str_replace([' & ', ' And '], ' & ', $name);
     // Restore common Roman numerals that Title Case lowercased
-    $name = preg_replace_callback('/\b(Ii|Iii|Iv|Vi|Vii|Viii|Ix)\b/', function ($m) {
+    $name = (string) preg_replace_callback('/\b(Ii|Iii|Iv|Vi|Vii|Viii|Ix)\b/', function ($m) {
         return strtoupper($m[1]);
     }, $name);
 

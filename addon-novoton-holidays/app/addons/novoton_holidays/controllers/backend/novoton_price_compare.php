@@ -544,7 +544,7 @@ if ($mode === 'compare') {
             echo '<table>';
             echo '<tr><th>#</th><th>IdAge</th><th>FromDate</th><th>ToDate</th><th>Price1</th><th>Price2</th><th>Correlates?</th></tr>';
             foreach ($handlingFeesRaw as $idx => $fee) {
-                $feeIdAge = trim(preg_replace('/\s+/', ' ', $fee['IdAge'] ?? ''));
+                $feeIdAge = trim((string) preg_replace('/\s+/', ' ', $fee['IdAge'] ?? ''));
                 $feeKey = trim(preg_replace('/\s+BY\s+\d+\s+AD\s*$/i', '', $feeIdAge));
                 $feeUpper = strtoupper($feeKey);
 
