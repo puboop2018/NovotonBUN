@@ -17,6 +17,7 @@ use Tygh\Registry;
 use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\Services\Container;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
+use Tygh\Addons\NovotonHolidays\Services\PriceInfoFormatter;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
@@ -54,13 +55,15 @@ function fn_novoton_holidays_pre_place_order(&$cart, &$allow, &$product_groups):
     $result = $verifier->verify($cart);
 
     // Apply price corrections: bump cart prices to the current API price
-    if (!empty($result['corrections'])) {
-        foreach ($result['corrections'] as $cartId => $correction) {
-            if (!isset($cart['products'][$cartId])) {
+    $corrections = is_array($result['corrections'] ?? null) ? $result['corrections'] : [];
+    if (!empty($corrections)) {
+        $cartProducts = is_array($cart['products'] ?? null) ? $cart['products'] : [];
+        foreach ($corrections as $cartId => $correction) {
+            if (!is_array($correction) || !isset($cartProducts[$cartId])) {
                 continue;
             }
 
-            $newPrice = (float) $correction['api_price'];
+            $newPrice = PriceInfoFormatter::toFloat($correction['api_price'] ?? 0);
 
             // Store the old price for "Old vs New" display before overwriting
             $cart['products'][$cartId]['extra']['price_before_correction'] = $cart['products'][$cartId]['price'];
@@ -124,25 +127,32 @@ function fn_novoton_holidays_place_order_post(&$order_id, &$action, &$order_stat
     // Fallback path: $cart is null/empty (payment callbacks, order status re-triggers).
     // Link any unlinked novoton bookings to this order by looking up the order's products.
     $order_info = fn_get_order_info($resolved_order_id);
-    if (empty($order_info['products'])) {
+    /** @var array<string, mixed> $order_info */
+    $order_info = is_array($order_info) ? $order_info : [];
+    $oiProducts = is_array($order_info['products'] ?? null) ? $order_info['products'] : [];
+    if (empty($oiProducts)) {
         return;
     }
 
-    foreach ($order_info['products'] as $product) {
-        $extra = $product['extra'] ?? [];
+    foreach ($oiProducts as $product) {
+        if (!is_array($product)) {
+            continue;
+        }
+        /** @var array<string, mixed> $extra */
+        $extra = is_array($product['extra'] ?? null) ? $product['extra'] : [];
         if (empty($extra['novoton_booking']) || empty($extra['novoton_booking_id'])) {
             continue;
         }
 
-        $booking_id = (int) $extra['novoton_booking_id'];
+        $booking_id = PriceInfoFormatter::toInt($extra['novoton_booking_id']);
         if ($booking_id <= 0) {
             continue;
         }
 
         // Only link if the booking isn't already linked to an order
-        $current_order = (int) db_get_field(
+        $current_order = PriceInfoFormatter::toInt(db_get_field(
             "SELECT order_id FROM ?:novoton_bookings WHERE booking_id = ?i", $booking_id
-        );
+        ));
 
         if ($current_order <= 0) {
             _nvt_booking_repo()->update($booking_id, ['order_id' => $resolved_order_id]);
@@ -183,12 +193,20 @@ function fn_novoton_holidays_get_orders_post($params, &$orders): void
 
     $bookings_by_order = [];
     foreach ($all_bookings as $booking) {
-        $bookings_by_order[$booking['order_id']][] = $booking;
+        if (!is_array($booking)) {
+            continue;
+        }
+        $bOrderId = PriceInfoFormatter::toScalar($booking['order_id'] ?? '');
+        $bookings_by_order[$bOrderId][] = $booking;
     }
 
     foreach ($orders as &$order) {
-        if (!empty($order['order_id']) && isset($bookings_by_order[$order['order_id']])) {
-            $order['hotel_bookings'] = $bookings_by_order[$order['order_id']];
+        if (!is_array($order)) {
+            continue;
+        }
+        $oOrderId = PriceInfoFormatter::toScalar($order['order_id'] ?? '');
+        if (!empty($oOrderId) && isset($bookings_by_order[$oOrderId])) {
+            $order['hotel_bookings'] = $bookings_by_order[$oOrderId];
         }
     }
 }
@@ -218,18 +236,24 @@ function fn_novoton_holidays_get_order_info(&$order, $additional_data): void
         fn_set_notification('N', 'DEBUG', 'fn_novoton_holidays_get_order_info hook fired for order #' . ($order['order_id'] ?? '?'));
     }
 
-    if (empty($order['products'])) {
+    $orderProducts = is_array($order['products'] ?? null) ? $order['products'] : [];
+    if (empty($orderProducts)) {
         return;
     }
 
     $date_format   = Registry::get('settings.Appearance.date_format') ?: '%d %b %Y';
-    $currency_code = $order['secondary_currency'] ?? TravelConstants::CURRENCY_EUR;
+    $currency_code = PriceInfoFormatter::toScalar($order['secondary_currency'] ?? TravelConstants::CURRENCY_EUR);
 
     // Pre-fetch hotel locations in single query (avoid N+1)
     $hotel_ids = [];
-    foreach ($order['products'] as $product) {
-        if (!empty($product['extra']['novoton_booking']) && !empty($product['extra']['hotel_id']) && empty($product['extra']['city'])) {
-            $hotel_ids[$product['extra']['hotel_id']] = true;
+    foreach ($orderProducts as $product) {
+        if (!is_array($product)) {
+            continue;
+        }
+        /** @var array<string, mixed> $pExtra */
+        $pExtra = is_array($product['extra'] ?? null) ? $product['extra'] : [];
+        if (!empty($pExtra['novoton_booking']) && !empty($pExtra['hotel_id']) && empty($pExtra['city'])) {
+            $hotel_ids[PriceInfoFormatter::toScalar($pExtra['hotel_id'])] = true;
         }
     }
     $hotels_cache = [];
@@ -239,25 +263,30 @@ function fn_novoton_holidays_get_order_info(&$order, $additional_data): void
     }
 
     foreach ($order['products'] as &$product) {
+        if (!is_array($product)) {
+            continue;
+        }
+        /** @var array<string, mixed> $extra */
+        $extra = is_array($product['extra'] ?? null) ? $product['extra'] : [];
         if ($debugMode && defined('AREA') && AREA === 'A') {
-            fn_set_notification('N', 'DEBUG', 'Product extra keys: ' . implode(', ', array_keys($product['extra'] ?? [])));
+            fn_set_notification('N', 'DEBUG', 'Product extra keys: ' . implode(', ', array_keys($extra)));
         }
 
-        if (empty($product['extra']['novoton_booking'])) {
+        if (empty($extra['novoton_booking'])) {
             continue;
         }
 
-        $hotel_id    = $product['extra']['hotel_id']  ?? '';
-        $check_in    = $product['extra']['check_in']  ?? '';
-        $check_out   = $product['extra']['check_out'] ?? '';
-        $total_price = (float)($product['extra']['total_price'] ?? $product['price'] ?? 0);
+        $hotel_id    = PriceInfoFormatter::toScalar($extra['hotel_id']  ?? '');
+        $check_in    = PriceInfoFormatter::toScalar($extra['check_in']  ?? '');
+        $check_out   = PriceInfoFormatter::toScalar($extra['check_out'] ?? '');
+        $total_price = PriceInfoFormatter::toFloat($extra['total_price'] ?? $product['price'] ?? 0);
 
         // [1] Hotel location
-        if (!empty($hotel_id) && empty($product['extra']['city']) && isset($hotels_cache[$hotel_id])) {
-            $loc = $hotels_cache[$hotel_id];
-            $product['extra']['city']    = $loc['city']    ?? '';
-            $product['extra']['region']  = $loc['region']  ?? '';
-            $product['extra']['country'] = $loc['country'] ?? '';
+        if (!empty($hotel_id) && empty($extra['city']) && isset($hotels_cache[$hotel_id])) {
+            $loc = is_array($hotels_cache[$hotel_id]) ? $hotels_cache[$hotel_id] : [];
+            $product['extra']['city']    = PriceInfoFormatter::toScalar($loc['city']    ?? '');
+            $product['extra']['region']  = PriceInfoFormatter::toScalar($loc['region']  ?? '');
+            $product['extra']['country'] = PriceInfoFormatter::toScalar($loc['country'] ?? '');
         }
 
         // [2] Formatted dates
@@ -274,7 +303,7 @@ function fn_novoton_holidays_get_order_info(&$order, $additional_data): void
         _nvt_enrich_order_product_terms($product, $hotel_id, $check_in, $check_out, $total_price, $currency_code);
 
         // [4] Board display name
-        $board_id = $product['extra']['board_id'] ?? $product['extra']['board'] ?? '';
+        $board_id = PriceInfoFormatter::toScalar($extra['board_id'] ?? $extra['board'] ?? '');
         if (!empty($board_id)) {
             $product['extra']['board_display'] = fn_novoton_holidays_format_board_name($board_id);
         }
@@ -296,15 +325,19 @@ function fn_novoton_holidays_get_order_info(&$order, $additional_data): void
     // notification banner so they know immediate attention is required.
     if (defined('AREA') && AREA === 'A' && !empty($order['order_id'])) {
         $repo = Container::getInstance()->bookingRepository();
-        $bookings = $repo->findByOrderId((int) $order['order_id']);
+        $bookings = $repo->findByOrderId(PriceInfoFormatter::toInt($order['order_id']));
 
         foreach ($bookings as $booking) {
-            if (($booking['status'] ?? '') === TravelConstants::STATUS_FAILED) {
-                $hotelName = $booking['hotel_name'] ?? '';
+            if (!is_array($booking)) {
+                continue;
+            }
+            if (PriceInfoFormatter::toScalar($booking['status'] ?? '') === TravelConstants::STATUS_FAILED) {
+                $hotelName = PriceInfoFormatter::toScalar($booking['hotel_name'] ?? '');
+                $dispOrderId = PriceInfoFormatter::toScalar($order['order_id'] ?? '');
                 fn_set_notification('W', __('warning'),
                     __('novoton_holidays.booking_api_failed', [
                         '[hotel]' => $hotelName,
-                        '[order_id]' => $order['order_id'],
+                        '[order_id]' => $dispOrderId,
                         '[default]' => 'Novoton booking failed for hotel "' . $hotelName . '" in order #' . $order['order_id'] . '. The API submission did not succeed. Please check and resubmit manually.',
                     ])
                 );
@@ -335,22 +368,24 @@ function _nvt_enrich_order_product_terms(
     float  $total_price,
     string $currency_code
 ): void {
-    $payment_raw  = $product['extra']['terms_of_payment_raw']      ?? '';
-    $payment_text = $product['extra']['terms_of_payment']          ?? '';
-    $cancel_raw   = $product['extra']['terms_of_cancellation_raw'] ?? '';
-    $cancel_text  = $product['extra']['terms_of_cancellation']     ?? '';
+    /** @var array<string, mixed> $pExtra */
+    $pExtra = is_array($product['extra'] ?? null) ? $product['extra'] : [];
+    $payment_raw  = PriceInfoFormatter::toScalar($pExtra['terms_of_payment_raw']      ?? '');
+    $payment_text = PriceInfoFormatter::toScalar($pExtra['terms_of_payment']          ?? '');
+    $cancel_raw   = PriceInfoFormatter::toScalar($pExtra['terms_of_cancellation_raw'] ?? '');
+    $cancel_text  = PriceInfoFormatter::toScalar($pExtra['terms_of_cancellation']     ?? '');
 
     // Fallback: fetch from novoton_bookings DB record (terms are persisted at booking creation)
     if (empty($payment_raw) && empty($payment_text) && empty($cancel_raw) && empty($cancel_text)) {
-        $booking_id = (int)($product['extra']['novoton_booking_id'] ?? 0);
+        $booking_id = PriceInfoFormatter::toInt($pExtra['novoton_booking_id'] ?? 0);
         if ($booking_id > 0) {
             $repo = Container::getInstance()->bookingRepository();
             $terms = $repo->getTerms($booking_id);
-            if (!empty($terms)) {
-                $payment_raw  = $terms['terms_of_payment_raw'] ?? '';
-                $cancel_raw   = $terms['terms_of_cancellation_raw'] ?? '';
-                $payment_text = $terms['terms_of_payment_formatted'] ?? '';
-                $cancel_text  = $terms['terms_of_cancellation_formatted'] ?? '';
+            if (!empty($terms) && is_array($terms)) {
+                $payment_raw  = PriceInfoFormatter::toScalar($terms['terms_of_payment_raw'] ?? '');
+                $cancel_raw   = PriceInfoFormatter::toScalar($terms['terms_of_cancellation_raw'] ?? '');
+                $payment_text = PriceInfoFormatter::toScalar($terms['terms_of_payment_formatted'] ?? '');
+                $cancel_text  = PriceInfoFormatter::toScalar($terms['terms_of_cancellation_formatted'] ?? '');
             }
         }
     }
@@ -385,7 +420,9 @@ function _nvt_enrich_order_product_terms(
  */
 function _nvt_format_order_guests(array &$product): void
 {
-    $guests_data = $product['extra']['guests_data'] ?? null;
+    /** @var array<string, mixed> $fExtra */
+    $fExtra = is_array($product['extra'] ?? null) ? $product['extra'] : [];
+    $guests_data = $fExtra['guests_data'] ?? null;
     if (empty($guests_data)) {
         return;
     }
@@ -394,7 +431,7 @@ function _nvt_format_order_guests(array &$product): void
         return;
     }
 
-    $holder_name = $product['extra']['holder_name'] ?? '';
+    $holder_name = PriceInfoFormatter::toScalar($fExtra['holder_name'] ?? '');
     $formatted = \Tygh\Addons\TravelCore\Services\GuestDataService::formatGuestsForOrderDisplay($guests_data, $holder_name);
     if (!empty($formatted)) {
         $product['extra']['guests_data'] = $formatted;

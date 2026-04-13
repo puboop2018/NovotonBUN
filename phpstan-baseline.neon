@@ -4249,18 +4249,6 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/cart_hooks.php
 
 		-
-			message: '#^Argument of an invalid type mixed supplied for foreach, only iterables are supported\.$#'
-			identifier: foreach.nonIterable
-			count: 3
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/order_hooks.php
-
-		-
-			message: '#^Binary operation "\." between ''Novoton booking…'' and mixed results in an error\.$#'
-			identifier: binaryOp.invalid
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/order_hooks.php
-
-		-
 			message: '#^Binary operation "\." between ''fn_novoton_holidays…'' and mixed results in an error\.$#'
 			identifier: binaryOp.invalid
 			count: 1
@@ -4273,19 +4261,19 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/order_hooks.php
 
 		-
-			message: '#^Cannot access offset ''api_price'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
+			message: '#^Call to function is_array\(\) with array\<string, mixed\> will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 4
+			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/order_hooks.php
+
+		-
+			message: '#^Call to function is_array\(\) with non\-empty\-array\<string, mixed\> will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/order_hooks.php
 
 		-
 			message: '#^Cannot access offset ''base_price'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/order_hooks.php
-
-		-
-			message: '#^Cannot access offset ''board'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/order_hooks.php
@@ -4297,25 +4285,7 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/order_hooks.php
 
 		-
-			message: '#^Cannot access offset ''board_id'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/order_hooks.php
-
-		-
-			message: '#^Cannot access offset ''check_in'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/order_hooks.php
-
-		-
 			message: '#^Cannot access offset ''check_in_formatted'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/order_hooks.php
-
-		-
-			message: '#^Cannot access offset ''check_out'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/order_hooks.php
@@ -4329,7 +4299,7 @@ parameters:
 		-
 			message: '#^Cannot access offset ''city'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
-			count: 3
+			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/order_hooks.php
 
 		-
@@ -4341,37 +4311,13 @@ parameters:
 		-
 			message: '#^Cannot access offset ''extra'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
-			count: 6
+			count: 2
 			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/order_hooks.php
 
 		-
 			message: '#^Cannot access offset ''guests_data'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/order_hooks.php
-
-		-
-			message: '#^Cannot access offset ''holder_name'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/order_hooks.php
-
-		-
-			message: '#^Cannot access offset ''hotel_id'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/order_hooks.php
-
-		-
-			message: '#^Cannot access offset ''novoton_booking'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 3
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/order_hooks.php
-
-		-
-			message: '#^Cannot access offset ''novoton_booking_id'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 2
 			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/order_hooks.php
 
 		-
@@ -4383,17 +4329,11 @@ parameters:
 		-
 			message: '#^Cannot access offset ''price'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
-			count: 3
+			count: 2
 			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/order_hooks.php
 
 		-
 			message: '#^Cannot access offset ''price_before_correction'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/order_hooks.php
-
-		-
-			message: '#^Cannot access offset ''products'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/order_hooks.php
@@ -4405,39 +4345,15 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/order_hooks.php
 
 		-
-			message: '#^Cannot access offset ''terms_of_cancellation'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/order_hooks.php
-
-		-
 			message: '#^Cannot access offset ''terms_of_cancellation_formatted'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 3
 			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/order_hooks.php
 
 		-
-			message: '#^Cannot access offset ''terms_of_cancellation_raw'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/order_hooks.php
-
-		-
-			message: '#^Cannot access offset ''terms_of_payment'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/order_hooks.php
-
-		-
 			message: '#^Cannot access offset ''terms_of_payment_formatted'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 4
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/order_hooks.php
-
-		-
-			message: '#^Cannot access offset ''terms_of_payment_raw'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/order_hooks.php
 
 		-
@@ -4449,43 +4365,25 @@ parameters:
 		-
 			message: '#^Cannot access offset ''total_price'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
-			count: 2
+			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/order_hooks.php
 
 		-
 			message: '#^Cannot access offset string on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/order_hooks.php
-
-		-
-			message: '#^Cannot cast mixed to float\.$#'
-			identifier: cast.double
 			count: 2
 			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/order_hooks.php
 
 		-
-			message: '#^Cannot cast mixed to int\.$#'
-			identifier: cast.int
-			count: 4
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/order_hooks.php
-
-		-
-			message: '#^Parameter \#1 \$array of function array_keys expects array, mixed given\.$#'
-			identifier: argument.type
+			message: '#^Offset ''corrections'' on array\{allow\: bool, corrections\: array\<string, mixed\>, notifications\: array\<int, array\<string, mixed\>\>\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/order_hooks.php
 
 		-
-			message: '#^Parameter \#1 \$boardId of function fn_novoton_holidays_format_board_name expects string, mixed given\.$#'
-			identifier: argument.type
+			message: '#^Offset ''order_id'' on non\-empty\-array\<string, mixed\> on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
 			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/order_hooks.php
-
-		-
-			message: '#^Parameter \#1 \$datetime of function strtotime expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 2
 			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/order_hooks.php
 
 		-
@@ -4495,63 +4393,15 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/order_hooks.php
 
 		-
-			message: '#^Parameter \#1 \$product of function _nvt_enrich_order_product_terms expects array\<string, mixed\>, mixed given\.$#'
+			message: '#^Parameter \#1 \$product of function _nvt_enrich_order_product_terms expects array\<string, mixed\>, array\<mixed\> given\.$#'
 			identifier: argument.type
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/order_hooks.php
 
 		-
-			message: '#^Parameter \#1 \$xml_string of function fn_novoton_holidays_format_cancellation_terms expects string, mixed given\.$#'
-			identifier: argument.type
+			message: '#^Ternary operator condition is always true\.$#'
+			identifier: ternary.alwaysTrue
 			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/order_hooks.php
-
-		-
-			message: '#^Parameter \#1 \$xml_string of function fn_novoton_holidays_format_payment_terms expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/order_hooks.php
-
-		-
-			message: '#^Parameter \#1 \$xml_string of function fn_novoton_holidays_format_payment_terms_with_amounts expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/order_hooks.php
-
-		-
-			message: '#^Parameter \#2 \$holder_name of static method Tygh\\Addons\\TravelCore\\Services\\GuestDataService\:\:formatGuestsForOrderDisplay\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/order_hooks.php
-
-		-
-			message: '#^Parameter \#2 \$hotel_id of function _nvt_enrich_order_product_terms expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/order_hooks.php
-
-		-
-			message: '#^Parameter \#3 \$check_in of function _nvt_enrich_order_product_terms expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/order_hooks.php
-
-		-
-			message: '#^Parameter \#4 \$check_out of function _nvt_enrich_order_product_terms expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/order_hooks.php
-
-		-
-			message: '#^Parameter \#6 \$currency_code of function _nvt_enrich_order_product_terms expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/order_hooks.php
-
-		-
-			message: '#^Possibly invalid array key type mixed\.$#'
-			identifier: offsetAccess.invalidOffset
-			count: 6
 			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/order_hooks.php
 
 		-
