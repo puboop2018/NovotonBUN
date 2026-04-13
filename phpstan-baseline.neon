@@ -8911,105 +8911,15 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoCalculation.php
 
 		-
-			message: '#^Argument of an invalid type mixed supplied for foreach, only iterables are supported\.$#'
-			identifier: foreach.nonIterable
-			count: 4
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoCalculator.php
-
-		-
-			message: '#^Binary operation "\." between ''adult_'' and mixed results in an error\.$#'
-			identifier: binaryOp.invalid
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoCalculator.php
-
-		-
-			message: '#^Binary operation "\." between ''child_'' and mixed results in an error\.$#'
-			identifier: binaryOp.invalid
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoCalculator.php
-
-		-
-			message: '#^Binary operation "\." between mixed and '' BY 1 AD'' results in an error\.$#'
-			identifier: binaryOp.invalid
+			message: '#^Call to function is_array\(\) with array\<mixed\> will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoCalculator.php
 
 		-
-			message: '#^Binary operation "\." between mixed and '' by 1 ad'' results in an error\.$#'
-			identifier: binaryOp.invalid
+			message: '#^Call to function is_array\(\) with array\<string, int\|string\> will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
 			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoCalculator.php
-
-		-
-			message: '#^Cannot access offset ''Code'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoCalculator.php
-
-		-
-			message: '#^Cannot access offset ''FromDays'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoCalculator.php
-
-		-
-			message: '#^Cannot access offset ''IdAcc'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoCalculator.php
-
-		-
-			message: '#^Cannot access offset ''IdAge'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoCalculator.php
-
-		-
-			message: '#^Cannot access offset ''IdBoard'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 3
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoCalculator.php
-
-		-
-			message: '#^Cannot access offset ''IdRoom'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 4
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoCalculator.php
-
-		-
-			message: '#^Cannot access offset ''ToDays'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoCalculator.php
-
-		-
-			message: '#^Cannot access offset ''acc_type'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 8
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoCalculator.php
-
-		-
-			message: '#^Cannot access offset ''age_type'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 6
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoCalculator.php
-
-		-
-			message: '#^Cannot access offset ''by_1_ad'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoCalculator.php
-
-		-
-			message: '#^Cannot access offset ''fAge'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoCalculator.php
-
-		-
-			message: '#^Cannot access offset ''index'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 4
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoCalculator.php
 
 		-
@@ -9019,26 +8929,14 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoCalculator.php
 
 		-
-			message: '#^Cannot cast mixed to float\.$#'
-			identifier: cast.double
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoCalculator.php
-
-		-
-			message: '#^Cannot cast mixed to string\.$#'
-			identifier: cast.string
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoCalculator.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\PriceInfoCalculator\:\:findBaseCodeRow\(\) should return array\<string, mixed\>\|null but returns mixed\.$#'
+			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\PriceInfoCalculator\:\:findBaseCodeRow\(\) should return array\<string, mixed\>\|null but returns array\<mixed\>\.$#'
 			identifier: return.type
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoCalculator.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\PriceInfoCalculator\:\:findSeasonPriceRow\(\) should return array\<string, mixed\>\|null but returns mixed\.$#'
-			identifier: return.type
+			message: '#^Offset ''row'' on array\{row\: array\<mixed\>, fromDays\: int\<1, max\>\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoCalculator.php
 
@@ -9055,25 +8953,7 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoCalculator.php
 
 		-
-			message: '#^Parameter \#1 \$seasonPrices of method Tygh\\Addons\\NovotonHolidays\\Services\\PriceInfoCalculator\:\:findSeasonPriceRow\(\) expects array\<string, mixed\>, mixed given\.$#'
-			identifier: argument.type
-			count: 4
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoCalculator.php
-
-		-
-			message: '#^Parameter \#1 \$string of function strtolower expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoCalculator.php
-
-		-
-			message: '#^Parameter \#4 \$ageType of method Tygh\\Addons\\NovotonHolidays\\Services\\PriceInfoCalculator\:\:findSeasonPriceRow\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoCalculator.php
-
-		-
-			message: '#^Parameter \#5 \$accType of method Tygh\\Addons\\NovotonHolidays\\Services\\PriceInfoCalculator\:\:findSeasonPriceRow\(\) expects string, mixed given\.$#'
+			message: '#^Parameter \#1 \$seasonPrices of method Tygh\\Addons\\NovotonHolidays\\Services\\PriceInfoCalculator\:\:findSeasonPriceRow\(\) expects array\<string, mixed\>, array\<mixed\> given\.$#'
 			identifier: argument.type
 			count: 4
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoCalculator.php
