@@ -4843,12 +4843,6 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Api/ReservationApiClient.php
 
 		-
-			message: '#^Argument of an invalid type mixed supplied for foreach, only iterables are supported\.$#'
-			identifier: foreach.nonIterable
-			count: 3
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/AddProductsCommand.php
-
-		-
 			message: '#^Binary operation "\." between ''NVT'' and mixed results in an error\.$#'
 			identifier: binaryOp.invalid
 			count: 1
@@ -4861,15 +4855,33 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/AddProductsCommand.php
 
 		-
+			message: '#^Call to function is_array\(\) with array\<string, mixed\> will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/AddProductsCommand.php
+
+		-
+			message: '#^Call to static method toInt\(\) on an unknown class Tygh\\Addons\\NovotonHolidays\\Cron\\Commands\\PriceInfoFormatter\.$#'
+			identifier: class.notFound
+			count: 2
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/AddProductsCommand.php
+
+		-
+			message: '#^Call to static method toScalar\(\) on an unknown class Tygh\\Addons\\NovotonHolidays\\Cron\\Commands\\PriceInfoFormatter\.$#'
+			identifier: class.notFound
+			count: 9
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/AddProductsCommand.php
+
+		-
 			message: '#^Cannot cast mixed to int\.$#'
 			identifier: cast.int
-			count: 3
+			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/AddProductsCommand.php
 
 		-
 			message: '#^Cannot cast mixed to string\.$#'
 			identifier: cast.string
-			count: 5
+			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/AddProductsCommand.php
 
 		-
@@ -4965,7 +4977,7 @@ parameters:
 		-
 			message: '#^Parameter \#2 \$product_id of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepositoryInterface\:\:linkToProduct\(\) expects int, mixed given\.$#'
 			identifier: argument.type
-			count: 1
+			count: 2
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/AddProductsCommand.php
 
 		-
@@ -4987,13 +4999,7 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/AddProductsCommand.php
 
 		-
-			message: '#^Part \$hotel\[''city''\] \(mixed\) of encapsed string cannot be cast to string\.$#'
-			identifier: encapsedStringPart.nonString
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/AddProductsCommand.php
-
-		-
-			message: '#^Part \$hotel\[''hotel_name''\] \(mixed\) of encapsed string cannot be cast to string\.$#'
+			message: '#^Part \$hotel_city \(mixed\) of encapsed string cannot be cast to string\.$#'
 			identifier: encapsedStringPart.nonString
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/AddProductsCommand.php
@@ -5002,6 +5008,12 @@ parameters:
 			message: '#^Part \$hotel_id \(mixed\) of encapsed string cannot be cast to string\.$#'
 			identifier: encapsedStringPart.nonString
 			count: 5
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/AddProductsCommand.php
+
+		-
+			message: '#^Part \$hotel_name \(mixed\) of encapsed string cannot be cast to string\.$#'
+			identifier: encapsedStringPart.nonString
+			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/AddProductsCommand.php
 
 		-

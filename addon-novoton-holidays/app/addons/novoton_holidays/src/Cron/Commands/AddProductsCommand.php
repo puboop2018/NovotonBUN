@@ -92,15 +92,20 @@ class AddProductsCommand extends AbstractCronCommand
             $added = 0;
 
             foreach ($hotels as $hotel) {
-                $hotel_id = $hotel['hotel_id'];
+                if (!is_array($hotel)) {
+                    continue;
+                }
+                $hotel_id = PriceInfoFormatter::toScalar($hotel['hotel_id'] ?? '');
+                $hotel_name = PriceInfoFormatter::toScalar($hotel['hotel_name'] ?? '');
+                $hotel_city = PriceInfoFormatter::toScalar($hotel['city'] ?? '');
                 $product_code = 'NVT' . $hotel_id;
 
-                $this->output("[{$hotel_id}] {$hotel['hotel_name']} ({$hotel['city']}) ... ", false);
+                $this->output("[{$hotel_id}] {$hotel_name} ({$hotel_city}) ... ", false);
 
                 // Check if CS-Cart product already exists (core products table)
                 $existing = db_get_field("SELECT product_id FROM ?:products WHERE product_code = ?s", $product_code);
                 if ($existing) {
-                    $hotelRepo->linkToProduct($hotel_id, (int) $existing);
+                    $hotelRepo->linkToProduct($hotel_id, PriceInfoFormatter::toInt($existing));
                     $this->output("LINKED");
                     continue;
                 }
@@ -108,22 +113,22 @@ class AddProductsCommand extends AbstractCronCommand
                 // Detect property type for this hotel
                 $propertyDetector = new PropertyTypeDetector();
                 $hotelData = fn_novoton_holidays_get_hotel_data($hotel_id);
+                /** @var array<string, mixed> $hotelData */
+                $hotelData = is_array($hotelData) ? $hotelData : [];
                 $packageNames = [];
                 $roomNames = [];
-                if (!empty($hotelData['packages'])) {
-                    foreach ($hotelData['packages'] as $pkg) {
-                        $packageNames[] = is_array($pkg) ? ($pkg['PackageName'] ?? '') : (string) $pkg;
-                    }
+                $pkgs = is_array($hotelData['packages'] ?? null) ? $hotelData['packages'] : [];
+                foreach ($pkgs as $pkg) {
+                    $packageNames[] = is_array($pkg) ? PriceInfoFormatter::toScalar($pkg['PackageName'] ?? '') : PriceInfoFormatter::toScalar($pkg);
                 }
-                if (!empty($hotelData['rooms'])) {
-                    foreach ($hotelData['rooms'] as $rm) {
-                        $roomNames[] = is_array($rm) ? ($rm['Type'] ?? $rm['IdRoom'] ?? '') : (string) $rm;
-                    }
+                $rms = is_array($hotelData['rooms'] ?? null) ? $hotelData['rooms'] : [];
+                foreach ($rms as $rm) {
+                    $roomNames[] = is_array($rm) ? PriceInfoFormatter::toScalar($rm['Type'] ?? $rm['IdRoom'] ?? '') : PriceInfoFormatter::toScalar($rm);
                 }
-                $detectedType = $propertyDetector->detect($hotel['hotel_name'], $packageNames, $roomNames);
+                $detectedType = $propertyDetector->detect($hotel_name, $packageNames, $roomNames);
 
                 // Format hotel display name: Title Case + append property type for short names
-                $display_name = fn_novoton_holidays_format_hotel_display_name($hotel['hotel_name'], $detectedType);
+                $display_name = fn_novoton_holidays_format_hotel_display_name($hotel_name, $detectedType);
 
                 $description = '';
                 try {
@@ -222,8 +227,9 @@ class AddProductsCommand extends AbstractCronCommand
         $facilityRepo = $container->facilityRepository();
 
         // Star rating — uses shared travel_core mapping (travel_feature_map + travel_api_alias)
-        if (!empty($hotel['star_rating']) && (int) $hotel['star_rating'] >= 1) {
-            $code = $normalizer->normalizeStarRating((string) $hotel['star_rating']);
+        $starRating = PriceInfoFormatter::toInt($hotel['star_rating'] ?? 0);
+        if ($starRating >= 1) {
+            $code = $normalizer->normalizeStarRating((string) $starRating);
             if ($code !== null) {
                 $featureMapper->assignFeatureViaCore($productId, 'stars', $code);
             }
@@ -231,11 +237,14 @@ class AddProductsCommand extends AbstractCronCommand
 
         // Board types — uses shared travel_core mapping (travel_feature_map + travel_api_alias)
         $hotelData = fn_novoton_holidays_get_hotel_data($hotelId);
-        if (!empty($hotelData['boards'])) {
+        /** @var array<string, mixed> $hotelData */
+        $hotelData = is_array($hotelData) ? $hotelData : [];
+        $boards = is_array($hotelData['boards'] ?? null) ? $hotelData['boards'] : [];
+        if (!empty($boards)) {
             $boardCodes = [];
-            foreach ($hotelData['boards'] as $board) {
-                $raw = is_array($board) ? ($board['IdBoard'] ?? $board['Board'] ?? '') : (string) $board;
-                $code = $normalizer->normalizeBoardCode((string) $raw);
+            foreach ($boards as $board) {
+                $raw = is_array($board) ? PriceInfoFormatter::toScalar($board['IdBoard'] ?? $board['Board'] ?? '') : PriceInfoFormatter::toScalar($board);
+                $code = $normalizer->normalizeBoardCode($raw);
                 if ($code !== null) {
                     $boardCodes[] = $code;
                 }
