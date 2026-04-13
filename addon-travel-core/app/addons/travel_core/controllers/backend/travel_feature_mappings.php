@@ -518,7 +518,7 @@ if ($mode === 'manage') {
         Tygh::$app['view']->assign('mappings', $mappings);
         Tygh::$app['view']->assign('search', $search);
         Tygh::$app['view']->assign('type_stats', $typeStats);
-        Tygh::$app['view']->assign('type_label', $typeLabels[$featureTypeFilter] ?? $featureTypeFilter);
+        Tygh::$app['view']->assign('type_label', $typeLabels[$featureTypeFilter]);
         Tygh::$app['view']->assign('configured_feature_id', FeatureMapper::getFeatureId($featureTypeFilter));
         Tygh::$app['view']->assign('feature_types', $validFeatureTypes);
     }

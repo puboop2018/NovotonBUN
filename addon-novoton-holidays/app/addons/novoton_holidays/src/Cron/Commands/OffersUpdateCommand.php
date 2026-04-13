@@ -54,7 +54,9 @@ class OffersUpdateCommand extends AbstractCronCommand
             return ['success' => true, 'stats' => ['new_hotels' => 0, 'added_to_cart' => 0]];
         }
 
-        $offers = is_array($response->Offer) ? $response->Offer : [$response->Offer];
+        /** @var mixed $offerRaw */
+        $offerRaw = $response->Offer;
+        $offers = is_array($offerRaw) ? $offerRaw : [$offerRaw];
         $this->output("Found " . count($offers) . " offers to check.");
         $this->output("");
 

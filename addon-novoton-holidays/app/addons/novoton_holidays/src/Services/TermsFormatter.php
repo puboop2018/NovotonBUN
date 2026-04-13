@@ -194,7 +194,7 @@ class TermsFormatter
                 foreach ($paymentRules as $rule) {
                     $rawDate = (string) ($rule['DateTo'] ?? $rule['tillDate'] ?? $rule['to'] ?? '');
                     $term = [
-                        'percent' => (int) round((float) ($rule['PerCent'] ?? $rule['percent'] ?? (string) $rule ?? 0)),
+                        'percent' => (int) round((float) ($rule['PerCent'] ?? $rule['percent'] ?? (string) $rule)),
                         'date' => $rawDate,
                         'date_formatted' => !empty($rawDate) ? self::formatDate($rawDate) : '',
                         'is_on_booking' => false,
@@ -246,7 +246,7 @@ class TermsFormatter
                     $daysBefore = 0;
                     if (!empty($tillDate) && $checkInTs) {
                         $tillTs = strtotime($tillDate);
-                        if ($tillTs && $checkInTs) {
+                        if ($tillTs) {
                             $daysBefore = max(0, ($checkInTs - $tillTs) / 86400);
                         }
                     }
@@ -259,7 +259,7 @@ class TermsFormatter
                         'is_penalty' => ($value > 0),
                     ];
 
-                    if ($value === 0 || $value === 0.0) {
+                    if ($value == 0) {
                         $term['value'] = 'FREE';
                         $term['is_penalty'] = false;
                     }

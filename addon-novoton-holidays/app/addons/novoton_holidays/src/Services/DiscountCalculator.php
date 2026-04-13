@@ -114,7 +114,7 @@ class DiscountCalculator implements DiscountCalculatorInterface
 
     /**
      * Calculate Reduction (free nights)
-     * @param array<string, mixed> $seasonsByNight
+     * @param list<array<string, int|string>> $seasonsByNight
      * @param array<string, mixed> $occupancy
      * @param array<string, mixed> $basePrice
      * @param array<string, mixed> $fees
@@ -288,7 +288,7 @@ class DiscountCalculator implements DiscountCalculatorInterface
                     }
                 }
             } else {
-                $avgNightPrice = $nights > 0 ? $basePrice['total'] / $nights : 0;
+                $avgNightPrice = $basePrice['total'] / $nights;
                 $discount = $avgNightPrice * ($nights - $maxDays);
             }
 

@@ -225,7 +225,7 @@ use Tygh\Addons\TravelCore\Services\CurrencyService;
     }
     
     // If not in DB, fetch from API
-    if ((empty($age_categories) || empty($room_limits)) && !empty($booking['hotel_id'])) {
+    if (empty($age_categories) || empty($room_limits)) {
         $api = fn_novoton_holidays_get_api();
         if ($api) {
             $hotelInfoResponse = $api->hotels()->getHotelInfo($booking['hotel_id']);
@@ -304,8 +304,8 @@ use Tygh\Addons\TravelCore\Services\CurrencyService;
     // Uses guest count to calculate realistic per-night totals
     $calendar_prices_json = '{}';
     $calendar_prices_currency = $novoton_display_currency;
-    if (ConfigProvider::isShowCalendarPrices() && !empty($bookingData['hotel_id'])) {
-        $calendar_adults = max(1, (int)($booking['adults'] ?? 2));
+    if (ConfigProvider::isShowCalendarPrices()) {
+        $calendar_adults = max(1, (int) $booking['adults']);
         $priceInfoService = Container::getInstance()->priceInfoService();
         $calendarData = $priceInfoService->getCalendarPrices($bookingData['hotel_id'], $novoton_display_currency, $calendar_adults);
         if (!empty($calendarData['prices'])) {

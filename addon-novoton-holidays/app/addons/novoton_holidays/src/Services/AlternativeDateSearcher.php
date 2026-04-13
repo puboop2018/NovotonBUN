@@ -43,7 +43,7 @@ class AlternativeDateSearcher implements AlternativeDateSearcherInterface
      * @param array<string, mixed>  $rooms     Room XML nodes from HotelAvailabilitySearcher::getRooms()
      * @param array<string, mixed>  $boardTypes Board type IDs from HotelAvailabilitySearcher::getBoardTypes()
      * @return array{
-     *   results: array,
+     *   results: list<array<string, mixed>>,
      *   check_in: string,
      *   check_out: string
      * }

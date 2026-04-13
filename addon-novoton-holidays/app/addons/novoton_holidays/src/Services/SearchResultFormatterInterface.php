@@ -13,7 +13,7 @@ interface SearchResultFormatterInterface
     /**
      * Assign all search-result template variables to the view.
      *
-     * @param array<string, mixed> $results       Primary result rows
+     * @param list<array<string, mixed>> $results       Primary result rows
      * @param array<string, mixed> $novotonParams Template params (from normalizer)
      * @param array<string, mixed> $searchResult  Output from HotelAvailabilitySearcher::search()
      * @param array<string, mixed> $altResult     Output from AlternativeDateSearcher::search()

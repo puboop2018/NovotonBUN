@@ -41,7 +41,7 @@ interface PriceInfoCalculationInterface
     /**
      * Get debug log.
      *
-     * @return array<string, mixed>
+     * @return list<string>
      */
     public function getDebugLog(): array;
 
@@ -59,7 +59,7 @@ interface PriceInfoCalculationInterface
      *
      * @param string $roomId
      * @param string $boardId
-     * @return list<string>
+     * @return list<array<string, mixed>>
      */
     public function getSamplePrices(string $roomId, string $boardId): array;
 

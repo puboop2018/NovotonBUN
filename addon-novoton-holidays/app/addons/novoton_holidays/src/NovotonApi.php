@@ -42,7 +42,7 @@ class NovotonApi implements NovotonApiKitInterface
     private NovotonHttpClient $httpClient;
     private NovotonXmlParser $xmlParser;
     private CommissionCalculator $commissionCalculator;
-    private ?\Tygh\Addons\NovotonHolidays\Services\CacheService $cache = null;
+    private ?\Tygh\Addons\NovotonHolidays\Services\CacheServiceInterface $cache = null;
     private bool $enableCache = true;
 
     // Domain clients

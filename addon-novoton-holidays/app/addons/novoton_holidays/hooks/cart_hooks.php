@@ -56,9 +56,6 @@ function fn_novoton_holidays_calculate_cart_items(&$cart, &$cart_products, $auth
     }
 
     $product_ids = array_column($cart_products, 'product_id');
-    if (empty($product_ids)) {
-        return;
-    }
 
     $repo = Container::getInstance()->bookingRepository();
     $auth_user_id = !empty($auth['user_id']) ? (int) $auth['user_id'] : 0;

@@ -446,7 +446,7 @@ class BatchedHotelInfoSyncV2 extends AbstractBatchedSync
                 }
 
                 // Also check for nested <Package> elements within each <packages>
-                if (isset($pkg->Package) && is_object($pkg->Package)) {
+                if (isset($pkg->Package)) {
                     foreach ($pkg->Package as $nestedPkg) {
                         $nestedIdCont = (string) ($nestedPkg->IdCont ?? '');
                         if ($nestedIdCont !== '' && !isset($seenIds[$nestedIdCont])) {
@@ -572,7 +572,9 @@ class BatchedHotelInfoSyncV2 extends AbstractBatchedSync
                 $response = $api->destinations()->getOffersUpdate($datetimeParam, $country);
 
                 if ($response && isset($response->Offer)) {
-                    $offers = is_array($response->Offer) ? $response->Offer : [$response->Offer];
+                    /** @var mixed $offerRaw */
+                    $offerRaw = $response->Offer;
+                    $offers = is_array($offerRaw) ? $offerRaw : [$offerRaw];
                     foreach ($offers as $offer) {
                         $hid = (string) ($offer->IdHotel ?? '');
                         if ($hid !== '') {

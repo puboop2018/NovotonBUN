@@ -178,7 +178,9 @@ class HotelSyncService extends AbstractSyncService implements HotelSyncServiceIn
                 $waitSecs = $httpClient->getCircuitBreakerTimeout() + 5;
                 $this->output("    Circuit breaker open. Waiting {$waitSecs}s before retry...");
                 sleep($waitSecs);
-                if ($httpClient->isCircuitOpen()) {
+                /** @var bool $stillOpen */
+                $stillOpen = $httpClient->isCircuitOpen();
+                if ($stillOpen) {
                     $this->output('    Circuit breaker still open after wait. Aborting remaining chunks.');
                     $stats['error'] = 'Circuit breaker open — API unavailable';
                     break;

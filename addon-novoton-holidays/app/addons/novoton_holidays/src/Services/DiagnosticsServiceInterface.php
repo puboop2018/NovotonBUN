@@ -18,7 +18,7 @@ interface DiagnosticsServiceInterface
     /**
      * Test API connection and credentials.
      *
-     * @return array{success: bool, config: non-empty-array<string, mixed>, message: string, hotels_count: int, sample_hotel: array<string, mixed>|null, error: string}
+     * @return array{success: bool, config: non-empty-array<string, mixed>, message: string, hotels_count: int, sample_hotel: array<string, mixed>|null, error: string, last_request?: mixed, last_http_code?: int|null, raw_response_preview?: string}
      */
     public function testApiConnection(): array;
 
@@ -35,7 +35,7 @@ interface DiagnosticsServiceInterface
      * Test room price API call.
      *
      * @param array<string, mixed> $params {hotel_id, room_id, board_id, check_in, check_out, adults}
-     * @return array{success: bool, result: mixed, price: float, price_with_commission: float, raw_response: string, error: string}
+     * @return array{success: bool, result: mixed, params: array<string, mixed>, price: float, price_with_commission: float, raw_response: string, error: string}
      */
     public function testRoomPrice(array $params): array;
 

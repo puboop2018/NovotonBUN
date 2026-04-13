@@ -506,7 +506,7 @@ if ($mode === 'check_prices_hotel') {
                 $min_price = 0;
                 if ($result instanceof \SimpleXMLElement) {
                     $prices = $result->xpath('//Price');
-                    $has_room_price = !empty($prices) && count($prices) > 0;
+                    $has_room_price = !empty($prices);
                     if ($has_room_price) {
                         foreach ($prices as $p) {
                             $pval = (float)((string)$p);

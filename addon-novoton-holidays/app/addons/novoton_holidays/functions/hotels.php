@@ -485,7 +485,7 @@ function fn_novoton_holidays_get_or_create_category(string $path): int
  */
 function fn_novoton_holidays_sync_resorts_list(string $country = \Tygh\Addons\NovotonHolidays\Constants::DEFAULT_COUNTRY): array
 {
-    $country = (string) ($country ?? \Tygh\Addons\NovotonHolidays\Constants::DEFAULT_COUNTRY);
+    $country = (string) $country;
 
     $api = fn_novoton_holidays_get_api();
     if (!$api) {
@@ -748,7 +748,7 @@ function fn_novoton_holidays_get_resorts_for_settings(): array
         $country = $row['country'];
         $resort = $row['city'];
 
-        if (!empty($hidden_resorts) && in_array(strtoupper($resort), $hidden_resorts, true)) {
+        if (in_array(strtoupper($resort), $hidden_resorts, true)) {
             continue;
         }
 

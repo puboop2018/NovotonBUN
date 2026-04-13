@@ -92,7 +92,6 @@ class HotelAvailabilitySearcher implements HotelAvailabilitySearcherInterface
         // Typed as the narrow kit interface so this method can only
         // reach the five domain sub-clients (+ debugInfo) and never
         // falls back to the deprecated NovotonApi facade methods.
-        /** @var NovotonApiKitInterface|null $api */
         $api = fn_novoton_holidays_get_api();
         if (!$api) {
             fn_set_notification('W', __('warning'),
@@ -181,7 +180,7 @@ class HotelAvailabilitySearcher implements HotelAvailabilitySearcherInterface
         $roomMeta      = []; // roomKey => occupancy metadata
 
         foreach ($roomsData as $roomIdx => $roomOccupancy) {
-            $roomNum       = $roomIdx + 1;
+            $roomNum       = (int) $roomIdx + 1;
             $roomAdults    = (int) ($roomOccupancy['adults'] ?? 2);
             $roomChildrenCount = (int) ($roomOccupancy['children'] ?? 0);
             $roomChildrenAges = $this->cleanChildrenAges($roomOccupancy['childrenAges'] ?? []);
@@ -275,7 +274,7 @@ class HotelAvailabilitySearcher implements HotelAvailabilitySearcherInterface
 
     /**
      * @param list<int> $children
-     * @param array<string, mixed> $roomsData
+     * @param list<array<string, mixed>> $roomsData
      * @param array<string, mixed> $roomTypeMap
      * @return array<string, mixed>
      */
@@ -468,7 +467,7 @@ class HotelAvailabilitySearcher implements HotelAvailabilitySearcherInterface
 
     /**
      * @return array<string, mixed>
-     * @param array<string, mixed> $results
+     * @param list<array<string, mixed>> $results
      */
     private function calculateMaxCapacity(array $results): array
     {

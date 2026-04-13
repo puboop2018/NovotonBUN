@@ -351,7 +351,7 @@ class PriceInfoFormatter
 
     /**
      * Create error result
-     * @param array<string, mixed> $debugLog
+     * @param list<string> $debugLog
      * @return array<string, mixed>
      */
     public static function errorResult(string $message, array $debugLog = [], bool $debug = false): array

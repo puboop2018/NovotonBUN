@@ -17,7 +17,7 @@ use Tygh\Registry;
 
 class ErrorHandler
 {
-    /** @var array<string, mixed> Collected errors */
+    /** @var list<array<string, mixed>> Collected errors */
     private static $errors = [];
 
     /** @var bool Debug mode */
@@ -108,7 +108,7 @@ class ErrorHandler
     /**
      * Get all errors
      * 
-     * @return array<string, mixed> Errors
+     * @return list<array<string, mixed>> Errors
      */
     public static function getErrors(): array
     {
@@ -235,7 +235,7 @@ class ErrorHandler
         $missing = [];
         
         foreach ($required as $field) {
-            if (!isset($data[$field]) || $data[$field] === '' || $data[$field] === null) {
+            if (!isset($data[$field]) || $data[$field] === '') {
                 $missing[] = $field;
             }
         }

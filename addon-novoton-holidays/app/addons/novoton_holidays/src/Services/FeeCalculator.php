@@ -454,7 +454,7 @@ class FeeCalculator implements FeeCalculatorInterface
             $idBoard = $extra['IdBoard'] ?? '';
             $idAge = $extra['IdAge'] ?? '';
 
-            if (!empty($idBoard) && !empty($boardId)) {
+            if (!empty($idBoard)) {
                 if (strcasecmp($idBoard, $boardId) !== 0) {
                     continue;
                 }

@@ -4,7 +4,7 @@ namespace Tygh\Addons\NovotonHolidays\Api;
 
 use Tygh\Addons\NovotonHolidays\NovotonHttpClient;
 use Tygh\Addons\NovotonHolidays\NovotonXmlParser;
-use Tygh\Addons\NovotonHolidays\Services\CacheService;
+use Tygh\Addons\NovotonHolidays\Services\CacheServiceInterface;
 use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
@@ -15,7 +15,7 @@ abstract class ApiClientBase
 {
     protected NovotonHttpClient $httpClient;
     protected NovotonXmlParser $xmlParser;
-    protected ?CacheService $cache;
+    protected ?CacheServiceInterface $cache;
     protected bool $enableCache;
 
     /** @var array<string, mixed> Cache TTL by function (seconds) */
@@ -39,7 +39,7 @@ abstract class ApiClientBase
     public function __construct(
         NovotonHttpClient $httpClient,
         NovotonXmlParser $xmlParser,
-        ?CacheService $cache,
+        ?CacheServiceInterface $cache,
         bool $enableCache
     ) {
         $this->httpClient = $httpClient;
@@ -166,7 +166,7 @@ abstract class ApiClientBase
     /**
      * Build adult ages XML (<Age> elements).
      * Uses default adult age from Constants for missing entries.
-     * @param array<string, mixed> $adultAges
+     * @param array<int|string, mixed> $adultAges
      */
     protected function buildAdultAgesXml(int $count, array $adultAges = []): string
     {

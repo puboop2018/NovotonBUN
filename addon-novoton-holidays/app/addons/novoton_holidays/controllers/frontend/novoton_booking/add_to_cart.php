@@ -447,7 +447,7 @@ use Tygh\Addons\TravelCore\TravelConstants;
     }
     
     // Fallback to bookingData if rooms_data didn't have room_id
-    if (empty($room_ids_for_db) && !empty($bookingData['room_id'])) {
+    if (empty($room_ids_for_db)) {
         $room_ids_for_db[] = $bookingData['room_id'];
         $room_types_for_db[] = fn_novoton_holidays_format_room_type($bookingData['room_id']);
     }

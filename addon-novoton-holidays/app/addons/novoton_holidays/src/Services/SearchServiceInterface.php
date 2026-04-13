@@ -35,11 +35,11 @@ interface SearchServiceInterface
         int     $nights,
         string  $checkIn,
         string  $checkOut,
-        string  $mealPlan,
-        array   $quotaMap,
-        array   $roomTypeMap,
-        ?int    $forRoom,
-        ?string $occupancyStr
+        string  $mealPlan = '',
+        array   $quotaMap = [],
+        array   $roomTypeMap = [],
+        ?int    $forRoom = null,
+        ?string $occupancyStr = null
     ): array;
 
     /**

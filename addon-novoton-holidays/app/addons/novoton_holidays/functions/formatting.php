@@ -204,7 +204,7 @@ function fn_novoton_holidays_parse_payment_terms($xml_string): array
             foreach ($paymentRules as $rule) {
                 $rawDate = (string)($rule['DateTo'] ?? $rule['tillDate'] ?? $rule['to'] ?? '');
                 $term = [
-                    'percent' => (int)round((float)($rule['PerCent'] ?? $rule['percent'] ?? (string)$rule ?? 0)),
+                    'percent' => (int)round((float)($rule['PerCent'] ?? $rule['percent'] ?? (string)$rule)),
                     'date' => $rawDate,
                     'date_formatted' => !empty($rawDate) ? fn_novoton_holidays_format_date($rawDate) : '',
                     'is_on_booking' => false,
@@ -265,11 +265,11 @@ function fn_novoton_holidays_parse_cancellation_terms($xml_string, $check_in = '
                 $days_before = 0;
                 if (!empty($tillDate) && $check_in_ts) {
                     $till_ts = strtotime($tillDate);
-                    if ($till_ts && $check_in_ts) {
+                    if ($till_ts) {
                         $days_before = max(0, ($check_in_ts - $till_ts) / 86400);
                     }
                 }
-                
+
                 $term = [
                     'value' => $value,
                     'type' => $type,
@@ -277,9 +277,9 @@ function fn_novoton_holidays_parse_cancellation_terms($xml_string, $check_in = '
                     'days_before' => (int)$days_before,
                     'is_penalty' => ($value > 0),
                 ];
-                
+
                 // Mark as FREE if value is 0
-                if ($value === 0 || $value === 0.0) {
+                if ($value == 0) {
                     $term['value'] = 'FREE';
                     $term['is_penalty'] = false;
                 }

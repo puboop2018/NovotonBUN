@@ -7,7 +7,7 @@ use Tygh\Addons\TravelCore\Services\CommissionCalculator;
 use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\NovotonHttpClient;
 use Tygh\Addons\NovotonHolidays\NovotonXmlParser;
-use Tygh\Addons\NovotonHolidays\Services\CacheService;
+use Tygh\Addons\NovotonHolidays\Services\CacheServiceInterface;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Exceptions\XmlParsingException;
 
@@ -23,7 +23,7 @@ class PricingApiClient extends ApiClientBase implements PricingApiClientInterfac
     public function __construct(
         NovotonHttpClient $httpClient,
         NovotonXmlParser $xmlParser,
-        ?CacheService $cache,
+        ?CacheServiceInterface $cache,
         bool $enableCache,
         CommissionCalculator $commissionCalculator
     ) {
@@ -240,7 +240,7 @@ class PricingApiClient extends ApiClientBase implements PricingApiClientInterfac
         }
 
         $prices = $result->xpath('//Price');
-        if (!empty($prices) && count($prices) > 0) {
+        if (!empty($prices)) {
             $this->saveToCache(Constants::API_FUNCTION_ROOM_PRICE, $cacheKey, $response);
         }
 

@@ -32,7 +32,7 @@ class PriceInfoCalculator
     /**
      * Calculate base price from season_price rows
      * @param array<string, mixed> $occupancy
-     * @param array<string, mixed> $seasonsByNight
+     * @param list<array<string, int|string>> $seasonsByNight
      * @return array<string, mixed>
      */
     public function calculateBasePrice(array $occupancy, array $seasonsByNight, string $roomId, string $boardId, int $nights): array
@@ -325,6 +325,7 @@ class PriceInfoCalculator
 
     /**
      * @param array<string, mixed> $row
+     * @param array<string, bool> $visited
      */
     private function resolvePrice(array $row, string $priceKey, array &$visited, int $depth = 0): float
     {
@@ -386,7 +387,7 @@ class PriceInfoCalculator
      * pick the one that best matches the given room and board.
      *
      * Falls back to the first row if no room/board match is found.
-     * @param array<string, mixed> $candidates
+     * @param list<array<string, mixed>> $candidates
      * @return array<string, mixed>
      */
     private function findBestBaseRow(array $candidates, string $roomId, string $boardId): array

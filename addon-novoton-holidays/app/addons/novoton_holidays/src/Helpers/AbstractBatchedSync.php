@@ -265,7 +265,7 @@ abstract class AbstractBatchedSync implements SyncInterface
      * batch in a single query — for example, a hotel-name map so every
      * processItem() call doesn't re-query the database.
      *
-     * @param array<int, string|int> $batch The item IDs in this batch
+     * @param array<int|string, mixed> $batch The item IDs in this batch
      */
     protected function preBatch(array $batch): void
     {
@@ -314,7 +314,7 @@ abstract class AbstractBatchedSync implements SyncInterface
     private static function parseMemoryLimit(): int
     {
         $limit = ini_get('memory_limit');
-        if ($limit === '-1' || $limit === false) {
+        if ($limit === '-1' || $limit === '') {
             return 0; // unlimited
         }
         $limit = trim($limit);

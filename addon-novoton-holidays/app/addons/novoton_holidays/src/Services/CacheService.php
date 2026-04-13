@@ -22,6 +22,7 @@ class CacheService implements CacheServiceInterface
     private string $storage = 'file';
     private string $cache_dir;
     private int $default_ttl = 300;
+    /** @var array<string, mixed> */
     private static array $memory_cache = [];
     private bool $debug = false;
     private CacheRepositoryInterface $cacheRepo;

@@ -51,7 +51,7 @@ use Tygh\Addons\TravelCore\Services\CurrencyService;
     $debug_log('=== NEW PRICE RECALCULATION REQUEST ===');
 
     // Helper function to send JSON response and exit
-    $sendJson = function($response) use (&$debug_enabled, &$debug_messages, &$_nvt_caught_warnings, &$prev_error_handler) {
+    $sendJson = function($response) use (&$debug_enabled, &$debug_messages, &$_nvt_caught_warnings) {
         // Include debug log in response when debug is enabled
         if ($debug_enabled && !empty($debug_messages)) {
             $response['_debug'] = $debug_messages;
@@ -202,7 +202,7 @@ use Tygh\Addons\TravelCore\Services\CurrencyService;
             $params['board_id'] = '';
             $response = $pricing->getRoomPrice($params);
 
-            $debug_log('Fallback API Last Response (first 2000 chars)', substr($api->getLastResponse() ?? '', 0, 2000));
+            $debug_log('Fallback API Last Response (first 2000 chars)', substr($api->getLastResponse(), 0, 2000));
 
             if (!$response) {
                 $debug_log('ERROR: No response from API');

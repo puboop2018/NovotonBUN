@@ -7,7 +7,7 @@ use Tygh\Addons\TravelCore\Services\CommissionCalculator;
 use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\NovotonHttpClient;
 use Tygh\Addons\NovotonHolidays\NovotonXmlParser;
-use Tygh\Addons\NovotonHolidays\Services\CacheService;
+use Tygh\Addons\NovotonHolidays\Services\CacheServiceInterface;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Helpers\DebugLogger;
 
@@ -18,7 +18,7 @@ class AvailabilityApiClient extends ApiClientBase implements AvailabilityApiClie
     public function __construct(
         NovotonHttpClient $httpClient,
         NovotonXmlParser $xmlParser,
-        ?CacheService $cache,
+        ?CacheServiceInterface $cache,
         bool $enableCache,
         CommissionCalculator $commissionCalculator
     ) {
@@ -167,7 +167,7 @@ class AvailabilityApiClient extends ApiClientBase implements AvailabilityApiClie
      * commission applied (see `parseSearchResults()` below). Callers must NOT
      * call `applyCommission()` on those values a second time.
      *
-     * @return array<string, mixed> Search results (commission applied)
+     * @return list<array<string, mixed>> Search results (commission applied)
      * @param array<string, mixed> $params
      */
     #[\Override]
@@ -194,7 +194,7 @@ class AvailabilityApiClient extends ApiClientBase implements AvailabilityApiClie
      *
      * @param array<string, array<string, mixed>> $paramsList Keyed array: key => search params
      * @param int $concurrency Max simultaneous requests
-     * @return array<string, array<string, mixed>> key => parsed search results array
+     * @return array<string, list<array<string, mixed>>> key => parsed search results array
      */
     #[\Override]
     public function searchAvailabilityBatch(array $paramsList, int $concurrency = 5): array

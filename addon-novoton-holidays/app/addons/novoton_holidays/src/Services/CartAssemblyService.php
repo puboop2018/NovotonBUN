@@ -123,7 +123,7 @@ class CartAssemblyService implements CartAssemblyServiceInterface
     public function enrichRoomsData(array $roomsData, array $guestsData): array
     {
         foreach ($roomsData as $roomIdx => &$room) {
-            $roomNum = $roomIdx + 1;
+            $roomNum = (int) $roomIdx + 1;
 
             // Collect children ages from guests for this room
             $childAgesForRoom = [];

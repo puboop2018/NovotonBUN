@@ -540,7 +540,7 @@ class PriceInfoService implements PriceInfoServiceInterface
 
             // Resolve age type — same logic as PriceInfoCalculator
             $rowAge = '';
-            if (!empty($fAge) && is_string($fAge)) {
+            if (!empty($fAge)) {
                 $rowAge = strtoupper(trim($fAge));
             } else {
                 $rowAge = strtoupper(trim($ageTypeMap[$idAge] ?? $idAge));

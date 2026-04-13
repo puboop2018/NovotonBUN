@@ -142,7 +142,9 @@ class AdminCronService implements AdminCronServiceInterface
         }
 
         $facilityRepo = $this->container->facilityRepository();
-        $facilities = is_array($response->Facility) ? $response->Facility : [$response->Facility];
+        /** @var mixed $facilityRaw */
+        $facilityRaw = $response->Facility;
+        $facilities = is_array($facilityRaw) ? $facilityRaw : [$facilityRaw];
         $count = 0;
 
         foreach ($facilities as $f) {
@@ -263,7 +265,9 @@ class AdminCronService implements AdminCronServiceInterface
             return ['success' => true, 'message' => 'No new offers found'];
         }
 
-        $offers = is_array($response->Offer) ? $response->Offer : [$response->Offer];
+        /** @var mixed $offerRaw */
+        $offerRaw = $response->Offer;
+        $offers = is_array($offerRaw) ? $offerRaw : [$offerRaw];
         $count  = count($offers);
 
         return ['success' => true, 'message' => "Found {$count} offers"];

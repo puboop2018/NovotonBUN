@@ -223,9 +223,6 @@ class PriceInfoSync
     public function syncAllProducts(): array
     {
         $products = $this->getProductsToSync();
-        if (!is_array($products)) {
-            $products = [];
-        }
         $totalProducts = count($products);
 
         $stats = [

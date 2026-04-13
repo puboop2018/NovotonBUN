@@ -216,9 +216,9 @@ class SearchResultFormatter implements SearchResultFormatterInterface
     }
 
     /**
-     * @param array<string, mixed> $packages
+     * @param object $view
+     * @param list<array<string, mixed>> $packages
      */
-    /** @param object $view @param list<array<string, mixed>> $packages */
     private function assignPackages($view, array $packages): void
     {
         if (empty($packages)) {
@@ -245,9 +245,9 @@ class SearchResultFormatter implements SearchResultFormatterInterface
     }
 
     /**
-     * @param array<string, mixed> $packages
+     * @param object $view
+     * @param list<array<string, mixed>> $packages
      */
-    /** @param object $view @param list<array<string, mixed>> $packages */
     private function assignActiveEarlyBooking($view, array $packages): void
     {
         $currentDate = date('Y-m-d');
@@ -294,9 +294,9 @@ class SearchResultFormatter implements SearchResultFormatterInterface
     }
 
     /**
-     * @param array<string, mixed> $packages
+     * @param object $view
+     * @param list<array<string, mixed>> $packages
      */
-    /** @param object $view @param list<array<string, mixed>> $packages */
     private function assignSeasonPeriod($view, array $packages): void
     {
         $seasonFrom  = '';
@@ -316,12 +316,10 @@ class SearchResultFormatter implements SearchResultFormatterInterface
                 $seasons = [$seasons];
             }
 
-            if (!empty($seasons)) {
-                $first      = reset($seasons);
-                $last       = end($seasons);
-                $seasonFrom = $first['DateFrom'] ?? $first['FromDate'] ?? '';
-                $seasonTo   = $last['DateTo'] ?? $last['ToDate'] ?? '';
-            }
+            $first      = reset($seasons);
+            $last       = end($seasons);
+            $seasonFrom = $first['DateFrom'] ?? $first['FromDate'] ?? '';
+            $seasonTo   = $last['DateTo'] ?? $last['ToDate'] ?? '';
             break;
         }
 
@@ -330,10 +328,10 @@ class SearchResultFormatter implements SearchResultFormatterInterface
     }
 
     /**
+     * @param object $view
      * @param list<array<string, mixed>> $results
      * @param array<string, mixed> $searchParams
      */
-    /** @param object $view @param list<array<string, mixed>> $results @param array<string, mixed> $searchParams */
     private function assignTerms($view, array $results, array $searchParams, string $hotelId): void
     {
         $termsPaymentRaw      = '';

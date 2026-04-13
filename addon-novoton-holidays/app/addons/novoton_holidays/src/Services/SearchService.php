@@ -12,7 +12,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Services;
 
-use Tygh\Registry;
+
 use Tygh\Addons\NovotonHolidays\Api\Contracts\PricingApiClientInterface;
 use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\NovotonApi;
@@ -23,8 +23,6 @@ class SearchService implements SearchServiceInterface
 {
     /** Narrow sub-client for applyCommission() used by parseRoomPriceResponse(). */
     private readonly PricingApiClientInterface $pricing;
-
-    private bool $debug = false;
 
     /**
      * Constructor.
@@ -46,7 +44,6 @@ class SearchService implements SearchServiceInterface
             $pricing = $api->pricing();
         }
         $this->pricing = $pricing;
-        $this->debug = (Registry::get(\Tygh\Addons\NovotonHolidays\Constants::SETTING_DEBUG_LOGGING) ?? 'N') === 'Y';
     }
     
     /**
@@ -471,7 +468,7 @@ class SearchService implements SearchServiceInterface
     /**
      * Calculate discount range from a list of early booking discounts.
      *
-     * @param array<string, mixed> $discounts From getEarlyBookingDiscounts()
+     * @param list<array<string, mixed>> $discounts From getEarlyBookingDiscounts()
      * @return array<string, mixed> {min, max, all} or empty
      */
     public static function getDiscountRange(array $discounts): array

@@ -57,7 +57,7 @@ if ($mode === 'export_hotel_features_csv') {
             exit;
         }
 
-        fn_set_notification('E', __('error'), "Failed: " . ($result['error'] ?? 'Unknown error'));
+        fn_set_notification('E', __('error'), "Failed: " . $result['error']);
     } catch (Exception $e) {
         ob_end_clean();
         fn_set_notification('E', __('error'), "Exception: " . $e->getMessage());
@@ -599,12 +599,12 @@ if ($mode === 'cron_export_hotel_features') {
 
     if ($result['success']) {
         echo "Status: SUCCESS\n";
-        echo "File: " . ($result['file_path'] ?? $result['filename'] ?? 'N/A') . "\n";
+        echo "File: " . $result['file_path'] . "\n";
         echo "Hotels: {$result['count']}\n";
         echo "[Good] CSV ready for CS-Cart import.\n";
     } else {
         echo "Status: FAILED\n";
-        echo "Error: " . ($result['error'] ?? 'Unknown error') . "\n";
+        echo "Error: " . $result['error'] . "\n";
     }
 
     exit;

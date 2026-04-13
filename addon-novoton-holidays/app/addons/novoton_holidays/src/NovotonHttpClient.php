@@ -223,9 +223,6 @@ class NovotonHttpClient implements HttpClientInterface
         $url = $this->apiUrl . '/index.php';
         $results = [];
         $mh = curl_multi_init();
-        if ($mh === false) {
-            return array_fill_keys(array_keys($requests), false);
-        }
 
         $chunks = array_chunk($requests, $concurrency, true);
 

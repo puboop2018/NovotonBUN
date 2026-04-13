@@ -126,7 +126,7 @@ use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
         _nvt_booking_repo()->update($booking_id, [
             'guest_name' => $guest_list,
             'holder_name' => $holder_name,
-            'guest_email' => $contact['email'] ?? '',
+            'guest_email' => $contact['email'] ?: '',
             'guest_phone' => $contact['phone'] ?? '',
             'guests_data' => (new GuestDataNormalizer())->toJson($guests_data),
             'api_request' => json_encode($api_request, JSON_UNESCAPED_UNICODE),
@@ -166,7 +166,7 @@ use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
             $cart['products'][$target_cart_id]['extra']['guest_names'] = $guest_list;
             $cart['products'][$target_cart_id]['extra']['holder_name'] = $holder_name;
             $cart['products'][$target_cart_id]['extra']['guests_data'] = (new GuestDataNormalizer())->toJson($guests_data);
-            $cart['products'][$target_cart_id]['extra']['contact_email'] = $contact['email'] ?? '';
+            $cart['products'][$target_cart_id]['extra']['contact_email'] = $contact['email'] ?: '';
             $cart['products'][$target_cart_id]['extra']['contact_phone'] = $contact['phone'] ?? '';
 
             // Persist extras to DB BEFORE recalculating — fn_calculate_cart_content()

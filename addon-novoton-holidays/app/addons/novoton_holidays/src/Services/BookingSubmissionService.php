@@ -185,7 +185,7 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
                     $this->bookingRepo->update($originalBookingId, [
                         'status'   => TravelConstants::STATUS_FAILED,
                         'order_id' => $orderId,
-                        'notes'    => 'Booking error (' . $e->getContext() . '): ' . $e->getMessage(),
+                        'notes'    => 'Booking error (' . json_encode($e->getContext()) . '): ' . $e->getMessage(),
                     ]);
                 }
 
@@ -306,16 +306,17 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
      * Parse rooms_data and guests_data, with DB fallbacks.
      *
      * @param array<string, mixed> $bookingData
-     * @return array{0: list<array<string, mixed>>, 1: list<array<string, mixed>>} [rooms_data[], guests_data[]]
+     * @return array{0: list<array<string, mixed>>, 1: array<string, mixed>} [rooms_data[], guests_data[]]
      */
     private function resolveRoomsAndGuests(array $bookingData, int $orderId, bool $debug): array
     {
         // --- rooms_data ---
         $roomsData = [];
         if (!empty($bookingData['rooms_data'])) {
-            $roomsData = is_string($bookingData['rooms_data'])
+            $decoded = is_string($bookingData['rooms_data'])
                 ? json_decode($bookingData['rooms_data'], true)
                 : $bookingData['rooms_data'];
+            $roomsData = is_array($decoded) ? $decoded : [];
         }
 
         // Synthesise a single-room entry when rooms_data is absent
@@ -455,7 +456,7 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
      * calculates the API price (without commission).
      *
      * @param array<string, mixed> $group
-     * @param list<array<string, mixed>> $guestsData
+     * @param array<int|string, array<string, mixed>> $guestsData
      * @param array<string, mixed> $bookingData
      * @return array{0: list<array<string, mixed>>, 1: list<array<string, mixed>>, 2: float, 3: float} [allGuests[], apiRooms[], totalApiPrice, totalGroupPrice]
      */
@@ -555,7 +556,7 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
      * Extract a guest name from the guestsData array.
      *
      * Prefers api_name (First Last format) over display_name/name.
-     * @param list<array<string, mixed>> $guestsData
+     * @param array<int|string, array<string, mixed>> $guestsData
      */
     private function extractGuestName(array $guestsData, string $guestKey): string
     {

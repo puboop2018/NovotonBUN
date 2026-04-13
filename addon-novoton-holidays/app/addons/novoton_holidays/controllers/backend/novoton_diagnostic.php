@@ -252,10 +252,12 @@ if ($mode === 'check') {
     );
     
     foreach ($functions as $func) {
-        $exists = function_exists($func);
+        /** @var string $funcName */
+        $funcName = $func;
+        $exists = function_exists($funcName);
         $status = $exists ? "[Good]" : "[MISSING]";
         echo "$status $func\n";
-        
+
         if ($exists) {
             $reflection = new ReflectionFunction($func);
             echo "       Parameters: " . count($reflection->getParameters()) . "\n";

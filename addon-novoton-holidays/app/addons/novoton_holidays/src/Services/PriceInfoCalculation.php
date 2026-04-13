@@ -56,7 +56,7 @@ class PriceInfoCalculation implements PriceInfoCalculationInterface
     /** @var bool Debug mode */
     private $debug = false;
 
-    /** @var array<string, mixed> Debug log */
+    /** @var list<string> Debug log */
     private $debugLog = [];
 
     /** @var PriceInfoParser */
@@ -138,7 +138,7 @@ class PriceInfoCalculation implements PriceInfoCalculationInterface
         if (!is_array($childrenAges)) {
             $childrenAges = !empty($childrenAges) ? explode(',', $childrenAges) : [];
         }
-        $childrenAges = array_map('floatval', $childrenAges);
+        $childrenAges = array_values(array_map('intval', $childrenAges));
         $numChildren = count($childrenAges);
 
         $checkOut = date('Y-m-d', strtotime($checkIn . ' + ' . $nights . ' days'));
@@ -287,6 +287,7 @@ class PriceInfoCalculation implements PriceInfoCalculationInterface
      * Get debug log
      * @return list<string>
      */
+    #[\Override]
     public function getDebugLog(): array
     {
         return $this->debugLog;
@@ -310,8 +311,9 @@ class PriceInfoCalculation implements PriceInfoCalculationInterface
 
     /**
      * Get sample prices for verification (debug helper)
-     * @return array<string, mixed>
+     * @return list<array<string, mixed>>
      */
+    #[\Override]
     public function getSamplePrices(string $roomId, string $boardId): array
     {
         return PriceInfoFormatter::getSamplePrices(

@@ -30,7 +30,7 @@ class PriceInfoParser
     /** @var array<string, mixed> */
     private array $codeIndex = [];
 
-    /** @var array<string, mixed> */
+    /** @var list<array<string, mixed>> */
     private array $childAgeBands = [];
 
     private ?\Closure $logger;
@@ -64,7 +64,7 @@ class PriceInfoParser
      */
     public function getCodeIndex(): array { return $this->codeIndex; }
     /**
-     * @return array<string, mixed>
+     * @return list<array<string, mixed>>
      */
     public function getChildAgeBands(): array { return $this->childAgeBands; }
 

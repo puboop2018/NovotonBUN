@@ -61,7 +61,10 @@ interface BookingRepositoryInterface
     public function updateStatus(int $booking_id, string $status, string $novoton_status = ''): bool;
     public function linkToOrder(int $booking_id, int $order_id): bool;
     public function setReservationId(int $booking_id, string $reservation_id, string $status = 'Good'): bool;
-    /** @param mixed $request @param mixed $response */
+    /**
+     * @param mixed $request
+     * @param mixed $response
+     */
     public function storeApiData(int $booking_id, $request, $response): bool;
     public function delete(int $booking_id): bool;
     public function deleteOrphans(int $hours = 24): int;

@@ -180,9 +180,7 @@ class Container
 
     public function searchService(): SearchServiceInterface
     {
-        return $this->resolve('searchService', fn() => new SearchService(
-            $this->cacheService()
-        ));
+        return $this->resolve('searchService', fn() => new SearchService());
     }
 
     public function roomPriceService(): RoomPriceServiceInterface
@@ -360,7 +358,7 @@ class Container
      * coupling of the interface type.
      * Not a singleton — new instance each call.
      */
-    public function batchedHotelInfoSyncV2(): SyncInterface
+    public function batchedHotelInfoSyncV2(): \Tygh\Addons\NovotonHolidays\Helpers\AbstractBatchedSync
     {
         if (isset($this->overrides['batchedHotelInfoSyncV2'])) {
             return ($this->overrides['batchedHotelInfoSyncV2'])();

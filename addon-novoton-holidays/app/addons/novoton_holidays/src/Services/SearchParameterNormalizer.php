@@ -209,9 +209,9 @@ class SearchParameterNormalizer
     /**
      * If the URL also carries a children_ages param, distribute them
      * to rooms whose childrenAges are still empty.
-     * @param array<string, mixed> $roomsData
+     * @param list<array<string, mixed>> $roomsData
      * @param array<string, mixed> $params
-     * @return array<string, mixed>
+     * @return list<array<string, mixed>>
      */
     private function mergeUrlChildrenAges(array $roomsData, array $params): array
     {
@@ -235,7 +235,7 @@ class SearchParameterNormalizer
 
     /**
      * @return array{int, int, int[]}  [totalAdults, totalChildren, allAges]
-     * @param array<string, mixed> $roomsData
+     * @param list<array<string, mixed>> $roomsData
      */
     private function calculateTotals(array $roomsData): array
     {

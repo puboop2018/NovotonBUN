@@ -223,7 +223,7 @@ class BookingQueryService implements BookingQueryServiceInterface
         }
 
         $guests_data = $this->guestDataNormalizer->normalize($nb['guests_data']);
-        if (empty($guests_data) || !is_array($guests_data)) {
+        if (empty($guests_data)) {
             return;
         }
 

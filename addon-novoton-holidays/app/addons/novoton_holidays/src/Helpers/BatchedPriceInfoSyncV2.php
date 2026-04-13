@@ -350,10 +350,6 @@ class BatchedPriceInfoSyncV2 extends AbstractBatchedSync
      */
     private static function simpleXmlToArray($xml): array
     {
-        if (!($xml instanceof SimpleXMLElement)) {
-            return [];
-        }
-
         $result = [];
 
         // Include attributes

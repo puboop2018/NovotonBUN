@@ -19,7 +19,7 @@ interface DiscountCalculatorInterface
     public function calculateEarlyBookingDiscount(string $bookingDate, string $checkIn, int $nights, array $basePrice, array $fees): array;
 
     /**
-     * @param array<string, mixed> $seasonsByNight
+     * @param list<array<string, int|string>> $seasonsByNight
      * @param array<string, mixed> $occupancy
      * @param array<string, mixed> $basePrice
      * @param array<string, mixed> $fees

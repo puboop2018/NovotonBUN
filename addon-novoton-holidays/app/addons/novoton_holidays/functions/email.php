@@ -432,7 +432,7 @@ function fn_novoton_holidays_generate_hotel_features_csv(): array
                     $coreLabel = class_exists(\Tygh\Addons\TravelCore\Services\FeatureMapper::class)
                         ? \Tygh\Addons\TravelCore\Services\FeatureMapper::getDisplayName('stars', (string) $stars, $lang)
                         : '';
-                    $star_label = $coreLabel !== '' ? $coreLabel : ($star_labels_fallback[$lang][$stars - 1] ?? '');
+                    $star_label = $coreLabel !== '' ? $coreLabel : $star_labels_fallback[$lang][$stars - 1];
                 }
 
                 $csv_lines[] = implode(';', [
@@ -578,7 +578,7 @@ function fn_novoton_holidays_generate_hotel_features_xml(): array
                     $coreLabel = class_exists(\Tygh\Addons\TravelCore\Services\FeatureMapper::class)
                         ? \Tygh\Addons\TravelCore\Services\FeatureMapper::getDisplayName('stars', (string) $stars, $lang)
                         : '';
-                    $star_value = $coreLabel !== '' ? $coreLabel : ($star_labels_fallback[$lang][$stars - 1] ?? '');
+                    $star_value = $coreLabel !== '' ? $coreLabel : $star_labels_fallback[$lang][$stars - 1];
                 }
 
                 $product_node = $dom->createElement('product');

@@ -148,7 +148,7 @@ class DatabaseHelper implements DatabaseHelperInterface
      * Upsert hotel packages (batch)
      *
      * @return int Number of packages upserted
-     * @param array<string, mixed> $packages
+     * @param list<array<string, mixed>> $packages
      */
     public function upsertHotelPackages(string $hotelId, array $packages): int
     {

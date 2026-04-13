@@ -53,7 +53,7 @@ class BookingRepository implements BookingRepositoryInterface
 
     /**
      * Find booking by ID (raw DB row, no JSON decoding).
-     * @return list<array<string, mixed>>|null
+     * @return array<string, mixed>|null
      */
     public function findById(int $booking_id): ?array
     {
