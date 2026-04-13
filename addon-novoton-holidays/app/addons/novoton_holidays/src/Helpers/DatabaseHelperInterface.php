@@ -16,8 +16,8 @@ interface DatabaseHelperInterface
     /**
      * Batch update hotels has_room_price flag after room_price API checks.
      *
-     * @param array<string, mixed> $withPrices    Hotel IDs that have prices
-     * @param array<string, mixed> $withoutPrices Hotel IDs that don't have prices
+     * @param list<string> $withPrices    Hotel IDs that have prices
+     * @param list<string> $withoutPrices Hotel IDs that don't have prices
      * @return int Number of rows affected
      */
     public function batchUpdateHasRoomPriceFlag(array $withPrices, array $withoutPrices): int;
@@ -25,7 +25,7 @@ interface DatabaseHelperInterface
     /**
      * Bulk lookup: Get existing product IDs for multiple hotel IDs.
      *
-     * @param array<string, mixed> $hotelIds
+     * @param list<string> $hotelIds
      * @return array<string, int> Map of hotel_id => product_id
      */
     public function getProductIdsByHotelIds(array $hotelIds): array;
@@ -33,15 +33,15 @@ interface DatabaseHelperInterface
     /**
      * Bulk lookup: Check which hotel IDs already exist in database.
      *
-     * @param array<string, mixed> $hotelIds
-     * @return string[] Existing hotel IDs
+     * @param list<string> $hotelIds
+     * @return list<string> Existing hotel IDs
      */
     public function getExistingHotelIds(array $hotelIds): array;
 
     /**
      * Bulk upsert hotels (INSERT ... ON DUPLICATE KEY UPDATE).
      *
-     * @param array<string, mixed> $hotels
+     * @param list<array<string, mixed>> $hotels
      * @return array{inserted: int, updated: int}
      */
     public function upsertHotels(array $hotels): array;
@@ -50,7 +50,7 @@ interface DatabaseHelperInterface
      * Upsert hotel packages (batch).
      *
      * @param string $hotelId
-     * @param array<string, mixed>  $packages
+     * @param list<array<string, mixed>> $packages
      * @return int Number of packages upserted
      */
     public function upsertHotelPackages(string $hotelId, array $packages): int;
@@ -58,7 +58,7 @@ interface DatabaseHelperInterface
     /**
      * Link products to hotels in batch.
      *
-     * @param array<string, mixed> $links Array of ['hotel_id' => x, 'product_id' => y]
+     * @param list<array{hotel_id: string, product_id: int}> $links
      * @return int Number of links created
      */
     public function linkProductsToHotels(array $links): int;
@@ -68,8 +68,8 @@ interface DatabaseHelperInterface
      *
      * @param array<string, mixed> $conditions
      * @param int   $limit
-     * @param array<string, mixed> $fields
-     * @return array<string, mixed>
+     * @param list<string> $fields
+     * @return list<array<string, mixed>>
      */
     public function getHotelsForSync(array $conditions = [], int $limit = 0, array $fields = []): array;
 

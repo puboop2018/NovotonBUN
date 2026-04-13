@@ -353,7 +353,7 @@ function fn_novoton_holidays_stream_page_open(string $title, string $extra_css =
  * Output the closing HTML for a streaming progress page.
  *
  * @param string $back_url  URL for the "Back" button (defaults to manage page)
- * @param array<string, mixed>  $extra_buttons  Optional additional buttons [['url' => ..., 'label' => ...], ...]
+ * @param list<array{url: string, label: string}>  $extra_buttons  Optional additional buttons
  */
 function fn_novoton_holidays_stream_page_close(string $back_url = '', array $extra_buttons = []): void
 {

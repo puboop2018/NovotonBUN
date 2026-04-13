@@ -7,18 +7,6 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_admin.php
 
 		-
-			message: '#^Parameter \#1 \$request of function fn_novoton_holidays_decrypt_request_pii expects array\<string, mixed\>, list\<array\<string, mixed\>\> given\.$#'
-			identifier: argument.type
-			count: 3
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_alternatives.php
-
-		-
-			message: '#^Parameter \#1 \$requests of function fn_novoton_holidays_decrypt_requests_pii expects list\<array\<string, mixed\>\>, array\<string, mixed\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_alternatives.php
-
-		-
 			message: '#^Offset ''message'' on array\{type\: string, title\: string, message\: string\} on left side of \?\? always exists and is not nullable\.$#'
 			identifier: nullCoalesce.offset
 			count: 1
@@ -52,12 +40,6 @@ parameters:
 			message: '#^Comparison operation "\>" between int\<1, max\> and 0 is always true\.$#'
 			identifier: greater.alwaysTrue
 			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_prices.php
-
-		-
-			message: '#^Parameter \#2 \$extra_buttons of function fn_novoton_holidays_stream_page_close expects array\<string, mixed\>, array\<int, array\<string, mixed\>\> given\.$#'
-			identifier: argument.type
-			count: 2
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_prices.php
 
 		-
@@ -259,12 +241,6 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Api/PricingApiClient.php
 
 		-
-			message: '#^Parameter \#1 \$requests of function fn_novoton_holidays_decrypt_requests_pii expects list\<array\<string, mixed\>\>, array\<string, mixed\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/AlternativesCommand.php
-
-		-
 			message: '#^Parameter \#2 \$alternatives of method Tygh\\Addons\\NovotonHolidays\\Cron\\Commands\\AlternativesCommand\:\:sendAlternativeEmail\(\) expects array\<string, mixed\>, list\<array\<string, string\>\> given\.$#'
 			identifier: argument.type
 			count: 1
@@ -295,40 +271,10 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/DataSyncCommand.php
 
 		-
-			message: '#^Parameter \#1 \$hotels of method Tygh\\Addons\\NovotonHolidays\\Helpers\\DatabaseHelperInterface\:\:upsertHotels\(\) expects array\<string, mixed\>, list\<array\<string, int\|string\|null\>\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/HotelListSyncCommand.php
-
-		-
 			message: '#^Ternary operator condition is always false\.$#'
 			identifier: ternary.alwaysFalse
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/OffersUpdateCommand.php
-
-		-
-			message: '#^Binary operation "\+" between string and 1 results in an error\.$#'
-			identifier: binaryOp.invalid
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/RoomPriceCheckCommand.php
-
-		-
-			message: '#^Parameter \#1 \$withPrices of method Tygh\\Addons\\NovotonHolidays\\Helpers\\DatabaseHelperInterface\:\:batchUpdateHasRoomPriceFlag\(\) expects array\<string, mixed\>, list\<mixed\> given\.$#'
-			identifier: argument.type
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/RoomPriceCheckCommand.php
-
-		-
-			message: '#^Parameter \#2 \$withoutPrices of method Tygh\\Addons\\NovotonHolidays\\Helpers\\DatabaseHelperInterface\:\:batchUpdateHasRoomPriceFlag\(\) expects array\<string, mixed\>, list\<mixed\> given\.$#'
-			identifier: argument.type
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/RoomPriceCheckCommand.php
-
-		-
-			message: '#^Parameter \#3 \$fields of method Tygh\\Addons\\NovotonHolidays\\Helpers\\DatabaseHelperInterface\:\:getHotelsForSync\(\) expects array\<string, mixed\>, array\<int, string\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/RoomPriceCheckCommand.php
 
 		-
 			message: '#^Parameter \#1 \$batch of method Tygh\\Addons\\NovotonHolidays\\Helpers\\AbstractBatchedSync\:\:preBatch\(\) expects array\<int, int\|string\>, array\<string, mixed\> given\.$#'
@@ -365,6 +311,18 @@ parameters:
 			identifier: instanceof.alwaysTrue
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/BatchedPriceInfoSyncV2.php
+
+		-
+			message: '#^Parameter \#2 \$packages \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Helpers\\DatabaseHelper\:\:upsertHotelPackages\(\) should be compatible with parameter \$packages \(list\<array\<string, mixed\>\>\) of method Tygh\\Addons\\NovotonHolidays\\Helpers\\DatabaseHelperInterface\:\:upsertHotelPackages\(\)$#'
+			identifier: method.childParameterType
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/DatabaseHelper.php
+
+		-
+			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Helpers\\DatabaseHelper\:\:getHotelsForSync\(\) should be compatible with return type \(list\<array\<string, mixed\>\>\) of method Tygh\\Addons\\NovotonHolidays\\Helpers\\DatabaseHelperInterface\:\:getHotelsForSync\(\)$#'
+			identifier: method.childReturnType
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/DatabaseHelper.php
 
 		-
 			message: '#^Parameter \#1 \$batchData of method Tygh\\Addons\\NovotonHolidays\\HotelSync\:\:executeBatchHotelUpsert\(\) expects array\<string, mixed\>, list\<array\<string, int\|string\|null\>\> given\.$#'
@@ -421,6 +379,18 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/PriceInfoSync.php
 
 		-
+			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\AlternativeRequestRepository\:\:findFiltered\(\) should be compatible with return type \(list\<array\<string, mixed\>\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\AlternativeRequestRepositoryInterface\:\:findFiltered\(\)$#'
+			identifier: method.childReturnType
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/AlternativeRequestRepository.php
+
+		-
+			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\AlternativeRequestRepository\:\:findUnnotified\(\) should be compatible with return type \(list\<array\<string, mixed\>\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\AlternativeRequestRepositoryInterface\:\:findUnnotified\(\)$#'
+			identifier: method.childReturnType
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/AlternativeRequestRepository.php
+
+		-
 			message: '#^Parameter \#1 \$booking of static method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepository\:\:hydrateJsonFields\(\) expects array\<string, mixed\>, list\<array\<string, mixed\>\> given\.$#'
 			identifier: argument.type
 			count: 1
@@ -443,12 +413,6 @@ parameters:
 			identifier: empty.variable
 			count: 2
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelReportingRepository.php
-
-		-
-			message: '#^Parameter \#1 \$requests of function fn_novoton_holidays_decrypt_requests_pii expects list\<array\<string, mixed\>\>, array\<string, mixed\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/AdminCronService.php
 
 		-
 			message: '#^Ternary operator condition is always false\.$#'

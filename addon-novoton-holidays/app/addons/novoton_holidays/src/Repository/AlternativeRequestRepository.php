@@ -18,7 +18,7 @@ class AlternativeRequestRepository implements AlternativeRequestRepositoryInterf
 {
     /**
      * Find request by ID.
-     * @return list<array<string, mixed>>|null
+     * @return array<string, mixed>|null
      */
     public function findById(int $request_id): ?array
     {

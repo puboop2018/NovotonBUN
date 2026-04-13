@@ -22,8 +22,8 @@ class DatabaseHelper implements DatabaseHelperInterface
     /**
      * Batch update hotels has_room_price flag after room_price API checks
      *
-     * @param array<string, mixed> $withPrices Hotel IDs that have prices (set has_room_price = 'Y')
-     * @param array<string, mixed> $withoutPrices Hotel IDs without prices (set has_room_price = 'N')
+     * @param list<string> $withPrices Hotel IDs that have prices (set has_room_price = 'Y')
+     * @param list<string> $withoutPrices Hotel IDs without prices (set has_room_price = 'N')
      * @return int Number of rows updated
      */
     public function batchUpdateHasRoomPriceFlag(array $withPrices, array $withoutPrices): int
@@ -55,7 +55,7 @@ class DatabaseHelper implements DatabaseHelperInterface
      * Bulk lookup: Get existing product IDs for multiple hotel IDs
      *
      * @return array<string, int> Map of hotel_id => product_id
-     * @param array<string, mixed> $hotelIds
+     * @param list<string> $hotelIds
      */
     public function getProductIdsByHotelIds(array $hotelIds): array
     {
@@ -90,7 +90,7 @@ class DatabaseHelper implements DatabaseHelperInterface
      * Bulk lookup: Check which hotel IDs already exist in database
      *
      * @return string[] Existing hotel IDs
-     * @param array<string, mixed> $hotelIds
+     * @param list<string> $hotelIds
      */
     public function getExistingHotelIds(array $hotelIds): array
     {
@@ -108,7 +108,7 @@ class DatabaseHelper implements DatabaseHelperInterface
      * Bulk upsert hotels (INSERT ... ON DUPLICATE KEY UPDATE)
      *
      * @return array{inserted: int, updated: int}
-     * @param array<string, mixed> $hotels
+     * @param list<array<string, mixed>> $hotels
      */
     public function upsertHotels(array $hotels): array
     {
@@ -186,7 +186,7 @@ class DatabaseHelper implements DatabaseHelperInterface
     /**
      * Link products to hotels in batch
      *
-     * @param array<string, mixed> $links Array of ['hotel_id' => x, 'product_id' => y]
+     * @param list<array<string, mixed>> $links Array of ['hotel_id' => x, 'product_id' => y]
      * @return int Number of links created
      */
     public function linkProductsToHotels(array $links): int
@@ -230,7 +230,7 @@ class DatabaseHelper implements DatabaseHelperInterface
     /**
      * Get hotels for sync with optimized field selection
      * @param array<string, mixed> $conditions
-     * @param array<string, mixed> $fields
+     * @param list<string> $fields
      * @return array<string, mixed>
      */
     public function getHotelsForSync(array $conditions = [], int $limit = 0, array $fields = []): array
