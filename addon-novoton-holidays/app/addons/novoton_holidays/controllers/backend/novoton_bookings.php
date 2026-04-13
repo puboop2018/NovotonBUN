@@ -52,10 +52,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if (!empty($result['notification'])) {
             $n = $result['notification'];
-            fn_set_notification($n['type'] ?? 'N', $n['title'] ?? '', $n['message'] ?? '');
+            fn_set_notification($n['type'], $n['title'], $n['message']);
         }
 
-        $redirect = $result['redirect'] ?? 'travel_bookings.manage&provider=novoton';
+        $redirect = $result['redirect'];
         return [CONTROLLER_STATUS_REDIRECT, $redirect];
     }
 

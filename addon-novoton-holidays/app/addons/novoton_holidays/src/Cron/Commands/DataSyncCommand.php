@@ -60,7 +60,7 @@ class DataSyncCommand extends AbstractCronCommand
             $this->output("Fetching {$country}... ", false);
             $result = fn_novoton_holidays_sync_resorts_list($country);
 
-            if (is_array($result) && !empty($result['success'])) {
+            if (!empty($result['success'])) {
                 $added = $result['added'] ?? 0;
                 $updated = $result['updated'] ?? 0;
                 $total = $result['total'] ?? ($added + $updated);
@@ -103,16 +103,13 @@ class DataSyncCommand extends AbstractCronCommand
         $updated = 0;
         $errors = 0;
 
-        if (is_array($result) && !empty($result['success'])) {
+        if (!empty($result['success'])) {
             $added = $result['added'] ?? 0;
             $updated = $result['updated'] ?? 0;
             $this->output("Synced " . ($result['total'] ?? ($added + $updated)) . " facilities ({$added} added, {$updated} updated).");
-        } elseif (is_numeric($result)) {
-            $updated = (int)$result;
-            $this->output("Synced {$updated} facilities.");
         } else {
             $errors = 1;
-            $this->output("Error: " . (is_array($result) ? ($result['error'] ?? 'Unknown error') : 'Sync returned unexpected result'));
+            $this->output("Error: " . ($result['error'] ?? 'Unknown error'));
         }
 
         // Sync new facilities to feature mapping table

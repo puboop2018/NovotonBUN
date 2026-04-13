@@ -37,25 +37,16 @@ class HotelReportingRepository implements HotelReportingRepositoryInterface
         $hidden = Constants::HIDDEN_RESORTS;
 
         if (!empty($country)) {
-            if (!empty($hidden)) {
-                return db_get_fields(
-                    "SELECT DISTINCT city FROM ?:novoton_hotels WHERE country = ?s AND city != '' AND city NOT IN (?a) ORDER BY city",
-                    $country, $hidden
-                );
-            }
             return db_get_fields(
-                "SELECT DISTINCT city FROM ?:novoton_hotels WHERE country = ?s AND city != '' ORDER BY city",
-                $country
+                "SELECT DISTINCT city FROM ?:novoton_hotels WHERE country = ?s AND city != '' AND city NOT IN (?a) ORDER BY city",
+                $country, $hidden
             );
         }
 
-        if (!empty($hidden)) {
-            return db_get_fields(
-                "SELECT DISTINCT city FROM ?:novoton_hotels WHERE city != '' AND city NOT IN (?a) ORDER BY city",
-                $hidden
-            );
-        }
-        return db_get_fields("SELECT DISTINCT city FROM ?:novoton_hotels WHERE city != '' ORDER BY city");
+        return db_get_fields(
+            "SELECT DISTINCT city FROM ?:novoton_hotels WHERE city != '' AND city NOT IN (?a) ORDER BY city",
+            $hidden
+        );
     }
 
     /**

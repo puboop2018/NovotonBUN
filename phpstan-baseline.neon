@@ -7,30 +7,6 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_admin.php
 
 		-
-			message: '#^Offset ''message'' on array\{type\: string, title\: string, message\: string\} on left side of \?\? always exists and is not nullable\.$#'
-			identifier: nullCoalesce.offset
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_bookings.php
-
-		-
-			message: '#^Offset ''redirect'' on array\{redirect\: string, notification\?\: array\{type\: string, title\: string, message\: string\}\} on left side of \?\? always exists and is not nullable\.$#'
-			identifier: nullCoalesce.offset
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_bookings.php
-
-		-
-			message: '#^Offset ''title'' on array\{type\: string, title\: string, message\: string\} on left side of \?\? always exists and is not nullable\.$#'
-			identifier: nullCoalesce.offset
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_bookings.php
-
-		-
-			message: '#^Offset ''type'' on array\{type\: string, title\: string, message\: string\} on left side of \?\? always exists and is not nullable\.$#'
-			identifier: nullCoalesce.offset
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_bookings.php
-
-		-
 			message: '#^Call to function function_exists\(\) with ''fn_novoton_holidays…'' will always evaluate to true\.$#'
 			identifier: function.alreadyNarrowedType
 			count: 1
@@ -259,18 +235,6 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/BatchedSyncCommand.php
 
 		-
-			message: '#^Call to function is_array\(\) with array\<string, mixed\> will always evaluate to true\.$#'
-			identifier: function.alreadyNarrowedType
-			count: 3
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/DataSyncCommand.php
-
-		-
-			message: '#^Call to function is_numeric\(\) with array\<string, mixed\> will always evaluate to false\.$#'
-			identifier: function.impossibleType
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/DataSyncCommand.php
-
-		-
 			message: '#^Ternary operator condition is always false\.$#'
 			identifier: ternary.alwaysFalse
 			count: 1
@@ -403,18 +367,6 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepositoryInterface.php
 
 		-
-			message: '#^Unreachable statement \- code above always terminates\.$#'
-			identifier: deadCode.unreachable
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelReportingRepository.php
-
-		-
-			message: '#^Variable \$hidden in empty\(\) always exists and is not falsy\.$#'
-			identifier: empty.variable
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelReportingRepository.php
-
-		-
 			message: '#^Ternary operator condition is always false\.$#'
 			identifier: ternary.alwaysFalse
 			count: 2
@@ -529,14 +481,14 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/CronService.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\DiagnosticsService\:\:testFacilities\(\) should return array\{success\: bool, result\: list\<array\<string, mixed\>\>, facilities\: list\<array\<string, mixed\>\>, error\: string\} but returns array\{success\: bool, result\: array\<string, mixed\>, facilities\: list\<array\<string, mixed\>\>, error\: mixed\}\.$#'
+			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\DiagnosticsService\:\:testSearch\(\) should return array\{success\: bool, results\: list\<array\<string, mixed\>\>, count\: int, error\: string\} but returns array\{success\: true, results\: non\-empty\-array\<string, mixed\>, count\: int\<1, max\>, error\: ''''\}\.$#'
 			identifier: return.type
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/DiagnosticsService.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\DiagnosticsService\:\:testSearch\(\) should return array\{success\: bool, results\: list\<array\<string, mixed\>\>, count\: int, error\: string\} but returns array\{success\: true, results\: non\-empty\-array\<string, mixed\>, count\: int\<1, max\>, error\: ''''\}\.$#'
-			identifier: return.type
+			message: '#^Return type \(array\{success\: bool, result\: array\<string, mixed\>, facilities\: list\<array\<string, mixed\>\>, error\: string\}\) of method Tygh\\Addons\\NovotonHolidays\\Services\\DiagnosticsService\:\:testFacilities\(\) should be compatible with return type \(array\{success\: bool, result\: list\<array\<string, mixed\>\>, facilities\: list\<array\<string, mixed\>\>, error\: string\}\) of method Tygh\\Addons\\NovotonHolidays\\Services\\DiagnosticsServiceInterface\:\:testFacilities\(\)$#'
+			identifier: method.childReturnType
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/DiagnosticsService.php
 

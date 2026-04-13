@@ -54,7 +54,17 @@ class DiagnosticsService implements DiagnosticsServiceInterface
      * present on the "empty result" branch — they surface the debug state
      * from the API client so the controller can render it in the admin UI.
      *
-     * @return array<string, mixed>
+     * @return array{
+     *   success: bool,
+     *   config: non-empty-array<string, mixed>,
+     *   message: string,
+     *   hotels_count: int,
+     *   sample_hotel: array<string, mixed>|null,
+     *   error: string,
+     *   last_request?: array<string, mixed>,
+     *   last_http_code?: int,
+     *   raw_response_preview?: string
+     * }
      */
     public function testApiConnection(): array
     {
@@ -197,7 +207,7 @@ class DiagnosticsService implements DiagnosticsServiceInterface
      * Test room price API call.
      *
      * @param array<string, mixed> $params {hotel_id, room_id, board_id, check_in, check_out, adults}
-     * @return array<string, mixed>
+     * @return array{success: bool, result: mixed, params: array<string, mixed>, price: float, price_with_commission: float, raw_response: string, error: string}
      */
     public function testRoomPrice(array $params): array
     {
@@ -310,7 +320,7 @@ class DiagnosticsService implements DiagnosticsServiceInterface
     /**
      * Test facilities sync.
      *
-     * @return array{success: bool, result: list<array<string, mixed>>, facilities: list<array<string, mixed>>, error: string}
+     * @return array{success: bool, result: array<string, mixed>, facilities: list<array<string, mixed>>, error: string}
      */
     public function testFacilities(): array
     {
