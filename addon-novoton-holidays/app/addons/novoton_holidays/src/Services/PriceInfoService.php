@@ -119,7 +119,7 @@ class PriceInfoService implements PriceInfoServiceInterface
         }
 
         $priceinfo = json_decode($priceinfoJson, true);
-        if (empty($priceinfo)) {
+        if (empty($priceinfo) || !is_array($priceinfo)) {
             return [];
         }
 
@@ -176,24 +176,30 @@ class PriceInfoService implements PriceInfoServiceInterface
         }
 
         $priceinfo = json_decode($priceinfoJson, true);
-        if (empty($priceinfo) || !isset($priceinfo['seasons']['season'])) {
+        if (!is_array($priceinfo) || !isset($priceinfo['seasons']['season'])) {
             return [];
         }
 
         $seasons = $priceinfo['seasons']['season'];
         // Normalize single season to array
-        if (isset($seasons['IdSeason'])) {
+        if (is_array($seasons) && isset($seasons['IdSeason'])) {
             $seasons = [$seasons];
+        }
+        if (!is_array($seasons)) {
+            return [];
         }
 
         $result = [];
         foreach ($seasons as $idx => $season) {
-            $seasonNum = isset($season['IdSeason']) ? (int)$season['IdSeason'] : ($idx + 1);
+            if (!is_array($season)) {
+                continue;
+            }
+            $seasonNum = isset($season['IdSeason']) ? PriceInfoFormatter::toInt($season['IdSeason']) : ($idx + 1);
             $result[$seasonNum] = [
                 'season_number' => $seasonNum,
-                'date_from' => $season['DateFrom'] ?? '',
-                'date_to' => $season['DateTo'] ?? '',
-                'season_name' => $season['SeasonName'] ?? "Season {$seasonNum}"
+                'date_from' => PriceInfoFormatter::toScalar($season['DateFrom'] ?? ''),
+                'date_to' => PriceInfoFormatter::toScalar($season['DateTo'] ?? ''),
+                'season_name' => PriceInfoFormatter::toScalar($season['SeasonName'] ?? "Season {$seasonNum}")
             ];
         }
 
@@ -217,28 +223,34 @@ class PriceInfoService implements PriceInfoServiceInterface
         }
 
         $priceinfo = json_decode($priceinfoJson, true);
-        if (empty($priceinfo) || !isset($priceinfo['early_booking'])) {
+        if (!is_array($priceinfo) || !isset($priceinfo['early_booking'])) {
             return [];
         }
 
         $eb_data = $priceinfo['early_booking'];
         // Normalize single entry to array
-        if (isset($eb_data['Reduction'])) {
+        if (is_array($eb_data) && isset($eb_data['Reduction'])) {
             $eb_data = [$eb_data];
+        }
+        if (!is_array($eb_data)) {
+            return [];
         }
 
         $result = [];
         foreach ($eb_data as $eb) {
+            if (!is_array($eb)) {
+                continue;
+            }
             $result[] = [
-                'booking_from' => $eb['BookFrom'] ?? '',
-                'booking_to' => $eb['BookTo'] ?? '',
-                'stay_from' => $eb['StayFrom'] ?? '',
-                'stay_to' => $eb['StayTo'] ?? '',
-                'reduction' => $eb['Reduction'] ?? 0,
-                'payment_date' => $eb['PaymentDate'] ?? '',
-                'payment_percent' => $eb['PaymentPercent'] ?? 0,
-                'room_types' => $eb['RoomTypes'] ?? 'all',
-                'min_stay' => $eb['MinStay'] ?? 0
+                'booking_from' => PriceInfoFormatter::toScalar($eb['BookFrom'] ?? ''),
+                'booking_to' => PriceInfoFormatter::toScalar($eb['BookTo'] ?? ''),
+                'stay_from' => PriceInfoFormatter::toScalar($eb['StayFrom'] ?? ''),
+                'stay_to' => PriceInfoFormatter::toScalar($eb['StayTo'] ?? ''),
+                'reduction' => PriceInfoFormatter::toFloat($eb['Reduction'] ?? 0),
+                'payment_date' => PriceInfoFormatter::toScalar($eb['PaymentDate'] ?? ''),
+                'payment_percent' => PriceInfoFormatter::toFloat($eb['PaymentPercent'] ?? 0),
+                'room_types' => PriceInfoFormatter::toScalar($eb['RoomTypes'] ?? 'all'),
+                'min_stay' => PriceInfoFormatter::toInt($eb['MinStay'] ?? 0)
             ];
         }
 
@@ -309,7 +321,7 @@ class PriceInfoService implements PriceInfoServiceInterface
 
         $rawPrices = !empty($rawJson) ? json_decode($rawJson, true) : null;
 
-        if (empty($rawPrices)) {
+        if (empty($rawPrices) || !is_array($rawPrices)) {
             return ['prices' => [], 'currency' => $currency];
         }
 
@@ -320,15 +332,17 @@ class PriceInfoService implements PriceInfoServiceInterface
         $today = date('Y-m-d');
 
         foreach ($rawPrices as $date => $rawPrice) {
-            if ($date < $today) {
+            $dateStr = (string) $date;
+            if ($dateStr < $today) {
                 continue;
             }
-            $price = $rawPrice * (1 + $commission / 100);
-            $price = $currencyService->convertFromApiCurrency((float) $price, $currency);
+            $rawPriceFloat = PriceInfoFormatter::toFloat($rawPrice);
+            $price = $rawPriceFloat * (1 + $commission / 100);
+            $price = $currencyService->convertFromApiCurrency($price, $currency);
             if ($roundPrices) {
                 $price = round($price);
             }
-            $dateMap[$date] = $price;
+            $dateMap[$dateStr] = $price;
         }
 
         $this->log('Calendar prices loaded', [
@@ -398,7 +412,7 @@ class PriceInfoService implements PriceInfoServiceInterface
             }
 
             $priceinfo = json_decode($priceinfoJson, true);
-            if (empty($priceinfo)) {
+            if (empty($priceinfo) || !is_array($priceinfo)) {
                 continue;
             }
 
@@ -420,7 +434,7 @@ class PriceInfoService implements PriceInfoServiceInterface
      *
      * Returns raw API prices (EUR, no commission, no conversion).
      *
-     * @param array<string, mixed>  $priceinfo Decoded priceinfo_data JSON
+     * @param array<mixed, mixed>  $priceinfo Decoded priceinfo_data JSON
      * @param int    $adults    Number of adults
      * @param string $today     Today's date (Y-m-d)
      * @param string $maxDate   Max future date (Y-m-d)
@@ -439,6 +453,9 @@ class PriceInfoService implements PriceInfoServiceInterface
 
         // 2. Parse season_price rows
         $seasonPrices = $priceinfo['season_price'] ?? [];
+        if (!is_array($seasonPrices)) {
+            return [];
+        }
         if (isset($seasonPrices['IdRoom'])) {
             $seasonPrices = [$seasonPrices];
         }
@@ -456,13 +473,16 @@ class PriceInfoService implements PriceInfoServiceInterface
         $dateMap = [];
 
         foreach ($seasons as $season) {
-            $seasonNum = (int) ($season['Season'] ?? $season['IdSeason'] ?? $season['SeasonNr'] ?? 0);
+            if (!is_array($season)) {
+                continue;
+            }
+            $seasonNum = PriceInfoFormatter::toInt($season['Season'] ?? $season['IdSeason'] ?? $season['SeasonNr'] ?? 0);
             if ($seasonNum <= 0 || !isset($cheapestBySeason[$seasonNum])) {
                 continue;
             }
 
-            $from = $season['FromDate'] ?? $season['DateFrom'] ?? '';
-            $to = $season['ToDate'] ?? $season['DateTo'] ?? '';
+            $from = PriceInfoFormatter::toScalar($season['FromDate'] ?? $season['DateFrom'] ?? '');
+            $to = PriceInfoFormatter::toScalar($season['ToDate'] ?? $season['DateTo'] ?? '');
             if (empty($from) || empty($to)) {
                 continue;
             }
@@ -515,6 +535,9 @@ class PriceInfoService implements PriceInfoServiceInterface
         // Build a code index for percentage resolution
         $codeIndex = [];
         foreach ($seasonPrices as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
             $code = $this->toScalarSafe($row['Code'] ?? '');
             if ($code !== '') {
                 $codeIndex[$code][] = $row;
@@ -524,7 +547,10 @@ class PriceInfoService implements PriceInfoServiceInterface
         // Get max season number
         $maxSeason = 0;
         foreach ($seasons as $s) {
-            $num = (int) ($s['Season'] ?? $s['IdSeason'] ?? $s['SeasonNr'] ?? 0);
+            if (!is_array($s)) {
+                continue;
+            }
+            $num = PriceInfoFormatter::toInt($s['Season'] ?? $s['IdSeason'] ?? $s['SeasonNr'] ?? 0);
             if ($num > $maxSeason) $maxSeason = $num;
         }
 
@@ -534,6 +560,9 @@ class PriceInfoService implements PriceInfoServiceInterface
         // Group adult regular rows by room
         $roomRows = [];
         foreach ($seasonPrices as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
             $fAge = $this->toScalarSafe($row['fAge'] ?? '');
             $idAge = $this->toScalarSafe($row['IdAge'] ?? '');
             $accType = strtoupper(trim($this->toScalarSafe($row['IdAcc'] ?? '')));
@@ -611,18 +640,18 @@ class PriceInfoService implements PriceInfoServiceInterface
         if (is_string($rawPrice) && str_contains($rawPrice, '%')) {
             $percent = (float) str_replace('%', '', $rawPrice);
             // Resolve from Base code row
-            if (isset($codeIndex['Base'][0])) {
+            if (isset($codeIndex['Base'][0]) && is_array($codeIndex['Base'][0])) {
                 $baseRaw = $codeIndex['Base'][0][$priceKey] ?? 0;
                 if (is_string($baseRaw) && str_contains($baseRaw, '%')) {
                     return 0.0; // Avoid infinite recursion
                 }
-                $basePrice = (float) $baseRaw;
+                $basePrice = PriceInfoFormatter::toFloat($baseRaw);
                 return round($basePrice * ($percent / 100), 2);
             }
             return 0.0;
         }
 
-        return (float) $rawPrice;
+        return PriceInfoFormatter::toFloat($rawPrice);
     }
 
     /**
@@ -640,7 +669,7 @@ class PriceInfoService implements PriceInfoServiceInterface
     /**
      * Extract prices from priceinfo response
      *
-     * @param array<string, mixed> $priceinfo Priceinfo data
+     * @param array<mixed, mixed> $priceinfo Priceinfo data
      * @return array<string, mixed> Prices grouped by room
      */
     private function extractPricesFromPriceInfo(array $priceinfo): array
@@ -650,6 +679,9 @@ class PriceInfoService implements PriceInfoServiceInterface
         }
 
         $seasonPrices = $priceinfo['season_price'];
+        if (!is_array($seasonPrices)) {
+            return [];
+        }
         // Normalize single entry to array
         if (isset($seasonPrices['IdRoom'])) {
             $seasonPrices = [$seasonPrices];
@@ -661,7 +693,7 @@ class PriceInfoService implements PriceInfoServiceInterface
     /**
      * Format priceinfo for display
      *
-     * @param array<string, mixed> $priceinfo Raw priceinfo data
+     * @param array<mixed, mixed> $priceinfo Raw priceinfo data
      * @param string $hotelId Hotel ID
      * @return array<string, mixed> Formatted priceinfo
      */
@@ -676,7 +708,7 @@ class PriceInfoService implements PriceInfoServiceInterface
         ];
 
         // Extract seasons
-        if (isset($priceinfo['seasons']['season'])) {
+        if (isset($priceinfo['seasons']['season']) && is_array($priceinfo['seasons']['season'])) {
             $seasons = $priceinfo['seasons']['season'];
             if (isset($seasons['IdSeason'])) {
                 $seasons = [$seasons];
@@ -685,7 +717,7 @@ class PriceInfoService implements PriceInfoServiceInterface
         }
 
         // Extract prices
-        if (isset($priceinfo['season_price'])) {
+        if (isset($priceinfo['season_price']) && is_array($priceinfo['season_price'])) {
             $prices = $priceinfo['season_price'];
             if (isset($prices['IdRoom'])) {
                 $prices = [$prices];
@@ -694,7 +726,7 @@ class PriceInfoService implements PriceInfoServiceInterface
         }
 
         // Extract early booking
-        if (isset($priceinfo['early_booking'])) {
+        if (isset($priceinfo['early_booking']) && is_array($priceinfo['early_booking'])) {
             $eb = $priceinfo['early_booking'];
             if (isset($eb['Reduction'])) {
                 $eb = [$eb];
@@ -716,7 +748,10 @@ class PriceInfoService implements PriceInfoServiceInterface
         $result = [];
 
         foreach ($prices as $price) {
-            $roomId = $price['IdRoom'] ?? $price['room_id'] ?? 'unknown';
+            if (!is_array($price)) {
+                continue;
+            }
+            $roomId = PriceInfoFormatter::toScalar($price['IdRoom'] ?? $price['room_id'] ?? 'unknown');
 
             if (!isset($result[$roomId])) {
                 $result[$roomId] = [];
@@ -739,6 +774,9 @@ class PriceInfoService implements PriceInfoServiceInterface
     {
         // Convert SimpleXML to array
         $data = json_decode((string) json_encode($response), true);
+        if (!is_array($data)) {
+            return ['hotel_id' => $hotelId, 'seasons' => [], 'prices' => [], 'early_booking' => [], 'raw' => []];
+        }
 
         return $this->formatPriceInfo($data, $hotelId);
     }

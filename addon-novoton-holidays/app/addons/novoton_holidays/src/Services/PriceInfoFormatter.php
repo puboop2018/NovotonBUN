@@ -32,6 +32,37 @@ class PriceInfoFormatter
     }
 
     /**
+     * Safely extract a float value from a mixed field.
+     */
+    public static function toFloat(mixed $value): float
+    {
+        if (is_float($value) || is_int($value)) {
+            return (float) $value;
+        }
+        if (is_string($value) && is_numeric($value)) {
+            return (float) $value;
+        }
+        return 0.0;
+    }
+
+    /**
+     * Safely extract an int value from a mixed field.
+     */
+    public static function toInt(mixed $value): int
+    {
+        if (is_int($value)) {
+            return $value;
+        }
+        if (is_float($value)) {
+            return (int) $value;
+        }
+        if (is_string($value) && is_numeric($value)) {
+            return (int) $value;
+        }
+        return 0;
+    }
+
+    /**
      * Normalize IdAge for fee matching: strip trailing "BY X AD" suffix
      */
     public static function feeKey(string $idAge): string
