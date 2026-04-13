@@ -24,8 +24,6 @@ class SearchService implements SearchServiceInterface
     /** Narrow sub-client for applyCommission() used by parseRoomPriceResponse(). */
     private readonly PricingApiClientInterface $pricing;
 
-    private CacheServiceInterface $cache;
-
     private bool $debug = false;
 
     /**
@@ -38,7 +36,6 @@ class SearchService implements SearchServiceInterface
      * @throws \RuntimeException if the Novoton API is not available
      */
     public function __construct(
-        ?CacheServiceInterface $cache = null,
         ?PricingApiClientInterface $pricing = null,
     ) {
         if ($pricing === null) {
@@ -49,7 +46,6 @@ class SearchService implements SearchServiceInterface
             $pricing = $api->pricing();
         }
         $this->pricing = $pricing;
-        $this->cache = $cache ?? new CacheService();
         $this->debug = (Registry::get(\Tygh\Addons\NovotonHolidays\Constants::SETTING_DEBUG_LOGGING) ?? 'N') === 'Y';
     }
     
@@ -169,27 +165,6 @@ class SearchService implements SearchServiceInterface
     public function getBoardName(string $board_id): string
     {
         return \Tygh\Addons\TravelCore\ValueObjects\BoardType::toDisplayName($board_id);
-    }
-    
-    /**
-     * Build cache key for search
-     * 
-     * @param string $prefix Key prefix
-     * @param array<string, mixed> $params Parameters to hash
-     * @return string Cache key
-     */
-    private function buildCacheKey(string $prefix, array $params): string
-    {
-        $key_data = [
-            'check_in' => $params['check_in'] ?? '',
-            'nights' => $params['nights'] ?? 7,
-            'adults' => $params['total_adults'] ?? $params['adults'] ?? 2,
-            'children' => $params['children_ages'] ?? [],
-            'hotel_id' => $params['hotel_id'] ?? '',
-            'country' => $params['country'] ?? '',
-        ];
-        
-        return 'nvt_' . $prefix . '_' . md5(json_encode($key_data));
     }
     
     // =========================================================================
@@ -570,7 +545,7 @@ class SearchService implements SearchServiceInterface
 
     /**
      * Safe xpath value accessor.
-     * @param array<string, mixed>|null $elements
+     * @param list<mixed>|null $elements
      */
     private static function xpathValue(?array $elements, int $index, string $default = ''): string
     {
@@ -580,19 +555,4 @@ class SearchService implements SearchServiceInterface
         return (string)$elements[$index];
     }
 
-    /**
-     * Log debug message
-     *
-     * @param string $message Log message
-     * @param array<string, mixed> $context Additional context
-     */
-    private function log(string $message, array $context = []): void
-    {
-        if ($this->debug) {
-            fn_log_event('general', 'runtime', array_merge(
-                ['message' => 'NovotonSearch: ' . $message],
-                $context
-            ));
-        }
-    }
 }

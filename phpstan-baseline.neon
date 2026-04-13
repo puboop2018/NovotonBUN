@@ -331,6 +331,12 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/CartAssemblyService.php
 
 		-
+			message: '#^Parameter \#1 \$pricing of class Tygh\\Addons\\NovotonHolidays\\Services\\SearchService constructor expects Tygh\\Addons\\NovotonHolidays\\Api\\Contracts\\PricingApiClientInterface\|null, Tygh\\Addons\\NovotonHolidays\\Services\\CacheServiceInterface given\.$#'
+			identifier: argument.type
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/Container.php
+
+		-
 			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\DiagnosticsService\:\:testSearch\(\) should return array\{success\: bool, results\: list\<array\<string, mixed\>\>, count\: int, error\: string\} but returns array\{success\: true, results\: non\-empty\-array\<string, mixed\>, count\: int\<1, max\>, error\: ''''\}\.$#'
 			identifier: return.type
 			count: 1
@@ -529,38 +535,8 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SearchResultFormatter.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\SearchService\:\:buildCacheKey\(\) is unused\.$#'
-			identifier: method.unused
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SearchService.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\SearchService\:\:log\(\) is unused\.$#'
-			identifier: method.unused
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SearchService.php
-
-		-
-			message: '#^Offset int on array\<string, mixed\> in isset\(\) does not exist\.$#'
-			identifier: isset.offset
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SearchService.php
-
-		-
-			message: '#^Property Tygh\\Addons\\NovotonHolidays\\Services\\SearchService\:\:\$cache is never read, only written\.$#'
+			message: '#^Property Tygh\\Addons\\NovotonHolidays\\Services\\SearchService\:\:\$debug is never read, only written\.$#'
 			identifier: property.onlyWritten
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SearchService.php
-
-		-
-			message: '#^Result of \|\| is always true\.$#'
-			identifier: booleanOr.alwaysTrue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SearchService.php
-
-		-
-			message: '#^Unreachable statement \- code above always terminates\.$#'
-			identifier: deadCode.unreachable
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SearchService.php
 
