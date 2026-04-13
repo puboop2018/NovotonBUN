@@ -49,6 +49,50 @@ class ValidationHelpers
     }
 
     /**
+     * Safely extract a scalar string from a mixed value.
+     *
+     * Arrays and objects become ''; scalars are cast to string and trimmed.
+     */
+    public static function toString(mixed $value): string
+    {
+        if (is_array($value) || is_object($value)) {
+            return '';
+        }
+        return trim((string) $value);
+    }
+
+    /**
+     * Safely extract a float from a mixed value.
+     */
+    public static function toFloat(mixed $value): float
+    {
+        if (is_float($value) || is_int($value)) {
+            return (float) $value;
+        }
+        if (is_string($value) && is_numeric($value)) {
+            return (float) $value;
+        }
+        return 0.0;
+    }
+
+    /**
+     * Safely extract an int from a mixed value.
+     */
+    public static function toInt(mixed $value): int
+    {
+        if (is_int($value)) {
+            return $value;
+        }
+        if (is_float($value)) {
+            return (int) $value;
+        }
+        if (is_string($value) && is_numeric($value)) {
+            return (int) $value;
+        }
+        return 0;
+    }
+
+    /**
      * Validate a person name contains only valid characters.
      *
      * Allows letters (including accented), spaces, hyphens, and apostrophes.

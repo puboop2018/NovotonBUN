@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\TravelCore\Services;
 
 use Tygh\Addons\TravelCore\Contracts\BookingDisplayServiceInterface;
+use Tygh\Addons\TravelCore\Helpers\ValidationHelpers;
 
 /**
  * Booking Display Service
@@ -32,33 +33,38 @@ class BookingDisplayService implements BookingDisplayServiceInterface
     #[\Override]
     public static function addBookingDisplayData(array &$product, ?array $cart = null, array $config = []): void
     {
-        $extra = $product['extra'] ?? [];
-        $langPrefix = $config['lang_prefix'] ?? 'travel_core';
-        $jsonDecoder = $config['json_decoder'] ?? null;
-        $boardFormatter = $config['board_name_formatter'] ?? null;
-        $roomFormatter = $config['room_name_formatter'] ?? null;
+        /** @var array<string, mixed> $extra */
+        $extra = is_array($product['extra'] ?? null) ? $product['extra'] : [];
+        $langPrefix = is_string($config['lang_prefix'] ?? null) ? $config['lang_prefix'] : 'travel_core';
+        $jsonDecoder = ($config['json_decoder'] ?? null);
+        $boardFormatter = ($config['board_name_formatter'] ?? null);
+        $roomFormatter = ($config['room_name_formatter'] ?? null);
 
         // Format dates
         $date_format = \Tygh\Registry::get('settings.Appearance.date_format') ?: '%d.%m.%Y';
-        $check_in_ts  = !empty($extra['check_in'])  ? strtotime($extra['check_in'])  : false;
-        $check_out_ts = !empty($extra['check_out']) ? strtotime($extra['check_out']) : false;
+        $checkInStr = is_string($extra['check_in'] ?? null) ? $extra['check_in'] : '';
+        $checkOutStr = is_string($extra['check_out'] ?? null) ? $extra['check_out'] : '';
+        $check_in_ts  = !empty($checkInStr)  ? strtotime($checkInStr)  : false;
+        $check_out_ts = !empty($checkOutStr) ? strtotime($checkOutStr) : false;
         $check_in_fmt  = ($check_in_ts  !== false) ? fn_date_format($check_in_ts, $date_format)  : '';
         $check_out_fmt = ($check_out_ts !== false) ? fn_date_format($check_out_ts, $date_format) : '';
 
-        $num_rooms  = (int)($extra['num_rooms'] ?? 1);
+        $num_rooms  = ValidationHelpers::toInt($extra['num_rooms'] ?? 1);
         $rooms_data = $extra['rooms_data'] ?? [];
         if (is_string($rooms_data)) {
-            if ($jsonDecoder !== null) {
-                $rooms_data = call_user_func($jsonDecoder, $rooms_data, 'rooms_data');
+            if (is_callable($jsonDecoder)) {
+                $rooms_data = $jsonDecoder($rooms_data, 'rooms_data');
             } else {
                 $decoded = json_decode($rooms_data, true);
                 $rooms_data = is_array($decoded) ? $decoded : [];
             }
         }
+        /** @var array<string, mixed> $rooms_data */
+        $rooms_data = is_array($rooms_data) ? $rooms_data : [];
 
         // Build guests string
-        $adults   = (int)($extra['adults']   ?? 2);
-        $children = (int)($extra['children'] ?? 0);
+        $adults   = ValidationHelpers::toInt($extra['adults']   ?? 2);
+        $children = ValidationHelpers::toInt($extra['children'] ?? 0);
 
         $guests_str = '';
         if ($num_rooms > 1) {
@@ -70,9 +76,13 @@ class BookingDisplayService implements BookingDisplayServiceInterface
             $guests_str .= ', ' . $children . ' child' . ($children > 1 ? 'ren' : '');
 
             if (!empty($extra['children_ages'])) {
-                $ages_str = $extra['children_ages'];
-                if (is_array($ages_str)) {
-                    $ages_str = implode(', ', $ages_str);
+                $ages_raw = $extra['children_ages'];
+                if (is_array($ages_raw)) {
+                    /** @var array<string> $agesStrArr */
+                    $agesStrArr = array_map(fn ($a) => ValidationHelpers::toString($a), $ages_raw);
+                    $ages_str = implode(', ', $agesStrArr);
+                } else {
+                    $ages_str = ValidationHelpers::toString($ages_raw);
                 }
                 $ages_arr = array_map('trim', explode(',', $ages_str));
                 $ages_arr = array_filter($ages_arr, function ($a) { return $a !== '' && $a !== 'age_needed'; });
@@ -86,24 +96,25 @@ class BookingDisplayService implements BookingDisplayServiceInterface
         $product['product_options_value'] = [];
 
         // Package
-        if (!empty($extra['package_name'])) {
+        $packageName = ValidationHelpers::toString($extra['package_name'] ?? '');
+        if (!empty($packageName)) {
             $product['product_options_value'][] = [
                 'option_name' => __($langPrefix . '.package'),
-                'value'       => $extra['package_name'],
+                'value'       => $packageName,
             ];
         }
 
         // Dates
-        $nights = $extra['nights'] ?? 7;
+        $nights = ValidationHelpers::toInt($extra['nights'] ?? 7);
         $product['product_options_value'][] = [
             'option_name' => __($langPrefix . '.dates'),
             'value'       => $check_in_fmt . ' → ' . $check_out_fmt . ' (' . $nights . ' ' . __($langPrefix . '.nights') . ')',
         ];
 
         // Room info
-        $room_name = $extra['room_name'] ?? $extra['room_id'] ?? '';
+        $room_name = ValidationHelpers::toString($extra['room_name'] ?? $extra['room_id'] ?? '');
         if ($num_rooms > 1 && !empty($rooms_data)) {
-            $room_name = self::buildMultiRoomDisplay($room_name, $rooms_data, $roomFormatter);
+            $room_name = self::buildMultiRoomDisplay($room_name, $rooms_data, is_callable($roomFormatter) ? $roomFormatter : null);
         }
         $product['product_options_value'][] = [
             'option_name' => __($langPrefix . '.room'),
@@ -111,9 +122,9 @@ class BookingDisplayService implements BookingDisplayServiceInterface
         ];
 
         // Board/Meal plan
-        $board_name = $extra['board_name'] ?? $extra['board_id'] ?? '';
+        $board_name = ValidationHelpers::toString($extra['board_name'] ?? $extra['board_id'] ?? '');
         if ($num_rooms > 1 && !empty($rooms_data)) {
-            $board_name = self::buildMultiBoardDisplay($board_name, $rooms_data, $boardFormatter);
+            $board_name = self::buildMultiBoardDisplay($board_name, $rooms_data, is_callable($boardFormatter) ? $boardFormatter : null);
         }
         $product['product_options_value'][] = [
             'option_name' => __($langPrefix . '.board'),
@@ -129,12 +140,18 @@ class BookingDisplayService implements BookingDisplayServiceInterface
         // Per-room breakdown
         if ($num_rooms > 1 && !empty($rooms_data)) {
             foreach ($rooms_data as $idx => $room) {
-                $room_num    = $idx + 1;
-                $room_guests = (int)($room['adults'] ?? 2) . ' adults';
-                if (!empty($room['children']) && $room['children'] > 0) {
-                    $room_guests .= ', ' . $room['children'] . ' children';
-                    if (!empty($room['childrenAges'])) {
-                        $ages = array_filter($room['childrenAges'], function ($a) { return $a !== null && $a !== ''; });
+                if (!is_array($room)) {
+                    continue;
+                }
+                $room_num    = (is_numeric($idx) ? (int) $idx : 0) + 1;
+                $room_guests = ValidationHelpers::toInt($room['adults'] ?? 2) . ' adults';
+                $roomChildren = ValidationHelpers::toInt($room['children'] ?? 0);
+                if ($roomChildren > 0) {
+                    $room_guests .= ', ' . $roomChildren . ' children';
+                    if (!empty($room['childrenAges']) && is_array($room['childrenAges'])) {
+                        /** @var array<string> $agesStr */
+                        $agesStr = array_map(fn ($a) => ValidationHelpers::toString($a), $room['childrenAges']);
+                        $ages = array_filter($agesStr, function ($a) { return $a !== ''; });
                         if (!empty($ages)) {
                             $room_guests .= ' (' . implode(', ', $ages) . ' y/o)';
                         }
@@ -148,10 +165,12 @@ class BookingDisplayService implements BookingDisplayServiceInterface
         }
 
         // Holder name
-        if (!empty($extra['holder_name']) || !empty($extra['guest_names'])) {
+        $holderName = ValidationHelpers::toString($extra['holder_name'] ?? '');
+        $guestNames = ValidationHelpers::toString($extra['guest_names'] ?? '');
+        if (!empty($holderName) || !empty($guestNames)) {
             $product['product_options_value'][] = [
                 'option_name' => __($langPrefix . '.holder'),
-                'value'       => $extra['holder_name'] ?? $extra['guest_names'],
+                'value'       => $holderName ?: $guestNames,
             ];
         }
 
@@ -172,7 +191,10 @@ class BookingDisplayService implements BookingDisplayServiceInterface
         $first = null;
 
         foreach ($rooms_data as $room) {
-            $id = $room['room_id'] ?? $room['room_name'] ?? '';
+            if (!is_array($room)) {
+                continue;
+            }
+            $id = ValidationHelpers::toString($room['room_id'] ?? $room['room_name'] ?? '');
             if ($first === null) {
                 $first = $id;
             } elseif ($id !== $first) {
@@ -181,7 +203,7 @@ class BookingDisplayService implements BookingDisplayServiceInterface
             if ($formatter !== null) {
                 $room_types[] = $formatter($room);
             } else {
-                $room_types[] = $room['room_name'] ?? $room['room_id'] ?? $defaultName;
+                $room_types[] = ValidationHelpers::toString($room['room_name'] ?? $room['room_id'] ?? $defaultName);
             }
         }
 
@@ -204,8 +226,12 @@ class BookingDisplayService implements BookingDisplayServiceInterface
         $first = null;
 
         foreach ($rooms_data as $room) {
-            $boardId = $room['board_id'] ?? '';
-            $board = $room['board_name'] ?? ($formatter !== null && !empty($boardId) ? $formatter($boardId) : $boardId);
+            if (!is_array($room)) {
+                continue;
+            }
+            $boardId = ValidationHelpers::toString($room['board_id'] ?? '');
+            $boardName = ValidationHelpers::toString($room['board_name'] ?? '');
+            $board = !empty($boardName) ? $boardName : ($formatter !== null && !empty($boardId) ? $formatter($boardId) : $boardId);
             if (!empty($board)) {
                 if ($first === null) {
                     $first = $board;
