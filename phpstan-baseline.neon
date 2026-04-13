@@ -8533,86 +8533,8 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/FeatureMapper.php
 
 		-
-			message: '#^Argument of an invalid type mixed supplied for foreach, only iterables are supported\.$#'
-			identifier: foreach.nonIterable
-			count: 7
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/FeeCalculator.php
-
-		-
 			message: '#^Binary operation "\+" between float and mixed results in an error\.$#'
 			identifier: binaryOp.invalid
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/FeeCalculator.php
-
-		-
-			message: '#^Cannot access offset ''FromDate'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 5
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/FeeCalculator.php
-
-		-
-			message: '#^Cannot access offset ''FromDays'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/FeeCalculator.php
-
-		-
-			message: '#^Cannot access offset ''IdAge'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 5
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/FeeCalculator.php
-
-		-
-			message: '#^Cannot access offset ''IdBoard'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 3
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/FeeCalculator.php
-
-		-
-			message: '#^Cannot access offset ''IdRoom'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 7
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/FeeCalculator.php
-
-		-
-			message: '#^Cannot access offset ''Price'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 9
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/FeeCalculator.php
-
-		-
-			message: '#^Cannot access offset ''Price1'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/FeeCalculator.php
-
-		-
-			message: '#^Cannot access offset ''Price2'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/FeeCalculator.php
-
-		-
-			message: '#^Cannot access offset ''ToDate'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 5
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/FeeCalculator.php
-
-		-
-			message: '#^Cannot access offset ''ToDays'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/FeeCalculator.php
-
-		-
-			message: '#^Cannot access offset ''Type'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 4
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/FeeCalculator.php
-
-		-
-			message: '#^Cannot access offset ''fAge'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/FeeCalculator.php
 
@@ -8623,63 +8545,15 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/FeeCalculator.php
 
 		-
-			message: '#^Cannot cast mixed to float\.$#'
-			identifier: cast.double
-			count: 5
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/FeeCalculator.php
-
-		-
 			message: '#^Parameter \#1 \$callback of function array_map expects \(callable\(mixed\)\: mixed\)\|null, ''trim'' given\.$#'
 			identifier: argument.type
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/FeeCalculator.php
 
 		-
-			message: '#^Parameter \#1 \$rowRoom of static method Tygh\\Addons\\NovotonHolidays\\Services\\PriceInfoFormatter\:\:matchRoom\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 3
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/FeeCalculator.php
-
-		-
-			message: '#^Parameter \#1 \$string1 of function strcasecmp expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/FeeCalculator.php
-
-		-
-			message: '#^Parameter \#1 \$value of function count expects array\|Countable, mixed given\.$#'
-			identifier: argument.type
-			count: 5
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/FeeCalculator.php
-
-		-
-			message: '#^Parameter \#2 \$idAge of static method Tygh\\Addons\\NovotonHolidays\\Services\\PriceInfoFormatter\:\:countMatchingPersons\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/FeeCalculator.php
-
-		-
-			message: '#^Parameter \#3 \$fromDate of static method Tygh\\Addons\\NovotonHolidays\\Services\\PriceInfoFormatter\:\:countOverlappingNights\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 5
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/FeeCalculator.php
-
-		-
-			message: '#^Parameter \#3 \$start2 of static method Tygh\\Addons\\NovotonHolidays\\Services\\PriceInfoFormatter\:\:datesOverlap\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 4
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/FeeCalculator.php
-
-		-
 			message: '#^Parameter \#3 \$subject of function preg_replace expects array\<float\|int\|string\>\|string, mixed given\.$#'
 			identifier: argument.type
 			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/FeeCalculator.php
-
-		-
-			message: '#^Parameter \#4 \$end2 of static method Tygh\\Addons\\NovotonHolidays\\Services\\PriceInfoFormatter\:\:datesOverlap\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 4
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/FeeCalculator.php
 
 		-
@@ -8692,12 +8566,6 @@ parameters:
 			message: '#^Parameter \#4 \$seasonAgeTypes of method Tygh\\Addons\\NovotonHolidays\\Services\\FeeCalculator\:\:calculateHandlingFee\(\) expects array\<string, mixed\>, array\<string\> given\.$#'
 			identifier: argument.type
 			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/FeeCalculator.php
-
-		-
-			message: '#^Parameter \#4 \$toDate of static method Tygh\\Addons\\NovotonHolidays\\Services\\PriceInfoFormatter\:\:countOverlappingNights\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 5
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/FeeCalculator.php
 
 		-
