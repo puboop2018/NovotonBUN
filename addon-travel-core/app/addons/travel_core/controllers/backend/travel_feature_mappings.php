@@ -172,9 +172,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 // Pass 3: normalized match (strip punctuation, collapse whitespace)
                 if (!$variantId) {
-                    $normalizedTarget = preg_replace('/\s+/', ' ', trim(preg_replace('/[^\p{L}\p{N}\s]/u', ' ', mb_strtolower($nameEn, 'UTF-8'))));
+                    $normalizedTarget = preg_replace('/\s+/', ' ', trim((string) preg_replace('/[^\p{L}\p{N}\s]/u', ' ', mb_strtolower($nameEn, 'UTF-8'))));
                     foreach ($variantNameToId as $vName => $vId) {
-                        $normalizedExisting = preg_replace('/\s+/', ' ', trim(preg_replace('/[^\p{L}\p{N}\s]/u', ' ', mb_strtolower($vName, 'UTF-8'))));
+                        $normalizedExisting = preg_replace('/\s+/', ' ', trim((string) preg_replace('/[^\p{L}\p{N}\s]/u', ' ', mb_strtolower($vName, 'UTF-8'))));
                         if ($normalizedExisting === $normalizedTarget) {
                             $variantId = $vId;
                             break;
@@ -224,7 +224,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Add alias
     if ($mode === 'add_alias') {
         $mapId = (int) ($_REQUEST['map_id'] ?? 0);
-        $apiSource = preg_replace('/[^a-z0-9_]/', '', strtolower((string) ($_REQUEST['api_source'] ?? '')));
+        $apiSource = (string) preg_replace('/[^a-z0-9_]/', '', strtolower((string) ($_REQUEST['api_source'] ?? '')));
         $apiValue = (string) ($_REQUEST['api_value'] ?? '');
         $validMatchTypes = ['exact', 'prefix', 'contains'];
         $matchType = (string) ($_REQUEST['match_type'] ?? 'exact');
@@ -273,7 +273,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Batch scan provider hotel facilities → populate travel_unmapped_values
     if ($mode === 'scan_facilities') {
-        $provider = preg_replace('/[^a-z0-9_]/', '', strtolower((string) ($_REQUEST['scan_provider'] ?? '')));
+        $provider = (string) preg_replace('/[^a-z0-9_]/', '', strtolower((string) ($_REQUEST['scan_provider'] ?? '')));
         $batchSize = min(max((int) ($_REQUEST['batch_size'] ?? TravelConstants::BATCH_SIZE_DEFAULT), TravelConstants::BATCH_SIZE_MIN), TravelConstants::BATCH_SIZE_MAX);
         $offset = max(0, (int) ($_REQUEST['scan_offset'] ?? 0));
 

@@ -345,7 +345,7 @@ function fn_travel_core_apply_modifier(string $value, string $modifier): string
         'title'      => mb_convert_case($value, MB_CASE_TITLE, 'UTF-8'),
         'capitalize' => mb_strtoupper(mb_substr($value, 0, 1, 'UTF-8'), 'UTF-8') . mb_substr($value, 1, null, 'UTF-8'),
         'trim'       => trim($value),
-        'slug'       => function_exists('fn_generate_seo_name') ? fn_generate_seo_name($value) : preg_replace('/-{2,}/', '-', trim(preg_replace('/[^a-z0-9\-]+/', '-', mb_strtolower($value, 'UTF-8')), '-')),
+        'slug'       => function_exists('fn_generate_seo_name') ? fn_generate_seo_name($value) : preg_replace('/-{2,}/', '-', trim((string) preg_replace('/[^a-z0-9\-]+/', '-', mb_strtolower($value, 'UTF-8')), '-')),
         'first'      => mb_substr($value, 0, 1, 'UTF-8'),
         'last'       => mb_substr($value, -1, 1, 'UTF-8'),
         'abs'        => (string) abs((float) $value),
@@ -420,7 +420,7 @@ function fn_travel_core_render_seo_template(string $pattern, array $placeholders
     }
 
     // Replace {{key}} and {{key|modifier}} in one pass
-    $result = preg_replace_callback(
+    $result = (string) preg_replace_callback(
         '/\{\{([a-z_][a-z0-9_]*)(?:\|([a-z_]+))?\}\}/',
         function ($m) use ($resolved) {
             $value = $resolved[$m[1]] ?? '';
@@ -433,16 +433,16 @@ function fn_travel_core_render_seo_template(string $pattern, array $placeholders
     );
 
     // Clean up dangling separators left by empty placeholders
-    $result = preg_replace('/,\s*,/', ',', $result);           // collapse double commas
-    $result = preg_replace('/\s*-\s*,/', ',', $result);        // "- ," → ","
-    $result = preg_replace('/,\s*-\s*/', ' - ', $result);      // ", -" → " - "
-    $result = preg_replace('/^\s*[-,]\s*/', '', $result);       // leading separator
-    $result = preg_replace('/\s*[-,]\s*$/', '', $result);       // trailing separator
-    $result = preg_replace('/\(\s*\)/', '', $result);           // empty parentheses
-    $result = preg_replace('/\s*-\s*-\s*/', ' - ', $result);   // double dashes
+    $result = (string) preg_replace('/,\s*,/', ',', $result);           // collapse double commas
+    $result = (string) preg_replace('/\s*-\s*,/', ',', $result);        // "- ," → ","
+    $result = (string) preg_replace('/,\s*-\s*/', ' - ', $result);      // ", -" → " - "
+    $result = (string) preg_replace('/^\s*[-,]\s*/', '', $result);       // leading separator
+    $result = (string) preg_replace('/\s*[-,]\s*$/', '', $result);       // trailing separator
+    $result = (string) preg_replace('/\(\s*\)/', '', $result);           // empty parentheses
+    $result = (string) preg_replace('/\s*-\s*-\s*/', ' - ', $result);   // double dashes
 
     // Collapse multiple spaces and trim
-    return trim(preg_replace('/\s{2,}/', ' ', $result));
+    return trim((string) preg_replace('/\s{2,}/', ' ', $result));
 }
 
 /**
@@ -466,8 +466,8 @@ function fn_travel_core_render_seo_slug(string $pattern, array $placeholders): s
 
     // Fallback: basic slug generation
     $slug = mb_strtolower($rendered, 'UTF-8');
-    $slug = preg_replace('/[^a-z0-9\-]+/', '-', $slug);
-    $slug = preg_replace('/-{2,}/', '-', $slug); // collapse multiple dashes
+    $slug = (string) preg_replace('/[^a-z0-9\-]+/', '-', $slug);
+    $slug = (string) preg_replace('/-{2,}/', '-', $slug); // collapse multiple dashes
     return trim($slug, '-');
 }
 

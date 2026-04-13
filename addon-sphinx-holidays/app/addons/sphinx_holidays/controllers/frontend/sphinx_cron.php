@@ -113,7 +113,7 @@ if (empty($providedKey) || !hash_equals($storedKey, $providedKey)) {
 
 // ── Parse mode ──
 
-$mode = preg_replace('/[^a-z0-9_]/', '', strtolower($_REQUEST['cron_mode'] ?? 'destinations'));
+$mode = (string) preg_replace('/[^a-z0-9_]/', '', strtolower($_REQUEST['cron_mode'] ?? 'destinations'));
 
 // ── Dispatch ──
 

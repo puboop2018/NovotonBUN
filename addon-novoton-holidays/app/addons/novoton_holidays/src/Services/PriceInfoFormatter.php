@@ -36,8 +36,8 @@ class PriceInfoFormatter
      */
     public static function feeKey(string $idAge): string
     {
-        $s = trim(preg_replace('/\s+/', ' ', $idAge));
-        $s = preg_replace('/\s+BY\s+\d+\s+AD\s*$/i', '', $s);
+        $s = trim((string) preg_replace('/\s+/', ' ', $idAge));
+        $s = (string) preg_replace('/\s+BY\s+\d+\s+AD\s*$/i', '', $s);
         return trim($s);
     }
 
@@ -78,8 +78,8 @@ class PriceInfoFormatter
      */
     public static function matchAgeType(string $rowAge, string $ageType): bool
     {
-        $rowAge = trim(preg_replace('/\s+/', ' ', $rowAge));
-        $ageType = trim(preg_replace('/\s+/', ' ', $ageType));
+        $rowAge = trim((string) preg_replace('/\s+/', ' ', $rowAge));
+        $ageType = trim((string) preg_replace('/\s+/', ' ', $ageType));
 
         if (strcasecmp($rowAge, $ageType) === 0) {
             return true;
@@ -208,7 +208,7 @@ class PriceInfoFormatter
         // This avoids double-counting when a room has no separate positional
         // adult pricing (all adults are plain "ADULT").
         if ($position !== null && ($type === 'ADULT' || $type === 'ADT' || $type === 'ADULTS')) {
-            $normalizedIdAge = trim(preg_replace('/\s+/', ' ', $idAge));
+            $normalizedIdAge = trim((string) preg_replace('/\s+/', ' ', $idAge));
             foreach ($occupancy['adults'] as $adult) {
                 $adultAgeNorm = strtoupper(trim(preg_replace('/\s+/', ' ', $adult['age_type'] ?? '')));
                 if ($adultAgeNorm === $normalizedIdAge) {
@@ -305,7 +305,7 @@ class PriceInfoFormatter
      */
     public static function correlatesWithSeasonAgeTypes(string $feeIdAge, array $seasonAgeTypes): bool
     {
-        $feeNorm = strtoupper(trim(preg_replace('/\s+/', ' ', str_replace(',', '.', $feeIdAge))));
+        $feeNorm = strtoupper(trim((string) preg_replace('/\s+/', ' ', str_replace(',', '.', $feeIdAge))));
         if ($feeNorm === '') {
             return false;
         }

@@ -34,7 +34,7 @@ class ValidationHelpers
      */
     public static function sanitizeName(string $name, int $maxLength = 100): string
     {
-        $name = preg_replace('/[^\p{L}\s\'-]/u', '', $name);
+        $name = (string) preg_replace('/[^\p{L}\s\'-]/u', '', $name);
         return mb_substr(trim($name), 0, $maxLength);
     }
 

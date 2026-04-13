@@ -353,7 +353,7 @@ class PriceInfoParser
                 $bandNorm = str_replace(',', '.', $ageBand);
                 $hasBand = false;
                 foreach ($availableBands as $ab) {
-                    if (str_replace(',', '.', $ab) === $bandNorm) {
+                    if (str_replace(',', '.', (string) $ab) === $bandNorm) {
                         $hasBand = true;
                         break;
                     }

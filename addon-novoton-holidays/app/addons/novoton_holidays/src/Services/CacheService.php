@@ -396,7 +396,7 @@ class CacheService implements CacheServiceInterface
     private function getCacheFilePath(string $key): string
     {
         // Sanitize key for filename
-        $safe_key = preg_replace('/[^a-zA-Z0-9_-]/', '_', $key);
+        $safe_key = (string) preg_replace('/[^a-zA-Z0-9_-]/', '_', $key);
         // Shard into subdirectories using first 2 chars to avoid flat directory degradation
         $shard = substr($safe_key, 0, 2) ?: '__';
         $dir = $this->cache_dir . $shard . '/';

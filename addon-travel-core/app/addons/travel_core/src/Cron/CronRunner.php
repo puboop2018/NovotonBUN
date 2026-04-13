@@ -77,7 +77,7 @@ class CronRunner
      */
     public static function sanitizeMode(string $mode): string
     {
-        return preg_replace('/[^a-z0-9_]/', '', strtolower($mode));
+        return (string) preg_replace('/[^a-z0-9_]/', '', strtolower($mode));
     }
 
     /**

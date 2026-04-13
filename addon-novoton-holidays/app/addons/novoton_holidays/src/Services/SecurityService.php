@@ -477,7 +477,7 @@ class SecurityService implements SecurityServiceInterface
      */
     private function sanitizeHotelId(string $hotelId): string
     {
-        return preg_replace('/[^a-zA-Z0-9_-]/', '', substr($hotelId, 0, 50));
+        return (string) preg_replace('/[^a-zA-Z0-9_-]/', '', substr($hotelId, 0, 50));
     }
     
     /**

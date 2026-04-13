@@ -327,8 +327,8 @@ class ReservationApiClient extends ApiClientBase implements ReservationApiClient
      */
     private function maskCredentials(string $xml): string
     {
-        $xml = preg_replace('/<usr>.*?<\/usr>/', '<usr>*****</usr>', $xml);
-        $xml = preg_replace('/<psw>.*?<\/psw>/', '<psw>*****</psw>', $xml);
+        $xml = (string) preg_replace('/<usr>.*?<\/usr>/', '<usr>*****</usr>', $xml);
+        $xml = (string) preg_replace('/<psw>.*?<\/psw>/', '<psw>*****</psw>', $xml);
         return $xml;
     }
 }

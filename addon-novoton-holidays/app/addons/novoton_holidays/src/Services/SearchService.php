@@ -271,7 +271,7 @@ class SearchService implements SearchServiceInterface
         }
 
         $priceElements = $xml->xpath('//Price');
-        $numPrices = count($priceElements);
+        $numPrices = count($priceElements ?: []);
 
         if ($numPrices === 0) {
             return [];
@@ -279,7 +279,7 @@ class SearchService implements SearchServiceInterface
 
         $searchAllBoards = empty($mealPlan);
 
-        if ($numPrices > 1 || ($xml->getName() !== 'room_price' && $numPrices > 0)) {
+        if ($numPrices > 1 || $xml->getName() !== 'room_price') {
             // Multi-result: parallel xpath arrays
             $idRooms        = $xml->xpath('//IdRoom');
             $boards          = $xml->xpath('//Board');
@@ -293,7 +293,7 @@ class SearchService implements SearchServiceInterface
             $termsPayment    = $xml->xpath('//TermsOfPayment');
             $termsCancellation = $xml->xpath('//TermsOfCancellation');
 
-            for ($i = 0; $i < count($prices); $i++) {
+            for ($i = 0; $i < count($prices ?: []); $i++) {
                 $roomId  = isset($idRooms[$i]) ? (string)$idRooms[$i] : '';
                 $boardId = isset($boards[$i])  ? (string)$boards[$i]  : '';
                 $price   = isset($prices[$i])  ? (float) (string) $prices[$i] : 0;
