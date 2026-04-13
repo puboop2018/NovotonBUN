@@ -8,15 +8,12 @@ includes:
     - phpstan-baseline.neon
 
 parameters:
-    # Level 7 enforces union type method calls, stricter parameter checking, and
-    # catches PHPDoc/native type drift. Legacy debt is baselined (1668 items);
-    # all NEW code must pass level 7 cleanly.
-    #
     # History:
     #   Level 5: installed 2026-04-12, baseline driven 214 -> 94
     #   Level 6: upgraded 2026-04-12, baseline 1668 (new code is clean-slate)
     #   Level 7: upgraded 2026-04-13, baseline 229 (zero at L6)
-    level: 8
+    #   Level 8: upgraded 2026-04-13, 39 errors fixed (zero at L7)
+    level: 9
 
     # Analyse all three addons in a single run so cross-addon type mismatches
     # (e.g. novoton services typed against travel_core contracts) surface.
