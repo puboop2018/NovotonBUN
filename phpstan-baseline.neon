@@ -14923,97 +14923,19 @@ parameters:
 			path: addon-travel-core/app/addons/travel_core/hooks/cart_hooks.php
 
 		-
+			message: '#^Call to function is_array\(\) with array\<string, mixed\> will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: addon-travel-core/app/addons/travel_core/hooks/cart_hooks.php
+
+		-
 			message: '#^Cannot access an offset on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
 			path: addon-travel-core/app/addons/travel_core/hooks/cart_hooks.php
 
 		-
-			message: '#^Cannot access offset ''address'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/hooks/cart_hooks.php
-
-		-
-			message: '#^Cannot access offset ''city'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/hooks/cart_hooks.php
-
-		-
-			message: '#^Cannot access offset ''classification'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/hooks/cart_hooks.php
-
-		-
-			message: '#^Cannot access offset ''country'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/hooks/cart_hooks.php
-
-		-
-			message: '#^Cannot access offset ''email'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/hooks/cart_hooks.php
-
-		-
 			message: '#^Cannot access offset ''extra'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 2
-			path: addon-travel-core/app/addons/travel_core/hooks/cart_hooks.php
-
-		-
-			message: '#^Cannot access offset ''full_description'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/hooks/cart_hooks.php
-
-		-
-			message: '#^Cannot access offset ''image_url'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 2
-			path: addon-travel-core/app/addons/travel_core/hooks/cart_hooks.php
-
-		-
-			message: '#^Cannot access offset ''latitude'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/hooks/cart_hooks.php
-
-		-
-			message: '#^Cannot access offset ''longitude'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/hooks/cart_hooks.php
-
-		-
-			message: '#^Cannot access offset ''meta_description'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/hooks/cart_hooks.php
-
-		-
-			message: '#^Cannot access offset ''name'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 2
-			path: addon-travel-core/app/addons/travel_core/hooks/cart_hooks.php
-
-		-
-			message: '#^Cannot access offset ''page_title'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/hooks/cart_hooks.php
-
-		-
-			message: '#^Cannot access offset ''phone'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/hooks/cart_hooks.php
-
-		-
-			message: '#^Cannot access offset ''region'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
 			path: addon-travel-core/app/addons/travel_core/hooks/cart_hooks.php
@@ -15027,7 +14949,7 @@ parameters:
 		-
 			message: '#^Cannot access offset ''travel_booking'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
-			count: 2
+			count: 1
 			path: addon-travel-core/app/addons/travel_core/hooks/cart_hooks.php
 
 		-
@@ -15061,12 +14983,6 @@ parameters:
 			path: addon-travel-core/app/addons/travel_core/hooks/cart_hooks.php
 
 		-
-			message: '#^Cannot access offset ''website'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/hooks/cart_hooks.php
-
-		-
 			message: '#^Cannot access offset string on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
@@ -15085,24 +15001,6 @@ parameters:
 			path: addon-travel-core/app/addons/travel_core/hooks/cart_hooks.php
 
 		-
-			message: '#^Cannot cast mixed to float\.$#'
-			identifier: cast.double
-			count: 2
-			path: addon-travel-core/app/addons/travel_core/hooks/cart_hooks.php
-
-		-
-			message: '#^Cannot cast mixed to int\.$#'
-			identifier: cast.int
-			count: 3
-			path: addon-travel-core/app/addons/travel_core/hooks/cart_hooks.php
-
-		-
-			message: '#^Cannot cast mixed to string\.$#'
-			identifier: cast.string
-			count: 3
-			path: addon-travel-core/app/addons/travel_core/hooks/cart_hooks.php
-
-		-
 			message: '#^Parameter \#1 \$dispatch of function _travel_core_render_debug expects string, mixed given\.$#'
 			identifier: argument.type
 			count: 1
@@ -15116,12 +15014,6 @@ parameters:
 
 		-
 			message: '#^Parameter \#1 \$string of function rtrim expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/hooks/cart_hooks.php
-
-		-
-			message: '#^Parameter \#1 \$string of function strip_tags expects string, mixed given\.$#'
 			identifier: argument.type
 			count: 1
 			path: addon-travel-core/app/addons/travel_core/hooks/cart_hooks.php

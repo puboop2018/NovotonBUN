@@ -11,6 +11,7 @@ declare(strict_types=1);
  */
 
 use Tygh\Registry;
+use Tygh\Addons\TravelCore\Helpers\ValidationHelpers;
 use Tygh\Addons\TravelCore\Services\BookingDisplayService;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
@@ -41,12 +42,18 @@ function fn_travel_core_get_cart_product_data_post(&$product, $cart, $auth): voi
 function fn_travel_core_calculate_cart_items_post(&$cart, &$cart_products, $auth): void
 {
     foreach ($cart_products as $cart_id => &$product) {
-        if (empty($product['extra']['travel_booking'])) {
+        if (!is_array($product)) {
+            continue;
+        }
+        /** @var array<string, mixed> $pExtra */
+        $pExtra = is_array($product['extra'] ?? null) ? $product['extra'] : [];
+        if (empty($pExtra['travel_booking'])) {
             continue;
         }
 
-        if (!empty($product['extra']['rooms_data']) && is_string($product['extra']['rooms_data'])) {
-            $decoded = json_decode($product['extra']['rooms_data'], true);
+        $roomsDataRaw = $pExtra['rooms_data'] ?? null;
+        if (!empty($roomsDataRaw) && is_string($roomsDataRaw)) {
+            $decoded = json_decode($roomsDataRaw, true);
             if (is_array($decoded)) {
                 $product['extra']['rooms_data'] = $decoded;
                 if (isset($cart['products'][$cart_id])) {
@@ -88,11 +95,11 @@ function fn_travel_core_dispatch_before_display(): void
     // even when Smarty template cache hasn't been cleared after deployment.
     // The Smarty hook (product_tabs.pre.tpl) serves as a secondary fallback.
     if ($dispatch === 'products.view' && !empty($_REQUEST['product_id'])) {
-        $productId = (int) $_REQUEST['product_id'];
-        $productCode = (string) db_get_field(
+        $productId = ValidationHelpers::toInt($_REQUEST['product_id']);
+        $productCode = ValidationHelpers::toString(db_get_field(
             "SELECT product_code FROM ?:products WHERE product_id = ?i",
             $productId
-        );
+        ));
 
         if ($productCode !== '' && (str_starts_with($productCode, 'NVT') || str_starts_with($productCode, 'SPX'))) {
             $view = \Tygh\Tygh::$app['view'];
@@ -124,15 +131,16 @@ function fn_travel_core_dispatch_before_display(): void
  */
 function _travel_core_prepare_hotel_seo_data(int $productId): void
 {
-    $productCode = (string) db_get_field(
+    $productCode = ValidationHelpers::toString(db_get_field(
         "SELECT product_code FROM ?:products WHERE product_id = ?i",
         $productId
-    );
+    ));
 
     if ($productCode === '') {
         return;
     }
 
+    /** @var array<string, mixed>|null $hotelData */
     $hotelData = null;
 
     // Novoton hotel (NVT prefix)
@@ -157,26 +165,28 @@ function _travel_core_prepare_hotel_seo_data(int $productId): void
         );
     }
 
-    if (empty($hotelData)) {
+    if (empty($hotelData) || !is_array($hotelData)) {
         return;
     }
 
     // Load product descriptions for page_title and meta_description
+    /** @var array<string, mixed> $productDesc */
     $productDesc = db_get_row(
         "SELECT page_title, meta_description, full_description FROM ?:product_descriptions WHERE product_id = ?i AND lang_code = ?s",
         $productId,
         CART_LANGUAGE
     );
 
+    $productDesc = is_array($productDesc) ? $productDesc : [];
     // Build JSON-LD schema
     $schema = [
         '@context'   => 'https://schema.org',
         '@type'      => 'Hotel',
-        'name'       => $hotelData['name'] ?? '',
-        'description' => fn_travel_core_truncate_seo(strip_tags($productDesc['full_description'] ?? ''), 300),
+        'name'       => ValidationHelpers::toString($hotelData['name'] ?? ''),
+        'description' => fn_travel_core_truncate_seo(strip_tags(ValidationHelpers::toString($productDesc['full_description'] ?? '')), 300),
     ];
 
-    $stars = (int) ($hotelData['classification'] ?? 0);
+    $stars = ValidationHelpers::toInt($hotelData['classification'] ?? 0);
     if ($stars > 0) {
         $schema['starRating'] = ['@type' => 'Rating', 'ratingValue' => (string) $stars];
     }
@@ -193,8 +203,8 @@ function _travel_core_prepare_hotel_seo_data(int $productId): void
     if (!empty($hotelData['latitude']) && !empty($hotelData['longitude'])) {
         $schema['geo'] = [
             '@type'     => 'GeoCoordinates',
-            'latitude'  => (float) $hotelData['latitude'],
-            'longitude' => (float) $hotelData['longitude'],
+            'latitude'  => ValidationHelpers::toFloat($hotelData['latitude']),
+            'longitude' => ValidationHelpers::toFloat($hotelData['longitude']),
         ];
     }
 
@@ -241,8 +251,8 @@ function _travel_core_render_debug(string $dispatch): void
 
     // ── 3. Product info (if on product page) ──
     if ($dispatch === 'products.view' && !empty($_REQUEST['product_id'])) {
-        $pid = (int) $_REQUEST['product_id'];
-        $pcode = (string) db_get_field("SELECT product_code FROM ?:products WHERE product_id = ?i", $pid);
+        $pid = ValidationHelpers::toInt($_REQUEST['product_id']);
+        $pcode = ValidationHelpers::toString(db_get_field("SELECT product_code FROM ?:products WHERE product_id = ?i", $pid));
         $debug['product'] = [
             'product_id' => $pid,
             'product_code' => $pcode,
