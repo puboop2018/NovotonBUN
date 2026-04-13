@@ -112,7 +112,7 @@ class PriceInfoService implements PriceInfoServiceInterface
         }
 
         // Get priceinfo from first package with data
-        $priceinfoJson = $this->packageRepo->getPriceinfoData($hotelId, $packageName ?: null);
+        $priceinfoJson = $this->packageRepo->getPriceinfoData((string) $hotelId, $packageName ?: null);
 
         if (empty($priceinfoJson)) {
             return [];
@@ -197,7 +197,7 @@ class PriceInfoService implements PriceInfoServiceInterface
             ];
         }
 
-        return $result;
+        return array_values($result);
     }
 
     /**
@@ -738,7 +738,7 @@ class PriceInfoService implements PriceInfoServiceInterface
     private function parsePriceInfoResponse($response, string $hotelId): array
     {
         // Convert SimpleXML to array
-        $data = json_decode(json_encode($response), true);
+        $data = json_decode((string) json_encode($response), true);
 
         return $this->formatPriceInfo($data, $hotelId);
     }

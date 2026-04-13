@@ -139,7 +139,7 @@ interface SyncLoggerInterface
     /**
      * Get all collected messages.
      *
-     * @return array<string, mixed>
+     * @return list<string>
      */
     public function getMessages(): array;
 

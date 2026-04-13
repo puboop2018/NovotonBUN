@@ -186,6 +186,6 @@ abstract class ApiClientBase
         // can use index-friendly prefix matching (no leading wildcards).
         $hotelId = $params['hotel_id'] ?? '';
         $hotelPart = $hotelId !== '' ? $hotelId . '_' : '';
-        return 'nvt_api_' . $function . '_' . $hotelPart . md5(json_encode($params));
+        return 'nvt_api_' . $function . '_' . $hotelPart . md5((string) json_encode($params));
     }
 }

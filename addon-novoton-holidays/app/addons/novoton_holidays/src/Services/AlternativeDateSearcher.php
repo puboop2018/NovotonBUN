@@ -70,13 +70,13 @@ class AlternativeDateSearcher implements AlternativeDateSearcherInterface
         // Build date list: after first, then before
         $altDates = [];
         for ($i = 1; $i <= $searchRange; $i++) {
-            $tryDate = date('Y-m-d', strtotime("+{$i} days", $baseDate));
+            $tryDate = date('Y-m-d', (int) strtotime("+{$i} days", $baseDate));
             if (strtotime($tryDate) >= strtotime('today')) {
                 $altDates[] = $tryDate;
             }
         }
         for ($i = 1; $i <= $searchRange; $i++) {
-            $tryDate = date('Y-m-d', strtotime("-{$i} days", $baseDate));
+            $tryDate = date('Y-m-d', (int) strtotime("-{$i} days", $baseDate));
             if (strtotime($tryDate) >= strtotime('today')) {
                 array_unshift($altDates, $tryDate);
             }
@@ -100,6 +100,7 @@ class AlternativeDateSearcher implements AlternativeDateSearcherInterface
             if (!is_object($room) && !is_array($room)) {
                 continue;
             }
+            /** @var object{IdRoom: string, Room: string}|array<string, mixed> $room */
             $roomId   = is_object($room) ? (string) $room->IdRoom : ($room['IdRoom'] ?? '');
             $roomName = is_object($room) ? (string) $room->Room   : ($room['Room'] ?? '');
             if (!empty($roomId)) {
@@ -113,7 +114,7 @@ class AlternativeDateSearcher implements AlternativeDateSearcherInterface
         $apiCallCount = 0;
 
         foreach ($altDates as $tryCheckIn) {
-            $tryCheckOut = date('Y-m-d', strtotime($tryCheckIn . ' +' . $nights . ' days'));
+            $tryCheckOut = date('Y-m-d', (int) strtotime($tryCheckIn . ' +' . $nights . ' days'));
 
             // Build all room×board requests for this date as a batch
             $batchRequests = [];

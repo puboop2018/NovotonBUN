@@ -330,11 +330,11 @@ class SearchService implements SearchServiceInterface
                     'more_info'              => self::xpathValue($moreInfos, $i),
                     'early_booking_discount' => (float) self::xpathValue($earlyBookings, $i, '0'),
                     'extras'                 => self::xpathValue($extras, $i),
-                    'terms_of_payment'       => isset($termsPayment[$i]) ? $termsPayment[$i]->asXML() : (isset($termsPayment[0]) ? $termsPayment[0]->asXML() : ''),
-                    'terms_of_cancellation'  => isset($termsCancellation[$i]) ? $termsCancellation[$i]->asXML() : (isset($termsCancellation[0]) ? $termsCancellation[0]->asXML() : ''),
+                    'terms_of_payment'       => isset($termsPayment[$i]) ? (string) $termsPayment[$i]->asXML() : (isset($termsPayment[0]) ? (string) $termsPayment[0]->asXML() : ''),
+                    'terms_of_cancellation'  => isset($termsCancellation[$i]) ? (string) $termsCancellation[$i]->asXML() : (isset($termsCancellation[0]) ? (string) $termsCancellation[0]->asXML() : ''),
                     'free_cancellation_date' => isset($termsCancellation[$i])
-                        ? fn_novoton_holidays_get_free_cancellation_date($termsCancellation[$i]->asXML())
-                        : (isset($termsCancellation[0]) ? fn_novoton_holidays_get_free_cancellation_date($termsCancellation[0]->asXML()) : null),
+                        ? fn_novoton_holidays_get_free_cancellation_date((string) $termsCancellation[$i]->asXML())
+                        : (isset($termsCancellation[0]) ? fn_novoton_holidays_get_free_cancellation_date((string) $termsCancellation[0]->asXML()) : null),
                 ];
 
                 if ($forRoom !== null) {
@@ -386,10 +386,10 @@ class SearchService implements SearchServiceInterface
                 'more_info'              => isset($xml->MoreInfo) ? (string)$xml->MoreInfo : '',
                 'early_booking_discount' => isset($xml->early_booking) ? (float) (string) $xml->early_booking : 0,
                 'extras'                 => isset($xml->extras) ? (string)$xml->extras : '',
-                'terms_of_payment'       => isset($xml->TermsOfPayment) ? $xml->TermsOfPayment->asXML() : '',
-                'terms_of_cancellation'  => isset($xml->TermsOfCancellation) ? $xml->TermsOfCancellation->asXML() : '',
+                'terms_of_payment'       => isset($xml->TermsOfPayment) ? (string) $xml->TermsOfPayment->asXML() : '',
+                'terms_of_cancellation'  => isset($xml->TermsOfCancellation) ? (string) $xml->TermsOfCancellation->asXML() : '',
                 'free_cancellation_date' => isset($xml->TermsOfCancellation)
-                    ? fn_novoton_holidays_get_free_cancellation_date($xml->TermsOfCancellation->asXML())
+                    ? fn_novoton_holidays_get_free_cancellation_date((string) $xml->TermsOfCancellation->asXML())
                     : null,
             ];
 
@@ -478,6 +478,9 @@ class SearchService implements SearchServiceInterface
         }
 
         $values = array_column($discounts, 'discount');
+        if (empty($values)) {
+            return [];
+        }
         $range = [
             'min' => min($values),
             'max' => max($values),
@@ -542,7 +545,7 @@ class SearchService implements SearchServiceInterface
 
     /**
      * Safe xpath value accessor.
-     * @param list<mixed>|null $elements
+     * @param array<mixed>|null $elements
      */
     private static function xpathValue(?array $elements, int $index, string $default = ''): string
     {

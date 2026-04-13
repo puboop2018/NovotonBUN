@@ -90,7 +90,7 @@ class StateManager implements StateManagerInterface
             // Handle checksummed format
             if (isset($decoded['_checksum']) && isset($decoded['_data'])) {
                 $expectedChecksum = $decoded['_checksum'];
-                $actualChecksum = md5(json_encode($decoded['_data']));
+                $actualChecksum = md5((string) json_encode($decoded['_data']));
                 if ($expectedChecksum !== $actualChecksum) {
                     return $this->restoreFromBackup();
                 }
@@ -194,7 +194,7 @@ class StateManager implements StateManagerInterface
     {
         $backupFile = $this->stateFile . '.bak';
         if (file_exists($backupFile)) {
-            $backupContent = file_get_contents($backupFile);
+            $backupContent = (string) file_get_contents($backupFile);
             $decoded = json_decode($backupContent, true);
             if (is_array($decoded)) {
                 // Handle checksummed backup
@@ -466,7 +466,7 @@ class StateManager implements StateManagerInterface
     public function acquireLock(int $timeout = 5): bool
     {
         $lockFile = $this->stateFile . '.lock';
-        $this->lockHandle = fopen($lockFile, 'c');
+        $this->lockHandle = fopen($lockFile, 'c') ?: null;
 
         if (!$this->lockHandle) {
             return false;

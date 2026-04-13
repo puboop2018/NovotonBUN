@@ -391,7 +391,7 @@ class HotelRepository implements HotelRepositoryInterface
     #[\Override]
     public function getCountries(): array
     {
-        return $this->reporting->getCountries();
+        return array_values($this->reporting->getCountries());
     }
 
     /**
@@ -400,7 +400,7 @@ class HotelRepository implements HotelRepositoryInterface
     #[\Override]
     public function getResorts(string $country = ''): array
     {
-        return $this->reporting->getResorts($country);
+        return array_values($this->reporting->getResorts($country));
     }
 
     /**
@@ -409,7 +409,7 @@ class HotelRepository implements HotelRepositoryInterface
     #[\Override]
     public function getCountryCityPairs(): array
     {
-        return $this->reporting->getCountryCityPairs();
+        return array_values($this->reporting->getCountryCityPairs());
     }
 
     /**
@@ -418,7 +418,7 @@ class HotelRepository implements HotelRepositoryInterface
     #[\Override]
     public function getCountriesWithPriceCounts(): array
     {
-        return $this->reporting->getCountriesWithPriceCounts();
+        return array_values($this->reporting->getCountriesWithPriceCounts());
     }
 
     /**
@@ -442,7 +442,7 @@ class HotelRepository implements HotelRepositoryInterface
     #[\Override]
     public function getResortStatsByCountry(string $country): array
     {
-        return $this->reporting->getResortStatsByCountry($country);
+        return array_values($this->reporting->getResortStatsByCountry($country));
     }
 
     #[\Override]

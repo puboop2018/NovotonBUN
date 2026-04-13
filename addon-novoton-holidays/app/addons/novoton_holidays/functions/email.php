@@ -320,7 +320,7 @@ function fn_novoton_holidays_cleanup_old_reports($dir, $days = 7): void
     
     $cutoff = time() - ($days * 86400);
     
-    foreach (glob($dir . '*.csv') as $file) {
+    foreach (glob($dir . '*.csv') ?: [] as $file) {
         if (filemtime($file) < $cutoff) {
             unlink($file);
         }

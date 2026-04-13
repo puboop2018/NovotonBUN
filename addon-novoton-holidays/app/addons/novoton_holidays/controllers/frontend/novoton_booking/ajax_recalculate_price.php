@@ -76,7 +76,7 @@ use Tygh\Addons\TravelCore\Services\CurrencyService;
     };
 
     // Get JSON input
-    $input = file_get_contents('php://input');
+    $input = (string) file_get_contents('php://input');
     $data = json_decode($input, true);
 
     $debug_log('Raw input', $input);
@@ -140,7 +140,7 @@ use Tygh\Addons\TravelCore\Services\CurrencyService;
     }
     
     // Calculate check-out date
-    $check_out = date('Y-m-d', strtotime($check_in . ' + ' . $nights . ' days'));
+    $check_out = date('Y-m-d', (int) strtotime($check_in . ' + ' . $nights . ' days'));
     
     // Get API instance
     $api = fn_novoton_holidays_get_api();

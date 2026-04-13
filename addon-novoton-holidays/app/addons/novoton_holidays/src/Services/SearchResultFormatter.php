@@ -39,6 +39,7 @@ class SearchResultFormatter implements SearchResultFormatterInterface
         array $searchParams,
         array $debugLog
     ): void {
+        /** @var \Smarty $view */
         $view = Tygh::$app['view'];
 
         // ── Core results ─────────────────────────────────────────────
@@ -107,6 +108,7 @@ class SearchResultFormatter implements SearchResultFormatterInterface
     #[\Override]
     public function assignDefaults(?string $warningLangKey = null): void
     {
+        /** @var \Smarty $view */
         $view      = Tygh::$app['view'];
         $pageTitle = __('novoton_holidays.search_results') ?: 'Search Results';
 
@@ -149,7 +151,7 @@ class SearchResultFormatter implements SearchResultFormatterInterface
     // Internal helpers
     // =====================================================================
 
-    /** @param object $view */
+    /** @param \Smarty $view */
     private function assignCurrency($view): void
     {
         $currency    = defined('CART_SECONDARY_CURRENCY') ? CART_SECONDARY_CURRENCY : 'EUR';
@@ -163,7 +165,7 @@ class SearchResultFormatter implements SearchResultFormatterInterface
         $view->assign('novoton_round_prices', ConfigProvider::isRoundPrices());
     }
 
-    /** @param object $view */
+    /** @param \Smarty $view */
     private function assignHotelDisplay($view, string $hotelId, int $productId): void
     {
         $hotelName    = '';
@@ -216,7 +218,7 @@ class SearchResultFormatter implements SearchResultFormatterInterface
     }
 
     /**
-     * @param object $view
+     * @param \Smarty $view
      * @param list<array<string, mixed>> $packages
      */
     private function assignPackages($view, array $packages): void
@@ -245,7 +247,7 @@ class SearchResultFormatter implements SearchResultFormatterInterface
     }
 
     /**
-     * @param object $view
+     * @param \Smarty $view
      * @param list<array<string, mixed>> $packages
      */
     private function assignActiveEarlyBooking($view, array $packages): void
@@ -294,7 +296,7 @@ class SearchResultFormatter implements SearchResultFormatterInterface
     }
 
     /**
-     * @param object $view
+     * @param \Smarty $view
      * @param list<array<string, mixed>> $packages
      */
     private function assignSeasonPeriod($view, array $packages): void
@@ -328,7 +330,7 @@ class SearchResultFormatter implements SearchResultFormatterInterface
     }
 
     /**
-     * @param object $view
+     * @param \Smarty $view
      * @param list<array<string, mixed>> $results
      * @param array<string, mixed> $searchParams
      */
@@ -376,7 +378,7 @@ class SearchResultFormatter implements SearchResultFormatterInterface
                         $stayFrom    = $eb['StayFrom'] ?? '';
                         $stayTo      = $eb['StayTo'] ?? '';
                         $paymentDate = !empty($bookTo)
-                            ? date('d.m.Y', strtotime($bookTo . ' +5 days'))
+                            ? date('d.m.Y', (int) strtotime($bookTo . ' +5 days'))
                             : 'N/A';
                         $lines[] = "-{$reduction}% Early Booking discount till {$bookTo}"
                             . " -- PAYMENT till {$paymentDate}"
@@ -389,7 +391,7 @@ class SearchResultFormatter implements SearchResultFormatterInterface
         $view->assign('early_booking_details', $ebDetails);
     }
 
-    /** @param object $view */
+    /** @param \Smarty $view */
     private function assignCalendarPrices($view, string $hotelId): void
     {
         $calendarPricesJson = '{}';
@@ -411,7 +413,7 @@ class SearchResultFormatter implements SearchResultFormatterInterface
         $view->assign('show_calendar_prices', $showCalendarPrices);
     }
 
-    /** @param object $view */
+    /** @param \Smarty $view */
     private function assignMeta($view): void
     {
         $pageTitle = __('novoton_holidays.search_results') ?: 'Search Results';

@@ -55,9 +55,9 @@ if ($mode === 'add_hotels_as_products') {
         $category_id = (int)($_REQUEST['category_id'] ?? 0);
         $import_mode = in_array($_REQUEST['import_mode'] ?? '', ['new_only', 'update']) ? $_REQUEST['import_mode'] : 'new_only';
         $limit = max(0, min(5000, (int)($_REQUEST['limit'] ?? 0)));
-        $selected_resorts = is_array($_REQUEST['resorts'] ?? null) ? array_map(function($r) {
+        $selected_resorts = is_array($_REQUEST['resorts'] ?? null) ? array_values(array_filter(array_map(function($r) {
             return preg_replace('/[^\p{L}\s\-\.]/u', '', mb_substr($r, 0, 100));
-        }, $_REQUEST['resorts']) : [];
+        }, $_REQUEST['resorts']), fn($v) => is_string($v))) : [];
         // Whitelist language codes to 2-3 char lowercase alpha codes
         $selected_languages = is_array($_REQUEST['languages'] ?? null) ? array_filter(array_map(function($l) {
             $l = strtolower(trim($l));

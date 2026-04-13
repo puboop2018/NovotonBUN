@@ -151,7 +151,7 @@ class AlternativeRequestRepository implements AlternativeRequestRepositoryInterf
      * Count requests matching optional status/conditions.
      *
      * @param string $whereSql  Pre-built WHERE clause (e.g. "WHERE status = 'pending'")
-     * @param array<string, mixed>  $params    Bound parameters for the WHERE clause
+     * @param list<mixed>  $params    Bound parameters for the WHERE clause
      */
     public function countFiltered(string $whereSql = '', array $params = []): int
     {
@@ -165,7 +165,7 @@ class AlternativeRequestRepository implements AlternativeRequestRepositoryInterf
      * Find requests with pagination and optional WHERE clause.
      *
      * @param string $whereSql  Pre-built WHERE clause
-     * @param array<string, mixed>  $params    Bound parameters
+     * @param list<mixed>  $params    Bound parameters
      * @param int    $limit
      * @param int    $offset
      * @return list<array<string, mixed>>

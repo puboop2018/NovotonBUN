@@ -144,8 +144,8 @@ function fn_travel_core_render_booking_engine(array $params = []): string
 
     // Defense-in-depth: escape JSON strings for safe HTML attribute embedding.
     // Prevents attribute injection if admin-controlled values ever contain quotes.
-    $colorsAttr = htmlspecialchars($colors, ENT_QUOTES, 'UTF-8');
-    $translationsAttr = htmlspecialchars($translationsJson, ENT_QUOTES, 'UTF-8');
+    $colorsAttr = htmlspecialchars((string) $colors, ENT_QUOTES, 'UTF-8');
+    $translationsAttr = htmlspecialchars((string) $translationsJson, ENT_QUOTES, 'UTF-8');
 
     return <<<HTML
 <div id="travel-booking-root"

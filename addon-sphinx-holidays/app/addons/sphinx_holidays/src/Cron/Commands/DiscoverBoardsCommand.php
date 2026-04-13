@@ -505,12 +505,12 @@ class DiscoverBoardsCommand extends AbstractSyncCommand
     private function resolveCountryCodes(array $params): array
     {
         if (!empty($params['country'])) {
-            return array_filter(array_map(function ($c) {
+            return array_values(array_filter(array_map(function ($c) {
                 return strtoupper(trim($c));
-            }, explode(',', $params['country'])));
+            }, explode(',', $params['country']))));
         }
 
-        return ConfigProvider::getSelectedCountryCodes();
+        return array_values(ConfigProvider::getSelectedCountryCodes());
     }
 
 }

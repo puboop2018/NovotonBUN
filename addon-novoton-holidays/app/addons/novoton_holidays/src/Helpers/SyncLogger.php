@@ -68,7 +68,7 @@ class SyncLogger implements SyncLoggerInterface
 
     /**
      * Collected messages for later retrieval
-     * @var array<string, mixed>
+     * @var list<string>
      */
     private array $messages = [];
 
@@ -395,7 +395,7 @@ class SyncLogger implements SyncLoggerInterface
     /**
      * Get all collected messages
      *
-     * @return array<string, mixed>
+     * @return list<string>
      */
     public function getMessages(): array
     {

@@ -56,7 +56,7 @@ class PriceInfoCalculation implements PriceInfoCalculationInterface
     /** @var bool Debug mode */
     private $debug = false;
 
-    /** @var list<string> Debug log */
+    /** @var list<array{time: string, message: string, data?: mixed}|string> Debug log */
     private $debugLog = [];
 
     /** @var PriceInfoParser */
@@ -141,7 +141,7 @@ class PriceInfoCalculation implements PriceInfoCalculationInterface
         $childrenAges = array_values(array_map('intval', $childrenAges));
         $numChildren = count($childrenAges);
 
-        $checkOut = date('Y-m-d', strtotime($checkIn . ' + ' . $nights . ' days'));
+        $checkOut = date('Y-m-d', (int) strtotime($checkIn . ' + ' . $nights . ' days'));
 
         $this->log('Parsed input', [
             'check_in' => $checkIn,
@@ -285,7 +285,7 @@ class PriceInfoCalculation implements PriceInfoCalculationInterface
 
     /**
      * Get debug log
-     * @return list<string>
+     * @return list<array{time: string, message: string, data?: mixed}|string>
      */
     #[\Override]
     public function getDebugLog(): array

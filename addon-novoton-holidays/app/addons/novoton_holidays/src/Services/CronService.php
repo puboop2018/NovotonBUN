@@ -174,7 +174,7 @@ class CronService implements CronServiceInterface
 
                     $this->altRequestRepo->markAlternativesFound(
                         (int) $request['request_id'],
-                        json_encode($alternatives)
+                        (string) json_encode($alternatives)
                     );
 
                     $results['found']++;

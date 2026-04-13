@@ -159,7 +159,7 @@ class HotelAvailabilitySearcher implements HotelAvailabilitySearcherInterface
      * @param array<string, mixed> $roomsData
      * @param array<string, mixed> $roomTypeMap
      * @param array<string, mixed> $rooms
-     * @return array<string, mixed>
+     * @return array{results: list<array<string, mixed>>, all_room_results: array<int, list<array<string, mixed>>>, is_multi_room: bool, multi_room_total_options: int, no_availability: bool, max_room_capacity: array<string, int>, early_booking_discounts: list<array<string, mixed>>, early_booking_range: array<string, mixed>}
      */
     private function searchMultiRoom(
         NovotonApiKitInterface $api,
@@ -276,7 +276,7 @@ class HotelAvailabilitySearcher implements HotelAvailabilitySearcherInterface
      * @param list<int> $children
      * @param list<array<string, mixed>> $roomsData
      * @param array<string, mixed> $roomTypeMap
-     * @return array<string, mixed>
+     * @return array{results: list<array<string, mixed>>, all_room_results: array<int, list<array<string, mixed>>>, is_multi_room: bool, multi_room_total_options: int, no_availability: bool, max_room_capacity: array<string, int>, early_booking_discounts: list<array<string, mixed>>, early_booking_range: array<string, mixed>}
      */
     private function searchSingleRoom(
         NovotonApiKitInterface $api,
@@ -412,7 +412,7 @@ class HotelAvailabilitySearcher implements HotelAvailabilitySearcherInterface
             $boardTypes = array_unique($reordered);
         }
 
-        return $boardTypes;
+        return array_values($boardTypes);
     }
 
     /** @return list<array{name: string, id_cont: string}> */
@@ -508,7 +508,18 @@ class HotelAvailabilitySearcher implements HotelAvailabilitySearcherInterface
         return $clean;
     }
 
-    /** @return array<string, mixed> */
+    /**
+     * @return array{
+     *   results: list<array<string, mixed>>,
+     *   all_room_results: array<int, list<array<string, mixed>>>,
+     *   is_multi_room: bool,
+     *   multi_room_total_options: int,
+     *   no_availability: bool,
+     *   max_room_capacity: array<string, int>,
+     *   early_booking_discounts: list<array<string, mixed>>,
+     *   early_booking_range: array<string, mixed>
+     * }
+     */
     private function emptyResult(): array
     {
         return [
@@ -564,7 +575,7 @@ class HotelAvailabilitySearcher implements HotelAvailabilitySearcherInterface
             $this->log("Has rooms: " . (isset($hotelInfo->rooms) ? 'YES' : 'NO'));
             $this->log("Has board: " . (isset($hotelInfo->board) ? 'YES' : 'NO'));
             $this->log("Has packages: " . (isset($hotelInfo->packages) ? 'YES' : 'NO'));
-            $rawXml = $hotelInfo->asXML();
+            $rawXml = (string) $hotelInfo->asXML();
             $this->log("=== RAW HOTELINFO XML (truncated) ===");
             $this->log(substr(htmlspecialchars($rawXml), 0, 2000));
         } else {

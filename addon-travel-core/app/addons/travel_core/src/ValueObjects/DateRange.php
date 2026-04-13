@@ -57,7 +57,7 @@ final class DateRange
             throw new InvalidArgumentException("Check-out ({$checkOut}) must be after check-in ({$checkIn})");
         }
 
-        $nights = (new \DateTime(date('Y-m-d', $tsIn)))->diff(new \DateTime(date('Y-m-d', $tsOut)))->days;
+        $nights = (int) (new \DateTime(date('Y-m-d', $tsIn)))->diff(new \DateTime(date('Y-m-d', $tsOut)))->days;
 
         return new self(date('Y-m-d', $tsIn), date('Y-m-d', $tsOut), $nights);
     }
@@ -69,7 +69,7 @@ final class DateRange
     public function shift(int $days): self
     {
         return self::fromCheckInAndNights(
-            date('Y-m-d', strtotime("{$days} days", strtotime($this->checkIn))),
+            date('Y-m-d', (int) strtotime("{$days} days", (int) strtotime($this->checkIn))),
             $this->nights
         );
     }

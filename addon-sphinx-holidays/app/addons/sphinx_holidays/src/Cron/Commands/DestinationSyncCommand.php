@@ -120,7 +120,7 @@ class DestinationSyncCommand extends AbstractSyncCommand
      * Can be interrupted (browser close, timeout) and resumed on next call.
      * @param array<string, mixed> $state
      * @param array<string, mixed> $params
-     * @return array<string, mixed>
+     * @return array{success: bool, stats: array<string, mixed>}
      */
     private function runWithState(array $state, array $params): array
     {
@@ -221,7 +221,7 @@ class DestinationSyncCommand extends AbstractSyncCommand
      * Mark sync as completed, build breadcrumbs, log, clear state.
      * @param array<string, mixed> $state
      * @param \Tygh\Addons\SphinxHolidays\Repository\DestinationRepository $repository
-     * @return array<string, mixed>
+     * @return array{success: bool, stats: array<string, mixed>}
      */
     private function completeSync(array $state, $repository): array
     {
@@ -256,12 +256,13 @@ class DestinationSyncCommand extends AbstractSyncCommand
 
         $this->outputRateLimitSummary($stats);
 
+        /** @var array{success: bool, stats: array<string, mixed>} */
         return $this->wrapResult($stats);
     }
 
     /**
      * Show current sync progress without doing any API calls.
-     * @return array<string, mixed>
+     * @return array{success: bool, stats: array<string, mixed>}
      */
     private function showStatus(): array
     {

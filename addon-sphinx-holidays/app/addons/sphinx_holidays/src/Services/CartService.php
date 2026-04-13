@@ -31,7 +31,7 @@ final class CartService implements CartServiceInterface
     {
         $security = Container::getSecurityService();
         $auth = Tygh::$app['session']['auth'] ?? [];
-        $rateLimitId = !empty($auth['user_id']) ? (string) $auth['user_id'] : session_id();
+        $rateLimitId = !empty($auth['user_id']) ? (string) $auth['user_id'] : (string) session_id();
 
         if (!$security->checkBookingRateLimit($rateLimitId)) {
             fn_set_notification('E', __('error'),
@@ -83,7 +83,7 @@ final class CartService implements CartServiceInterface
      * Sanitize raw guest data and run server-side validation.
      * Returns the parsed result or false on validation failure (notification already set).
      *
-     * @return array{guests_data: array<string, mixed>, guest_list: string, holder_name: string}|false
+     * @return array<string, mixed>|false
      * @param array<string, mixed> $rawGuests
      */
     #[\Override]

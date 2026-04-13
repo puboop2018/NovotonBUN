@@ -18,7 +18,7 @@ final class Occupancy
 {
     private int $adults;
     private int $children;
-    /** @var int[] */
+    /** @var list<int> */
     private array $childrenAges;
 
     /**

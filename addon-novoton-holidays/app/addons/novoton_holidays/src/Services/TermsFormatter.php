@@ -98,7 +98,7 @@ class TermsFormatter
                 }
 
                 if (!empty($prevTillDate) && !empty($tillDate)) {
-                    $fromStr = self::formatDate(strtotime($prevTillDate . ' +1 day'));
+                    $fromStr = self::formatDate((int) strtotime($prevTillDate . ' +1 day'));
                     $toStr = self::formatDate($tillDate);
                     $lines[] = __('novoton_holidays.cancel_between_dates', [
                         '[from]' => $fromStr,
@@ -284,7 +284,7 @@ class TermsFormatter
                     if (!empty($checkIn) && $term['days_before'] > 0) {
                         $checkInTs = strtotime($checkIn);
                         if ($checkInTs) {
-                            $term['till_date'] = date('Y-m-d', strtotime("-{$term['days_before']} days", $checkInTs));
+                            $term['till_date'] = date('Y-m-d', (int) strtotime("-{$term['days_before']} days", $checkInTs));
                         }
                     }
 

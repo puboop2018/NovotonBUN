@@ -97,11 +97,19 @@ class Container
 
     // ── Resolve helper ──
 
+    /**
+     * @template T of object
+     * @param string $id
+     * @param callable(): T $factory
+     * @return T
+     */
     private function resolve(string $id, callable $factory): object
     {
         if (isset($this->overrides[$id])) {
+            /** @var T */
             return $this->instances[$id] ??= ($this->overrides[$id])();
         }
+        /** @var T */
         return $this->instances[$id] ??= $factory();
     }
 

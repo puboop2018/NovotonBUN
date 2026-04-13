@@ -54,8 +54,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         ];
                     }
                     
-                    $altRequestRepo->markAlternativesFound($request_id, json_encode($alternatives));
-                    
+                    $altRequestRepo->markAlternativesFound($request_id, (string) json_encode($alternatives));
+
                     fn_set_notification('N', __('notice'), __('novoton_holidays.alternatives_found', ['[count]' => count($alternatives)]));
                 } else {
                     fn_set_notification('W', __('warning'), __('novoton_holidays.no_alternatives_yet'));
@@ -157,7 +157,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                     
                     if (!empty($alternatives)) {
-                        $altRequestRepo->markAlternativesFound($request['request_id'], json_encode($alternatives));
+                        $altRequestRepo->markAlternativesFound($request['request_id'], (string) json_encode($alternatives));
                         $found++;
                     }
                 }

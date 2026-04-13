@@ -347,6 +347,7 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
         // --- guests_data ---
         $guestsData = $this->resolveGuestsData($bookingData, $orderId, $debug);
 
+        /** @var list<array<string, mixed>> $roomsData */
         return [$roomsData, $guestsData];
     }
 

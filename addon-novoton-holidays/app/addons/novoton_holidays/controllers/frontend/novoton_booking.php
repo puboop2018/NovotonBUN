@@ -135,7 +135,7 @@ function _nvt_get_cached_hotel_info($hotel_id, $force = false) {
             // Convert cached array back to SimpleXMLElement if needed
             if (is_string($cached)) {
                 try {
-                    return simplexml_load_string($cached, 'SimpleXMLElement', LIBXML_NOCDATA | LIBXML_NONET);
+                    return simplexml_load_string($cached, 'SimpleXMLElement', LIBXML_NOCDATA | LIBXML_NONET) ?: null;
                 } catch (Exception $e) {
                     // Cache corrupted, fetch fresh
                 }

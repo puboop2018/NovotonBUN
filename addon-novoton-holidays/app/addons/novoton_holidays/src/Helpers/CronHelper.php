@@ -124,13 +124,13 @@ class CronHelper
 
         if (!empty($excludeResorts)) {
             if (is_array($excludeResorts)) {
-                return array_filter($excludeResorts);
+                return array_values(array_filter($excludeResorts));
             }
-            return array_filter(array_map('trim', explode(',', $excludeResorts)));
+            return array_values(array_filter(array_map('trim', explode(',', $excludeResorts))));
         }
 
         // Fall back to settings
-        return ConfigProvider::getExcludedResorts();
+        return array_values(ConfigProvider::getExcludedResorts());
     }
 
     /**

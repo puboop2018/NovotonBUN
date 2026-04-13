@@ -73,6 +73,7 @@ abstract class AbstractSyncService
 
         $this->logComplete($logId, $stats['success'] ? 'completed' : 'failed', $stats);
 
+        /** @var array{success: bool, total: int, synced: int, skipped: int, failed: int, duration_ms: int, error: string, sync_mode: string} $stats */
         return $stats;
     }
 

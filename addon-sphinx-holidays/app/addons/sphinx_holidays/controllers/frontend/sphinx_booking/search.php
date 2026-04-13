@@ -35,7 +35,7 @@ try {
 
     if (empty($check_out) && !empty($check_in)) {
         $nights = max(1, (int) ($_REQUEST['nights'] ?? 7));
-        $check_out = date('Y-m-d', strtotime($check_in . " + {$nights} days"));
+        $check_out = date('Y-m-d', (int) strtotime($check_in . " + {$nights} days"));
     }
 
     $templateParams = [

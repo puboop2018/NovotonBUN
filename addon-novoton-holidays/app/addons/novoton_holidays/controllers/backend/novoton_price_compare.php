@@ -51,7 +51,7 @@ if ($mode === 'compare') {
         $children_arr = array_map('floatval', explode(',', $children_ages));
     }
 
-    $check_out = date('Y-m-d', strtotime($check_in . ' + ' . $nights . ' days'));
+    $check_out = date('Y-m-d', (int) strtotime($check_in . ' + ' . $nights . ' days'));
 
     echo '<!DOCTYPE html><html><head><title>Price Comparison Result</title>
     <style>
@@ -315,9 +315,9 @@ if ($mode === 'compare') {
         foreach ($personKeys as $pKey) {
             $rowInfo = $matchedRows[$pKey] ?? [];
             $personTotal = $byPerson[$pKey] ?? 0;
-            $isAdult = str_starts_with($pKey, 'adult_');
+            $isAdult = str_starts_with((string) $pKey, 'adult_');
             $badgeClass = $isAdult ? 'badge-adult' : 'badge-child';
-            $label = str_replace('_', ' ', ucfirst($pKey));
+            $label = str_replace('_', ' ', ucfirst((string) $pKey));
 
             echo '<tr>';
             echo '<td><span class="badge ' . $badgeClass . '">' . htmlspecialchars($label) . '</span></td>';
@@ -950,7 +950,7 @@ if ($mode === 'compare') {
     if ($show_debug && !empty($calcResult['debug_log'])) {
         echo '<h2>Raw Debug Log</h2>';
         echo '<div class="debug-section">';
-        echo '<pre>' . htmlspecialchars(json_encode($calcResult['debug_log'], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)) . '</pre>';
+        echo '<pre>' . htmlspecialchars((string) json_encode($calcResult['debug_log'], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)) . '</pre>';
         echo '</div>';
     }
 
@@ -968,7 +968,7 @@ if ($mode === 'compare') {
         echo '<span class="collapsible-toggle" onclick="toggleSection(\'raw-seasons-data\')">&#9654; Raw Seasons Data (JSON)</span>';
         echo '<div id="raw-seasons-data" class="collapsible-content">';
         echo '<div class="debug-section">';
-        echo '<pre>' . htmlspecialchars(json_encode($rawSeasons, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)) . '</pre>';
+        echo '<pre>' . htmlspecialchars((string) json_encode($rawSeasons, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)) . '</pre>';
         echo '</div>';
         echo '</div>';
     }

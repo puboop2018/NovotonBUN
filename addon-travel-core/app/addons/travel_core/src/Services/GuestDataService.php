@@ -560,7 +560,7 @@ class GuestDataService implements GuestDataServiceInterface
                     'type' => $guest['type'] ?? 'adult',
                     'age' => $guestAge,
                     'birthday' => $birthday,
-                    'dob' => !empty($birthday) ? date('d/m/Y', strtotime($birthday)) : '',
+                    'dob' => !empty($birthday) ? date('d/m/Y', (int) strtotime($birthday)) : '',
                     'room' => (int) ($guest['room'] ?? 1),
                     'is_holder' => !empty($guest['is_holder']) ? 1 : 0,
                 ];
@@ -577,7 +577,7 @@ class GuestDataService implements GuestDataServiceInterface
                     'type' => $guest['type'] ?? 'adult',
                     'age' => $guestAge,
                     'birthday' => $birthday,
-                    'dob' => !empty($birthday) ? date('d/m/Y', strtotime($birthday)) : '',
+                    'dob' => !empty($birthday) ? date('d/m/Y', (int) strtotime($birthday)) : '',
                     'room' => (int) ($guest['room'] ?? 1),
                     'is_holder' => !empty($guest['is_holder']) ? 1 : 0,
                 ];

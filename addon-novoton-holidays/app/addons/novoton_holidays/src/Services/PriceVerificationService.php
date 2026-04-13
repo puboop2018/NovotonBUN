@@ -85,10 +85,10 @@ class PriceVerificationService implements PriceVerificationServiceInterface
         $tp = $priceData->xpath('//TermsOfPayment');
         $tc = $priceData->xpath('//TermsOfCancellation');
         if (!empty($tp[0])) {
-            $termsOfPayment = $tp[0]->asXML();
+            $termsOfPayment = (string) $tp[0]->asXML();
         }
         if (!empty($tc[0])) {
-            $termsOfCancellation = $tc[0]->asXML();
+            $termsOfCancellation = (string) $tc[0]->asXML();
         }
 
         return [

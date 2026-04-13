@@ -288,11 +288,11 @@ if ($mode === 'test_room_price') {
         ]);
 
         echo '<h3>Request Parameters:</h3>';
-        echo '<pre>' . htmlspecialchars(json_encode($result['params'], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)) . '</pre>';
+        echo '<pre>' . htmlspecialchars((string) json_encode($result['params'], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)) . '</pre>';
 
         echo '<h3>Response:</h3>';
         if ($result['success']) {
-            echo '<pre>' . htmlspecialchars(json_encode($result['result'], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)) . '</pre>';
+            echo '<pre>' . htmlspecialchars((string) json_encode($result['result'], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)) . '</pre>';
 
             if ($result['price'] > 0) {
                 echo '<p><strong>Price: &euro;' . htmlspecialchars((string)$result['price']) . ' (with commission: &euro;' . htmlspecialchars((string)$result['price_with_commission']) . ')</strong></p>';

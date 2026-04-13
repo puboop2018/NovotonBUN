@@ -26,6 +26,7 @@ if ($mode === 'update_prices') {
         
         $sync = new PriceInfoSync();
         $stats = [
+            'total' => 1,
             'updated' => [],
             'failed' => [],
             'no_data' => [],

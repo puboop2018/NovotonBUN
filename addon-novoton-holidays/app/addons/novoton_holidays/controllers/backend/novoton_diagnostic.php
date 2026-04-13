@@ -261,7 +261,7 @@ if ($mode === 'check') {
         if ($exists) {
             $reflection = new ReflectionFunction($func);
             echo "       Parameters: " . count($reflection->getParameters()) . "\n";
-            echo "       File: " . basename($reflection->getFileName()) . "\n";
+            echo "       File: " . basename((string) $reflection->getFileName()) . "\n";
         }
     }
     echo "\n";
@@ -272,12 +272,12 @@ if ($mode === 'check') {
     
     $init_file = $addon_dir . 'init.php';
     if (file_exists($init_file)) {
-        $init_content = file_get_contents($init_file);
-        
+        $init_content = (string) file_get_contents($init_file);
+
         // Check for require
         $has_require = (str_contains($init_content, 'require') || str_contains($init_content, 'include'));
         echo ($has_require ? "[Good]" : "[WARNING]") . " Includes hooks.php: " . ($has_require ? "YES" : "NO") . "\n";
-        
+
         // Check registered hooks
         preg_match_all("/'([^']+)'/", $init_content, $matches);
         if (!empty($matches[1])) {
@@ -288,7 +288,7 @@ if ($mode === 'check') {
         }
         
         // Check for view access
-        if (str_contains($init_content, "['view']") || str_contains($init_content, "->view")) {
+        if (str_contains($init_content, "['view']") || str_contains($init_content, '->view')) {
             echo "[WARNING] init.php accesses view - this can cause errors!\n";
         }
     } else {
@@ -304,9 +304,9 @@ if ($mode === 'check') {
     if (file_exists($hooks_file)) {
         echo "[Good] hooks.php exists\n";
         
-        $hooks_content = file_get_contents($hooks_file);
+        $hooks_content = (string) file_get_contents($hooks_file);
         echo "     Size: " . strlen($hooks_content) . " bytes\n";
-        
+
         // Check for each required function
         foreach ($functions as $func) {
             $found = str_contains($hooks_content, "function $func");
@@ -315,7 +315,7 @@ if ($mode === 'check') {
         
         // Check for syntax errors
         exec("php -l " . escapeshellarg($hooks_file) . " 2>&1", $output, $return);
-        $syntax_ok = str_contains(implode('', $output), 'No syntax errors');
+        $syntax_ok = str_contains(implode('', $output ?: []), 'No syntax errors');
         echo "     " . ($syntax_ok ? "[Good]" : "[ERROR]") . " Syntax check\n";
         if (!$syntax_ok) {
             echo "     Error: " . implode("\n     ", $output) . "\n";
@@ -367,7 +367,7 @@ if ($mode === 'check') {
     }
     
     if (file_exists($init_file)) {
-        $init_content = file_get_contents($init_file);
+        $init_content = (string) file_get_contents($init_file);
         if (str_contains($init_content, "['view']")) {
             $issues++;
             echo "??  MEDIUM: init.php accesses view directly\n";

@@ -179,7 +179,7 @@ class SphinxFeatureAssigner implements SphinxFeatureAssignerInterface
         }
 
         // Cache check — avoid re-resolving for same hotel
-        $cacheKey = md5(is_string($facilitiesJson) ? $facilitiesJson : json_encode($facilitiesJson));
+        $cacheKey = md5(is_string($facilitiesJson) ? $facilitiesJson : (string) json_encode($facilitiesJson));
         if ($this->resolvedFacilitiesCacheKey === $cacheKey && $this->resolvedFacilitiesCache !== null) {
             return $this->resolvedFacilitiesCache;
         }

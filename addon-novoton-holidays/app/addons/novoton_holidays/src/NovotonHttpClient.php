@@ -224,7 +224,7 @@ class NovotonHttpClient implements HttpClientInterface
         $results = [];
         $mh = curl_multi_init();
 
-        $chunks = array_chunk($requests, $concurrency, true);
+        $chunks = array_chunk($requests, max(1, $concurrency), true);
 
         foreach ($chunks as $chunk) {
             $handles = [];

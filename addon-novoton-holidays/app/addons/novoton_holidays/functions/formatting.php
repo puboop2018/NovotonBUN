@@ -307,7 +307,7 @@ function fn_novoton_holidays_parse_cancellation_terms($xml_string, $check_in = '
                 if (!empty($check_in) && $term['days_before'] > 0) {
                     $check_in_ts = strtotime($check_in);
                     if ($check_in_ts) {
-                        $term['till_date'] = date('Y-m-d', strtotime("-{$term['days_before']} days", $check_in_ts));
+                        $term['till_date'] = date('Y-m-d', (int) strtotime("-{$term['days_before']} days", $check_in_ts));
                     }
                 }
                 
@@ -488,7 +488,7 @@ function fn_novoton_holidays_format_hotel_display_name(string $hotel_name, strin
     }
 
     // Step 3: Count words — if 3+, keep as-is
-    $word_count = count(preg_split('/\s+/', $name));
+    $word_count = count(preg_split('/\s+/', $name) ?: []);
     if ($word_count >= 3) {
         return $name;
     }

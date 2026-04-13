@@ -402,7 +402,7 @@ class DiagnosticsService implements DiagnosticsServiceInterface
                 ];
             }
 
-            $hotelData = json_decode(json_encode($hotelInfo), true);
+            $hotelData = json_decode((string) json_encode($hotelInfo), true);
 
             // Get DB packages
             $packagesDb = (new HotelPackageRepository())->findByHotelId(

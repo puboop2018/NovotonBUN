@@ -299,10 +299,10 @@ use Tygh\Addons\TravelCore\TravelConstants;
         $termsCancellation = $priceData->xpath('//TermsOfCancellation');
 
         if (!empty($termsPayment[0])) {
-            $terms_of_payment = $termsPayment[0]->asXML();
+            $terms_of_payment = (string) $termsPayment[0]->asXML();
         }
         if (!empty($termsCancellation[0])) {
-            $terms_of_cancellation = $termsCancellation[0]->asXML();
+            $terms_of_cancellation = (string) $termsCancellation[0]->asXML();
         }
 
         // Extract remark and important info

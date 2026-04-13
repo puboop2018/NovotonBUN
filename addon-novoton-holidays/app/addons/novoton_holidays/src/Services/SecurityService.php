@@ -543,7 +543,7 @@ class SecurityService implements SecurityServiceInterface
         $keyFile = $keyDir . '/.encryption_key';
 
         if (file_exists($keyFile)) {
-            $key = trim(file_get_contents($keyFile));
+            $key = trim((string) file_get_contents($keyFile));
             // bin2hex(random_bytes(32)) produces 64 hex chars (256-bit key)
             if ($key !== '' && strlen($key) >= 64) {
                 return $key;

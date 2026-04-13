@@ -41,7 +41,7 @@ interface PriceInfoCalculationInterface
     /**
      * Get debug log.
      *
-     * @return list<string>
+     * @return list<array{time: string, message: string, data?: mixed}|string>
      */
     public function getDebugLog(): array;
 

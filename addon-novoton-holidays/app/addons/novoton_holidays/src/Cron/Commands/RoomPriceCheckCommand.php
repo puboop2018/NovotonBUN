@@ -31,7 +31,7 @@ class RoomPriceCheckCommand extends AbstractCronCommand
         $nights = (int)$this->getParam('nights', 7);
         $limit = (int)$this->getParam('limit', 500);
         $country = strtoupper($this->getParam('country', ''));
-        $check_out = date('Y-m-d', strtotime($check_in . ' + ' . $nights . ' days'));
+        $check_out = date('Y-m-d', (int) strtotime($check_in . ' + ' . $nights . ' days'));
 
         $this->output("Checking hotels with active prices...");
         $this->output("Check-in: {$check_in}, Check-out: {$check_out}, Nights: {$nights}, Limit: {$limit}");

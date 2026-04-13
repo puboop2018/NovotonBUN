@@ -36,6 +36,7 @@ parameters:
     # them. Novoton's Constants.php sits at the addon root (PSR-4 mapped to ""
     # in its composer.json) so PHPStan needs to index it explicitly.
     scanFiles:
+        - stubs/Smarty.php
         - addon-novoton-holidays/app/addons/novoton_holidays/Constants.php
     scanDirectories:
         - addon-novoton-holidays/app/addons/novoton_holidays/src

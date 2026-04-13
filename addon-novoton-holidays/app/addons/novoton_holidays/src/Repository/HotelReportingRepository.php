@@ -50,7 +50,7 @@ class HotelReportingRepository implements HotelReportingRepositoryInterface
     }
 
     /**
-     * @return array<int, array{country: string, city: string}>
+     * @return list<array{country: string, city: string}>
      */
     #[\Override]
     public function getCountryCityPairs(): array
@@ -61,7 +61,7 @@ class HotelReportingRepository implements HotelReportingRepositoryInterface
     }
 
     /**
-     * @return array<int, array{country: string, cnt: int}>
+     * @return list<array<string, mixed>>
      */
     #[\Override]
     public function getCountriesWithPriceCounts(): array
@@ -98,7 +98,7 @@ class HotelReportingRepository implements HotelReportingRepositoryInterface
     }
 
     /**
-     * @return array<int, array{city: string, hotel_count: int, with_prices: int}>
+     * @return list<array<string, mixed>>
      */
     #[\Override]
     public function getResortStatsByCountry(string $country): array

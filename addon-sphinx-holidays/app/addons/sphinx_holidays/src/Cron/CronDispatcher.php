@@ -123,6 +123,7 @@ class CronDispatcher implements CronDispatcherInterface
             set_time_limit(0);
 
             $class = self::$modes[$mode];
+            /** @var \Tygh\Addons\SphinxHolidays\Cron\Commands\AbstractSyncCommand $command */
             $command = new $class();
 
             // Set output callback to echo progress and keep lock file fresh

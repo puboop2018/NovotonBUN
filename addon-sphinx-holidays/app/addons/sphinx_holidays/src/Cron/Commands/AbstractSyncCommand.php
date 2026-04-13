@@ -14,6 +14,14 @@ use Tygh\Addons\TravelCore\Cron\AbstractCronCommand as BaseCommand;
 abstract class AbstractSyncCommand extends BaseCommand
 {
     /**
+     * Execute the command with optional parameters.
+     *
+     * @param array<string, mixed> $params
+     * @return array<string, mixed>
+     */
+    abstract public function execute(array $params = []): array;
+
+    /**
      * @param array<string, mixed> $stats
      */
     protected function outputRateLimitSummary(array $stats): void

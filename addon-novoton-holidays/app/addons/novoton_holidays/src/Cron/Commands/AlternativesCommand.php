@@ -97,7 +97,7 @@ class AlternativesCommand extends AbstractCronCommand
                 continue;
             }
 
-            $altRepo->markAlternativesFound($request['request_id'], json_encode($alternatives));
+            $altRepo->markAlternativesFound($request['request_id'], (string) json_encode($alternatives));
             $found++;
             $this->output("FOUND " . count($alternatives) . " alternatives", false);
 

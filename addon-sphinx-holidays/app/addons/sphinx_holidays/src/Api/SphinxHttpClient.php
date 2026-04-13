@@ -212,7 +212,7 @@ class SphinxHttpClient
 
             // Success
             $this->resetFailures();
-            $decoded = json_decode($response, true);
+            $decoded = json_decode((string) $response, true);
             if (!is_array($decoded)) {
                 $this->lastError = 'JSON decode error: ' . (json_last_error_msg() ?: 'response is not a JSON object/array');
                 return null;

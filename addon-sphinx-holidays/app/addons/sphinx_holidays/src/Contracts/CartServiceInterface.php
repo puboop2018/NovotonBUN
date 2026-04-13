@@ -37,7 +37,7 @@ interface CartServiceInterface
     /**
      * Sanitize raw guest data and run server-side validation.
      *
-     * @return array{guests_data: array<string, mixed>, guest_list: string, holder_name: string}|false
+     * @return array<string, mixed>|false
      * @param array<string, mixed> $rawGuests
      */
     public function parseGuests(array $rawGuests, string $dateRef): array|false;

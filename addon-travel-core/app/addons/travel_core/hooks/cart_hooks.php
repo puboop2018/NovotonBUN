@@ -285,7 +285,7 @@ function _travel_core_render_debug(string $dispatch): void
     foreach ($jsFiles as $jsFile) {
         $fullPath = $docRoot . '/' . $jsFile;
         $debug['js_files'][$jsFile] = file_exists($fullPath)
-            ? 'EXISTS (' . number_format(filesize($fullPath)) . ' bytes)'
+            ? 'EXISTS (' . number_format((float) filesize($fullPath)) . ' bytes)'
             : 'MISSING';
     }
 
@@ -299,7 +299,7 @@ function _travel_core_render_debug(string $dispatch): void
     foreach ($tplHooks as $tplFile) {
         $fullPath = $docRoot . '/' . $tplFile;
         $debug['template_files'][$tplFile] = file_exists($fullPath)
-            ? 'EXISTS (' . number_format(filesize($fullPath)) . ' bytes)'
+            ? 'EXISTS (' . number_format((float) filesize($fullPath)) . ' bytes)'
             : 'MISSING';
     }
 
@@ -318,7 +318,7 @@ function _travel_core_render_debug(string $dispatch): void
     // ── 7. CSS file ──
     $cssFile = $docRoot . '/design/themes/responsive/css/addons/travel_core/styles.css';
     $debug['css_file'] = file_exists($cssFile)
-        ? 'EXISTS (' . number_format(filesize($cssFile)) . ' bytes)'
+        ? 'EXISTS (' . number_format((float) filesize($cssFile)) . ' bytes)'
         : 'MISSING';
 
     // ── Render debug output as HTML comment + visible panel ──

@@ -100,7 +100,7 @@ class BookingRetryService implements BookingRetryServiceInterface
                 $this->repo->updateApiResponse(
                     $bookingId,
                     $bookResult['booking_reference'],
-                    json_encode($bookResult)
+                    (string) json_encode($bookResult)
                 );
             }
 

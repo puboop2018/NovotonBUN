@@ -282,7 +282,7 @@ class AvailabilityApiClient extends ApiClientBase implements AvailabilityApiClie
         }
 
         if (empty($results) && $result) {
-            $data = json_decode(json_encode($result), true);
+            $data = json_decode((string) json_encode($result), true);
             if (is_array($data)) {
                 $this->extractOffersRecursive($data, $results, $params);
             }

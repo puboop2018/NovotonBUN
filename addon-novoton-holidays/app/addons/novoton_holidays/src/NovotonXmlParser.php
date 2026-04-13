@@ -40,7 +40,7 @@ class NovotonXmlParser implements XmlParserInterface
         $parts = preg_split('/(<!\[CDATA\[.*?\]\]>)/s', $string, -1, PREG_SPLIT_DELIM_CAPTURE);
 
         $result = '';
-        foreach ($parts as $part) {
+        foreach ($parts ?: [] as $part) {
             if (str_starts_with($part, '<![CDATA[')) {
                 // CDATA section — keep as-is
                 $result .= $part;

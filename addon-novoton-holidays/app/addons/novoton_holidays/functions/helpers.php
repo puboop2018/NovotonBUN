@@ -29,7 +29,7 @@ function fn_novoton_holidays_parse_countries(mixed $selected_countries = null): 
 {
     // When called without argument, delegate to ConfigProvider (single source of truth)
     if ($selected_countries === null) {
-        return ConfigProvider::getSelectedCountries();
+        return array_values(ConfigProvider::getSelectedCountries());
     }
 
     $countries = [];
@@ -49,7 +49,7 @@ function fn_novoton_holidays_parse_countries(mixed $selected_countries = null): 
         }, explode(',', $selected_countries));
     }
 
-    $countries = array_filter($countries);
+    $countries = array_values(array_filter($countries));
 
     // If no countries resolved, fallback to all available countries
     if (empty($countries)) {
@@ -161,7 +161,7 @@ function fn_novoton_holidays_update_product_prices($product_id): bool|string
         }
 
         // Convert to array
-        $hotelData = json_decode(json_encode($hotel_info), true);
+        $hotelData = json_decode((string) json_encode($hotel_info), true);
 
         // Normalize packages array
         $packages = [];
@@ -191,7 +191,7 @@ function fn_novoton_holidays_update_product_prices($product_id): bool|string
 
             // Get priceinfo for this package
             $priceInfo = $api->pricing()->getPriceInfo($hotel_id, $packageName);
-            $priceData = !empty($priceInfo) ? json_decode(json_encode($priceInfo), true) : [];
+            $priceData = !empty($priceInfo) ? json_decode((string) json_encode($priceInfo), true) : [];
 
             $priceinfoValue = !empty($priceData) ? json_encode($priceData) : '';
             $now = date('Y-m-d H:i:s');
@@ -382,14 +382,17 @@ function fn_novoton_holidays_stream_page_close(string $back_url = '', array $ext
  */
 function fn_novoton_holidays_stream_form_fields(string $dispatch_url): array
 {
-    $action = htmlspecialchars(strtok($dispatch_url, '?'));
+    $action = htmlspecialchars((string) strtok($dispatch_url, '?'));
     $hidden = '';
     $url_parts = parse_url($dispatch_url);
 
     if (!empty($url_parts['query'])) {
         parse_str($url_parts['query'], $qs);
         foreach ($qs as $k => $v) {
-            $hidden .= '<input type="hidden" name="' . htmlspecialchars($k) . '" value="' . htmlspecialchars($v) . '">';
+            if (is_array($v)) {
+                continue;
+            }
+            $hidden .= '<input type="hidden" name="' . htmlspecialchars((string) $k) . '" value="' . htmlspecialchars($v) . '">';
         }
     }
 

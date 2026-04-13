@@ -158,7 +158,7 @@ class DiscountCalculator implements DiscountCalculatorInterface
 
             if (!empty($checkInFrom) && !empty($checkInTo)) {
                 if (strcasecmp($validFor, 'Stay') === 0) {
-                    $checkOutDate = date('Y-m-d', strtotime($checkIn . ' + ' . $nights . ' days'));
+                    $checkOutDate = date('Y-m-d', (int) strtotime($checkIn . ' + ' . $nights . ' days'));
                     if (!PriceInfoFormatter::datesOverlap($checkIn, $checkOutDate, $checkInFrom, $checkInTo)) {
                         continue;
                     }
@@ -255,7 +255,7 @@ class DiscountCalculator implements DiscountCalculatorInterface
             $entries = [$entries];
         }
 
-        $checkOut = date('Y-m-d', strtotime($checkIn . ' + ' . $nights . ' days'));
+        $checkOut = date('Y-m-d', (int) strtotime($checkIn . ' + ' . $nights . ' days'));
 
         foreach ($entries as $entry) {
             $fromDays = (int) ($entry['FromDays'] ?? 0);

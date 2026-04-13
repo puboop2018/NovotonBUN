@@ -90,7 +90,7 @@ class GuestDataNormalizer implements GuestDataNormalizerInterface
     public function toJson(array|string $data): string
     {
         $normalized = $this->normalize($data);
-        return !empty($normalized) ? json_encode($normalized) : '{}';
+        return !empty($normalized) ? (string) json_encode($normalized) : '{}';
     }
 
     /**

@@ -311,7 +311,7 @@ class PriceInfoFormatter
         }
 
         foreach ($seasonAgeTypes as $spAge) {
-            $spNorm = strtoupper(trim(preg_replace('/\s+/', ' ', str_replace(',', '.', $spAge))));
+            $spNorm = strtoupper(trim((string) preg_replace('/\s+/', ' ', str_replace(',', '.', (string) $spAge))));
             if ($feeNorm === $spNorm) {
                 return true;
             }
@@ -351,7 +351,7 @@ class PriceInfoFormatter
 
     /**
      * Create error result
-     * @param list<string> $debugLog
+     * @param list<array{time: string, message: string, data?: mixed}|string> $debugLog
      * @return array<string, mixed>
      */
     public static function errorResult(string $message, array $debugLog = [], bool $debug = false): array

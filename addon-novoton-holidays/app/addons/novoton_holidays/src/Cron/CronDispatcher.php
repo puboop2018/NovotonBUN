@@ -47,7 +47,7 @@ class CronDispatcher implements CronDispatcherInterface
 
         $namespace = 'Tygh\\Addons\\NovotonHolidays\\Cron\\Commands\\';
 
-        foreach (glob($commandsDir . '*Command.php') as $file) {
+        foreach (glob($commandsDir . '*Command.php') ?: [] as $file) {
             $className = $namespace . basename($file, '.php');
 
             if (!class_exists($className)) {

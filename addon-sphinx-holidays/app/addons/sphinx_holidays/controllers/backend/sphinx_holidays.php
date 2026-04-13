@@ -278,7 +278,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $hotelRepo->updateImages(
                             (string) $hotel['hotel_id'],
                             $imageUrls[0],
-                            json_encode($fresh['images'])
+                            (string) json_encode($fresh['images'])
                         );
                     }
                 }

@@ -585,7 +585,7 @@ class PriceInfoParser
             ];
         }
 
-        return $result;
+        return array_values($result);
     }
 
     private function log(string $message, mixed $data = null): void

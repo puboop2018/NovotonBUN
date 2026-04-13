@@ -126,7 +126,7 @@ class DateHelper
      */
     public static function getCheckOutDate(string $checkIn, int $nights): string
     {
-        return date('Y-m-d', strtotime($checkIn . ' + ' . $nights . ' days'));
+        return date('Y-m-d', (int) strtotime($checkIn . ' + ' . $nights . ' days'));
     }
 
     /**
@@ -142,7 +142,7 @@ class DateHelper
      */
     public static function isToday(string $date): bool
     {
-        return date('Y-m-d', strtotime($date)) === date('Y-m-d');
+        return date('Y-m-d', (int) strtotime($date)) === date('Y-m-d');
     }
 
     /**

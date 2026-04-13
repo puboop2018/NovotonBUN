@@ -38,12 +38,12 @@ class PackageRouteSyncCommand extends AbstractSyncCommand
 
         $departureIds = [];
         if (!empty($params['departure_ids'])) {
-            $departureIds = array_map('intval', array_filter(explode(',', $params['departure_ids'])));
+            $departureIds = array_values(array_map('intval', array_filter(explode(',', $params['departure_ids']))));
         }
 
         $destinationIds = [];
         if (!empty($params['destination_ids'])) {
-            $destinationIds = array_map('intval', array_filter(explode(',', $params['destination_ids'])));
+            $destinationIds = array_values(array_map('intval', array_filter(explode(',', $params['destination_ids']))));
         }
 
         $stats = $service->sync($departureIds, $destinationIds);

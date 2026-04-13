@@ -32,7 +32,7 @@ class PriceInfoSync
     {
         $this->api = $api ?? new NovotonApi();
         $this->defaultCountry = ConfigProvider::getDefaultCountry();
-        $this->productPrefixes = ConfigProvider::getProductCodePrefixes();
+        $this->productPrefixes = array_values(ConfigProvider::getProductCodePrefixes());
     }
 
     /**
@@ -94,7 +94,7 @@ class PriceInfoSync
     /**
      * Sync priceinfo for a single product
      * V3: Writes priceinfo to novoton_hotel_packages table
-     * @param array<string, int|list<string>> $stats
+     * @param array{total: int, updated: list<string>, failed: list<string>, no_data: list<string>, missing: list<string>, errors?: list<string>, duration?: string} $stats
      */
     public function syncProductPrices(int $productId, array &$stats): bool
     {
@@ -129,7 +129,7 @@ class PriceInfoSync
             }
 
             // Convert to array
-            $hotelData = json_decode(json_encode($hotelInfo), true);
+            $hotelData = json_decode((string) json_encode($hotelInfo), true);
 
             // Normalize packages array
             if (isset($hotelData['packages']['IdCont'])) {
@@ -160,7 +160,7 @@ class PriceInfoSync
                 }
 
                 // Convert to array for JSON storage
-                $priceData = json_decode(json_encode($priceInfo), true);
+                $priceData = json_decode((string) json_encode($priceInfo), true);
 
                 // V3: Save raw data to novoton_hotel_packages table
                 // Flag for recomputation by compute_prices cron
@@ -295,7 +295,7 @@ class PriceInfoSync
     /**
      * Check for products in API but not in CS-Cart
      * Optimized: Fetches all matching products once instead of querying per hotel
-     * @param array<string, int|list<string>> $stats
+     * @param array{total: int, updated: list<string>, failed: list<string>, no_data: list<string>, missing: list<string>, errors?: list<string>, duration?: string} $stats
      */
     private function checkMissingProducts(array &$stats): void
     {

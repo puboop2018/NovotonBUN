@@ -72,7 +72,7 @@ use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
     $children_ages  = trim($bookingData['children_ages'] ?? '');
 
     $check_out = !empty($departure_date) && $duration_days > 0
-        ? date('Y-m-d', strtotime($departure_date . " + {$duration_days} days"))
+        ? date('Y-m-d', (int) strtotime($departure_date . " + {$duration_days} days"))
         : $departure_date;
     $nights = max(0, $duration_days - 1);
 

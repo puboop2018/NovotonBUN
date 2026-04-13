@@ -34,7 +34,7 @@ class CacheEndpointService implements CacheEndpointServiceInterface
     #[\Override]
     public function getHotelDeals(array $filters = []): array
     {
-        $cacheKey = 'deals:hotels:' . md5(json_encode($filters));
+        $cacheKey = 'deals:hotels:' . md5((string) json_encode($filters));
         /** @var list<array<string, mixed>>|null $cached */
         $cached = CacheService::get($cacheKey);
         if ($cached !== null) {
@@ -64,7 +64,7 @@ class CacheEndpointService implements CacheEndpointServiceInterface
     #[\Override]
     public function getPackageDeals(array $filters = []): array
     {
-        $cacheKey = 'deals:packages:' . md5(json_encode($filters));
+        $cacheKey = 'deals:packages:' . md5((string) json_encode($filters));
         /** @var list<array<string, mixed>>|null $cached */
         $cached = CacheService::get($cacheKey);
         if ($cached !== null) {

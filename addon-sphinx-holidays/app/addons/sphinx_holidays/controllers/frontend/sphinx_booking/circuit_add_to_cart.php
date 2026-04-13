@@ -110,7 +110,7 @@ use Tygh\Addons\SphinxHolidays\Services\Container;
     }
 
     $check_out = !empty($departure_date) && $duration_days > 0
-        ? date('Y-m-d', strtotime($departure_date . " + {$duration_days} days"))
+        ? date('Y-m-d', (int) strtotime($departure_date . " + {$duration_days} days"))
         : '';
 
     // Build + persist booking record

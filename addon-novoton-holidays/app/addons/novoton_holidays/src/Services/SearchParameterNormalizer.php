@@ -44,7 +44,7 @@ class SearchParameterNormalizer
 
         // ── Check-out ────────────────────────────────────────────────
         $checkOut = !empty($checkIn)
-            ? date('Y-m-d', strtotime($checkIn . ' +' . $nights . ' days'))
+            ? date('Y-m-d', (int) strtotime($checkIn . ' +' . $nights . ' days'))
             : '';
 
         // ── Meal plan ────────────────────────────────────────────────
@@ -176,7 +176,7 @@ class SearchParameterNormalizer
                 $roomsData[$idx]['children']     = !empty($cleanAges) ? count($cleanAges) : (int) ($room['children'] ?? 0);
                 $roomsData[$idx]['childrenAges'] = $cleanAges;
             }
-            return $roomsData;
+            return array_values($roomsData);
         }
 
         // Fallback: build single room from scalar params

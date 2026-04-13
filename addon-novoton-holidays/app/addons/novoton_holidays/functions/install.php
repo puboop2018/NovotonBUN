@@ -709,7 +709,7 @@ function fn_novoton_holidays_remove_theme_presets(): void
         if (isset($manifest['default']) && is_array($manifest['default'])) {
             $key = array_search('novoton_default', $manifest['default'], true);
             if ($key !== false) {
-                array_splice($manifest['default'], $key, 1);
+                array_splice($manifest['default'], (int) $key, 1);
                 $changed = true;
             }
         }

@@ -48,7 +48,7 @@ class HotelSync
         $this->api = $api;
         $this->adultOnlyDetector = new AdultOnlyDetector();
         $this->propertyTypeDetector = new PropertyTypeDetector();
-        $this->selectedCountries = ConfigProvider::getSelectedCountries();
+        $this->selectedCountries = array_values(ConfigProvider::getSelectedCountries());
 
         $this->stats = [
             'hotels_processed' => 0,

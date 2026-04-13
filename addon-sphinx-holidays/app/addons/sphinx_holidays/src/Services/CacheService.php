@@ -84,6 +84,6 @@ class CacheService implements CacheServiceInterface
     {
         // Sort for deterministic key regardless of param order
         ksort($params);
-        return 'search:' . md5(json_encode($params));
+        return 'search:' . md5((string) json_encode($params));
     }
 }

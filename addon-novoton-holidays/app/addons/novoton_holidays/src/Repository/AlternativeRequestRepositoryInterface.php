@@ -21,10 +21,10 @@ interface AlternativeRequestRepositoryInterface
     public function markNotified(int $request_id): bool;
     public function expireOlderThan(int $days = 30): int;
     public function delete(int $request_id): bool;
-    /** @param array<string, mixed> $params */
+    /** @param list<mixed> $params */
     public function countFiltered(string $whereSql = '', array $params = []): int;
     /**
-     * @param array<string, mixed> $params
+     * @param list<mixed> $params
      * @return list<array<string, mixed>>
      */
     public function findFiltered(string $whereSql = '', array $params = [], int $limit = 30, int $offset = 0): array;
