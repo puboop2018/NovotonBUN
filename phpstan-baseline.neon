@@ -7999,141 +7999,15 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingService.php
 
 		-
-			message: '#^Argument of an invalid type mixed supplied for foreach, only iterables are supported\.$#'
-			identifier: foreach.nonIterable
+			message: '#^Call to function is_array\(\) with array\<string, mixed\> will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
 			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingSubmissionService.php
-
-		-
-			message: '#^Binary operation "\+" between mixed and 1 results in an error\.$#'
-			identifier: binaryOp.invalid
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingSubmissionService.php
-
-		-
-			message: '#^Binary operation "\." between mixed and ''\|'' results in an error\.$#'
-			identifier: binaryOp.invalid
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingSubmissionService.php
-
-		-
-			message: '#^Binary operation "\." between non\-falsy\-string and mixed results in an error\.$#'
-			identifier: binaryOp.invalid
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingSubmissionService.php
-
-		-
-			message: '#^Cannot access offset ''adults'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingSubmissionService.php
-
-		-
-			message: '#^Cannot access offset ''board_id'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 3
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingSubmissionService.php
-
-		-
-			message: '#^Cannot access offset ''board_name'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingSubmissionService.php
-
-		-
-			message: '#^Cannot access offset ''children'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingSubmissionService.php
-
-		-
-			message: '#^Cannot access offset ''childrenAges'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingSubmissionService.php
-
-		-
-			message: '#^Cannot access offset ''email'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingSubmissionService.php
-
-		-
-			message: '#^Cannot access offset ''extra'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingSubmissionService.php
-
-		-
-			message: '#^Cannot access offset ''novoton_booking'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingSubmissionService.php
-
-		-
-			message: '#^Cannot access offset ''novoton_booking_id'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingSubmissionService.php
-
-		-
-			message: '#^Cannot access offset ''original_index'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingSubmissionService.php
-
-		-
-			message: '#^Cannot access offset ''price'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingSubmissionService.php
-
-		-
-			message: '#^Cannot access offset ''room_id'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingSubmissionService.php
-
-		-
-			message: '#^Cannot access offset ''room_name'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingSubmissionService.php
-
-		-
-			message: '#^Cannot access offset ''room_type_display'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingSubmissionService.php
-
-		-
-			message: '#^Cannot access offset ''user_id'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingSubmissionService.php
-
-		-
-			message: '#^Cannot access offset 0 on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 6
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingSubmissionService.php
-
-		-
-			message: '#^Cannot access offset int\<0, max\> on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingSubmissionService.php
 
 		-
 			message: '#^Cannot cast mixed to float\.$#'
 			identifier: cast.double
-			count: 6
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingSubmissionService.php
-
-		-
-			message: '#^Cannot cast mixed to int\.$#'
-			identifier: cast.int
-			count: 11
+			count: 2
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingSubmissionService.php
 
 		-
@@ -8143,49 +8017,19 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingSubmissionService.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\BookingSubmissionService\:\:extractGuestName\(\) should return string but returns mixed\.$#'
-			identifier: return.type
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingSubmissionService.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\BookingSubmissionService\:\:groupRoomsByPackage\(\) should return array\<string, array\{package_name\: string, check_in\: string, check_out\: string, rooms\: list\<array\<string, mixed\>\>\}\> but returns array\<non\-falsy\-string, array\{package_name\: mixed, check_in\: mixed, check_out\: mixed, rooms\: non\-empty\-list\<non\-empty\-array\<string, mixed\>\>\}\>\.$#'
-			identifier: return.type
+			message: '#^Offset ''products'' on non\-empty\-array\<string, mixed\> on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingSubmissionService.php
 
 		-
-			message: '#^Parameter \#1 \$array of function array_column expects array, mixed given\.$#'
-			identifier: argument.type
-			count: 3
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingSubmissionService.php
-
-		-
-			message: '#^Parameter \#1 \$bookingData of method Tygh\\Addons\\NovotonHolidays\\Services\\BookingSubmissionService\:\:hydrateBookingFromDb\(\) expects array\<string, mixed\>, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingSubmissionService.php
-
-		-
-			message: '#^Parameter \#1 \$datetime of class DateTime constructor expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingSubmissionService.php
-
-		-
-			message: '#^Parameter \#1 \$hotel_id of method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepositoryInterface\:\:findUnassignedByHotelDates\(\) expects string, mixed given\.$#'
-			identifier: argument.type
+			message: '#^PHPDoc tag @var with type array\<string, mixed\> is not subtype of native type hasOffset\(string\)\.$#'
+			identifier: varTag.nativeType
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingSubmissionService.php
 
 		-
 			message: '#^Parameter \#1 \$raw of method Tygh\\Addons\\TravelCore\\Services\\GuestDataNormalizer\:\:normalize\(\) expects array\<string, mixed\>\|string, mixed given\.$#'
-			identifier: argument.type
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingSubmissionService.php
-
-		-
-			message: '#^Parameter \#1 \$value of function count expects array\|Countable, mixed given\.$#'
 			identifier: argument.type
 			count: 2
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingSubmissionService.php
@@ -8203,49 +8047,19 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingSubmissionService.php
 
 		-
-			message: '#^Parameter \#2 \$check_in of method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepositoryInterface\:\:findUnassignedByHotelDates\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingSubmissionService.php
-
-		-
 			message: '#^Parameter \#2 \$guestsData of method Tygh\\Addons\\NovotonHolidays\\Services\\BookingSubmissionService\:\:buildGroupGuestsAndRooms\(\) expects array\<int\|string, array\<string, mixed\>\>, array\<string, mixed\> given\.$#'
 			identifier: argument.type
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingSubmissionService.php
 
 		-
-			message: '#^Parameter \#2 \$hotel_id of method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepositoryInterface\:\:findIdByOrderAndHotelDates\(\) expects string, mixed given\.$#'
+			message: '#^Parameter \#2 \$product of method Tygh\\Addons\\NovotonHolidays\\Services\\BookingSubmissionService\:\:resolveFinalPrice\(\) expects array\<string, mixed\>, array\<mixed\> given\.$#'
 			identifier: argument.type
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingSubmissionService.php
 
 		-
-			message: '#^Parameter \#2 \$product of method Tygh\\Addons\\NovotonHolidays\\Services\\BookingSubmissionService\:\:resolveFinalPrice\(\) expects array\<string, mixed\>, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingSubmissionService.php
-
-		-
-			message: '#^Parameter \#3 \$check_in of method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepositoryInterface\:\:findIdByOrderAndHotelDates\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingSubmissionService.php
-
-		-
-			message: '#^Parameter \#3 \$check_out of method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepositoryInterface\:\:findUnassignedByHotelDates\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingSubmissionService.php
-
-		-
-			message: '#^Parameter \#4 \$check_out of method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepositoryInterface\:\:findIdByOrderAndHotelDates\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingSubmissionService.php
-
-		-
-			message: '#^Parameter \#4 \$product of method Tygh\\Addons\\NovotonHolidays\\Services\\BookingSubmissionService\:\:buildBookingRecord\(\) expects array\<string, mixed\>, mixed given\.$#'
+			message: '#^Parameter \#4 \$product of method Tygh\\Addons\\NovotonHolidays\\Services\\BookingSubmissionService\:\:buildBookingRecord\(\) expects array\<string, mixed\>, array\<mixed\> given\.$#'
 			identifier: argument.type
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingSubmissionService.php

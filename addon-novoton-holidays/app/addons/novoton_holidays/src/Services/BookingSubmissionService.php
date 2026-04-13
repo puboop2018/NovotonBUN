@@ -67,13 +67,20 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
         $debugLogging  = ConfigProvider::isDebugLogging();
         $orderComment  = trim((string) ($cart['notes'] ?? ''));
 
-        foreach ($cart['products'] as $cartId => $product) {
-            if (empty($product['extra']['novoton_booking'])) {
+        $cartProducts = is_array($cart['products'] ?? null) ? $cart['products'] : [];
+        foreach ($cartProducts as $cartId => $product) {
+            if (!is_array($product)) {
+                continue;
+            }
+            /** @var array<string, mixed> $extra */
+            $extra = is_array($product['extra'] ?? null) ? $product['extra'] : [];
+            if (empty($extra['novoton_booking'])) {
                 continue;
             }
 
-            $bookingData       = $product['extra'];
-            $originalBookingId = (int) ($bookingData['novoton_booking_id'] ?? 0);
+            /** @var array<string, mixed> $bookingData */
+            $bookingData       = $extra;
+            $originalBookingId = PriceInfoFormatter::toInt($bookingData['novoton_booking_id'] ?? 0);
 
             // 1. Hydrate booking data from DB (single source of truth)
             $bookingData = $this->hydrateBookingFromDb($bookingData, $originalBookingId, $debugLogging);
@@ -289,17 +296,17 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
      */
     private function resolveFinalPrice(array $bookingData, array $product): float
     {
-        $price = (float) ($bookingData['total_price'] ?? 0);
+        $price = PriceInfoFormatter::toFloat($bookingData['total_price'] ?? 0);
         if ($price > 0) {
             return $price;
         }
 
-        $price = (float) ($product['price'] ?? 0);
+        $price = PriceInfoFormatter::toFloat($product['price'] ?? 0);
         if ($price > 0) {
             return $price;
         }
 
-        return (float) ($product['base_price'] ?? 0);
+        return PriceInfoFormatter::toFloat($product['base_price'] ?? 0);
     }
 
     /**
@@ -329,18 +336,18 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
             }
 
             $roomsData = [[
-                'room_id'           => $bookingData['room_id'],
-                'room_name'         => $bookingData['room_type'] ?? $bookingData['room_name'] ?? $bookingData['room_id'],
-                'room_type_display' => $bookingData['room_type'] ?? $bookingData['room_name'] ?? $bookingData['room_id'],
-                'board_id'          => $bookingData['board_id'],
-                'board_name'        => $bookingData['board_name'] ?? $bookingData['board_id'],
-                'package_name'      => $bookingData['package_name'] ?? '',
-                'check_in'          => $bookingData['check_in'],
-                'check_out'         => $bookingData['check_out'],
-                'adults'            => (int) ($bookingData['adults'] ?? 2),
-                'children'          => (int) ($bookingData['children'] ?? 0),
+                'room_id'           => PriceInfoFormatter::toScalar($bookingData['room_id'] ?? ''),
+                'room_name'         => PriceInfoFormatter::toScalar($bookingData['room_type'] ?? $bookingData['room_name'] ?? $bookingData['room_id'] ?? ''),
+                'room_type_display' => PriceInfoFormatter::toScalar($bookingData['room_type'] ?? $bookingData['room_name'] ?? $bookingData['room_id'] ?? ''),
+                'board_id'          => PriceInfoFormatter::toScalar($bookingData['board_id'] ?? ''),
+                'board_name'        => PriceInfoFormatter::toScalar($bookingData['board_name'] ?? $bookingData['board_id'] ?? ''),
+                'package_name'      => PriceInfoFormatter::toScalar($bookingData['package_name'] ?? ''),
+                'check_in'          => PriceInfoFormatter::toScalar($bookingData['check_in'] ?? ''),
+                'check_out'         => PriceInfoFormatter::toScalar($bookingData['check_out'] ?? ''),
+                'adults'            => PriceInfoFormatter::toInt($bookingData['adults'] ?? 2),
+                'children'          => PriceInfoFormatter::toInt($bookingData['children'] ?? 0),
                 'childrenAges'      => $childrenAges,
-                'price'             => $bookingData['final_price'],
+                'price'             => PriceInfoFormatter::toFloat($bookingData['final_price'] ?? 0),
             ]];
         }
 
@@ -371,7 +378,7 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
         }
 
         // Fallback 1: re-fetch from DB by booking_id
-        $bookingId = (int) ($bookingData['novoton_booking_id'] ?? 0);
+        $bookingId = PriceInfoFormatter::toInt($bookingData['novoton_booking_id'] ?? 0);
         if ($bookingId > 0) {
             $dbGuests = $this->bookingRepo->getGuestsData($bookingId);
             if (!empty($dbGuests)) {
@@ -391,9 +398,9 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
 
         // Fallback 2: match unassigned pending booking by hotel + dates
         $existing = $this->bookingRepo->findUnassignedByHotelDates(
-            $bookingData['hotel_id'] ?? '',
-            $bookingData['check_in'] ?? '',
-            $bookingData['check_out'] ?? ''
+            PriceInfoFormatter::toScalar($bookingData['hotel_id'] ?? ''),
+            PriceInfoFormatter::toScalar($bookingData['check_in'] ?? ''),
+            PriceInfoFormatter::toScalar($bookingData['check_out'] ?? '')
         );
         if (!empty($existing['guests_data'])) {
             $guestsData = $this->guestDataNormalizer->normalize($existing['guests_data']);
@@ -422,14 +429,17 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
     private function groupRoomsByPackage(array $roomsData, array $bookingData): array
     {
         $groups          = [];
-        $defaultPackage  = $bookingData['package_name'] ?? '';
-        $defaultCheckIn  = $bookingData['check_in'];
-        $defaultCheckOut = $bookingData['check_out'];
+        $defaultPackage  = PriceInfoFormatter::toScalar($bookingData['package_name'] ?? '');
+        $defaultCheckIn  = PriceInfoFormatter::toScalar($bookingData['check_in'] ?? '');
+        $defaultCheckOut = PriceInfoFormatter::toScalar($bookingData['check_out'] ?? '');
 
         foreach ($roomsData as $roomIdx => $room) {
-            $package  = $room['package_name'] ?? $defaultPackage;
-            $checkIn  = $room['check_in']     ?? $defaultCheckIn;
-            $checkOut = $room['check_out']    ?? $defaultCheckOut;
+            if (!is_array($room)) {
+                continue;
+            }
+            $package  = PriceInfoFormatter::toScalar($room['package_name'] ?? $defaultPackage);
+            $checkIn  = PriceInfoFormatter::toScalar($room['check_in']     ?? $defaultCheckIn);
+            $checkOut = PriceInfoFormatter::toScalar($room['check_out']    ?? $defaultCheckOut);
 
             $groupKey = md5($package . '|' . $checkIn . '|' . $checkOut);
 
@@ -472,12 +482,16 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
         $totalApiPrice   = 0.0;
         $totalGroupPrice = 0.0;
 
-        foreach ($group['rooms'] as $room) {
-            $roomIdx      = $room['original_index'];
+        $groupRooms = is_array($group['rooms'] ?? null) ? $group['rooms'] : [];
+        foreach ($groupRooms as $room) {
+            if (!is_array($room)) {
+                continue;
+            }
+            $roomIdx      = PriceInfoFormatter::toInt($room['original_index'] ?? 0);
             $roomNum      = $roomIdx + 1;
-            $adultsCount  = (int) ($room['adults']   ?? 2);
-            $childrenCount = (int) ($room['children'] ?? 0);
-            $childrenAges = $room['childrenAges'] ?? [];
+            $adultsCount  = PriceInfoFormatter::toInt($room['adults']   ?? 2);
+            $childrenCount = PriceInfoFormatter::toInt($room['children'] ?? 0);
+            $childrenAges = is_array($room['childrenAges'] ?? null) ? $room['childrenAges'] : [];
             $roomGuests   = [];
 
             // Adults
@@ -487,14 +501,15 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
 
                 if (empty($name)) {
                     $name = ($roomNum === 1 && $i === 1 && !empty($bookingData['holder_name']))
-                        ? $bookingData['holder_name']
+                        ? PriceInfoFormatter::toScalar($bookingData['holder_name'])
                         : "Adult {$i} Room {$roomNum}";
                 }
 
+                $guestEntry = is_array($guestsData[$guestKey] ?? null) ? $guestsData[$guestKey] : [];
                 $guest = [
                     'name'     => $name,
-                    'birthday' => $guestsData[$guestKey]['birthday'] ?? '',
-                    'age'      => (int) ($guestsData[$guestKey]['age'] ?? 30),
+                    'birthday' => PriceInfoFormatter::toScalar($guestEntry['birthday'] ?? ''),
+                    'age'      => PriceInfoFormatter::toInt($guestEntry['age'] ?? 30),
                     'type'     => 'adult',
                     'room'     => $roomNum,
                 ];
@@ -511,11 +526,12 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
                     $name = "Child {$i} Room {$roomNum}";
                 }
 
+                $childEntry = is_array($guestsData[$guestKey] ?? null) ? $guestsData[$guestKey] : [];
                 $age = 0;
-                if (isset($guestsData[$guestKey]['age'])) {
-                    $age = (int) $guestsData[$guestKey]['age'];
+                if (isset($childEntry['age'])) {
+                    $age = PriceInfoFormatter::toInt($childEntry['age']);
                 } elseif (isset($childrenAges[$i - 1])) {
-                    $age = (int) $childrenAges[$i - 1];
+                    $age = PriceInfoFormatter::toInt($childrenAges[$i - 1]);
                 }
 
                 if ($age <= 0) {
@@ -528,7 +544,7 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
 
                 $guest = [
                     'name'     => $name,
-                    'birthday' => $guestsData[$guestKey]['birthday'] ?? '',
+                    'birthday' => PriceInfoFormatter::toScalar($childEntry['birthday'] ?? ''),
                     'age'      => $age,
                     'type'     => 'child',
                     'room'     => $roomNum,
@@ -538,14 +554,14 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
             }
 
             // Price: reverse commission to get API (net) price
-            $roomPriceWithCommission = (float) ($room['price'] ?? 0);
+            $roomPriceWithCommission = PriceInfoFormatter::toFloat($room['price'] ?? 0);
             $roomApiPrice            = $roomPriceWithCommission / (1 + ($commission / 100));
             $totalApiPrice   += $roomApiPrice;
             $totalGroupPrice += $roomPriceWithCommission;
 
             $apiRooms[] = [
-                'room_id'  => $room['room_id']  ?? $bookingData['room_id'],
-                'board_id' => $room['board_id'] ?? $bookingData['board_id'],
+                'room_id'  => PriceInfoFormatter::toScalar($room['room_id']  ?? $bookingData['room_id'] ?? ''),
+                'board_id' => PriceInfoFormatter::toScalar($room['board_id'] ?? $bookingData['board_id'] ?? ''),
                 'guests'   => $roomGuests,
             ];
         }
@@ -566,12 +582,15 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
         }
 
         $entry = $guestsData[$guestKey];
+        if (!is_array($entry)) {
+            return '';
+        }
 
         if (!empty($entry['api_name'])) {
-            return $entry['api_name'];
+            return PriceInfoFormatter::toScalar($entry['api_name']);
         }
         if (!empty($entry['name'])) {
-            return $entry['name'];
+            return PriceInfoFormatter::toScalar($entry['name']);
         }
 
         return '';
@@ -597,12 +616,16 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
     ): array {
         $suffix = $totalGroups > 1 ? "-G{$groupNum}" : '';
 
+        $firstGuestName = (is_array($allGuests[0] ?? null) && !empty($allGuests[0]['name']))
+            ? PriceInfoFormatter::toScalar($allGuests[0]['name'])
+            : PriceInfoFormatter::toScalar($bookingData['holder_name'] ?? 'Guest');
+
         $apiData = [
-            'hotel_id'     => $bookingData['hotel_id'],
-            'package_name' => $group['package_name'],
-            'check_in'     => $group['check_in'],
-            'check_out'    => $group['check_out'],
-            'holder'       => $allGuests[0]['name'] ?? $bookingData['holder_name'] ?? 'Guest',
+            'hotel_id'     => PriceInfoFormatter::toScalar($bookingData['hotel_id'] ?? ''),
+            'package_name' => PriceInfoFormatter::toScalar($group['package_name'] ?? ''),
+            'check_in'     => PriceInfoFormatter::toScalar($group['check_in'] ?? ''),
+            'check_out'    => PriceInfoFormatter::toScalar($group['check_out'] ?? ''),
+            'holder'       => $firstGuestName,
             'guests'       => $allGuests,
             'rooms'        => $apiRooms,
             'order_num'    => $orderId . $suffix,
@@ -611,9 +634,11 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
         ];
 
         // Single-room shortcut
-        if (count($group['rooms']) === 1) {
-            $apiData['room_id']  = $group['rooms'][0]['room_id']  ?? $bookingData['room_id'];
-            $apiData['board_id'] = $group['rooms'][0]['board_id'] ?? $bookingData['board_id'];
+        $groupRoomsArr = is_array($group['rooms'] ?? null) ? $group['rooms'] : [];
+        if (count($groupRoomsArr) === 1) {
+            $firstGroupRoom = is_array($groupRoomsArr[0] ?? null) ? $groupRoomsArr[0] : [];
+            $apiData['room_id']  = PriceInfoFormatter::toScalar($firstGroupRoom['room_id']  ?? $bookingData['room_id'] ?? '');
+            $apiData['board_id'] = PriceInfoFormatter::toScalar($firstGroupRoom['board_id'] ?? $bookingData['board_id'] ?? '');
         }
 
         return $apiData;
@@ -642,12 +667,14 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
         array $apiData,
         bool  $disableApi
     ): array {
-        $groupRooms = $group['rooms'];
+        $groupRooms = is_array($group['rooms'] ?? null) ? $group['rooms'] : [];
 
         // Calculate nights safely
+        $groupCheckIn = PriceInfoFormatter::toScalar($group['check_in'] ?? '');
+        $groupCheckOut = PriceInfoFormatter::toScalar($group['check_out'] ?? '');
         try {
-            $checkInDate  = new \DateTime($group['check_in']);
-            $checkOutDate = new \DateTime($group['check_out']);
+            $checkInDate  = new \DateTime($groupCheckIn);
+            $checkOutDate = new \DateTime($groupCheckOut);
             $nights       = $checkInDate->diff($checkOutDate)->days;
         } catch (\Exception $e) {
             fn_log_event('general', 'error', [
@@ -656,36 +683,43 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
                 'check_out' => $group['check_out'] ?? '',
                 'error'     => $e->getMessage(),
             ]);
-            $nights = (int) ($bookingData['nights'] ?? 7);
+            $nights = PriceInfoFormatter::toInt($bookingData['nights'] ?? 7);
         }
 
         $orderInfo   = fn_get_order_info($orderId);
-        $orderUserId = (int) ($orderInfo['user_id'] ?? 0);
-        $orderEmail  = $orderInfo['email'] ?? '';
+        /** @var array<string, mixed> $orderInfo */
+        $orderInfo = is_array($orderInfo) ? $orderInfo : [];
+        $orderUserId = PriceInfoFormatter::toInt($orderInfo['user_id'] ?? 0);
+        $orderEmail  = PriceInfoFormatter::toScalar($orderInfo['email'] ?? '');
+
+        $firstGroupRoom = is_array($groupRooms[0] ?? null) ? $groupRooms[0] : [];
+        $firstGuestName = (is_array($allGuests[0] ?? null) && !empty($allGuests[0]['name']))
+            ? PriceInfoFormatter::toScalar($allGuests[0]['name'])
+            : PriceInfoFormatter::toScalar($bookingData['holder_name'] ?? '');
 
         return [
             'order_id'         => $orderId,
-            'product_id'       => $product['product_id'],
-            'item_id'          => $product['item_id'] ?? '',
-            'hotel_id'         => $bookingData['hotel_id'],
-            'hotel_name'       => $bookingData['hotel_name'] ?? '',
-            'package_name'     => $group['package_name'],
+            'product_id'       => PriceInfoFormatter::toScalar($product['product_id'] ?? ''),
+            'item_id'          => PriceInfoFormatter::toScalar($product['item_id'] ?? ''),
+            'hotel_id'         => PriceInfoFormatter::toScalar($bookingData['hotel_id'] ?? ''),
+            'hotel_name'       => PriceInfoFormatter::toScalar($bookingData['hotel_name'] ?? ''),
+            'package_name'     => PriceInfoFormatter::toScalar($group['package_name'] ?? ''),
             'room_id'          => implode(', ', array_column($groupRooms, 'room_id')),
-            'room_type'        => $groupRooms[0]['room_type_display'] ?? $groupRooms[0]['room_name'] ?? '',
-            'board_id'         => $groupRooms[0]['board_id'] ?? $bookingData['board_id'],
-            'board_name'       => $groupRooms[0]['board_name'] ?? $bookingData['board_name'] ?? '',
-            'check_in'         => $group['check_in'],
-            'check_out'        => $group['check_out'],
+            'room_type'        => PriceInfoFormatter::toScalar($firstGroupRoom['room_type_display'] ?? $firstGroupRoom['room_name'] ?? ''),
+            'board_id'         => PriceInfoFormatter::toScalar($firstGroupRoom['board_id'] ?? $bookingData['board_id'] ?? ''),
+            'board_name'       => PriceInfoFormatter::toScalar($firstGroupRoom['board_name'] ?? $bookingData['board_name'] ?? ''),
+            'check_in'         => $groupCheckIn,
+            'check_out'        => $groupCheckOut,
             'nights'           => $nights,
             'adults'           => array_sum(array_column($groupRooms, 'adults')),
             'children'         => array_sum(array_column($groupRooms, 'children')),
-            'children_ages'    => $bookingData['children_ages'] ?? '',
+            'children_ages'    => PriceInfoFormatter::toScalar($bookingData['children_ages'] ?? ''),
             'num_rooms'        => count($groupRooms),
             'room_number'      => $groupNum,
             'total_rooms'      => $totalGroups,
             'rooms_data'       => json_encode($groupRooms),
             'guest_name'       => implode(', ', array_column($allGuests, 'name')),
-            'holder_name'      => $allGuests[0]['name'] ?? $bookingData['holder_name'] ?? '',
+            'holder_name'      => $firstGuestName,
             'guests_data'      => json_encode($allGuests),
             'base_price'       => $totalApiPrice,
             'total_price'      => $totalGroupPrice,
@@ -725,7 +759,10 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
 
         // Dedup: find existing booking for this order + hotel + dates
         $existingId = $this->bookingRepo->findIdByOrderAndHotelDates(
-            $orderId, $record['hotel_id'], $record['check_in'], $record['check_out']
+            $orderId,
+            PriceInfoFormatter::toScalar($record['hotel_id'] ?? ''),
+            PriceInfoFormatter::toScalar($record['check_in'] ?? ''),
+            PriceInfoFormatter::toScalar($record['check_out'] ?? '')
         );
 
         if ($existingId) {
