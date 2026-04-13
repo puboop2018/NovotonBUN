@@ -55,15 +55,17 @@ class HotelAvailabilitySearcher implements HotelAvailabilitySearcherInterface
     #[\Override]
     public function search(array $params): array
     {
-        $hotelId  = $params['hotel_id'];
-        $checkIn  = $params['check_in'];
-        $checkOut = $params['check_out'];
-        $nights   = $params['nights'];
-        $adults   = $params['adults'];
-        $children = $params['children'];
-        $mealPlan = $params['meal_plan'];
-        $numRooms = $params['num_rooms'];
-        $roomsData = $params['rooms_data'];
+        $hotelId  = PriceInfoFormatter::toScalar($params['hotel_id']);
+        $checkIn  = PriceInfoFormatter::toScalar($params['check_in']);
+        $checkOut = PriceInfoFormatter::toScalar($params['check_out']);
+        $nights   = PriceInfoFormatter::toInt($params['nights']);
+        $adults   = PriceInfoFormatter::toInt($params['adults']);
+        /** @var list<int> $children */
+        $children = is_array($params['children']) ? $params['children'] : [];
+        $mealPlan = PriceInfoFormatter::toScalar($params['meal_plan']);
+        $numRooms = PriceInfoFormatter::toInt($params['num_rooms']);
+        /** @var array<string, mixed> $roomsData */
+        $roomsData = is_array($params['rooms_data']) ? $params['rooms_data'] : [];
 
         $this->log("=== SEARCH DEBUG ===");
         $this->log("Hotel ID: {$hotelId}");
@@ -158,7 +160,7 @@ class HotelAvailabilitySearcher implements HotelAvailabilitySearcherInterface
     /**
      * @param array<string, mixed> $roomsData
      * @param array<string, mixed> $roomTypeMap
-     * @param array<string, mixed> $rooms
+     * @param list<\SimpleXMLElement> $rooms
      * @return array{results: list<array<string, mixed>>, all_room_results: array<int, list<array<string, mixed>>>, is_multi_room: bool, multi_room_total_options: int, no_availability: bool, max_room_capacity: array<string, int>, early_booking_discounts: list<array<string, mixed>>, early_booking_range: array<string, mixed>}
      */
     private function searchMultiRoom(
@@ -180,10 +182,14 @@ class HotelAvailabilitySearcher implements HotelAvailabilitySearcherInterface
         $roomMeta      = []; // roomKey => occupancy metadata
 
         foreach ($roomsData as $roomIdx => $roomOccupancy) {
-            $roomNum       = (int) $roomIdx + 1;
-            $roomAdults    = (int) ($roomOccupancy['adults'] ?? 2);
-            $roomChildrenCount = (int) ($roomOccupancy['children'] ?? 0);
-            $roomChildrenAges = $this->cleanChildrenAges($roomOccupancy['childrenAges'] ?? []);
+            $roomNum       = PriceInfoFormatter::toInt($roomIdx) + 1;
+            /** @var array<string, mixed> $roomOccupancy */
+            $roomOccupancy = is_array($roomOccupancy) ? $roomOccupancy : [];
+            $roomAdults    = PriceInfoFormatter::toInt($roomOccupancy['adults'] ?? 2);
+            $roomChildrenCount = PriceInfoFormatter::toInt($roomOccupancy['children'] ?? 0);
+            /** @var list<mixed> $rawChildrenAges */
+            $rawChildrenAges = is_array($roomOccupancy['childrenAges'] ?? null) ? $roomOccupancy['childrenAges'] : [];
+            $roomChildrenAges = $this->cleanChildrenAges($rawChildrenAges);
 
             $this->log("--- Room #{$roomNum}: {$roomAdults} adults, {$roomChildrenCount} children ---");
             if (!empty($roomChildrenAges)) {
@@ -274,7 +280,7 @@ class HotelAvailabilitySearcher implements HotelAvailabilitySearcherInterface
 
     /**
      * @param list<int> $children
-     * @param list<array<string, mixed>> $roomsData
+     * @param array<string, mixed> $roomsData
      * @param array<string, mixed> $roomTypeMap
      * @return array{results: list<array<string, mixed>>, all_room_results: array<int, list<array<string, mixed>>>, is_multi_room: bool, multi_room_total_options: int, no_availability: bool, max_room_capacity: array<string, int>, early_booking_discounts: list<array<string, mixed>>, early_booking_range: array<string, mixed>}
      */
@@ -291,8 +297,11 @@ class HotelAvailabilitySearcher implements HotelAvailabilitySearcherInterface
         array  $roomTypeMap
     ): array {
         $singleRoomChildren = $children;
-        if (empty($singleRoomChildren) && !empty($roomsData[0]['childrenAges'])) {
-            $singleRoomChildren = $roomsData[0]['childrenAges'];
+        $firstRoom = reset($roomsData);
+        if (empty($singleRoomChildren) && is_array($firstRoom) && !empty($firstRoom['childrenAges'])) {
+            /** @var list<mixed> $rawAges0 */
+            $rawAges0 = is_array($firstRoom['childrenAges']) ? $firstRoom['childrenAges'] : [];
+            $singleRoomChildren = $this->cleanChildrenAges($rawAges0);
         }
 
         $this->log("=== SINGLE ROOM SEARCH MODE ===");
@@ -339,8 +348,11 @@ class HotelAvailabilitySearcher implements HotelAvailabilitySearcherInterface
             foreach ($results as $r) {
                 $status = $r['is_on_request']
                     ? 'ON REQUEST'
-                    : ($r['rooms_available'] !== null ? "{$r['rooms_available']} rooms" : 'available');
-                $this->log("  -> ADDED: Room={$r['room_id']}, Board={$r['board_id']}, Price={$r['total_price']}€, {$status}");
+                    : ($r['rooms_available'] !== null ? PriceInfoFormatter::toScalar($r['rooms_available']) . ' rooms' : 'available');
+                $rRoomId  = PriceInfoFormatter::toScalar($r['room_id']);
+                $rBoardId = PriceInfoFormatter::toScalar($r['board_id']);
+                $rPrice   = PriceInfoFormatter::toScalar($r['total_price']);
+                $this->log("  -> ADDED: Room={$rRoomId}, Board={$rBoardId}, Price={$rPrice}€, {$status}");
             }
         } else {
             $this->logApiError($api, "  ");
@@ -369,10 +381,11 @@ class HotelAvailabilitySearcher implements HotelAvailabilitySearcherInterface
     // Hotel-info extraction helpers
     // =====================================================================
 
-    /** @return array<string, mixed> */
+    /** @return list<\SimpleXMLElement> */
     private function extractRooms(\SimpleXMLElement $hotelInfo): array
     {
-        return $hotelInfo->xpath('//rooms') ?: [];
+        /** @var list<\SimpleXMLElement> */
+        return array_values($hotelInfo->xpath('//rooms') ?: []);
     }
 
     /** @return list<string> */
@@ -438,7 +451,7 @@ class HotelAvailabilitySearcher implements HotelAvailabilitySearcherInterface
 
     /**
      * @return array<string, mixed>
-     * @param array<string, mixed> $rooms
+     * @param list<\SimpleXMLElement> $rooms
      */
     private function buildRoomTypeMap(array $rooms): array
     {
@@ -466,7 +479,7 @@ class HotelAvailabilitySearcher implements HotelAvailabilitySearcherInterface
     // =====================================================================
 
     /**
-     * @return array<string, mixed>
+     * @return array<string, int>
      * @param list<array<string, mixed>> $results
      */
     private function calculateMaxCapacity(array $results): array
@@ -475,7 +488,8 @@ class HotelAvailabilitySearcher implements HotelAvailabilitySearcherInterface
         $maxChildren = 0;
 
         foreach ($results as $result) {
-            if (preg_match('/(\d+)\+(\d+)/', $result['room_id'], $m)) {
+            $roomId = PriceInfoFormatter::toScalar($result['room_id']);
+            if (preg_match('/(\d+)\+(\d+)/', $roomId, $m)) {
                 $maxAdults   = max($maxAdults, (int) $m[1]);
                 $maxChildren = max($maxChildren, (int) $m[2]);
             }
@@ -502,7 +516,7 @@ class HotelAvailabilitySearcher implements HotelAvailabilitySearcherInterface
         $clean = [];
         foreach ($raw as $age) {
             if ($age !== null && $age !== '' && $age !== 'age_needed') {
-                $clean[] = (int) $age;
+                $clean[] = PriceInfoFormatter::toInt($age);
             }
         }
         return $clean;
@@ -555,12 +569,12 @@ class HotelAvailabilitySearcher implements HotelAvailabilitySearcherInterface
             $cs = $api->getCircuitStatus();
             $this->log("=== API CIRCUIT BREAKER STATUS ===");
             $this->log("Circuit Open: " . ($cs['is_open'] ? 'YES (BLOCKING REQUESTS!)' : 'NO'));
-            $this->log("Failure Count: " . $cs['failure_count'] . "/" . $cs['threshold']);
+            $this->log("Failure Count: " . PriceInfoFormatter::toScalar($cs['failure_count']) . "/" . PriceInfoFormatter::toScalar($cs['threshold']));
             if ($cs['last_failure']) {
-                $this->log("Last Failure: " . $cs['last_failure']);
+                $this->log("Last Failure: " . PriceInfoFormatter::toScalar($cs['last_failure']));
             }
             if ($cs['is_open']) {
-                $this->log("Seconds Until Retry: " . $cs['seconds_until_retry']);
+                $this->log("Seconds Until Retry: " . PriceInfoFormatter::toScalar($cs['seconds_until_retry']));
             }
         }
     }
@@ -616,8 +630,8 @@ class HotelAvailabilitySearcher implements HotelAvailabilitySearcherInterface
         $debugInfo = $api->debugInfo();
         $lastReq = $debugInfo->lastRequestFormatted;
         $this->log("  -> API Request Params: hotel_id={$hotelId}, check_in="
-            . ($lastReq['check_in'] ?? '') . ", check_out=" . ($lastReq['check_out'] ?? '')
-            . ", adults=" . ($priceParams['adults'] ?? 2));
+            . PriceInfoFormatter::toScalar($lastReq['check_in'] ?? '') . ", check_out=" . PriceInfoFormatter::toScalar($lastReq['check_out'] ?? '')
+            . ", adults=" . PriceInfoFormatter::toScalar($priceParams['adults'] ?? 2));
         $this->log("  -> Children ages: " . json_encode($priceParams['children'] ?? []));
 
         $fullRequest = $debugInfo->lastRequest;
