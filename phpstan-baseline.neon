@@ -14587,123 +14587,9 @@ parameters:
 			path: addon-travel-core/app/addons/travel_core/functions/hotels.php
 
 		-
-			message: '#^Cannot access offset ''adults'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/functions/hotels.php
-
-		-
-			message: '#^Cannot access offset ''check_in'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/functions/hotels.php
-
-		-
-			message: '#^Cannot access offset ''check_out'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/functions/hotels.php
-
-		-
-			message: '#^Cannot access offset ''children'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/functions/hotels.php
-
-		-
-			message: '#^Cannot access offset ''children_ages'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/functions/hotels.php
-
-		-
-			message: '#^Cannot access offset ''children_ages_str'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/functions/hotels.php
-
-		-
-			message: '#^Cannot access offset ''children_count'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/functions/hotels.php
-
-		-
-			message: '#^Cannot access offset ''color_accent'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/functions/hotels.php
-
-		-
-			message: '#^Cannot access offset ''color_bg'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/functions/hotels.php
-
-		-
-			message: '#^Cannot access offset ''color_border'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/functions/hotels.php
-
-		-
-			message: '#^Cannot access offset ''color_cal_cheapest'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/functions/hotels.php
-
-		-
-			message: '#^Cannot access offset ''color_cal_price'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/functions/hotels.php
-
-		-
-			message: '#^Cannot access offset ''color_danger'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/functions/hotels.php
-
-		-
-			message: '#^Cannot access offset ''color_primary'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/functions/hotels.php
-
-		-
-			message: '#^Cannot access offset ''color_search_btn_bg'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/functions/hotels.php
-
-		-
-			message: '#^Cannot access offset ''color_search_btn_hover'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/functions/hotels.php
-
-		-
-			message: '#^Cannot access offset ''color_search_btn_text'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/functions/hotels.php
-
-		-
-			message: '#^Cannot access offset ''color_text'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/functions/hotels.php
-
-		-
-			message: '#^Cannot access offset ''color_text_light'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/functions/hotels.php
-
-		-
 			message: '#^Cannot access offset ''hotel_id'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
-			count: 3
+			count: 2
 			path: addon-travel-core/app/addons/travel_core/functions/hotels.php
 
 		-
@@ -14719,25 +14605,7 @@ parameters:
 			path: addon-travel-core/app/addons/travel_core/functions/hotels.php
 
 		-
-			message: '#^Cannot access offset ''num_rooms'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/functions/hotels.php
-
-		-
 			message: '#^Cannot access offset ''product_id'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 2
-			path: addon-travel-core/app/addons/travel_core/functions/hotels.php
-
-		-
-			message: '#^Cannot access offset ''rooms'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/functions/hotels.php
-
-		-
-			message: '#^Cannot access offset ''rooms_data_json'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
 			path: addon-travel-core/app/addons/travel_core/functions/hotels.php
@@ -14757,13 +14625,13 @@ parameters:
 		-
 			message: '#^Cannot cast mixed to int\.$#'
 			identifier: cast.int
-			count: 11
+			count: 8
 			path: addon-travel-core/app/addons/travel_core/functions/hotels.php
 
 		-
 			message: '#^Cannot cast mixed to string\.$#'
 			identifier: cast.string
-			count: 5
+			count: 4
 			path: addon-travel-core/app/addons/travel_core/functions/hotels.php
 
 		-
@@ -14791,12 +14659,6 @@ parameters:
 			path: addon-travel-core/app/addons/travel_core/functions/hotels.php
 
 		-
-			message: '#^Parameter \#1 \$string of function htmlspecialchars expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 6
-			path: addon-travel-core/app/addons/travel_core/functions/hotels.php
-
-		-
 			message: '#^Parameter \#1 \$string of function trim expects string, mixed given\.$#'
 			identifier: argument.type
 			count: 1
@@ -14810,12 +14672,6 @@ parameters:
 
 		-
 			message: '#^Parameter \#2 \$placeholders of function fn_travel_core_apply_seo_fields expects array\<string, mixed\>, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/functions/hotels.php
-
-		-
-			message: '#^Parameter \#2 \.\.\.\$values of function sprintf expects bool\|float\|int\|string\|null, mixed given\.$#'
 			identifier: argument.type
 			count: 1
 			path: addon-travel-core/app/addons/travel_core/functions/hotels.php
@@ -14840,24 +14696,6 @@ parameters:
 
 		-
 			message: '#^Part \$lang \(mixed\) of encapsed string cannot be cast to string\.$#'
-			identifier: encapsedStringPart.nonString
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/functions/hotels.php
-
-		-
-			message: '#^Part \$mode \(mixed\) of encapsed string cannot be cast to string\.$#'
-			identifier: encapsedStringPart.nonString
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/functions/hotels.php
-
-		-
-			message: '#^Part \$provider \(mixed\) of encapsed string cannot be cast to string\.$#'
-			identifier: encapsedStringPart.nonString
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/functions/hotels.php
-
-		-
-			message: '#^Part \$searchDispatch \(mixed\) of encapsed string cannot be cast to string\.$#'
 			identifier: encapsedStringPart.nonString
 			count: 1
 			path: addon-travel-core/app/addons/travel_core/functions/hotels.php

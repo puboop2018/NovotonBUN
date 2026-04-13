@@ -42,28 +42,31 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
  */
 function fn_travel_core_render_booking_engine(array $params = []): string
 {
-    $provider       = $params['provider'] ?? '';
-    $searchDispatch = $params['search_dispatch'] ?? '';
-    $mode           = $params['mode'] ?? 'search';
-    $sp             = $params['search_params'] ?? [];
-    $calPricesJson  = $params['calendar_prices_json'] ?? '';
-    $calPricesCurr  = $params['calendar_prices_currency'] ?? '';
+    $vh = \Tygh\Addons\TravelCore\Helpers\ValidationHelpers::class;
+    $provider       = $vh::toString($params['provider'] ?? '');
+    $searchDispatch = $vh::toString($params['search_dispatch'] ?? '');
+    $mode           = $vh::toString($params['mode'] ?? 'search');
+    /** @var array<string, mixed> $sp */
+    $sp             = is_array($params['search_params'] ?? null) ? $params['search_params'] : [];
+    $calPricesJson  = $vh::toString($params['calendar_prices_json'] ?? '');
+    $calPricesCurr  = $vh::toString($params['calendar_prices_currency'] ?? '');
 
     // Colors from addon settings (bypasses Smarty completely)
-    $tc = \Tygh\Registry::get('addons.travel_core') ?: [];
+    /** @var array<string, mixed> $tc */
+    $tc = is_array(\Tygh\Registry::get('addons.travel_core')) ? \Tygh\Registry::get('addons.travel_core') : [];
     $colors = json_encode([
-        'primary'      => $tc['color_primary'] ?? '',
-        'accent'       => $tc['color_accent'] ?? '',
-        'text'         => $tc['color_text'] ?? '',
-        'textLight'    => $tc['color_text_light'] ?? '',
-        'bg'           => $tc['color_bg'] ?? '',
-        'border'       => $tc['color_border'] ?? '',
-        'btnBg'        => $tc['color_search_btn_bg'] ?? '',
-        'btnHover'     => $tc['color_search_btn_hover'] ?? '',
-        'btnText'      => $tc['color_search_btn_text'] ?? '',
-        'calCheapest'  => $tc['color_cal_cheapest'] ?? '',
-        'calPrice'     => $tc['color_cal_price'] ?? '',
-        'danger'       => $tc['color_danger'] ?? '',
+        'primary'      => $vh::toString($tc['color_primary'] ?? ''),
+        'accent'       => $vh::toString($tc['color_accent'] ?? ''),
+        'text'         => $vh::toString($tc['color_text'] ?? ''),
+        'textLight'    => $vh::toString($tc['color_text_light'] ?? ''),
+        'bg'           => $vh::toString($tc['color_bg'] ?? ''),
+        'border'       => $vh::toString($tc['color_border'] ?? ''),
+        'btnBg'        => $vh::toString($tc['color_search_btn_bg'] ?? ''),
+        'btnHover'     => $vh::toString($tc['color_search_btn_hover'] ?? ''),
+        'btnText'      => $vh::toString($tc['color_search_btn_text'] ?? ''),
+        'calCheapest'  => $vh::toString($tc['color_cal_cheapest'] ?? ''),
+        'calPrice'     => $vh::toString($tc['color_cal_price'] ?? ''),
+        'danger'       => $vh::toString($tc['color_danger'] ?? ''),
     ], JSON_UNESCAPED_SLASHES);
 
     // Translations (50+ keys — built via PHP __() instead of Smarty {__()})
@@ -110,8 +113,8 @@ function fn_travel_core_render_booking_engine(array $params = []): string
     $translationsJson = json_encode($translations, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
     // Resolve IDs
-    $hotelId   = htmlspecialchars($sp['hotel_id'] ?? '', ENT_QUOTES);
-    $productId = htmlspecialchars((string)($sp['product_id'] ?? ''), ENT_QUOTES);
+    $hotelId   = htmlspecialchars($vh::toString($sp['hotel_id'] ?? ''), ENT_QUOTES);
+    $productId = htmlspecialchars($vh::toString($sp['product_id'] ?? ''), ENT_QUOTES);
     $lang      = defined('CART_LANGUAGE') ? CART_LANGUAGE : 'en';
     $cacheVer  = defined('TRAVEL_CACHE_VER') ? TRAVEL_CACHE_VER : '1';
     $baseUrl   = \Tygh\Registry::get('config.current_location') ?: '';
@@ -122,13 +125,13 @@ function fn_travel_core_render_booking_engine(array $params = []): string
         $searchAttrs = sprintf(
             ' data-check-in="%s" data-check-out="%s" data-adults="%s" data-children="%s"'
             . ' data-children-ages="%s" data-rooms="%s" data-rooms-data=\'%s\'',
-            htmlspecialchars($sp['check_in'] ?? '', ENT_QUOTES),
-            htmlspecialchars($sp['check_out'] ?? '', ENT_QUOTES),
-            (int)($sp['adults'] ?? 2),
-            (int)($sp['children_count'] ?? $sp['children'] ?? 0),
-            htmlspecialchars($sp['children_ages'] ?? $sp['children_ages_str'] ?? '', ENT_QUOTES),
-            (int)($sp['num_rooms'] ?? $sp['rooms'] ?? 1),
-            htmlspecialchars($sp['rooms_data_json'] ?? '[]', ENT_QUOTES)
+            htmlspecialchars($vh::toString($sp['check_in'] ?? ''), ENT_QUOTES),
+            htmlspecialchars($vh::toString($sp['check_out'] ?? ''), ENT_QUOTES),
+            $vh::toInt($sp['adults'] ?? 2),
+            $vh::toInt($sp['children_count'] ?? $sp['children'] ?? 0),
+            htmlspecialchars($vh::toString($sp['children_ages'] ?? $sp['children_ages_str'] ?? ''), ENT_QUOTES),
+            $vh::toInt($sp['num_rooms'] ?? $sp['rooms'] ?? 1),
+            htmlspecialchars($vh::toString($sp['rooms_data_json'] ?? '[]'), ENT_QUOTES)
         );
     }
 
