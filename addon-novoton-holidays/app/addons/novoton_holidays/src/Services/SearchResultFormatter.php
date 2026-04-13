@@ -76,8 +76,8 @@ class SearchResultFormatter implements SearchResultFormatterInterface
         );
 
         // ── Hotel display info ───────────────────────────────────────
-        $hotelId   = $novotonParams['hotel_id'] ?? '';
-        $productId = $novotonParams['product_id'] ?? 0;
+        $hotelId   = PriceInfoFormatter::toScalar($novotonParams['hotel_id'] ?? '');
+        $productId = PriceInfoFormatter::toInt($novotonParams['product_id'] ?? 0);
         $this->assignHotelDisplay($view, $hotelId, $productId);
 
         // ── Terms & early-booking tooltip ────────────────────────────
@@ -85,7 +85,7 @@ class SearchResultFormatter implements SearchResultFormatterInterface
 
         // ── Hotel URL ────────────────────────────────────────────────
         $view->assign('hotel_url', !empty($productId)
-            ? fn_url("products.view?product_id={$productId}")
+            ? fn_url('products.view?product_id=' . $productId)
             : ''
         );
 
@@ -232,14 +232,14 @@ class SearchResultFormatter implements SearchResultFormatterInterface
         // Use first non-bracketed package name, or just the first
         $packageName = '';
         foreach ($packages as $pkg) {
-            $pname = $pkg['package_name'] ?? '';
+            $pname = PriceInfoFormatter::toScalar($pkg['package_name'] ?? '');
             if (!empty($pname) && substr($pname, -1) !== ']') {
                 $packageName = $pname;
                 break;
             }
         }
         if (empty($packageName) && !empty($packages[0])) {
-            $packageName = $packages[0]['package_name'] ?? '';
+            $packageName = PriceInfoFormatter::toScalar($packages[0]['package_name'] ?? '');
         }
 
         $view->assign('hotel_package_name', $packageName);
@@ -260,27 +260,33 @@ class SearchResultFormatter implements SearchResultFormatterInterface
                 continue;
             }
 
-            $priceinfo = json_decode($pkg['priceinfo_data'], true);
-            if (empty($priceinfo['early_booking'])) {
+            $priceinfo = json_decode(PriceInfoFormatter::toScalar($pkg['priceinfo_data']), true);
+            if (!is_array($priceinfo) || empty($priceinfo['early_booking'])) {
                 continue;
             }
 
             $ebData = $priceinfo['early_booking'];
+            if (!is_array($ebData)) {
+                continue;
+            }
             if (isset($ebData['Reduction'])) {
                 $ebData = [$ebData];
             }
 
             foreach ($ebData as $eb) {
-                $bookFrom = $eb['BookFrom'] ?? '';
-                $bookTo   = $eb['BookTo'] ?? '';
+                if (!is_array($eb)) {
+                    continue;
+                }
+                $bookFrom = PriceInfoFormatter::toScalar($eb['BookFrom'] ?? '');
+                $bookTo   = PriceInfoFormatter::toScalar($eb['BookTo'] ?? '');
                 if ($bookFrom <= $currentDate && $bookTo >= $currentDate) {
                     $activeEb = [
                         'reduction'       => $eb['Reduction'] ?? 0,
                         'booking_from'    => $bookFrom,
                         'booking_to'      => $bookTo,
-                        'stay_from'       => $eb['StayFrom'] ?? '',
-                        'stay_to'         => $eb['StayTo'] ?? '',
-                        'payment_date'    => $eb['PaymentDate'] ?? '',
+                        'stay_from'       => PriceInfoFormatter::toScalar($eb['StayFrom'] ?? ''),
+                        'stay_to'         => PriceInfoFormatter::toScalar($eb['StayTo'] ?? ''),
+                        'payment_date'    => PriceInfoFormatter::toScalar($eb['PaymentDate'] ?? ''),
                         'payment_percent' => $eb['PaymentPercent'] ?? 0,
                         'room_types'      => $eb['RoomTypes'] ?? 'all',
                         'min_stay'        => $eb['MinStay'] ?? 0,
@@ -308,20 +314,27 @@ class SearchResultFormatter implements SearchResultFormatterInterface
             if (empty($pkg['priceinfo_data'])) {
                 continue;
             }
-            $pi = json_decode($pkg['priceinfo_data'], true);
-            if (empty($pi['seasons']['season'])) {
+            $pi = json_decode(PriceInfoFormatter::toScalar($pkg['priceinfo_data']), true);
+            if (!is_array($pi) || !is_array($pi['seasons'] ?? null) || empty($pi['seasons']['season'])) {
                 continue;
             }
 
-            $seasons = $pi['seasons']['season'];
+            $piSeasons = $pi['seasons'];
+            $seasons = $piSeasons['season'];
+            if (!is_array($seasons)) {
+                continue;
+            }
             if (isset($seasons['IdSeason']) || isset($seasons['DateFrom'])) {
                 $seasons = [$seasons];
             }
 
-            $first      = reset($seasons);
-            $last       = end($seasons);
-            $seasonFrom = $first['DateFrom'] ?? $first['FromDate'] ?? '';
-            $seasonTo   = $last['DateTo'] ?? $last['ToDate'] ?? '';
+            $first = reset($seasons);
+            $last  = end($seasons);
+            if (!is_array($first) || !is_array($last)) {
+                continue;
+            }
+            $seasonFrom = PriceInfoFormatter::toScalar($first['DateFrom'] ?? $first['FromDate'] ?? '');
+            $seasonTo   = PriceInfoFormatter::toScalar($last['DateTo'] ?? $last['ToDate'] ?? '');
             break;
         }
 
@@ -341,14 +354,14 @@ class SearchResultFormatter implements SearchResultFormatterInterface
 
         foreach ($results as $r) {
             if (!empty($r['terms_of_payment']) && empty($termsPaymentRaw)) {
-                $termsPaymentRaw = $r['terms_of_payment'];
+                $termsPaymentRaw = PriceInfoFormatter::toScalar($r['terms_of_payment']);
             }
             if (!empty($r['terms_of_cancellation']) && empty($termsCancellationRaw)) {
-                $termsCancellationRaw = $r['terms_of_cancellation'];
+                $termsCancellationRaw = PriceInfoFormatter::toScalar($r['terms_of_cancellation']);
             }
         }
 
-        $checkInForTerms = $searchParams['check_in'] ?? '';
+        $checkInForTerms = PriceInfoFormatter::toScalar($searchParams['check_in'] ?? '');
 
         $view->assign('terms_of_payment', TermsFormatter::formatPaymentTerms($termsPaymentRaw));
         $view->assign('terms_of_cancellation', TermsFormatter::formatCancellationTerms($termsCancellationRaw, $checkInForTerms));
@@ -364,19 +377,24 @@ class SearchResultFormatter implements SearchResultFormatterInterface
             $ebPackage   = $packageRepo->findEarlyBookingPackage($hotelId);
 
             if (!empty($ebPackage['priceinfo_data'])) {
-                $priceinfo = json_decode($ebPackage['priceinfo_data'], true);
-                if (!empty($priceinfo['early_booking'])) {
+                $priceinfo = json_decode(PriceInfoFormatter::toScalar($ebPackage['priceinfo_data']), true);
+                if (is_array($priceinfo) && !empty($priceinfo['early_booking'])) {
                     $ebData = $priceinfo['early_booking'];
-                    if (isset($ebData['Reduction'])) {
+                    if (!is_array($ebData)) {
+                        $ebData = [];
+                    } elseif (isset($ebData['Reduction'])) {
                         $ebData = [$ebData];
                     }
 
                     $lines = [];
                     foreach ($ebData as $eb) {
-                        $reduction   = $eb['Reduction'] ?? 0;
-                        $bookTo      = $eb['BookTo'] ?? '';
-                        $stayFrom    = $eb['StayFrom'] ?? '';
-                        $stayTo      = $eb['StayTo'] ?? '';
+                        if (!is_array($eb)) {
+                            continue;
+                        }
+                        $reduction   = PriceInfoFormatter::toScalar($eb['Reduction'] ?? 0);
+                        $bookTo      = PriceInfoFormatter::toScalar($eb['BookTo'] ?? '');
+                        $stayFrom    = PriceInfoFormatter::toScalar($eb['StayFrom'] ?? '');
+                        $stayTo      = PriceInfoFormatter::toScalar($eb['StayTo'] ?? '');
                         $paymentDate = !empty($bookTo)
                             ? date('d.m.Y', (int) strtotime($bookTo . ' +5 days'))
                             : 'N/A';

@@ -90,7 +90,10 @@ class PriceInfoParser
             return null;
         }
 
-        $this->priceinfo = json_decode($json, true);
+        $json = PriceInfoFormatter::toScalar($json);
+        $decoded = json_decode($json, true);
+        /** @var array<string, mixed>|null $decoded */
+        $this->priceinfo = is_array($decoded) ? $decoded : null;
         return $this->priceinfo;
     }
 
@@ -107,7 +110,10 @@ class PriceInfoParser
             return null;
         }
 
-        $this->hotelinfo = json_decode($json, true);
+        $json = PriceInfoFormatter::toScalar($json);
+        $decoded = json_decode($json, true);
+        /** @var array<string, mixed>|null $decoded */
+        $this->hotelinfo = is_array($decoded) ? $decoded : null;
         return $this->hotelinfo;
     }
 
@@ -118,11 +124,17 @@ class PriceInfoParser
     {
         $this->codeIndex = [];
         $seasonPrices = $this->priceinfo['season_price'] ?? [];
+        if (!is_array($seasonPrices)) {
+            return;
+        }
         if (isset($seasonPrices['IdRoom'])) {
             $seasonPrices = [$seasonPrices];
         }
 
         foreach ($seasonPrices as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
             $code = PriceInfoFormatter::toScalar($row['Code'] ?? '');
             if ($code === '') continue;
             if (!isset($this->codeIndex[$code])) {
@@ -145,11 +157,11 @@ class PriceInfoParser
 
         $ages = $this->hotelinfo['ages'] ?? [];
 
-        if (isset($ages['age'])) {
+        if (is_array($ages) && isset($ages['age'])) {
             $ages = $ages['age'];
         }
 
-        if (isset($ages['IdAge'])) {
+        if (is_array($ages) && isset($ages['IdAge'])) {
             $ages = [$ages];
         }
 
@@ -158,14 +170,17 @@ class PriceInfoParser
         }
 
         foreach ($ages as $age) {
-            $fAge = (string)($age['fAge'] ?? '0');
+            if (!is_array($age)) {
+                continue;
+            }
+            $fAge = PriceInfoFormatter::toScalar($age['fAge'] ?? '0');
             $isChild = $fAge === '1';
             if (!$isChild) {
                 continue;
             }
 
-            $fromYear = (float) ($age['FromYear'] ?? 0);
-            $toYear = (float) ($age['ToYear'] ?? 0);
+            $fromYear = PriceInfoFormatter::toFloat($age['FromYear'] ?? 0);
+            $toYear = PriceInfoFormatter::toFloat($age['ToYear'] ?? 0);
             if ($toYear <= 0) {
                 continue;
             }
@@ -206,19 +221,25 @@ class PriceInfoParser
         }
 
         $rooms = $this->hotelinfo['rooms'];
+        if (!is_array($rooms)) {
+            return $default;
+        }
         if (isset($rooms['IdRoom'])) {
             $rooms = [$rooms];
         }
 
         foreach ($rooms as $room) {
-            $rid = $room['IdRoom'] ?? '';
+            if (!is_array($room)) {
+                continue;
+            }
+            $rid = PriceInfoFormatter::toScalar($room['IdRoom'] ?? '');
             if ($rid === $roomId || rawurldecode($rid) === $roomId) {
                 return [
-                    'RB' => (int) ($room['RegularBeds'] ?? $room['RB'] ?? 2),
-                    'EB' => (int) ($room['ExtraBeds'] ?? $room['EB'] ?? 1),
-                    'maxADT' => (int) ($room['maxADT'] ?? $room['MaxAdults'] ?? 2),
-                    'maxCHD' => (int) ($room['maxCHD'] ?? $room['MaxChildren'] ?? 2),
-                    'minPAX' => (int) ($room['minPAX'] ?? $room['MinPax'] ?? 1)
+                    'RB' => PriceInfoFormatter::toInt($room['RegularBeds'] ?? $room['RB'] ?? 2),
+                    'EB' => PriceInfoFormatter::toInt($room['ExtraBeds'] ?? $room['EB'] ?? 1),
+                    'maxADT' => PriceInfoFormatter::toInt($room['maxADT'] ?? $room['MaxAdults'] ?? 2),
+                    'maxCHD' => PriceInfoFormatter::toInt($room['maxCHD'] ?? $room['MaxChildren'] ?? 2),
+                    'minPAX' => PriceInfoFormatter::toInt($room['minPAX'] ?? $room['MinPax'] ?? 1)
                 ];
             }
         }
@@ -233,20 +254,26 @@ class PriceInfoParser
      */
     public function validateOccupancy(int $adults, int $children, array $capacity): array
     {
-        if ($adults < $capacity['minPAX']) {
-            return ['valid' => false, 'reason' => "Adults ({$adults}) less than minPAX ({$capacity['minPAX']})"];
+        $minPAX = PriceInfoFormatter::toInt($capacity['minPAX'] ?? 1);
+        $maxADT = PriceInfoFormatter::toInt($capacity['maxADT'] ?? 2);
+        $maxCHD = PriceInfoFormatter::toInt($capacity['maxCHD'] ?? 2);
+        $rb = PriceInfoFormatter::toInt($capacity['RB'] ?? 2);
+        $eb = PriceInfoFormatter::toInt($capacity['EB'] ?? 1);
+
+        if ($adults < $minPAX) {
+            return ['valid' => false, 'reason' => "Adults ({$adults}) less than minPAX ({$minPAX})"];
         }
 
-        if ($adults > $capacity['maxADT']) {
-            return ['valid' => false, 'reason' => "Adults ({$adults}) exceeds maxADT ({$capacity['maxADT']})"];
+        if ($adults > $maxADT) {
+            return ['valid' => false, 'reason' => "Adults ({$adults}) exceeds maxADT ({$maxADT})"];
         }
 
-        if ($children > $capacity['maxCHD']) {
-            return ['valid' => false, 'reason' => "Children ({$children}) exceeds maxCHD ({$capacity['maxCHD']})"];
+        if ($children > $maxCHD) {
+            return ['valid' => false, 'reason' => "Children ({$children}) exceeds maxCHD ({$maxCHD})"];
         }
 
         $totalPax = $adults + $children;
-        $totalCapacity = $capacity['RB'] + $capacity['EB'];
+        $totalCapacity = $rb + $eb;
         if ($totalPax > $totalCapacity) {
             return ['valid' => false, 'reason' => "Total pax ({$totalPax}) exceeds capacity ({$totalCapacity})"];
         }
@@ -273,8 +300,8 @@ class PriceInfoParser
             'total_eb_used' => 0
         ];
 
-        $rbAvailable = $capacity['RB'];
-        $ebAvailable = $capacity['EB'];
+        $rbAvailable = PriceInfoFormatter::toInt($capacity['RB'] ?? 2);
+        $ebAvailable = PriceInfoFormatter::toInt($capacity['EB'] ?? 1);
         $rbUsed = 0;
         $ebUsed = 0;
 
@@ -440,7 +467,7 @@ class PriceInfoParser
         if (!empty($this->childAgeBands)) {
             foreach ($this->childAgeBands as $band) {
                 if ($age >= $band['from'] && $age <= $band['to']) {
-                    return $band['label'];
+                    return PriceInfoFormatter::toScalar($band['label']);
                 }
             }
             return PriceInfoFormatter::formatAgeBandLabel(floor($age), 17.99);
@@ -462,12 +489,18 @@ class PriceInfoParser
     public function getAvailableChildAgeBands(string $roomId, string $boardId): array
     {
         $seasonPrices = $this->priceinfo['season_price'] ?? [];
+        if (!is_array($seasonPrices)) {
+            return [];
+        }
         if (isset($seasonPrices['IdRoom'])) {
             $seasonPrices = [$seasonPrices];
         }
 
         $bands = [];
         foreach ($seasonPrices as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
             $rowRoom = PriceInfoFormatter::toScalar($row['IdRoom'] ?? '');
             $rowBoard = PriceInfoFormatter::toScalar($row['IdBoard'] ?? '');
 
@@ -507,11 +540,17 @@ class PriceInfoParser
     public function hasAdultExtraBedPricing(string $roomId, string $boardId): bool
     {
         $seasonPrices = $this->priceinfo['season_price'] ?? [];
+        if (!is_array($seasonPrices)) {
+            return false;
+        }
         if (isset($seasonPrices['IdRoom'])) {
             $seasonPrices = [$seasonPrices];
         }
 
         foreach ($seasonPrices as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
             $rowRoom = PriceInfoFormatter::toScalar($row['IdRoom'] ?? '');
             $rowBoard = PriceInfoFormatter::toScalar($row['IdBoard'] ?? '');
 
@@ -548,13 +587,15 @@ class PriceInfoParser
     {
         $seasons = $this->priceinfo['seasons'] ?? [];
 
-        if (isset($seasons['Season'])) {
+        if (!is_array($seasons)) {
+            $seasons = [];
+        } elseif (isset($seasons['Season'])) {
             $seasons = [$seasons];
-        } elseif (isset($seasons[0]['Season'])) {
+        } elseif (isset($seasons[0]) && is_array($seasons[0]) && isset($seasons[0]['Season'])) {
             // Already an array
         } elseif (isset($seasons['season'])) {
             $seasons = $seasons['season'];
-            if (isset($seasons['Season'])) {
+            if (is_array($seasons) && isset($seasons['Season'])) {
                 $seasons = [$seasons];
             }
         }
@@ -568,14 +609,19 @@ class PriceInfoParser
             $dateStr = $currentDate->format('Y-m-d');
 
             $seasonNum = 1;
-            foreach ($seasons as $season) {
-                $from = $season['FromDate'] ?? $season['DateFrom'] ?? '';
-                $to = $season['ToDate'] ?? $season['DateTo'] ?? '';
-                $id = (int) ($season['Season'] ?? $season['IdSeason'] ?? 1);
+            if (is_array($seasons)) {
+                foreach ($seasons as $season) {
+                    if (!is_array($season)) {
+                        continue;
+                    }
+                    $from = PriceInfoFormatter::toScalar($season['FromDate'] ?? $season['DateFrom'] ?? '');
+                    $to = PriceInfoFormatter::toScalar($season['ToDate'] ?? $season['DateTo'] ?? '');
+                    $id = PriceInfoFormatter::toInt($season['Season'] ?? $season['IdSeason'] ?? 1);
 
-                if ($dateStr >= $from && $dateStr <= $to) {
-                    $seasonNum = $id;
-                    break;
+                    if ($dateStr >= $from && $dateStr <= $to) {
+                        $seasonNum = $id;
+                        break;
+                    }
                 }
             }
 
