@@ -9,6 +9,7 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
 use Tygh\Tygh;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
+use Tygh\Addons\NovotonHolidays\Services\PriceInfoFormatter;
 use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
 use Tygh\Addons\TravelCore\Services\CurrencyService;
 use Tygh\Addons\NovotonHolidays\Services\Container;
@@ -16,19 +17,21 @@ use Tygh\Addons\TravelCore\TravelConstants;
 
     // --- Security: Rate limiting ---
     $security = _nvt_get_security_service();
-    $auth = Tygh::$app['session']['auth'] ?? [];
-    $rate_limit_id = !empty($auth['user_id']) ? (string)$auth['user_id'] : Tygh::$app['session']->getID();
+    /** @var array<string, mixed> $auth */
+    $auth = is_array(Tygh::$app['session']['auth'] ?? null) ? Tygh::$app['session']['auth'] : [];
+    $rate_limit_id = !empty($auth['user_id']) ? PriceInfoFormatter::toScalar($auth['user_id']) : Tygh::$app['session']->getID();
     if (!$security->checkBookingRateLimit($rate_limit_id)) {
         $security->logSecurityEvent('rate_limit_exceeded', ['mode' => 'add_to_cart', 'identifier' => $rate_limit_id]);
         fn_set_notification('E', __('error'), 'Too many booking requests. Please try again later.');
         return [CONTROLLER_STATUS_REDIRECT, 'index.index'];
     }
 
+    /** @var array<string, mixed> $bookingData */
     $bookingData = $_REQUEST;
 
     // Normalize room_id: restore + signs lost by URL decoding
     if (!empty($bookingData['room_id'])) {
-        $bookingData['room_id'] = fn_novoton_holidays_normalize_room_code($bookingData['room_id']);
+        $bookingData['room_id'] = fn_novoton_holidays_normalize_room_code(PriceInfoFormatter::toScalar($bookingData['room_id']));
     }
 
     // --- Security: Validate booking data via SecurityService ---
@@ -37,7 +40,7 @@ use Tygh\Addons\TravelCore\TravelConstants;
         $security->logSecurityEvent('booking_validation_failed', [
             'mode' => 'add_to_cart',
             'errors' => $validation['errors'],
-            'hotel_id' => $bookingData['hotel_id'] ?? ''
+            'hotel_id' => $bdHotelId ?? ''
         ]);
         fn_set_notification('E', __('error'), __('novoton_holidays.invalid_booking_data'));
         return [CONTROLLER_STATUS_REDIRECT, 'index.index'];
@@ -51,16 +54,17 @@ use Tygh\Addons\TravelCore\TravelConstants;
     
     // Get product ID from hotel ID
     $prefix = ConfigProvider::getFirstProductCodePrefix();
-    $product_code = $prefix . $bookingData['hotel_id'];
-    
+    $bdHotelId = PriceInfoFormatter::toScalar($bdHotelId ?? '');
+    $product_code = $prefix . $bdHotelId;
+
     $product_id = db_get_field(
         "SELECT product_id FROM ?:products WHERE product_code = ?s",
         $product_code
     );
-    
+
     if (empty($product_id)) {
         // Try the product_id from form
-        $product_id = (int)($bookingData['product_id'] ?? 0);
+        $product_id = PriceInfoFormatter::toInt($bookingData['product_id'] ?? 0);
     }
     
     if (empty($product_id)) {
@@ -69,18 +73,18 @@ use Tygh\Addons\TravelCore\TravelConstants;
     }
     
     // Get hotel info using repository
-    $hotel_info = _nvt_hotel_repo()->findById($bookingData['hotel_id']);
+    $hotel_info = _nvt_hotel_repo()->findById($bdHotelId);
 
     if (empty($hotel_info)) {
         // Hotel not in local DB — auto-create from API (same pattern as OffersUpdateCommand)
         fn_log_event('general', 'runtime', [
             'message' => 'Novoton add_to_cart: hotel_id not in local DB, auto-creating',
-            'hotel_id' => $bookingData['hotel_id'],
+            'hotel_id' => $bdHotelId,
             'product_id' => $product_id,
         ]);
 
         $hotel_data = [
-            'hotel_id' => $bookingData['hotel_id'],
+            'hotel_id' => $bdHotelId,
             'product_id' => (int) $product_id,
             'hotel_name' => '',
             'city' => '',
@@ -94,7 +98,7 @@ use Tygh\Addons\TravelCore\TravelConstants;
         try {
             $api_for_hotel = fn_novoton_holidays_get_api();
             if ($api_for_hotel) {
-                $api_hotel_info = $api_for_hotel->hotels()->getHotelInfo($bookingData['hotel_id']);
+                $api_hotel_info = $api_for_hotel->hotels()->getHotelInfo($bdHotelId);
                 if ($api_hotel_info) {
                     $hotel_data['hotel_name'] = (string) ($api_hotel_info->Hotel ?? '');
                     $hotel_data['city']       = (string) ($api_hotel_info->City ?? '');
@@ -106,13 +110,13 @@ use Tygh\Addons\TravelCore\TravelConstants;
         } catch (\Throwable $e) {
             fn_log_event('general', 'runtime', [
                 'message' => 'Novoton add_to_cart: getHotelInfo failed, using stub',
-                'hotel_id' => $bookingData['hotel_id'],
+                'hotel_id' => $bdHotelId,
                 'error' => $e->getMessage(),
             ]);
         }
 
         _nvt_hotel_repo()->upsert($hotel_data);
-        $hotel_info = _nvt_hotel_repo()->findById($bookingData['hotel_id']);
+        $hotel_info = _nvt_hotel_repo()->findById($bdHotelId);
     }
     
     // Process guest information — sanitize via SecurityService
@@ -129,35 +133,35 @@ use Tygh\Addons\TravelCore\TravelConstants;
     $all_child_ages = [];
     foreach ($guests_data as $guest) {
         if (isset($guest['type']) && $guest['type'] === 'child' && isset($guest['age'])) {
-            $all_child_ages[] = (int)($guest['age']);
+            $all_child_ages[] = PriceInfoFormatter::toInt($guest['age'] ?? 0);
         }
     }
     $children_ages = !empty($all_child_ages) ? implode(',', $all_child_ages) : ($bookingData['children_ages'] ?? '');
     
     // Get package name
     $package_name = $bookingData['package_name'] ?? '';
-    if (empty($package_name) && !empty($bookingData['hotel_id'])) {
+    if (empty($package_name) && !empty($bdHotelId)) {
         // V3: Get first package from novoton_hotel_packages table
         $packageRepo = Container::getInstance()->hotelPackageRepository();
-        $first_pkg = $packageRepo->getFirstPackageName($bookingData['hotel_id']);
+        $first_pkg = $packageRepo->getFirstPackageName($bdHotelId);
         if (!empty($first_pkg)) {
             $package_name = $first_pkg;
         }
     }
     
     // Get total price (from form or recalculate)
-    $total_price = (float)($bookingData['total_price'] ?? 0);
+    $total_price = PriceInfoFormatter::toFloat($bookingData['total_price'] ?? 0);
     
     // Always call API to get terms and verify price (Option A: fetch terms at checkout)
     // IMPORTANT: Include children ages for correct price calculation
     $priceParams = [
-        'hotel_id' => $bookingData['hotel_id'],
+        'hotel_id' => $bdHotelId,
         'room_id' => $bookingData['room_id'],
         'board_id' => $bookingData['board_id'] ?? '',
         'star_rating' => '',
         'check_in' => $bookingData['check_in'],
         'check_out' => $bookingData['check_out'],
-        'adults' => (int)($bookingData['adults'] ?? 2),
+        'adults' => PriceInfoFormatter::toInt($bookingData['adults'] ?? 2),
         'children' => $all_child_ages  // Include children ages from guest form
     ];
     
@@ -170,10 +174,10 @@ use Tygh\Addons\TravelCore\TravelConstants;
     if (!$priceData || !isset($priceData->Price)) {
         fn_log_event('general', 'runtime', [
             'message' => 'Novoton add_to_cart: PRICE VERIFICATION FAILED - API returned no price',
-            'hotel_id' => $bookingData['hotel_id'],
+            'hotel_id' => $bdHotelId,
             'room_id' => $bookingData['room_id'],
             'children_ages' => $all_child_ages,
-            'adults' => (int)($bookingData['adults'] ?? 2)
+            'adults' => PriceInfoFormatter::toInt($bookingData['adults'] ?? 2)
         ]);
 
         fn_set_notification('E', __('error'), __('novoton_holidays.price_verification_failed', [
@@ -182,7 +186,7 @@ use Tygh\Addons\TravelCore\TravelConstants;
 
         // Build return URL to booking form with all parameters
         $return_params = [
-            'hotel_id' => $bookingData['hotel_id'],
+            'hotel_id' => $bdHotelId,
             'product_id' => $product_id,
             'check_in' => $bookingData['check_in'],
             'check_out' => $bookingData['check_out'],
@@ -226,7 +230,7 @@ use Tygh\Addons\TravelCore\TravelConstants;
                     $price_diff = round($api_price - $total_price, 2);
                     fn_log_event('general', 'runtime', [
                         'message' => 'Novoton PRICE FLOOR: form price below real-time API room_price — using API price',
-                        'hotel_id' => $bookingData['hotel_id'],
+                        'hotel_id' => $bdHotelId,
                         'room_id' => $bookingData['room_id'],
                         'form_price' => $total_price,
                         'api_price' => $api_price,
@@ -236,14 +240,14 @@ use Tygh\Addons\TravelCore\TravelConstants;
 
                     // Send email alert to admin with price discrepancy details
                     fn_novoton_holidays_send_price_alert_email([
-                        'hotel_id'      => $bookingData['hotel_id'],
+                        'hotel_id'      => $bdHotelId,
                         'hotel_name'    => $hotel_info['hotel_name'] ?? '',
                         'room_id'       => $bookingData['room_id'],
                         'board_id'      => $bookingData['board_id'] ?? '',
                         'check_in'      => $bookingData['check_in'],
                         'check_out'     => $bookingData['check_out'],
-                        'adults'        => (int)($bookingData['adults'] ?? 2),
-                        'children'      => (int)($bookingData['children'] ?? 0),
+                        'adults'        => PriceInfoFormatter::toInt($bookingData['adults'] ?? 2),
+                        'children'      => PriceInfoFormatter::toInt($bookingData['children'] ?? 0),
                         'children_ages' => $children_ages,
                         'form_price'    => $total_price,
                         'api_price'     => $api_price,
@@ -265,7 +269,7 @@ use Tygh\Addons\TravelCore\TravelConstants;
                     'add_to_cart',
                     [
                         'hotel_name' => $hotel_info['hotel_name'] ?? '',
-                        'hotel_id'   => $bookingData['hotel_id'],
+                        'hotel_id'   => $bdHotelId,
                         'room_id'    => $bookingData['room_id'],
                     ]
                 );
@@ -336,7 +340,7 @@ use Tygh\Addons\TravelCore\TravelConstants;
     $board_name = fn_novoton_holidays_format_board_name($board_id);
     
     // Parse rooms_data
-    $num_rooms = (int)($bookingData['num_rooms'] ?? 1);
+    $num_rooms = PriceInfoFormatter::toInt($bookingData['num_rooms'] ?? 1);
     $rooms_data = [];
     if (!empty($bookingData['rooms_data'])) {
         $rooms_data = is_string($bookingData['rooms_data']) ? json_decode($bookingData['rooms_data'], true) : $bookingData['rooms_data'];
@@ -370,10 +374,10 @@ use Tygh\Addons\TravelCore\TravelConstants;
                 'room_type_display' => fn_novoton_holidays_format_room_type($bookingData['room_id']),
                 'board_id' => $board_id,
                 'board_name' => $board_name,
-                'adults' => (int)($bookingData['adults'] ?? 2),
-                'children' => (int)($bookingData['children'] ?? 0),
+                'adults' => PriceInfoFormatter::toInt($bookingData['adults'] ?? 2),
+                'children' => PriceInfoFormatter::toInt($bookingData['children'] ?? 0),
                 'childrenAges' => $children_ages_arr,
-                'price' => (float)($bookingData['total_price'] ?? 0)
+                'price' => PriceInfoFormatter::toFloat($bookingData['total_price'] ?? 0)
             ]
         ];
         $num_rooms = 1;
@@ -388,7 +392,7 @@ use Tygh\Addons\TravelCore\TravelConstants;
         $child_ages_for_room = [];
         foreach ($guests_data as $key => $guest) {
             if (isset($guest['room']) && $guest['room'] == $room_num && $guest['type'] === 'child') {
-                $child_ages_for_room[] = (int)($guest['age']);
+                $child_ages_for_room[] = PriceInfoFormatter::toInt($guest['age'] ?? 0);
             }
         }
         
@@ -416,7 +420,7 @@ use Tygh\Addons\TravelCore\TravelConstants;
     // This prevents duplicates from form resubmissions
     $bookingRepo = _nvt_booking_repo();
     $existing = $bookingRepo->findExisting(
-        $bookingData['hotel_id'],
+        $bdHotelId,
         $bookingData['check_in'],
         $bookingData['check_out'],
         $holder_name,
@@ -454,10 +458,10 @@ use Tygh\Addons\TravelCore\TravelConstants;
     
     // Use totals from rooms_data if available, otherwise from bookingData
     if ($total_adults == 0) {
-        $total_adults = (int)($bookingData['adults'] ?? 2);
+        $total_adults = PriceInfoFormatter::toInt($bookingData['adults'] ?? 2);
     }
     if ($total_children == 0) {
-        $total_children = (int)($bookingData['children'] ?? 0);
+        $total_children = PriceInfoFormatter::toInt($bookingData['children'] ?? 0);
     }
     
     $room_id_column = implode(', ', $room_ids_for_db);
@@ -502,7 +506,7 @@ use Tygh\Addons\TravelCore\TravelConstants;
             'user_id' => $user_id,
             'session_id' => $session_id,
             'product_id' => $product_id,
-            'hotel_id' => $bookingData['hotel_id'],
+            'hotel_id' => $bdHotelId,
             'hotel_name' => $hotel_info['hotel_name'] ?? '',
             'package_name' => $package_name,
             'room_id' => $room_id_column,
@@ -546,7 +550,7 @@ use Tygh\Addons\TravelCore\TravelConstants;
             'travel_booking' => true,
             'novoton_booking' => true,
             'novoton_booking_id' => $booking_id,
-            'hotel_id' => $bookingData['hotel_id'],
+            'hotel_id' => $bdHotelId,
             'hotel_name' => $hotel_info['hotel_name'] ?? '',
             'hotel_city' => $hotel_info['city'] ?? '',
             'hotel_region' => $hotel_info['region'] ?? '',
@@ -560,8 +564,8 @@ use Tygh\Addons\TravelCore\TravelConstants;
             'check_in' => $bookingData['check_in'],
             'check_out' => $bookingData['check_out'],
             'nights' => $nights,
-            'adults' => (int)($bookingData['adults'] ?? 2),
-            'children' => (int)($bookingData['children'] ?? 0),
+            'adults' => PriceInfoFormatter::toInt($bookingData['adults'] ?? 2),
+            'children' => PriceInfoFormatter::toInt($bookingData['children'] ?? 0),
             'children_ages' => $children_ages,
             'num_rooms' => (int)($num_rooms),  // Explicitly cast to int
             'rooms_data' => $rooms_data,
@@ -623,12 +627,12 @@ use Tygh\Addons\TravelCore\TravelConstants;
     // skip the API call and make checkout feel instant.
     if (isset($api_price) && $api_price > 0) {
         $cache_key = md5(implode('|', [
-            $bookingData['hotel_id'],
+            $bdHotelId,
             $bookingData['room_id'],
             $bookingData['board_id'] ?? '',
             $bookingData['check_in'],
             $bookingData['check_out'],
-            (int)($bookingData['adults'] ?? 2),
+            PriceInfoFormatter::toInt($bookingData['adults'] ?? 2),
             $children_ages,
         ]));
         Tygh::$app['session']['novoton_price_cache'][$cache_key] = [
