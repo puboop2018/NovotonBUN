@@ -21,7 +21,7 @@ interface BookingQueryServiceInterface
      * Get unified booking list with joined hotel + order metadata.
      *
      * @param array<string, mixed> $params Filter parameters (show_orphans, order_id, hotel_id, status, etc.)
-     * @return array<string, mixed> Unified bookings list with display enrichment
+     * @return list<array<string, mixed>> Unified bookings list with display enrichment
      */
     public function getUnifiedBookings(array $params = []): array;
 }

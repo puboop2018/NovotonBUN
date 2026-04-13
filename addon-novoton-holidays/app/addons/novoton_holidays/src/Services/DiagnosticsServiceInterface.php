@@ -50,7 +50,7 @@ interface DiagnosticsServiceInterface
     /**
      * Test facilities sync.
      *
-     * @return array{success: bool, result: list<array<string, mixed>>, facilities: list<array<string, mixed>>, error: string}
+     * @return array{success: bool, result: array<string, mixed>, facilities: list<array<string, mixed>>, error: string}
      */
     public function testFacilities(): array;
 

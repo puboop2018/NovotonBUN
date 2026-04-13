@@ -53,7 +53,7 @@ interface PriceInfoServiceInterface
      * Get seasons for hotel.
      *
      * @param string $hotelId Hotel ID
-     * @return array<string, mixed> Seasons with dates
+     * @return list<array<string, mixed>> Seasons with dates
      */
     public function getSeasons(string $hotelId): array;
 
@@ -61,7 +61,7 @@ interface PriceInfoServiceInterface
      * Get early booking discounts for hotel.
      *
      * @param string $hotelId Hotel ID
-     * @return array<string, mixed> Early booking periods
+     * @return list<array<string, mixed>> Early booking periods
      */
     public function getEarlyBooking(string $hotelId): array;
 

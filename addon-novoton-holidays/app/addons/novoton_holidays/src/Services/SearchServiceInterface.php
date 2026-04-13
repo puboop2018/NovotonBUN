@@ -28,7 +28,7 @@ interface SearchServiceInterface
      * Parse room_price API XML response into structured result array.
      * @param array<string, mixed> $quotaMap
      * @param array<string, mixed> $roomTypeMap
-     * @return array<string, mixed>
+     * @return list<array<string, mixed>>
      */
     public function parseRoomPriceResponse(
         string  $rawXml,

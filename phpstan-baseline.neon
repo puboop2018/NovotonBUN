@@ -13,12 +13,6 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_prices.php
 
 		-
-			message: '#^Offset ''added'' on list\<array\<string, mixed\>\> on left side of \?\? does not exist\.$#'
-			identifier: nullCoalesce.offset
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_tools.php
-
-		-
 			message: '#^Offset ''error'' on array\{success\: bool, file_path\: string, count\: int, error\: string\} on left side of \?\? always exists and is not nullable\.$#'
 			identifier: nullCoalesce.offset
 			count: 1
@@ -81,18 +75,6 @@ parameters:
 		-
 			message: '#^Offset ''raw_response_preview'' on array\{success\: false, config\: non\-empty\-array\<string, mixed\>, message\: string, hotels_count\: int, sample_hotel\: array\<string, mixed\>\|null, error\: string\} in empty\(\) does not exist\.$#'
 			identifier: empty.offset
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_tools.php
-
-		-
-			message: '#^Offset ''total'' on list\<array\<string, mixed\>\> on left side of \?\? does not exist\.$#'
-			identifier: nullCoalesce.offset
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_tools.php
-
-		-
-			message: '#^Offset ''updated'' on list\<array\<string, mixed\>\> on left side of \?\? does not exist\.$#'
-			identifier: nullCoalesce.offset
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_tools.php
 
@@ -259,12 +241,6 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/DatabaseHelper.php
 
 		-
-			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Helpers\\DatabaseHelper\:\:getHotelsForSync\(\) should be compatible with return type \(list\<array\<string, mixed\>\>\) of method Tygh\\Addons\\NovotonHolidays\\Helpers\\DatabaseHelperInterface\:\:getHotelsForSync\(\)$#'
-			identifier: method.childReturnType
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/DatabaseHelper.php
-
-		-
 			message: '#^Property Tygh\\Addons\\NovotonHolidays\\NovotonApi\:\:\$cache \(Tygh\\Addons\\NovotonHolidays\\Services\\CacheService\|null\) does not accept Tygh\\Addons\\NovotonHolidays\\Services\\CacheServiceInterface\.$#'
 			identifier: assign.propertyType
 			count: 1
@@ -281,18 +257,6 @@ parameters:
 			identifier: function.alreadyNarrowedType
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/PriceInfoSync.php
-
-		-
-			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\AlternativeRequestRepository\:\:findFiltered\(\) should be compatible with return type \(list\<array\<string, mixed\>\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\AlternativeRequestRepositoryInterface\:\:findFiltered\(\)$#'
-			identifier: method.childReturnType
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/AlternativeRequestRepository.php
-
-		-
-			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\AlternativeRequestRepository\:\:findUnnotified\(\) should be compatible with return type \(list\<array\<string, mixed\>\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\AlternativeRequestRepositoryInterface\:\:findUnnotified\(\)$#'
-			identifier: method.childReturnType
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/AlternativeRequestRepository.php
 
 		-
 			message: '#^Parameter \#1 \$booking of static method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepository\:\:hydrateJsonFields\(\) expects array\<string, mixed\>, list\<array\<string, mixed\>\> given\.$#'
@@ -325,26 +289,8 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/AlternativeDateSearcherInterface.php
 
 		-
-			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Services\\BookingAdminProvider\:\:getAvailableActions\(\) should be compatible with return type \(array\<int, array\{name\: string, label\: string, url\: string, method\: string, css_class\: string, icon\: string\}\>\) of method Tygh\\Addons\\TravelCore\\Contracts\\BookingAdminProviderInterface\:\:getAvailableActions\(\)$#'
-			identifier: method.childReturnType
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingAdminProvider.php
-
-		-
-			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Services\\BookingAdminProvider\:\:getProviderTabs\(\) should be compatible with return type \(array\<int, array\{name\: string, label\: string, dispatch\: string, ajax\: bool\}\>\) of method Tygh\\Addons\\TravelCore\\Contracts\\BookingAdminProviderInterface\:\:getProviderTabs\(\)$#'
-			identifier: method.childReturnType
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingAdminProvider.php
-
-		-
 			message: '#^Call to function is_array\(\) with non\-empty\-array\<string, mixed\> will always evaluate to true\.$#'
 			identifier: function.alreadyNarrowedType
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingQueryService.php
-
-		-
-			message: '#^Return type \(list\<array\<string, mixed\>\>\) of method Tygh\\Addons\\NovotonHolidays\\Services\\BookingQueryService\:\:getUnifiedBookings\(\) should be compatible with return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Services\\BookingQueryServiceInterface\:\:getUnifiedBookings\(\)$#'
-			identifier: method.childReturnType
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingQueryService.php
 
@@ -385,20 +331,8 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/CartAssemblyService.php
 
 		-
-			message: '#^Return type \(list\<string\>\) of method Tygh\\Addons\\NovotonHolidays\\Services\\CronService\:\:getCountries\(\) should be compatible with return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Services\\CronServiceInterface\:\:getCountries\(\)$#'
-			identifier: method.childReturnType
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/CronService.php
-
-		-
 			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\DiagnosticsService\:\:testSearch\(\) should return array\{success\: bool, results\: list\<array\<string, mixed\>\>, count\: int, error\: string\} but returns array\{success\: true, results\: non\-empty\-array\<string, mixed\>, count\: int\<1, max\>, error\: ''''\}\.$#'
 			identifier: return.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/DiagnosticsService.php
-
-		-
-			message: '#^Return type \(array\{success\: bool, result\: array\<string, mixed\>, facilities\: list\<array\<string, mixed\>\>, error\: string\}\) of method Tygh\\Addons\\NovotonHolidays\\Services\\DiagnosticsService\:\:testFacilities\(\) should be compatible with return type \(array\{success\: bool, result\: list\<array\<string, mixed\>\>, facilities\: list\<array\<string, mixed\>\>, error\: string\}\) of method Tygh\\Addons\\NovotonHolidays\\Services\\DiagnosticsServiceInterface\:\:testFacilities\(\)$#'
-			identifier: method.childReturnType
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/DiagnosticsService.php
 
@@ -465,13 +399,7 @@ parameters:
 		-
 			message: '#^Parameter \#1 \$results of method Tygh\\Addons\\NovotonHolidays\\Services\\HotelAvailabilitySearcher\:\:calculateMaxCapacity\(\) expects array\<string, mixed\>, list\<array\<string, mixed\>\> given\.$#'
 			identifier: argument.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/HotelAvailabilitySearcher.php
-
-		-
-			message: '#^Parameter \#1 \$results of static method Tygh\\Addons\\NovotonHolidays\\Services\\SearchService\:\:deduplicateResults\(\) expects list\<array\<string, mixed\>\>, array\<string, mixed\> given\.$#'
-			identifier: argument.type
-			count: 1
+			count: 2
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/HotelAvailabilitySearcher.php
 
 		-
@@ -511,6 +439,12 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoCalculation.php
 
 		-
+			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Services\\PriceInfoCalculation\:\:getSamplePrices\(\) should be compatible with return type \(list\<string\>\) of method Tygh\\Addons\\NovotonHolidays\\Services\\PriceInfoCalculationInterface\:\:getSamplePrices\(\)$#'
+			identifier: method.childReturnType
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoCalculation.php
+
+		-
 			message: '#^Return type \(list\<string\>\) of method Tygh\\Addons\\NovotonHolidays\\Services\\PriceInfoCalculation\:\:getDebugLog\(\) should be compatible with return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Services\\PriceInfoCalculationInterface\:\:getDebugLog\(\)$#'
 			identifier: method.childReturnType
 			count: 1
@@ -543,18 +477,6 @@ parameters:
 		-
 			message: '#^Call to function is_string\(\) with non\-falsy\-string will always evaluate to true\.$#'
 			identifier: function.alreadyNarrowedType
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoService.php
-
-		-
-			message: '#^Return type \(list\<array\<string, mixed\>\>\) of method Tygh\\Addons\\NovotonHolidays\\Services\\PriceInfoService\:\:getEarlyBooking\(\) should be compatible with return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Services\\PriceInfoServiceInterface\:\:getEarlyBooking\(\)$#'
-			identifier: method.childReturnType
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoService.php
-
-		-
-			message: '#^Return type \(list\<array\<string, mixed\>\>\) of method Tygh\\Addons\\NovotonHolidays\\Services\\PriceInfoService\:\:getSeasons\(\) should be compatible with return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Services\\PriceInfoServiceInterface\:\:getSeasons\(\)$#'
-			identifier: method.childReturnType
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoService.php
 
@@ -633,12 +555,6 @@ parameters:
 		-
 			message: '#^Result of \|\| is always true\.$#'
 			identifier: booleanOr.alwaysTrue
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SearchService.php
-
-		-
-			message: '#^Return type \(list\<array\<string, mixed\>\>\) of method Tygh\\Addons\\NovotonHolidays\\Services\\SearchService\:\:parseRoomPriceResponse\(\) should be compatible with return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Services\\SearchServiceInterface\:\:parseRoomPriceResponse\(\)$#'
-			identifier: method.childReturnType
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SearchService.php
 

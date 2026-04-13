@@ -231,7 +231,7 @@ class DatabaseHelper implements DatabaseHelperInterface
      * Get hotels for sync with optimized field selection
      * @param array<string, mixed> $conditions
      * @param list<string> $fields
-     * @return array<string, mixed>
+     * @return list<array<string, mixed>>
      */
     public function getHotelsForSync(array $conditions = [], int $limit = 0, array $fields = []): array
     {

@@ -96,6 +96,7 @@ class BookingAdminProvider implements BookingAdminProviderInterface
     /**
      * @return array<string, mixed>
      * @param array<string, mixed> $booking
+     * @return list<array{name: string, label: string, url: string, method: string, css_class: string, icon: string}>
      */
     public function getAvailableActions(array $booking): array
     {
@@ -175,6 +176,7 @@ class BookingAdminProvider implements BookingAdminProviderInterface
     /**
      * @return array<string, mixed>
      * @param array<string, mixed> $booking
+     * @return list<array{name: string, label: string, dispatch: string, ajax: bool}>
      */
     public function getProviderTabs(array $booking): array
     {

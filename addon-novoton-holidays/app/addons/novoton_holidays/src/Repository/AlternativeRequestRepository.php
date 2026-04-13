@@ -72,7 +72,7 @@ class AlternativeRequestRepository implements AlternativeRequestRepositoryInterf
 
     /**
      * Find requests with alternatives found but not yet notified.
-     * @return array<string, mixed>
+     * @return list<array<string, mixed>>
      */
     public function findUnnotified(int $limit = 20): array
     {
@@ -168,7 +168,7 @@ class AlternativeRequestRepository implements AlternativeRequestRepositoryInterf
      * @param array<string, mixed>  $params    Bound parameters
      * @param int    $limit
      * @param int    $offset
-     * @return array<string, mixed>
+     * @return list<array<string, mixed>>
      */
     public function findFiltered(string $whereSql = '', array $params = [], int $limit = 30, int $offset = 0): array
     {

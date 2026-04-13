@@ -59,7 +59,7 @@ interface PriceInfoCalculationInterface
      *
      * @param string $roomId
      * @param string $boardId
-     * @return array<string, mixed>
+     * @return list<string>
      */
     public function getSamplePrices(string $roomId, string $boardId): array;
 
