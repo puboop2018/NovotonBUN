@@ -9409,18 +9409,6 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SecurityService.php
 
 		-
-			message: '#^Cannot cast mixed to float\.$#'
-			identifier: cast.double
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SecurityService.php
-
-		-
-			message: '#^Cannot cast mixed to int\.$#'
-			identifier: cast.int
-			count: 11
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SecurityService.php
-
-		-
 			message: '#^Cannot use \+\+ on mixed\.$#'
 			identifier: postInc.type
 			count: 1
@@ -9459,29 +9447,11 @@ parameters:
 		-
 			message: '#^Parameter \#1 \$date of method Tygh\\Addons\\NovotonHolidays\\Services\\SecurityService\:\:isValidDate\(\) expects string, mixed given\.$#'
 			identifier: argument.type
-			count: 5
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SecurityService.php
-
-		-
-			message: '#^Parameter \#1 \$datetime of function strtotime expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 3
+			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SecurityService.php
 
 		-
 			message: '#^Parameter \#1 \$haystack of function str_contains expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SecurityService.php
-
-		-
-			message: '#^Parameter \#1 \$hotelId of method Tygh\\Addons\\NovotonHolidays\\Services\\SecurityService\:\:isValidHotelId\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SecurityService.php
-
-		-
-			message: '#^Parameter \#1 \$hotelId of method Tygh\\Addons\\NovotonHolidays\\Services\\SecurityService\:\:sanitizeHotelId\(\) expects string, mixed given\.$#'
 			identifier: argument.type
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SecurityService.php
@@ -9493,36 +9463,6 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SecurityService.php
 
 		-
-			message: '#^Parameter \#1 \$name of method Tygh\\Addons\\NovotonHolidays\\Services\\SecurityService\:\:isValidName\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SecurityService.php
-
-		-
-			message: '#^Parameter \#1 \$name of method Tygh\\Addons\\NovotonHolidays\\Services\\SecurityService\:\:sanitizeName\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 4
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SecurityService.php
-
-		-
-			message: '#^Parameter \#1 \$string of function substr expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SecurityService.php
-
-		-
-			message: '#^Parameter \#1 \$string of function trim expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SecurityService.php
-
-		-
-			message: '#^Parameter \#1 \$string of method Tygh\\Addons\\NovotonHolidays\\Services\\SecurityService\:\:sanitizeString\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SecurityService.php
-
-		-
 			message: '#^Parameter \#2 \$data of function hash expects string, mixed given\.$#'
 			identifier: argument.type
 			count: 1
@@ -9531,7 +9471,7 @@ parameters:
 		-
 			message: '#^Parameter \#2 \$string of function explode expects string, mixed given\.$#'
 			identifier: argument.type
-			count: 2
+			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SecurityService.php
 
 		-

@@ -51,50 +51,53 @@ class SecurityService implements SecurityServiceInterface
         }
         
         // Validate hotel_id format
-        if (!empty($data['hotel_id']) && !$this->isValidHotelId($data['hotel_id'])) {
+        $hotelIdStr = PriceInfoFormatter::toScalar($data['hotel_id'] ?? '');
+        if (!empty($hotelIdStr) && !$this->isValidHotelId($hotelIdStr)) {
             $errors[] = 'Invalid hotel ID format';
         }
-        
+
         // Validate dates
-        if (!empty($data['check_in'])) {
-            if (!$this->isValidDate($data['check_in'])) {
+        $checkInStr = PriceInfoFormatter::toScalar($data['check_in'] ?? '');
+        if (!empty($checkInStr)) {
+            if (!$this->isValidDate($checkInStr)) {
                 $errors[] = 'Invalid check-in date format';
-            } elseif (strtotime($data['check_in']) < strtotime('today')) {
+            } elseif ((int) strtotime($checkInStr) < (int) strtotime('today')) {
                 $errors[] = 'Check-in date cannot be in the past';
             }
         }
-        
-        if (!empty($data['check_out'])) {
-            if (!$this->isValidDate($data['check_out'])) {
+
+        $checkOutStr = PriceInfoFormatter::toScalar($data['check_out'] ?? '');
+        if (!empty($checkOutStr)) {
+            if (!$this->isValidDate($checkOutStr)) {
                 $errors[] = 'Invalid check-out date format';
-            } elseif (!empty($data['check_in']) && strtotime($data['check_out']) <= strtotime($data['check_in'])) {
+            } elseif (!empty($checkInStr) && (int) strtotime($checkOutStr) <= (int) strtotime($checkInStr)) {
                 $errors[] = 'Check-out must be after check-in';
             }
         }
-        
+
         // Validate adults/children
         if (isset($data['adults'])) {
-            $adults = (int) $data['adults'];
+            $adults = PriceInfoFormatter::toInt($data['adults']);
             if ($adults < 1 || $adults > TravelConstants::MAX_ADULTS) {
                 $errors[] = 'Adults must be between 1 and ' . TravelConstants::MAX_ADULTS;
             }
         }
-        
+
         if (isset($data['children'])) {
-            $children = (int) $data['children'];
+            $children = PriceInfoFormatter::toInt($data['children']);
             if ($children < 0 || $children > TravelConstants::MAX_CHILDREN) {
                 $errors[] = 'Children must be between 0 and ' . TravelConstants::MAX_CHILDREN;
             }
         }
-        
+
         // Validate children ages
         if (!empty($data['children_ages'])) {
-            $ages = is_array($data['children_ages']) 
-                ? $data['children_ages'] 
-                : explode(',', $data['children_ages']);
-            
+            $ages = is_array($data['children_ages'])
+                ? $data['children_ages']
+                : explode(',', PriceInfoFormatter::toScalar($data['children_ages']));
+
             foreach ($ages as $age) {
-                $age = (float) $age;
+                $age = PriceInfoFormatter::toFloat($age);
                 if ($age < TravelConstants::MIN_CHILD_AGE || $age > TravelConstants::MAX_CHILD_AGE) {
                     $errors[] = 'Child age must be between ' . TravelConstants::MIN_CHILD_AGE . ' and ' . TravelConstants::MAX_CHILD_AGE;
                     break;
@@ -104,7 +107,7 @@ class SecurityService implements SecurityServiceInterface
         
         // Validate price (prevent manipulation)
         if (isset($data['total_price'])) {
-            $price = (float) $data['total_price'];
+            $price = PriceInfoFormatter::toFloat($data['total_price']);
             if ($price < 0 || $price > 100000) {
                 $errors[] = 'Invalid price value';
             }
@@ -113,7 +116,7 @@ class SecurityService implements SecurityServiceInterface
         // Validate guest names (basic XSS prevention)
         $nameFields = ['holder_name', 'guest_name'];
         foreach ($nameFields as $field) {
-            if (!empty($data[$field]) && !$this->isValidName($data[$field])) {
+            if (!empty($data[$field]) && !$this->isValidName(PriceInfoFormatter::toScalar($data[$field]))) {
                 $errors[] = "Invalid characters in {$field}";
             }
         }
@@ -135,50 +138,53 @@ class SecurityService implements SecurityServiceInterface
         $sanitized = [];
 
         // Sanitize and validate check_in
-        if (!empty($params['check_in'])) {
-            if ($this->isValidDate($params['check_in'])) {
-                $sanitized['check_in'] = $params['check_in'];
+        $pCheckIn = PriceInfoFormatter::toScalar($params['check_in'] ?? '');
+        if (!empty($pCheckIn)) {
+            if ($this->isValidDate($pCheckIn)) {
+                $sanitized['check_in'] = $pCheckIn;
             }
         }
 
         // Sanitize and validate check_out
-        if (!empty($params['check_out'])) {
-            if ($this->isValidDate($params['check_out'])) {
-                $sanitized['check_out'] = $params['check_out'];
+        $pCheckOut = PriceInfoFormatter::toScalar($params['check_out'] ?? '');
+        if (!empty($pCheckOut)) {
+            if ($this->isValidDate($pCheckOut)) {
+                $sanitized['check_out'] = $pCheckOut;
             }
         }
 
         // Sanitize nights
-        $sanitized['nights'] = max(1, min(TravelConstants::MAX_NIGHTS, (int) ($params['nights'] ?? TravelConstants::DEFAULT_NIGHTS)));
+        $sanitized['nights'] = max(1, min(TravelConstants::MAX_NIGHTS, PriceInfoFormatter::toInt($params['nights'] ?? TravelConstants::DEFAULT_NIGHTS)));
 
         // Sanitize adults
-        $sanitized['adults'] = max(1, min(TravelConstants::MAX_ADULTS, (int) ($params['adults'] ?? TravelConstants::DEFAULT_ADULTS)));
+        $sanitized['adults'] = max(1, min(TravelConstants::MAX_ADULTS, PriceInfoFormatter::toInt($params['adults'] ?? TravelConstants::DEFAULT_ADULTS)));
 
         // Sanitize children
-        $sanitized['children'] = max(0, min(TravelConstants::MAX_CHILDREN, (int) ($params['children'] ?? TravelConstants::DEFAULT_CHILDREN)));
+        $sanitized['children'] = max(0, min(TravelConstants::MAX_CHILDREN, PriceInfoFormatter::toInt($params['children'] ?? TravelConstants::DEFAULT_CHILDREN)));
 
         // Sanitize rooms
-        $sanitized['rooms'] = max(1, min(TravelConstants::MAX_ROOMS, (int) ($params['rooms'] ?? TravelConstants::DEFAULT_ROOMS)));
+        $sanitized['rooms'] = max(1, min(TravelConstants::MAX_ROOMS, PriceInfoFormatter::toInt($params['rooms'] ?? TravelConstants::DEFAULT_ROOMS)));
 
         // Sanitize destination (alphanumeric, spaces, common punctuation)
         if (!empty($params['destination'])) {
-            $sanitized['destination'] = $this->sanitizeString($params['destination'], 100);
+            $sanitized['destination'] = $this->sanitizeString(PriceInfoFormatter::toScalar($params['destination']), 100);
         }
 
         // Sanitize hotel_id
         if (!empty($params['hotel_id'])) {
-            $sanitized['hotel_id'] = $this->sanitizeHotelId($params['hotel_id']);
+            $sanitized['hotel_id'] = $this->sanitizeHotelId(PriceInfoFormatter::toScalar($params['hotel_id']));
         }
 
         // Pass through product_id (integer)
         if (!empty($params['product_id'])) {
-            $sanitized['product_id'] = (int) $params['product_id'];
+            $sanitized['product_id'] = PriceInfoFormatter::toInt($params['product_id']);
         }
 
         // Pass through children_ages (comma-separated numbers, may include decimals like 1.5)
-        if (!empty($params['children_ages']) && is_string($params['children_ages'])) {
+        $childAgesRaw = $params['children_ages'] ?? '';
+        if (!empty($childAgesRaw) && is_string($childAgesRaw)) {
             // Only allow digits, dots (decimals), and commas
-            $sanitized['children_ages'] = preg_replace('/[^0-9.,]/', '', $params['children_ages']);
+            $sanitized['children_ages'] = preg_replace('/[^0-9.,]/', '', $childAgesRaw);
         }
 
         // Pass through rooms_data (JSON string - will be decoded by controller)
@@ -190,18 +196,18 @@ class SecurityService implements SecurityServiceInterface
         }
 
         // Pass through meal_plan
-        if (!empty($params['meal_plan'])) {
+        if (!empty($params['meal_plan']) && is_string($params['meal_plan'])) {
             $sanitized['meal_plan'] = preg_replace('/[^a-zA-Z0-9_ &+]/', '', substr($params['meal_plan'], 0, 50));
         }
 
         // Pass through flex_days (integer)
         if (!empty($params['flex_days'])) {
-            $sanitized['flex_days'] = max(0, min(30, (int) $params['flex_days']));
+            $sanitized['flex_days'] = max(0, min(30, PriceInfoFormatter::toInt($params['flex_days'])));
         }
 
         // Pass through search query
         if (!empty($params['q'])) {
-            $sanitized['q'] = $this->sanitizeString($params['q'], 200);
+            $sanitized['q'] = $this->sanitizeString(PriceInfoFormatter::toScalar($params['q']), 200);
         }
 
         // Note: debug mode is gated by server-side ConfigProvider::isDebugLogging(),
@@ -211,40 +217,41 @@ class SecurityService implements SecurityServiceInterface
         for ($i = 1; $i <= 6; $i++) {
             $key = 'child_age_' . $i;
             if (isset($params[$key])) {
-                $sanitized[$key] = max(0, min(17, (int) $params[$key]));
+                $sanitized[$key] = max(0, min(17, PriceInfoFormatter::toInt($params[$key])));
             }
         }
 
         return $sanitized;
     }
-    
+
     /**
      * Validate and sanitize guest data
-     * 
+     *
      * @param array<string, mixed> $guests Guest data
      * @return array<string, mixed> Sanitized guest data
      */
     public function sanitizeGuestData(array $guests): array
     {
         $sanitized = [];
-        
+
         foreach ($guests as $key => $guest) {
             if (!is_array($guest)) continue;
-            
+
+            $guestType = PriceInfoFormatter::toScalar($guest['type'] ?? '');
             $sanitized[$key] = [
-                'first_name' => $this->sanitizeName($guest['first_name'] ?? ''),
-                'last_name' => $this->sanitizeName($guest['last_name'] ?? ''),
-                'name' => $this->sanitizeName($guest['name'] ?? ''),
-                'api_name' => $this->sanitizeName($guest['api_name'] ?? ''),
-                'type' => in_array($guest['type'] ?? '', ['adult', 'child']) ? $guest['type'] : 'adult',
-                'age' => isset($guest['age']) ? max(0, min(99, (int) $guest['age'])) : null,
-                'room' => max(1, min(5, (int) ($guest['room'] ?? 1))),
+                'first_name' => $this->sanitizeName(PriceInfoFormatter::toScalar($guest['first_name'] ?? '')),
+                'last_name' => $this->sanitizeName(PriceInfoFormatter::toScalar($guest['last_name'] ?? '')),
+                'name' => $this->sanitizeName(PriceInfoFormatter::toScalar($guest['name'] ?? '')),
+                'api_name' => $this->sanitizeName(PriceInfoFormatter::toScalar($guest['api_name'] ?? '')),
+                'type' => in_array($guestType, ['adult', 'child']) ? $guestType : 'adult',
+                'age' => isset($guest['age']) ? max(0, min(99, PriceInfoFormatter::toInt($guest['age']))) : null,
+                'room' => max(1, min(5, PriceInfoFormatter::toInt($guest['room'] ?? 1))),
                 'is_holder' => !empty($guest['is_holder']),
             ];
 
             // Validate and pass through DOB (DD/MM/YYYY format from form)
             if (!empty($guest['dob'])) {
-                $dob = trim($guest['dob']);
+                $dob = trim(PriceInfoFormatter::toScalar($guest['dob']));
                 // Accept DD/MM/YYYY or YYYY-MM-DD format
                 if (preg_match('/^(\d{2})\/(\d{2})\/(\d{4})$/', $dob) || preg_match('/^\d{4}-\d{2}-\d{2}$/', $dob)) {
                     $sanitized[$key]['dob'] = $dob;
