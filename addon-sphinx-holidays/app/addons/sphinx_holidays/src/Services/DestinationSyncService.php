@@ -6,6 +6,7 @@ namespace Tygh\Addons\SphinxHolidays\Services;
 use Tygh\Addons\SphinxHolidays\SphinxApi;
 use Tygh\Addons\SphinxHolidays\Contracts\DestinationSyncServiceInterface;
 use Tygh\Addons\SphinxHolidays\Repository\DestinationRepository;
+use Tygh\Addons\TravelCore\Helpers\ValidationHelpers;
 
 /**
  * Fetches destinations from the Sphinx API and syncs them into the local DB.
@@ -98,22 +99,25 @@ class DestinationSyncService extends AbstractSyncService implements DestinationS
             // Normalize and upsert this page's items immediately
             $pageBatch = [];
             foreach ($items as $item) {
+                if (!is_array($item)) {
+                    continue;
+                }
                 $normalized = $this->normalizeDestination($item);
                 if ($normalized !== null) {
                     $pageBatch[] = $normalized;
-                    $stats['total']++;
+                    $stats['total'] = ValidationHelpers::toInt($stats['total'] ?? 0) + 1;
 
                     if (count($pageBatch) >= self::UPSERT_BATCH_SIZE) {
-                        $stats['synced'] += $this->repository->upsertBatch($pageBatch);
+                        $stats['synced'] = ValidationHelpers::toInt($stats['synced'] ?? 0) + $this->repository->upsertBatch($pageBatch);
                         $pageBatch = [];
                     }
                 } else {
                     $skipped++;
-                    $rawId = $item['id'] ?? $item['destination_id'] ?? '?';
-                    $rawName = $item['name'] ?? $item['title'] ?? $item['label'] ?? '(none)';
-                    $rawType = $item['type'] ?? $item['destination_type'] ?? '?';
-                    $rawParent = $item['parent_id'] ?? $item['parent'] ?? '?';
-                    $reason = ((int)($item['id'] ?? $item['destination_id'] ?? 0)) <= 0
+                    $rawId = ValidationHelpers::toString($item['id'] ?? $item['destination_id'] ?? '?');
+                    $rawName = ValidationHelpers::toString($item['name'] ?? $item['title'] ?? $item['label'] ?? '(none)');
+                    $rawType = ValidationHelpers::toString($item['type'] ?? $item['destination_type'] ?? '?');
+                    $rawParent = ValidationHelpers::toString($item['parent_id'] ?? $item['parent'] ?? '?');
+                    $reason = ValidationHelpers::toInt($item['id'] ?? $item['destination_id'] ?? 0) <= 0
                         ? 'invalid ID (0 or negative)'
                         : 'empty name';
                     $detail = "id={$rawId}, name=\"{$rawName}\", type={$rawType}, parent_id={$rawParent}, reason={$reason}";
@@ -123,25 +127,29 @@ class DestinationSyncService extends AbstractSyncService implements DestinationS
             }
 
             if (!empty($pageBatch)) {
-                $stats['synced'] += $this->repository->upsertBatch($pageBatch);
+                $stats['synced'] = ValidationHelpers::toInt($stats['synced'] ?? 0) + $this->repository->upsertBatch($pageBatch);
             }
 
+            $sTotal = ValidationHelpers::toInt($stats['total'] ?? 0);
             $skipMsg = $skipped > 0 ? ", {$skipped} skipped (no name/id)" : '';
-            $this->output("  Page {$page}: " . count($items) . " items fetched, {$stats['total']} accepted{$skipMsg}");
+            $this->output("  Page {$page}: " . count($items) . " items fetched, {$sTotal} accepted{$skipMsg}");
 
-            if (!$this->hasMorePages($response, $page, self::PER_PAGE, $stats['total'])) {
+            if (!$this->hasMorePages($response, $page, self::PER_PAGE, $sTotal)) {
                 break;
             }
 
             $page++;
         }
 
-        if ($stats['total'] === 0 && $updatedSince !== null) {
+        $sTotal = ValidationHelpers::toInt($stats['total'] ?? 0);
+        $sSynced = ValidationHelpers::toInt($stats['synced'] ?? 0);
+
+        if ($sTotal === 0 && $updatedSince !== null) {
             $this->output('No destinations updated since last sync. Everything is up to date.');
             $stats['success'] = true;
             $stats['synced'] = 0;
         } else {
-            $stats['failed'] = $stats['total'] - $stats['synced'];
+            $stats['failed'] = $sTotal - $sSynced;
             $stats['success'] = true;
 
             // Build full_path breadcrumbs for disambiguation (chunked)
@@ -159,7 +167,8 @@ class DestinationSyncService extends AbstractSyncService implements DestinationS
             $this->output('=== END SKIPPED SUMMARY ===');
             $this->output('');
         }
-        $this->output("Sync complete: {$stats['synced']}/{$stats['total']} destinations synced ({$stats['sync_mode']}).");
+        $sSyncMode = ValidationHelpers::toString($stats['sync_mode'] ?? 'full');
+        $this->output("Sync complete: {$sSynced}/{$sTotal} destinations synced ({$sSyncMode}).");
 
         return $stats;
     }
@@ -171,25 +180,27 @@ class DestinationSyncService extends AbstractSyncService implements DestinationS
      */
     private function normalizeDestination(array $raw): ?array
     {
-        $id = (int) ($raw['id'] ?? $raw['destination_id'] ?? 0);
+        $id = ValidationHelpers::toInt($raw['id'] ?? $raw['destination_id'] ?? 0);
         if ($id <= 0) {
             return null;
         }
 
         // Extract name — try multiple field names the API might use
-        $name = (string) ($raw['name'] ?? $raw['title'] ?? $raw['label'] ?? '');
+        $name = ValidationHelpers::toString($raw['name'] ?? $raw['title'] ?? $raw['label'] ?? '');
 
         // Some APIs nest the name inside a translations/localized object
-        if ($name === '' && isset($raw['translations'])) {
+        if ($name === '' && isset($raw['translations']) && is_array($raw['translations'])) {
             $translations = $raw['translations'];
-            $name = (string) ($translations['en'] ?? $translations['en_US'] ?? reset($translations) ?? '');
+            $first = reset($translations);
+            $name = ValidationHelpers::toString($translations['en'] ?? $translations['en_US'] ?? $first ?? '');
         }
-        if ($name === '' && isset($raw['names'])) {
+        if ($name === '' && isset($raw['names']) && is_array($raw['names'])) {
             $names = $raw['names'];
-            $name = (string) ($names['en'] ?? $names['en_US'] ?? reset($names) ?? '');
+            $first = reset($names);
+            $name = ValidationHelpers::toString($names['en'] ?? $names['en_US'] ?? $first ?? '');
         }
         if ($name === '' && isset($raw['name_en'])) {
-            $name = (string) $raw['name_en'];
+            $name = ValidationHelpers::toString($raw['name_en']);
         }
 
         // Skip destinations with no name — they are unusable for disambiguation
@@ -198,7 +209,7 @@ class DestinationSyncService extends AbstractSyncService implements DestinationS
         }
 
         // Determine destination type from API data
-        $type = strtolower((string) ($raw['type'] ?? $raw['destination_type'] ?? 'destination'));
+        $type = strtolower(ValidationHelpers::toString($raw['type'] ?? $raw['destination_type'] ?? 'destination'));
 
         // Map common API type values to our canonical types
         $typeMap = [
@@ -216,12 +227,12 @@ class DestinationSyncService extends AbstractSyncService implements DestinationS
             'destination_id' => $id,
             'name'           => trim($name),
             'type'           => $type,
-            'parent_id'      => (int) ($raw['parent_id'] ?? $raw['parent'] ?? 0),
-            'country_code'   => (string) ($raw['country_code'] ?? $raw['iso'] ?? $raw['iso_code'] ?? ''),
-            'geoname_id'     => (int) ($raw['geoname_id'] ?? $raw['geonames_id'] ?? 0),
-            'latitude'       => (float) ($raw['latitude'] ?? $raw['lat'] ?? 0),
-            'longitude'      => (float) ($raw['longitude'] ?? $raw['lng'] ?? $raw['lon'] ?? 0),
-            'hotel_count'    => (int) ($raw['hotel_count'] ?? $raw['hotels_count'] ?? 0),
+            'parent_id'      => ValidationHelpers::toInt($raw['parent_id'] ?? $raw['parent'] ?? 0),
+            'country_code'   => ValidationHelpers::toString($raw['country_code'] ?? $raw['iso'] ?? $raw['iso_code'] ?? ''),
+            'geoname_id'     => ValidationHelpers::toInt($raw['geoname_id'] ?? $raw['geonames_id'] ?? 0),
+            'latitude'       => ValidationHelpers::toFloat($raw['latitude'] ?? $raw['lat'] ?? 0),
+            'longitude'      => ValidationHelpers::toFloat($raw['longitude'] ?? $raw['lng'] ?? $raw['lon'] ?? 0),
+            'hotel_count'    => ValidationHelpers::toInt($raw['hotel_count'] ?? $raw['hotels_count'] ?? 0),
         ];
     }
 }
