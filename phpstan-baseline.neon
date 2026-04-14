@@ -5907,7 +5907,7 @@ parameters:
 		-
 			message: '#^Argument of an invalid type mixed supplied for foreach, only iterables are supported\.$#'
 			identifier: foreach.nonIterable
-			count: 5
+			count: 4
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/PriceInfoSync.php
 
 		-
@@ -5923,12 +5923,6 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/PriceInfoSync.php
 
 		-
-			message: '#^Binary operation "\." between mixed and '' \- '' results in an error\.$#'
-			identifier: binaryOp.invalid
-			count: 8
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/PriceInfoSync.php
-
-		-
 			message: '#^Binary operation "\." between mixed and ''/var/cache/novoton/'' results in an error\.$#'
 			identifier: binaryOp.invalid
 			count: 2
@@ -5941,50 +5935,8 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/PriceInfoSync.php
 
 		-
-			message: '#^Binary operation "\." between non\-falsy\-string and mixed results in an error\.$#'
-			identifier: binaryOp.invalid
-			count: 8
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/PriceInfoSync.php
-
-		-
-			message: '#^Cannot access offset ''IdCont'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/PriceInfoSync.php
-
-		-
-			message: '#^Cannot access offset ''PackageName'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/PriceInfoSync.php
-
-		-
-			message: '#^Cannot access offset ''packages'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/PriceInfoSync.php
-
-		-
-			message: '#^Cannot access offset ''product'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 9
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/PriceInfoSync.php
-
-		-
-			message: '#^Cannot access offset ''product_code'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 9
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/PriceInfoSync.php
-
-		-
-			message: '#^Cannot access offset ''product_id'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/PriceInfoSync.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\PriceInfoSync\:\:getHotelIdFromProduct\(\) should return string\|null but returns mixed\.$#'
-			identifier: return.type
+			message: '#^Call to function is_array\(\) with non\-empty\-array\<string, mixed\> will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/PriceInfoSync.php
 
@@ -6001,30 +5953,6 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/PriceInfoSync.php
 
 		-
-			message: '#^Parameter \#1 \$haystack of function str_starts_with expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/PriceInfoSync.php
-
-		-
-			message: '#^Parameter \#1 \$product of method Tygh\\Addons\\NovotonHolidays\\PriceInfoSync\:\:getHotelIdFromProduct\(\) expects array\<string, mixed\>, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/PriceInfoSync.php
-
-		-
-			message: '#^Parameter \#1 \$productId of method Tygh\\Addons\\NovotonHolidays\\PriceInfoSync\:\:syncProductPrices\(\) expects int, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/PriceInfoSync.php
-
-		-
-			message: '#^Parameter \#1 \$string of function substr expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/PriceInfoSync.php
-
-		-
 			message: '#^Parameter \#1 \$value of function count expects array\|Countable, mixed given\.$#'
 			identifier: argument.type
 			count: 4
@@ -6034,30 +5962,6 @@ parameters:
 			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, list\<mixed\> given\.$#'
 			identifier: argument.type
 			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/PriceInfoSync.php
-
-		-
-			message: '#^Parameter \#2 \$packageName of method Tygh\\Addons\\NovotonHolidays\\Api\\Contracts\\PricingApiClientInterface\:\:getPriceInfo\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/PriceInfoSync.php
-
-		-
-			message: '#^Parameter \#2 \$subject of function preg_match expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/PriceInfoSync.php
-
-		-
-			message: '#^Part \$product\[''product''\] \(mixed\) of encapsed string cannot be cast to string\.$#'
-			identifier: encapsedStringPart.nonString
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/PriceInfoSync.php
-
-		-
-			message: '#^Part \$product\[''product_code''\] \(mixed\) of encapsed string cannot be cast to string\.$#'
-			identifier: encapsedStringPart.nonString
-			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/PriceInfoSync.php
 
 		-

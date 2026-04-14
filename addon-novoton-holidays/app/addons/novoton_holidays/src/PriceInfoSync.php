@@ -13,6 +13,7 @@ namespace Tygh\Addons\NovotonHolidays;
 use Tygh\Addons\NovotonHolidays\Api\Contracts\NovotonApiKitInterface;
 use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
+use Tygh\Addons\NovotonHolidays\Services\PriceInfoFormatter;
 use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
 use Tygh\Addons\NovotonHolidays\Exceptions\XmlParsingException;
 
@@ -69,15 +70,15 @@ class PriceInfoSync
     private function getHotelIdFromProduct(array $product): ?string
     {
         // Try to get from novoton_hotels table
-        $hotelId = db_get_field(
+        $hotelId = PriceInfoFormatter::toScalar(db_get_field(
             "SELECT hotel_id FROM ?:novoton_hotels WHERE product_id = ?i LIMIT 1",
-            $product['product_id']
-        );
+            PriceInfoFormatter::toInt($product['product_id'] ?? 0)
+        ));
 
         if (empty($hotelId)) {
             // Try to extract from product code (e.g., NVT442)
             // Strip known prefixes first, then take trailing digits
-            $code = $product['product_code'];
+            $code = PriceInfoFormatter::toScalar($product['product_code'] ?? '');
             foreach ($this->productPrefixes as $prefix) {
                 if (str_starts_with($code, $prefix)) {
                     $code = substr($code, strlen($prefix));
@@ -88,7 +89,7 @@ class PriceInfoSync
             $hotelId = $matches[1] ?? null;
         }
 
-        return $hotelId;
+        return $hotelId ?: null;
     }
 
     /**
@@ -98,6 +99,7 @@ class PriceInfoSync
      */
     public function syncProductPrices(int $productId, array &$stats): bool
     {
+        /** @var array<string, mixed>|null $product */
         $product = db_get_row(
             "SELECT p.product_id, pd.product, p.product_code
              FROM ?:products AS p
@@ -107,15 +109,17 @@ class PriceInfoSync
             $productId
         );
 
-        if (empty($product)) {
+        if (empty($product) || !is_array($product)) {
             $stats['errors'][] = "Product ID $productId not found";
             return false;
         }
 
         $hotelId = $this->getHotelIdFromProduct($product);
+        $productCode = PriceInfoFormatter::toScalar($product['product_code'] ?? '');
+        $productName = PriceInfoFormatter::toScalar($product['product'] ?? '');
 
         if (empty($hotelId)) {
-            $stats['no_data'][] = $product['product_code'] . ' - ' . $product['product'];
+            $stats['no_data'][] = $productCode . ' - ' . $productName;
             return false;
         }
 
@@ -124,20 +128,24 @@ class PriceInfoSync
             $hotelInfo = $this->api->hotels()->getHotelInfo($hotelId);
 
             if (!$hotelInfo || !isset($hotelInfo->packages)) {
-                $stats['no_data'][] = $product['product_code'] . ' - ' . $product['product'];
+                $stats['no_data'][] = $productCode . ' - ' . $productName;
                 return false;
             }
 
             // Convert to array
+            /** @var array<string, mixed>|null $hotelData */
             $hotelData = json_decode((string) json_encode($hotelInfo), true);
+            if (!is_array($hotelData)) {
+                $hotelData = [];
+            }
 
             // Normalize packages array
-            if (isset($hotelData['packages']['IdCont'])) {
+            if (isset($hotelData['packages']) && is_array($hotelData['packages']) && isset($hotelData['packages']['IdCont'])) {
                 $hotelData['packages'] = [$hotelData['packages']];
             }
 
-            if (empty($hotelData['packages'])) {
-                $stats['no_data'][] = $product['product_code'] . ' - ' . $product['product'];
+            if (empty($hotelData['packages']) || !is_array($hotelData['packages'])) {
+                $stats['no_data'][] = $productCode . ' - ' . $productName;
                 return false;
             }
 
@@ -145,8 +153,11 @@ class PriceInfoSync
 
             // V3: Process each package and store priceinfo
             foreach ($hotelData['packages'] as $pkg) {
-                $packageId = $pkg['IdCont'] ?? '';
-                $packageName = $pkg['PackageName'] ?? '';
+                if (!is_array($pkg)) {
+                    continue;
+                }
+                $packageId = PriceInfoFormatter::toScalar($pkg['IdCont'] ?? '');
+                $packageName = PriceInfoFormatter::toScalar($pkg['PackageName'] ?? '');
 
                 if (empty($packageId) || empty($packageName)) {
                     continue;
@@ -195,23 +206,23 @@ class PriceInfoSync
                     $hotelId
                 );
 
-                $stats['updated'][] = $product['product_code'] . ' - ' . $product['product'];
+                $stats['updated'][] = $productCode . ' - ' . $productName;
                 $this->clearHotelCache($hotelId);
 
                 return true;
             } else {
-                $stats['no_data'][] = $product['product_code'] . ' - ' . $product['product'];
+                $stats['no_data'][] = $productCode . ' - ' . $productName;
                 return false;
             }
 
         } catch (ApiException $e) {
-            $stats['failed'][] = $product['product_code'] . ' - ' . $product['product'] . ' (API error HTTP ' . $e->getHttpCode() . ': ' . $e->getMessage() . ')';
+            $stats['failed'][] = $productCode . ' - ' . $productName . ' (API error HTTP ' . $e->getHttpCode() . ': ' . $e->getMessage() . ')';
             return false;
         } catch (XmlParsingException $e) {
-            $stats['failed'][] = $product['product_code'] . ' - ' . $product['product'] . ' (XML error: ' . $e->getMessage() . ')';
+            $stats['failed'][] = $productCode . ' - ' . $productName . ' (XML error: ' . $e->getMessage() . ')';
             return false;
         } catch (\Throwable $e) {
-            $stats['failed'][] = $product['product_code'] . ' - ' . $product['product'] . ' (Error: ' . $e->getMessage() . ')';
+            $stats['failed'][] = $productCode . ' - ' . $productName . ' (Error: ' . $e->getMessage() . ')';
             return false;
         }
     }
@@ -241,16 +252,21 @@ class PriceInfoSync
         $currentIndex = 0;
 
         foreach ($products as $product) {
+            if (!is_array($product)) {
+                continue;
+            }
             $currentIndex++;
 
+            $pCode = PriceInfoFormatter::toScalar($product['product_code'] ?? '');
+            $pName = PriceInfoFormatter::toScalar($product['product'] ?? '');
             // Update progress
             fn_set_progress('sync_novoton_prices', [
                 'current' => $currentIndex,
                 'total' => $totalProducts,
-                'message' => "Updating $currentIndex of $totalProducts ({$product['product_code']}) - {$product['product']}"
+                'message' => "Updating $currentIndex of $totalProducts ({$pCode}) - {$pName}"
             ]);
 
-            $this->syncProductPrices($product['product_id'], $stats);
+            $this->syncProductPrices(PriceInfoFormatter::toInt($product['product_id'] ?? 0), $stats);
 
             // Small delay to avoid overwhelming the API
             usleep(Constants::API_DELAY_BACKOFF);
