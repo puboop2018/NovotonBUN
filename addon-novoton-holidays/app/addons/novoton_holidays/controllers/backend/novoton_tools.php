@@ -32,6 +32,7 @@ use Tygh\Addons\NovotonHolidays\NovotonApi;
 use Tygh\Addons\NovotonHolidays\Services\DiagnosticsService;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Services\Container;
+use Tygh\Addons\NovotonHolidays\Services\PriceInfoFormatter;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
@@ -213,32 +214,37 @@ if ($mode === 'test_hotel_list') {
 
     header('Content-Type: text/html; charset=utf-8');
 
-    $country = $_REQUEST['country'] ?? 'BULGARIA';
-    $limit = (int)($_REQUEST['limit'] ?? 10);
+    $country = PriceInfoFormatter::toScalar($_REQUEST['country'] ?? 'BULGARIA');
+    $limit = PriceInfoFormatter::toInt($_REQUEST['limit'] ?? 10);
 
     echo '<h2>Hotel List Test - ' . htmlspecialchars($country) . '</h2>';
 
     $diag = Container::getInstance()->diagnosticsService();
     $result = $diag->testHotelList($country, $limit);
 
-    if ($result['success']) {
-        echo "<p>Total hotels: {$result['total']}</p>";
+    if (!empty($result['success'])) {
+        $rTotal = PriceInfoFormatter::toInt($result['total'] ?? 0);
+        echo "<p>Total hotels: {$rTotal}</p>";
         echo '<table border="1" cellpadding="5">';
         echo '<tr><th>ID</th><th>Name</th><th>City</th><th>Stars</th><th>Type</th></tr>';
-        foreach ($result['hotels'] as $hotel) {
+        $rHotels = is_array($result['hotels'] ?? null) ? $result['hotels'] : [];
+        foreach ($rHotels as $hotel) {
+            if (!is_array($hotel)) {
+                continue;
+            }
             echo '<tr>';
-            echo '<td>' . htmlspecialchars($hotel['id']) . '</td>';
-            echo '<td>' . htmlspecialchars($hotel['name']) . '</td>';
-            echo '<td>' . htmlspecialchars($hotel['city']) . '</td>';
-            echo '<td>' . htmlspecialchars($hotel['stars']) . '</td>';
-            echo '<td>' . htmlspecialchars($hotel['type']) . '</td>';
+            echo '<td>' . htmlspecialchars(PriceInfoFormatter::toScalar($hotel['id'] ?? '')) . '</td>';
+            echo '<td>' . htmlspecialchars(PriceInfoFormatter::toScalar($hotel['name'] ?? '')) . '</td>';
+            echo '<td>' . htmlspecialchars(PriceInfoFormatter::toScalar($hotel['city'] ?? '')) . '</td>';
+            echo '<td>' . htmlspecialchars(PriceInfoFormatter::toScalar($hotel['stars'] ?? '')) . '</td>';
+            echo '<td>' . htmlspecialchars(PriceInfoFormatter::toScalar($hotel['type'] ?? '')) . '</td>';
             echo '</tr>';
         }
         echo '</table>';
     } else {
         echo '<p style="color:red">No results or error</p>';
         if (!empty($result['error'])) {
-            echo '<pre>' . htmlspecialchars($result['error']) . '</pre>';
+            echo '<pre>' . htmlspecialchars(PriceInfoFormatter::toScalar($result['error'])) . '</pre>';
         }
     }
 
@@ -256,12 +262,12 @@ if ($mode === 'test_room_price') {
 
     header('Content-Type: text/html; charset=utf-8');
 
-    $hotel_id = $_REQUEST['hotel_id'] ?? '';
-    $room_id = $_REQUEST['room_id'] ?? '';
-    $board_id = $_REQUEST['board_id'] ?? 'AI';
-    $check_in = $_REQUEST['check_in'] ?? date('Y-m-d', strtotime('+' . Constants::DEFAULT_CHECKIN_DAYS_AHEAD . ' days'));
-    $check_out = $_REQUEST['check_out'] ?? date('Y-m-d', strtotime('+' . (Constants::DEFAULT_CHECKIN_DAYS_AHEAD + Constants::DEFAULT_STAY_NIGHTS) . ' days'));
-    $adults = (int)($_REQUEST['adults'] ?? 2);
+    $hotel_id = PriceInfoFormatter::toScalar($_REQUEST['hotel_id'] ?? '');
+    $room_id = PriceInfoFormatter::toScalar($_REQUEST['room_id'] ?? '');
+    $board_id = PriceInfoFormatter::toScalar($_REQUEST['board_id'] ?? 'AI');
+    $check_in = PriceInfoFormatter::toScalar($_REQUEST['check_in'] ?? date('Y-m-d', strtotime('+' . Constants::DEFAULT_CHECKIN_DAYS_AHEAD . ' days')));
+    $check_out = PriceInfoFormatter::toScalar($_REQUEST['check_out'] ?? date('Y-m-d', strtotime('+' . (Constants::DEFAULT_CHECKIN_DAYS_AHEAD + Constants::DEFAULT_STAY_NIGHTS) . ' days')));
+    $adults = PriceInfoFormatter::toInt($_REQUEST['adults'] ?? 2);
 
     echo '<h2>Room Price Test</h2>';
 
@@ -321,11 +327,11 @@ if ($mode === 'test_search') {
 
     header('Content-Type: text/html; charset=utf-8');
 
-    $hotel_id = $_REQUEST['hotel_id'] ?? '';
-    $check_in = $_REQUEST['check_in'] ?? date('Y-m-d', strtotime('+' . Constants::DEFAULT_CHECKIN_DAYS_AHEAD . ' days'));
-    $check_out = $_REQUEST['check_out'] ?? date('Y-m-d', strtotime('+' . (Constants::DEFAULT_CHECKIN_DAYS_AHEAD + Constants::DEFAULT_STAY_NIGHTS) . ' days'));
-    $adults = (int)($_REQUEST['adults'] ?? 2);
-    $children = (int)($_REQUEST['children'] ?? 0);
+    $hotel_id = PriceInfoFormatter::toScalar($_REQUEST['hotel_id'] ?? '');
+    $check_in = PriceInfoFormatter::toScalar($_REQUEST['check_in'] ?? date('Y-m-d', strtotime('+' . Constants::DEFAULT_CHECKIN_DAYS_AHEAD . ' days')));
+    $check_out = PriceInfoFormatter::toScalar($_REQUEST['check_out'] ?? date('Y-m-d', strtotime('+' . (Constants::DEFAULT_CHECKIN_DAYS_AHEAD + Constants::DEFAULT_STAY_NIGHTS) . ' days')));
+    $adults = PriceInfoFormatter::toInt($_REQUEST['adults'] ?? 2);
+    $children = PriceInfoFormatter::toInt($_REQUEST['children'] ?? 0);
 
     echo '<h2>Search Availability Test</h2>';
 
