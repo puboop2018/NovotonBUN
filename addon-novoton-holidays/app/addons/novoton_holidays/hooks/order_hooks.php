@@ -55,34 +55,34 @@ function fn_novoton_holidays_pre_place_order(&$cart, &$allow, &$product_groups):
     $result = $verifier->verify($cart);
 
     // Apply price corrections: bump cart prices to the current API price
-    $corrections = is_array($result['corrections'] ?? null) ? $result['corrections'] : [];
-    if (!empty($corrections)) {
-        $cartProducts = is_array($cart['products'] ?? null) ? $cart['products'] : [];
+    $corrections = $result['corrections'];
+    if (!empty($corrections) && is_array($cart['products'] ?? null)) {
         foreach ($corrections as $cartId => $correction) {
-            if (!is_array($correction) || !isset($cartProducts[$cartId])) {
+            if (!is_array($correction) || !isset($cart['products'][$cartId]) || !is_array($cart['products'][$cartId])) {
                 continue;
             }
 
             $newPrice = PriceInfoFormatter::toFloat($correction['api_price'] ?? 0);
+            /** @var array<string, mixed> $existingProduct */
+            $existingProduct = $cart['products'][$cartId];
+            /** @var array<string, mixed> $existingExtra */
+            $existingExtra = is_array($existingProduct['extra'] ?? null) ? $existingProduct['extra'] : [];
 
             // Store the old price for "Old vs New" display before overwriting
-            $cart['products'][$cartId]['extra']['price_before_correction'] = $cart['products'][$cartId]['price'];
+            $existingExtra['price_before_correction'] = $existingProduct['price'] ?? null;
+            $existingExtra['total_price'] = $newPrice;
 
-            $cart['products'][$cartId]['price']          = $newPrice;
-            $cart['products'][$cartId]['base_price']     = $newPrice;
-            $cart['products'][$cartId]['original_price'] = $newPrice;
-
-            // Also update the extra fields so BookingSubmissionService sees
-            // the corrected price when it reads the cart after order creation.
-            $cart['products'][$cartId]['extra']['total_price'] = $newPrice;
+            $existingProduct['price']          = $newPrice;
+            $existingProduct['base_price']     = $newPrice;
+            $existingProduct['original_price'] = $newPrice;
+            $existingProduct['extra']          = $existingExtra;
+            $cart['products'][$cartId]         = $existingProduct;
         }
     }
 
     // Send email notifications for any price discrepancies (lower OR higher)
-    if (!empty($result['notifications'])) {
-        foreach ($result['notifications'] as $notification) {
-            fn_novoton_holidays_send_price_discrepancy_email($notification);
-        }
+    foreach ($result['notifications'] as $notification) {
+        fn_novoton_holidays_send_price_discrepancy_email($notification);
     }
 }
 
@@ -179,7 +179,8 @@ function fn_novoton_holidays_get_orders_post($params, &$orders): void
         return;
     }
 
-    $order_ids = array_column($orders, 'order_id');
+    /** @var list<int> $order_ids */
+    $order_ids = array_values(array_map('intval', array_column($orders, 'order_id')));
     if (empty($order_ids)) {
         return;
     }
@@ -193,17 +194,11 @@ function fn_novoton_holidays_get_orders_post($params, &$orders): void
 
     $bookings_by_order = [];
     foreach ($all_bookings as $booking) {
-        if (!is_array($booking)) {
-            continue;
-        }
         $bOrderId = PriceInfoFormatter::toScalar($booking['order_id'] ?? '');
         $bookings_by_order[$bOrderId][] = $booking;
     }
 
     foreach ($orders as &$order) {
-        if (!is_array($order)) {
-            continue;
-        }
         $oOrderId = PriceInfoFormatter::toScalar($order['order_id'] ?? '');
         if (!empty($oOrderId) && isset($bookings_by_order[$oOrderId])) {
             $order['hotel_bookings'] = $bookings_by_order[$oOrderId];
@@ -233,7 +228,7 @@ function fn_novoton_holidays_get_order_info(&$order, $additional_data): void
     $debugMode = ConfigProvider::isDebugLogging();
 
     if ($debugMode && defined('AREA') && AREA === 'A') {
-        fn_set_notification('N', 'DEBUG', 'fn_novoton_holidays_get_order_info hook fired for order #' . ($order['order_id'] ?? '?'));
+        fn_set_notification('N', 'DEBUG', 'fn_novoton_holidays_get_order_info hook fired for order #' . PriceInfoFormatter::toScalar($order['order_id'] ?? '?'));
     }
 
     $orderProducts = is_array($order['products'] ?? null) ? $order['products'] : [];
