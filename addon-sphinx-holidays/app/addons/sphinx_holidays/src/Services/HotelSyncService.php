@@ -8,6 +8,7 @@ use Tygh\Addons\SphinxHolidays\SphinxApi;
 use Tygh\Addons\SphinxHolidays\Repository\DestinationRepository;
 use Tygh\Addons\SphinxHolidays\Contracts\HotelSyncServiceInterface;
 use Tygh\Addons\SphinxHolidays\Repository\HotelRepository;
+use Tygh\Addons\TravelCore\Helpers\ValidationHelpers;
 
 /**
  * Fetches hotels from the Sphinx API and syncs them into the local DB.
@@ -72,8 +73,8 @@ class HotelSyncService extends AbstractSyncService implements HotelSyncServiceIn
     #[\Override]
     protected function doSync(bool $fullSync, array $stats, array $context): array
     {
-        $countryCodes = $context['country_codes'] ?? [];
-        $extraDestinationIds = $context['destination_ids'] ?? [];
+        $countryCodes = is_array($context['country_codes'] ?? null) ? $context['country_codes'] : [];
+        $extraDestinationIds = is_array($context['destination_ids'] ?? null) ? $context['destination_ids'] : [];
 
         if (empty($countryCodes) && empty($extraDestinationIds)) {
             $countryCodes = ConfigProvider::getSelectedCountryCodes();
@@ -113,31 +114,39 @@ class HotelSyncService extends AbstractSyncService implements HotelSyncServiceIn
 
         // Fetch and sync hotels per country (with per-country incremental timestamps)
         foreach (array_keys($destinationIds) as $countryCode) {
+            $countryCodeStr = ValidationHelpers::toString($countryCode);
             $updatedSince = null;
             if (!$fullSync) {
-                $lastSynced = $this->hotelRepo->getLastSyncedAt($countryCode);
+                $lastSynced = $this->hotelRepo->getLastSyncedAt($countryCodeStr);
                 if ($lastSynced !== null) {
                     $updatedSince = $lastSynced;
                 }
             }
             $modeLabel = $updatedSince !== null ? "incremental since {$updatedSince}" : 'full';
-            $this->output("  {$countryCode}: sync mode: {$modeLabel}");
+            $this->output("  {$countryCodeStr}: sync mode: {$modeLabel}");
 
-            $countryStats = $this->syncCountry($countryCode, $destinationIds[$countryCode], $updatedSince);
-            $stats['total'] += $countryStats['total'];
-            $stats['synced'] += $countryStats['synced'];
-            $stats['skipped'] += $countryStats['skipped'];
-            $stats['failed'] += $countryStats['failed'];
+            /** @var array<string, mixed> $destIdsForCountry */
+            $destIdsForCountry = is_array($destinationIds[$countryCode] ?? null) ? $destinationIds[$countryCode] : [];
+            $countryStats = $this->syncCountry($countryCodeStr, $destIdsForCountry, $updatedSince);
+            $stats['total'] = ValidationHelpers::toInt($stats['total'] ?? 0) + ValidationHelpers::toInt($countryStats['total'] ?? 0);
+            $stats['synced'] = ValidationHelpers::toInt($stats['synced'] ?? 0) + ValidationHelpers::toInt($countryStats['synced'] ?? 0);
+            $stats['skipped'] = ValidationHelpers::toInt($stats['skipped'] ?? 0) + ValidationHelpers::toInt($countryStats['skipped'] ?? 0);
+            $stats['failed'] = ValidationHelpers::toInt($stats['failed'] ?? 0) + ValidationHelpers::toInt($countryStats['failed'] ?? 0);
 
-            if (!empty($countryStats['error'])) {
-                $stats['error'] .= ($stats['error'] ? '; ' : '') . $countryStats['error'];
+            $cError = ValidationHelpers::toString($countryStats['error'] ?? '');
+            if (!empty($cError)) {
+                $currentError = ValidationHelpers::toString($stats['error'] ?? '');
+                $stats['error'] = $currentError . ($currentError !== '' ? '; ' : '') . $cError;
             }
         }
 
         // Set overall sync_mode label based on what actually happened
         $stats['sync_mode'] = $fullSync ? 'full' : 'per-country incremental';
-        $stats['success'] = ($stats['synced'] > 0 || $stats['total'] === 0);
-        $this->output("Sync complete: {$stats['synced']}/{$stats['total']} hotels synced, {$stats['skipped']} skipped.");
+        $sSynced = ValidationHelpers::toInt($stats['synced'] ?? 0);
+        $sTotal = ValidationHelpers::toInt($stats['total'] ?? 0);
+        $sSkipped = ValidationHelpers::toInt($stats['skipped'] ?? 0);
+        $stats['success'] = ($sSynced > 0 || $sTotal === 0);
+        $this->output("Sync complete: {$sSynced}/{$sTotal} hotels synced, {$sSkipped} skipped.");
 
         return $stats;
     }
@@ -211,21 +220,24 @@ class HotelSyncService extends AbstractSyncService implements HotelSyncServiceIn
 
                 $pageBatch = [];
                 foreach ($items as $raw) {
+                    if (!is_array($raw)) {
+                        continue;
+                    }
                     $normalized = $this->normalizeHotel($raw);
                     if ($normalized === null) {
-                        $stats['skipped']++;
+                        $stats['skipped'] = ValidationHelpers::toInt($stats['skipped'] ?? 0) + 1;
                         continue;
                     }
 
                     // Safety filter: verify country_code matches
-                    $hotelCountry = strtoupper($normalized['country_code']);
+                    $hotelCountry = strtoupper(ValidationHelpers::toString($normalized['country_code'] ?? ''));
                     if ($hotelCountry !== '' && $hotelCountry !== $countryCode) {
-                        $stats['skipped']++;
+                        $stats['skipped'] = ValidationHelpers::toInt($stats['skipped'] ?? 0) + 1;
                         continue;
                     }
 
                     $pageBatch[] = $normalized;
-                    $stats['total']++;
+                    $stats['total'] = ValidationHelpers::toInt($stats['total'] ?? 0) + 1;
                 }
 
                 // Batch-resolve country/region/city from destination hierarchy
@@ -233,10 +245,11 @@ class HotelSyncService extends AbstractSyncService implements HotelSyncServiceIn
 
                 // Upsert in sub-batches
                 foreach (array_chunk($pageBatch, self::UPSERT_BATCH_SIZE) as $upsertChunk) {
-                    $stats['synced'] += $this->hotelRepo->upsertBatch($upsertChunk);
+                    $stats['synced'] = ValidationHelpers::toInt($stats['synced'] ?? 0) + $this->hotelRepo->upsertBatch($upsertChunk);
                 }
 
-                if (!$this->hasMorePages($response, $page, self::PER_PAGE, $stats['total'] + $stats['skipped'])) {
+                $totalPlusSkipped = ValidationHelpers::toInt($stats['total'] ?? 0) + ValidationHelpers::toInt($stats['skipped'] ?? 0);
+                if (!$this->hasMorePages($response, $page, self::PER_PAGE, $totalPlusSkipped)) {
                     break;
                 }
 
@@ -244,7 +257,7 @@ class HotelSyncService extends AbstractSyncService implements HotelSyncServiceIn
             }
         }
 
-        if ($stats['total'] === 0) {
+        if (ValidationHelpers::toInt($stats['total'] ?? 0) === 0) {
             if ($updatedSince !== null) {
                 $this->output("    {$countryCode}: no hotels updated since {$updatedSince}");
             } else {

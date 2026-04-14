@@ -12943,24 +12943,6 @@ parameters:
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/HotelSyncService.php
 
 		-
-			message: '#^Binary operation "\+\=" between mixed and mixed results in an error\.$#'
-			identifier: assignOp.invalid
-			count: 4
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/HotelSyncService.php
-
-		-
-			message: '#^Binary operation "\." between ''''\|''; '' and mixed results in an error\.$#'
-			identifier: binaryOp.invalid
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/HotelSyncService.php
-
-		-
-			message: '#^Binary operation "\.\=" between mixed and non\-falsy\-string results in an error\.$#'
-			identifier: assignOp.invalid
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/HotelSyncService.php
-
-		-
 			message: '#^Cannot access offset ''country_code'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
@@ -13045,6 +13027,48 @@ parameters:
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/HotelSyncService.php
 
 		-
+			message: '#^Offset ''skipped'' on array\{total\: int, synced\: int, skipped\: int, failed\: 0, error\: string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 3
+			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/HotelSyncService.php
+
+		-
+			message: '#^Offset ''skipped'' on non\-empty\-array\<string, mixed\> on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/HotelSyncService.php
+
+		-
+			message: '#^Offset ''synced'' on array\{total\: int, synced\: int, skipped\: int, failed\: 0, error\: string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/HotelSyncService.php
+
+		-
+			message: '#^Offset ''synced'' on non\-empty\-array\<string, mixed\> on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/HotelSyncService.php
+
+		-
+			message: '#^Offset ''total'' on array\{total\: int, synced\: int, skipped\: int, failed\: 0, error\: string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 3
+			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/HotelSyncService.php
+
+		-
+			message: '#^Offset ''total'' on non\-empty\-array\<string, mixed\> on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/HotelSyncService.php
+
+		-
+			message: '#^Offset string on non\-empty\-array\<string, array\<int\>\> on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/HotelSyncService.php
+
+		-
 			message: '#^Parameter \#1 \$array of function array_unique expects an array of values castable to string, list\<mixed\> given\.$#'
 			identifier: argument.type
 			count: 1
@@ -13057,7 +13081,7 @@ parameters:
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/HotelSyncService.php
 
 		-
-			message: '#^Parameter \#1 \$countryCodes of method Tygh\\Addons\\SphinxHolidays\\Services\\HotelSyncService\:\:resolveDestinationIds\(\) expects array\<string\>, mixed given\.$#'
+			message: '#^Parameter \#1 \$countryCodes of method Tygh\\Addons\\SphinxHolidays\\Services\\HotelSyncService\:\:resolveDestinationIds\(\) expects array\<string\>, array\<mixed\> given\.$#'
 			identifier: argument.type
 			count: 1
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/HotelSyncService.php
@@ -13069,19 +13093,13 @@ parameters:
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/HotelSyncService.php
 
 		-
+			message: '#^Parameter \#1 \$raw of method Tygh\\Addons\\SphinxHolidays\\Services\\HotelSyncService\:\:normalizeHotel\(\) expects array\<string, mixed\>, array\<mixed, mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/HotelSyncService.php
+
+		-
 			message: '#^Parameter \#1 \$raw of method Tygh\\Addons\\SphinxHolidays\\Services\\HotelSyncService\:\:normalizeHotel\(\) expects array\<string, mixed\>, array\<mixed\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/HotelSyncService.php
-
-		-
-			message: '#^Parameter \#1 \$raw of method Tygh\\Addons\\SphinxHolidays\\Services\\HotelSyncService\:\:normalizeHotel\(\) expects array\<string, mixed\>, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/HotelSyncService.php
-
-		-
-			message: '#^Parameter \#1 \$string of function strtoupper expects string, mixed given\.$#'
 			identifier: argument.type
 			count: 1
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/HotelSyncService.php
@@ -13099,7 +13117,7 @@ parameters:
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/HotelSyncService.php
 
 		-
-			message: '#^Parameter \#2 \$allowedDestIds of method Tygh\\Addons\\SphinxHolidays\\Services\\HotelSyncService\:\:resolveDestinationIds\(\) expects array\<int\>, mixed given\.$#'
+			message: '#^Parameter \#2 \$allowedDestIds of method Tygh\\Addons\\SphinxHolidays\\Services\\HotelSyncService\:\:resolveDestinationIds\(\) expects array\<int\>, array\<mixed\> given\.$#'
 			identifier: argument.type
 			count: 1
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/HotelSyncService.php
@@ -13111,9 +13129,15 @@ parameters:
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/HotelSyncService.php
 
 		-
-			message: '#^Parameter \#2 \$array of function implode expects array, mixed given\.$#'
+			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, array\<mixed\> given\.$#'
 			identifier: argument.type
 			count: 2
+			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/HotelSyncService.php
+
+		-
+			message: '#^Parameter \#2 \$destinationIds of method Tygh\\Addons\\SphinxHolidays\\Services\\HotelSyncService\:\:syncCountry\(\) expects array\<int\>, array\<string, mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/HotelSyncService.php
 
 		-
