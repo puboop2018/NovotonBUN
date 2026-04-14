@@ -2751,24 +2751,12 @@ parameters:
 		-
 			message: '#^Argument of an invalid type mixed supplied for foreach, only iterables are supported\.$#'
 			identifier: foreach.nonIterable
-			count: 3
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/update_booking.php
-
-		-
-			message: '#^Binary operation "\+" between mixed and 1 results in an error\.$#'
-			identifier: binaryOp.invalid
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/update_booking.php
 
 		-
-			message: '#^Cannot access offset ''age'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/update_booking.php
-
-		-
-			message: '#^Cannot access offset ''api_name'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
+			message: '#^Call to function is_array\(\) with non\-empty\-array\<string, mixed\> will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/update_booking.php
 
@@ -2776,18 +2764,6 @@ parameters:
 			message: '#^Cannot access offset ''auth'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/update_booking.php
-
-		-
-			message: '#^Cannot access offset ''birthday'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/update_booking.php
-
-		-
-			message: '#^Cannot access offset ''board_id'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/update_booking.php
 
 		-
@@ -2809,15 +2785,9 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/update_booking.php
 
 		-
-			message: '#^Cannot access offset ''email'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/update_booking.php
-
-		-
 			message: '#^Cannot access offset ''extra'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
-			count: 2
+			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/update_booking.php
 
 		-
@@ -2839,63 +2809,27 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/update_booking.php
 
 		-
-			message: '#^Cannot access offset ''name'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/update_booking.php
-
-		-
-			message: '#^Cannot access offset ''novoton_booking_id'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/update_booking.php
-
-		-
-			message: '#^Cannot access offset ''phone'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/update_booking.php
-
-		-
 			message: '#^Cannot access offset ''products'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 3
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/update_booking.php
 
 		-
-			message: '#^Cannot access offset ''room'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/update_booking.php
-
-		-
-			message: '#^Cannot access offset ''room_id'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/update_booking.php
-
-		-
 			message: '#^Cannot access offset ''session'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
-			count: 4
+			count: 5
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/update_booking.php
 
 		-
-			message: '#^Cannot access offset ''type'' on mixed\.$#'
+			message: '#^Cannot access offset int\|string on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/update_booking.php
 
 		-
-			message: '#^Cannot access offset ''user_id'' on mixed\.$#'
+			message: '#^Cannot access offset non\-falsy\-string on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
-			count: 3
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/update_booking.php
-
-		-
-			message: '#^Cannot access offset mixed on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 2
+			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/update_booking.php
 
 		-
@@ -2905,9 +2839,9 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/update_booking.php
 
 		-
-			message: '#^Cannot cast mixed to int\.$#'
-			identifier: cast.int
-			count: 3
+			message: '#^Offset ''room'' on array\{name\: string, birthday\: string, age\: int, type\: string, room\: int\} in isset\(\) always exists and is not nullable\.$#'
+			identifier: isset.offset
+			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/update_booking.php
 
 		-
@@ -2923,39 +2857,9 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/update_booking.php
 
 		-
-			message: '#^Parameter \#1 \$json of function json_decode expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/update_booking.php
-
-		-
-			message: '#^Parameter \#1 \$string of function trim expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/update_booking.php
-
-		-
-			message: '#^Parameter \#1 \$value of function count expects array\|Countable, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/update_booking.php
-
-		-
-			message: '#^Parameter \#2 \$checkIn of static method Tygh\\Addons\\TravelCore\\Services\\GuestDataService\:\:parseAndValidateGuests\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/update_booking.php
-
-		-
 			message: '#^Parameter \#3 \$session_id of method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepositoryInterface\:\:checkOwnership\(\) expects string, mixed given\.$#'
 			identifier: argument.type
 			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/update_booking.php
-
-		-
-			message: '#^Part \$cart_id \(mixed\) of encapsed string cannot be cast to string\.$#'
-			identifier: encapsedStringPart.nonString
-			count: 2
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/update_booking.php
 
 		-
