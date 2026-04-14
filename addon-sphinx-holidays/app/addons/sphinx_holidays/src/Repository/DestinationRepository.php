@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays\Repository;
 
+use Tygh\Addons\TravelCore\Helpers\ValidationHelpers;
+
 /**
  * Repository for sphinx_destinations table operations.
  *
@@ -35,7 +37,10 @@ class DestinationRepository
 
         $affected = 0;
         foreach ($destinations as $dest) {
-            $id = (int) ($dest['destination_id'] ?? 0);
+            if (!is_array($dest)) {
+                continue;
+            }
+            $id = ValidationHelpers::toInt($dest['destination_id'] ?? 0);
             if ($id <= 0) {
                 continue;
             }
@@ -56,14 +61,14 @@ class DestinationRepository
                     hotel_count = new_row.hotel_count,
                     last_synced_at = new_row.last_synced_at",
                 $id,
-                (string) ($dest['name'] ?? ''),
-                (string) ($dest['type'] ?? 'destination'),
-                (int) ($dest['parent_id'] ?? 0),
-                (string) ($dest['country_code'] ?? ''),
-                (int) ($dest['geoname_id'] ?? 0),
-                (float) ($dest['latitude'] ?? 0),
-                (float) ($dest['longitude'] ?? 0),
-                (int) ($dest['hotel_count'] ?? 0),
+                ValidationHelpers::toString($dest['name'] ?? ''),
+                ValidationHelpers::toString($dest['type'] ?? 'destination'),
+                ValidationHelpers::toInt($dest['parent_id'] ?? 0),
+                ValidationHelpers::toString($dest['country_code'] ?? ''),
+                ValidationHelpers::toInt($dest['geoname_id'] ?? 0),
+                ValidationHelpers::toFloat($dest['latitude'] ?? 0),
+                ValidationHelpers::toFloat($dest['longitude'] ?? 0),
+                ValidationHelpers::toInt($dest['hotel_count'] ?? 0),
                 date('Y-m-d H:i:s')
             );
 
@@ -94,10 +99,10 @@ class DestinationRepository
             $condition .= db_quote(" AND d.parent_id = ?i", $parentId);
         }
 
-        $total = (int) db_get_field(
+        $total = ValidationHelpers::toInt(db_get_field(
             "SELECT COUNT(*) FROM ?:sphinx_destinations d WHERE 1 ?p",
             $condition
-        );
+        ));
 
         $offset = ($page - 1) * $perPage;
 
@@ -118,12 +123,13 @@ class DestinationRepository
      */
     public function getById(int $id): ?array
     {
+        /** @var array<string, mixed>|null $row */
         $row = db_get_row(
             "SELECT * FROM ?:sphinx_destinations WHERE destination_id = ?i",
             $id
         );
 
-        return $row ?: null;
+        return (is_array($row) && !empty($row)) ? $row : null;
     }
 
     /**
@@ -161,8 +167,13 @@ class DestinationRepository
         );
 
         $counts = [];
-        foreach ($rows as $row) {
-            $counts[$row['type']] = (int) $row['cnt'];
+        if (is_array($rows)) {
+            foreach ($rows as $row) {
+                if (!is_array($row)) {
+                    continue;
+                }
+                $counts[ValidationHelpers::toString($row['type'] ?? '')] = ValidationHelpers::toInt($row['cnt'] ?? 0);
+            }
         }
 
         return $counts;
@@ -173,7 +184,7 @@ class DestinationRepository
      */
     public function getTotal(): int
     {
-        return (int) db_get_field("SELECT COUNT(*) FROM ?:sphinx_destinations");
+        return ValidationHelpers::toInt(db_get_field("SELECT COUNT(*) FROM ?:sphinx_destinations"));
     }
 
     /**
@@ -185,7 +196,7 @@ class DestinationRepository
             "SELECT MAX(last_synced_at) FROM ?:sphinx_destinations"
         );
 
-        return $val ?: null;
+        return is_string($val) && $val !== '' ? $val : null;
     }
 
     /**
@@ -204,19 +215,19 @@ class DestinationRepository
      */
     public function getRegionsByCountry(string $countryCode): array
     {
-        $countryId = db_get_field(
+        $countryId = ValidationHelpers::toInt(db_get_field(
             "SELECT destination_id FROM ?:sphinx_destinations WHERE country_code = ?s AND type = 'country' LIMIT 1",
             $countryCode
-        );
+        ));
 
-        if (!$countryId) {
+        if ($countryId <= 0) {
             return [];
         }
 
         return db_get_array(
             "SELECT destination_id, name, type, hotel_count FROM ?:sphinx_destinations
              WHERE parent_id = ?i ORDER BY name",
-            (int) $countryId
+            $countryId
         );
     }
 
