@@ -6309,23 +6309,11 @@ parameters:
 		-
 			message: '#^Cannot cast mixed to int\.$#'
 			identifier: cast.int
-			count: 14
+			count: 12
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepository.php
 
 		-
 			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepository\:\:findAllForExport\(\) should return list\<array\<string, mixed\>\> but returns mixed\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepository\:\:findByHotelId\(\) should return list\<array\<string, mixed\>\> but returns mixed\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepository\:\:findById\(\) should return array\<string, mixed\>\|null but returns mixed\.$#'
 			identifier: return.type
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepository.php
@@ -6343,37 +6331,7 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepository.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepository\:\:findByOrderId\(\) should return list\<array\<string, mixed\>\> but returns mixed\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepository\:\:findByOrderIds\(\) should return list\<array\<string, mixed\>\> but returns mixed\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepository\:\:findByProductIds\(\) should return list\<array\<string, mixed\>\> but returns mixed\.$#'
-			identifier: return.type
-			count: 3
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepository\:\:findBySessionId\(\) should return list\<array\<string, mixed\>\> but returns mixed\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepository\:\:findByUserId\(\) should return list\<array\<string, mixed\>\> but returns mixed\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepository\:\:findExisting\(\) should return array\<string, mixed\>\|null but returns mixed\.$#'
+			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepository\:\:findExisting\(\) should return array\<string, mixed\>\|null but returns array\<mixed, mixed\>\|null\.$#'
 			identifier: return.type
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepository.php
@@ -6385,31 +6343,13 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepository.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepository\:\:findPending\(\) should return list\<array\<string, mixed\>\> but returns mixed\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepository.php
-
-		-
 			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepository\:\:findRqWithoutAlternatives\(\) should return list\<array\<string, mixed\>\> but returns mixed\.$#'
 			identifier: return.type
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepository.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepository\:\:findUnassignedByHotelDates\(\) should return array\<string, mixed\>\|null but returns mixed\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepository.php
-
-		-
 			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepository\:\:findWithOrderDetails\(\) should return array\<string, mixed\>\|null but returns mixed\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepository\:\:findWithReservationId\(\) should return list\<array\<string, mixed\>\> but returns mixed\.$#'
 			identifier: return.type
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepository.php

@@ -52,13 +52,28 @@ class BookingRepository implements BookingRepositoryInterface
     }
 
     /**
+     * Narrow db_get_array() result to list<array<string, mixed>>.
+     * @param mixed $rows
+     * @return list<array<string, mixed>>
+     */
+    private static function asRowList($rows): array
+    {
+        if (!is_array($rows)) {
+            return [];
+        }
+        /** @var list<array<string, mixed>> $rows */
+        return array_values(array_filter($rows, 'is_array'));
+    }
+
+    /**
      * Find booking by ID (raw DB row, no JSON decoding).
      * @return array<string, mixed>|null
      */
     public function findById(int $booking_id): ?array
     {
+        /** @var array<string, mixed>|null $booking */
         $booking = db_get_row("SELECT * FROM ?:novoton_bookings WHERE booking_id = ?i", $booking_id);
-        return $booking ?: null;
+        return (is_array($booking) && !empty($booking)) ? $booking : null;
     }
 
     /**
@@ -105,7 +120,8 @@ class BookingRepository implements BookingRepositoryInterface
     public static function hydrateJsonFields(array $booking): array
     {
         // rooms_data
-        $booking['rooms_data_parsed'] = JsonDecoder::decode($booking['rooms_data'] ?? '', 'rooms_data');
+        $roomsRaw = $booking['rooms_data'] ?? '';
+        $booking['rooms_data_parsed'] = JsonDecoder::decode(is_string($roomsRaw) ? $roomsRaw : '', 'rooms_data');
 
         // guests_data — always normalize to canonical keyed format
         if (!empty($booking['guests_data'])) {
@@ -135,7 +151,7 @@ class BookingRepository implements BookingRepositoryInterface
      */
     public function findByOrderId(int $order_id): array
     {
-        return db_get_array("SELECT * FROM ?:novoton_bookings WHERE order_id = ?i ORDER BY booking_id", $order_id);
+        return self::asRowList(db_get_array("SELECT * FROM ?:novoton_bookings WHERE order_id = ?i ORDER BY booking_id", $order_id));
     }
     
     /**
@@ -144,63 +160,63 @@ class BookingRepository implements BookingRepositoryInterface
      */
     public function findByUserId(int $user_id, int $limit = 100): array
     {
-        return db_get_array(
+        return self::asRowList(db_get_array(
             "SELECT " . self::LIST_COLUMNS . " FROM ?:novoton_bookings WHERE user_id = ?i ORDER BY created_at DESC LIMIT ?i",
             $user_id,
             $limit
-        );
+        ));
     }
-    
+
     /**
      * Find bookings by session ID
      * @return list<array<string, mixed>>
      */
     public function findBySessionId(string $session_id): array
     {
-        return db_get_array(
+        return self::asRowList(db_get_array(
             "SELECT " . self::LIST_COLUMNS . " FROM ?:novoton_bookings WHERE session_id = ?s AND order_id = 0 ORDER BY created_at DESC LIMIT 50",
             $session_id
-        );
+        ));
     }
-    
+
     /**
      * Find bookings by hotel ID
      * @return list<array<string, mixed>>
      */
     public function findByHotelId(string $hotel_id, int $limit = 100): array
     {
-        return db_get_array(
+        return self::asRowList(db_get_array(
             "SELECT " . self::LIST_COLUMNS . " FROM ?:novoton_bookings WHERE hotel_id = ?s ORDER BY check_in DESC LIMIT ?i",
             $hotel_id,
             $limit
-        );
+        ));
     }
-    
+
     /**
      * Find pending bookings
      * @return list<array<string, mixed>>
      */
     public function findPending(int $limit = 500): array
     {
-        return db_get_array(
+        return self::asRowList(db_get_array(
             "SELECT " . self::LIST_COLUMNS . " FROM ?:novoton_bookings WHERE status = ?s ORDER BY created_at DESC LIMIT ?i",
             TravelConstants::STATUS_PENDING,
             $limit
-        );
+        ));
     }
-    
+
     /**
      * Find bookings with Novoton reservation ID
      * @return list<array<string, mixed>>
      */
     public function findWithReservationId(int $limit = 1000): array
     {
-        return db_get_array(
+        return self::asRowList(db_get_array(
             "SELECT " . self::LIST_COLUMNS . ", novoton_reservation_id FROM ?:novoton_bookings
              WHERE novoton_reservation_id IS NOT NULL AND novoton_reservation_id != ''
              ORDER BY created_at DESC LIMIT ?i",
             $limit
-        );
+        ));
     }
     
     /**
@@ -210,20 +226,20 @@ class BookingRepository implements BookingRepositoryInterface
     public function findExisting(string $hotel_id, string $check_in, string $check_out, string $holder_name, int $hours = 1): ?array
     {
         $booking = db_get_row(
-            "SELECT * FROM ?:novoton_bookings 
-             WHERE order_id = 0 
-               AND hotel_id = ?s 
-               AND check_in = ?s 
-               AND check_out = ?s 
+            "SELECT * FROM ?:novoton_bookings
+             WHERE order_id = 0
+               AND hotel_id = ?s
+               AND check_in = ?s
+               AND check_out = ?s
                AND holder_name = ?s
                AND created_at > DATE_SUB(NOW(), INTERVAL ?i HOUR)
              LIMIT 1",
             $hotel_id, $check_in, $check_out, $holder_name, $hours
         );
-        
-        return $booking ?: null;
+
+        return (is_array($booking) && !empty($booking)) ? $booking : null;
     }
-    
+
     /**
      * Count bookings with filters
      * @param array<string, mixed> $filters
@@ -231,7 +247,7 @@ class BookingRepository implements BookingRepositoryInterface
     public function count(array $filters = []): int
     {
         $where = $this->buildWhereClause($filters);
-        return (int) db_get_field("SELECT COUNT(*) FROM ?:novoton_bookings {$where}");
+        return \Tygh\Addons\NovotonHolidays\Services\PriceInfoFormatter::toInt(db_get_field("SELECT COUNT(*) FROM ?:novoton_bookings {$where}"));
     }
     
     /**
@@ -244,7 +260,7 @@ class BookingRepository implements BookingRepositoryInterface
 
         db_query("START TRANSACTION");
         try {
-            $booking_id = (int) db_query("INSERT INTO ?:novoton_bookings ?e", $data);
+            $booking_id = \Tygh\Addons\NovotonHolidays\Services\PriceInfoFormatter::toInt(db_query("INSERT INTO ?:novoton_bookings ?e", $data));
 
             if ($booking_id > 0) {
                 $this->syncToTravelBookings($booking_id, $data);
@@ -494,21 +510,21 @@ class BookingRepository implements BookingRepositoryInterface
 
         // Scope to current user/session to prevent cross-user booking leakage
         if ($user_id > 0 && !empty($session_id)) {
-            return db_get_array(
+            return self::asRowList(db_get_array(
                 $select . " AND (session_id = ?s OR user_id = ?i) ORDER BY booking_id DESC",
                 $product_ids, $statuses, $session_id, $user_id
-            );
+            ));
         } elseif ($user_id > 0) {
-            return db_get_array(
+            return self::asRowList(db_get_array(
                 $select . " AND user_id = ?i ORDER BY booking_id DESC",
                 $product_ids, $statuses, $user_id
-            );
+            ));
         }
 
-        return db_get_array(
+        return self::asRowList(db_get_array(
             $select . " AND session_id = ?s ORDER BY booking_id DESC",
             $product_ids, $statuses, $session_id
-        );
+        ));
     }
 
     /**
@@ -550,6 +566,7 @@ class BookingRepository implements BookingRepositoryInterface
      */
     public function findUnassignedByHotelDates(string $hotel_id, string $check_in, string $check_out): ?array
     {
+        /** @var array<string, mixed>|null $row */
         $row = db_get_row(
             "SELECT guests_data, holder_name FROM ?:novoton_bookings
              WHERE hotel_id = ?s AND check_in = ?s AND check_out = ?s AND order_id = 0
@@ -558,7 +575,7 @@ class BookingRepository implements BookingRepositoryInterface
             $check_in,
             $check_out
         );
-        return $row ?: null;
+        return (is_array($row) && !empty($row)) ? $row : null;
     }
 
     /**
@@ -572,14 +589,14 @@ class BookingRepository implements BookingRepositoryInterface
         if (empty($order_ids)) {
             return [];
         }
-        return db_get_array(
+        return self::asRowList(db_get_array(
             "SELECT booking_id, order_id, hotel_id, hotel_name, room_type, board_id,
                     check_in, check_out, nights, adults, children, total_price,
                     currency, status, novoton_status, novoton_confirm_id
              FROM ?:novoton_bookings
              WHERE order_id IN (?n)",
             $order_ids
-        );
+        ));
     }
 
     /**
