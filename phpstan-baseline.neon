@@ -11851,6 +11851,12 @@ parameters:
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Repository/HotelRepository.php
 
 		-
+			message: '#^Call to function is_array\(\) with array\<string, mixed\> will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Repository/HotelRepository.php
+
+		-
 			message: '#^Cannot access offset ''cnt'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
@@ -11863,21 +11869,9 @@ parameters:
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Repository/HotelRepository.php
 
 		-
-			message: '#^Cannot cast mixed to float\.$#'
-			identifier: cast.double
-			count: 2
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Repository/HotelRepository.php
-
-		-
 			message: '#^Cannot cast mixed to int\.$#'
 			identifier: cast.int
-			count: 14
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Repository/HotelRepository.php
-
-		-
-			message: '#^Cannot cast mixed to string\.$#'
-			identifier: cast.string
-			count: 15
+			count: 11
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Repository/HotelRepository.php
 
 		-

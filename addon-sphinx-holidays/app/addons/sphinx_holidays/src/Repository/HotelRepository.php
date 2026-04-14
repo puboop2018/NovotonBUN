@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays\Repository;
 
+use Tygh\Addons\TravelCore\Helpers\ValidationHelpers;
+
 /**
  * Repository for sphinx_hotels table operations.
  *
@@ -59,7 +61,10 @@ class HotelRepository
 
         $affected = 0;
         foreach ($hotels as $hotel) {
-            $hotelId = (string) ($hotel['hotel_id'] ?? '');
+            if (!is_array($hotel)) {
+                continue;
+            }
+            $hotelId = ValidationHelpers::toString($hotel['hotel_id'] ?? '');
             if ($hotelId === '') {
                 continue;
             }
@@ -126,29 +131,29 @@ class HotelRepository
                         'Y', ?:sphinx_hotels.product_needs_update
                     )",
                 $hotelId,
-                (string) ($hotel['name'] ?? ''),
-                (int) ($hotel['classification'] ?? 0),
-                (string) ($hotel['property_type'] ?? 'hotel'),
-                (int) ($hotel['destination_id'] ?? 0),
-                (string) ($hotel['destination_name'] ?? ''),
-                (int) ($hotel['region_id'] ?? 0),
-                (string) ($hotel['region_name'] ?? ''),
-                (string) ($hotel['country_code'] ?? ''),
-                (string) ($hotel['country_name'] ?? ''),
-                (float) ($hotel['latitude'] ?? 0),
-                (float) ($hotel['longitude'] ?? 0),
-                (string) ($hotel['address'] ?? ''),
-                (string) ($hotel['phone'] ?? ''),
-                (string) ($hotel['email'] ?? ''),
-                (string) ($hotel['website'] ?? ''),
-                (string) ($hotel['description'] ?? ''),
-                (string) ($hotel['short_description'] ?? ''),
-                (string) ($hotel['image_url'] ?? ''),
-                $hotel['images_json'] ?? '[]',
-                $hotel['facilities_json'] ?? '[]',
-                (string) ($hotel['is_adults_only'] ?? 'N'),
-                $hotel['rating'],
-                $hotel['rating_count'],
+                ValidationHelpers::toString($hotel['name'] ?? ''),
+                ValidationHelpers::toInt($hotel['classification'] ?? 0),
+                ValidationHelpers::toString($hotel['property_type'] ?? 'hotel'),
+                ValidationHelpers::toInt($hotel['destination_id'] ?? 0),
+                ValidationHelpers::toString($hotel['destination_name'] ?? ''),
+                ValidationHelpers::toInt($hotel['region_id'] ?? 0),
+                ValidationHelpers::toString($hotel['region_name'] ?? ''),
+                ValidationHelpers::toString($hotel['country_code'] ?? ''),
+                ValidationHelpers::toString($hotel['country_name'] ?? ''),
+                ValidationHelpers::toFloat($hotel['latitude'] ?? 0),
+                ValidationHelpers::toFloat($hotel['longitude'] ?? 0),
+                ValidationHelpers::toString($hotel['address'] ?? ''),
+                ValidationHelpers::toString($hotel['phone'] ?? ''),
+                ValidationHelpers::toString($hotel['email'] ?? ''),
+                ValidationHelpers::toString($hotel['website'] ?? ''),
+                ValidationHelpers::toString($hotel['description'] ?? ''),
+                ValidationHelpers::toString($hotel['short_description'] ?? ''),
+                ValidationHelpers::toString($hotel['image_url'] ?? ''),
+                ValidationHelpers::toString($hotel['images_json'] ?? '[]'),
+                ValidationHelpers::toString($hotel['facilities_json'] ?? '[]'),
+                ValidationHelpers::toString($hotel['is_adults_only'] ?? 'N'),
+                ValidationHelpers::toFloat($hotel['rating'] ?? 0),
+                ValidationHelpers::toInt($hotel['rating_count'] ?? 0),
                 date('Y-m-d H:i:s')
             );
 
