@@ -219,7 +219,7 @@ class DatabaseHelper implements DatabaseHelperInterface
     }
 
     /** @var string[] Allowed column names for dynamic queries */
-    private const ALLOWED_COLUMNS = [
+    private const array ALLOWED_COLUMNS = [
         'hotel_id', 'product_id', 'hotel_name', 'city', 'region', 'country',
         'hotel_type', 'star_rating', 'latitude', 'longitude', 'has_room_price',
         'packages_count', 'hotelinfo_synced_at', 'hotel_list_synced_at',

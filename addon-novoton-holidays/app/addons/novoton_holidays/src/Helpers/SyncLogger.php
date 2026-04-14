@@ -24,7 +24,7 @@ class SyncLogger implements SyncLoggerInterface
     /**
      * Sync type labels for email subjects
      */
-    public const TYPE_LABELS = [
+    public const array TYPE_LABELS = [
         'hotel_list' => 'Hotel List Sync',
         'hotellist' => 'Hotel List Sync',
         'hotel_info' => 'Hotel Accommodation',

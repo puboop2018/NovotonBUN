@@ -156,7 +156,7 @@ class CronDispatcher implements CronDispatcherInterface
     }
 
     /** Maximum lock age before it's considered stale (seconds). */
-    private const STALE_LOCK_THRESHOLD = 1800; // 30 minutes
+    private const int STALE_LOCK_THRESHOLD = 1800; // 30 minutes
 
     /**
      * Acquire an exclusive file lock with stale lock detection.

@@ -55,7 +55,7 @@ class HotelRepository implements HotelRepositoryInterface
     /**
      * Core columns for hotel listing (excludes large hotel_data JSON).
      */
-    private const LISTING_COLUMNS = 'hotel_id, product_id, hotel_name, city, region, country,
+    private const string LISTING_COLUMNS = 'hotel_id, product_id, hotel_name, city, region, country,
         hotel_type, star_rating, property_type, is_adults_only, latitude, longitude,
         has_room_price, packages_count, hotelinfo_synced_at, hotel_list_synced_at,
         last_price_check, created_at, updated_at';

@@ -34,9 +34,9 @@ class AddProductsCommand extends AbstractSyncCommand
 {
     use StatefulCommandTrait;
 
-    private const STATE_FILE_NAME = 'sphinx_add_products_state.json';
-    private const STALE_HOURS = 6;
-    private const DEFAULT_STATE = [
+    private const string STATE_FILE_NAME = 'sphinx_add_products_state.json';
+    private const int STALE_HOURS = 6;
+    private const array DEFAULT_STATE = [
         'status' => 'idle',
         'started_at' => null,
         'last_run_at' => null,

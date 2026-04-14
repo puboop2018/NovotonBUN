@@ -24,7 +24,7 @@ class PropertyTypeDetector
      * Keyword → property_type mapping, ordered by specificity (most specific first).
      * 'hotel' is last because it's the most generic and also the default.
      */
-    private const KEYWORD_MAP = [
+    private const array KEYWORD_MAP = [
         ['pattern' => '/\bVILLAS?\b/i',              'type' => 'villa'],
         ['pattern' => '/\bAPART(?:MENTS?|HOTEL)?\b/i', 'type' => 'apartment'],
         ['pattern' => '/\bCHALETS?\b/i',             'type' => 'chalet'],
@@ -47,7 +47,7 @@ class PropertyTypeDetector
      * Only room types that strongly imply the overall property type.
      * Suite, Deluxe, Superior etc. do NOT determine property type.
      */
-    private const ROOM_KEYWORD_MAP = [
+    private const array ROOM_KEYWORD_MAP = [
         ['pattern' => '/\bAPART/i',    'type' => 'apartment'],
         ['pattern' => '/\bVILLA/i',    'type' => 'villa'],
         ['pattern' => '/\bBUNGALOW/i', 'type' => 'cabin'],

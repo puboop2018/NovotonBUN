@@ -15,8 +15,8 @@ use Tygh\Addons\NovotonHolidays\Exceptions\XmlParsingException;
 
 class NovotonXmlParser implements XmlParserInterface
 {
-    private const STREAMING_THRESHOLD = 1_000_000;
-    private const OPTIMIZATION_THRESHOLD = 100_000;
+    private const int STREAMING_THRESHOLD = 1_000_000;
+    private const int OPTIMIZATION_THRESHOLD = 100_000;
 
     /**
      * Clean XML entities

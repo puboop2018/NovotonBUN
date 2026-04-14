@@ -26,7 +26,7 @@ class DatabaseIterator implements DatabaseIteratorInterface
     /**
      * Default chunk size for batch processing
      */
-    private const DEFAULT_CHUNK_SIZE = 100;
+    private const int DEFAULT_CHUNK_SIZE = 100;
 
     /**
      * Iterate over hotels with optional filters
@@ -318,7 +318,7 @@ class DatabaseIterator implements DatabaseIteratorInterface
     /**
      * Allowed table names for countItems() to prevent SQL injection.
      */
-    private const ALLOWED_TABLES = [
+    private const array ALLOWED_TABLES = [
         'novoton_hotels',
         'novoton_hotel_packages',
         'novoton_bookings',
@@ -333,7 +333,7 @@ class DatabaseIterator implements DatabaseIteratorInterface
     /**
      * Allowed column names for countItems() filters to prevent SQL injection.
      */
-    private const ALLOWED_COLUMNS = [
+    private const array ALLOWED_COLUMNS = [
         'hotel_id', 'product_id', 'hotel_name', 'city', 'region', 'country',
         'hotel_type', 'star_rating', 'has_room_price', 'status', 'novoton_status',
         'order_id', 'user_id', 'booking_id', 'package_id', 'sync_type',

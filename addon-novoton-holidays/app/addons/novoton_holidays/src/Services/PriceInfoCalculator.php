@@ -357,7 +357,7 @@ class PriceInfoCalculator
      * When multiple rows share the same Code, the lookup prefers the row
      * matching the current row's IdRoom and IdBoard.
      */
-    private const MAX_RESOLVE_DEPTH = 10;
+    private const int MAX_RESOLVE_DEPTH = 10;
 
     /**
      * @param array<string, mixed> $row

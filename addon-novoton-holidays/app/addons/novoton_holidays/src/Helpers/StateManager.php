@@ -37,7 +37,7 @@ class StateManager implements StateManagerInterface
     /**
      * Default state structure
      */
-    public const DEFAULT_STATE = [
+    public const array DEFAULT_STATE = [
         'status' => 'idle',
         'sync_type' => null,
         'started_at' => null,

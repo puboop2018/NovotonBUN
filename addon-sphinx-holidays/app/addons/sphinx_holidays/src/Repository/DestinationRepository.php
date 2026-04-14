@@ -14,7 +14,7 @@ use Tygh\Addons\TravelCore\Helpers\ValidationHelpers;
 class DestinationRepository
 {
     /** Destination types that map to the "city" level in the hierarchy. */
-    private const CITY_LEVEL_TYPES = ['city', 'destination', 'resort'];
+    private const array CITY_LEVEL_TYPES = ['city', 'destination', 'resort'];
 
     /**
      * Lightweight parent lookup cache: id → [name, type, parent_id].

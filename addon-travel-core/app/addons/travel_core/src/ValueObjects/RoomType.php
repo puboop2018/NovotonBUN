@@ -16,24 +16,24 @@ namespace Tygh\Addons\TravelCore\ValueObjects;
 
 final class RoomType
 {
-    public const SINGLE = 'SGL';
-    public const DOUBLE = 'DBL';
-    public const TWIN = 'TWIN';
-    public const TRIPLE = 'TRP';
-    public const QUAD = 'QUA';
-    public const FAMILY = 'FAM';
-    public const STUDIO = 'STUDIO';
-    public const APARTMENT = 'APP';
-    public const SUITE = 'SUITE';
-    public const JUNIOR_SUITE = 'JST';
-    public const VILLA = 'VILLA';
-    public const BUNGALOW = 'BUNGALOW';
-    public const MAISONETTE = 'MAISONETTE';
-    public const PENTHOUSE = 'PENTHOUSE';
-    public const DELUXE = 'DLX';
-    public const SUPERIOR = 'SUP';
+    public const string SINGLE = 'SGL';
+    public const string DOUBLE = 'DBL';
+    public const string TWIN = 'TWIN';
+    public const string TRIPLE = 'TRP';
+    public const string QUAD = 'QUA';
+    public const string FAMILY = 'FAM';
+    public const string STUDIO = 'STUDIO';
+    public const string APARTMENT = 'APP';
+    public const string SUITE = 'SUITE';
+    public const string JUNIOR_SUITE = 'JST';
+    public const string VILLA = 'VILLA';
+    public const string BUNGALOW = 'BUNGALOW';
+    public const string MAISONETTE = 'MAISONETTE';
+    public const string PENTHOUSE = 'PENTHOUSE';
+    public const string DELUXE = 'DLX';
+    public const string SUPERIOR = 'SUP';
 
-    private const DISPLAY_NAMES = [
+    private const array DISPLAY_NAMES = [
         self::SINGLE => 'Camera Single',
         self::DOUBLE => 'Camera Dubla',
         self::TWIN => 'Camera Twin',
@@ -52,7 +52,7 @@ final class RoomType
         self::SUPERIOR => 'Camera Superior',
     ];
 
-    private const ALIASES = [
+    private const array ALIASES = [
         'TWN' => self::TWIN,
         'TRPL' => self::TRIPLE,
         'TRIPLE' => self::TRIPLE,
@@ -72,8 +72,8 @@ final class RoomType
         'SUPERIOR' => self::SUPERIOR,
     ];
 
-    private const BEDROOM_PREFIX_TEMPLATE = 'Apartament %d Dormitoare';
-    private const BEDROOM_PREFIX_SINGULAR = 'Apartament 1 Dormitor';
+    private const string BEDROOM_PREFIX_TEMPLATE = 'Apartament %d Dormitoare';
+    private const string BEDROOM_PREFIX_SINGULAR = 'Apartament 1 Dormitor';
 
     private string $code;
 

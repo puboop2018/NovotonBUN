@@ -36,7 +36,7 @@ class FullSyncCommand
      * update_products syncs changed hotel data to existing CS-Cart products.
      * sync_images downloads and attaches hotel images to CS-Cart products.
      */
-    private const SYNC_SEQUENCE = [
+    private const array SYNC_SEQUENCE = [
         'destinations',
         'hotels',
         'assign_boards',

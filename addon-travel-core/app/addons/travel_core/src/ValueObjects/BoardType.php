@@ -16,18 +16,18 @@ namespace Tygh\Addons\TravelCore\ValueObjects;
 
 final class BoardType
 {
-    public const ALL_INCLUSIVE = 'AI';
-    public const ALL_INCLUSIVE_LIGHT = 'AIL';
-    public const ULTRA_ALL_INCLUSIVE = 'UAI';
-    public const FULL_BOARD = 'FB';
-    public const FULL_BOARD_PLUS = 'FB+';
-    public const HALF_BOARD = 'HB';
-    public const HALF_BOARD_PLUS = 'HB+';
-    public const BED_AND_BREAKFAST = 'BB';
-    public const ROOM_ONLY = 'RO';
-    public const SELF_CATERING = 'SC';
+    public const string ALL_INCLUSIVE = 'AI';
+    public const string ALL_INCLUSIVE_LIGHT = 'AIL';
+    public const string ULTRA_ALL_INCLUSIVE = 'UAI';
+    public const string FULL_BOARD = 'FB';
+    public const string FULL_BOARD_PLUS = 'FB+';
+    public const string HALF_BOARD = 'HB';
+    public const string HALF_BOARD_PLUS = 'HB+';
+    public const string BED_AND_BREAKFAST = 'BB';
+    public const string ROOM_ONLY = 'RO';
+    public const string SELF_CATERING = 'SC';
 
-    private const DISPLAY_NAMES = [
+    private const array DISPLAY_NAMES = [
         self::ALL_INCLUSIVE => 'All Inclusive',
         self::ALL_INCLUSIVE_LIGHT => 'All Inclusive Light',
         self::ULTRA_ALL_INCLUSIVE => 'Ultra All Inclusive',
@@ -40,7 +40,7 @@ final class BoardType
         self::SELF_CATERING => 'Self Catering',
     ];
 
-    private const ALIASES = [
+    private const array ALIASES = [
         'ALL INCL' => self::ALL_INCLUSIVE,
         'ALL INCLUSIVE' => self::ALL_INCLUSIVE,
         'ALL INCLUSIVE LIGHT' => self::ALL_INCLUSIVE_LIGHT,

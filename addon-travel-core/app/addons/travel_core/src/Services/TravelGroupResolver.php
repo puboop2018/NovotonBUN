@@ -21,7 +21,7 @@ namespace Tygh\Addons\TravelCore\Services;
 final class TravelGroupResolver
 {
     /** Facility canonical codes that indicate a family-friendly hotel */
-    private const FAMILY_CODES = [
+    private const array FAMILY_CODES = [
         'family_rooms',
         'kids_menu',
         'babysitting',
@@ -31,7 +31,7 @@ final class TravelGroupResolver
     ];
 
     /** Facility canonical codes that indicate a pets-friendly hotel */
-    private const PETS_CODES = [
+    private const array PETS_CODES = [
         'pets_allowed',
     ];
 

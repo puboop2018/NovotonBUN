@@ -25,7 +25,7 @@ class SphinxFeatureAssigner implements SphinxFeatureAssignerInterface
 {
     use CsCartFeatureAssignment;
 
-    private const API_SOURCE = 'sphinx';
+    private const string API_SOURCE = 'sphinx';
 
     /** @var array<string, int> featureId:variantName → variant_id cache */
     private array $locationVariantCache = [];

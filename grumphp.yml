@@ -33,13 +33,21 @@ grumphp:
             level: null            # use config file value
             memory_limit: 1G
             triggered_by: [php]
+            # Use paths from phpstan.neon, not the set of staged files.
+            # Per-file analysis misses cross-file class-constant usage
+            # and triggers false-positive classConstant.unused errors.
+            use_grumphp_paths: false
 
-        # 5. Psalm — second static analyser (different strengths)
-        psalm:
-            config: ./psalm.xml
-            show_info: false
-            threads: 4
-            triggered_by: [php]
+        # 5. Psalm — disabled at pre-commit time because GrumPHP passes
+        # individual staged files to Psalm, which loses cross-file class
+        # resolution and emits false-positive MissingDependency /
+        # InvalidReturnType findings. Full-project Psalm still runs in CI.
+        # Run manually: composer psalm
+        # psalm:
+        #     config: ./psalm.xml
+        #     show_info: false
+        #     threads: 4
+        #     triggered_by: [php]
 
         # 6. Composer JSON validation
         composer:

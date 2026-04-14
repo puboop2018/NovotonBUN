@@ -20,13 +20,13 @@ use Tygh\Tygh;
 class PriceChangeDetector implements PriceChangeDetectorInterface
 {
     /** Default tolerance threshold (percentage). Changes below this are silent. */
-    private const DEFAULT_TOLERANCE_PERCENT = 1.0;
+    private const float DEFAULT_TOLERANCE_PERCENT = 1.0;
 
     /** Minimum absolute price difference to be considered significant (avoids floating-point noise). */
-    private const MIN_ABSOLUTE_DIFFERENCE = 0.01;
+    private const float MIN_ABSOLUTE_DIFFERENCE = 0.01;
 
     /** Session key for storing price change alerts. */
-    private const SESSION_KEY = 'travel_price_change_alerts';
+    private const string SESSION_KEY = 'travel_price_change_alerts';
 
     public function __construct(
         private readonly float $tolerancePercent = 0.0,

@@ -21,7 +21,7 @@ use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
  */
 class SyncImagesCommand extends AbstractSyncCommand
 {
-    private const BATCH_SIZE = 50;
+    private const int BATCH_SIZE = 50;
 
     #[\Override]
     public static function getDescription(): string

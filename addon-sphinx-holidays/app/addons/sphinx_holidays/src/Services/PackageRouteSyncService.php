@@ -17,8 +17,8 @@ use Tygh\Addons\SphinxHolidays\SphinxApi;
  */
 class PackageRouteSyncService extends AbstractSyncService
 {
-    private const UPSERT_BATCH_SIZE = 100;
-    private const PER_PAGE = 1000;
+    private const int UPSERT_BATCH_SIZE = 100;
+    private const int PER_PAGE = 1000;
 
     /** @var array<int, string> In-memory cache: destination_id → country_code */
     private array $countryCodeCache = [];

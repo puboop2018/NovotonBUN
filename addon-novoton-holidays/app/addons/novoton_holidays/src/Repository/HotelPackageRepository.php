@@ -19,7 +19,7 @@ class HotelPackageRepository implements HotelPackageRepositoryInterface
     /**
      * Listing columns (excludes large priceinfo_data JSON).
      */
-    private const LISTING_COLUMNS = 'id, hotel_id, package_id, package_name, seasons_count,
+    private const string LISTING_COLUMNS = 'id, hotel_id, package_id, package_name, seasons_count,
         has_early_booking, min_price, currency, needs_price_compute, synced_at, created_at, updated_at';
 
     /**

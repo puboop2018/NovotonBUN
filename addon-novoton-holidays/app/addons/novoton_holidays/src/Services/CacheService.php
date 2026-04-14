@@ -19,7 +19,7 @@ use Tygh\Addons\NovotonHolidays\Repository\CacheRepositoryInterface;
 
 class CacheService implements CacheServiceInterface
 {
-    private const MEMORY_CACHE_MAX_SIZE = 500;
+    private const int MEMORY_CACHE_MAX_SIZE = 500;
 
     private string $storage = 'file';
     private string $cache_dir;

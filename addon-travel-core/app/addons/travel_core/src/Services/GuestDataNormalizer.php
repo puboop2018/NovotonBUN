@@ -22,7 +22,7 @@ class GuestDataNormalizer implements GuestDataNormalizerInterface
     /**
      * All fields expected on a canonical guest entry, with defaults.
      */
-    private const GUEST_DEFAULTS = [
+    private const array GUEST_DEFAULTS = [
         'name' => '',
         'api_name' => '',
         'first_name' => '',

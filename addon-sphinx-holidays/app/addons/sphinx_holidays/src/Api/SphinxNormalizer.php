@@ -24,7 +24,7 @@ class SphinxNormalizer implements ProviderNormalizerInterface
 
     /** Board code mapping: Sphinx meal names → canonical codes.
      *  Order matters for partial matching — more specific entries must come first. */
-    private const BOARD_MAP = [
+    private const array BOARD_MAP = [
         // All Inclusive variants (specific before generic for partial match)
         'ultra all inclusive' => 'UAI',
         'all inclusive light' => 'AIL',
@@ -52,7 +52,7 @@ class SphinxNormalizer implements ProviderNormalizerInterface
     ];
 
     /** Room type prefix mapping */
-    private const ROOM_TYPE_PREFIXES = [
+    private const array ROOM_TYPE_PREFIXES = [
         'single' => 'SGL',
         'double' => 'DBL',
         'twin' => 'TWIN',

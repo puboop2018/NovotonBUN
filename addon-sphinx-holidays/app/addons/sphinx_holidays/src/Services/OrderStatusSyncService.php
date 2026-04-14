@@ -24,7 +24,7 @@ class OrderStatusSyncService implements OrderStatusSyncServiceInterface
     private ?\Closure $outputCallback = null;
 
     /** Map Sphinx API booking statuses to our internal TravelConstants statuses */
-    private const STATUS_MAP = [
+    private const array STATUS_MAP = [
         'confirmed' => TravelConstants::STATUS_CONFIRMED,
         'on_request' => TravelConstants::STATUS_PENDING,
         'cancelled' => TravelConstants::STATUS_CANCELLED,

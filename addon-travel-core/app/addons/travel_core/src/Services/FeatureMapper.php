@@ -42,7 +42,7 @@ class FeatureMapper implements FeatureMapperInterface
      * Strict feature types: unknown codes are logged + skipped, never auto-registered.
      * These have well-defined value sets that shouldn't grow automatically.
      */
-    public const STRICT_FEATURE_TYPES = [
+    public const array STRICT_FEATURE_TYPES = [
         'board', 'room_type', 'stars', 'property_type', 'travel_group',
     ];
 
@@ -50,12 +50,12 @@ class FeatureMapper implements FeatureMapperInterface
      * Dynamic feature types: unknown codes are auto-registered as new mappings.
      * These grow organically as new hotels/facilities appear in API data.
      */
-    public const DYNAMIC_FEATURE_TYPES = [
+    public const array DYNAMIC_FEATURE_TYPES = [
         'hotel_facility', 'room_facility', 'resort', 'region', 'city', 'beach_access',
     ];
 
     /** Feature type → travel_core addon setting key */
-    private const FEATURE_SETTING_KEYS = [
+    private const array FEATURE_SETTING_KEYS = [
         'stars' => 'feature_id_property_rating',
         'property_type' => 'feature_id_property_type',
         'resort' => 'feature_id_location',
@@ -124,7 +124,7 @@ class FeatureMapper implements FeatureMapperInterface
     }
 
     /** All facility sub-types */
-    public const FACILITY_TYPES = ['hotel_facility', 'room_facility', 'beach_access'];
+    public const array FACILITY_TYPES = ['hotel_facility', 'room_facility', 'beach_access'];
 
     /**
      * Resolve a facility API value across all facility sub-types.

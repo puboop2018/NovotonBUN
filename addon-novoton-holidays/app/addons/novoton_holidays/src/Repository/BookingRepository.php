@@ -25,7 +25,7 @@ class BookingRepository implements BookingRepositoryInterface
      * rooms_data, guests_data, api_request, api_response, alternatives_data,
      * notes, terms_of_payment_raw/formatted, terms_of_cancellation_raw/formatted).
      */
-    private const LIST_COLUMNS = 'booking_id, order_id, product_id, user_id,
+    private const string LIST_COLUMNS = 'booking_id, order_id, product_id, user_id,
         session_id, novoton_confirm_id, novoton_invoice_id, novoton_res_num,
         novoton_status, hotel_id, hotel_name, package_id, package_name,
         room_id, room_type, board_id, board_name, item_id,

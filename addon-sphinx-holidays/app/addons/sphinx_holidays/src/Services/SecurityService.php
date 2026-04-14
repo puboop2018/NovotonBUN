@@ -21,11 +21,11 @@ use Tygh\Addons\TravelCore\TravelConstants;
 
 class SecurityService implements SecurityServiceInterface
 {
-    /** @var int Rate limit window in seconds */
-    private const RATE_LIMIT_WINDOW = 3600;
+    /** Rate limit window in seconds */
+    private const int RATE_LIMIT_WINDOW = 3600;
 
-    /** @var int Max bookings per hour */
-    private const MAX_BOOKINGS_PER_HOUR = 20;
+    /** Max bookings per hour */
+    private const int MAX_BOOKINGS_PER_HOUR = 20;
 
     /**
      * {@inheritdoc}

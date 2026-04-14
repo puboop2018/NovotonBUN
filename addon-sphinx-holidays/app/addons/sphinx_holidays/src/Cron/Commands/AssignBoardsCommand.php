@@ -37,15 +37,15 @@ class AssignBoardsCommand extends AbstractSyncCommand
     use StatefulCommandTrait;
 
     /** State file name stored in DIR_CACHE */
-    private const STATE_FILE_NAME = 'sphinx_assign_boards_state.json';
+    private const string STATE_FILE_NAME = 'sphinx_assign_boards_state.json';
 
     /** Batch configuration */
-    private const DEFAULT_BATCH_SIZE = 100;         // hotels per DB query batch
-    private const DEFAULT_MAX_TIME = 300;            // 5 minutes
-    private const STALE_HOURS = 6;                   // clear abandoned state after 6h
+    private const int DEFAULT_BATCH_SIZE = 100;         // hotels per DB query batch
+    private const int DEFAULT_MAX_TIME = 300;            // 5 minutes
+    private const int STALE_HOURS = 6;                   // clear abandoned state after 6h
 
     /** Default state structure */
-    private const DEFAULT_STATE = [
+    private const array DEFAULT_STATE = [
         'status' => 'idle',
         'started_at' => null,
         'last_run_at' => null,

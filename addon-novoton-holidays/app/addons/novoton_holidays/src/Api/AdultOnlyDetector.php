@@ -23,7 +23,7 @@ class AdultOnlyDetector
      * Patterns that indicate an adults-only property.
      * Ordered by specificity (most explicit first).
      */
-    private const PATTERNS = [
+    private const array PATTERNS = [
         '/\bADULTS?\s*ONLY\b/i',
         '/\bONLY\s+ADULTS?\b/i',
         '/\b(?:16|18)\+/i',

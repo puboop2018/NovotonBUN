@@ -19,7 +19,7 @@ use Tygh\Addons\TravelCore\Services\FeatureMapper;
  */
 class UpdateProductsCommand extends AbstractSyncCommand
 {
-    private const BATCH_SIZE = 200;
+    private const int BATCH_SIZE = 200;
 
     #[\Override]
     public static function getDescription(): string

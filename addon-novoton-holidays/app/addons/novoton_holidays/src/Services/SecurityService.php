@@ -23,7 +23,7 @@ use Tygh\Registry;
 class SecurityService implements SecurityServiceInterface
 {
     /** @var int Rate limit window in seconds */
-    private const RATE_LIMIT_WINDOW = 60;
+    private const int RATE_LIMIT_WINDOW = 60;
 
     private CacheRepositoryInterface $cacheRepo;
 

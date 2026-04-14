@@ -16,7 +16,7 @@ namespace Tygh\Addons\NovotonHolidays\Repository;
 class FacilityRepository implements FacilityRepositoryInterface
 {
     /** @var array<string, string> Allowed facility name columns by language */
-    private const NAME_COLUMNS = [
+    private const array NAME_COLUMNS = [
         'ro' => 'facility_name_ro',
         'en' => 'facility_name_en',
     ];

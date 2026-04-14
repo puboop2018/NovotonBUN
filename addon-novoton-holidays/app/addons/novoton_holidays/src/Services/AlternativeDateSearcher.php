@@ -17,7 +17,7 @@ namespace Tygh\Addons\NovotonHolidays\Services;
 class AlternativeDateSearcher implements AlternativeDateSearcherInterface
 {
     /** Maximum total API calls across all dates/rooms/boards to prevent runaway loops */
-    private const MAX_API_CALLS = 50;
+    private const int MAX_API_CALLS = 50;
 
     /**  */
     private bool $debug;

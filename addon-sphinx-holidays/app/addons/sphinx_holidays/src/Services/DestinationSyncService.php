@@ -16,8 +16,8 @@ use Tygh\Addons\TravelCore\Helpers\ValidationHelpers;
  */
 class DestinationSyncService extends AbstractSyncService implements DestinationSyncServiceInterface
 {
-    private const UPSERT_BATCH_SIZE = 100;
-    private const PER_PAGE = 1000;
+    private const int UPSERT_BATCH_SIZE = 100;
+    private const int PER_PAGE = 1000;
 
     public function __construct(
         SphinxApi $api,

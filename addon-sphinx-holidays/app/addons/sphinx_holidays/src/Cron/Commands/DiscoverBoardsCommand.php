@@ -37,26 +37,26 @@ class DiscoverBoardsCommand extends AbstractSyncCommand
     use StatefulCommandTrait;
 
     /** State file name stored in DIR_CACHE */
-    private const STATE_FILE_NAME = 'sphinx_discover_boards_state.json';
+    private const string STATE_FILE_NAME = 'sphinx_discover_boards_state.json';
 
     /** Default search parameters for board discovery */
-    private const SEARCH_NIGHTS = 7;
-    private const SEARCH_ADULTS = 2;
-    private const SEARCH_DAYS_AHEAD = 30;
+    private const int SEARCH_NIGHTS = 7;
+    private const int SEARCH_ADULTS = 2;
+    private const int SEARCH_DAYS_AHEAD = 30;
 
     /** Polling configuration */
-    private const POLL_INTERVAL_SECONDS = 3;
-    private const POLL_MAX_ATTEMPTS = 20;
+    private const int POLL_INTERVAL_SECONDS = 3;
+    private const int POLL_MAX_ATTEMPTS = 20;
 
     /** Batch configuration */
-    private const DEFAULT_MAX_TIME = 300;            // 5 minutes
-    private const STALE_HOURS = 6;                   // clear abandoned state after 6h
+    private const int DEFAULT_MAX_TIME = 300;            // 5 minutes
+    private const int STALE_HOURS = 6;                   // clear abandoned state after 6h
 
     /** Rate limiting */
-    private const DELAY_BETWEEN_DESTINATIONS_MS = 500000; // 500ms
+    private const int DELAY_BETWEEN_DESTINATIONS_MS = 500000; // 500ms
 
     /** Default state structure */
-    private const DEFAULT_STATE = [
+    private const array DEFAULT_STATE = [
         'status' => 'idle',
         'started_at' => null,
         'last_run_at' => null,
