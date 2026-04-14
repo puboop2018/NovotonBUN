@@ -4,6 +4,7 @@ namespace Tygh\Addons\NovotonHolidays\Cron\Commands;
 
 use Tygh\Addons\NovotonHolidays\Cron\AbstractCronCommand;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
+use Tygh\Addons\NovotonHolidays\Services\PriceInfoFormatter;
 use Tygh\Addons\NovotonHolidays\Services\PriceInfoService;
 
 /**
@@ -95,11 +96,16 @@ class PriceComputeCommand extends AbstractCronCommand
         $dirtyHotels = [];
 
         foreach ($packages as $pkg) {
+            if (!is_array($pkg)) {
+                continue;
+            }
+            $pkgHotelId = PriceInfoFormatter::toScalar($pkg['hotel_id'] ?? '');
+            $pkgPackageId = PriceInfoFormatter::toScalar($pkg['package_id'] ?? '');
             try {
-                $priceinfo = json_decode($pkg['priceinfo_data'], true);
-                if (empty($priceinfo)) {
+                $priceinfo = json_decode(PriceInfoFormatter::toScalar($pkg['priceinfo_data'] ?? ''), true);
+                if (empty($priceinfo) || !is_array($priceinfo)) {
                     $errors++;
-                    $this->output("  ERROR [{$pkg['hotel_id']}/{$pkg['package_id']}]: invalid JSON");
+                    $this->output("  ERROR [{$pkgHotelId}/{$pkgPackageId}]: invalid JSON");
                     continue;
                 }
 
@@ -117,14 +123,14 @@ class PriceComputeCommand extends AbstractCronCommand
                     $minPrice,
                     $seasonsCount,
                     $hasEarlyBooking,
-                    (int) $pkg['id']
+                    PriceInfoFormatter::toInt($pkg['id'] ?? 0)
                 );
 
-                $dirtyHotels[$pkg['hotel_id']] = true;
+                $dirtyHotels[$pkgHotelId] = true;
                 $processed++;
             } catch (\Throwable $e) {
                 $errors++;
-                $this->output("  ERROR [{$pkg['hotel_id']}/{$pkg['package_id']}]: " . $e->getMessage());
+                $this->output("  ERROR [{$pkgHotelId}/{$pkgPackageId}]: " . $e->getMessage());
             }
 
             if (($processed + $errors) % 200 === 0) {
@@ -209,9 +215,12 @@ class PriceComputeCommand extends AbstractCronCommand
         $errors = 0;
 
         foreach ($packages as $pkg) {
+            if (!is_array($pkg)) {
+                continue;
+            }
             try {
-                $priceinfo = json_decode($pkg['priceinfo_data'], true);
-                if (empty($priceinfo)) {
+                $priceinfo = json_decode(PriceInfoFormatter::toScalar($pkg['priceinfo_data'] ?? ''), true);
+                if (empty($priceinfo) || !is_array($priceinfo)) {
                     $errors++;
                     continue;
                 }
@@ -230,13 +239,14 @@ class PriceComputeCommand extends AbstractCronCommand
                     $minPrice,
                     $seasonsCount,
                     $hasEarlyBooking,
-                    (int) $pkg['id']
+                    PriceInfoFormatter::toInt($pkg['id'] ?? 0)
                 );
 
                 $processed++;
             } catch (\Throwable $e) {
                 $errors++;
-                $this->output("  ERROR [{$pkg['package_id']}]: " . $e->getMessage());
+                $pkgId = PriceInfoFormatter::toScalar($pkg['package_id'] ?? '');
+                $this->output("  ERROR [{$pkgId}]: " . $e->getMessage());
             }
         }
 
@@ -273,6 +283,7 @@ class PriceComputeCommand extends AbstractCronCommand
      */
     public static function updateProductPrice(string $hotelId): bool
     {
+        /** @var array<string, mixed>|null $row */
         $row = db_get_row(
             "SELECT h.product_id, MIN(p.min_price) AS lowest_price
              FROM ?:novoton_hotels h
@@ -282,15 +293,15 @@ class PriceComputeCommand extends AbstractCronCommand
             $hotelId
         );
 
-        if (empty($row) || empty($row['product_id']) || empty($row['lowest_price'])) {
+        if (empty($row) || !is_array($row) || empty($row['product_id']) || empty($row['lowest_price'])) {
             return false;
         }
 
         $commission = ConfigProvider::getCommission();
-        $price = (float) $row['lowest_price'] * (1 + ($commission / 100));
+        $price = PriceInfoFormatter::toFloat($row['lowest_price']) * (1 + ($commission / 100));
         $price = ConfigProvider::isRoundPrices() ? round($price) : round($price, 2);
 
-        db_query("UPDATE ?:products SET price = ?d WHERE product_id = ?i", $price, (int) $row['product_id']);
+        db_query("UPDATE ?:products SET price = ?d WHERE product_id = ?i", $price, PriceInfoFormatter::toInt($row['product_id']));
 
         return true;
     }
@@ -322,15 +333,18 @@ class PriceComputeCommand extends AbstractCronCommand
         }
 
         foreach ($seasonPrices as $sp) {
-            $idAge = (string) ($sp['IdAge'] ?? '');
+            if (!is_array($sp)) {
+                continue;
+            }
+            $idAge = PriceInfoFormatter::toScalar($sp['IdAge'] ?? '');
 
             // Must contain ADULT (case-insensitive)
-            if (!str_contains(strtolower($idAge), strtolower('ADULT'))) {
+            if (!str_contains(strtolower($idAge), 'adult')) {
                 continue;
             }
 
             // Exclude supplementary "3 RD ADULT" / "3RD ADULT" rows
-            if (str_contains(strtolower($idAge), strtolower('3 RD')) || str_contains(strtolower($idAge), strtolower('3RD'))) {
+            if (str_contains(strtolower($idAge), '3 rd') || str_contains(strtolower($idAge), '3rd')) {
                 continue;
             }
 
@@ -340,14 +354,14 @@ class PriceComputeCommand extends AbstractCronCommand
                     continue;
                 }
 
-                $priceVal = (string) $sp[$priceKey];
+                $priceVal = PriceInfoFormatter::toScalar($sp[$priceKey]);
 
                 // Skip percentage values
                 if (str_contains($priceVal, '%')) {
                     continue;
                 }
 
-                $price = (float) $priceVal;
+                $price = PriceInfoFormatter::toFloat($priceVal);
                 if ($price > 0 && ($minPrice === null || $price < $minPrice)) {
                     $minPrice = $price;
                 }

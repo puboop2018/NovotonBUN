@@ -4747,6 +4747,12 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/PriceComputeCommand.php
 
 		-
+			message: '#^Call to function is_array\(\) with non\-empty\-array\<string, mixed\> will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/PriceComputeCommand.php
+
+		-
 			message: '#^Cannot access offset ''Code'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
@@ -4754,12 +4760,6 @@ parameters:
 
 		-
 			message: '#^Cannot access offset ''EarlyBooking'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/PriceComputeCommand.php
-
-		-
-			message: '#^Cannot access offset ''IdAge'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/PriceComputeCommand.php
@@ -4777,49 +4777,7 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/PriceComputeCommand.php
 
 		-
-			message: '#^Cannot access offset ''Price1''\|''Price10''\|''Price11''\|''Price12''\|''Price13''\|''Price14''\|''Price15''\|''Price16''\|''Price17''\|''Price18''\|''Price19''\|''Price2''\|''Price20''\|''Price3''\|''Price4''\|''Price5''\|''Price6''\|''Price7''\|''Price8''\|''Price9'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/PriceComputeCommand.php
-
-		-
 			message: '#^Cannot access offset ''early_booking'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/PriceComputeCommand.php
-
-		-
-			message: '#^Cannot access offset ''hotel_id'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 3
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/PriceComputeCommand.php
-
-		-
-			message: '#^Cannot access offset ''id'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/PriceComputeCommand.php
-
-		-
-			message: '#^Cannot access offset ''lowest_price'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/PriceComputeCommand.php
-
-		-
-			message: '#^Cannot access offset ''package_id'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 3
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/PriceComputeCommand.php
-
-		-
-			message: '#^Cannot access offset ''priceinfo_data'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/PriceComputeCommand.php
-
-		-
-			message: '#^Cannot access offset ''product_id'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/PriceComputeCommand.php
@@ -4831,43 +4789,25 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/PriceComputeCommand.php
 
 		-
-			message: '#^Cannot cast mixed to float\.$#'
-			identifier: cast.double
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/PriceComputeCommand.php
 
 		-
-			message: '#^Cannot cast mixed to int\.$#'
-			identifier: cast.int
-			count: 3
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/PriceComputeCommand.php
-
-		-
-			message: '#^Cannot cast mixed to string\.$#'
-			identifier: cast.string
-			count: 3
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/PriceComputeCommand.php
-
-		-
-			message: '#^Parameter \#1 \$json of function json_decode expects string, mixed given\.$#'
+			message: '#^Parameter \#1 \$priceinfo of static method Tygh\\Addons\\NovotonHolidays\\Cron\\Commands\\PriceComputeCommand\:\:countSeasons\(\) expects array\<string, mixed\>, array\<mixed, mixed\> given\.$#'
 			identifier: argument.type
 			count: 2
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/PriceComputeCommand.php
 
 		-
-			message: '#^Parameter \#1 \$priceinfo of static method Tygh\\Addons\\NovotonHolidays\\Cron\\Commands\\PriceComputeCommand\:\:countSeasons\(\) expects array\<string, mixed\>, mixed given\.$#'
+			message: '#^Parameter \#1 \$priceinfo of static method Tygh\\Addons\\NovotonHolidays\\Cron\\Commands\\PriceComputeCommand\:\:extractMinPrice\(\) expects array\<string, mixed\>, array\<mixed, mixed\> given\.$#'
 			identifier: argument.type
 			count: 2
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/PriceComputeCommand.php
 
 		-
-			message: '#^Parameter \#1 \$priceinfo of static method Tygh\\Addons\\NovotonHolidays\\Cron\\Commands\\PriceComputeCommand\:\:extractMinPrice\(\) expects array\<string, mixed\>, mixed given\.$#'
-			identifier: argument.type
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/PriceComputeCommand.php
-
-		-
-			message: '#^Parameter \#1 \$priceinfo of static method Tygh\\Addons\\NovotonHolidays\\Cron\\Commands\\PriceComputeCommand\:\:hasEarlyBooking\(\) expects array\<string, mixed\>, mixed given\.$#'
+			message: '#^Parameter \#1 \$priceinfo of static method Tygh\\Addons\\NovotonHolidays\\Cron\\Commands\\PriceComputeCommand\:\:hasEarlyBooking\(\) expects array\<string, mixed\>, array\<mixed, mixed\> given\.$#'
 			identifier: argument.type
 			count: 2
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/PriceComputeCommand.php
@@ -4875,24 +4815,6 @@ parameters:
 		-
 			message: '#^Parameter \#1 \$value of function count expects array\|Countable, mixed given\.$#'
 			identifier: argument.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/PriceComputeCommand.php
-
-		-
-			message: '#^Part \$pkg\[''hotel_id''\] \(mixed\) of encapsed string cannot be cast to string\.$#'
-			identifier: encapsedStringPart.nonString
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/PriceComputeCommand.php
-
-		-
-			message: '#^Part \$pkg\[''package_id''\] \(mixed\) of encapsed string cannot be cast to string\.$#'
-			identifier: encapsedStringPart.nonString
-			count: 3
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/PriceComputeCommand.php
-
-		-
-			message: '#^Possibly invalid array key type mixed\.$#'
-			identifier: offsetAccess.invalidOffset
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/PriceComputeCommand.php
 
