@@ -2263,12 +2263,6 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/booking_form.php
 
 		-
-			message: '#^Binary operation "\." between ''Hotel \#'' and mixed results in an error\.$#'
-			identifier: binaryOp.invalid
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/booking_form.php
-
-		-
 			message: '#^Binary operation "\." between mixed and '' \(missing hotel_id,…'' results in an error\.$#'
 			identifier: binaryOp.invalid
 			count: 1
@@ -2281,8 +2275,8 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/booking_form.php
 
 		-
-			message: '#^Binary operation "\." between string and mixed results in an error\.$#'
-			identifier: binaryOp.invalid
+			message: '#^Call to function is_array\(\) with non\-empty\-array\<string, mixed\> will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/booking_form.php
 
@@ -2323,12 +2317,6 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/booking_form.php
 
 		-
-			message: '#^Cannot access offset ''board_id'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/booking_form.php
-
-		-
 			message: '#^Cannot access offset ''coefficient'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
@@ -2342,30 +2330,6 @@ parameters:
 
 		-
 			message: '#^Cannot access offset ''id'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/booking_form.php
-
-		-
-			message: '#^Cannot access offset ''package_id'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/booking_form.php
-
-		-
-			message: '#^Cannot access offset ''package_name'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/booking_form.php
-
-		-
-			message: '#^Cannot access offset ''room_id'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/booking_form.php
-
-		-
-			message: '#^Cannot access offset ''room_name'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/booking_form.php
@@ -2409,41 +2373,17 @@ parameters:
 		-
 			message: '#^Cannot cast mixed to float\.$#'
 			identifier: cast.double
-			count: 4
+			count: 3
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/booking_form.php
 
 		-
-			message: '#^Cannot cast mixed to int\.$#'
-			identifier: cast.int
-			count: 5
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/booking_form.php
-
-		-
-			message: '#^Parameter \#1 \$boardId of function fn_novoton_holidays_format_board_name expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/booking_form.php
-
-		-
-			message: '#^Parameter \#1 \$hotelId of method Tygh\\Addons\\NovotonHolidays\\Api\\HotelApiClient\:\:getHotelInfo\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/booking_form.php
-
-		-
-			message: '#^Parameter \#1 \$hotelId of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelPackageRepositoryInterface\:\:getPackageIdNamePairs\(\) expects string, mixed given\.$#'
-			identifier: argument.type
+			message: '#^If condition is always true\.$#'
+			identifier: if.alwaysTrue
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/booking_form.php
 
 		-
 			message: '#^Parameter \#1 \$hotelId of method Tygh\\Addons\\NovotonHolidays\\Services\\PriceInfoServiceInterface\:\:getCalendarPrices\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/booking_form.php
-
-		-
-			message: '#^Parameter \#1 \$hotel_id of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepositoryInterface\:\:findById\(\) expects string, mixed given\.$#'
 			identifier: argument.type
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/booking_form.php
@@ -2455,27 +2395,15 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/booking_form.php
 
 		-
-			message: '#^Parameter \#1 \$roomCode of function fn_novoton_holidays_normalize_room_code expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 3
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/booking_form.php
-
-		-
-			message: '#^Parameter \#1 \$string of function rawurldecode expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/booking_form.php
-
-		-
-			message: '#^Parameter \#2 \$subject of function preg_match expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/booking_form.php
-
-		-
 			message: '#^Possibly invalid array key type mixed\.$#'
 			identifier: offsetAccess.invalidOffset
-			count: 2
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/booking_form.php
+
+		-
+			message: '#^Ternary operator condition is always true\.$#'
+			identifier: ternary.alwaysTrue
+			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/booking_form.php
 
 		-

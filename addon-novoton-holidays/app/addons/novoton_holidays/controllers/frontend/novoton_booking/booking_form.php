@@ -11,43 +11,49 @@ use Tygh\Registry;
 use Tygh\Tygh;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Services\Container;
+use Tygh\Addons\NovotonHolidays\Services\PriceInfoFormatter;
 use Tygh\Addons\TravelCore\Services\CurrencyService;
 
+    /** @var array<string, mixed> $bookingData */
     $bookingData = $_REQUEST;
-    
+
     // Normalize room_id: restore + signs lost by URL decoding
     if (!empty($bookingData['room_id'])) {
-        $bookingData['room_id'] = fn_novoton_holidays_normalize_room_code($bookingData['room_id']);
+        $bookingData['room_id'] = fn_novoton_holidays_normalize_room_code(PriceInfoFormatter::toScalar($bookingData['room_id']));
     }
-    
+
     // Check if this is a multi-room booking
     $is_multi_room = !empty($bookingData['multi_room']) || !empty($bookingData['rooms_data']);
-    
+
     // Parse rooms_data if it's a string (from form submission)
     $rooms_data = [];
     if (!empty($bookingData['rooms_data'])) {
-        $rooms_data = is_string($bookingData['rooms_data'])
-            ? json_decode(rawurldecode($bookingData['rooms_data']), true)
-            : $bookingData['rooms_data'];
+        $rawRoomsData = $bookingData['rooms_data'];
+        $rooms_data = is_string($rawRoomsData)
+            ? json_decode(rawurldecode($rawRoomsData), true)
+            : $rawRoomsData;
         if (!is_array($rooms_data)) {
             $rooms_data = [];
         }
         // Normalize room_id and room_name in each room (restore + lost by URL decoding)
         foreach ($rooms_data as &$room) {
+            if (!is_array($room)) {
+                continue;
+            }
             if (!empty($room['room_id'])) {
-                $room['room_id'] = fn_novoton_holidays_normalize_room_code($room['room_id']);
+                $room['room_id'] = fn_novoton_holidays_normalize_room_code(PriceInfoFormatter::toScalar($room['room_id']));
             }
             if (!empty($room['room_name'])) {
-                $room['room_name'] = fn_novoton_holidays_normalize_room_code($room['room_name']);
+                $room['room_name'] = fn_novoton_holidays_normalize_room_code(PriceInfoFormatter::toScalar($room['room_name']));
             }
         }
         unset($room);
     }
     
     // For multi-room, derive room_id from rooms_data if not directly provided
-    if ($is_multi_room && empty($bookingData['room_id']) && !empty($rooms_data[0]['room_id'])) {
-        $bookingData['room_id'] = $rooms_data[0]['room_id'];
-        $bookingData['board_id'] = $rooms_data[0]['board_id'] ?? 'AI';
+    if ($is_multi_room && empty($bookingData['room_id']) && is_array($rooms_data[0] ?? null) && !empty($rooms_data[0]['room_id'])) {
+        $bookingData['room_id'] = PriceInfoFormatter::toScalar($rooms_data[0]['room_id']);
+        $bookingData['board_id'] = PriceInfoFormatter::toScalar($rooms_data[0]['board_id'] ?? 'AI');
     }
     
     // Validate required data
@@ -64,50 +70,55 @@ use Tygh\Addons\TravelCore\Services\CurrencyService;
     
     // Get product and hotel info
     $prefix = ConfigProvider::getFirstProductCodePrefix();
-    $product_code = $prefix . $bookingData['hotel_id'];
-    
+    $bdHotelId = PriceInfoFormatter::toScalar($bookingData['hotel_id']);
+    $product_code = $prefix . $bdHotelId;
+
     $product_id = db_get_field(
         "SELECT product_id FROM ?:products WHERE product_code = ?s",
         $product_code
     );
-    
+
     // Get hotel info from novoton_hotels table
-    $hotel_info = _nvt_hotel_repo()->findById($bookingData['hotel_id']);
-    
+    /** @var array<string, mixed>|null $hotel_info */
+    $hotel_info = _nvt_hotel_repo()->findById($bdHotelId);
+
     // If hotel not found in novoton_hotels, try to get name from product
-    if (empty($hotel_info['hotel_name']) && !empty($product_id)) {
-        $product_name = db_get_field(
+    if ((empty($hotel_info) || empty($hotel_info['hotel_name'])) && !empty($product_id)) {
+        $product_name = PriceInfoFormatter::toScalar(db_get_field(
             "SELECT product FROM ?:product_descriptions WHERE product_id = ?i AND lang_code = ?s",
-            $product_id,
+            PriceInfoFormatter::toInt($product_id),
             CART_LANGUAGE
-        );
+        ));
         if (!empty($product_name)) {
-            if (empty($hotel_info)) {
+            if (empty($hotel_info) || !is_array($hotel_info)) {
                 $hotel_info = [];
             }
             $hotel_info['hotel_name'] = $product_name;
         }
     }
-    
+
     // Fallback: if still no hotel name, use hotel_id
-    if (empty($hotel_info['hotel_name'])) {
-        $hotel_info['hotel_name'] = 'Hotel #' . $bookingData['hotel_id'];
+    if (!is_array($hotel_info)) {
+        $hotel_info = [];
     }
-    
+    if (empty($hotel_info['hotel_name'])) {
+        $hotel_info['hotel_name'] = 'Hotel #' . $bdHotelId;
+    }
+
     // Prepare booking data for template
     $booking = [
-        'hotel_id' => $bookingData['hotel_id'],
-        'room_id' => $bookingData['room_id'],
-        'board_id' => $bookingData['board_id'] ?? 'BB',
-        'check_in' => $bookingData['check_in'],
-        'check_out' => $bookingData['check_out'],
-        'nights' => (int)($bookingData['nights'] ?? 7),
-        'adults' => (int)($bookingData['adults'] ?? 2),
-        'children' => (int)($bookingData['children'] ?? 0),
-        'total_price' => (float)($bookingData['total_price'] ?? $bookingData['price'] ?? 0),
-        'children_ages' => $bookingData['children_ages'] ?? '',
-        'package_name' => $bookingData['package_name'] ?? '',
-        'num_rooms' => (int)($bookingData['num_rooms'] ?? 1),
+        'hotel_id' => $bdHotelId,
+        'room_id' => PriceInfoFormatter::toScalar($bookingData['room_id']),
+        'board_id' => PriceInfoFormatter::toScalar($bookingData['board_id'] ?? 'BB'),
+        'check_in' => PriceInfoFormatter::toScalar($bookingData['check_in']),
+        'check_out' => PriceInfoFormatter::toScalar($bookingData['check_out']),
+        'nights' => PriceInfoFormatter::toInt($bookingData['nights'] ?? 7),
+        'adults' => PriceInfoFormatter::toInt($bookingData['adults'] ?? 2),
+        'children' => PriceInfoFormatter::toInt($bookingData['children'] ?? 0),
+        'total_price' => PriceInfoFormatter::toFloat($bookingData['total_price'] ?? $bookingData['price'] ?? 0),
+        'children_ages' => PriceInfoFormatter::toScalar($bookingData['children_ages'] ?? ''),
+        'package_name' => PriceInfoFormatter::toScalar($bookingData['package_name'] ?? ''),
+        'num_rooms' => PriceInfoFormatter::toInt($bookingData['num_rooms'] ?? 1),
         'rooms_data' => []
     ];
     
@@ -121,22 +132,22 @@ use Tygh\Addons\TravelCore\Services\CurrencyService;
     if (empty($booking['rooms_data'])) {
         $children_ages_arr = [];
         if (!empty($booking['children_ages'])) {
-            $children_ages_arr = is_string($booking['children_ages']) 
+            $children_ages_arr = is_string($booking['children_ages'])
                 ? array_map('intval', array_filter(explode(',', $booking['children_ages']), function($v) { return $v !== ''; }))
                 : (array)$booking['children_ages'];
         }
-        
+
         // Z3: Format board name consistently
         $formatted_board_name = fn_novoton_holidays_format_board_name($booking['board_id']);
         if ($formatted_board_name === $booking['board_id'] && !empty($bookingData['board_name'])) {
             // If format function didn't change it, try the passed board_name
-            $formatted_board_name = fn_novoton_holidays_format_board_name($bookingData['board_name']);
+            $formatted_board_name = fn_novoton_holidays_format_board_name(PriceInfoFormatter::toScalar($bookingData['board_name']));
         }
-        
+
         $booking['rooms_data'] = [
             [
                 'room_id' => $booking['room_id'],
-                'room_name' => $bookingData['room_name'] ?? $booking['room_id'],
+                'room_name' => PriceInfoFormatter::toScalar($bookingData['room_name'] ?? $booking['room_id']),
                 'board_id' => $booking['board_id'],
                 'board_name' => $formatted_board_name,
                 'adults' => $booking['adults'],
@@ -160,26 +171,28 @@ use Tygh\Addons\TravelCore\Services\CurrencyService;
     
     // Get package name - only from passed parameters (tied to specific room/price)
     $package_name = '';
-    
+
     // First check rooms_data (from multi-room booking)
-    if (!empty($booking['rooms_data'][0]['package_name'])) {
-        $package_name = $booking['rooms_data'][0]['package_name'];
+    $firstRoom = is_array($booking['rooms_data'][0] ?? null) ? $booking['rooms_data'][0] : [];
+    if (!empty($firstRoom['package_name'])) {
+        $package_name = PriceInfoFormatter::toScalar($firstRoom['package_name']);
     }
     // Then check URL parameter (from single room booking)
     elseif (!empty($bookingData['package_name'])) {
-        $package_name = $bookingData['package_name'];
+        $package_name = PriceInfoFormatter::toScalar($bookingData['package_name']);
     }
     // Decode URL encoding (e.g., %2b -> +)
     $package_name = rawurldecode($package_name);
     // Do NOT fall back to database - package_name must come from room_price result
-    
+
     // Get hotel stars
     $hotel_stars = '';
+    $hotelName = PriceInfoFormatter::toScalar($hotel_info['hotel_name'] ?? '');
     if (!empty($hotel_info['star_rating'])) {
-        $hotel_stars = str_repeat('★', (int)($hotel_info['star_rating']));
-    } elseif (!empty($hotel_info['hotel_name'])) {
+        $hotel_stars = str_repeat('★', PriceInfoFormatter::toInt($hotel_info['star_rating']));
+    } elseif (!empty($hotelName)) {
         // Try to extract stars from hotel name (e.g. "Hotel Name ****")
-        if (preg_match('/(\*+)/', $hotel_info['hotel_name'], $matches)) {
+        if (preg_match('/(\*+)/', $hotelName, $matches)) {
             $hotel_stars = $matches[1];
         }
     }
@@ -190,9 +203,12 @@ use Tygh\Addons\TravelCore\Services\CurrencyService;
     $db_packages = $packageRepo->getPackageIdNamePairs($booking['hotel_id']);
     if (!empty($db_packages)) {
         foreach ($db_packages as $pkg) {
+            if (!is_array($pkg)) {
+                continue;
+            }
             $all_packages[] = [
-                'IdCont' => $pkg['package_id'],
-                'PackageName' => $pkg['package_name']
+                'IdCont' => PriceInfoFormatter::toScalar($pkg['package_id'] ?? ''),
+                'PackageName' => PriceInfoFormatter::toScalar($pkg['package_name'] ?? '')
             ];
         }
     }
