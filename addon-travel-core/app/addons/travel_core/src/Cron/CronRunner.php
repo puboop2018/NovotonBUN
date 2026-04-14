@@ -14,6 +14,9 @@ use Tygh\Addons\TravelCore\Contracts\CronDispatcherInterface;
  * dispatch + output + error handling.
  *
  * Each addon's cron.php becomes ~15 lines: bootstrap, build dispatcher, run().
+ *
+ * Note: this class legitimately uses `exit()` as a cron entry point,
+ * which is why ExitExpression is excluded for this file in phpmd.xml.
  */
 class CronRunner
 {

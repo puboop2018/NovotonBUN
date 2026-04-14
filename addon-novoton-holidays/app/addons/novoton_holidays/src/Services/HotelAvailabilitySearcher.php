@@ -88,8 +88,6 @@ class HotelAvailabilitySearcher implements HotelAvailabilitySearcherInterface
 
         // ── Rooms / boards / packages from XML ──────────────────────
         $rooms = $this->extractRooms($hotelInfo);
-        $boardTypes = $this->extractBoardTypes($hotelInfo, $mealPlan);
-        $packages = $this->extractPackages($hotelInfo);
         $roomTypeMap = $this->buildRoomTypeMap($rooms);
 
         // ── API client ──────────────────────────────────────────────
@@ -458,27 +456,6 @@ class HotelAvailabilitySearcher implements HotelAvailabilitySearcherInterface
         }
 
         return array_values($boardTypes);
-    }
-
-    /** @return list<array{name: string, id_cont: string}> */
-    private function extractPackages(\SimpleXMLElement $hotelInfo): array
-    {
-        $packages = [];
-        $packageElements = $hotelInfo->xpath('//packages') ?: [];
-
-        foreach ($packageElements as $pkg) {
-            $pkgName = (string) $pkg->PackageName;
-            $pkgIdCont = (string) $pkg->IdCont;
-            if (!empty($pkgName)) {
-                $packages[] = ['name' => $pkgName, 'id_cont' => $pkgIdCont];
-            }
-        }
-
-        if (empty($packages)) {
-            $packages[] = ['name' => '', 'id_cont' => ''];
-        }
-
-        return $packages;
     }
 
     /**

@@ -108,7 +108,7 @@ class GuestDataNormalizer implements GuestDataNormalizerInterface
             return false;
         }
 
-        foreach ($data as $key => $value) {
+        foreach (array_keys($data) as $key) {
             if (!is_string($key)) {
                 return false;
             }
@@ -192,7 +192,7 @@ class GuestDataNormalizer implements GuestDataNormalizerInterface
             ]);
 
             // Map incoming fields
-            foreach (self::GUEST_DEFAULTS as $field => $default) {
+            foreach (array_keys(self::GUEST_DEFAULTS) as $field) {
                 if (isset($guest[$field])) {
                     $entry[$field] = $guest[$field];
                 }

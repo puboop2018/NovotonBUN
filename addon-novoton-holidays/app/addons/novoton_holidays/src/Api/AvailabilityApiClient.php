@@ -323,7 +323,7 @@ class AvailabilityApiClient extends ApiClientBase implements AvailabilityApiClie
             }
         }
 
-        foreach ($data as $key => $value) {
+        foreach ($data as $value) {
             if (is_array($value)) {
                 $this->extractOffersRecursive($value, $results, $params);
             }

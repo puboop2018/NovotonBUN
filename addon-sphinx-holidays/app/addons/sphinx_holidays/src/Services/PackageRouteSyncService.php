@@ -39,7 +39,7 @@ class PackageRouteSyncService extends AbstractSyncService
      *
      * @param list<int> $departureIds Optional departure ID filter
      * @param list<int> $destinationIds Optional destination ID filter
-     * @return array{success: bool, total: int, synced: int, failed: int, duration_ms: int, error: string}
+     * @return array{success: bool, total: int, synced: int, skipped: int, failed: int, sync_mode: string, duration_ms: int, error: string}
      */
     public function sync(array $departureIds = [], array $destinationIds = []): array
     {

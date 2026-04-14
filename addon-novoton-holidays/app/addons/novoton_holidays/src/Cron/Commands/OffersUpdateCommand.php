@@ -65,7 +65,6 @@ class OffersUpdateCommand extends AbstractCronCommand
         $hotelRepo = Container::getInstance()->hotelRepository();
         $new_hotels = 0;
         $added_to_cart = 0;
-        $current_year = date('Y');
         $image_base_url = \Tygh\Addons\NovotonHolidays\Constants::IMAGE_BASE_URL;
 
         foreach ($offers as $offer) {

@@ -309,12 +309,7 @@ class BatchedPriceInfoSyncV2 extends AbstractBatchedSync
     private function processPriceInfo(string $hotelId, string $packageId, $priceinfo, string $now): int
     {
         // Count seasons for the return value (lightweight, used for output only)
-        $seasonsCount = 0;
-        if (isset($priceinfo->seasons)) {
-            foreach ($priceinfo->seasons as $season) {
-                $seasonsCount++;
-            }
-        }
+        $seasonsCount = isset($priceinfo->seasons) ? count((array) $priceinfo->seasons) : 0;
 
         // Convert SimpleXML to array for reliable JSON encoding.
         // json_encode(SimpleXMLElement) can lose attributes and mishandle repeated siblings.

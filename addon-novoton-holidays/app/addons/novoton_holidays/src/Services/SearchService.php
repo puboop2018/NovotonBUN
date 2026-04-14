@@ -293,7 +293,8 @@ class SearchService implements SearchServiceInterface
             $termsPayment = $xml->xpath('//TermsOfPayment');
             $termsCancellation = $xml->xpath('//TermsOfCancellation');
 
-            for ($i = 0; $i < count($prices ?: []); $i++) {
+            $pricesCount = count($prices ?: []);
+            for ($i = 0; $i < $pricesCount; $i++) {
                 $roomId = isset($idRooms[$i]) ? (string)$idRooms[$i] : '';
                 $boardId = isset($boards[$i]) ? (string)$boards[$i] : '';
                 $price = isset($prices[$i]) ? (float) (string) $prices[$i] : 0;

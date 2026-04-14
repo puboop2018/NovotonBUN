@@ -463,10 +463,8 @@ class PriceInfoService implements PriceInfoServiceInterface
         }
 
         // 3. For each season, find the cheapest room total for N adults
-        // getCheapestRoomTotalBySeason is instance method, but the logic is stateless
-        // so we inline the static call via a temporary instance
-        $instance = new self();
-        $cheapestBySeason = $instance->getCheapestRoomTotalBySeason($seasonPrices, $seasons, $adults);
+        // (stateless helper called statically)
+        $cheapestBySeason = self::getCheapestRoomTotalBySeason($seasonPrices, $seasons, $adults);
 
         // 4. Expand season ranges into per-date raw prices
         $dateMap = [];
@@ -524,12 +522,12 @@ class PriceInfoService implements PriceInfoServiceInterface
      *
      * Picks the minimum total across all rooms for each season.
      *
-     * @param array<string, mixed> $seasonPrices season_price rows
-     * @param array<string, mixed> $seasons seasons array
+     * @param array<mixed, mixed> $seasonPrices season_price rows
+     * @param array<mixed, mixed> $seasons seasons array
      * @param int $adults number of adults
      * @return array<int, float> [seasonNum => cheapestRoomTotal]
      */
-    private function getCheapestRoomTotalBySeason(array $seasonPrices, array $seasons, int $adults): array
+    private static function getCheapestRoomTotalBySeason(array $seasonPrices, array $seasons, int $adults): array
     {
         // Build a code index for percentage resolution
         $codeIndex = [];
@@ -537,7 +535,7 @@ class PriceInfoService implements PriceInfoServiceInterface
             if (!is_array($row)) {
                 continue;
             }
-            $code = $this->toScalarSafe($row['Code'] ?? '');
+            $code = self::toScalarSafe($row['Code'] ?? '');
             if ($code !== '') {
                 $codeIndex[$code][] = $row;
             }
@@ -564,9 +562,9 @@ class PriceInfoService implements PriceInfoServiceInterface
             if (!is_array($row)) {
                 continue;
             }
-            $fAge = $this->toScalarSafe($row['fAge'] ?? '');
-            $idAge = $this->toScalarSafe($row['IdAge'] ?? '');
-            $accType = strtoupper(trim($this->toScalarSafe($row['IdAcc'] ?? '')));
+            $fAge = self::toScalarSafe($row['fAge'] ?? '');
+            $idAge = self::toScalarSafe($row['IdAge'] ?? '');
+            $accType = strtoupper(trim(self::toScalarSafe($row['IdAcc'] ?? '')));
 
             // Resolve age type — same logic as PriceInfoCalculator
             $rowAge = '';
@@ -587,7 +585,7 @@ class PriceInfoService implements PriceInfoServiceInterface
                 continue;
             }
 
-            $roomId = $this->toScalarSafe($row['IdRoom'] ?? '');
+            $roomId = self::toScalarSafe($row['IdRoom'] ?? '');
             if ($roomId === '') {
                 $roomId = '_default';
             }
@@ -605,7 +603,7 @@ class PriceInfoService implements PriceInfoServiceInterface
         foreach ($roomRows as $roomId => $rows) {
             // Use the first matching row for this room (most general)
             $row = $rows[0];
-            $isRoomPrice = strtoupper($this->toScalarSafe($row['RoomPrice'] ?? 'No')) === 'YES';
+            $isRoomPrice = strtoupper(self::toScalarSafe($row['RoomPrice'] ?? 'No')) === 'YES';
 
             for ($s = 1; $s <= min($maxSeason, 20); $s++) {
                 $priceKey = 'Price' . $s;
@@ -615,7 +613,7 @@ class PriceInfoService implements PriceInfoServiceInterface
                     continue;
                 }
 
-                $unitPrice = $this->resolveCalendarPrice($rawPrice, $priceKey, $codeIndex);
+                $unitPrice = self::resolveCalendarPrice($rawPrice, $priceKey, $codeIndex);
                 if ($unitPrice <= 0) {
                     continue;
                 }
@@ -640,7 +638,7 @@ class PriceInfoService implements PriceInfoServiceInterface
      * @param array<string, mixed> $codeIndex Code-indexed season_price rows
      * @return float Resolved price
      */
-    private function resolveCalendarPrice($rawPrice, string $priceKey, array $codeIndex): float
+    private static function resolveCalendarPrice($rawPrice, string $priceKey, array $codeIndex): float
     {
         if (is_array($rawPrice) || is_object($rawPrice)) {
             return 0.0;
@@ -667,7 +665,7 @@ class PriceInfoService implements PriceInfoServiceInterface
      * Safely convert a value to scalar string.
      * @param mixed $val
      */
-    private function toScalarSafe($val): string
+    private static function toScalarSafe($val): string
     {
         if (is_array($val) || is_object($val)) {
             return '';

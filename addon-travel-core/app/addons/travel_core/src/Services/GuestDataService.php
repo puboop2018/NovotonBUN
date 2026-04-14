@@ -220,7 +220,7 @@ class GuestDataService implements GuestDataServiceInterface
     {
         $display = [];
 
-        foreach ($guests_data as $key => $guest) {
+        foreach ($guests_data as $guest) {
             if (!is_array($guest)) {
                 continue;
             }

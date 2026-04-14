@@ -62,7 +62,6 @@ class AddProductsCommand extends AbstractCronCommand
         $this->output('');
 
         $hotelRepo = Container::getInstance()->hotelRepository();
-        $current_year = date('Y');
         $image_base_url = \Tygh\Addons\NovotonHolidays\Constants::IMAGE_BASE_URL;
         $grand_total = 0;
         $grand_added = 0;

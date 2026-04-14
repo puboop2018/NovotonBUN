@@ -315,7 +315,6 @@ class PriceInfoParser
         ];
 
         $rbAvailable = PriceInfoFormatter::toInt($capacity['RB'] ?? 2);
-        $ebAvailable = PriceInfoFormatter::toInt($capacity['EB'] ?? 1);
         $rbUsed = 0;
         $ebUsed = 0;
 
@@ -386,7 +385,7 @@ class PriceInfoParser
 
         // Place children
         $childOrdinalCounter = 0;
-        foreach ($sortedChildrenAges as $idx => $age) {
+        foreach ($sortedChildrenAges as $age) {
             $ageBand = $this->getAgeBand($age);
 
             $bandHasPricing = true;

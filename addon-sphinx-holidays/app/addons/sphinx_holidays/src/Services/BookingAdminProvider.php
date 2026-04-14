@@ -116,7 +116,6 @@ class BookingAdminProvider implements BookingAdminProviderInterface
     public function getAvailableActions(array $booking): array
     {
         $actions = [];
-        $providerBookingId = $booking['provider_booking_id'] ?? '';
         $status = $booking['status'] ?? '';
 
         // Retry action for failed bookings

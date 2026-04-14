@@ -40,8 +40,6 @@ class ProductFactory implements ProductFactoryInterface
     {
         $hotelId = $hotel['hotel_id'];
         $hotelName = $hotel['hotel_name'] ?? '';
-        $city = $hotel['city'] ?? '';
-        $country = $hotel['country'] ?? '';
 
         $productCode = $this->dbHelper->getProductCode($hotelId);
 

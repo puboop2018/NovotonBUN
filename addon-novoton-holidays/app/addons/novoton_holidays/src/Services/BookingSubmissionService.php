@@ -70,7 +70,7 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
         $orderComment = trim((string) ($cart['notes'] ?? ''));
 
         $cartProducts = is_array($cart['products'] ?? null) ? $cart['products'] : [];
-        foreach ($cartProducts as $cartId => $product) {
+        foreach ($cartProducts as $product) {
             if (!is_array($product)) {
                 continue;
             }

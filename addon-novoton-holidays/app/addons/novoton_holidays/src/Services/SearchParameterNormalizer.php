@@ -40,7 +40,7 @@ class SearchParameterNormalizer
         $roomsData = $this->mergeUrlChildrenAges($roomsData, $searchParams);
 
         // ── Totals ───────────────────────────────────────────────────
-        [$totalAdults, $totalChildren, $allChildrenAges] = $this->calculateTotals($roomsData);
+        [$totalAdults, , $allChildrenAges] = $this->calculateTotals($roomsData);
         $adults = $totalAdults;
         $numRooms = count($roomsData);
 

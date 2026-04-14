@@ -228,6 +228,9 @@ class SphinxHttpClient
 
     /**
      * Parse rate limit headers from response.
+     *
+     * Note: called via `CURLOPT_HEADERFUNCTION => [$this, 'parseResponseHeaders']`,
+     * which PHPMD's UnusedPrivateMethod sniff cannot detect.
      */
     private function parseResponseHeaders(\CurlHandle $ch, string $header): int
     {
