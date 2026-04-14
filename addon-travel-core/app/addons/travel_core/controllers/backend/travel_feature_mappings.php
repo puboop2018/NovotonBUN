@@ -12,6 +12,7 @@ declare(strict_types=1);
 
 use Tygh\Tygh;
 use Tygh\Registry;
+use Tygh\Addons\TravelCore\Helpers\ValidationHelpers;
 use Tygh\Addons\TravelCore\Services\FeatureMapper;
 use Tygh\Addons\TravelCore\Services\TravelProviderRegistry;
 use Tygh\Addons\TravelCore\TravelConstants;
@@ -33,33 +34,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Update mapping
     if ($mode === 'update') {
-        $mapId = (int) ($_REQUEST['map_id'] ?? 0);
-        if ($mapId > 0 && !empty($_REQUEST['mapping_data'])) {
+        $mapId = ValidationHelpers::toInt($_REQUEST['map_id'] ?? 0);
+        if ($mapId > 0 && !empty($_REQUEST['mapping_data']) && is_array($_REQUEST['mapping_data'])) {
+            /** @var array<string, mixed> $data */
             $data = $_REQUEST['mapping_data'];
             $updateData = [];
 
             // Allowed editable fields
             if (isset($data['display_name_en'])) {
-                $updateData['display_name_en'] = (string) $data['display_name_en'];
+                $updateData['display_name_en'] = ValidationHelpers::toString($data['display_name_en']);
             }
             if (isset($data['display_name_ro'])) {
-                $updateData['display_name_ro'] = (string) $data['display_name_ro'];
+                $updateData['display_name_ro'] = ValidationHelpers::toString($data['display_name_ro']);
             }
             if (isset($data['cscart_feature_id'])) {
-                $updateData['cscart_feature_id'] = (int) $data['cscart_feature_id'] ?: null;
+                $updateData['cscart_feature_id'] = ValidationHelpers::toInt($data['cscart_feature_id']) ?: null;
             }
             if (isset($data['cscart_variant_id'])) {
-                $updateData['cscart_variant_id'] = (int) $data['cscart_variant_id'] ?: null;
+                $updateData['cscart_variant_id'] = ValidationHelpers::toInt($data['cscart_variant_id']) ?: null;
                 // Mark as manually set to prevent auto-overwrite
-                if ((int) ($data['cscart_variant_id'] ?? 0) > 0) {
+                if (ValidationHelpers::toInt($data['cscart_variant_id'] ?? 0) > 0) {
                     $updateData['variant_source'] = 'manual';
                 }
             }
             if (isset($data['position'])) {
-                $updateData['position'] = (int) $data['position'];
+                $updateData['position'] = ValidationHelpers::toInt($data['position']);
             }
             if (isset($data['status'])) {
-                $updateData['status'] = $data['status'] === 'A' ? 'A' : 'D';
+                $updateData['status'] = ValidationHelpers::toString($data['status']) === 'A' ? 'A' : 'D';
             }
 
             if (!empty($updateData)) {
@@ -69,16 +71,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-        $redirectParams = !empty($_REQUEST['feature_type_filter']) ? '&feature_type=' . urlencode($_REQUEST['feature_type_filter']) : '';
+        $redirectParams = !empty($_REQUEST['feature_type_filter']) ? '&feature_type=' . urlencode(ValidationHelpers::toString($_REQUEST['feature_type_filter'])) : '';
         return [CONTROLLER_STATUS_REDIRECT, 'travel_feature_mappings.manage' . $redirectParams];
     }
 
     // Bulk update (toggle status, delete)
     if ($mode === 'bulk_update') {
-        $action = $_REQUEST['dispatch_extra'] ?? '';
-        $ids = $_REQUEST['map_ids'] ?? [];
+        $action = ValidationHelpers::toString($_REQUEST['dispatch_extra'] ?? '');
+        $ids = is_array($_REQUEST['map_ids'] ?? null) ? $_REQUEST['map_ids'] : [];
 
-        if (!empty($ids) && is_array($ids)) {
+        if (!empty($ids)) {
             $ids = array_map('intval', $ids);
 
             if ($action === 'activate') {
@@ -94,7 +96,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             FeatureMapper::clearCache();
         }
 
-        $redirectParams = !empty($_REQUEST['feature_type']) ? '&feature_type=' . urlencode($_REQUEST['feature_type']) : '';
+        $redirectParams = !empty($_REQUEST['feature_type']) ? '&feature_type=' . urlencode(ValidationHelpers::toString($_REQUEST['feature_type'])) : '';
         return [CONTROLLER_STATUS_REDIRECT, 'travel_feature_mappings.manage' . $redirectParams];
     }
 
@@ -128,7 +130,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Group unmapped rows by cscart_feature_id for batch lookup
         $byFeature = [];
         foreach ($unmapped as $mapping) {
-            $fid = (int) $mapping['cscart_feature_id'];
+            if (!is_array($mapping)) {
+                continue;
+            }
+            $fid = ValidationHelpers::toInt($mapping['cscart_feature_id'] ?? 0);
             if ($fid > 0) {
                 $byFeature[$fid][] = $mapping;
             } else {
@@ -148,7 +153,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             );
 
             foreach ($mappings as $mapping) {
-                $nameEn = trim($mapping['display_name_en'] ?? '');
+                if (!is_array($mapping)) {
+                    continue;
+                }
+                $nameEn = trim(ValidationHelpers::toString($mapping['display_name_en'] ?? ''));
                 if ($nameEn === '') {
                     $failed++;
                     continue;
@@ -183,11 +191,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
 
                 if ($variantId) {
-                    FeatureMapper::updateVariantId((int) $mapping['map_id'], (int) $variantId, 'auto');
+                    FeatureMapper::updateVariantId(ValidationHelpers::toInt($mapping['map_id'] ?? 0), ValidationHelpers::toInt($variantId), 'auto');
                     $resolved++;
                 } else {
                     // Auto-create the variant
-                    $nameRo = trim($mapping['display_name_ro'] ?? '') ?: $nameEn;
+                    $nameRo = trim(ValidationHelpers::toString($mapping['display_name_ro'] ?? '')) ?: $nameEn;
                     $languages = $repo->getActiveLanguageCodes();
                     if (empty($languages)) {
                         $languages = ['en'];

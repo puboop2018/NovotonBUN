@@ -13429,31 +13429,13 @@ parameters:
 			path: addon-travel-core/app/addons/travel_core/controllers/backend/travel_feature_mappings.php
 
 		-
+			message: '#^Call to function is_array\(\) with array\<string, mixed\> will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 2
+			path: addon-travel-core/app/addons/travel_core/controllers/backend/travel_feature_mappings.php
+
+		-
 			message: '#^Cannot access offset ''ajax'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/controllers/backend/travel_feature_mappings.php
-
-		-
-			message: '#^Cannot access offset ''cscart_feature_id'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/controllers/backend/travel_feature_mappings.php
-
-		-
-			message: '#^Cannot access offset ''cscart_variant_id'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/controllers/backend/travel_feature_mappings.php
-
-		-
-			message: '#^Cannot access offset ''display_name_en'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/controllers/backend/travel_feature_mappings.php
-
-		-
-			message: '#^Cannot access offset ''display_name_ro'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
 			path: addon-travel-core/app/addons/travel_core/controllers/backend/travel_feature_mappings.php
@@ -13466,18 +13448,6 @@ parameters:
 
 		-
 			message: '#^Cannot access offset ''name'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/controllers/backend/travel_feature_mappings.php
-
-		-
-			message: '#^Cannot access offset ''position'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/controllers/backend/travel_feature_mappings.php
-
-		-
-			message: '#^Cannot access offset ''status'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
 			path: addon-travel-core/app/addons/travel_core/controllers/backend/travel_feature_mappings.php
@@ -13509,13 +13479,19 @@ parameters:
 		-
 			message: '#^Cannot cast mixed to int\.$#'
 			identifier: cast.int
-			count: 31
+			count: 23
 			path: addon-travel-core/app/addons/travel_core/controllers/backend/travel_feature_mappings.php
 
 		-
 			message: '#^Cannot cast mixed to string\.$#'
 			identifier: cast.string
-			count: 10
+			count: 8
+			path: addon-travel-core/app/addons/travel_core/controllers/backend/travel_feature_mappings.php
+
+		-
+			message: '#^Offset ''cscart_variant_id'' on non\-empty\-array\<string, mixed\> on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
 			path: addon-travel-core/app/addons/travel_core/controllers/backend/travel_feature_mappings.php
 
 		-
@@ -13562,18 +13538,6 @@ parameters:
 
 		-
 			message: '#^Parameter \#1 \$string of function mb_strtolower expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 2
-			path: addon-travel-core/app/addons/travel_core/controllers/backend/travel_feature_mappings.php
-
-		-
-			message: '#^Parameter \#1 \$string of function trim expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 2
-			path: addon-travel-core/app/addons/travel_core/controllers/backend/travel_feature_mappings.php
-
-		-
-			message: '#^Parameter \#1 \$string of function urlencode expects string, mixed given\.$#'
 			identifier: argument.type
 			count: 2
 			path: addon-travel-core/app/addons/travel_core/controllers/backend/travel_feature_mappings.php
