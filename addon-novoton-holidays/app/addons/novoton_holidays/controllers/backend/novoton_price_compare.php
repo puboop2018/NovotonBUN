@@ -35,14 +35,14 @@ use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 if ($mode === 'compare') {
     header('Content-Type: text/html; charset=utf-8');
 
-    $hotel_id = $_REQUEST['hotel_id'] ?? '';
-    $package_name = $_REQUEST['package_name'] ?? '';
-    $room_id = $_REQUEST['room_id'] ?? '';
-    $board_id = $_REQUEST['board_id'] ?? '';
-    $check_in = $_REQUEST['check_in'] ?? date('Y') . '-07-01';
-    $nights = (int)($_REQUEST['nights'] ?? 7);
-    $adults = (int)($_REQUEST['adults'] ?? 2);
-    $children_ages = $_REQUEST['children_ages'] ?? '';
+    $hotel_id = PriceInfoFormatter::toScalar($_REQUEST['hotel_id'] ?? '');
+    $package_name = PriceInfoFormatter::toScalar($_REQUEST['package_name'] ?? '');
+    $room_id = PriceInfoFormatter::toScalar($_REQUEST['room_id'] ?? '');
+    $board_id = PriceInfoFormatter::toScalar($_REQUEST['board_id'] ?? '');
+    $check_in = PriceInfoFormatter::toScalar($_REQUEST['check_in'] ?? date('Y') . '-07-01');
+    $nights = PriceInfoFormatter::toInt($_REQUEST['nights'] ?? 7);
+    $adults = PriceInfoFormatter::toInt($_REQUEST['adults'] ?? 2);
+    $children_ages = PriceInfoFormatter::toScalar($_REQUEST['children_ages'] ?? '');
     $show_debug = ConfigProvider::isDebugLogging();
 
     // Parse children ages
@@ -146,9 +146,9 @@ if ($mode === 'compare') {
         'booking_date' => date('Y-m-d')
     ]);
 
-    if (!$calcResult['success']) {
+    if (empty($calcResult['success'])) {
         echo '<div class="result-box result-mismatch">';
-        echo '<strong>Calculation Error:</strong> ' . htmlspecialchars($calcResult['error'] ?? 'Unknown error');
+        echo '<strong>Calculation Error:</strong> ' . htmlspecialchars(PriceInfoFormatter::toScalar($calcResult['error'] ?? 'Unknown error'));
         echo '</div>';
         echo '<a href="' . fn_url('novoton_price_compare.manage') . '" class="btn">&larr; Back to Form</a>';
         echo '</div></body></html>';
@@ -161,33 +161,36 @@ if ($mode === 'compare') {
     echo '<div class="step">';
     echo '<div class="step-header"><span class="step-num">1</span><span class="step-title">Room Capacity &amp; Hotel Age Bands</span></div>';
 
-    $roomCap = $calcResult['room_capacity'] ?? [];
+    $roomCap = is_array($calcResult['room_capacity'] ?? null) ? $calcResult['room_capacity'] : [];
     echo '<div class="grid-2">';
 
     // Room capacity
     echo '<div>';
     echo '<table>';
     echo '<tr><th colspan="2">Room Capacity</th></tr>';
-    echo '<tr><td>Regular Beds (RB)</td><td>' . ($roomCap['RB'] ?? '-') . '</td></tr>';
-    echo '<tr><td>Extra Beds (EB)</td><td>' . ($roomCap['EB'] ?? '-') . '</td></tr>';
-    echo '<tr><td>Max Adults</td><td>' . ($roomCap['maxADT'] ?? '-') . '</td></tr>';
-    echo '<tr><td>Max Children</td><td>' . ($roomCap['maxCHD'] ?? '-') . '</td></tr>';
-    echo '<tr><td>Min Persons</td><td>' . ($roomCap['minPAX'] ?? '-') . '</td></tr>';
+    echo '<tr><td>Regular Beds (RB)</td><td>' . PriceInfoFormatter::toScalar($roomCap['RB'] ?? '-') . '</td></tr>';
+    echo '<tr><td>Extra Beds (EB)</td><td>' . PriceInfoFormatter::toScalar($roomCap['EB'] ?? '-') . '</td></tr>';
+    echo '<tr><td>Max Adults</td><td>' . PriceInfoFormatter::toScalar($roomCap['maxADT'] ?? '-') . '</td></tr>';
+    echo '<tr><td>Max Children</td><td>' . PriceInfoFormatter::toScalar($roomCap['maxCHD'] ?? '-') . '</td></tr>';
+    echo '<tr><td>Min Persons</td><td>' . PriceInfoFormatter::toScalar($roomCap['minPAX'] ?? '-') . '</td></tr>';
     echo '</table>';
     echo '</div>';
 
     // Child age bands
     echo '<div>';
-    $ageBands = $calcResult['child_age_bands'] ?? [];
+    $ageBands = is_array($calcResult['child_age_bands'] ?? null) ? $calcResult['child_age_bands'] : [];
     echo '<table>';
     echo '<tr><th colspan="3">Hotel Child Age Bands</th></tr>';
     echo '<tr><th>Band</th><th>From</th><th>To</th></tr>';
     if (!empty($ageBands)) {
         foreach ($ageBands as $ab) {
+            if (!is_array($ab)) {
+                continue;
+            }
             echo '<tr>';
-            echo '<td><span class="badge badge-child">' . htmlspecialchars($ab['label']) . '</span></td>';
-            echo '<td>' . $ab['from'] . '</td>';
-            echo '<td>' . $ab['to'] . '</td>';
+            echo '<td><span class="badge badge-child">' . htmlspecialchars(PriceInfoFormatter::toScalar($ab['label'] ?? '')) . '</span></td>';
+            echo '<td>' . PriceInfoFormatter::toScalar($ab['from'] ?? '') . '</td>';
+            echo '<td>' . PriceInfoFormatter::toScalar($ab['to'] ?? '') . '</td>';
             echo '</tr>';
         }
     } else {
