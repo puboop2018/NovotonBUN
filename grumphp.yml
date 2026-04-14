@@ -1,0 +1,56 @@
+grumphp:
+    process_timeout: 180
+    stop_on_failure: false
+    # Run checks only on files changed in the commit, not the whole repo.
+    # This keeps pre-commit fast (<10s on typical commits).
+    tasks:
+        # 1. PHP syntax lint — catches parse errors immediately
+        phplint:
+            triggered_by: [php]
+            ignore_patterns:
+                - vendor/
+                - var/
+                - node_modules/
+
+        # 2. PHP_CodeSniffer — code style (PSR-12)
+        phpcs:
+            standard: ./phpcs.xml
+            whitelist_patterns:
+                - /^addon-novoton-holidays\/app\/addons\/novoton_holidays\/src\/.*\.php$/
+                - /^addon-travel-core\/app\/addons\/travel_core\/src\/.*\.php$/
+                - /^addon-sphinx-holidays\/app\/addons\/sphinx_holidays\/src\/.*\.php$/
+            triggered_by: [php]
+
+        # 3. PHP CS Fixer — auto-formatter (dry-run so dev sees what would change)
+        phpcsfixer:
+            config: ./.php-cs-fixer.dist.php
+            allow_risky: true
+            triggered_by: [php]
+
+        # 4. PHPStan — static analysis at level 10
+        phpstan:
+            configuration: ./phpstan.neon
+            level: null            # use config file value
+            memory_limit: 1G
+            triggered_by: [php]
+
+        # 5. Psalm — second static analyser (different strengths)
+        psalm:
+            config: ./psalm.xml
+            show_info: false
+            threads: 4
+            triggered_by: [php]
+
+        # 6. Composer JSON validation
+        composer:
+            file: ./composer.json
+            no_check_all: false
+            no_check_lock: false
+            no_check_publish: true
+            with_dependencies: false
+
+    # On failure: short message, don't spam the terminal with full output.
+    # Dev can run the individual tool for full output.
+    ascii:
+        failed: null
+        succeeded: null
