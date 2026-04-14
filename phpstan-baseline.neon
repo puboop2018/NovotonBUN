@@ -5707,18 +5707,6 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/HotelSync.php
 
 		-
-			message: '#^Binary operation "\+" between mixed and mixed results in an error\.$#'
-			identifier: binaryOp.invalid
-			count: 3
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/HotelSync.php
-
-		-
-			message: '#^Binary operation "\+\=" between mixed and int\<1, max\> results in an error\.$#'
-			identifier: assignOp.invalid
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/HotelSync.php
-
-		-
 			message: '#^Binary operation "\." between mixed and mixed results in an error\.$#'
 			identifier: binaryOp.invalid
 			count: 1
@@ -5728,12 +5716,6 @@ parameters:
 			message: '#^Binary operation "\." between string and mixed results in an error\.$#'
 			identifier: binaryOp.invalid
 			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/HotelSync.php
-
-		-
-			message: '#^Cannot access an offset on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 19
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/HotelSync.php
 
 		-
@@ -5767,9 +5749,9 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/HotelSync.php
 
 		-
-			message: '#^Cannot use \+\+ on mixed\.$#'
-			identifier: postInc.type
-			count: 26
+			message: '#^Offset ''duration'' on array\{hotels_processed\: int, hotels_updated\: int, hotels_failed\: int, packages_processed\: int, packages_updated\: int, packages_failed\: int, errors\: list\<string\>\} on left side of \?\? does not exist\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/HotelSync.php
 
 		-
@@ -5836,30 +5818,6 @@ parameters:
 			message: '#^Part \$pkg\[''package_id''\] \(mixed\) of encapsed string cannot be cast to string\.$#'
 			identifier: encapsedStringPart.nonString
 			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/HotelSync.php
-
-		-
-			message: '#^Part \$this\-\>stats\[''hotels_failed''\] \(mixed\) of encapsed string cannot be cast to string\.$#'
-			identifier: encapsedStringPart.nonString
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/HotelSync.php
-
-		-
-			message: '#^Part \$this\-\>stats\[''hotels_updated''\] \(mixed\) of encapsed string cannot be cast to string\.$#'
-			identifier: encapsedStringPart.nonString
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/HotelSync.php
-
-		-
-			message: '#^Part \$this\-\>stats\[''packages_failed''\] \(mixed\) of encapsed string cannot be cast to string\.$#'
-			identifier: encapsedStringPart.nonString
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/HotelSync.php
-
-		-
-			message: '#^Part \$this\-\>stats\[''packages_updated''\] \(mixed\) of encapsed string cannot be cast to string\.$#'
-			identifier: encapsedStringPart.nonString
-			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/HotelSync.php
 
 		-

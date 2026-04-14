@@ -32,7 +32,7 @@ class HotelSync
     private PropertyTypeDetector $propertyTypeDetector;
     /** @var list<string> */
     private array $selectedCountries;
-    /** @var array<string, mixed> */
+    /** @var array{hotels_processed: int, hotels_updated: int, hotels_failed: int, packages_processed: int, packages_updated: int, packages_failed: int, errors: list<string>} */
     private array $stats;
 
     /**
