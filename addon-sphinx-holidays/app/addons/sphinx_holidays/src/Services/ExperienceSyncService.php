@@ -45,6 +45,7 @@ class ExperienceSyncService extends AbstractSyncService implements ExperienceSyn
      * @param array<string, mixed> $context
      * @return array<string, mixed>
      */
+    #[\Override]
     protected function doSync(bool $fullSync, array $stats, array $context): array
     {
         $allowedDestIds = ConfigProvider::getAllowedDestinationIds();
