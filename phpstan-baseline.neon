@@ -8833,12 +8833,6 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/TermsFormatter.php
 
 		-
-			message: '#^Binary operation "\." between '' \('' and mixed results in an error\.$#'
-			identifier: binaryOp.invalid
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/backend/sphinx_holidays.php
-
-		-
 			message: '#^Binary operation "\." between mixed and ''\: '' results in an error\.$#'
 			identifier: binaryOp.invalid
 			count: 8
@@ -8853,12 +8847,6 @@ parameters:
 		-
 			message: '#^Binary operation "\." between non\-falsy\-string and mixed results in an error\.$#'
 			identifier: binaryOp.invalid
-			count: 2
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/backend/sphinx_holidays.php
-
-		-
-			message: '#^Cannot access offset ''added'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/backend/sphinx_holidays.php
 
@@ -8900,12 +8888,6 @@ parameters:
 
 		-
 			message: '#^Cannot access offset ''hotel_id'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/backend/sphinx_holidays.php
-
-		-
-			message: '#^Cannot access offset ''invalid_country'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/backend/sphinx_holidays.php
@@ -8995,6 +8977,72 @@ parameters:
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/backend/sphinx_holidays.php
 
 		-
+			message: '#^Offset ''error'' on array\{success\: false, total\: int, synced\: int, failed\: int, duration_ms\: int, error\: string, sync_mode\: string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/backend/sphinx_holidays.php
+
+		-
+			message: '#^Offset ''error'' on array\{success\: false, total\: int, synced\: int, skipped\: int, failed\: int, duration_ms\: int, error\: string, sync_mode\: string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/backend/sphinx_holidays.php
+
+		-
+			message: '#^Offset ''errors'' on array\{total\: int, linked\: int, skipped\: int, not_found\: int, errors\: int\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/backend/sphinx_holidays.php
+
+		-
+			message: '#^Offset ''linked'' on array\{total\: int, linked\: int, skipped\: int, not_found\: int, errors\: int\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/backend/sphinx_holidays.php
+
+		-
+			message: '#^Offset ''not_found'' on array\{total\: int, linked\: int, skipped\: int, not_found\: int, errors\: int\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/backend/sphinx_holidays.php
+
+		-
+			message: '#^Offset ''skipped'' on array\{total\: int, linked\: int, skipped\: int, not_found\: int, errors\: int\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/backend/sphinx_holidays.php
+
+		-
+			message: '#^Offset ''synced'' on array\{success\: true, total\: int, synced\: int, failed\: int, duration_ms\: int, error\: string, sync_mode\: string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/backend/sphinx_holidays.php
+
+		-
+			message: '#^Offset ''synced'' on array\{success\: true, total\: int, synced\: int, skipped\: int, failed\: int, duration_ms\: int, error\: string, sync_mode\: string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/backend/sphinx_holidays.php
+
+		-
+			message: '#^Offset ''total'' on array\{success\: true, total\: int, synced\: int, failed\: int, duration_ms\: int, error\: string, sync_mode\: string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/backend/sphinx_holidays.php
+
+		-
+			message: '#^Offset ''total'' on array\{success\: true, total\: int, synced\: int, skipped\: int, failed\: int, duration_ms\: int, error\: string, sync_mode\: string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/backend/sphinx_holidays.php
+
+		-
+			message: '#^Offset ''total'' on array\{total\: int, linked\: int, skipped\: int, not_found\: int, errors\: int\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/backend/sphinx_holidays.php
+
+		-
 			message: '#^Parameter \#1 \$callback of function array_map expects \(callable\(mixed\)\: mixed\)\|null, ''strval'' given\.$#'
 			identifier: argument.type
 			count: 1
@@ -9033,7 +9081,7 @@ parameters:
 		-
 			message: '#^Parameter \#1 \$json of function json_decode expects string, mixed given\.$#'
 			identifier: argument.type
-			count: 2
+			count: 1
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/backend/sphinx_holidays.php
 
 		-

@@ -20,6 +20,7 @@ use Tygh\Addons\SphinxHolidays\Services\Container;
 use Tygh\Addons\SphinxHolidays\Services\DestinationSyncService;
 use Tygh\Addons\SphinxHolidays\Services\HotelSyncService;
 use Tygh\Addons\SphinxHolidays\Cron\Commands\AddProductsCommand;
+use Tygh\Addons\TravelCore\Helpers\ValidationHelpers;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
@@ -43,10 +44,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $result = $service->sync();
 
-        if ($result['success']) {
-            fn_set_notification('N', __('notice'), __('sphinx_holidays.sync_completed') . ': ' . $result['synced'] . '/' . $result['total']);
+        if (!empty($result['success'])) {
+            fn_set_notification('N', __('notice'), __('sphinx_holidays.sync_completed') . ': ' . ValidationHelpers::toInt($result['synced'] ?? 0) . '/' . ValidationHelpers::toInt($result['total'] ?? 0));
         } else {
-            fn_set_notification('E', __('error'), __('sphinx_holidays.sync_failed') . ': ' . ($result['error'] ?: 'Unknown error'));
+            fn_set_notification('E', __('error'), __('sphinx_holidays.sync_failed') . ': ' . (ValidationHelpers::toString($result['error'] ?? '') ?: 'Unknown error'));
         }
 
         return [CONTROLLER_STATUS_REDIRECT, 'sphinx_holidays.manage'];
@@ -68,10 +69,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $countryCodes = ConfigProvider::getSelectedCountryCodes();
         $result = $service->sync($countryCodes);
 
-        if ($result['success']) {
-            fn_set_notification('N', __('notice'), __('sphinx_holidays.hotel_sync_completed') . ': ' . $result['synced'] . '/' . $result['total']);
+        if (!empty($result['success'])) {
+            fn_set_notification('N', __('notice'), __('sphinx_holidays.hotel_sync_completed') . ': ' . ValidationHelpers::toInt($result['synced'] ?? 0) . '/' . ValidationHelpers::toInt($result['total'] ?? 0));
         } else {
-            fn_set_notification('E', __('error'), __('sphinx_holidays.hotel_sync_failed') . ': ' . ($result['error'] ?: 'Unknown error'));
+            fn_set_notification('E', __('error'), __('sphinx_holidays.hotel_sync_failed') . ': ' . (ValidationHelpers::toString($result['error'] ?? '') ?: 'Unknown error'));
         }
 
         return [CONTROLLER_STATUS_REDIRECT, 'sphinx_holidays.manage'];
@@ -90,9 +91,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $command->setOutputCallback(function($msg) {}); // silent in web context
         $result = $command->execute();
 
-        if ($result['success']) {
-            $added = $result['stats']['added'] ?? 0;
-            $invalid = $result['stats']['invalid_country'] ?? 0;
+        if (!empty($result['success'])) {
+            $stats = is_array($result['stats'] ?? null) ? $result['stats'] : [];
+            $added = ValidationHelpers::toInt($stats['added'] ?? 0);
+            $invalid = ValidationHelpers::toInt($stats['invalid_country'] ?? 0);
             $msg = __('sphinx_holidays.products_created') . ': ' . $added;
             if ($invalid > 0) {
                 $msg .= ' (' . $invalid . ' ' . __('sphinx_holidays.skipped_invalid_country') . ')';
@@ -119,24 +121,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $service = new HotelSyncService($api, $hotelRepo, $destRepo);
 
         $result = $service->relinkExistingProducts();
+        $rLinked = ValidationHelpers::toInt($result['linked'] ?? 0);
+        $rSkipped = ValidationHelpers::toInt($result['skipped'] ?? 0);
+        $rNotFound = ValidationHelpers::toInt($result['not_found'] ?? 0);
+        $rErrors = ValidationHelpers::toInt($result['errors'] ?? 0);
+        $rTotal = ValidationHelpers::toInt($result['total'] ?? 0);
 
-        if ($result['linked'] > 0 || $result['skipped'] > 0) {
+        if ($rLinked > 0 || $rSkipped > 0) {
             fn_set_notification('N', __('notice'), __('sphinx_holidays.relink_done', [
-                '[linked]'    => $result['linked'],
-                '[skipped]'   => $result['skipped'],
-                '[not_found]' => $result['not_found'],
-                '[errors]'    => $result['errors'],
-                '[total]'     => $result['total'],
+                '[linked]'    => $rLinked,
+                '[skipped]'   => $rSkipped,
+                '[not_found]' => $rNotFound,
+                '[errors]'    => $rErrors,
+                '[total]'     => $rTotal,
             ]));
-        } elseif ($result['total'] === 0) {
+        } elseif ($rTotal === 0) {
             fn_set_notification('W', __('warning'), __('sphinx_holidays.no_spx_products'));
         } else {
             fn_set_notification('W', __('warning'), __('sphinx_holidays.relink_done', [
                 '[linked]'    => 0,
-                '[skipped]'   => $result['skipped'],
-                '[not_found]' => $result['not_found'],
-                '[errors]'    => $result['errors'],
-                '[total]'     => $result['total'],
+                '[skipped]'   => $rSkipped,
+                '[not_found]' => $rNotFound,
+                '[errors]'    => $rErrors,
+                '[total]'     => $rTotal,
             ]));
         }
 
@@ -158,7 +165,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($mode === 'save_whitelist') {
         // Single JSON field to avoid PHP max_input_vars limit
-        $whitelist = json_decode($_REQUEST['whitelist_json'] ?? '[]', true) ?: [];
+        $whitelist = json_decode(ValidationHelpers::toString($_REQUEST['whitelist_json'] ?? '[]'), true) ?: [];
 
         $whitelistRepo = Container::getDestinationWhitelistRepository();
         try {
@@ -176,11 +183,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if ($mode === 'bulk_update_hotels') {
-        $hotelIds = $_REQUEST['hotel_ids'] ?? [];
-        $status = $_REQUEST['bulk_status'] ?? '';
+        $hotelIds = is_array($_REQUEST['hotel_ids'] ?? null) ? $_REQUEST['hotel_ids'] : [];
+        $status = ValidationHelpers::toString($_REQUEST['bulk_status'] ?? '');
         $validStatuses = ['active', 'inactive', 'pending', 'error'];
 
-        if (empty($hotelIds) || !is_array($hotelIds)) {
+        if (empty($hotelIds)) {
             fn_set_notification('W', __('warning'), __('sphinx_holidays.no_hotels_selected'));
             return [CONTROLLER_STATUS_REDIRECT, 'sphinx_holidays.hotels'];
         }
