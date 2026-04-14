@@ -5,6 +5,7 @@ namespace Tygh\Addons\SphinxHolidays\Cron\Commands;
 
 use Tygh\Registry;
 use Tygh\Addons\SphinxHolidays\Services\Container;
+use Tygh\Addons\TravelCore\Helpers\ValidationHelpers;
 use Tygh\Addons\TravelCore\Services\FeatureMapper;
 
 /**
@@ -80,7 +81,7 @@ class AssignBoardsCommand extends AbstractSyncCommand
         }
 
         // Check that feature_id_meals is configured in travel_core
-        $featureId = (int) Registry::get('addons.travel_core.feature_id_meals');
+        $featureId = ValidationHelpers::toInt(Registry::get('addons.travel_core.feature_id_meals'));
         if ($featureId <= 0) {
             $this->output('ERROR: travel_core setting "feature_id_meals" is not configured (value: 0).');
             $this->output('Please set the Meals/Board feature ID in Admin > Add-ons > Travel Core settings.');
@@ -93,21 +94,23 @@ class AssignBoardsCommand extends AbstractSyncCommand
         $state = $this->loadState();
 
         // Check for in-progress state
-        if ($state['status'] === 'in_progress') {
+        if (ValidationHelpers::toString($state['status'] ?? 'idle') === 'in_progress') {
             if ($this->isStale($state)) {
-                $this->output("Stale state detected (no activity since {$state['last_run_at']}). Clearing and starting fresh.");
+                $this->output("Stale state detected (no activity since " . ValidationHelpers::toString($state['last_run_at'] ?? '') . "). Clearing and starting fresh.");
                 $this->clearState();
                 $state = self::DEFAULT_STATE;
             } else {
                 // Resume
-                $pct = $state['total'] > 0 ? round($state['processed'] / $state['total'] * 100, 1) : 0;
-                $this->output("Resuming board assignment: {$state['processed']}/{$state['total']} ({$pct}%) done");
+                $sTotal = ValidationHelpers::toInt($state['total'] ?? 0);
+                $sProcessed = ValidationHelpers::toInt($state['processed'] ?? 0);
+                $pct = $sTotal > 0 ? round($sProcessed / $sTotal * 100, 1) : 0;
+                $this->output("Resuming board assignment: {$sProcessed}/{$sTotal} ({$pct}%) done");
                 return $this->processBatch($state, $params);
             }
         }
 
         // Fresh start
-        $countryCode = $params['country'] ?? '';
+        $countryCode = ValidationHelpers::toString($params['country'] ?? '');
         $hotelRepo = Container::getHotelRepository();
         $total = $hotelRepo->countWithBoardsAndProduct($countryCode);
 
@@ -144,15 +147,15 @@ class AssignBoardsCommand extends AbstractSyncCommand
      */
     private function processBatch(array $state, array $params): array
     {
-        $maxTime = max(60, (int) ($params['max_time'] ?? self::DEFAULT_MAX_TIME));
+        $maxTime = max(60, ValidationHelpers::toInt($params['max_time'] ?? self::DEFAULT_MAX_TIME));
         $unlimited = !empty($params['unlimited']);
         $startTime = time();
 
         $hotelRepo = Container::getHotelRepository();
         $featureAssigner = Container::getFeatureAssigner();
 
-        $offset = $state['processed'];
-        $total = $state['total'];
+        $offset = ValidationHelpers::toInt($state['processed'] ?? 0);
+        $total = ValidationHelpers::toInt($state['total'] ?? 0);
         $processedThisRun = 0;
 
         while ($offset < $total) {
@@ -165,7 +168,7 @@ class AssignBoardsCommand extends AbstractSyncCommand
 
             // Fetch next batch from DB
             $hotels = $hotelRepo->findWithBoardsAndProduct(
-                $state['country_code'],
+                ValidationHelpers::toString($state['country_code'] ?? ''),
                 self::DEFAULT_BATCH_SIZE,
                 $offset
             );
@@ -177,20 +180,25 @@ class AssignBoardsCommand extends AbstractSyncCommand
             }
 
             foreach ($hotels as $hotel) {
+                if (!is_array($hotel)) {
+                    continue;
+                }
                 // Check time limit within batch
                 if (!$unlimited && (time() - $startTime) > $maxTime) {
                     break 2;
                 }
 
-                $productId = (int) $hotel['product_id'];
+                $productId = ValidationHelpers::toInt($hotel['product_id'] ?? 0);
 
                 try {
                     $featureAssigner->assignAll($productId, $hotel);
-                    $state['assigned']++;
+                    $state['assigned'] = ValidationHelpers::toInt($state['assigned'] ?? 0) + 1;
                 } catch (\Throwable $e) {
-                    $state['errors']++;
-                    if ($state['errors'] <= 10) {
-                        $this->output("  [ERROR] Hotel {$hotel['hotel_id']}: " . $e->getMessage());
+                    $state['errors'] = ValidationHelpers::toInt($state['errors'] ?? 0) + 1;
+                    $sErrors = ValidationHelpers::toInt($state['errors'] ?? 0);
+                    if ($sErrors <= 10) {
+                        $hotelIdStr = ValidationHelpers::toString($hotel['hotel_id'] ?? '');
+                        $this->output("  [ERROR] Hotel {$hotelIdStr}: " . $e->getMessage());
                     }
                 }
 
