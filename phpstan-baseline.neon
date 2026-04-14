@@ -3555,84 +3555,12 @@ parameters:
 		-
 			message: '#^Argument of an invalid type mixed supplied for foreach, only iterables are supported\.$#'
 			identifier: foreach.nonIterable
-			count: 4
+			count: 3
 			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/hotels.php
 
 		-
 			message: '#^Binary operation "\.\=" between ''SELECT DISTINCT…'' and mixed results in an error\.$#'
 			identifier: assignOp.invalid
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/hotels.php
-
-		-
-			message: '#^Cannot access offset ''Base'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/hotels.php
-
-		-
-			message: '#^Cannot access offset ''Code'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/hotels.php
-
-		-
-			message: '#^Cannot access offset ''IdAcc'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/hotels.php
-
-		-
-			message: '#^Cannot access offset ''IdAge'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/hotels.php
-
-		-
-			message: '#^Cannot access offset ''IdBoard'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/hotels.php
-
-		-
-			message: '#^Cannot access offset ''IdRoom'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 4
-			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/hotels.php
-
-		-
-			message: '#^Cannot access offset ''IdSeason'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/hotels.php
-
-		-
-			message: '#^Cannot access offset ''IdStar'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/hotels.php
-
-		-
-			message: '#^Cannot access offset ''Price1''\|''Price10''\|''Price11''\|''Price12''\|''Price13''\|''Price14''\|''Price15''\|''Price16''\|''Price17''\|''Price18''\|''Price19''\|''Price2''\|''Price20''\|''Price3''\|''Price4''\|''Price5''\|''Price6''\|''Price7''\|''Price8''\|''Price9'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/hotels.php
-
-		-
-			message: '#^Cannot access offset ''RoomPrice'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/hotels.php
-
-		-
-			message: '#^Cannot access offset ''ages'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/hotels.php
-
-		-
-			message: '#^Cannot access offset ''boards'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/hotels.php
 
@@ -3649,49 +3577,7 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/hotels.php
 
 		-
-			message: '#^Cannot access offset ''early_booking'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/hotels.php
-
-		-
-			message: '#^Cannot access offset ''fAge'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/hotels.php
-
-		-
-			message: '#^Cannot access offset ''hotel_id'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/hotels.php
-
-		-
-			message: '#^Cannot access offset ''priceinfo_data'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 3
-			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/hotels.php
-
-		-
-			message: '#^Cannot access offset ''rooms'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/hotels.php
-
-		-
 			message: '#^Cannot access offset ''season'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/hotels.php
-
-		-
-			message: '#^Cannot access offset ''season_price'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/hotels.php
-
-		-
-			message: '#^Cannot access offset ''seasons'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/hotels.php
@@ -3709,15 +3595,9 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/hotels.php
 
 		-
-			message: '#^Cannot cast mixed to float\.$#'
-			identifier: cast.double
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/hotels.php
-
-		-
 			message: '#^Cannot cast mixed to int\.$#'
 			identifier: cast.int
-			count: 3
+			count: 2
 			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/hotels.php
 
 		-
@@ -3763,13 +3643,13 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/hotels.php
 
 		-
-			message: '#^Function fn_novoton_holidays_get_package_priceinfo\(\) should return array\<string, mixed\>\|null but returns mixed\.$#'
+			message: '#^Function fn_novoton_holidays_get_package_priceinfo\(\) should return array\<string, mixed\>\|null but returns array\<mixed, mixed\>\.$#'
 			identifier: return.type
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/hotels.php
 
 		-
-			message: '#^Function fn_novoton_holidays_get_package_priceinfo_by_name\(\) should return array\<string, mixed\>\|null but returns mixed\.$#'
+			message: '#^Function fn_novoton_holidays_get_package_priceinfo_by_name\(\) should return array\<string, mixed\>\|null but returns array\<mixed, mixed\>\.$#'
 			identifier: return.type
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/hotels.php
@@ -3781,21 +3661,21 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/hotels.php
 
 		-
-			message: '#^Parameter \#1 \$hotel of function _novoton_enrich_hotel_row expects array\<string, mixed\>, mixed given\.$#'
+			message: '#^Parameter \#1 \$hotel of function _novoton_enrich_hotel_row expects array\<string, mixed\>, array\<mixed, mixed\> given\.$#'
 			identifier: argument.type
 			count: 2
 			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/hotels.php
 
 		-
-			message: '#^Parameter \#1 \$json of function json_decode expects string, mixed given\.$#'
+			message: '#^Parameter \#1 \$pkg of function fn_novoton_holidays_normalize_package expects array\<string, mixed\>, array\<mixed, mixed\> given\.$#'
 			identifier: argument.type
-			count: 5
+			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/hotels.php
 
 		-
-			message: '#^Parameter \#1 \$pkg of function fn_novoton_holidays_normalize_package expects array\<string, mixed\>, mixed given\.$#'
+			message: '#^Parameter \#1 \$pkg of function fn_novoton_holidays_normalize_package expects array\<string, mixed\>, array\<mixed\> given\.$#'
 			identifier: argument.type
-			count: 2
+			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/hotels.php
 
 		-
@@ -3811,12 +3691,6 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/hotels.php
 
 		-
-			message: '#^Parameter \#2 \$subject of function preg_match expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/hotels.php
-
-		-
 			message: '#^Parameter \#2 \$tempFile of function fn_travel_core_attach_product_image expects string, mixed given\.$#'
 			identifier: argument.type
 			count: 1
@@ -3825,7 +3699,7 @@ parameters:
 		-
 			message: '#^Possibly invalid array key type mixed\.$#'
 			identifier: offsetAccess.invalidOffset
-			count: 5
+			count: 3
 			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/hotels.php
 
 		-
