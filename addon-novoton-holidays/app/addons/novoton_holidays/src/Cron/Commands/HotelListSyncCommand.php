@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 namespace Tygh\Addons\NovotonHolidays\Cron\Commands;
 
 use Tygh\Addons\NovotonHolidays\Api\PropertyTypeDetector;
@@ -29,12 +31,12 @@ class HotelListSyncCommand extends AbstractCronCommand
     {
         $dbHelper = Container::getInstance()->databaseHelper();
         $detector = new PropertyTypeDetector();
-        $this->output("Syncing hotels from API (hotel_list)...");
-        $this->output("");
+        $this->output('Syncing hotels from API (hotel_list)...');
+        $this->output('');
 
         $countries = ConfigProvider::getSelectedCountries();
-        $this->output("Countries: " . implode(', ', $countries));
-        $this->output("");
+        $this->output('Countries: ' . implode(', ', $countries));
+        $this->output('');
 
         $total = 0;
         $added = 0;
@@ -46,7 +48,7 @@ class HotelListSyncCommand extends AbstractCronCommand
             $hotels = $this->api->hotels()->getHotelList($country);
 
             if (empty($hotels)) {
-                $this->output("0 hotels (or error)");
+                $this->output('0 hotels (or error)');
                 continue;
             }
 
@@ -57,7 +59,9 @@ class HotelListSyncCommand extends AbstractCronCommand
             $hotelBatch = [];
             foreach ($hotels as $hotel) {
                 $hotel_id = (string)($hotel->IdHotel ?? '');
-                if (empty($hotel_id)) continue;
+                if (empty($hotel_id)) {
+                    continue;
+                }
 
                 $hotelName = (string)($hotel->Hotel ?? '');
                 $hotelType = (string)($hotel->HotelType ?? '');
@@ -84,9 +88,9 @@ class HotelListSyncCommand extends AbstractCronCommand
             $this->output("  -> Inserted: {$result['inserted']}, Updated: {$result['updated']}");
         }
 
-        $this->output("");
+        $this->output('');
         $this->output("Total hotels: {$total}");
-        $this->output("Synced: " . ($added + $updated) . " (new: {$added})");
+        $this->output('Synced: ' . ($added + $updated) . " (new: {$added})");
 
         // Ensure Novoton aliases exist in travel_api_alias (idempotent)
         if (function_exists('fn_novoton_holidays_seed_travel_aliases')) {

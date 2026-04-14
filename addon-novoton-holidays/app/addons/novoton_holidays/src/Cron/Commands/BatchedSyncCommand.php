@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 namespace Tygh\Addons\NovotonHolidays\Cron\Commands;
 
 use Tygh\Addons\NovotonHolidays\Cron\AbstractCronCommand;
@@ -38,15 +40,17 @@ class BatchedSyncCommand extends AbstractCronCommand
      */
     private function hotelInfoBatched(): array
     {
-        $this->output("Batched Hotel Info Sync");
-        $this->output("========================");
-        $this->output("");
+        $this->output('Batched Hotel Info Sync');
+        $this->output('========================');
+        $this->output('');
 
         // Resolved via Container so the AbstractBatchedSync-based
         // BatchedHotelInfoSyncV2 handles the sync. The legacy
         // BatchedHotelInfoSync helper was deleted in PR #11.
         $sync = Container::getInstance()->batchedHotelInfoSyncV2();
-        $sync->setOutputCallback(function ($msg) { $this->output(rtrim($msg, "\n")); });
+        $sync->setOutputCallback(function ($msg): void {
+            $this->output(rtrim($msg, "\n"));
+        });
 
         $this->configureBatchSync($sync);
 
@@ -57,7 +61,7 @@ class BatchedSyncCommand extends AbstractCronCommand
         $options = $this->getBatchOptions();
         $result = $sync->run($options);
 
-        $this->output("");
+        $this->output('');
         $this->output("Result: {$result['status']}");
         $this->printBatchResult($result, 'hotel_info_batched');
 
@@ -69,9 +73,9 @@ class BatchedSyncCommand extends AbstractCronCommand
      */
     private function priceInfoBatched(): array
     {
-        $this->output("Batched Price Info Sync");
-        $this->output("========================");
-        $this->output("");
+        $this->output('Batched Price Info Sync');
+        $this->output('========================');
+        $this->output('');
 
         // Resolved via Container so the AbstractBatchedSync-based
         // BatchedPriceInfoSyncV2 handles the sync. The legacy
@@ -79,7 +83,9 @@ class BatchedSyncCommand extends AbstractCronCommand
         // factory returns the concrete V2 type so setStaleHours()
         // (which is not part of SyncInterface) remains callable below.
         $sync = Container::getInstance()->batchedPriceInfoSyncV2();
-        $sync->setOutputCallback(function ($msg) { $this->output(rtrim($msg, "\n")); });
+        $sync->setOutputCallback(function ($msg): void {
+            $this->output(rtrim($msg, "\n"));
+        });
 
         $this->configureBatchSync($sync);
 
@@ -94,7 +100,7 @@ class BatchedSyncCommand extends AbstractCronCommand
         $options = $this->getBatchOptions();
         $result = $sync->run($options);
 
-        $this->output("");
+        $this->output('');
         $this->output("Result: {$result['status']}");
         $this->printBatchResult($result, 'sync_priceinfo_batched');
 
@@ -112,8 +118,8 @@ class BatchedSyncCommand extends AbstractCronCommand
         }
         if (!empty($this->params['unlimited'])) {
             $sync->setUnlimited(true);
-            $this->output("Mode: UNLIMITED (no time limit)");
-            $this->output("");
+            $this->output('Mode: UNLIMITED (no time limit)');
+            $this->output('');
         }
     }
 
@@ -125,8 +131,8 @@ class BatchedSyncCommand extends AbstractCronCommand
         $options = [];
         if (!empty($this->params['force_full'])) {
             $options['force_full'] = true;
-            $this->output("Mode: FORCED FULL SYNC");
-            $this->output("");
+            $this->output('Mode: FORCED FULL SYNC');
+            $this->output('');
         }
         if (!empty($this->params['reset'])) {
             $options['reset'] = true;
@@ -151,8 +157,8 @@ class BatchedSyncCommand extends AbstractCronCommand
             $this->output("Elapsed: {$status['elapsed']}");
             $this->output("ETA: {$status['eta']}");
         } elseif ($status['status'] === 'idle') {
-            $this->output("Last Sync: " . ($status['last_sync'] ?? 'Never'));
-            $this->output("Last Type: " . ($status['last_sync_type'] ?? 'N/A'));
+            $this->output('Last Sync: ' . ($status['last_sync'] ?? 'Never'));
+            $this->output('Last Type: ' . ($status['last_sync_type'] ?? 'N/A'));
             if (isset($status['last_total'])) {
                 $this->output("Last Total: {$status['last_total']}");
             }
@@ -167,16 +173,16 @@ class BatchedSyncCommand extends AbstractCronCommand
     private function printBatchResult(array $result, string $type): void
     {
         if ($result['status'] === 'in_progress') {
-            $this->output("Processed this run: " . ($result['synced_this_run'] ?? 0));
+            $this->output('Processed this run: ' . ($result['synced_this_run'] ?? 0));
             $this->output("Total progress: {$result['processed']}/{$result['total']}");
             $this->output("Remaining: {$result['remaining']}");
             $this->output("Estimated runs remaining: {$result['estimated_runs_remaining']}");
-            $this->output("");
-            $this->output("Run this cron again to continue.");
+            $this->output('');
+            $this->output('Run this cron again to continue.');
         } elseif ($result['status'] === 'completed') {
             $this->output("Total synced: {$result['synced']}");
             $this->output("Errors: {$result['errors']}");
-            $this->output("Duration: " . round($result['duration'] / 60, 1) . " minutes");
+            $this->output('Duration: ' . round($result['duration'] / 60, 1) . ' minutes');
 
             $this->sendReport($type, [
                 'sync_type' => $result['sync_type'],

@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 /**
  * Novoton Holidays - Batched Price Info Sync (V2)
  *
@@ -110,11 +112,11 @@ class BatchedPriceInfoSyncV2 extends AbstractBatchedSync
         $lastFullSync = db_get_field(
             "SELECT MAX(sync_date) FROM ?:novoton_sync_log
              WHERE sync_type = 'sync_priceinfo' AND status = 'completed'
-             AND notes LIKE '%\"sync_type\":\"full\"%'"
+             AND notes LIKE '%\"sync_type\":\"full\"%'",
         );
 
         if (empty($lastFullSync)) {
-            $this->logger->output("No previous full sync found. Starting full sync.");
+            $this->logger->output('No previous full sync found. Starting full sync.');
             return 'full';
         }
 
@@ -128,9 +130,9 @@ class BatchedPriceInfoSyncV2 extends AbstractBatchedSync
 
         // Incremental branch: count stale packages.
         $staleCount = (int) db_get_field(
-            "SELECT COUNT(*) FROM ?:novoton_hotel_packages
-             WHERE synced_at IS NULL OR synced_at < DATE_SUB(NOW(), INTERVAL ?i HOUR)",
-            $this->staleHours
+            'SELECT COUNT(*) FROM ?:novoton_hotel_packages
+             WHERE synced_at IS NULL OR synced_at < DATE_SUB(NOW(), INTERVAL ?i HOUR)',
+            $this->staleHours,
         );
 
         if ($staleCount > 0) {
@@ -152,30 +154,30 @@ class BatchedPriceInfoSyncV2 extends AbstractBatchedSync
 
         if ($syncType === 'full') {
             $rows = db_get_array(
-                "SELECT p.hotel_id, p.package_id
+                'SELECT p.hotel_id, p.package_id
                  FROM ?:novoton_hotel_packages p
                  JOIN ?:novoton_hotels h ON p.hotel_id = h.hotel_id
                  WHERE h.country IN (?a)
-                 ORDER BY h.hotel_name, p.package_name",
-                $countries
+                 ORDER BY h.hotel_name, p.package_name',
+                $countries,
             );
         } else {
             $rows = db_get_array(
-                "SELECT p.hotel_id, p.package_id
+                'SELECT p.hotel_id, p.package_id
                  FROM ?:novoton_hotel_packages p
                  JOIN ?:novoton_hotels h ON p.hotel_id = h.hotel_id
                  WHERE h.country IN (?a)
                  AND (p.synced_at IS NULL OR p.synced_at < DATE_SUB(NOW(), INTERVAL ?i HOUR))
-                 ORDER BY p.synced_at ASC, h.hotel_name",
+                 ORDER BY p.synced_at ASC, h.hotel_name',
                 $countries,
-                $this->staleHours
+                $this->staleHours,
             );
         }
 
         // Encode composite (hotel_id, package_id) as "hotelId/packageId" string.
         return array_map(
-            static fn(array $row): string => $row['hotel_id'] . '/' . $row['package_id'],
-            $rows
+            static fn (array $row): string => $row['hotel_id'] . '/' . $row['package_id'],
+            $rows,
         );
     }
 
@@ -215,7 +217,7 @@ class BatchedPriceInfoSyncV2 extends AbstractBatchedSync
 
         $rows = db_get_array(
             'SELECT hotel_id, package_id, package_name FROM ?:novoton_hotel_packages WHERE ' . implode(' OR ', $whereParts),
-            ...$whereParams
+            ...$whereParams,
         );
 
         foreach ($rows as $row) {
@@ -243,8 +245,9 @@ class BatchedPriceInfoSyncV2 extends AbstractBatchedSync
         // retryFailedItems() which bypasses the batch loader).
         if ($packageName === '') {
             $pkg = db_get_field(
-                "SELECT package_name FROM ?:novoton_hotel_packages WHERE hotel_id = ?s AND package_id = ?s",
-                $hotelId, $packageId
+                'SELECT package_name FROM ?:novoton_hotel_packages WHERE hotel_id = ?s AND package_id = ?s',
+                $hotelId,
+                $packageId,
             );
             $packageName = is_string($pkg) ? $pkg : '';
         }
@@ -260,12 +263,12 @@ class BatchedPriceInfoSyncV2 extends AbstractBatchedSync
             // The Novoton API requires PackageName, not package_id (IdCont).
             $priceInfo = $this->getApi()->pricing()->getPriceInfo($hotelId, $packageName);
         } catch (ApiException $e) {
-            $this->logger->output("ERROR: " . $e->getMessage());
+            $this->logger->output('ERROR: ' . $e->getMessage());
             return ['success' => false, 'message' => $e->getMessage(), 'data' => null];
         }
 
         if (!$priceInfo) {
-            $this->logger->output("API returned empty");
+            $this->logger->output('API returned empty');
             return ['success' => false, 'message' => 'api_returned_empty', 'data' => null];
         }
 
@@ -275,7 +278,7 @@ class BatchedPriceInfoSyncV2 extends AbstractBatchedSync
         return [
             'success' => true,
             'message' => '',
-            'data'    => ['seasons_count' => $seasonsCount],
+            'data' => ['seasons_count' => $seasonsCount],
         ];
     }
 
@@ -332,7 +335,7 @@ class BatchedPriceInfoSyncV2 extends AbstractBatchedSync
             $priceinfoJson,
             $now,
             $hotelId,
-            $packageId
+            $packageId,
         );
 
         return $seasonsCount;

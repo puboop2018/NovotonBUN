@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 /**
  * State Manager Interface
  *
@@ -38,8 +40,6 @@ interface StateManagerInterface
 
     /**
      * Check if a sync is in progress.
-     *
-     * @return bool
      */
     public function isInProgress(): bool;
 
@@ -47,8 +47,8 @@ interface StateManagerInterface
      * Start a new sync.
      *
      * @param string $syncType Type of sync (e.g., 'full', 'incremental')
-     * @param array<string, mixed>  $itemIds  Items to process
-     * @param array<string, mixed>  $metadata Additional metadata
+     * @param array<string, mixed> $itemIds Items to process
+     * @param array<string, mixed> $metadata Additional metadata
      * @return array<string, mixed> New state
      */
     public function start(string $syncType, array $itemIds, array $metadata = []): array;
@@ -56,9 +56,6 @@ interface StateManagerInterface
     /**
      * Update progress counters.
      *
-     * @param int   $processed
-     * @param int   $synced
-     * @param int   $errors
      * @param list<string> $errorIds
      * @return array<string, mixed> Updated state
      */
@@ -67,10 +64,6 @@ interface StateManagerInterface
     /**
      * Increment counters.
      *
-     * @param int         $processed
-     * @param int         $synced
-     * @param int         $errors
-     * @param string|null $errorId
      * @return array<string, mixed> Updated state
      */
     public function increment(int $processed = 0, int $synced = 0, int $errors = 0, ?string $errorId = null): array;
@@ -92,15 +85,12 @@ interface StateManagerInterface
     /**
      * Get the next batch of item IDs to process.
      *
-     * @param int $batchSize
      * @return array<string, mixed> Array of item IDs
      */
     public function getNextBatch(int $batchSize): array;
 
     /**
      * Check if sync should be resumed.
-     *
-     * @return bool
      */
     public function shouldResume(): bool;
 
@@ -130,8 +120,6 @@ interface StateManagerInterface
 
     /**
      * Get state file path.
-     *
-     * @return string
      */
     public function getStateFilePath(): string;
 }

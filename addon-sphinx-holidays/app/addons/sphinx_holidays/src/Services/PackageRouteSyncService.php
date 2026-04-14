@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays\Services;
@@ -36,14 +37,14 @@ class PackageRouteSyncService extends AbstractSyncService
     /**
      * Run package route sync from static API.
      *
-     * @param list<int> $departureIds  Optional departure ID filter
+     * @param list<int> $departureIds Optional departure ID filter
      * @param list<int> $destinationIds Optional destination ID filter
      * @return array{success: bool, total: int, synced: int, failed: int, duration_ms: int, error: string}
      */
     public function sync(array $departureIds = [], array $destinationIds = []): array
     {
         return $this->runSync(true, [
-            'departure_ids'   => $departureIds,
+            'departure_ids' => $departureIds,
             'destination_ids' => $destinationIds,
         ]);
     }
@@ -151,16 +152,16 @@ class PackageRouteSyncService extends AbstractSyncService
         }
 
         return [
-            'transport_type'  => $transportType,
-            'departure_id'    => $departureId,
-            'departure_name'  => (string) ($departure['name'] ?? ''),
-            'departure_iata'  => (string) ($departure['iata_code'] ?? '') ?: null,
-            'arrival_id'      => $arrivalId,
-            'arrival_name'    => (string) ($arrival['name'] ?? ''),
-            'arrival_iata'    => (string) ($arrival['iata_code'] ?? '') ?: null,
+            'transport_type' => $transportType,
+            'departure_id' => $departureId,
+            'departure_name' => (string) ($departure['name'] ?? ''),
+            'departure_iata' => (string) ($departure['iata_code'] ?? '') ?: null,
+            'arrival_id' => $arrivalId,
+            'arrival_name' => (string) ($arrival['name'] ?? ''),
+            'arrival_iata' => (string) ($arrival['iata_code'] ?? '') ?: null,
             'available_dates' => json_encode($dates),
-            'duration'        => (int) ($raw['duration'] ?? 0),
-            'last_synced_at'  => date('Y-m-d H:i:s'),
+            'duration' => (int) ($raw['duration'] ?? 0),
+            'last_synced_at' => date('Y-m-d H:i:s'),
         ];
     }
 

@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Tygh\Addons\TravelCore\Services;
@@ -44,12 +45,12 @@ class BookingDisplayService implements BookingDisplayServiceInterface
         $date_format = \Tygh\Registry::get('settings.Appearance.date_format') ?: '%d.%m.%Y';
         $checkInStr = is_string($extra['check_in'] ?? null) ? $extra['check_in'] : '';
         $checkOutStr = is_string($extra['check_out'] ?? null) ? $extra['check_out'] : '';
-        $check_in_ts  = !empty($checkInStr)  ? strtotime($checkInStr)  : false;
+        $check_in_ts = !empty($checkInStr) ? strtotime($checkInStr) : false;
         $check_out_ts = !empty($checkOutStr) ? strtotime($checkOutStr) : false;
-        $check_in_fmt  = ($check_in_ts  !== false) ? fn_date_format($check_in_ts, $date_format)  : '';
+        $check_in_fmt = ($check_in_ts !== false) ? fn_date_format($check_in_ts, $date_format) : '';
         $check_out_fmt = ($check_out_ts !== false) ? fn_date_format($check_out_ts, $date_format) : '';
 
-        $num_rooms  = ValidationHelpers::toInt($extra['num_rooms'] ?? 1);
+        $num_rooms = ValidationHelpers::toInt($extra['num_rooms'] ?? 1);
         $rooms_data = $extra['rooms_data'] ?? [];
         if (is_string($rooms_data)) {
             if (is_callable($jsonDecoder)) {
@@ -63,7 +64,7 @@ class BookingDisplayService implements BookingDisplayServiceInterface
         $rooms_data = is_array($rooms_data) ? $rooms_data : [];
 
         // Build guests string
-        $adults   = ValidationHelpers::toInt($extra['adults']   ?? 2);
+        $adults = ValidationHelpers::toInt($extra['adults'] ?? 2);
         $children = ValidationHelpers::toInt($extra['children'] ?? 0);
 
         $guests_str = '';
@@ -85,9 +86,9 @@ class BookingDisplayService implements BookingDisplayServiceInterface
                     $ages_str = ValidationHelpers::toString($ages_raw);
                 }
                 $ages_arr = array_map('trim', explode(',', $ages_str));
-                $ages_arr = array_filter($ages_arr, function ($a) { return $a !== '' && $a !== 'age_needed'; });
+                $ages_arr = array_filter($ages_arr, fn ($a) => $a !== '' && $a !== 'age_needed');
                 if (!empty($ages_arr)) {
-                    $guests_str .= ' (' . implode(' and ', array_map(function ($a) { return $a . ' y/o'; }, $ages_arr)) . ')';
+                    $guests_str .= ' (' . implode(' and ', array_map(fn ($a) => $a . ' y/o', $ages_arr)) . ')';
                 }
             }
         }
@@ -100,7 +101,7 @@ class BookingDisplayService implements BookingDisplayServiceInterface
         if (!empty($packageName)) {
             $product['product_options_value'][] = [
                 'option_name' => __($langPrefix . '.package'),
-                'value'       => $packageName,
+                'value' => $packageName,
             ];
         }
 
@@ -108,7 +109,7 @@ class BookingDisplayService implements BookingDisplayServiceInterface
         $nights = ValidationHelpers::toInt($extra['nights'] ?? 7);
         $product['product_options_value'][] = [
             'option_name' => __($langPrefix . '.dates'),
-            'value'       => $check_in_fmt . ' → ' . $check_out_fmt . ' (' . $nights . ' ' . __($langPrefix . '.nights') . ')',
+            'value' => $check_in_fmt . ' → ' . $check_out_fmt . ' (' . $nights . ' ' . __($langPrefix . '.nights') . ')',
         ];
 
         // Room info
@@ -118,7 +119,7 @@ class BookingDisplayService implements BookingDisplayServiceInterface
         }
         $product['product_options_value'][] = [
             'option_name' => __($langPrefix . '.room'),
-            'value'       => $room_name,
+            'value' => $room_name,
         ];
 
         // Board/Meal plan
@@ -128,13 +129,13 @@ class BookingDisplayService implements BookingDisplayServiceInterface
         }
         $product['product_options_value'][] = [
             'option_name' => __($langPrefix . '.board'),
-            'value'       => $board_name,
+            'value' => $board_name,
         ];
 
         // Guests
         $product['product_options_value'][] = [
             'option_name' => __($langPrefix . '.guests'),
-            'value'       => $guests_str,
+            'value' => $guests_str,
         ];
 
         // Per-room breakdown
@@ -143,7 +144,7 @@ class BookingDisplayService implements BookingDisplayServiceInterface
                 if (!is_array($room)) {
                     continue;
                 }
-                $room_num    = (is_numeric($idx) ? (int) $idx : 0) + 1;
+                $room_num = (is_numeric($idx) ? (int) $idx : 0) + 1;
                 $room_guests = ValidationHelpers::toInt($room['adults'] ?? 2) . ' adults';
                 $roomChildren = ValidationHelpers::toInt($room['children'] ?? 0);
                 if ($roomChildren > 0) {
@@ -151,7 +152,7 @@ class BookingDisplayService implements BookingDisplayServiceInterface
                     if (!empty($room['childrenAges']) && is_array($room['childrenAges'])) {
                         /** @var array<string> $agesStr */
                         $agesStr = array_map(fn ($a) => ValidationHelpers::toString($a), $room['childrenAges']);
-                        $ages = array_filter($agesStr, function ($a) { return $a !== ''; });
+                        $ages = array_filter($agesStr, fn ($a) => $a !== '');
                         if (!empty($ages)) {
                             $room_guests .= ' (' . implode(', ', $ages) . ' y/o)';
                         }
@@ -159,7 +160,7 @@ class BookingDisplayService implements BookingDisplayServiceInterface
                 }
                 $product['product_options_value'][] = [
                     'option_name' => 'Room ' . $room_num,
-                    'value'       => $room_guests,
+                    'value' => $room_guests,
                 ];
             }
         }
@@ -170,7 +171,7 @@ class BookingDisplayService implements BookingDisplayServiceInterface
         if (!empty($holderName) || !empty($guestNames)) {
             $product['product_options_value'][] = [
                 'option_name' => __($langPrefix . '.holder'),
-                'value'       => $holderName ?: $guestNames,
+                'value' => $holderName ?: $guestNames,
             ];
         }
 

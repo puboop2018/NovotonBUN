@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays\Cron\Commands;
@@ -42,7 +43,7 @@ class OrderStatusSyncCommand extends AbstractSyncCommand
 
         return [
             'success' => $stats['errors'] === 0,
-            'stats'   => $stats,
+            'stats' => $stats,
         ];
     }
 }

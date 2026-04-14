@@ -1,18 +1,19 @@
 <?php
+
 declare(strict_types=1);
+
 namespace Tygh\Addons\NovotonHolidays\Api;
 
 use Tygh\Addons\NovotonHolidays\Api\Contracts\ReservationApiClientInterface;
 use Tygh\Addons\NovotonHolidays\Constants;
-use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Helpers\DebugLogger;
+use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 
 class ReservationApiClient extends ApiClientBase implements ReservationApiClientInterface
 {
     /**
      * 7. hotel_res_RQ - Reservation request
      *
-     * @return \SimpleXMLElement
      * @param array<string, mixed> $bookingData
      */
     #[\Override]
@@ -102,8 +103,6 @@ class ReservationApiClient extends ApiClientBase implements ReservationApiClient
 
     /**
      * 15. resinfo - Reservations Info
-     *
-     * @return \SimpleXMLElement
      */
     #[\Override]
     public function getReservationInfo(string $idNum = '', string $confirmAgency = '', string $lang = 'UK'): \SimpleXMLElement
@@ -133,7 +132,7 @@ class ReservationApiClient extends ApiClientBase implements ReservationApiClient
 
         fn_log_event('general', 'runtime', [
             'message' => 'Novoton hotel_request Request',
-            'xml' => $xml
+            'xml' => $xml,
         ]);
 
         $response = $this->callApi(Constants::API_FUNCTION_HOTEL_REQUEST, $xml, $lang);
@@ -144,7 +143,7 @@ class ReservationApiClient extends ApiClientBase implements ReservationApiClient
                 'xml_sent' => $this->maskCredentials($xml),
                 'xml_response' => $response,
                 'parsed' => $parsed,
-                'id_num' => isset($parsed->IdNum) ? (string)$parsed->IdNum : null
+                'id_num' => isset($parsed->IdNum) ? (string)$parsed->IdNum : null,
             ];
         }
 
@@ -168,8 +167,6 @@ class ReservationApiClient extends ApiClientBase implements ReservationApiClient
 
     /**
      * 23. alternative_RS - Check for available requested alternatives
-     *
-     * @return \SimpleXMLElement
      */
     #[\Override]
     public function getAlternatives(string $idNum, string $lang = 'UK'): \SimpleXMLElement
@@ -182,7 +179,7 @@ class ReservationApiClient extends ApiClientBase implements ReservationApiClient
 
         fn_log_event('general', 'runtime', [
             'message' => 'Novoton alternative_RS Request',
-            'xml' => $xml
+            'xml' => $xml,
         ]);
 
         return $this->callApiAndParse(Constants::API_FUNCTION_ALTERNATIVE_RS, $xml, $lang);
@@ -190,8 +187,6 @@ class ReservationApiClient extends ApiClientBase implements ReservationApiClient
 
     /**
      * 8. hotel_acc_RQ_html - Invoice as HTML
-     *
-     * @return string
      */
     #[\Override]
     public function getInvoiceHtml(string $idNum, string $lang = 'UK'): string
@@ -207,8 +202,6 @@ class ReservationApiClient extends ApiClientBase implements ReservationApiClient
 
     /**
      * 9. hotel_acc_RQ - Invoice as XML
-     *
-     * @return \SimpleXMLElement
      */
     #[\Override]
     public function getInvoiceXml(string $idNum, string $lang = 'UK'): \SimpleXMLElement
@@ -224,8 +217,6 @@ class ReservationApiClient extends ApiClientBase implements ReservationApiClient
 
     /**
      * 14. list_invoices - List Invoices
-     *
-     * @return \SimpleXMLElement
      */
     #[\Override]
     public function listInvoices(string $arrFrom = '', string $arrTo = '', string $lang = 'UK'): \SimpleXMLElement

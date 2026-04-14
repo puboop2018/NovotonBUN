@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 /**
  * Novoton PriceInfo Discount Calculator
  *
@@ -106,14 +108,14 @@ class DiscountCalculator implements DiscountCalculatorInterface
             'EBToDaily' => $ebToDaily,
             'EBToRooms' => $ebToRooms,
             'EBToBoard' => $ebToBoard,
-            'breakdown' => $bestBreakdown
+            'breakdown' => $bestBreakdown,
         ]);
 
         return [
             'applicable' => $applicable,
             'discount' => $bestDiscount,
             'percent' => $bestPercent,
-            'discount_breakdown' => $bestBreakdown
+            'discount_breakdown' => $bestBreakdown,
         ];
     }
 
@@ -186,7 +188,9 @@ class DiscountCalculator implements DiscountCalculatorInterface
             $freeNightIndices = [];
             if ($type === 'End') {
                 for ($i = $nights - $freeNights; $i < $nights; $i++) {
-                    if ($i >= 0) $freeNightIndices[] = $i;
+                    if ($i >= 0) {
+                        $freeNightIndices[] = $i;
+                    }
                 }
             } else {
                 for ($i = 0; $i < $freeNights && $i < $nights; $i++) {
@@ -231,7 +235,7 @@ class DiscountCalculator implements DiscountCalculatorInterface
             'EXTToDaily' => $extToDaily,
             'EXTToRooms' => $extToRooms,
             'EXTToBoard' => $extToBoard,
-            'breakdown' => $bestBreakdown
+            'breakdown' => $bestBreakdown,
         ]);
 
         return [
@@ -239,7 +243,7 @@ class DiscountCalculator implements DiscountCalculatorInterface
             'discount' => $bestDiscount,
             'free_nights' => $bestFreeNights,
             'free_night_indices' => $bestFreeNightIndices,
-            'discount_breakdown' => $bestBreakdown
+            'discount_breakdown' => $bestBreakdown,
         ];
     }
 
@@ -312,14 +316,14 @@ class DiscountCalculator implements DiscountCalculatorInterface
                 'to_days' => $toDays,
                 'max_days' => $maxDays,
                 'nights' => $nights,
-                'discount' => $discount
+                'discount' => $discount,
             ]);
 
             return [
                 'applicable' => true,
                 'discount' => $discount,
                 'max_days' => $maxDays,
-                'capped_nights' => $nights - $maxDays
+                'capped_nights' => $nights - $maxDays,
             ];
         }
 
@@ -375,14 +379,14 @@ class DiscountCalculator implements DiscountCalculatorInterface
             'percent' => $totalPercent,
             'subtotal' => $subtotal,
             'discount' => $discount,
-            'names' => $names
+            'names' => $names,
         ]);
 
         return [
             'applicable' => true,
             'discount' => $discount,
             'percent' => $totalPercent,
-            'name' => implode(', ', $names)
+            'name' => implode(', ', $names),
         ];
     }
 
@@ -398,7 +402,7 @@ class DiscountCalculator implements DiscountCalculatorInterface
         string $checkIn,
         int $nights,
         string $roomId,
-        float $subtotal
+        float $subtotal,
     ): array {
         $priceinfo = $this->parser->getPriceinfo();
         $entries = $priceinfo['reduction_perc_marketing'] ?? [];
@@ -486,7 +490,7 @@ class DiscountCalculator implements DiscountCalculatorInterface
                 'room_types' => $roomTypes,
                 'min_stay' => $minStay,
                 'type' => $type,
-                'matched' => true
+                'matched' => true,
             ];
         }
 
@@ -503,7 +507,7 @@ class DiscountCalculator implements DiscountCalculatorInterface
             'discount' => $discount,
             'is_surcharge' => $isSurcharge,
             'name' => $bestName,
-            'details' => $details
+            'details' => $details,
         ]);
 
         return [
@@ -512,7 +516,7 @@ class DiscountCalculator implements DiscountCalculatorInterface
             'percent' => $bestPercent,
             'is_surcharge' => $isSurcharge,
             'name' => $bestName,
-            'details' => $details
+            'details' => $details,
         ];
     }
 
@@ -551,8 +555,12 @@ class DiscountCalculator implements DiscountCalculatorInterface
         $totalReduction = $redApplicable ? ($basePlusFees - $redDiscountAmt) : $basePlusFees;
 
         $totalCombined = $basePlusFees;
-        if ($ebApplicable) $totalCombined -= $ebDiscountAmt;
-        if ($redApplicable) $totalCombined -= $redDiscountAmt;
+        if ($ebApplicable) {
+            $totalCombined -= $ebDiscountAmt;
+        }
+        if ($redApplicable) {
+            $totalCombined -= $redDiscountAmt;
+        }
 
         $appliedDiscount = 'none';
         $discountAmount = $reductionPeriodDiscount;
@@ -596,8 +604,8 @@ class DiscountCalculator implements DiscountCalculatorInterface
                 'early_booking' => $totalEB,
                 'reduction' => $totalReduction,
                 'combined' => $totalCombined,
-                'reduction_period_discount' => $reductionPeriodDiscount
-            ]
+                'reduction_period_discount' => $reductionPeriodDiscount,
+            ],
         ];
     }
 

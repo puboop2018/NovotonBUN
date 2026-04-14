@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays\Repository;
@@ -19,8 +20,8 @@ class SyncLogRepository
     public function getRecent(int $limit = 10): array
     {
         return db_get_array(
-            "SELECT * FROM ?:sphinx_sync_log ORDER BY started_at DESC LIMIT ?i",
-            $limit
+            'SELECT * FROM ?:sphinx_sync_log ORDER BY started_at DESC LIMIT ?i',
+            $limit,
         );
     }
 }

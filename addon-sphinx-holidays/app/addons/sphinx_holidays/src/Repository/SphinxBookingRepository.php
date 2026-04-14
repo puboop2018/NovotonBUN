@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 /**
  * Sphinx Holidays - Booking Repository
  *
@@ -23,7 +25,7 @@ class SphinxBookingRepository
      */
     public function findById(int $booking_id): ?array
     {
-        $booking = db_get_row("SELECT * FROM ?:sphinx_bookings WHERE booking_id = ?i", $booking_id);
+        $booking = db_get_row('SELECT * FROM ?:sphinx_bookings WHERE booking_id = ?i', $booking_id);
         return $booking ?: null;
     }
 
@@ -34,8 +36,8 @@ class SphinxBookingRepository
     public function findByOrderId(int $order_id): array
     {
         return db_get_array(
-            "SELECT * FROM ?:sphinx_bookings WHERE order_id = ?i ORDER BY booking_id",
-            $order_id
+            'SELECT * FROM ?:sphinx_bookings WHERE order_id = ?i ORDER BY booking_id',
+            $order_id,
         );
     }
 
@@ -52,8 +54,9 @@ class SphinxBookingRepository
     public function findPendingDuplicateByOffer(string $offerId, string $pendingStatus): ?int
     {
         $id = db_get_field(
-            "SELECT booking_id FROM ?:sphinx_bookings WHERE offer_id = ?s AND order_id > 0 AND status = ?s LIMIT 1",
-            $offerId, $pendingStatus
+            'SELECT booking_id FROM ?:sphinx_bookings WHERE offer_id = ?s AND order_id > 0 AND status = ?s LIMIT 1',
+            $offerId,
+            $pendingStatus,
         );
         return $id !== false && $id !== '' ? (int) $id : null;
     }
@@ -64,11 +67,14 @@ class SphinxBookingRepository
     public function findRecentUnassigned(string $hotel_id, string $check_in, string $check_out, string $holder_name): ?int
     {
         $id = db_get_field(
-            "SELECT booking_id FROM ?:sphinx_bookings
+            'SELECT booking_id FROM ?:sphinx_bookings
              WHERE order_id = 0 AND hotel_id = ?s AND check_in = ?s AND check_out = ?s
                AND holder_name = ?s AND created_at > DATE_SUB(NOW(), INTERVAL 1 HOUR)
-             LIMIT 1",
-            $hotel_id, $check_in, $check_out, $holder_name
+             LIMIT 1',
+            $hotel_id,
+            $check_in,
+            $check_out,
+            $holder_name,
         );
         return $id !== false && $id !== '' ? (int) $id : null;
     }
@@ -82,7 +88,7 @@ class SphinxBookingRepository
         $data = self::filterNullValues($data);
 
         return $this->withTransaction(function () use ($data): int {
-            $booking_id = (int) db_query("INSERT INTO ?:sphinx_bookings ?e", $data);
+            $booking_id = (int) db_query('INSERT INTO ?:sphinx_bookings ?e', $data);
 
             if ($booking_id > 0) {
                 $this->syncToTravelBookings($booking_id, $data);
@@ -102,8 +108,9 @@ class SphinxBookingRepository
 
         return $this->withTransaction(function () use ($booking_id, $data): bool {
             $result = (bool) db_query(
-                "UPDATE ?:sphinx_bookings SET ?u WHERE booking_id = ?i",
-                $data, $booking_id
+                'UPDATE ?:sphinx_bookings SET ?u WHERE booking_id = ?i',
+                $data,
+                $booking_id,
             );
 
             if ($result) {
@@ -147,20 +154,23 @@ class SphinxBookingRepository
     public function linkToUserBySession(int $user_id, string $session_id): int
     {
         $affected = (int) db_query(
-            "UPDATE ?:sphinx_bookings SET user_id = ?i WHERE session_id = ?s AND user_id = 0 AND order_id = 0",
-            $user_id, $session_id
+            'UPDATE ?:sphinx_bookings SET user_id = ?i WHERE session_id = ?s AND user_id = 0 AND order_id = 0',
+            $user_id,
+            $session_id,
         );
 
         if ($affected > 0) {
             $booking_ids = db_get_fields(
-                "SELECT booking_id FROM ?:sphinx_bookings WHERE session_id = ?s AND user_id = ?i",
-                $session_id, $user_id
+                'SELECT booking_id FROM ?:sphinx_bookings WHERE session_id = ?s AND user_id = ?i',
+                $session_id,
+                $user_id,
             );
             if (!empty($booking_ids)) {
                 $id_strings = array_map('strval', $booking_ids);
                 db_query(
                     "UPDATE ?:travel_bookings SET user_id = ?i WHERE provider = 'sphinx' AND provider_booking_id IN (?a)",
-                    $user_id, $id_strings
+                    $user_id,
+                    $id_strings,
                 );
             }
         }
@@ -176,9 +186,9 @@ class SphinxBookingRepository
         return $this->withTransaction(function () use ($booking_id): bool {
             db_query(
                 "DELETE FROM ?:travel_bookings WHERE provider = 'sphinx' AND provider_booking_id = ?s",
-                (string) $booking_id
+                (string) $booking_id,
             );
-            return (bool) db_query("DELETE FROM ?:sphinx_bookings WHERE booking_id = ?i", $booking_id);
+            return (bool) db_query('DELETE FROM ?:sphinx_bookings WHERE booking_id = ?i', $booking_id);
         });
     }
 
@@ -192,14 +202,14 @@ class SphinxBookingRepository
              INNER JOIN ?:sphinx_bookings sb ON tb.provider_booking_id = CAST(sb.booking_id AS CHAR)
              WHERE tb.provider = 'sphinx' AND sb.order_id = 0
                AND sb.created_at < DATE_SUB(NOW(), INTERVAL ?i HOUR)",
-            $hours
+            $hours,
         );
 
         return (int) db_query(
-            "DELETE FROM ?:sphinx_bookings
+            'DELETE FROM ?:sphinx_bookings
              WHERE order_id = 0
-               AND created_at < DATE_SUB(NOW(), INTERVAL ?i HOUR)",
-            $hours
+               AND created_at < DATE_SUB(NOW(), INTERVAL ?i HOUR)',
+            $hours,
         );
     }
 
@@ -218,29 +228,30 @@ class SphinxBookingRepository
         }
 
         $travel_record = [
-            'provider'            => 'sphinx',
+            'provider' => 'sphinx',
             'provider_booking_id' => (string) $booking_id,
-            'order_id'            => (int) ($data['order_id'] ?? 0),
-            'user_id'             => (int) ($data['user_id'] ?? 0),
-            'hotel_id'            => $data['hotel_id'] ?? '',
-            'hotel_name'          => $data['hotel_name'] ?? '',
-            'room_name'           => $data['room_type'] ?? '',
-            'board_code'          => $data['board_id'] ?? '',
-            'check_in'            => $data['check_in'] ?? '',
-            'check_out'           => $data['check_out'] ?? '',
-            'nights'              => (int) ($data['nights'] ?? 0),
-            'adults'              => (int) ($data['adults'] ?? 2),
-            'children'            => (int) ($data['children'] ?? 0),
-            'children_ages'       => $data['children_ages'] ?? '',
-            'total_price'         => (float) ($data['total_price'] ?? 0),
-            'currency'            => $data['currency'] ?? 'EUR',
-            'status'              => $data['status'] ?? TravelConstants::STATUS_PENDING,
-            'guests_json'         => $guests_json,
+            'order_id' => (int) ($data['order_id'] ?? 0),
+            'user_id' => (int) ($data['user_id'] ?? 0),
+            'hotel_id' => $data['hotel_id'] ?? '',
+            'hotel_name' => $data['hotel_name'] ?? '',
+            'room_name' => $data['room_type'] ?? '',
+            'board_code' => $data['board_id'] ?? '',
+            'check_in' => $data['check_in'] ?? '',
+            'check_out' => $data['check_out'] ?? '',
+            'nights' => (int) ($data['nights'] ?? 0),
+            'adults' => (int) ($data['adults'] ?? 2),
+            'children' => (int) ($data['children'] ?? 0),
+            'children_ages' => $data['children_ages'] ?? '',
+            'total_price' => (float) ($data['total_price'] ?? 0),
+            'currency' => $data['currency'] ?? 'EUR',
+            'status' => $data['status'] ?? TravelConstants::STATUS_PENDING,
+            'guests_json' => $guests_json,
         ];
 
         db_query(
-            "INSERT INTO ?:travel_bookings ?e ON DUPLICATE KEY UPDATE ?u",
-            $travel_record, $travel_record
+            'INSERT INTO ?:travel_bookings ?e ON DUPLICATE KEY UPDATE ?u',
+            $travel_record,
+            $travel_record,
         );
     }
 
@@ -253,22 +264,22 @@ class SphinxBookingRepository
     private function syncUpdateToTravelBookings(int $booking_id, array $data): void
     {
         static $fieldMap = [
-            'order_id'      => 'order_id',
-            'user_id'       => 'user_id',
-            'hotel_id'      => 'hotel_id',
-            'hotel_name'    => 'hotel_name',
-            'room_type'     => 'room_name',
-            'board_id'      => 'board_code',
-            'check_in'      => 'check_in',
-            'check_out'     => 'check_out',
-            'nights'        => 'nights',
-            'adults'        => 'adults',
-            'children'      => 'children',
+            'order_id' => 'order_id',
+            'user_id' => 'user_id',
+            'hotel_id' => 'hotel_id',
+            'hotel_name' => 'hotel_name',
+            'room_type' => 'room_name',
+            'board_id' => 'board_code',
+            'check_in' => 'check_in',
+            'check_out' => 'check_out',
+            'nights' => 'nights',
+            'adults' => 'adults',
+            'children' => 'children',
             'children_ages' => 'children_ages',
-            'total_price'   => 'total_price',
-            'currency'      => 'currency',
-            'status'        => 'status',
-            'guests_data'   => 'guests_json',
+            'total_price' => 'total_price',
+            'currency' => 'currency',
+            'status' => 'status',
+            'guests_data' => 'guests_json',
         ];
 
         $travelUpdate = [];
@@ -284,7 +295,8 @@ class SphinxBookingRepository
 
         db_query(
             "UPDATE ?:travel_bookings SET ?u WHERE provider = 'sphinx' AND provider_booking_id = ?s",
-            $travelUpdate, (string) $booking_id
+            $travelUpdate,
+            (string) $booking_id,
         );
     }
 
@@ -297,13 +309,13 @@ class SphinxBookingRepository
      */
     private function withTransaction(callable $callback): mixed
     {
-        db_query("START TRANSACTION");
+        db_query('START TRANSACTION');
         try {
             $result = $callback();
-            db_query("COMMIT");
+            db_query('COMMIT');
             return $result;
         } catch (\Throwable $e) {
-            db_query("ROLLBACK");
+            db_query('ROLLBACK');
             throw $e;
         }
     }
@@ -317,8 +329,9 @@ class SphinxBookingRepository
     {
         $data = self::filterNullValues($data);
         return (bool) db_query(
-            "UPDATE ?:sphinx_bookings SET ?u WHERE booking_id = ?i",
-            $data, $booking_id
+            'UPDATE ?:sphinx_bookings SET ?u WHERE booking_id = ?i',
+            $data,
+            $booking_id,
         );
     }
 
@@ -332,14 +345,14 @@ class SphinxBookingRepository
     public function findForStatusCheck(array $terminalStatuses, int $daysBack = 90): array
     {
         return db_get_array(
-            "SELECT booking_id, order_id, hotel_name, room_type, status, api_booking_ref
+            'SELECT booking_id, order_id, hotel_name, room_type, status, api_booking_ref
              FROM ?:sphinx_bookings
              WHERE order_id > 0
                AND status NOT IN (?a)
                AND created_at > DATE_SUB(NOW(), INTERVAL ?i DAY)
-             ORDER BY created_at DESC",
+             ORDER BY created_at DESC',
             $terminalStatuses,
-            $daysBack
+            $daysBack,
         );
     }
 
@@ -350,6 +363,6 @@ class SphinxBookingRepository
      */
     private static function filterNullValues(array $data): array
     {
-        return array_filter($data, static fn($v) => $v !== null);
+        return array_filter($data, static fn ($v) => $v !== null);
     }
 }

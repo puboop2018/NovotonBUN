@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 /**
  * Sphinx Security Service
  *
@@ -50,7 +52,8 @@ class SecurityService implements SecurityServiceInterface
             $errors[] = 'Invalid check-out date format';
         }
 
-        if (!empty($data['check_in']) && !empty($data['check_out'])
+        if (
+            !empty($data['check_in']) && !empty($data['check_out'])
             && strtotime($data['check_out']) <= strtotime($data['check_in'])
         ) {
             $errors[] = 'Check-out must be after check-in';
@@ -148,7 +151,7 @@ class SecurityService implements SecurityServiceInterface
         $cacheRepo->upsert(
             $cacheKey,
             json_encode($record, JSON_UNESCAPED_UNICODE) ?: '',
-            $record['reset'] + 60
+            $record['reset'] + 60,
         );
 
         return true;

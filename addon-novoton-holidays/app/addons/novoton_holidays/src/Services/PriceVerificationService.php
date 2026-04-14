@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Services;
@@ -111,7 +112,7 @@ class PriceVerificationService implements PriceVerificationServiceInterface
         if ($this->debug) {
             fn_log_event('general', 'runtime', array_merge(
                 ['message' => 'NovotonPrice: ' . $message],
-                $context
+                $context,
             ));
         }
     }

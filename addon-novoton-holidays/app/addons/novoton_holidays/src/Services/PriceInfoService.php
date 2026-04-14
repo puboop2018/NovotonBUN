@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 /**
  * Novoton PriceInfo Service
  *
@@ -199,7 +201,7 @@ class PriceInfoService implements PriceInfoServiceInterface
                 'season_number' => $seasonNum,
                 'date_from' => PriceInfoFormatter::toScalar($season['DateFrom'] ?? ''),
                 'date_to' => PriceInfoFormatter::toScalar($season['DateTo'] ?? ''),
-                'season_name' => PriceInfoFormatter::toScalar($season['SeasonName'] ?? "Season {$seasonNum}")
+                'season_name' => PriceInfoFormatter::toScalar($season['SeasonName'] ?? "Season {$seasonNum}"),
             ];
         }
 
@@ -250,14 +252,12 @@ class PriceInfoService implements PriceInfoServiceInterface
                 'payment_date' => PriceInfoFormatter::toScalar($eb['PaymentDate'] ?? ''),
                 'payment_percent' => PriceInfoFormatter::toFloat($eb['PaymentPercent'] ?? 0),
                 'room_types' => PriceInfoFormatter::toScalar($eb['RoomTypes'] ?? 'all'),
-                'min_stay' => PriceInfoFormatter::toInt($eb['MinStay'] ?? 0)
+                'min_stay' => PriceInfoFormatter::toInt($eb['MinStay'] ?? 0),
             ];
         }
 
         // Sort by reduction DESC
-        usort($result, function ($a, $b) {
-            return $b['reduction'] <=> $a['reduction'];
-        });
+        usort($result, fn ($a, $b) => $b['reduction'] <=> $a['reduction']);
 
         return $result;
     }
@@ -271,7 +271,7 @@ class PriceInfoService implements PriceInfoServiceInterface
      */
     public function getActiveEarlyBooking(string $hotelId, ?string $date = null): ?array
     {
-        $date = $date ?? date('Y-m-d');
+        $date ??= date('Y-m-d');
 
         $discounts = $this->getEarlyBooking($hotelId);
 
@@ -299,9 +299,9 @@ class PriceInfoService implements PriceInfoServiceInterface
      * If the column is empty (cron hasn't run yet), returns an empty price map.
      * The Calendar UI should treat missing dates as "no price" (grey/dash).
      *
-     * @param string      $hotelId        Hotel ID
-     * @param string|null $targetCurrency  Target currency code (null = display currency)
-     * @param int         $adults          Number of adults (default 2)
+     * @param string $hotelId Hotel ID
+     * @param string|null $targetCurrency Target currency code (null = display currency)
+     * @param int $adults Number of adults (default 2)
      * @return array<string, mixed> ['prices' => [date => price], 'currency' => string]
      */
     public function getCalendarPrices(string $hotelId, ?string $targetCurrency = null, int $adults = 2): array
@@ -348,7 +348,7 @@ class PriceInfoService implements PriceInfoServiceInterface
         $this->log('Calendar prices loaded', [
             'hotel_id' => $hotelId,
             'currency' => $currency,
-            'dates_count' => count($dateMap)
+            'dates_count' => count($dateMap),
         ]);
 
         return ['prices' => $dateMap, 'currency' => $currency];
@@ -366,7 +366,6 @@ class PriceInfoService implements PriceInfoServiceInterface
      * JSON parsing and room grouping.
      *
      * @param string $hotelId Hotel ID
-     * @return void
      */
     public static function precomputeCalendarPrices(string $hotelId): void
     {
@@ -434,10 +433,10 @@ class PriceInfoService implements PriceInfoServiceInterface
      *
      * Returns raw API prices (EUR, no commission, no conversion).
      *
-     * @param array<mixed, mixed>  $priceinfo Decoded priceinfo_data JSON
-     * @param int    $adults    Number of adults
-     * @param string $today     Today's date (Y-m-d)
-     * @param string $maxDate   Max future date (Y-m-d)
+     * @param array<mixed, mixed> $priceinfo Decoded priceinfo_data JSON
+     * @param int $adults Number of adults
+     * @param string $today Today's date (Y-m-d)
+     * @param string $maxDate Max future date (Y-m-d)
      * @return array<string, mixed> [date => rawPrice]
      */
     private static function buildRawDateMap(array $priceinfo, int $adults, string $today, string $maxDate): array
@@ -526,8 +525,8 @@ class PriceInfoService implements PriceInfoServiceInterface
      * Picks the minimum total across all rooms for each season.
      *
      * @param array<string, mixed> $seasonPrices season_price rows
-     * @param array<string, mixed> $seasons      seasons array
-     * @param int   $adults       number of adults
+     * @param array<string, mixed> $seasons seasons array
+     * @param int $adults number of adults
      * @return array<int, float> [seasonNum => cheapestRoomTotal]
      */
     private function getCheapestRoomTotalBySeason(array $seasonPrices, array $seasons, int $adults): array
@@ -551,7 +550,9 @@ class PriceInfoService implements PriceInfoServiceInterface
                 continue;
             }
             $num = PriceInfoFormatter::toInt($s['Season'] ?? $s['IdSeason'] ?? $s['SeasonNr'] ?? 0);
-            if ($num > $maxSeason) $maxSeason = $num;
+            if ($num > $maxSeason) {
+                $maxSeason = $num;
+            }
         }
 
         // Age type mapping — matches PriceInfoCalculator logic
@@ -577,13 +578,19 @@ class PriceInfoService implements PriceInfoServiceInterface
 
             // Only consider adult entries (ADULT, 1ST ADULT, 2ND ADULT, etc.)
             $isAdult = str_contains(strtolower($rowAge), strtolower('ADULT'));
-            if (!$isAdult) continue;
+            if (!$isAdult) {
+                continue;
+            }
 
             // Only consider regular bed (not extra bed)
-            if ($accType !== '' && $accType !== 'REGULAR' && $accType !== 'RB') continue;
+            if ($accType !== '' && $accType !== 'REGULAR' && $accType !== 'RB') {
+                continue;
+            }
 
             $roomId = $this->toScalarSafe($row['IdRoom'] ?? '');
-            if ($roomId === '') $roomId = '_default';
+            if ($roomId === '') {
+                $roomId = '_default';
+            }
 
             $roomRows[$roomId][] = $row;
         }
@@ -609,7 +616,9 @@ class PriceInfoService implements PriceInfoServiceInterface
                 }
 
                 $unitPrice = $this->resolveCalendarPrice($rawPrice, $priceKey, $codeIndex);
-                if ($unitPrice <= 0) continue;
+                if ($unitPrice <= 0) {
+                    continue;
+                }
 
                 // Calculate nightly total for the given occupancy
                 $nightlyTotal = $isRoomPrice ? $unitPrice : ($unitPrice * $adults);
@@ -626,9 +635,9 @@ class PriceInfoService implements PriceInfoServiceInterface
     /**
      * Resolve a single price value, handling percentage references.
      *
-     * @param mixed  $rawPrice  Price value (numeric or "85%")
-     * @param string $priceKey  Column key (e.g. "Price2")
-     * @param array<string, mixed>  $codeIndex Code-indexed season_price rows
+     * @param mixed $rawPrice Price value (numeric or "85%")
+     * @param string $priceKey Column key (e.g. "Price2")
+     * @param array<string, mixed> $codeIndex Code-indexed season_price rows
      * @return float Resolved price
      */
     private function resolveCalendarPrice($rawPrice, string $priceKey, array $codeIndex): float
@@ -704,7 +713,7 @@ class PriceInfoService implements PriceInfoServiceInterface
             'seasons' => [],
             'prices' => [],
             'early_booking' => [],
-            'raw' => $priceinfo
+            'raw' => $priceinfo,
         ];
 
         // Extract seasons
@@ -795,7 +804,7 @@ class PriceInfoService implements PriceInfoServiceInterface
 
         fn_log_event('novoton_holidays', 'priceinfo', array_merge(
             ['message' => $message],
-            $context
+            $context,
         ));
     }
 }

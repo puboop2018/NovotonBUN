@@ -1,14 +1,16 @@
 <?php
+
 declare(strict_types=1);
+
 namespace Tygh\Addons\NovotonHolidays\Cron\Commands;
 
-use Tygh\Registry;
+use Tygh\Addons\NovotonHolidays\Api\PropertyTypeDetector;
 use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\Cron\AbstractCronCommand;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Services\Container;
-use Tygh\Addons\NovotonHolidays\Api\PropertyTypeDetector;
 use Tygh\Addons\TravelCore\Services\TravelGroupResolver;
+use Tygh\Registry;
 
 class AddProductsCommand extends AbstractCronCommand
 {
@@ -44,20 +46,20 @@ class AddProductsCommand extends AbstractCronCommand
         // Ensure feature mapping table is populated (auto-seeds if settings are configured but mappings missing)
         $mappingCheck = fn_novoton_holidays_ensure_feature_mappings();
         if (!empty($mappingCheck['unconfigured'])) {
-            $this->output("WARNING: Feature IDs not configured in addon settings for: " . implode(', ', $mappingCheck['unconfigured']));
-            $this->output("Go to Addons > Novoton Holidays > Feature Mapping and set the CS-Cart feature IDs.");
+            $this->output('WARNING: Feature IDs not configured in addon settings for: ' . implode(', ', $mappingCheck['unconfigured']));
+            $this->output('Go to Addons > Novoton Holidays > Feature Mapping and set the CS-Cart feature IDs.');
         }
         if ($mappingCheck['seeded'] > 0) {
             $this->output("Auto-seeded {$mappingCheck['seeded']} feature mappings.");
         }
 
-        $this->output("Adding hotels as products...");
-        $this->output("Countries: " . implode(', ', $countries));
-        $this->output("Limit per country: " . ($limit > 0 ? $limit : "No limit"));
+        $this->output('Adding hotels as products...');
+        $this->output('Countries: ' . implode(', ', $countries));
+        $this->output('Limit per country: ' . ($limit > 0 ? $limit : 'No limit'));
         if (!empty($exclude_resorts)) {
-            $this->output("Excluding resorts (" . count($exclude_resorts) . "): " . implode(', ', $exclude_resorts));
+            $this->output('Excluding resorts (' . count($exclude_resorts) . '): ' . implode(', ', $exclude_resorts));
         }
-        $this->output("");
+        $this->output('');
 
         $hotelRepo = Container::getInstance()->hotelRepository();
         $current_year = date('Y');
@@ -69,10 +71,10 @@ class AddProductsCommand extends AbstractCronCommand
             $this->output("=== {$country} ===");
 
             $hotels = $hotelRepo->findUnlinkedWithPrices($country, $exclude_resorts, $limit);
-            $this->output("Found " . count($hotels) . " hotels to add.");
+            $this->output('Found ' . count($hotels) . ' hotels to add.');
 
             if (empty($hotels)) {
-                $this->output("");
+                $this->output('');
                 continue;
             }
 
@@ -84,7 +86,7 @@ class AddProductsCommand extends AbstractCronCommand
 
             if (!$category_id) {
                 $this->output("ERROR: No category mapping for '{$country}' and auto-creation failed. Skipping.");
-                $this->output("");
+                $this->output('');
                 $grand_total += count($hotels);
                 continue;
             }
@@ -103,10 +105,10 @@ class AddProductsCommand extends AbstractCronCommand
                 $this->output("[{$hotel_id}] {$hotel_name} ({$hotel_city}) ... ", false);
 
                 // Check if CS-Cart product already exists (core products table)
-                $existing = db_get_field("SELECT product_id FROM ?:products WHERE product_code = ?s", $product_code);
+                $existing = db_get_field('SELECT product_id FROM ?:products WHERE product_code = ?s', $product_code);
                 if ($existing) {
                     $hotelRepo->linkToProduct($hotel_id, PriceInfoFormatter::toInt($existing));
-                    $this->output("LINKED");
+                    $this->output('LINKED');
                     continue;
                 }
 
@@ -145,13 +147,13 @@ class AddProductsCommand extends AbstractCronCommand
                 $seoFields = fn_travel_core_apply_seo_fields('novoton_holidays', $placeholders, 0, $hotel_id);
 
                 $product_data = array_merge([
-                    'product_code'     => $product_code,
-                    'price'            => 0,
-                    'amount'           => ConfigProvider::getDefaultProductQuantity(),
-                    'status'           => 'D',
-                    'company_id'       => Registry::get('runtime.company_id') ?: 1,
-                    'main_category'    => $category_id,
-                    'category_ids'     => [$category_id],
+                    'product_code' => $product_code,
+                    'price' => 0,
+                    'amount' => ConfigProvider::getDefaultProductQuantity(),
+                    'status' => 'D',
+                    'company_id' => Registry::get('runtime.company_id') ?: 1,
+                    'main_category' => $category_id,
+                    'category_ids' => [$category_id],
                 ], $seoFields);
 
                 $product_id = fn_update_product($product_data, 0, CART_LANGUAGE);
@@ -166,7 +168,9 @@ class AddProductsCommand extends AbstractCronCommand
                             foreach ($images->url as $url) {
                                 $image_url = $image_base_url . str_replace(' ', '%20', (string) $url);
                                 fn_novoton_holidays_add_product_image($product_id, $image_url, $count === 0);
-                                if (++$count >= 10) break;
+                                if (++$count >= 10) {
+                                    break;
+                                }
                             }
                         }
                     } catch (\Exception $e) {
@@ -189,14 +193,14 @@ class AddProductsCommand extends AbstractCronCommand
                     $added++;
                     $this->output("ADDED (ID: {$product_id})");
                 } else {
-                    $this->output("FAILED (category_id={$category_id}, company_id=" . (Registry::get('runtime.company_id') ?: 1) . ")");
+                    $this->output("FAILED (category_id={$category_id}, company_id=" . (Registry::get('runtime.company_id') ?: 1) . ')');
                 }
 
                 usleep(Constants::API_DELAY_NORMAL);
             }
 
             $this->output("{$country}: Added {$added} of " . count($hotels));
-            $this->output("");
+            $this->output('');
             $grand_total += count($hotels);
             $grand_added += $added;
         }
@@ -204,12 +208,12 @@ class AddProductsCommand extends AbstractCronCommand
         // Clear FeatureMapper cache after batch import to free memory
         \Tygh\Addons\TravelCore\Services\FeatureMapper::clearCache();
 
-        $this->output("=== TOTAL ===");
+        $this->output('=== TOTAL ===');
         $this->output("Added: {$grand_added} of {$grand_total}");
 
         $stats = ['added' => $grand_added, 'total' => $grand_total, 'countries' => count($countries)];
         $this->sendReport('add_products', [
-            'added' => $grand_added, 'total' => $grand_total, 'countries' => implode(', ', $countries), 'duration' => $this->getDuration() . 's'
+            'added' => $grand_added, 'total' => $grand_total, 'countries' => implode(', ', $countries), 'duration' => $this->getDuration() . 's',
         ]);
 
         return ['success' => true, 'stats' => $stats];
@@ -283,7 +287,7 @@ class AddProductsCommand extends AbstractCronCommand
 
         $travelGroups = TravelGroupResolver::derive(
             $resolvedFacilityCodes,
-            ($hotel['is_adults_only'] ?? 'N') === 'Y'
+            ($hotel['is_adults_only'] ?? 'N') === 'Y',
         );
         if (!empty($travelGroups)) {
             $featureMapper->assignMultipleViaCore($productId, 'travel_group', $travelGroups);

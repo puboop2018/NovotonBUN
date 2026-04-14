@@ -1,12 +1,13 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays\Helpers;
 
-use Tygh\Registry;
 use Tygh\Addons\SphinxHolidays\Repository\HotelRepository;
-use Tygh\Addons\SphinxHolidays\Services\SphinxFeatureAssigner;
 use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
+use Tygh\Addons\SphinxHolidays\Services\SphinxFeatureAssigner;
+use Tygh\Registry;
 
 /**
  * Creates CS-Cart products from Sphinx hotel data.
@@ -43,7 +44,7 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
         if (empty($this->validCountryCodes)) {
             $this->validCountryCodes = db_get_hash_single_array(
                 "SELECT code, code FROM ?:countries WHERE status = 'A'",
-                ['code', 'code']
+                ['code', 'code'],
             );
         }
     }
@@ -72,8 +73,8 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
 
         // Check if product already exists (re-run after partial failure)
         $existingProductId = (int) db_get_field(
-            "SELECT product_id FROM ?:products WHERE product_code = ?s",
-            $productCode
+            'SELECT product_id FROM ?:products WHERE product_code = ?s',
+            $productCode,
         );
         if ($existingProductId > 0) {
             $this->hotelRepo->linkToProduct($hotelId, $existingProductId);
@@ -137,36 +138,48 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
         // Tier 1: name + property_type + classification + region_id + country_code
         if ($regionId > 0 && $cc !== '') {
             $dupeProductId = (int) db_get_field(
-                "SELECT product_id FROM ?:sphinx_hotels
+                'SELECT product_id FROM ?:sphinx_hotels
                  WHERE name = ?s AND property_type = ?s AND classification = ?i
                    AND region_id = ?i AND country_code = ?s
                    AND product_id IS NOT NULL AND product_id > 0 AND hotel_id != ?s
-                 LIMIT 1",
-                $hotel['name'], $propType, $classif, $regionId, $cc, $hotelId
+                 LIMIT 1',
+                $hotel['name'],
+                $propType,
+                $classif,
+                $regionId,
+                $cc,
+                $hotelId,
             );
         }
 
         // Tier 2: name + coordinates with ROUND(,3) tolerance (~110m)
         if ($dupeProductId === 0 && $lat !== 0.0 && $lng !== 0.0) {
             $dupeProductId = (int) db_get_field(
-                "SELECT product_id FROM ?:sphinx_hotels
+                'SELECT product_id FROM ?:sphinx_hotels
                  WHERE name = ?s
                    AND ROUND(latitude, 3) = ROUND(?d, 3) AND ROUND(longitude, 3) = ROUND(?d, 3)
                    AND product_id IS NOT NULL AND product_id > 0 AND hotel_id != ?s
-                 LIMIT 1",
-                $hotel['name'], $lat, $lng, $hotelId
+                 LIMIT 1',
+                $hotel['name'],
+                $lat,
+                $lng,
+                $hotelId,
             );
         }
 
         // Tier 3: name + property_type + classification + destination_id (fallback)
         if ($dupeProductId === 0 && $destId > 0) {
             $dupeProductId = (int) db_get_field(
-                "SELECT product_id FROM ?:sphinx_hotels
+                'SELECT product_id FROM ?:sphinx_hotels
                  WHERE name = ?s AND property_type = ?s AND classification = ?i
                    AND destination_id = ?i
                    AND product_id IS NOT NULL AND product_id > 0 AND hotel_id != ?s
-                 LIMIT 1",
-                $hotel['name'], $propType, $classif, $destId, $hotelId
+                 LIMIT 1',
+                $hotel['name'],
+                $propType,
+                $classif,
+                $destId,
+                $hotelId,
             );
         }
 
@@ -180,13 +193,13 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
         $seoFields = fn_travel_core_apply_seo_fields('sphinx_holidays', $placeholders, 0, $hotelId);
 
         $productData = array_merge([
-            'product_code'      => $productCode,
-            'price'             => 0,
-            'amount'            => ConfigProvider::getDefaultProductQuantity(),
-            'status'            => 'A',
-            'company_id'        => Registry::get('runtime.company_id') ?: 1,
-            'main_category'     => $categoryId,
-            'category_ids'      => [$categoryId],
+            'product_code' => $productCode,
+            'price' => 0,
+            'amount' => ConfigProvider::getDefaultProductQuantity(),
+            'status' => 'A',
+            'company_id' => Registry::get('runtime.company_id') ?: 1,
+            'main_category' => $categoryId,
+            'category_ids' => [$categoryId],
             'short_description' => $hotel['short_description'] ?? '',
         ], $seoFields);
 
@@ -204,12 +217,23 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
         $fullDescription = $productData['full_description'] ?? '';
         foreach ($otherLanguages as $lc) {
             db_query(
-                "INSERT INTO ?:product_descriptions (product_id, lang_code, product, full_description, short_description, page_title, meta_description, meta_keywords)
+                'INSERT INTO ?:product_descriptions (product_id, lang_code, product, full_description, short_description, page_title, meta_description, meta_keywords)
                  VALUES (?i, ?s, ?s, ?s, ?s, ?s, ?s, ?s)
-                 ON DUPLICATE KEY UPDATE product = ?s, full_description = ?s, short_description = ?s, page_title = ?s, meta_description = ?s, meta_keywords = ?s",
-                $productId, $lc,
-                $productData['product'], $fullDescription, $hotel['short_description'] ?? '', $productData['page_title'], $productData['meta_description'], $productData['meta_keywords'],
-                $productData['product'], $fullDescription, $hotel['short_description'] ?? '', $productData['page_title'], $productData['meta_description'], $productData['meta_keywords']
+                 ON DUPLICATE KEY UPDATE product = ?s, full_description = ?s, short_description = ?s, page_title = ?s, meta_description = ?s, meta_keywords = ?s',
+                $productId,
+                $lc,
+                $productData['product'],
+                $fullDescription,
+                $hotel['short_description'] ?? '',
+                $productData['page_title'],
+                $productData['meta_description'],
+                $productData['meta_keywords'],
+                $productData['product'],
+                $fullDescription,
+                $hotel['short_description'] ?? '',
+                $productData['page_title'],
+                $productData['meta_description'],
+                $productData['meta_keywords'],
             );
         }
 
@@ -243,7 +267,7 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
     /**
      * Build the placeholder map for SEO template rendering from Sphinx hotel data.
      *
-     * @param array<string, mixed> $hotel     Hotel row from sphinx_hotels table
+     * @param array<string, mixed> $hotel Hotel row from sphinx_hotels table
      * @param array<string, mixed> $hierarchy Destination hierarchy (country, region, city)
      * @return array<string, string|array<int, string>> Key => value map (keys without braces)
      */
@@ -276,27 +300,26 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
         }
 
         return [
-            'name'           => $hotel['name'] ?? '',
+            'name' => $hotel['name'] ?? '',
             'classification' => $hotel['classification'] ?? '',
-            'stars_emoji'    => fn_travel_core_build_star_emoji((int) ($hotel['classification'] ?? 0)),
-            'city'           => $cityName,
-            'country'        => $countryName,
-            'region'         => $hotel['region_name'] ?? '',
-            'property_type'  => $hotel['property_type'] ?? 'hotel',
-            'description'    => $hotel['description'] ?? '',
-            'rating'         => $hotel['rating'] ?? '',
-            'facilities'     => $facilities,
-            'boards'         => $boards,
-            'board_types'    => $boards,
-            'latitude'       => $hotel['latitude'] ?? '',
-            'longitude'      => $hotel['longitude'] ?? '',
-            'image_url'      => $hotel['image_url'] ?? '',
-            'address'        => $hotel['address'] ?? '',
-            'phone'          => $hotel['phone'] ?? '',
-            'email'          => $hotel['email'] ?? '',
-            'website'        => $hotel['website'] ?? '',
-            'year'           => date('Y'),
+            'stars_emoji' => fn_travel_core_build_star_emoji((int) ($hotel['classification'] ?? 0)),
+            'city' => $cityName,
+            'country' => $countryName,
+            'region' => $hotel['region_name'] ?? '',
+            'property_type' => $hotel['property_type'] ?? 'hotel',
+            'description' => $hotel['description'] ?? '',
+            'rating' => $hotel['rating'] ?? '',
+            'facilities' => $facilities,
+            'boards' => $boards,
+            'board_types' => $boards,
+            'latitude' => $hotel['latitude'] ?? '',
+            'longitude' => $hotel['longitude'] ?? '',
+            'image_url' => $hotel['image_url'] ?? '',
+            'address' => $hotel['address'] ?? '',
+            'phone' => $hotel['phone'] ?? '',
+            'email' => $hotel['email'] ?? '',
+            'website' => $hotel['website'] ?? '',
+            'year' => date('Y'),
         ];
     }
-
 }

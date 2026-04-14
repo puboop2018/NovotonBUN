@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays\Cron\Commands;
@@ -70,7 +71,7 @@ trait StatefulCommandTrait
 
         $wrapped = json_encode([
             '_checksum' => md5($data),
-            '_data'     => $state,
+            '_data' => $state,
         ]);
 
         $tmpPath = $path . '.tmp';

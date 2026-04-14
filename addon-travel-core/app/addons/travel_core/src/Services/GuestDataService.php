@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Tygh\Addons\TravelCore\Services;
@@ -326,7 +327,7 @@ class GuestDataService implements GuestDataServiceInterface
             }
 
             $display_name = $guest['display_name'] ?? $guest['name'] ?? '';
-            $api_name     = $guest['api_name'] ?? '';
+            $api_name = $guest['api_name'] ?? '';
 
             if (empty($display_name) && !empty($api_name)) {
                 $parts = explode(' ', trim($api_name), 2);
@@ -336,23 +337,23 @@ class GuestDataService implements GuestDataServiceInterface
             }
 
             $guest_type = $guest['type'] ?? 'adult';
-            $is_holder  = false;
+            $is_holder = false;
 
             if ($is_first && $guest_type === 'adult') {
                 $is_holder = true;
-                $is_first  = false;
+                $is_first = false;
             } elseif (!empty($holder_name) && str_contains(strtolower($display_name), strtolower($holder_name))) {
                 $is_holder = true;
             }
 
             $formatted[$key] = [
                 'display_name' => $display_name,
-                'name'         => $guest['name'] ?? $display_name,
-                'type'         => $guest_type,
-                'age'          => (int)($guest['age'] ?? 0),
-                'is_holder'    => $is_holder,
-                'birthday'     => $guest['birthday'] ?? '',
-                'room'         => $guest['room'] ?? 1,
+                'name' => $guest['name'] ?? $display_name,
+                'type' => $guest_type,
+                'age' => (int)($guest['age'] ?? 0),
+                'is_holder' => $is_holder,
+                'birthday' => $guest['birthday'] ?? '',
+                'room' => $guest['room'] ?? 1,
             ];
         }
 
@@ -371,7 +372,6 @@ class GuestDataService implements GuestDataServiceInterface
         $merged = [];
 
         foreach ($sources as $source) {
-
             foreach ($source as $key => $guest) {
                 if (!isset($merged[$key]) || empty($merged[$key]['name'])) {
                     $merged[$key] = $guest;
@@ -416,7 +416,8 @@ class GuestDataService implements GuestDataServiceInterface
                 $d = (int) $m[1];
                 $mo = (int) $m[2];
                 $y = (int) $m[3];
-                if ($d >= 1 && $d <= 31 && $mo >= 1 && $mo <= 12
+                if (
+                    $d >= 1 && $d <= 31 && $mo >= 1 && $mo <= 12
                     && $y >= $minYear && $y <= $currentYear
                     && checkdate($mo, $d, $y)
                 ) {
@@ -438,7 +439,8 @@ class GuestDataService implements GuestDataServiceInterface
             $d = (int) $guest['dob_day'];
             $mo = (int) $guest['dob_month'];
             $y = (int) $guest['dob_year'];
-            if ($d >= 1 && $d <= 31 && $mo >= 1 && $mo <= 12
+            if (
+                $d >= 1 && $d <= 31 && $mo >= 1 && $mo <= 12
                 && $y >= $minYear && $y <= $currentYear
                 && checkdate($mo, $d, $y)
             ) {
@@ -470,8 +472,8 @@ class GuestDataService implements GuestDataServiceInterface
      *   - Age calculation from DOB
      *   - Holder name resolution (prefers is_holder flag, falls back to first guest)
      *
-     * @param array<string, mixed>  $guests   Raw guests array from form
-     * @param string $checkIn  Check-in date (YYYY-MM-DD) for child age validation
+     * @param array<string, mixed> $guests Raw guests array from form
+     * @param string $checkIn Check-in date (YYYY-MM-DD) for child age validation
      * @param string $provider Provider name for log/notification messages ('novoton'|'sphinx')
      * @return array<string, mixed>|false Parsed result array or false if validation fails
      */
@@ -479,7 +481,7 @@ class GuestDataService implements GuestDataServiceInterface
     public static function parseAndValidateGuests(
         array $guests,
         string $checkIn = '',
-        string $provider = ''
+        string $provider = '',
     ): array|false {
         $guestNames = [];
         $guestsData = [];
@@ -526,8 +528,10 @@ class GuestDataService implements GuestDataServiceInterface
                                 ]);
                             }
                             $langKey = $provider . '_holidays.child_must_be_under_18';
-                            fn_set_notification('E', __('error'), __($langKey,
-                                ['[default]' => 'Child must be under 18 years old at check-in date.']));
+                            fn_set_notification('E', __('error'), __(
+                                $langKey,
+                                ['[default]' => 'Child must be under 18 years old at check-in date.'],
+                            ));
                             return false;
                         }
                     } catch (\Exception $e) {

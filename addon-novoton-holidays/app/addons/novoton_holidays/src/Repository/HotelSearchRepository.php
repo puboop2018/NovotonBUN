@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 /**
  * Novoton Holidays - Hotel Search Repository
  *
@@ -39,9 +41,9 @@ class HotelSearchRepository implements HotelSearchRepositoryInterface
     public function findAll(array $filters = [], int $limit = 0, int $offset = 0): array
     {
         $where = $this->buildWhereClause($filters);
-        $limit_clause = $limit > 0 ? db_quote(" LIMIT ?i, ?i", $offset, $limit) : '';
+        $limit_clause = $limit > 0 ? db_quote(' LIMIT ?i, ?i', $offset, $limit) : '';
 
-        return db_get_array("SELECT " . self::LISTING_COLUMNS . " FROM ?:novoton_hotels {$where} ORDER BY hotel_name {$limit_clause}");
+        return db_get_array('SELECT ' . self::LISTING_COLUMNS . " FROM ?:novoton_hotels {$where} ORDER BY hotel_name {$limit_clause}");
     }
 
     /**
@@ -52,9 +54,9 @@ class HotelSearchRepository implements HotelSearchRepositoryInterface
     public function findAllForListing(array $filters = [], int $limit = 0, int $offset = 0): array
     {
         $where = $this->buildWhereClause($filters);
-        $limit_clause = $limit > 0 ? db_quote(" LIMIT ?i, ?i", $offset, $limit) : '';
+        $limit_clause = $limit > 0 ? db_quote(' LIMIT ?i, ?i', $offset, $limit) : '';
 
-        return db_get_array("SELECT " . self::LISTING_COLUMNS . " FROM ?:novoton_hotels {$where} ORDER BY hotel_name {$limit_clause}");
+        return db_get_array('SELECT ' . self::LISTING_COLUMNS . " FROM ?:novoton_hotels {$where} ORDER BY hotel_name {$limit_clause}");
     }
 
     /**
@@ -63,7 +65,7 @@ class HotelSearchRepository implements HotelSearchRepositoryInterface
     #[\Override]
     public function findByCountry(string $country): array
     {
-        return db_get_array("SELECT " . self::LISTING_COLUMNS . " FROM ?:novoton_hotels WHERE country = ?s ORDER BY hotel_name", $country);
+        return db_get_array('SELECT ' . self::LISTING_COLUMNS . ' FROM ?:novoton_hotels WHERE country = ?s ORDER BY hotel_name', $country);
     }
 
     /**
@@ -73,8 +75,8 @@ class HotelSearchRepository implements HotelSearchRepositoryInterface
     public function findByCountryForListing(string $country): array
     {
         return db_get_array(
-            "SELECT " . self::LISTING_COLUMNS . " FROM ?:novoton_hotels WHERE country = ?s ORDER BY hotel_name",
-            $country
+            'SELECT ' . self::LISTING_COLUMNS . ' FROM ?:novoton_hotels WHERE country = ?s ORDER BY hotel_name',
+            $country,
         );
     }
 
@@ -85,9 +87,9 @@ class HotelSearchRepository implements HotelSearchRepositoryInterface
     public function findByCountryIndexed(string $country): array
     {
         return db_get_hash_array(
-            "SELECT hotel_id, hotel_name, city, product_id, has_room_price FROM ?:novoton_hotels WHERE country = ?s ORDER BY hotel_name",
+            'SELECT hotel_id, hotel_name, city, product_id, has_room_price FROM ?:novoton_hotels WHERE country = ?s ORDER BY hotel_name',
             'hotel_id',
-            $country
+            $country,
         );
     }
 
@@ -97,10 +99,10 @@ class HotelSearchRepository implements HotelSearchRepositoryInterface
     #[\Override]
     public function findByCountryWithLimit(string $country, int $limit = 0): array
     {
-        $limit_clause = $limit > 0 ? db_quote(" LIMIT ?i", $limit) : '';
+        $limit_clause = $limit > 0 ? db_quote(' LIMIT ?i', $limit) : '';
         return db_get_array(
             "SELECT hotel_id, hotel_name, city, product_id FROM ?:novoton_hotels WHERE country = ?s ORDER BY hotel_name{$limit_clause}",
-            $country
+            $country,
         );
     }
 
@@ -110,14 +112,14 @@ class HotelSearchRepository implements HotelSearchRepositoryInterface
     #[\Override]
     public function findWithoutPackages(int $limit = 0): array
     {
-        $limit_clause = $limit > 0 ? db_quote(" LIMIT ?i", $limit) : '';
+        $limit_clause = $limit > 0 ? db_quote(' LIMIT ?i', $limit) : '';
         $cols = preg_replace('/\b(\w+)\b/', 'h.$1', self::LISTING_COLUMNS);
 
         return db_get_array(
             "SELECT {$cols} FROM ?:novoton_hotels h
              LEFT JOIN ?:novoton_hotel_packages p ON h.hotel_id = p.hotel_id
              WHERE p.id IS NULL
-             ORDER BY h.hotel_name {$limit_clause}"
+             ORDER BY h.hotel_name {$limit_clause}",
         );
     }
 
@@ -128,19 +130,19 @@ class HotelSearchRepository implements HotelSearchRepositoryInterface
     #[\Override]
     public function findUnlinkedWithPrices(string $country, array $excludeResorts = [], int $limit = 0): array
     {
-        $query = "SELECT " . self::LISTING_COLUMNS . " FROM ?:novoton_hotels
+        $query = 'SELECT ' . self::LISTING_COLUMNS . " FROM ?:novoton_hotels
                   WHERE has_room_price = 'Y' AND country = ?s
                   AND (product_id IS NULL OR product_id = 0)";
         $params = [$country];
 
         if (!empty($excludeResorts)) {
-            $query .= " AND (city NOT IN (?a) OR city IS NULL)";
+            $query .= ' AND (city NOT IN (?a) OR city IS NULL)';
             $params[] = $excludeResorts;
         }
 
-        $query .= " ORDER BY hotel_name";
+        $query .= ' ORDER BY hotel_name';
         if ($limit > 0) {
-            $query .= " LIMIT ?i";
+            $query .= ' LIMIT ?i';
             $params[] = $limit;
         }
 
@@ -155,16 +157,16 @@ class HotelSearchRepository implements HotelSearchRepositoryInterface
     {
         if ($filter === 'packages') {
             return db_get_array(
-                "SELECT h.*
+                'SELECT h.*
                  FROM ?:novoton_hotels h
                  INNER JOIN ?:novoton_hotel_packages pkg ON h.hotel_id = pkg.hotel_id
                  WHERE h.country = ?s
                    AND (h.product_id IS NULL OR h.product_id = 0)
                  GROUP BY h.hotel_id
                  ORDER BY h.hotel_name
-                 LIMIT ?i",
+                 LIMIT ?i',
                 $country,
-                $limit
+                $limit,
             );
         }
 
@@ -177,7 +179,7 @@ class HotelSearchRepository implements HotelSearchRepositoryInterface
              ORDER BY h.hotel_name
              LIMIT ?i",
             $country,
-            $limit
+            $limit,
         );
     }
 
@@ -188,11 +190,11 @@ class HotelSearchRepository implements HotelSearchRepositoryInterface
     public function findNeedingPriceCheck(int $daysStale = 7, int $limit = 100): array
     {
         return db_get_array(
-            "SELECT hotel_id, hotel_name FROM ?:novoton_hotels
+            'SELECT hotel_id, hotel_name FROM ?:novoton_hotels
              WHERE (last_price_check IS NULL OR last_price_check < DATE_SUB(NOW(), INTERVAL ?i DAY))
-             LIMIT ?i",
+             LIMIT ?i',
             $daysStale,
-            $limit
+            $limit,
         );
     }
 
@@ -210,7 +212,7 @@ class HotelSearchRepository implements HotelSearchRepositoryInterface
              ORDER BY CASE WHEN last_price_check IS NULL THEN 0 ELSE 1 END, last_price_check ASC
              LIMIT ?i",
             $staleHours,
-            $limit
+            $limit,
         );
     }
 
@@ -221,12 +223,12 @@ class HotelSearchRepository implements HotelSearchRepositoryInterface
     public function findWithProductsSortedByStaleness(int $limit = 50): array
     {
         return db_get_array(
-            "SELECT hotel_id, hotel_name, product_id
+            'SELECT hotel_id, hotel_name, product_id
              FROM ?:novoton_hotels
              WHERE product_id > 0
              ORDER BY CASE WHEN last_price_check IS NULL THEN 0 ELSE 1 END, last_price_check ASC
-             LIMIT ?i",
-            $limit
+             LIMIT ?i',
+            $limit,
         );
     }
 
@@ -241,7 +243,7 @@ class HotelSearchRepository implements HotelSearchRepositoryInterface
              FROM ?:novoton_hotels
              WHERE country = ?s AND has_room_price = 'Y'
              ORDER BY city, hotel_name",
-            $country
+            $country,
         );
     }
 
@@ -256,19 +258,19 @@ class HotelSearchRepository implements HotelSearchRepositoryInterface
         $params = [$country];
 
         if ($importMode === 'new_only') {
-            $condition .= " AND (product_id IS NULL OR product_id = 0)";
+            $condition .= ' AND (product_id IS NULL OR product_id = 0)';
         }
 
         if (!empty($selectedResorts)) {
-            $condition .= " AND city IN (?a)";
+            $condition .= ' AND city IN (?a)';
             $params[] = $selectedResorts;
         }
 
-        $limit_sql = $limit > 0 ? " LIMIT " . (int)($limit) : "";
+        $limit_sql = $limit > 0 ? ' LIMIT ' . (int)($limit) : '';
 
         return db_get_array(
             "SELECT * FROM ?:novoton_hotels WHERE {$condition} ORDER BY hotel_name {$limit_sql}",
-            ...$params
+            ...$params,
         );
     }
 
@@ -281,7 +283,7 @@ class HotelSearchRepository implements HotelSearchRepositoryInterface
         return db_get_fields(
             "SELECT DISTINCT h.hotel_id FROM ?:novoton_hotels h
              INNER JOIN ?:novoton_hotel_packages p ON h.hotel_id = p.hotel_id
-             WHERE p.priceinfo_data IS NOT NULL AND p.priceinfo_data != ''"
+             WHERE p.priceinfo_data IS NOT NULL AND p.priceinfo_data != ''",
         );
     }
 
@@ -292,12 +294,13 @@ class HotelSearchRepository implements HotelSearchRepositoryInterface
     public function findLinkedForSeo(int $offset, int $batch): array
     {
         return db_get_array(
-            "SELECT hotel_id, product_id, hotel_name, city, country, region,
+            'SELECT hotel_id, product_id, hotel_name, city, country, region,
                     star_rating, hotel_type, property_type, latitude, longitude
              FROM ?:novoton_hotels
              WHERE product_id IS NOT NULL AND product_id > 0
-             LIMIT ?i, ?i",
-            $offset, $batch
+             LIMIT ?i, ?i',
+            $offset,
+            $batch,
         );
     }
 
@@ -308,13 +311,13 @@ class HotelSearchRepository implements HotelSearchRepositoryInterface
     public function findWithPriceinfoData(int $limit = 200): array
     {
         return db_get_array(
-            "SELECT DISTINCT h.hotel_id, h.hotel_name
+            'SELECT DISTINCT h.hotel_id, h.hotel_name
              FROM ?:novoton_hotels h
              INNER JOIN ?:novoton_hotel_packages p ON h.hotel_id = p.hotel_id
              WHERE p.priceinfo_data IS NOT NULL
              ORDER BY h.hotel_name
-             LIMIT ?i",
-            $limit
+             LIMIT ?i',
+            $limit,
         );
     }
 
@@ -340,34 +343,34 @@ class HotelSearchRepository implements HotelSearchRepositoryInterface
         $conditions = [];
 
         if (!empty($filters['country'])) {
-            $conditions[] = db_quote("country = ?s", $filters['country']);
+            $conditions[] = db_quote('country = ?s', $filters['country']);
         }
         if (!empty($filters['city'])) {
-            $conditions[] = db_quote("city = ?s", $filters['city']);
+            $conditions[] = db_quote('city = ?s', $filters['city']);
         }
         if (!empty($filters['resort'])) {
-            $conditions[] = db_quote("city = ?s", $filters['resort']);
+            $conditions[] = db_quote('city = ?s', $filters['resort']);
         }
         if (!empty($filters['has_room_price'])) {
-            $conditions[] = db_quote("has_room_price = ?s", $filters['has_room_price']);
+            $conditions[] = db_quote('has_room_price = ?s', $filters['has_room_price']);
         }
         if (!empty($filters['has_product'])) {
-            $conditions[] = "product_id > 0";
+            $conditions[] = 'product_id > 0';
         }
         if (!empty($filters['no_packages'])) {
-            $conditions[] = "packages_count = 0";
+            $conditions[] = 'packages_count = 0';
         }
         if (!empty($filters['has_packages'])) {
-            $conditions[] = "packages_count > 0";
+            $conditions[] = 'packages_count > 0';
         }
         if (!empty($filters['has_verified_room_price'])) {
             $conditions[] = "has_room_price = 'Y' AND last_price_check IS NOT NULL";
         }
         if (!empty($filters['stars'])) {
-            $conditions[] = db_quote("star_rating = ?i", (int) $filters['stars']);
+            $conditions[] = db_quote('star_rating = ?i', (int) $filters['stars']);
         }
         if (!empty($filters['star_rating'])) {
-            $conditions[] = db_quote("star_rating = ?i", (int) $filters['star_rating']);
+            $conditions[] = db_quote('star_rating = ?i', (int) $filters['star_rating']);
         }
 
         return !empty($conditions) ? 'WHERE ' . implode(' AND ', $conditions) : '';

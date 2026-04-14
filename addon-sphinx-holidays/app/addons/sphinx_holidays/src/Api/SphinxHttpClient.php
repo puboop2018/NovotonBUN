@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays\Api;
@@ -46,7 +47,7 @@ class SphinxHttpClient
         float $retryMultiplier = 2.0,
         int $cbThreshold = 5,
         int $cbTimeout = 60,
-        bool $debugLogging = false
+        bool $debugLogging = false,
     ) {
         $this->baseUrl = rtrim($baseUrl, '/');
         $this->apiKey = $apiKey;
@@ -62,7 +63,7 @@ class SphinxHttpClient
      * Send a GET request.
      *
      * @param string $endpoint API endpoint (e.g., '/api/v1/static/destinations')
-     * @param array<string, mixed>  $query    Query parameters
+     * @param array<string, mixed> $query Query parameters
      * @return array<string, mixed>|null Decoded JSON response or null on failure
      */
     public function get(string $endpoint, array $query = []): ?array
@@ -79,7 +80,7 @@ class SphinxHttpClient
      * Send a POST request.
      *
      * @param string $endpoint API endpoint
-     * @param array<string, mixed>  $data     Request body (will be JSON-encoded)
+     * @param array<string, mixed> $data Request body (will be JSON-encoded)
      * @return array<string, mixed>|null Decoded JSON response or null on failure
      */
     public function post(string $endpoint, array $data = []): ?array
@@ -130,11 +131,11 @@ class SphinxHttpClient
 
             $opts = [
                 CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_HTTPHEADER     => $headers,
-                CURLOPT_TIMEOUT        => self::CURL_TIMEOUT,
+                CURLOPT_HTTPHEADER => $headers,
+                CURLOPT_TIMEOUT => self::CURL_TIMEOUT,
                 CURLOPT_CONNECTTIMEOUT => self::CURL_CONNECT_TIMEOUT,
                 CURLOPT_SSL_VERIFYPEER => true,
-                CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1,
+                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
                 CURLOPT_HEADERFUNCTION => [$this, 'parseResponseHeaders'],
             ];
 
@@ -282,15 +283,39 @@ class SphinxHttpClient
         }
     }
 
-    public function getCircuitBreakerTimeout(): int { return $this->cbTimeout; }
+    public function getCircuitBreakerTimeout(): int
+    {
+        return $this->cbTimeout;
+    }
 
-    public function getLastHttpCode(): int { return $this->lastHttpCode; }
-    public function getLastError(): string { return $this->lastError; }
-    public function getLastResponseRaw(): ?string { return $this->lastResponseRaw; }
-    public function getRateLimitLimit(): ?int { return $this->rateLimitLimit; }
-    public function getRateLimitRemaining(): ?int { return $this->rateLimitRemaining; }
-    public function getRateLimitReset(): ?int { return $this->rateLimitReset; }
-    public function getRateLimitHitCount(): int { return $this->rateLimitHitCount; }
+    public function getLastHttpCode(): int
+    {
+        return $this->lastHttpCode;
+    }
+    public function getLastError(): string
+    {
+        return $this->lastError;
+    }
+    public function getLastResponseRaw(): ?string
+    {
+        return $this->lastResponseRaw;
+    }
+    public function getRateLimitLimit(): ?int
+    {
+        return $this->rateLimitLimit;
+    }
+    public function getRateLimitRemaining(): ?int
+    {
+        return $this->rateLimitRemaining;
+    }
+    public function getRateLimitReset(): ?int
+    {
+        return $this->rateLimitReset;
+    }
+    public function getRateLimitHitCount(): int
+    {
+        return $this->rateLimitHitCount;
+    }
 
     /**
      * Get full rate limit state for monitoring/logging.
@@ -299,10 +324,10 @@ class SphinxHttpClient
     public function getRateLimitState(): array
     {
         return [
-            'limit'     => $this->rateLimitLimit,
+            'limit' => $this->rateLimitLimit,
             'remaining' => $this->rateLimitRemaining,
-            'reset'     => $this->rateLimitReset,
-            'reset_in'  => $this->rateLimitReset !== null ? max(0, $this->rateLimitReset - time()) : null,
+            'reset' => $this->rateLimitReset,
+            'reset_in' => $this->rateLimitReset !== null ? max(0, $this->rateLimitReset - time()) : null,
         ];
     }
 }

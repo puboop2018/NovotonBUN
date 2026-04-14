@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays\Repository;
@@ -18,9 +19,12 @@ class PackageRouteRepository
     public function findByUniqueKey(string $transportType, int $departureId, int $arrivalId, int $duration): ?int
     {
         $id = db_get_field(
-            "SELECT route_id FROM ?:sphinx_package_routes
-             WHERE transport_type = ?s AND departure_id = ?i AND arrival_id = ?i AND duration = ?i",
-            $transportType, $departureId, $arrivalId, $duration
+            'SELECT route_id FROM ?:sphinx_package_routes
+             WHERE transport_type = ?s AND departure_id = ?i AND arrival_id = ?i AND duration = ?i',
+            $transportType,
+            $departureId,
+            $arrivalId,
+            $duration,
         );
         return ($id !== false && $id !== '') ? (int) $id : null;
     }
@@ -35,13 +39,13 @@ class PackageRouteRepository
             $row['transport_type'],
             (int) $row['departure_id'],
             (int) $row['arrival_id'],
-            (int) $row['duration']
+            (int) $row['duration'],
         );
 
         if ($existing !== null) {
-            db_query("UPDATE ?:sphinx_package_routes SET ?u WHERE route_id = ?i", $row, $existing);
+            db_query('UPDATE ?:sphinx_package_routes SET ?u WHERE route_id = ?i', $row, $existing);
         } else {
-            db_query("INSERT INTO ?:sphinx_package_routes ?e", $row);
+            db_query('INSERT INTO ?:sphinx_package_routes ?e', $row);
         }
     }
 
@@ -51,8 +55,8 @@ class PackageRouteRepository
     public function getCountryCodeForDestination(int $destinationId): string
     {
         return (string) db_get_field(
-            "SELECT country_code FROM ?:sphinx_destinations WHERE destination_id = ?i",
-            $destinationId
+            'SELECT country_code FROM ?:sphinx_destinations WHERE destination_id = ?i',
+            $destinationId,
         );
     }
 }

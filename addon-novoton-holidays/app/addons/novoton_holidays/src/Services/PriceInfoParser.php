@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 /**
  * Novoton PriceInfo Parser
  *
@@ -42,7 +44,7 @@ class PriceInfoParser
     public function __construct(
         ?callable $logger = null,
         ?HotelPackageRepositoryInterface $packageRepo = null,
-        ?HotelRepositoryInterface $hotelRepo = null
+        ?HotelRepositoryInterface $hotelRepo = null,
     ) {
         $this->logger = $logger !== null ? $logger(...) : null;
         $this->packageRepo = $packageRepo ?? new HotelPackageRepository();
@@ -54,19 +56,31 @@ class PriceInfoParser
     /**
      * @return array<string, mixed>|null
      */
-    public function getPriceinfo(): ?array { return $this->priceinfo; }
+    public function getPriceinfo(): ?array
+    {
+        return $this->priceinfo;
+    }
     /**
      * @return array<string, mixed>|null
      */
-    public function getHotelinfo(): ?array { return $this->hotelinfo; }
+    public function getHotelinfo(): ?array
+    {
+        return $this->hotelinfo;
+    }
     /**
      * @return array<string, mixed>
      */
-    public function getCodeIndex(): array { return $this->codeIndex; }
+    public function getCodeIndex(): array
+    {
+        return $this->codeIndex;
+    }
     /**
      * @return list<array<string, mixed>>
      */
-    public function getChildAgeBands(): array { return $this->childAgeBands; }
+    public function getChildAgeBands(): array
+    {
+        return $this->childAgeBands;
+    }
 
     /**
      * Set priceinfo directly (used by debug tools that bypass loadPriceInfo)
@@ -136,7 +150,9 @@ class PriceInfoParser
                 continue;
             }
             $code = PriceInfoFormatter::toScalar($row['Code'] ?? '');
-            if ($code === '') continue;
+            if ($code === '') {
+                continue;
+            }
             if (!isset($this->codeIndex[$code])) {
                 $this->codeIndex[$code] = [];
             }
@@ -191,13 +207,11 @@ class PriceInfoParser
                 'from' => $fromYear,
                 'to' => $toYear,
                 'label' => $label,
-                'id_age' => $age['IdAge'] ?? ''
+                'id_age' => $age['IdAge'] ?? '',
             ];
         }
 
-        usort($this->childAgeBands, function ($a, $b) {
-            return $a['from'] <=> $b['from'];
-        });
+        usort($this->childAgeBands, fn ($a, $b) => $a['from'] <=> $b['from']);
 
         $this->log('Parsed hotel child age bands', $this->childAgeBands);
     }
@@ -213,7 +227,7 @@ class PriceInfoParser
             'EB' => 1,
             'maxADT' => 2,
             'maxCHD' => 2,
-            'minPAX' => 1
+            'minPAX' => 1,
         ];
 
         if (empty($this->hotelinfo) || !isset($this->hotelinfo['rooms'])) {
@@ -239,7 +253,7 @@ class PriceInfoParser
                     'EB' => PriceInfoFormatter::toInt($room['ExtraBeds'] ?? $room['EB'] ?? 1),
                     'maxADT' => PriceInfoFormatter::toInt($room['maxADT'] ?? $room['MaxAdults'] ?? 2),
                     'maxCHD' => PriceInfoFormatter::toInt($room['maxCHD'] ?? $room['MaxChildren'] ?? 2),
-                    'minPAX' => PriceInfoFormatter::toInt($room['minPAX'] ?? $room['MinPax'] ?? 1)
+                    'minPAX' => PriceInfoFormatter::toInt($room['minPAX'] ?? $room['MinPax'] ?? 1),
                 ];
             }
         }
@@ -297,7 +311,7 @@ class PriceInfoParser
             'children' => [],
             'children_as_adults' => [],
             'total_rb_used' => 0,
-            'total_eb_used' => 0
+            'total_eb_used' => 0,
         ];
 
         $rbAvailable = PriceInfoFormatter::toInt($capacity['RB'] ?? 2);
@@ -311,7 +325,7 @@ class PriceInfoParser
             $this->log('Available child age bands for room', [
                 'room_id' => $roomId,
                 'board_id' => $boardId,
-                'bands' => $availableBands
+                'bands' => $availableBands,
             ]);
         }
 
@@ -325,7 +339,7 @@ class PriceInfoParser
             $this->log('Adult extra bed pricing check', [
                 'room_id' => $roomId,
                 'board_id' => $boardId,
-                'has_extra_bed_adult_pricing' => $hasExtraBedAdultPricing
+                'has_extra_bed_adult_pricing' => $hasExtraBedAdultPricing,
             ]);
         }
 
@@ -337,7 +351,7 @@ class PriceInfoParser
                     'index' => $i + 1,
                     'bed_type' => 'REGULAR',
                     'age_type' => 'ADULT ',
-                    'acc_type' => 'REGULAR'
+                    'acc_type' => 'REGULAR',
                 ];
                 $rbUsed++;
             } else {
@@ -348,7 +362,7 @@ class PriceInfoParser
                         'index' => $i + 1,
                         'bed_type' => 'EXTRA BED',
                         'age_type' => $ordinal . ' ADULT',
-                        'acc_type' => 'EXTRA BED'
+                        'acc_type' => 'EXTRA BED',
                     ];
                 } else {
                     // No separate pricing — all adults use plain "ADULT" / "REGULAR"
@@ -357,7 +371,7 @@ class PriceInfoParser
                         'index' => $i + 1,
                         'bed_type' => 'EXTRA BED',
                         'age_type' => 'ADULT ',
-                        'acc_type' => 'REGULAR'
+                        'acc_type' => 'REGULAR',
                     ];
                 }
                 $ebUsed++;
@@ -395,7 +409,7 @@ class PriceInfoParser
                 $this->log('Child reclassified as adult (no pricing for age band)', [
                     'child_age' => $age,
                     'age_band' => $ageBand,
-                    'reclassified_as' => $ordinal . ' ADULT'
+                    'reclassified_as' => $ordinal . ' ADULT',
                 ]);
 
                 if ($rbUsed < $rbAvailable) {
@@ -405,7 +419,7 @@ class PriceInfoParser
                         'age_type' => 'ADULT ',
                         'acc_type' => 'REGULAR',
                         'original_child_age' => $age,
-                        'reclassified' => true
+                        'reclassified' => true,
                     ];
                     $rbUsed++;
                 } else {
@@ -415,7 +429,7 @@ class PriceInfoParser
                         'age_type' => $ordinal . ' ADULT',
                         'acc_type' => 'EXTRA BED',
                         'original_child_age' => $age,
-                        'reclassified' => true
+                        'reclassified' => true,
                     ];
                     $ebUsed++;
                 }
@@ -436,7 +450,7 @@ class PriceInfoParser
                     'bed_type' => 'REGULAR',
                     'age_type' => $ordinal . ' CHD ' . $ageBand,
                     'acc_type' => 'REGULAR',
-                    'by_1_ad' => ($adults === 1)
+                    'by_1_ad' => ($adults === 1),
                 ];
                 $rbUsed++;
             } else {
@@ -447,7 +461,7 @@ class PriceInfoParser
                     'bed_type' => 'EXTRA BED',
                     'age_type' => $ordinal . ' CHD ' . $ageBand,
                     'acc_type' => 'EXTRA BED',
-                    'by_1_ad' => ($adults === 1)
+                    'by_1_ad' => ($adults === 1),
                 ];
                 $ebUsed++;
             }
@@ -504,8 +518,12 @@ class PriceInfoParser
             $rowRoom = PriceInfoFormatter::toScalar($row['IdRoom'] ?? '');
             $rowBoard = PriceInfoFormatter::toScalar($row['IdBoard'] ?? '');
 
-            if (!PriceInfoFormatter::matchRoom($rowRoom, $roomId)) continue;
-            if (!PriceInfoFormatter::matchBoard($rowBoard, $boardId)) continue;
+            if (!PriceInfoFormatter::matchRoom($rowRoom, $roomId)) {
+                continue;
+            }
+            if (!PriceInfoFormatter::matchBoard($rowBoard, $boardId)) {
+                continue;
+            }
 
             $rowAge = '';
             $fAgeVal = $row['fAge'] ?? null;
@@ -554,8 +572,12 @@ class PriceInfoParser
             $rowRoom = PriceInfoFormatter::toScalar($row['IdRoom'] ?? '');
             $rowBoard = PriceInfoFormatter::toScalar($row['IdBoard'] ?? '');
 
-            if (!PriceInfoFormatter::matchRoom($rowRoom, $roomId)) continue;
-            if (!PriceInfoFormatter::matchBoard($rowBoard, $boardId)) continue;
+            if (!PriceInfoFormatter::matchRoom($rowRoom, $roomId)) {
+                continue;
+            }
+            if (!PriceInfoFormatter::matchBoard($rowBoard, $boardId)) {
+                continue;
+            }
 
             $rowAge = '';
             $fAgeVal2 = $row['fAge'] ?? null;
@@ -570,8 +592,10 @@ class PriceInfoParser
             $rowAge = strtoupper(trim($rowAge));
             $rowAcc = strtoupper(trim(PriceInfoFormatter::toScalar($row['IdAcc'] ?? '')));
 
-            if (preg_match('/\d+\s*(ST|ND|RD|TH)\s*ADULT/i', $rowAge) &&
-                ($rowAcc === 'EXTRA BED' || $rowAcc === 'EB' || $rowAcc === 'EXTRABED')) {
+            if (
+                preg_match('/\d+\s*(ST|ND|RD|TH)\s*ADULT/i', $rowAge) &&
+                ($rowAcc === 'EXTRA BED' || $rowAcc === 'EB' || $rowAcc === 'EXTRABED')
+            ) {
                 return true;
             }
         }
@@ -627,7 +651,7 @@ class PriceInfoParser
 
             $result[$night] = [
                 'date' => $dateStr,
-                'season' => $seasonNum
+                'season' => $seasonNum,
             ];
         }
 

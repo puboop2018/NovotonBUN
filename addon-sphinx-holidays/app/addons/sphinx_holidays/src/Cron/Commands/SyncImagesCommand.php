@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays\Cron\Commands;
@@ -51,25 +52,25 @@ class SyncImagesCommand extends AbstractSyncCommand
         }
 
         if (empty($countryCodes)) {
-            $this->output("ERROR: No whitelisted countries configured. Configure destination whitelist or pass &country=XX.");
+            $this->output('ERROR: No whitelisted countries configured. Configure destination whitelist or pass &country=XX.');
             return [
                 'success' => false,
-                'stats'   => ['error' => 'no_whitelisted_countries'],
+                'stats' => ['error' => 'no_whitelisted_countries'],
             ];
         }
 
         $stats = [
             'hotels_processed' => 0,
-            'images_added'     => 0,
-            'hotels_skipped'   => 0,
-            'errors'           => 0,
-            'total'            => 0,
+            'images_added' => 0,
+            'hotels_skipped' => 0,
+            'errors' => 0,
+            'total' => 0,
         ];
 
         $processed = 0;
         $effectiveBatch = ($limit > 0 && $limit < $batchSize) ? $limit : $batchSize;
 
-        $this->output("Syncing images for countries: " . implode(', ', $countryCodes)
+        $this->output('Syncing images for countries: ' . implode(', ', $countryCodes)
             . ($force ? ' (FORCE: re-syncing all, including products with existing images)' : ' (skipping products with existing images)'));
 
         while (true) {
@@ -129,14 +130,14 @@ class SyncImagesCommand extends AbstractSyncCommand
 
         $durationMs = (int)(microtime(true) * 1000) - $startMs;
 
-        $this->output("Done: {$stats['hotels_processed']} hotels, {$stats['images_added']} images added, {$stats['hotels_skipped']} skipped, {$stats['errors']} errors (" . round($durationMs / 1000, 1) . "s)");
+        $this->output("Done: {$stats['hotels_processed']} hotels, {$stats['images_added']} images added, {$stats['hotels_skipped']} skipped, {$stats['errors']} errors (" . round($durationMs / 1000, 1) . 's)');
 
         return [
             'success' => true,
-            'stats'   => [
-                'total'  => $stats['total'],
+            'stats' => [
+                'total' => $stats['total'],
                 'synced' => $stats['hotels_processed'],
-                'added'  => $stats['images_added'],
+                'added' => $stats['images_added'],
                 'skipped' => $stats['hotels_skipped'],
                 'failed' => $stats['errors'],
                 'duration_ms' => $durationMs,
@@ -147,22 +148,22 @@ class SyncImagesCommand extends AbstractSyncCommand
     /**
      * Find hotels with linked products that need image sync.
      *
-     * @param string[] $countryCodes  Whitelist country codes
-     * @param int      $limit         Max rows to return
-     * @param bool     $skipExisting  If true, LEFT JOINs images_links to skip products with images
+     * @param string[] $countryCodes Whitelist country codes
+     * @param int $limit Max rows to return
+     * @param bool $skipExisting If true, LEFT JOINs images_links to skip products with images
      * @return array<string, mixed>
      */
     private function findHotels(array $countryCodes, int $limit, bool $skipExisting): array
     {
         $join = '';
-        $condition = db_quote(" AND h.country_code IN (?a)", $countryCodes);
+        $condition = db_quote(' AND h.country_code IN (?a)', $countryCodes);
 
         if ($skipExisting) {
             $join = " LEFT JOIN ?:images_links il ON il.object_id = h.product_id AND il.object_type = 'product'";
-            $condition .= " AND il.pair_id IS NULL";
+            $condition .= ' AND il.pair_id IS NULL';
         }
 
-        $limitClause = $limit > 0 ? db_quote(" LIMIT ?i", $limit) : '';
+        $limitClause = $limit > 0 ? db_quote(' LIMIT ?i', $limit) : '';
 
         return db_get_array(
             "SELECT h.hotel_id, h.product_id, h.name, h.images_json
@@ -173,8 +174,8 @@ class SyncImagesCommand extends AbstractSyncCommand
                AND h.images_json IS NOT NULL AND h.images_json != '[]'
                ?p
              ORDER BY h.country_code ASC, h.hotel_id ASC ?p",
-            $condition, $limitClause
+            $condition,
+            $limitClause,
         );
     }
-
 }

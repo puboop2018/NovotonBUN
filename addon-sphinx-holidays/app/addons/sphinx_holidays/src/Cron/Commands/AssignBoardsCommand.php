@@ -1,12 +1,13 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays\Cron\Commands;
 
-use Tygh\Registry;
 use Tygh\Addons\SphinxHolidays\Services\Container;
 use Tygh\Addons\TravelCore\Helpers\ValidationHelpers;
 use Tygh\Addons\TravelCore\Services\FeatureMapper;
+use Tygh\Registry;
 
 /**
  * Cron command: assign discovered board/meal types as CS-Cart product features.
@@ -45,13 +46,13 @@ class AssignBoardsCommand extends AbstractSyncCommand
 
     /** Default state structure */
     private const DEFAULT_STATE = [
-        'status'     => 'idle',
+        'status' => 'idle',
         'started_at' => null,
         'last_run_at' => null,
-        'total'      => 0,
-        'processed'  => 0,
-        'assigned'   => 0,
-        'errors'     => 0,
+        'total' => 0,
+        'processed' => 0,
+        'assigned' => 0,
+        'errors' => 0,
         'country_code' => '',
     ];
 
@@ -96,7 +97,7 @@ class AssignBoardsCommand extends AbstractSyncCommand
         // Check for in-progress state
         if (ValidationHelpers::toString($state['status'] ?? 'idle') === 'in_progress') {
             if ($this->isStale($state)) {
-                $this->output("Stale state detected (no activity since " . ValidationHelpers::toString($state['last_run_at'] ?? '') . "). Clearing and starting fresh.");
+                $this->output('Stale state detected (no activity since ' . ValidationHelpers::toString($state['last_run_at'] ?? '') . '). Clearing and starting fresh.');
                 $this->clearState();
                 $state = self::DEFAULT_STATE;
             } else {
@@ -123,13 +124,13 @@ class AssignBoardsCommand extends AbstractSyncCommand
 
         // Create initial state
         $state = [
-            'status'       => 'in_progress',
-            'started_at'   => date('Y-m-d H:i:s'),
-            'last_run_at'  => date('Y-m-d H:i:s'),
-            'total'        => $total,
-            'processed'    => 0,
-            'assigned'     => 0,
-            'errors'       => 0,
+            'status' => 'in_progress',
+            'started_at' => date('Y-m-d H:i:s'),
+            'last_run_at' => date('Y-m-d H:i:s'),
+            'total' => $total,
+            'processed' => 0,
+            'assigned' => 0,
+            'errors' => 0,
             'country_code' => $countryCode,
         ];
 
@@ -170,7 +171,7 @@ class AssignBoardsCommand extends AbstractSyncCommand
             $hotels = $hotelRepo->findWithBoardsAndProduct(
                 ValidationHelpers::toString($state['country_code'] ?? ''),
                 self::DEFAULT_BATCH_SIZE,
-                $offset
+                $offset,
             );
 
             if (empty($hotels)) {
@@ -235,14 +236,14 @@ class AssignBoardsCommand extends AbstractSyncCommand
         $this->output("Run again to continue ({$remaining} hotels remaining).");
 
         return [
-            'success'            => true,
-            'status'             => 'in_progress',
-            'total'              => $total,
-            'processed'          => $offset,
-            'remaining'          => $remaining,
+            'success' => true,
+            'status' => 'in_progress',
+            'total' => $total,
+            'processed' => $offset,
+            'remaining' => $remaining,
             'processed_this_run' => $processedThisRun,
-            'assigned'           => $state['assigned'],
-            'errors'             => $state['errors'],
+            'assigned' => $state['assigned'],
+            'errors' => $state['errors'],
         ];
     }
 
@@ -268,7 +269,7 @@ class AssignBoardsCommand extends AbstractSyncCommand
             $state['assigned'],
             $state['errors'],
             $durationSeconds * 1000,
-            $state['started_at']
+            $state['started_at'],
         );
 
         $this->output('');
@@ -282,11 +283,11 @@ class AssignBoardsCommand extends AbstractSyncCommand
 
         return [
             'success' => true,
-            'status'  => 'completed',
-            'stats'   => [
-                'processed'        => $state['processed'],
-                'assigned'         => $state['assigned'],
-                'errors'           => $state['errors'],
+            'status' => 'completed',
+            'stats' => [
+                'processed' => $state['processed'],
+                'assigned' => $state['assigned'],
+                'errors' => $state['errors'],
                 'duration_seconds' => $durationSeconds,
             ],
         ];
@@ -304,7 +305,7 @@ class AssignBoardsCommand extends AbstractSyncCommand
             $this->output('Board Assignment Status: idle (no assignment in progress)');
 
             $lastRun = db_get_row(
-                "SELECT * FROM ?:sphinx_sync_log WHERE sync_type = 'assign_boards' ORDER BY started_at DESC LIMIT 1"
+                "SELECT * FROM ?:sphinx_sync_log WHERE sync_type = 'assign_boards' ORDER BY started_at DESC LIMIT 1",
             );
             if (!empty($lastRun)) {
                 $this->output("  Last run: {$lastRun['started_at']} — {$lastRun['items_synced']} features assigned");
@@ -331,5 +332,4 @@ class AssignBoardsCommand extends AbstractSyncCommand
 
         return ['success' => true, 'status' => $state['status'], 'processed' => $state['processed'], 'total' => $state['total']];
     }
-
 }

@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 /**
  * Novoton API Integration - Facade
  *
@@ -26,16 +28,16 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays;
 
+use Tygh\Addons\NovotonHolidays\Api\AvailabilityApiClient;
 use Tygh\Addons\NovotonHolidays\Api\Contracts\NovotonApiKitInterface;
+use Tygh\Addons\NovotonHolidays\Api\DestinationApiClient;
 use Tygh\Addons\NovotonHolidays\Api\HotelApiClient;
 use Tygh\Addons\NovotonHolidays\Api\PricingApiClient;
-use Tygh\Addons\NovotonHolidays\Api\AvailabilityApiClient;
 use Tygh\Addons\NovotonHolidays\Api\ReservationApiClient;
-use Tygh\Addons\NovotonHolidays\Api\DestinationApiClient;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Services\Container;
-use Tygh\Addons\TravelCore\ValueObjects\RequestDebugInfo;
 use Tygh\Addons\TravelCore\Services\CommissionCalculator;
+use Tygh\Addons\TravelCore\ValueObjects\RequestDebugInfo;
 
 class NovotonApi implements NovotonApiKitInterface
 {
@@ -72,7 +74,7 @@ class NovotonApi implements NovotonApiKitInterface
         $this->xmlParser = new NovotonXmlParser();
         $this->commissionCalculator = new CommissionCalculator(
             ConfigProvider::getCommission(),
-            ConfigProvider::isRoundPrices() ? 'Y' : 'N'
+            ConfigProvider::isRoundPrices() ? 'Y' : 'N',
         );
 
         $this->enableCache = (ConfigProvider::get('enable_api_cache', 'Y') === 'Y');
@@ -96,19 +98,34 @@ class NovotonApi implements NovotonApiKitInterface
     // from the facade.
 
     #[\Override]
-    public function hotels(): HotelApiClient { return $this->lastActiveClient = $this->hotelApi; }
+    public function hotels(): HotelApiClient
+    {
+        return $this->lastActiveClient = $this->hotelApi;
+    }
 
     #[\Override]
-    public function pricing(): PricingApiClient { return $this->lastActiveClient = $this->pricingApi; }
+    public function pricing(): PricingApiClient
+    {
+        return $this->lastActiveClient = $this->pricingApi;
+    }
 
     #[\Override]
-    public function availability(): AvailabilityApiClient { return $this->lastActiveClient = $this->availabilityApi; }
+    public function availability(): AvailabilityApiClient
+    {
+        return $this->lastActiveClient = $this->availabilityApi;
+    }
 
     #[\Override]
-    public function reservations(): ReservationApiClient { return $this->lastActiveClient = $this->reservationApi; }
+    public function reservations(): ReservationApiClient
+    {
+        return $this->lastActiveClient = $this->reservationApi;
+    }
 
     #[\Override]
-    public function destinations(): DestinationApiClient { return $this->lastActiveClient = $this->destinationApi; }
+    public function destinations(): DestinationApiClient
+    {
+        return $this->lastActiveClient = $this->destinationApi;
+    }
 
     // ========== DEBUG STATE ==========
 
@@ -159,7 +176,7 @@ class NovotonApi implements NovotonApiKitInterface
     public function getLastError(): string
     {
         $error = (string) ($this->lastActiveClient->lastError ?? '');
-        $code  = (int) ($this->lastActiveClient->lastHttpCode ?? 0);
+        $code = (int) ($this->lastActiveClient->lastHttpCode ?? 0);
         if ($code !== 0 && $code !== 200) {
             $error .= " (HTTP {$code})";
         }
@@ -181,8 +198,14 @@ class NovotonApi implements NovotonApiKitInterface
     /**
      * @return array<string, mixed>
      */
-    public function getCircuitStatus(): array { return $this->httpClient->getCircuitStatus(); }
-    public function resetCircuitBreaker(): void { $this->httpClient->resetCircuitBreaker(); }
+    public function getCircuitStatus(): array
+    {
+        return $this->httpClient->getCircuitStatus();
+    }
+    public function resetCircuitBreaker(): void
+    {
+        $this->httpClient->resetCircuitBreaker();
+    }
 
     // ========== CACHE ==========
 

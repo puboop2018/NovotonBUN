@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Tygh\Addons\TravelCore\Repository;
@@ -17,8 +18,8 @@ class TravelBookingRepository implements TravelBookingRepositoryInterface
     public function getProviderInfo(int $bookingId): ?array
     {
         $row = db_get_row(
-            "SELECT provider, provider_booking_id FROM ?:travel_bookings WHERE booking_id = ?i",
-            $bookingId
+            'SELECT provider, provider_booking_id FROM ?:travel_bookings WHERE booking_id = ?i',
+            $bookingId,
         );
 
         return $row ?: null;
@@ -28,8 +29,8 @@ class TravelBookingRepository implements TravelBookingRepositoryInterface
     public function getById(int $bookingId): ?array
     {
         $row = db_get_row(
-            "SELECT * FROM ?:travel_bookings WHERE booking_id = ?i",
-            $bookingId
+            'SELECT * FROM ?:travel_bookings WHERE booking_id = ?i',
+            $bookingId,
         );
 
         return $row ?: null;
@@ -40,8 +41,8 @@ class TravelBookingRepository implements TravelBookingRepositoryInterface
     public function getPaginated(string $condition, string $sortColumn, string $sortOrder, int $offset, int $limit): array
     {
         $total = (int) db_get_field(
-            "SELECT COUNT(*) FROM ?:travel_bookings tb WHERE 1 ?p",
-            $condition
+            'SELECT COUNT(*) FROM ?:travel_bookings tb WHERE 1 ?p',
+            $condition,
         );
 
         $items = db_get_array(
@@ -49,7 +50,9 @@ class TravelBookingRepository implements TravelBookingRepositoryInterface
              WHERE 1 ?p
              ORDER BY {$sortColumn} {$sortOrder}
              LIMIT ?i, ?i",
-            $condition, $offset, $limit
+            $condition,
+            $offset,
+            $limit,
         );
 
         return ['items' => $items, 'total' => $total];

@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays\Services;
@@ -134,7 +135,9 @@ class CacheEndpointService implements CacheEndpointServiceInterface
         $deals = [];
         foreach ($items as $item) {
             $price = (float)($item['price'] ?? 0);
-            if ($price <= 0) continue;
+            if ($price <= 0) {
+                continue;
+            }
 
             $deal = [
                 'hotel_id' => $item['hotel_id'] ?? '',

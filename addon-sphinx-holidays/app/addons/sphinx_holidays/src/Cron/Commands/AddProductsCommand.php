@@ -1,10 +1,11 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays\Cron\Commands;
 
-use Tygh\Addons\SphinxHolidays\Services\Container;
 use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
+use Tygh\Addons\SphinxHolidays\Services\Container;
 use Tygh\Addons\TravelCore\Helpers\ValidationHelpers;
 use Tygh\Addons\TravelCore\Services\FeatureMapper;
 
@@ -36,15 +37,15 @@ class AddProductsCommand extends AbstractSyncCommand
     private const STATE_FILE_NAME = 'sphinx_add_products_state.json';
     private const STALE_HOURS = 6;
     private const DEFAULT_STATE = [
-        'status'          => 'idle',
-        'started_at'      => null,
-        'last_run_at'     => null,
-        'added'           => 0,
-        'skipped'         => 0,
-        'failed'          => 0,
+        'status' => 'idle',
+        'started_at' => null,
+        'last_run_at' => null,
+        'added' => 0,
+        'skipped' => 0,
+        'failed' => 0,
         'invalid_country' => 0,
-        'total'           => 0,
-        'country'         => '',
+        'total' => 0,
+        'country' => '',
     ];
 
     #[\Override]
@@ -145,7 +146,7 @@ class AddProductsCommand extends AbstractSyncCommand
         $factory->loadValidCountryCodes();
 
         if (!$destRepo->loadParentLookup()) {
-            $this->output("WARNING: sphinx_destinations is empty — run destination sync first. Category paths will use hotel fields only.");
+            $this->output('WARNING: sphinx_destinations is empty — run destination sync first. Category paths will use hotel fields only.');
         }
 
         $processed = 0;
@@ -199,13 +200,13 @@ class AddProductsCommand extends AbstractSyncCommand
                 $stateInvalidCountry = ValidationHelpers::toInt($state['invalid_country'] ?? 0);
 
                 match ($resultStatus) {
-                    'added'   => $state['added'] = $stateAdded + 1,
-                    'linked'  => $state['skipped'] = $stateSkipped + 1,
+                    'added' => $state['added'] = $stateAdded + 1,
+                    'linked' => $state['skipped'] = $stateSkipped + 1,
                     'skipped' => str_contains($resultReason, 'invalid country')
                         ? $state['invalid_country'] = $stateInvalidCountry + 1
                         : $state['failed'] = $stateFailed + 1,
-                    'failed'  => $state['failed'] = $stateFailed + 1,
-                    default   => $state['failed'] = $stateFailed + 1,
+                    'failed' => $state['failed'] = $stateFailed + 1,
+                    default => $state['failed'] = $stateFailed + 1,
                 };
             }
 
@@ -235,8 +236,8 @@ class AddProductsCommand extends AbstractSyncCommand
                 foreach ($byReason as $reason => $count) {
                     $this->output("  - {$reason}: {$count}");
                 }
-                $this->output("Run with retry_skipped=1 to make them eligible again.");
-                $this->output("  Or use: &cron_mode=add_products&retry_skipped=1");
+                $this->output('Run with retry_skipped=1 to make them eligible again.');
+                $this->output('  Or use: &cron_mode=add_products&retry_skipped=1');
             }
         }
 
@@ -248,7 +249,7 @@ class AddProductsCommand extends AbstractSyncCommand
 
         if ($finalInvalidCountry > 0) {
             $this->output("WARNING: {$finalInvalidCountry} hotels skipped — country codes not in CS-Cart. Check sync health log.");
-            $this->output("After enabling the missing countries in CS-Cart, run: cron_mode=add_products&retry_skipped=invalid_country");
+            $this->output('After enabling the missing countries in CS-Cart, run: cron_mode=add_products&retry_skipped=invalid_country');
         }
 
         $this->output("Done: {$finalAdded} added, {$finalSkipped} skipped, {$finalFailed} failed, {$finalInvalidCountry} invalid country.");
@@ -257,11 +258,11 @@ class AddProductsCommand extends AbstractSyncCommand
         $this->clearState();
 
         return ['success' => true, 'stats' => [
-            'added'           => $finalAdded,
-            'skipped'         => $finalSkipped,
-            'failed'          => $finalFailed,
+            'added' => $finalAdded,
+            'skipped' => $finalSkipped,
+            'failed' => $finalFailed,
             'invalid_country' => $finalInvalidCountry,
-            'total'           => $finalTotal,
+            'total' => $finalTotal,
         ]];
     }
 
@@ -292,16 +293,17 @@ class AddProductsCommand extends AbstractSyncCommand
 
         // 3. Show configured root category IDs
         $rootIds = [
-            'hotels'      => ConfigProvider::getHotelsCategoryId(),
-            'packages'    => ConfigProvider::getPackagesCategoryId(),
-            'circuits'    => ConfigProvider::getCircuitsCategoryId(),
+            'hotels' => ConfigProvider::getHotelsCategoryId(),
+            'packages' => ConfigProvider::getPackagesCategoryId(),
+            'circuits' => ConfigProvider::getCircuitsCategoryId(),
             'experiences' => ConfigProvider::getExperiencesCategoryId(),
         ];
         $this->output('--- Root Category IDs (from addon settings) ---');
         foreach ($rootIds as $type => $id) {
             $name = $id > 0 ? (string) db_get_field(
-                "SELECT category FROM ?:category_descriptions WHERE category_id = ?i AND lang_code = ?s",
-                $id, $cartLang
+                'SELECT category FROM ?:category_descriptions WHERE category_id = ?i AND lang_code = ?s',
+                $id,
+                $cartLang,
             ) : '(not set)';
             $status = $id > 0 ? ($name ? 'OK' : 'MISSING in DB') : 'NOT CONFIGURED';
             $this->output("  {$type}: category_id={$id} name=\"{$name}\" [{$status}]");
@@ -321,12 +323,13 @@ class AddProductsCommand extends AbstractSyncCommand
         if ($hotelRootId > 0) {
             $this->output("--- Country sub-categories under hotels root (ID={$hotelRootId}) ---");
             $subs = db_get_array(
-                "SELECT c.category_id, cd.category, c.status
+                'SELECT c.category_id, cd.category, c.status
                  FROM ?:categories c
                  JOIN ?:category_descriptions cd ON cd.category_id = c.category_id AND cd.lang_code = ?s
                  WHERE c.parent_id = ?i
-                 ORDER BY cd.category",
-                $cartLang, $hotelRootId
+                 ORDER BY cd.category',
+                $cartLang,
+                $hotelRootId,
             );
             if (empty($subs)) {
                 $this->output('  (none yet — will be created on first add_products run)');
@@ -335,7 +338,7 @@ class AddProductsCommand extends AbstractSyncCommand
                     if (!is_array($sub)) {
                         continue;
                     }
-                    $this->output("  [" . ValidationHelpers::toString($sub['category_id'] ?? '') . "] \"" . ValidationHelpers::toString($sub['category'] ?? '') . "\" status=" . ValidationHelpers::toString($sub['status'] ?? ''));
+                    $this->output('  [' . ValidationHelpers::toString($sub['category_id'] ?? '') . '] "' . ValidationHelpers::toString($sub['category'] ?? '') . '" status=' . ValidationHelpers::toString($sub['status'] ?? ''));
                 }
             }
             $this->output('');
@@ -353,7 +356,7 @@ class AddProductsCommand extends AbstractSyncCommand
                 "SELECT hotel_id, name, destination_id, country_code, country_name, region_name, destination_name, product_skip_reason
                  FROM ?:sphinx_hotels
                  WHERE product_skip_reason IS NOT NULL AND sync_status = 'active'
-                 LIMIT 3"
+                 LIMIT 3",
             );
             if (!empty($hotels)) {
                 $this->output('No unlinked hotels found, showing skipped hotels instead:');
@@ -373,12 +376,12 @@ class AddProductsCommand extends AbstractSyncCommand
             $hotelId = ValidationHelpers::toString($hotel['hotel_id'] ?? '');
             $hotelName = ValidationHelpers::toString($hotel['name'] ?? '');
             $this->output("--- Hotel [{$hotelId}] {$hotelName} ---");
-            $this->output("  country_code=" . ValidationHelpers::toString($hotel['country_code'] ?? '') . ", country_name=" . ValidationHelpers::toString($hotel['country_name'] ?? ''));
-            $this->output("  region_name=" . ValidationHelpers::toString($hotel['region_name'] ?? '') . ", destination_name=" . ValidationHelpers::toString($hotel['destination_name'] ?? ''));
+            $this->output('  country_code=' . ValidationHelpers::toString($hotel['country_code'] ?? '') . ', country_name=' . ValidationHelpers::toString($hotel['country_name'] ?? ''));
+            $this->output('  region_name=' . ValidationHelpers::toString($hotel['region_name'] ?? '') . ', destination_name=' . ValidationHelpers::toString($hotel['destination_name'] ?? ''));
             $destIdVal = ValidationHelpers::toInt($hotel['destination_id'] ?? 0);
             $this->output("  destination_id={$destIdVal}");
             if (!empty($hotel['product_skip_reason'])) {
-                $this->output("  skip_reason=" . ValidationHelpers::toString($hotel['product_skip_reason']));
+                $this->output('  skip_reason=' . ValidationHelpers::toString($hotel['product_skip_reason']));
             }
 
             // Resolve hierarchy
@@ -399,10 +402,12 @@ class AddProductsCommand extends AbstractSyncCommand
             // Check if country sub-category exists under root
             if ($hotelRootId > 0) {
                 $countryCatId = ValidationHelpers::toInt(db_get_field(
-                    "SELECT c.category_id FROM ?:categories c
+                    'SELECT c.category_id FROM ?:categories c
                      JOIN ?:category_descriptions cd ON cd.category_id = c.category_id AND cd.lang_code = ?s
-                     WHERE c.parent_id = ?i AND cd.category = ?s LIMIT 1",
-                    $cartLang, $hotelRootId, $countryName
+                     WHERE c.parent_id = ?i AND cd.category = ?s LIMIT 1',
+                    $cartLang,
+                    $hotelRootId,
+                    $countryName,
                 ));
                 if ($countryCatId > 0) {
                     $this->output("  category: root({$hotelRootId}) -> \"{$countryName}\"({$countryCatId}) => FOUND");
@@ -411,7 +416,7 @@ class AddProductsCommand extends AbstractSyncCommand
                 }
             }
 
-            $this->output("  region -> product feature: \"" . ValidationHelpers::toString($hotel['region_name'] ?? '') . "\"");
+            $this->output('  region -> product feature: "' . ValidationHelpers::toString($hotel['region_name'] ?? '') . '"');
             $this->output("  city -> product feature: \"{$hotel['destination_name']}\"");
             $this->output('');
         }
@@ -435,7 +440,7 @@ class AddProductsCommand extends AbstractSyncCommand
             // Show unlinked count
             $hotelRepo = Container::getHotelRepository();
             $unlinkedCount = ValidationHelpers::toInt(db_get_field(
-                "SELECT COUNT(*) FROM ?:sphinx_hotels WHERE product_id IS NULL AND sync_status = 'active' AND product_skip_reason IS NULL"
+                "SELECT COUNT(*) FROM ?:sphinx_hotels WHERE product_id IS NULL AND sync_status = 'active' AND product_skip_reason IS NULL",
             ));
             $this->output("  Unlinked hotels ready: {$unlinkedCount}");
 
@@ -453,17 +458,17 @@ class AddProductsCommand extends AbstractSyncCommand
 
         $this->output('Add Products Status:');
         $this->output("  Status: {$stateStatus}");
-        $this->output("  Total processed: " . ValidationHelpers::toInt($state['total'] ?? 0));
-        $this->output("  Added: " . ValidationHelpers::toInt($state['added'] ?? 0));
-        $this->output("  Skipped: " . ValidationHelpers::toInt($state['skipped'] ?? 0));
-        $this->output("  Failed: " . ValidationHelpers::toInt($state['failed'] ?? 0));
-        $this->output("  Invalid country: " . ValidationHelpers::toInt($state['invalid_country'] ?? 0));
+        $this->output('  Total processed: ' . ValidationHelpers::toInt($state['total'] ?? 0));
+        $this->output('  Added: ' . ValidationHelpers::toInt($state['added'] ?? 0));
+        $this->output('  Skipped: ' . ValidationHelpers::toInt($state['skipped'] ?? 0));
+        $this->output('  Failed: ' . ValidationHelpers::toInt($state['failed'] ?? 0));
+        $this->output('  Invalid country: ' . ValidationHelpers::toInt($state['invalid_country'] ?? 0));
         $stateCountry = ValidationHelpers::toString($state['country'] ?? '');
         if ($stateCountry !== '') {
             $this->output("  Country filter: {$stateCountry}");
         }
-        $this->output("  Started: " . ValidationHelpers::toString($state['started_at'] ?? ''));
-        $this->output("  Last activity: " . ValidationHelpers::toString($state['last_run_at'] ?? ''));
+        $this->output('  Started: ' . ValidationHelpers::toString($state['started_at'] ?? ''));
+        $this->output('  Last activity: ' . ValidationHelpers::toString($state['last_run_at'] ?? ''));
 
         if ($this->isStale($state)) {
             $this->output('  WARNING: State appears stale (no activity for 6+ hours). Run with reset=1 to clear.');
@@ -476,8 +481,8 @@ class AddProductsCommand extends AbstractSyncCommand
 
         return ['success' => true, 'stats' => [
             'status' => $state['status'],
-            'total'  => $state['total'],
-            'added'  => $state['added'],
+            'total' => $state['total'],
+            'added' => $state['added'],
             'failed' => $state['failed'],
         ]];
     }
@@ -494,7 +499,7 @@ class AddProductsCommand extends AbstractSyncCommand
              FROM ?:sphinx_hotels
              WHERE product_skip_reason IS NOT NULL AND sync_status = 'active'
              GROUP BY product_skip_reason
-             ORDER BY cnt DESC"
+             ORDER BY cnt DESC",
         );
 
         $result = [];

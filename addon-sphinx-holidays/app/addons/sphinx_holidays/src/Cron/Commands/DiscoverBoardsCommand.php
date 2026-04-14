@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays\Cron\Commands;
@@ -56,17 +57,17 @@ class DiscoverBoardsCommand extends AbstractSyncCommand
 
     /** Default state structure */
     private const DEFAULT_STATE = [
-        'status'          => 'idle',
-        'started_at'      => null,
-        'last_run_at'     => null,
-        'total'           => 0,
-        'processed'       => 0,
+        'status' => 'idle',
+        'started_at' => null,
+        'last_run_at' => null,
+        'total' => 0,
+        'processed' => 0,
         'destination_ids' => [],
-        'hotels_updated'  => 0,
-        'offers_found'    => 0,
-        'search_errors'   => 0,
-        'boards_found'    => [],
-        'country_codes'   => [],
+        'hotels_updated' => 0,
+        'offers_found' => 0,
+        'search_errors' => 0,
+        'boards_found' => [],
+        'country_codes' => [],
     ];
 
     #[\Override]
@@ -101,7 +102,7 @@ class DiscoverBoardsCommand extends AbstractSyncCommand
         $stateStatus = ValidationHelpers::toString($state['status'] ?? 'idle');
         if ($stateStatus === 'in_progress') {
             if ($this->isStale($state)) {
-                $this->output("Stale state detected (no activity since " . ValidationHelpers::toString($state['last_run_at'] ?? '') . "). Clearing and starting fresh.");
+                $this->output('Stale state detected (no activity since ' . ValidationHelpers::toString($state['last_run_at'] ?? '') . '). Clearing and starting fresh.');
                 $this->clearState();
                 $state = self::DEFAULT_STATE;
             } else {
@@ -131,17 +132,17 @@ class DiscoverBoardsCommand extends AbstractSyncCommand
 
         // Create initial state
         $state = [
-            'status'          => 'in_progress',
-            'started_at'      => date('Y-m-d H:i:s'),
-            'last_run_at'     => date('Y-m-d H:i:s'),
-            'total'           => count($destinationIds),
-            'processed'       => 0,
+            'status' => 'in_progress',
+            'started_at' => date('Y-m-d H:i:s'),
+            'last_run_at' => date('Y-m-d H:i:s'),
+            'total' => count($destinationIds),
+            'processed' => 0,
             'destination_ids' => array_values($destinationIds),
-            'hotels_updated'  => 0,
-            'offers_found'    => 0,
-            'search_errors'   => 0,
-            'boards_found'    => [],
-            'country_codes'   => $countryCodes,
+            'hotels_updated' => 0,
+            'offers_found' => 0,
+            'search_errors' => 0,
+            'boards_found' => [],
+            'country_codes' => $countryCodes,
         ];
 
         $this->saveState($state);
@@ -191,10 +192,10 @@ class DiscoverBoardsCommand extends AbstractSyncCommand
             // Initiate search for this destination
             $searchResponse = $api->searchHotels([
                 'destination_id' => $destId,
-                'check_in'       => $checkIn,
-                'check_out'      => $checkOut,
-                'occupancy'      => [['adults' => self::SEARCH_ADULTS, 'children_ages' => []]],
-                'currency'       => $currency,
+                'check_in' => $checkIn,
+                'check_out' => $checkOut,
+                'occupancy' => [['adults' => self::SEARCH_ADULTS, 'children_ages' => []]],
+                'currency' => $currency,
             ]);
 
             if ($searchResponse === null) {
@@ -227,7 +228,7 @@ class DiscoverBoardsCommand extends AbstractSyncCommand
             $destOffers = $this->pollResults($api, $cursor);
 
             if ($debug) {
-                $this->output("  [DEBUG] dest={$destId}: search returned " . count($destOffers) . " offers");
+                $this->output("  [DEBUG] dest={$destId}: search returned " . count($destOffers) . ' offers');
             }
 
             if (!empty($destOffers)) {
@@ -237,12 +238,12 @@ class DiscoverBoardsCommand extends AbstractSyncCommand
                 $knownHotels = $hotelRepo->getHotelIdsByDestination((int) $destId);
 
                 if ($debug) {
-                    $this->output("  [DEBUG] dest={$destId}: " . count($knownHotels) . " known hotels in DB");
+                    $this->output("  [DEBUG] dest={$destId}: " . count($knownHotels) . ' known hotels in DB');
                     // Show first 3 offer hotel_ids vs first 3 known hotel_ids for comparison
                     $offerIds = array_unique(array_slice(array_column($destOffers, 'hotel_id'), 0, 5));
                     $knownIds = array_slice(array_keys($knownHotels), 0, 5);
-                    $this->output("  [DEBUG] API offer hotel_ids (sample): " . json_encode($offerIds) . " (types: " . implode(',', array_map('gettype', $offerIds)) . ")");
-                    $this->output("  [DEBUG] DB known hotel_ids (sample): " . json_encode($knownIds) . " (types: " . implode(',', array_map('gettype', $knownIds)) . ")");
+                    $this->output('  [DEBUG] API offer hotel_ids (sample): ' . json_encode($offerIds) . ' (types: ' . implode(',', array_map('gettype', $offerIds)) . ')');
+                    $this->output('  [DEBUG] DB known hotel_ids (sample): ' . json_encode($knownIds) . ' (types: ' . implode(',', array_map('gettype', $knownIds)) . ')');
                 }
 
                 // Extract and normalize boards, then update DB immediately per destination
@@ -257,7 +258,11 @@ class DiscoverBoardsCommand extends AbstractSyncCommand
                     }
                     $hotelId = ValidationHelpers::toString($offer['hotel_id'] ?? '');
                     if ($hotelId === '' || !isset($knownHotels[$hotelId])) {
-                        if ($hotelId === '') { $debugSkipNoId++; } else { $debugSkipUnknown++; }
+                        if ($hotelId === '') {
+                            $debugSkipNoId++;
+                        } else {
+                            $debugSkipUnknown++;
+                        }
                         continue;
                     }
 
@@ -330,13 +335,13 @@ class DiscoverBoardsCommand extends AbstractSyncCommand
         $this->output("Run again to continue ({$remaining} destinations remaining).");
 
         return [
-            'success'                    => true,
-            'status'                     => 'in_progress',
-            'total'                      => $total,
-            'processed'                  => $offset,
-            'remaining'                  => $remaining,
-            'processed_this_run'         => $processedThisRun,
-            'hotels_updated'             => $state['hotels_updated'],
+            'success' => true,
+            'status' => 'in_progress',
+            'total' => $total,
+            'processed' => $offset,
+            'remaining' => $remaining,
+            'processed_this_run' => $processedThisRun,
+            'hotels_updated' => $state['hotels_updated'],
         ];
     }
 
@@ -366,7 +371,7 @@ class DiscoverBoardsCommand extends AbstractSyncCommand
             $sHotelsUpdated,
             $sSearchErrors,
             $durationSeconds * 1000,
-            $startedAt
+            $startedAt,
         );
 
         // Summary output
@@ -383,7 +388,7 @@ class DiscoverBoardsCommand extends AbstractSyncCommand
             arsort($boardsFound);
             $this->output('  Board distribution:');
             foreach ($boardsFound as $code => $count) {
-                $this->output("    " . (string) $code . ": " . ValidationHelpers::toInt($count) . " offers");
+                $this->output('    ' . (string) $code . ': ' . ValidationHelpers::toInt($count) . ' offers');
             }
         }
 
@@ -403,14 +408,14 @@ class DiscoverBoardsCommand extends AbstractSyncCommand
 
         return [
             'success' => true,
-            'status'  => 'completed',
-            'stats'   => [
+            'status' => 'completed',
+            'stats' => [
                 'destinations_total' => $sTotal,
-                'hotels_updated'     => $sHotelsUpdated,
-                'offers_found'       => $sOffersFound,
-                'search_errors'      => $sSearchErrors,
-                'boards_found'       => $boardsFound,
-                'duration_seconds'   => $durationSeconds,
+                'hotels_updated' => $sHotelsUpdated,
+                'offers_found' => $sOffersFound,
+                'search_errors' => $sSearchErrors,
+                'boards_found' => $boardsFound,
+                'duration_seconds' => $durationSeconds,
             ],
         ];
     }
@@ -428,7 +433,7 @@ class DiscoverBoardsCommand extends AbstractSyncCommand
 
             // Check last completed run from sphinx_sync_log
             $lastRun = db_get_row(
-                "SELECT * FROM ?:sphinx_sync_log WHERE sync_type = 'discover_boards' ORDER BY started_at DESC LIMIT 1"
+                "SELECT * FROM ?:sphinx_sync_log WHERE sync_type = 'discover_boards' ORDER BY started_at DESC LIMIT 1",
             );
             if (!empty($lastRun)) {
                 $this->output("  Last run: {$lastRun['started_at']} — {$lastRun['items_synced']} hotels updated");
@@ -447,7 +452,7 @@ class DiscoverBoardsCommand extends AbstractSyncCommand
         $this->output("  Hotels updated: {$state['hotels_updated']}");
         $this->output("  Offers found: {$state['offers_found']}");
         $this->output("  Search errors: {$state['search_errors']}");
-        $this->output("  Countries: " . implode(', ', $state['country_codes'] ?? []));
+        $this->output('  Countries: ' . implode(', ', $state['country_codes'] ?? []));
         $this->output("  Started: {$state['started_at']}");
         $this->output("  Last activity: {$state['last_run_at']}");
 
@@ -523,12 +528,9 @@ class DiscoverBoardsCommand extends AbstractSyncCommand
     private function resolveCountryCodes(array $params): array
     {
         if (!empty($params['country'])) {
-            return array_values(array_filter(array_map(function ($c) {
-                return strtoupper(trim($c));
-            }, explode(',', $params['country']))));
+            return array_values(array_filter(array_map(fn ($c) => strtoupper(trim($c)), explode(',', $params['country']))));
         }
 
         return array_values(ConfigProvider::getSelectedCountryCodes());
     }
-
 }

@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 /**
  * Sync Logger Interface
  *
@@ -15,16 +17,11 @@ interface SyncLoggerInterface
 {
     /**
      * Set output callback for custom output handling.
-     *
-     * @param callable $callback
      */
     public function setOutputCallback(callable $callback): void;
 
     /**
      * Output a message to console/callback.
-     *
-     * @param string $message
-     * @param bool   $newline
      */
     public function output(string $message, bool $newline = true): void;
 
@@ -42,10 +39,6 @@ interface SyncLoggerInterface
 
     /**
      * Output progress indicator.
-     *
-     * @param int    $current
-     * @param int    $total
-     * @param string $prefix
      */
     public function outputProgress(int $current, int $total, string $prefix = ''): void;
 
@@ -58,17 +51,13 @@ interface SyncLoggerInterface
 
     /**
      * Increment a statistic counter.
-     *
-     * @param string $key
-     * @param int    $amount
      */
     public function increment(string $key, int $amount = 1): void;
 
     /**
      * Set a statistic value.
      *
-     * @param string $key
-     * @param mixed  $value
+     * @param mixed $value
      */
     public function setStat(string $key, $value): void;
 
@@ -81,22 +70,16 @@ interface SyncLoggerInterface
 
     /**
      * Get elapsed time in seconds.
-     *
-     * @return float
      */
     public function getElapsedTime(): float;
 
     /**
      * Get formatted duration string.
-     *
-     * @return string
      */
     public function getFormattedDuration(): string;
 
     /**
      * Get formatted current datetime.
-     *
-     * @return string
      */
     public function getFormattedDateTime(): string;
 
@@ -104,7 +87,7 @@ interface SyncLoggerInterface
      * Log to database sync_log table.
      *
      * @param string|null $status Status: 'completed', 'failed', 'in_progress'
-     * @param array<string, mixed>       $extra  Additional data
+     * @param array<string, mixed> $extra Additional data
      * @return int|false Log ID or false on failure
      */
     public function logToDatabase(?string $status = 'completed', array $extra = []): int|false;
@@ -112,26 +95,21 @@ interface SyncLoggerInterface
     /**
      * Send email report.
      *
-     * @param array<string, mixed>  $results Detailed results for CSV attachment
-     * @param string $country
-     * @return bool
+     * @param array<string, mixed> $results Detailed results for CSV attachment
      */
     public function sendEmailReport(array $results = [], string $country = ''): bool;
 
     /**
      * Log event using CS-Cart's fn_log_event.
      *
-     * @param string $action
-     * @param array<string, mixed>  $context
+     * @param array<string, mixed> $context
      */
     public function logEvent(string $action, array $context = []): void;
 
     /**
      * Complete sync: log to database and optionally send email.
      *
-     * @param bool   $sendEmail
-     * @param string $country
-     * @param array<string, mixed>  $extra
+     * @param array<string, mixed> $extra
      * @return array<string, mixed> Result with log_id and email_sent
      */
     public function complete(bool $sendEmail = true, string $country = '', array $extra = []): array;
@@ -152,7 +130,6 @@ interface SyncLoggerInterface
      * Get type label for display.
      *
      * @param string|null $type Sync type (uses current if not provided)
-     * @return string
      */
     public static function getTypeLabel(?string $type = null): string;
 }

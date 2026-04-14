@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 /**
  * HTTP Client Interface
  *
@@ -16,15 +18,11 @@ interface HttpClientInterface
 {
     /**
      * Get API username for XML request building.
-     *
-     * @return string
      */
     public function getApiUser(): string;
 
     /**
      * Get API password for XML request building.
-     *
-     * @return string
      */
     public function getApiPassword(): string;
 
@@ -32,8 +30,8 @@ interface HttpClientInterface
      * Send POST request to Novoton API with retry and circuit breaker.
      *
      * @param string $function API function name
-     * @param string $xml      XML request body
-     * @param string $lang     Language code
+     * @param string $xml XML request body
+     * @param string $lang Language code
      * @return string Raw response body
      * @throws \Tygh\Addons\NovotonHolidays\Exceptions\ApiException
      */
@@ -42,16 +40,14 @@ interface HttpClientInterface
     /**
      * Send multiple requests in parallel using curl_multi.
      *
-     * @param array<string, mixed> $requests    Keyed array: key => ['function' => ..., 'xml' => ..., 'lang' => ...]
-     * @param int   $concurrency Max simultaneous requests
+     * @param array<string, mixed> $requests Keyed array: key => ['function' => ..., 'xml' => ..., 'lang' => ...]
+     * @param int $concurrency Max simultaneous requests
      * @return array<string, mixed> key => raw response string or false
      */
     public function sendBatchRequests(array $requests, int $concurrency = 5): array;
 
     /**
      * Check if circuit breaker allows requests.
-     *
-     * @return bool
      */
     public function isCircuitClosed(): bool;
 

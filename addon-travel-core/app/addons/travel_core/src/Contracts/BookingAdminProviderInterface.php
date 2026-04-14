@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Tygh\Addons\TravelCore\Contracts;
@@ -56,8 +57,8 @@ interface BookingAdminProviderInterface
      * The unified controller delegates unknown POST modes to the provider's
      * handleAction() method. Returns a redirect target or result array.
      *
-     * @param string $action  The action name (e.g. 'request_alternatives', 'cleanup_orphans')
-     * @param array<string, mixed>  $request The $_REQUEST data
+     * @param string $action The action name (e.g. 'request_alternatives', 'cleanup_orphans')
+     * @param array<string, mixed> $request The $_REQUEST data
      * @return array{redirect: string, notification?: array{type: string, title: string, message: string}}
      */
     public function handleAction(string $action, array $request): array;

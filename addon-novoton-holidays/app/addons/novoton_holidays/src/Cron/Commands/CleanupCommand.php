@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 namespace Tygh\Addons\NovotonHolidays\Cron\Commands;
 
 use Tygh\Addons\NovotonHolidays\Cron\AbstractCronCommand;
@@ -25,34 +27,34 @@ class CleanupCommand extends AbstractCronCommand
      */
     public function execute(): array
     {
-        $this->output("=== NOVOTON CLEANUP ===");
-        $this->output("");
+        $this->output('=== NOVOTON CLEANUP ===');
+        $this->output('');
 
         // 1. Clean orphan bookings (no order_id, older than 48h)
-        $this->output("1. Cleaning orphan bookings...");
+        $this->output('1. Cleaning orphan bookings...');
         $bookingRepo = Container::getInstance()->bookingRepository();
         $orphan_count = $bookingRepo->countOrphans(48);
         $bookingRepo->deleteOrphans(48);
         $this->output("   Orphan bookings deleted: {$orphan_count}");
-        $this->output("");
+        $this->output('');
 
         // 2. Clean old sync logs (keep last 100)
-        $this->output("2. Cleaning old sync logs...");
+        $this->output('2. Cleaning old sync logs...');
         $syncRepo = Container::getInstance()->syncLogRepository();
         $total_logs = $syncRepo->count();
         $logs_to_keep = 100;
         $logs_deleted = $syncRepo->trimToLatest($logs_to_keep);
         $this->output("   Total: {$total_logs}, Kept: {$logs_to_keep}, Deleted: {$logs_deleted}");
-        $this->output("");
+        $this->output('');
 
         // 3. Clean expired cache entries
-        $this->output("3. Cleaning expired cache...");
+        $this->output('3. Cleaning expired cache...');
         $expired_count = (int)db_get_field(
-            "SELECT COUNT(*) FROM ?:novoton_cache WHERE expires_at < NOW()"
+            'SELECT COUNT(*) FROM ?:novoton_cache WHERE expires_at < NOW()',
         );
-        db_query("DELETE FROM ?:novoton_cache WHERE expires_at < NOW()");
+        db_query('DELETE FROM ?:novoton_cache WHERE expires_at < NOW()');
         $this->output("   Expired cache entries deleted: {$expired_count}");
-        $this->output("");
+        $this->output('');
 
         $stats = [
             'orphans_deleted' => $orphan_count,

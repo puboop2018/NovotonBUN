@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 /**
  * Prepares the complete set of Smarty template variables for the search page.
  *
@@ -14,7 +16,6 @@ declare(strict_types=1);
 namespace Tygh\Addons\NovotonHolidays\Services;
 
 use Tygh\Addons\TravelCore\Services\CurrencyService;
-use Tygh\Addons\NovotonHolidays\Services\TermsFormatter;
 use Tygh\Registry;
 use Tygh\Tygh;
 
@@ -23,12 +24,12 @@ class SearchResultFormatter implements SearchResultFormatterInterface
     /**
      * Assign all search-result template variables.
      *
-     * @param list<array<string, mixed>> $results        Primary result rows
-     * @param array<string, mixed> $novotonParams  Template params (from normalizer)
-     * @param array<string, mixed> $searchResult   Output from HotelAvailabilitySearcher::search()
-     * @param array<string, mixed> $altResult      Output from AlternativeDateSearcher::search()
-     * @param array<string, mixed> $searchParams   Raw (sanitized) request params
-     * @param array<string, mixed> $debugLog       Debug lines (empty when debug is off)
+     * @param list<array<string, mixed>> $results Primary result rows
+     * @param array<string, mixed> $novotonParams Template params (from normalizer)
+     * @param array<string, mixed> $searchResult Output from HotelAvailabilitySearcher::search()
+     * @param array<string, mixed> $altResult Output from AlternativeDateSearcher::search()
+     * @param array<string, mixed> $searchParams Raw (sanitized) request params
+     * @param array<string, mixed> $debugLog Debug lines (empty when debug is off)
      */
     #[\Override]
     public function assignToView(
@@ -37,7 +38,7 @@ class SearchResultFormatter implements SearchResultFormatterInterface
         array $searchResult,
         array $altResult,
         array $searchParams,
-        array $debugLog
+        array $debugLog,
     ): void {
         /** @var \Smarty $view */
         $view = Tygh::$app['view'];
@@ -71,12 +72,13 @@ class SearchResultFormatter implements SearchResultFormatterInterface
         $view->assign('alternative_check_out', $altResult['check_out'] ?? '');
         $view->assign('no_availability_message', $noAvailability);
         $view->assign('flex_days', $novotonParams['flex_days'] ?? 0);
-        $view->assign('flex_dates_searched',
-            (($novotonParams['flex_days'] ?? 0) > 0 && !empty($altResult['check_in']))
+        $view->assign(
+            'flex_dates_searched',
+            (($novotonParams['flex_days'] ?? 0) > 0 && !empty($altResult['check_in'])),
         );
 
         // ── Hotel display info ───────────────────────────────────────
-        $hotelId   = PriceInfoFormatter::toScalar($novotonParams['hotel_id'] ?? '');
+        $hotelId = PriceInfoFormatter::toScalar($novotonParams['hotel_id'] ?? '');
         $productId = PriceInfoFormatter::toInt($novotonParams['product_id'] ?? 0);
         $this->assignHotelDisplay($view, $hotelId, $productId);
 
@@ -86,8 +88,7 @@ class SearchResultFormatter implements SearchResultFormatterInterface
         // ── Hotel URL ────────────────────────────────────────────────
         $view->assign('hotel_url', !empty($productId)
             ? fn_url('products.view?product_id=' . $productId)
-            : ''
-        );
+            : '');
 
         // ── Calendar prices (for datepicker in search form) ─────────
         $this->assignCalendarPrices($view, $hotelId);
@@ -109,7 +110,7 @@ class SearchResultFormatter implements SearchResultFormatterInterface
     public function assignDefaults(?string $warningLangKey = null): void
     {
         /** @var \Smarty $view */
-        $view      = Tygh::$app['view'];
+        $view = Tygh::$app['view'];
         $pageTitle = __('novoton_holidays.search_results') ?: 'Search Results';
 
         $view->assign('novoton_results', []);
@@ -141,8 +142,10 @@ class SearchResultFormatter implements SearchResultFormatterInterface
         $this->assignMeta($view);
 
         if ($warningLangKey) {
-            fn_set_notification('W', __('warning'),
-                __($warningLangKey) ?: 'Please fill in required search fields'
+            fn_set_notification(
+                'W',
+                __('warning'),
+                __($warningLangKey) ?: 'Please fill in required search fields',
             );
         }
     }
@@ -154,10 +157,10 @@ class SearchResultFormatter implements SearchResultFormatterInterface
     /** @param \Smarty $view */
     private function assignCurrency($view): void
     {
-        $currency    = defined('CART_SECONDARY_CURRENCY') ? CART_SECONDARY_CURRENCY : 'EUR';
-        $currencies  = Registry::get('currencies');
+        $currency = defined('CART_SECONDARY_CURRENCY') ? CART_SECONDARY_CURRENCY : 'EUR';
+        $currencies = Registry::get('currencies');
         $coefficient = (float) ($currencies[$currency]['coefficient'] ?? 1.0);
-        $symbol      = $currencies[$currency]['symbol'] ?? $currency;
+        $symbol = $currencies[$currency]['symbol'] ?? $currency;
 
         $view->assign('novoton_display_currency', $currency);
         $view->assign('novoton_display_coefficient', $coefficient);
@@ -168,9 +171,9 @@ class SearchResultFormatter implements SearchResultFormatterInterface
     /** @param \Smarty $view */
     private function assignHotelDisplay($view, string $hotelId, int $productId): void
     {
-        $hotelName    = '';
-        $hotelCity    = '';
-        $hotelRegion  = '';
+        $hotelName = '';
+        $hotelCity = '';
+        $hotelRegion = '';
         $hotelCountry = '';
 
         if (!empty($hotelId)) {
@@ -178,14 +181,14 @@ class SearchResultFormatter implements SearchResultFormatterInterface
             $hotelInfo = $hotelRepo->findBasicById($hotelId);
 
             if ($hotelInfo) {
-                $hotelName    = $hotelInfo['hotel_name'] ?? '';
-                $hotelCity    = $hotelInfo['city'] ?? '';
-                $hotelRegion  = $hotelInfo['region'] ?? '';
+                $hotelName = $hotelInfo['hotel_name'] ?? '';
+                $hotelCity = $hotelInfo['city'] ?? '';
+                $hotelRegion = $hotelInfo['region'] ?? '';
                 $hotelCountry = $hotelInfo['country'] ?? '';
 
                 // Fetch packages once, reuse across sub-methods
                 $packageRepo = Container::getInstance()->hotelPackageRepository();
-                $packages    = $packageRepo->findByHotelIdFull($hotelId);
+                $packages = $packageRepo->findByHotelIdFull($hotelId);
 
                 $this->assignPackages($view, $packages);
                 $this->assignActiveEarlyBooking($view, $packages);
@@ -195,16 +198,17 @@ class SearchResultFormatter implements SearchResultFormatterInterface
             }
 
             // Room-level facilities
-            $lang_code       = CART_LANGUAGE;
-            $roomFacilities  = fn_novoton_holidays_get_hotel_facilities_by_type($hotelId, \Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_ROOM_FACILITY, $lang_code);
+            $lang_code = CART_LANGUAGE;
+            $roomFacilities = fn_novoton_holidays_get_hotel_facilities_by_type($hotelId, \Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_ROOM_FACILITY, $lang_code);
             $view->assign('novoton_room_facilities', $roomFacilities);
         }
 
         // Fallback: product name
         if (empty($hotelName) && !empty($productId)) {
             $hotelName = (string) db_get_field(
-                "SELECT product FROM ?:product_descriptions WHERE product_id = ?i AND lang_code = ?s",
-                $productId, CART_LANGUAGE
+                'SELECT product FROM ?:product_descriptions WHERE product_id = ?i AND lang_code = ?s',
+                $productId,
+                CART_LANGUAGE,
             );
         }
         if (empty($hotelName)) {
@@ -253,7 +257,7 @@ class SearchResultFormatter implements SearchResultFormatterInterface
     private function assignActiveEarlyBooking($view, array $packages): void
     {
         $currentDate = date('Y-m-d');
-        $activeEb    = null;
+        $activeEb = null;
 
         foreach ($packages as $pkg) {
             if (($pkg['has_early_booking'] ?? 'N') !== 'Y' || empty($pkg['priceinfo_data'])) {
@@ -278,18 +282,18 @@ class SearchResultFormatter implements SearchResultFormatterInterface
                     continue;
                 }
                 $bookFrom = PriceInfoFormatter::toScalar($eb['BookFrom'] ?? '');
-                $bookTo   = PriceInfoFormatter::toScalar($eb['BookTo'] ?? '');
+                $bookTo = PriceInfoFormatter::toScalar($eb['BookTo'] ?? '');
                 if ($bookFrom <= $currentDate && $bookTo >= $currentDate) {
                     $activeEb = [
-                        'reduction'       => $eb['Reduction'] ?? 0,
-                        'booking_from'    => $bookFrom,
-                        'booking_to'      => $bookTo,
-                        'stay_from'       => PriceInfoFormatter::toScalar($eb['StayFrom'] ?? ''),
-                        'stay_to'         => PriceInfoFormatter::toScalar($eb['StayTo'] ?? ''),
-                        'payment_date'    => PriceInfoFormatter::toScalar($eb['PaymentDate'] ?? ''),
+                        'reduction' => $eb['Reduction'] ?? 0,
+                        'booking_from' => $bookFrom,
+                        'booking_to' => $bookTo,
+                        'stay_from' => PriceInfoFormatter::toScalar($eb['StayFrom'] ?? ''),
+                        'stay_to' => PriceInfoFormatter::toScalar($eb['StayTo'] ?? ''),
+                        'payment_date' => PriceInfoFormatter::toScalar($eb['PaymentDate'] ?? ''),
                         'payment_percent' => $eb['PaymentPercent'] ?? 0,
-                        'room_types'      => $eb['RoomTypes'] ?? 'all',
-                        'min_stay'        => $eb['MinStay'] ?? 0,
+                        'room_types' => $eb['RoomTypes'] ?? 'all',
+                        'min_stay' => $eb['MinStay'] ?? 0,
                     ];
                     break 2;
                 }
@@ -307,8 +311,8 @@ class SearchResultFormatter implements SearchResultFormatterInterface
      */
     private function assignSeasonPeriod($view, array $packages): void
     {
-        $seasonFrom  = '';
-        $seasonTo    = '';
+        $seasonFrom = '';
+        $seasonTo = '';
 
         foreach ($packages as $pkg) {
             if (empty($pkg['priceinfo_data'])) {
@@ -329,12 +333,12 @@ class SearchResultFormatter implements SearchResultFormatterInterface
             }
 
             $first = reset($seasons);
-            $last  = end($seasons);
+            $last = end($seasons);
             if (!is_array($first) || !is_array($last)) {
                 continue;
             }
             $seasonFrom = PriceInfoFormatter::toScalar($first['DateFrom'] ?? $first['FromDate'] ?? '');
-            $seasonTo   = PriceInfoFormatter::toScalar($last['DateTo'] ?? $last['ToDate'] ?? '');
+            $seasonTo = PriceInfoFormatter::toScalar($last['DateTo'] ?? $last['ToDate'] ?? '');
             break;
         }
 
@@ -349,7 +353,7 @@ class SearchResultFormatter implements SearchResultFormatterInterface
      */
     private function assignTerms($view, array $results, array $searchParams, string $hotelId): void
     {
-        $termsPaymentRaw      = '';
+        $termsPaymentRaw = '';
         $termsCancellationRaw = '';
 
         foreach ($results as $r) {
@@ -374,7 +378,7 @@ class SearchResultFormatter implements SearchResultFormatterInterface
         $ebDetails = '';
         if (!empty($hotelId)) {
             $packageRepo = Container::getInstance()->hotelPackageRepository();
-            $ebPackage   = $packageRepo->findEarlyBookingPackage($hotelId);
+            $ebPackage = $packageRepo->findEarlyBookingPackage($hotelId);
 
             if (!empty($ebPackage['priceinfo_data'])) {
                 $priceinfo = json_decode(PriceInfoFormatter::toScalar($ebPackage['priceinfo_data']), true);
@@ -391,10 +395,10 @@ class SearchResultFormatter implements SearchResultFormatterInterface
                         if (!is_array($eb)) {
                             continue;
                         }
-                        $reduction   = PriceInfoFormatter::toScalar($eb['Reduction'] ?? 0);
-                        $bookTo      = PriceInfoFormatter::toScalar($eb['BookTo'] ?? '');
-                        $stayFrom    = PriceInfoFormatter::toScalar($eb['StayFrom'] ?? '');
-                        $stayTo      = PriceInfoFormatter::toScalar($eb['StayTo'] ?? '');
+                        $reduction = PriceInfoFormatter::toScalar($eb['Reduction'] ?? 0);
+                        $bookTo = PriceInfoFormatter::toScalar($eb['BookTo'] ?? '');
+                        $stayFrom = PriceInfoFormatter::toScalar($eb['StayFrom'] ?? '');
+                        $stayTo = PriceInfoFormatter::toScalar($eb['StayTo'] ?? '');
                         $paymentDate = !empty($bookTo)
                             ? date('d.m.Y', (int) strtotime($bookTo . ' +5 days'))
                             : 'N/A';

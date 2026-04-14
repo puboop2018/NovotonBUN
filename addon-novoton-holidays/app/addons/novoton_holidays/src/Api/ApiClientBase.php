@@ -1,13 +1,15 @@
 <?php
+
 declare(strict_types=1);
+
 namespace Tygh\Addons\NovotonHolidays\Api;
 
+use Tygh\Addons\NovotonHolidays\Constants;
+use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
 use Tygh\Addons\NovotonHolidays\NovotonHttpClient;
 use Tygh\Addons\NovotonHolidays\NovotonXmlParser;
 use Tygh\Addons\NovotonHolidays\Services\CacheServiceInterface;
-use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
-use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
 use Tygh\Addons\TravelCore\ValueObjects\Occupancy;
 use Tygh\Addons\TravelCore\ValueObjects\RequestDebugInfo;
 
@@ -40,7 +42,7 @@ abstract class ApiClientBase
         NovotonHttpClient $httpClient,
         NovotonXmlParser $xmlParser,
         ?CacheServiceInterface $cache,
-        bool $enableCache
+        bool $enableCache,
     ) {
         $this->httpClient = $httpClient;
         $this->xmlParser = $xmlParser;
@@ -83,7 +85,7 @@ abstract class ApiClientBase
             $this->lastResponseRaw,
             $this->lastRequestFormatted,
             $this->lastError,
-            $this->lastHttpCode
+            $this->lastHttpCode,
         );
     }
 

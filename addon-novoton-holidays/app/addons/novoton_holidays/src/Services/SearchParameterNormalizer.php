@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 /**
  * Normalizes raw HTTP search parameters into a clean, validated structure.
  *
@@ -20,17 +22,17 @@ class SearchParameterNormalizer
      *
      * @param array<string, mixed> $searchParams Already-sanitized request params (from SecurityService)
      * @return array<string, mixed> Normalized parameter bag with keys:
-     *   check_in, check_out, nights, adults, children (ages array),
-     *   children_count, children_ages_str, num_rooms, rooms_data,
-     *   rooms_data_json, flex_days, meal_plan, hotel_id, product_id,
-     *   novoton_params (template-ready sub-array)
+     *                              check_in, check_out, nights, adults, children (ages array),
+     *                              children_count, children_ages_str, num_rooms, rooms_data,
+     *                              rooms_data_json, flex_days, meal_plan, hotel_id, product_id,
+     *                              novoton_params (template-ready sub-array)
      */
     public function normalize(array $searchParams): array
     {
         $checkIn = $this->resolveCheckIn($searchParams);
-        $nights  = $this->resolveNights($searchParams, $checkIn);
+        $nights = $this->resolveNights($searchParams, $checkIn);
 
-        $adults   = !empty($searchParams['adults']) ? (int) $searchParams['adults'] : 2;
+        $adults = !empty($searchParams['adults']) ? (int) $searchParams['adults'] : 2;
         $flexDays = !empty($searchParams['flex_days']) ? (int) $searchParams['flex_days'] : 0;
 
         // ── Multi-room data ──────────────────────────────────────────
@@ -39,7 +41,7 @@ class SearchParameterNormalizer
 
         // ── Totals ───────────────────────────────────────────────────
         [$totalAdults, $totalChildren, $allChildrenAges] = $this->calculateTotals($roomsData);
-        $adults   = $totalAdults;
+        $adults = $totalAdults;
         $numRooms = count($roomsData);
 
         // ── Check-out ────────────────────────────────────────────────
@@ -53,51 +55,51 @@ class SearchParameterNormalizer
         $childrenAgesStr = !empty($allChildrenAges) ? implode(',', $allChildrenAges) : '';
 
         // ── Hotel / product ID ───────────────────────────────────────
-        $hotelId   = $searchParams['hotel_id'] ?? '';
+        $hotelId = $searchParams['hotel_id'] ?? '';
         $productId = !empty($searchParams['product_id']) ? (int) $searchParams['product_id'] : 0;
 
         if (!empty($hotelId) && empty($productId)) {
-            $prefix    = ConfigProvider::getFirstProductCodePrefix();
+            $prefix = ConfigProvider::getFirstProductCodePrefix();
             $productId = (int) db_get_field(
-                "SELECT product_id FROM ?:products WHERE product_code = ?s",
-                $prefix . $hotelId
+                'SELECT product_id FROM ?:products WHERE product_code = ?s',
+                $prefix . $hotelId,
             );
         }
 
         $novotonParams = [
-            'check_in'            => $checkIn,
-            'check_out'           => $checkOut,
-            'nights'              => $nights,
-            'adults'              => $adults,
-            'children'            => $allChildrenAges,
-            'children_count'      => count($allChildrenAges),
-            'children_ages'       => $childrenAgesStr,
-            'children_ages_str'   => $childrenAgesStr,
+            'check_in' => $checkIn,
+            'check_out' => $checkOut,
+            'nights' => $nights,
+            'adults' => $adults,
+            'children' => $allChildrenAges,
+            'children_count' => count($allChildrenAges),
+            'children_ages' => $childrenAgesStr,
+            'children_ages_str' => $childrenAgesStr,
             'children_ages_array' => $allChildrenAges,
-            'meal_plan'           => $mealPlan ?: (__('novoton_holidays.all_boards') ?: 'All Boards'),
-            'hotel_id'            => $hotelId,
-            'product_id'          => $productId,
-            'num_rooms'           => $numRooms,
-            'rooms_data'          => $roomsData,
-            'rooms_data_json'     => json_encode($roomsData),
-            'flex_days'           => $flexDays,
+            'meal_plan' => $mealPlan ?: (__('novoton_holidays.all_boards') ?: 'All Boards'),
+            'hotel_id' => $hotelId,
+            'product_id' => $productId,
+            'num_rooms' => $numRooms,
+            'rooms_data' => $roomsData,
+            'rooms_data_json' => json_encode($roomsData),
+            'flex_days' => $flexDays,
         ];
 
         return [
-            'check_in'        => $checkIn,
-            'check_out'       => $checkOut,
-            'nights'          => $nights,
-            'adults'          => $adults,
-            'children'        => $allChildrenAges,
-            'children_count'  => count($allChildrenAges),
+            'check_in' => $checkIn,
+            'check_out' => $checkOut,
+            'nights' => $nights,
+            'adults' => $adults,
+            'children' => $allChildrenAges,
+            'children_count' => count($allChildrenAges),
             'children_ages_str' => $childrenAgesStr,
-            'num_rooms'       => $numRooms,
-            'rooms_data'      => $roomsData,
-            'flex_days'       => $flexDays,
-            'meal_plan'       => $mealPlan,
-            'hotel_id'        => $hotelId,
-            'product_id'      => $productId,
-            'novoton_params'  => $novotonParams,
+            'num_rooms' => $numRooms,
+            'rooms_data' => $roomsData,
+            'flex_days' => $flexDays,
+            'meal_plan' => $mealPlan,
+            'hotel_id' => $hotelId,
+            'product_id' => $productId,
+            'novoton_params' => $novotonParams,
         ];
     }
 
@@ -172,8 +174,8 @@ class SearchParameterNormalizer
                         }
                     }
                 }
-                $roomsData[$idx]['adults']       = (int) ($room['adults'] ?? 2);
-                $roomsData[$idx]['children']     = !empty($cleanAges) ? count($cleanAges) : (int) ($room['children'] ?? 0);
+                $roomsData[$idx]['adults'] = (int) ($room['adults'] ?? 2);
+                $roomsData[$idx]['children'] = !empty($cleanAges) ? count($cleanAges) : (int) ($room['children'] ?? 0);
                 $roomsData[$idx]['childrenAges'] = $cleanAges;
             }
             return array_values($roomsData);
@@ -181,7 +183,7 @@ class SearchParameterNormalizer
 
         // Fallback: build single room from scalar params
         $childrenCount = !empty($params['children']) ? (int) $params['children'] : 0;
-        $childrenAges  = $this->parseCommaAges($params['children_ages'] ?? '');
+        $childrenAges = $this->parseCommaAges($params['children_ages'] ?? '');
 
         // Legacy: child_age_1, child_age_2, ... individual URL params
         if (empty($childrenAges) && $childrenCount > 0) {
@@ -199,8 +201,8 @@ class SearchParameterNormalizer
 
         return [
             [
-                'adults'       => !empty($params['adults']) ? (int) $params['adults'] : 2,
-                'children'     => $childrenCount,
+                'adults' => !empty($params['adults']) ? (int) $params['adults'] : 2,
+                'children' => $childrenCount,
                 'childrenAges' => $childrenAges,
             ],
         ];
@@ -234,17 +236,17 @@ class SearchParameterNormalizer
     }
 
     /**
-     * @return array{int, int, int[]}  [totalAdults, totalChildren, allAges]
+     * @return array{int, int, int[]} [totalAdults, totalChildren, allAges]
      * @param list<array<string, mixed>> $roomsData
      */
     private function calculateTotals(array $roomsData): array
     {
-        $totalAdults   = 0;
+        $totalAdults = 0;
         $totalChildren = 0;
-        $allAges       = [];
+        $allAges = [];
 
         foreach ($roomsData as $room) {
-            $totalAdults   += (int) ($room['adults'] ?? 2);
+            $totalAdults += (int) ($room['adults'] ?? 2);
             $totalChildren += (int) ($room['children'] ?? 0);
             if (!empty($room['childrenAges'])) {
                 foreach ($room['childrenAges'] as $age) {

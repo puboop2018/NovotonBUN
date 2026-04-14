@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 /**
  * Novoton Holidays - Diagnostics Service
  *
@@ -354,12 +356,12 @@ class DiagnosticsService implements DiagnosticsServiceInterface
     public function testProduct(string $productCode): array
     {
         $product = db_get_row(
-            "SELECT p.product_id, p.product_code, pd.product
+            'SELECT p.product_id, p.product_code, pd.product
              FROM ?:products AS p
              LEFT JOIN ?:product_descriptions AS pd ON p.product_id = pd.product_id AND pd.lang_code = ?s
-             WHERE p.product_code = ?s",
+             WHERE p.product_code = ?s',
             CART_LANGUAGE,
-            $productCode
+            $productCode,
         );
 
         if (!$product) {
@@ -406,7 +408,7 @@ class DiagnosticsService implements DiagnosticsServiceInterface
 
             // Get DB packages
             $packagesDb = (new HotelPackageRepository())->findByHotelId(
-                $hotelId
+                $hotelId,
             );
 
             // Extract API packages/rooms/boards

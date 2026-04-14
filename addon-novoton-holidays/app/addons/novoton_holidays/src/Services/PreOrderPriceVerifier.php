@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 /**
  * Novoton Holidays - Pre-Order Price Verifier
  *
@@ -24,9 +26,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Services;
 
-use Tygh\Addons\NovotonHolidays\Services\Container;
 use Tygh\Addons\TravelCore\Contracts\PreOrderPriceVerifierInterface;
-use Tygh\Addons\TravelCore\Services\CurrencyService;
 use Tygh\Tygh;
 
 class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
@@ -36,9 +36,9 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
      *
      * @param array<string, mixed> $cart CS-Cart cart array
      * @return array{allow: bool, corrections: array<string, array<string, mixed>>, notifications: list<array<string, mixed>>}
-     *   - allow: always true (we correct, never block)
-     *   - corrections: cart_id => ['api_price' => float, 'api_price_raw' => float]
-     *   - notifications: list of discrepancy data for admin emails
+     *                                                                                                                         - allow: always true (we correct, never block)
+     *                                                                                                                         - corrections: cart_id => ['api_price' => float, 'api_price_raw' => float]
+     *                                                                                                                         - notifications: list of discrepancy data for admin emails
      */
     public function verify(array $cart): array
     {
@@ -57,8 +57,8 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
         }
 
         $threshold = ConfigProvider::getPriceHigherThreshold();
-        $cacheTtl  = ConfigProvider::getPreorderCacheTtl();
-        $debug     = ConfigProvider::isDebugLogging();
+        $cacheTtl = ConfigProvider::getPreorderCacheTtl();
+        $debug = ConfigProvider::isDebugLogging();
 
         // Lazy-load the API only when actually needed (cache miss).
         // $pricing is bound from $api->pricing() after the null check so
@@ -77,7 +77,7 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
                 continue;
             }
 
-            $extra     = $pExtra;
+            $extra = $pExtra;
             $formPrice = PriceInfoFormatter::toFloat($extra['total_price'] ?? $product['price'] ?? 0);
 
             if ($formPrice <= 0) {
@@ -91,13 +91,13 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
 
             if ($cached !== null) {
                 $apiPriceWithCommission = PriceInfoFormatter::toFloat($cached['api_price'] ?? 0);
-                $rawApiPrice            = PriceInfoFormatter::toFloat($cached['api_price_raw'] ?? 0);
+                $rawApiPrice = PriceInfoFormatter::toFloat($cached['api_price_raw'] ?? 0);
 
                 if ($debug) {
                     fn_log_event('general', 'runtime', [
-                        'message'  => 'PreOrderPriceVerifier: using session-cached price (Silent Sync)',
+                        'message' => 'PreOrderPriceVerifier: using session-cached price (Silent Sync)',
                         'hotel_id' => PriceInfoFormatter::toScalar($extra['hotel_id'] ?? ''),
-                        'age_sec'  => time() - PriceInfoFormatter::toInt($cached['timestamp'] ?? 0),
+                        'age_sec' => time() - PriceInfoFormatter::toInt($cached['timestamp'] ?? 0),
                         'api_price' => $apiPriceWithCommission,
                     ]);
                 }
@@ -115,14 +115,14 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
                 }
 
                 $priceParams = [
-                    'hotel_id'    => PriceInfoFormatter::toScalar($extra['hotel_id'] ?? ''),
-                    'room_id'     => PriceInfoFormatter::toScalar($extra['room_id'] ?? ''),
-                    'board_id'    => PriceInfoFormatter::toScalar($extra['board_id'] ?? ''),
+                    'hotel_id' => PriceInfoFormatter::toScalar($extra['hotel_id'] ?? ''),
+                    'room_id' => PriceInfoFormatter::toScalar($extra['room_id'] ?? ''),
+                    'board_id' => PriceInfoFormatter::toScalar($extra['board_id'] ?? ''),
                     'star_rating' => '',
-                    'check_in'    => PriceInfoFormatter::toScalar($extra['check_in'] ?? ''),
-                    'check_out'   => PriceInfoFormatter::toScalar($extra['check_out'] ?? ''),
-                    'adults'      => PriceInfoFormatter::toInt($extra['adults'] ?? 2),
-                    'children'    => $childrenAges,
+                    'check_in' => PriceInfoFormatter::toScalar($extra['check_in'] ?? ''),
+                    'check_out' => PriceInfoFormatter::toScalar($extra['check_out'] ?? ''),
+                    'adults' => PriceInfoFormatter::toInt($extra['adults'] ?? 2),
+                    'children' => $childrenAges,
                 ];
 
                 if (empty($priceParams['hotel_id']) || empty($priceParams['check_in'])) {
@@ -134,15 +134,15 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
                 if (!$priceData || !isset($priceData->Price)) {
                     if ($debug) {
                         fn_log_event('general', 'runtime', [
-                            'message'  => 'PreOrderPriceVerifier: API returned no price, allowing order',
+                            'message' => 'PreOrderPriceVerifier: API returned no price, allowing order',
                             'hotel_id' => $priceParams['hotel_id'],
-                            'room_id'  => $priceParams['room_id'],
+                            'room_id' => $priceParams['room_id'],
                         ]);
                     }
                     continue;
                 }
 
-                $rawApiPrice            = (float) (string) $priceData->Price;
+                $rawApiPrice = (float) (string) $priceData->Price;
                 $apiPriceWithCommission = $pricing->applyCommission($rawApiPrice);
             }
 
@@ -152,7 +152,7 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
                 $rawApiPrice,
                 $threshold,
                 $extra,
-                $cartId
+                $cartId,
             );
 
             if (!empty($checkResult['correction'])) {
@@ -170,10 +170,10 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
     /**
      * Look up the session price cache written by add_to_cart.
      *
-     * @param array<string, mixed> $extra   Cart product extra data
+     * @param array<string, mixed> $extra Cart product extra data
      * @param int[] $childrenAges Parsed children ages
-     * @param int   $ttl     Max age in seconds
-     * @return array<string, mixed>|null    Cached entry or null if miss/stale
+     * @param int $ttl Max age in seconds
+     * @return array<string, mixed>|null Cached entry or null if miss/stale
      */
     private function getCachedPrice(array $extra, array $childrenAges, int $ttl): ?array
     {
@@ -202,7 +202,7 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
         if (!is_array($entry)) {
             return null;
         }
-        $age   = time() - PriceInfoFormatter::toInt($entry['timestamp'] ?? 0);
+        $age = time() - PriceInfoFormatter::toInt($entry['timestamp'] ?? 0);
 
         if ($age > $ttl) {
             return null; // stale
@@ -219,38 +219,38 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
      * @return array{allow: bool, correction: array<string, mixed>|null, notification: array<string, mixed>|null, type: string}
      */
     private function comparePrice(
-        float  $formPrice,
-        float  $apiPrice,
-        float  $rawApiPrice,
-        float  $threshold,
-        array  $extra,
-        $cartId
+        float $formPrice,
+        float $apiPrice,
+        float $rawApiPrice,
+        float $threshold,
+        array $extra,
+        $cartId,
     ): array {
         $cartId = PriceInfoFormatter::toScalar($cartId);
-        $hotelId   = PriceInfoFormatter::toScalar($extra['hotel_id'] ?? '');
+        $hotelId = PriceInfoFormatter::toScalar($extra['hotel_id'] ?? '');
         $hotelName = PriceInfoFormatter::toScalar($extra['hotel_name'] ?? '');
-        $roomId    = PriceInfoFormatter::toScalar($extra['room_id'] ?? '');
-        $boardId   = PriceInfoFormatter::toScalar($extra['board_id'] ?? '');
-        $checkIn   = PriceInfoFormatter::toScalar($extra['check_in'] ?? '');
-        $checkOut  = PriceInfoFormatter::toScalar($extra['check_out'] ?? '');
-        $adults    = PriceInfoFormatter::toInt($extra['adults'] ?? 2);
-        $children  = PriceInfoFormatter::toInt($extra['children'] ?? 0);
+        $roomId = PriceInfoFormatter::toScalar($extra['room_id'] ?? '');
+        $boardId = PriceInfoFormatter::toScalar($extra['board_id'] ?? '');
+        $checkIn = PriceInfoFormatter::toScalar($extra['check_in'] ?? '');
+        $checkOut = PriceInfoFormatter::toScalar($extra['check_out'] ?? '');
+        $adults = PriceInfoFormatter::toInt($extra['adults'] ?? 2);
+        $children = PriceInfoFormatter::toInt($extra['children'] ?? 0);
         $childrenAges = PriceInfoFormatter::toScalar($extra['children_ages'] ?? '');
 
         $notificationData = [
-            'hotel_id'      => $hotelId,
-            'hotel_name'    => $hotelName,
-            'room_id'       => $roomId,
-            'board_id'      => $boardId,
-            'check_in'      => $checkIn,
-            'check_out'     => $checkOut,
-            'adults'        => $adults,
-            'children'      => $children,
+            'hotel_id' => $hotelId,
+            'hotel_name' => $hotelName,
+            'room_id' => $roomId,
+            'board_id' => $boardId,
+            'check_in' => $checkIn,
+            'check_out' => $checkOut,
+            'adults' => $adults,
+            'children' => $children,
             'children_ages' => $childrenAges,
-            'form_price'    => $formPrice,
-            'api_price'     => $apiPrice,
+            'form_price' => $formPrice,
+            'api_price' => $apiPrice,
             'api_price_raw' => $rawApiPrice,
-            'cart_id'       => $cartId,
+            'cart_id' => $cartId,
         ];
 
         // Use PriceChangeDetector for consistent "No Surprises" UX
@@ -262,9 +262,9 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
             'checkout',
             [
                 'hotel_name' => $hotelName,
-                'hotel_id'   => $hotelId,
-                'room_id'    => $roomId,
-            ]
+                'hotel_id' => $hotelId,
+                'room_id' => $roomId,
+            ],
         );
 
         // Case 1: Form price is LOWER than API price → CORRECT (never block)
@@ -275,12 +275,12 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
             $percentLower = $apiPrice > 0 ? round(($difference / $apiPrice) * 100, 1) : 0;
 
             fn_log_event('general', 'runtime', [
-                'message'       => 'PreOrderPriceVerifier: CORRECTED — form price below API price, upgrading cart',
-                'hotel_id'      => $hotelId,
-                'room_id'       => $roomId,
-                'form_price'    => $formPrice,
-                'api_price'     => $apiPrice,
-                'difference'    => $difference,
+                'message' => 'PreOrderPriceVerifier: CORRECTED — form price below API price, upgrading cart',
+                'hotel_id' => $hotelId,
+                'room_id' => $roomId,
+                'form_price' => $formPrice,
+                'api_price' => $apiPrice,
+                'difference' => $difference,
                 'percent_lower' => $percentLower,
             ]);
 
@@ -289,29 +289,33 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
             $notificationData['type'] = 'price_lower';
 
             // Admin notification (visible in CS-Cart backend)
-            fn_set_notification('W', 'Price Discrepancy',
+            fn_set_notification(
+                'W',
+                'Price Discrepancy',
                 'Price corrected at checkout: form price (' . number_format($formPrice, 2) . ' EUR) was lower than API price ('
                 . number_format($apiPrice, 2) . ' EUR) for hotel ' . $hotelName . ' [' . $hotelId . ']. '
                 . 'Difference: ' . number_format($difference, 2) . ' EUR (' . $percentLower . '% lower). '
-                . 'Cart was updated to the API price.'
+                . 'Cart was updated to the API price.',
             );
 
             // User-facing price change alert (orange badge for increase)
             if ($changeInfo['significant']) {
                 $detector->storeAlert($changeInfo, $cartId);
-                fn_set_notification('W', __('novoton_holidays.price_change'),
+                fn_set_notification(
+                    'W',
+                    __('novoton_holidays.price_change'),
                     __('novoton_holidays.price_updated_at_checkout', [
                         '[old_price]' => fn_format_price($formPrice),
                         '[new_price]' => fn_format_price($apiPrice),
-                    ])
+                    ]),
                 );
             }
 
             return [
-                'allow'        => true,
-                'type'         => 'price_lower',
-                'correction'   => [
-                    'api_price'     => $apiPrice,
+                'allow' => true,
+                'type' => 'price_lower',
+                'correction' => [
+                    'api_price' => $apiPrice,
                     'api_price_raw' => $rawApiPrice,
                 ],
                 'notification' => $notificationData,
@@ -325,14 +329,14 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
 
             if ($percentHigher > $threshold) {
                 fn_log_event('general', 'runtime', [
-                    'message'        => 'PreOrderPriceVerifier: ALERT — form price significantly above API price',
-                    'hotel_id'       => $hotelId,
-                    'room_id'        => $roomId,
-                    'form_price'     => $formPrice,
-                    'api_price'      => $apiPrice,
-                    'difference'     => $difference,
+                    'message' => 'PreOrderPriceVerifier: ALERT — form price significantly above API price',
+                    'hotel_id' => $hotelId,
+                    'room_id' => $roomId,
+                    'form_price' => $formPrice,
+                    'api_price' => $apiPrice,
+                    'difference' => $difference,
                     'percent_higher' => $percentHigher,
-                    'threshold'      => $threshold,
+                    'threshold' => $threshold,
                 ]);
 
                 $notificationData['difference'] = $difference;
@@ -340,16 +344,18 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
                 $notificationData['type'] = 'price_higher';
 
                 // Admin notification (order is still allowed)
-                fn_set_notification('W', 'Price Discrepancy',
+                fn_set_notification(
+                    'W',
+                    'Price Discrepancy',
                     'Alert: form price (' . number_format($formPrice, 2) . ' EUR) is ' . $percentHigher
                     . '% higher than API price (' . number_format($apiPrice, 2) . ' EUR) for hotel '
-                    . $hotelName . ' [' . $hotelId . ']. Order allowed but please investigate.'
+                    . $hotelName . ' [' . $hotelId . ']. Order allowed but please investigate.',
                 );
 
                 return [
-                    'allow'        => true,
-                    'type'         => 'price_higher',
-                    'correction'   => null,
+                    'allow' => true,
+                    'type' => 'price_higher',
+                    'correction' => null,
                     'notification' => $notificationData,
                 ];
             }
@@ -357,19 +363,21 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
             // Price decrease detected — show green "Price Dropped!" if significant
             if ($changeInfo['significant'] && $changeInfo['direction'] === 'decrease') {
                 $detector->storeAlert($changeInfo, $cartId);
-                fn_set_notification('N', __('novoton_holidays.price_dropped'),
+                fn_set_notification(
+                    'N',
+                    __('novoton_holidays.price_dropped'),
                     __('novoton_holidays.price_dropped_to', [
                         '[new_price]' => fn_format_price($apiPrice),
-                    ])
+                    ]),
                 );
             }
         }
 
         // Case 3: Prices are within acceptable range
         return [
-            'allow'        => true,
-            'type'         => 'ok',
-            'correction'   => null,
+            'allow' => true,
+            'type' => 'ok',
+            'correction' => null,
             'notification' => null,
         ];
     }
@@ -390,7 +398,7 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
         } elseif (is_string($raw) && $raw !== '') {
             $ages = array_map('intval', array_filter(
                 explode(',', $raw),
-                function ($v) { return $v !== ''; }
+                fn ($v) => $v !== '',
             ));
         }
 

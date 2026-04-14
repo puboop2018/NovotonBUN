@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Services;
@@ -31,23 +32,22 @@ interface SearchServiceInterface
      * @return list<array<string, mixed>>
      */
     public function parseRoomPriceResponse(
-        string  $rawXml,
-        int     $nights,
-        string  $checkIn,
-        string  $checkOut,
-        string  $mealPlan = '',
-        array   $quotaMap = [],
-        array   $roomTypeMap = [],
-        ?int    $forRoom = null,
-        ?string $occupancyStr = null
+        string $rawXml,
+        int $nights,
+        string $checkIn,
+        string $checkOut,
+        string $mealPlan = '',
+        array $quotaMap = [],
+        array $roomTypeMap = [],
+        ?int $forRoom = null,
+        ?string $occupancyStr = null,
     ): array;
 
     /**
      * Check if a board ID matches the requested meal plan.
      *
-     * @param string $boardId  Board identifier from the API response
+     * @param string $boardId Board identifier from the API response
      * @param string $mealPlan User-selected meal plan code (e.g. 'AI', 'HB')
-     * @return bool
      */
     public static function matchesMealPlan(string $boardId, string $mealPlan): bool;
 
@@ -62,8 +62,8 @@ interface SearchServiceInterface
     /**
      * Extract active early booking discounts from priceinfo_data.
      *
-     * @param string $hotelId  Hotel ID
-     * @param string $checkIn  Guest check-in date (Y-m-d)
+     * @param string $hotelId Hotel ID
+     * @param string $checkIn Guest check-in date (Y-m-d)
      * @param string $checkOut Guest check-out date (Y-m-d)
      * @return array<string, mixed> List of applicable discount records
      */

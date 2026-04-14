@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 /**
  * Safe JSON decoding with logging for malformed data.
  *
@@ -21,9 +23,9 @@ class JsonDecoder
     /**
      * Decode a JSON string, returning a default on failure and logging the error.
      *
-     * @param mixed  $json     The raw JSON string (null/empty/non-string are handled)
-     * @param string $context  Human-readable label for log messages (e.g. 'rooms_data', 'priceinfo')
-     * @param array<string, mixed>  $default  Value to return on decode failure
+     * @param mixed $json The raw JSON string (null/empty/non-string are handled)
+     * @param string $context Human-readable label for log messages (e.g. 'rooms_data', 'priceinfo')
+     * @param array<string, mixed> $default Value to return on decode failure
      * @return array<string, mixed>
      */
     public static function decode($json, string $context = '', array $default = []): array

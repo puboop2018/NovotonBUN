@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 /**
  * Novoton Holidays - Batched Hotel Info Sync (V2)
  *
@@ -146,11 +148,11 @@ class BatchedHotelInfoSyncV2 extends AbstractBatchedSync
         $lastFullSync = db_get_field(
             "SELECT MAX(sync_date) FROM ?:novoton_sync_log
              WHERE sync_type = 'hotelinfo' AND status = 'completed'
-             AND notes LIKE '%\"sync_type\":\"full\"%'"
+             AND notes LIKE '%\"sync_type\":\"full\"%'",
         );
 
         if (empty($lastFullSync)) {
-            $this->logger->output("No previous full sync found. Starting full sync.");
+            $this->logger->output('No previous full sync found. Starting full sync.');
             return 'full';
         }
 
@@ -165,7 +167,7 @@ class BatchedHotelInfoSyncV2 extends AbstractBatchedSync
         // Incremental: last completed sync of any kind.
         $lastIncremental = db_get_field(
             "SELECT MAX(sync_date) FROM ?:novoton_sync_log
-             WHERE sync_type = 'hotelinfo' AND status = 'completed'"
+             WHERE sync_type = 'hotelinfo' AND status = 'completed'",
         );
 
         if (empty($lastIncremental)) {
@@ -192,10 +194,10 @@ class BatchedHotelInfoSyncV2 extends AbstractBatchedSync
 
         if ($syncType === 'full') {
             return db_get_fields(
-                "SELECT hotel_id FROM ?:novoton_hotels
+                'SELECT hotel_id FROM ?:novoton_hotels
                  WHERE country IN (?a)
-                 ORDER BY hotel_name",
-                $countries
+                 ORDER BY hotel_name',
+                $countries,
             );
         }
 
@@ -230,9 +232,9 @@ class BatchedHotelInfoSyncV2 extends AbstractBatchedSync
 
         // 1. Hotel metadata (hotel_name, product_id) keyed by hotel_id.
         $this->hotelMap = db_get_hash_array(
-            "SELECT hotel_id, hotel_name, product_id FROM ?:novoton_hotels WHERE hotel_id IN (?a)",
+            'SELECT hotel_id, hotel_name, product_id FROM ?:novoton_hotels WHERE hotel_id IN (?a)',
             'hotel_id',
-            $hotelIds
+            $hotelIds,
         );
 
         // 2. Product code -> product_id map for unlinked hotels only.
@@ -246,9 +248,9 @@ class BatchedHotelInfoSyncV2 extends AbstractBatchedSync
         }
         if (!empty($codePatterns)) {
             $this->productCodeMap = db_get_hash_single_array(
-                "SELECT product_code, product_id FROM ?:products WHERE product_code IN (?a)",
+                'SELECT product_code, product_id FROM ?:products WHERE product_code IN (?a)',
                 ['product_code', 'product_id'],
-                $codePatterns
+                $codePatterns,
             );
         }
 
@@ -280,7 +282,7 @@ class BatchedHotelInfoSyncV2 extends AbstractBatchedSync
         $this->logger->output("[{$hotelId}] {$hotelName} ... ", false);
 
         if (!$hotelInfo) {
-            $this->logger->output("API returned empty");
+            $this->logger->output('API returned empty');
             return ['success' => false, 'message' => 'api_returned_empty', 'data' => null];
         }
 
@@ -294,10 +296,10 @@ class BatchedHotelInfoSyncV2 extends AbstractBatchedSync
                 $this->productCodePrefixes,
             );
         } catch (ApiException $e) {
-            $this->logger->output("ERROR: " . $e->getMessage());
+            $this->logger->output('ERROR: ' . $e->getMessage());
             return ['success' => false, 'message' => $e->getMessage(), 'data' => null];
         } catch (\Throwable $e) {
-            $this->logger->output("ERROR: " . $e->getMessage());
+            $this->logger->output('ERROR: ' . $e->getMessage());
             return ['success' => false, 'message' => $e->getMessage(), 'data' => null];
         }
 
@@ -307,7 +309,7 @@ class BatchedHotelInfoSyncV2 extends AbstractBatchedSync
         return [
             'success' => true,
             'message' => '',
-            'data'    => ['packages_count' => $packagesCount],
+            'data' => ['packages_count' => $packagesCount],
         ];
     }
 
@@ -323,12 +325,12 @@ class BatchedHotelInfoSyncV2 extends AbstractBatchedSync
      * links unlinked products via the pre-fetched product_code_map, and
      * upserts every package in a single transactional batch INSERT.
      *
-     * @param string                                  $hotelId         Hotel ID
-     * @param mixed                                   $hotelInfo       SimpleXML hotel info from the API
-     * @param string                                  $now             Current timestamp
-     * @param array<string, array<string, mixed>>     $hotelMap        hotel_id → [hotel_name, product_id] map
-     * @param array<string, int>                      $productCodeMap  product_code → product_id map
-     * @param string[]                                $prefixes        Product code prefixes
+     * @param string $hotelId Hotel ID
+     * @param mixed $hotelInfo SimpleXML hotel info from the API
+     * @param string $now Current timestamp
+     * @param array<string, array<string, mixed>> $hotelMap hotel_id → [hotel_name, product_id] map
+     * @param array<string, int> $productCodeMap product_code → product_id map
+     * @param string[] $prefixes Product code prefixes
      */
     private function processHotelInfo(
         string $hotelId,
@@ -345,7 +347,7 @@ class BatchedHotelInfoSyncV2 extends AbstractBatchedSync
 
         $update = [
             'hotelinfo_synced_at' => $now,
-            'hotel_data'          => $hotelDataJson,
+            'hotel_data' => $hotelDataJson,
         ];
 
         // Detect adults-only from hotel name
@@ -389,31 +391,31 @@ class BatchedHotelInfoSyncV2 extends AbstractBatchedSync
         $update['packages_count'] = count($packages);
 
         // Wrap hotel + packages update in a transaction for atomicity
-        db_query("START TRANSACTION");
+        db_query('START TRANSACTION');
         try {
             // Update hotel record
-            db_query("UPDATE ?:novoton_hotels SET ?u WHERE hotel_id = ?s", $update, $hotelId);
+            db_query('UPDATE ?:novoton_hotels SET ?u WHERE hotel_id = ?s', $update, $hotelId);
 
             // Batch INSERT packages (multi-row upsert instead of N individual queries)
-            $validPackages = array_filter($packages, static fn(array $pkg): bool => !empty($pkg['IdCont']));
+            $validPackages = array_filter($packages, static fn (array $pkg): bool => !empty($pkg['IdCont']));
             if (!empty($validPackages)) {
                 $values = [];
                 $params = [];
                 foreach ($validPackages as $pkg) {
-                    $values[] = "(?s, ?s, ?s, NOW())";
+                    $values[] = '(?s, ?s, ?s, NOW())';
                     $params[] = $hotelId;
                     $params[] = $pkg['IdCont'];
                     $params[] = $pkg['PackageName'];
                 }
-                $sql = "INSERT INTO ?:novoton_hotel_packages (hotel_id, package_id, package_name, created_at) VALUES "
+                $sql = 'INSERT INTO ?:novoton_hotel_packages (hotel_id, package_id, package_name, created_at) VALUES '
                     . implode(', ', $values)
-                    . " AS new_row ON DUPLICATE KEY UPDATE package_name = new_row.package_name";
+                    . ' AS new_row ON DUPLICATE KEY UPDATE package_name = new_row.package_name';
                 db_query($sql, ...$params);
             }
 
-            db_query("COMMIT");
+            db_query('COMMIT');
         } catch (\Throwable $e) {
-            db_query("ROLLBACK");
+            db_query('ROLLBACK');
             throw $e;
         }
     }
@@ -439,7 +441,7 @@ class BatchedHotelInfoSyncV2 extends AbstractBatchedSync
                 $idCont = (string) ($pkg->IdCont ?? '');
                 if ($idCont !== '' && !isset($seenIds[$idCont])) {
                     $packages[] = [
-                        'IdCont'      => $idCont,
+                        'IdCont' => $idCont,
                         'PackageName' => (string) ($pkg->PackageName ?? $pkg->Package ?? ''),
                     ];
                     $seenIds[$idCont] = true;
@@ -451,7 +453,7 @@ class BatchedHotelInfoSyncV2 extends AbstractBatchedSync
                         $nestedIdCont = (string) ($nestedPkg->IdCont ?? '');
                         if ($nestedIdCont !== '' && !isset($seenIds[$nestedIdCont])) {
                             $packages[] = [
-                                'IdCont'      => $nestedIdCont,
+                                'IdCont' => $nestedIdCont,
                                 'PackageName' => (string) ($nestedPkg->PackageName ?? ''),
                             ];
                             $seenIds[$nestedIdCont] = true;
@@ -485,7 +487,7 @@ class BatchedHotelInfoSyncV2 extends AbstractBatchedSync
 
         // 1. Re-link: hotels with NULL product_id whose product exists
         $orphaned = db_get_fields(
-            "SELECT hotel_id FROM ?:novoton_hotels WHERE product_id IS NULL OR product_id = 0"
+            'SELECT hotel_id FROM ?:novoton_hotels WHERE product_id IS NULL OR product_id = 0',
         );
 
         $linked = 0;
@@ -501,9 +503,9 @@ class BatchedHotelInfoSyncV2 extends AbstractBatchedSync
             $productMap = [];
             if (!empty($codePatterns)) {
                 $productMap = db_get_hash_single_array(
-                    "SELECT product_code, product_id FROM ?:products WHERE product_code IN (?a)",
+                    'SELECT product_code, product_id FROM ?:products WHERE product_code IN (?a)',
                     ['product_code', 'product_id'],
-                    $codePatterns
+                    $codePatterns,
                 );
             }
 
@@ -513,8 +515,9 @@ class BatchedHotelInfoSyncV2 extends AbstractBatchedSync
                     $pid = $productMap[$prefix . $hotelId] ?? null;
                     if (!empty($pid)) {
                         db_query(
-                            "UPDATE ?:novoton_hotels SET product_id = ?i WHERE hotel_id = ?s",
-                            $pid, $hotelId
+                            'UPDATE ?:novoton_hotels SET product_id = ?i WHERE hotel_id = ?s',
+                            $pid,
+                            $hotelId,
                         );
                         $linked++;
                         break;
@@ -525,10 +528,10 @@ class BatchedHotelInfoSyncV2 extends AbstractBatchedSync
 
         // 2. Cleanup: clear product_id pointing to deleted products
         $cleaned = db_query(
-            "UPDATE ?:novoton_hotels h
+            'UPDATE ?:novoton_hotels h
              LEFT JOIN ?:products p ON h.product_id = p.product_id
              SET h.product_id = NULL
-             WHERE h.product_id > 0 AND p.product_id IS NULL"
+             WHERE h.product_id > 0 AND p.product_id IS NULL',
         );
 
         if ($linked > 0 || $cleaned > 0) {
@@ -552,7 +555,7 @@ class BatchedHotelInfoSyncV2 extends AbstractBatchedSync
         // Get last sync date
         $lastSync = db_get_field(
             "SELECT MAX(sync_date) FROM ?:novoton_sync_log
-             WHERE sync_type = 'hotelinfo' AND status = 'completed'"
+             WHERE sync_type = 'hotelinfo' AND status = 'completed'",
         );
 
         if (empty($lastSync)) {
@@ -581,24 +584,24 @@ class BatchedHotelInfoSyncV2 extends AbstractBatchedSync
                             $changedIds[$hid] = true;
                         }
                     }
-                    $this->logger->output("  Found " . count($offers) . " changed offers");
+                    $this->logger->output('  Found ' . count($offers) . ' changed offers');
                 } else {
-                    $this->logger->output("  No changes");
+                    $this->logger->output('  No changes');
                 }
             } catch (ApiException $e) {
-                $this->logger->output("  Error: " . $e->getMessage());
+                $this->logger->output('  Error: ' . $e->getMessage());
             }
         }
 
         // Also include hotels that never had hotelinfo synced
         $unsynced = db_get_fields(
-            "SELECT hotel_id FROM ?:novoton_hotels
-             WHERE country IN (?a) AND hotelinfo_synced_at IS NULL",
-            $countries
+            'SELECT hotel_id FROM ?:novoton_hotels
+             WHERE country IN (?a) AND hotelinfo_synced_at IS NULL',
+            $countries,
         );
 
         if (!empty($unsynced)) {
-            $this->logger->output("Also adding " . count($unsynced) . " hotels that never had hotelinfo synced.");
+            $this->logger->output('Also adding ' . count($unsynced) . ' hotels that never had hotelinfo synced.');
             foreach ($unsynced as $id) {
                 $changedIds[$id] = true;
             }

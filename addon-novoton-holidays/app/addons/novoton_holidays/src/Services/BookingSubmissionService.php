@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 /**
  * Novoton Holidays - Booking Submission Service
  *
@@ -23,11 +25,11 @@ namespace Tygh\Addons\NovotonHolidays\Services;
 
 use Tygh\Addons\NovotonHolidays\Api\Contracts\ReservationApiClientInterface;
 use Tygh\Addons\NovotonHolidays\Constants;
-use Tygh\Addons\TravelCore\TravelConstants;
-use Tygh\Addons\NovotonHolidays\Repository\BookingRepositoryInterface;
 use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
 use Tygh\Addons\NovotonHolidays\Exceptions\NovotonException;
+use Tygh\Addons\NovotonHolidays\Repository\BookingRepositoryInterface;
 use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
+use Tygh\Addons\TravelCore\TravelConstants;
 
 class BookingSubmissionService implements BookingSubmissionServiceInterface
 {
@@ -38,7 +40,7 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
     public function __construct(
         BookingRepositoryInterface $bookingRepo,
         ReservationApiClientInterface $reservations,
-        ?GuestDataNormalizer $guestDataNormalizer = null
+        ?GuestDataNormalizer $guestDataNormalizer = null,
     ) {
         $this->bookingRepo = $bookingRepo;
         $this->reservations = $reservations;
@@ -62,10 +64,10 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
             return;
         }
 
-        $commission    = ConfigProvider::getCommission();
-        $disableApi    = ConfigProvider::isApiDisabled();
-        $debugLogging  = ConfigProvider::isDebugLogging();
-        $orderComment  = trim((string) ($cart['notes'] ?? ''));
+        $commission = ConfigProvider::getCommission();
+        $disableApi = ConfigProvider::isApiDisabled();
+        $debugLogging = ConfigProvider::isDebugLogging();
+        $orderComment = trim((string) ($cart['notes'] ?? ''));
 
         $cartProducts = is_array($cart['products'] ?? null) ? $cart['products'] : [];
         foreach ($cartProducts as $cartId => $product) {
@@ -79,7 +81,7 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
             }
 
             /** @var array<string, mixed> $bookingData */
-            $bookingData       = $extra;
+            $bookingData = $extra;
             $originalBookingId = PriceInfoFormatter::toInt($bookingData['novoton_booking_id'] ?? 0);
 
             // 1. Hydrate booking data from DB (single source of truth)
@@ -91,16 +93,18 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
 
             if ($debugLogging) {
                 fn_log_event('general', 'runtime', [
-                    'message'     => 'Novoton - Final price determined',
-                    'booking_id'  => $originalBookingId,
+                    'message' => 'Novoton - Final price determined',
+                    'booking_id' => $originalBookingId,
                     'final_price' => $finalPrice,
-                    'hotel_id'    => $bookingData['hotel_id'] ?? 'NOT SET',
+                    'hotel_id' => $bookingData['hotel_id'] ?? 'NOT SET',
                 ]);
             }
 
             // 2. Resolve rooms and guests
             [$roomsData, $guestsData] = $this->resolveRoomsAndGuests(
-                $bookingData, $orderId, $debugLogging
+                $bookingData,
+                $orderId,
+                $debugLogging,
             );
 
             // 3. Group rooms by (package + dates)
@@ -108,16 +112,16 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
 
             if ($debugLogging) {
                 fn_log_event('general', 'runtime', [
-                    'message'      => 'Novoton - Room grouping result',
-                    'order_id'     => $orderId,
-                    'total_rooms'  => count($roomsData),
+                    'message' => 'Novoton - Room grouping result',
+                    'order_id' => $orderId,
+                    'total_rooms' => count($roomsData),
                     'groups_count' => count($roomGroups),
-                    'can_combine'  => count($roomGroups) === 1 ? 'YES - single API call' : 'NO - multiple API calls needed',
+                    'can_combine' => count($roomGroups) === 1 ? 'YES - single API call' : 'NO - multiple API calls needed',
                 ]);
             }
 
             // 4-6. Process each group inside a DB transaction
-            db_query("START TRANSACTION");
+            db_query('START TRANSACTION');
 
             try {
                 $groupNum = 0;
@@ -130,93 +134,114 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
                         $this->buildGroupGuestsAndRooms($group, $guestsData, $bookingData, $commission);
 
                     $apiData = $this->buildApiBookingRequest(
-                        $group, $allGuests, $apiRooms, $bookingData, $orderId, $groupNum, count($roomGroups), $orderComment
+                        $group,
+                        $allGuests,
+                        $apiRooms,
+                        $bookingData,
+                        $orderId,
+                        $groupNum,
+                        count($roomGroups),
+                        $orderComment,
                     );
 
                     // 5. Persist booking record (upsert)
                     $bookingRecord = $this->buildBookingRecord(
-                        $group, $allGuests, $bookingData, $product,
-                        $orderId, $groupNum, count($roomGroups),
-                        $totalApiPrice, $totalGroupPrice,
-                        $apiData, $disableApi
+                        $group,
+                        $allGuests,
+                        $bookingData,
+                        $product,
+                        $orderId,
+                        $groupNum,
+                        count($roomGroups),
+                        $totalApiPrice,
+                        $totalGroupPrice,
+                        $apiData,
+                        $disableApi,
                     );
 
                     $bookingId = $this->persistBookingRecord(
-                        $bookingRecord, $originalBookingId, $groupNum, $orderId
+                        $bookingRecord,
+                        $originalBookingId,
+                        $groupNum,
+                        $orderId,
                     );
 
                     if ($debugLogging) {
                         fn_log_event('general', 'runtime', [
-                            'message'        => 'Novoton Booking - API Request Prepared',
-                            'order_id'       => $orderId,
-                            'booking_id'     => $bookingId,
-                            'group'          => $groupNum . ' of ' . count($roomGroups),
+                            'message' => 'Novoton Booking - API Request Prepared',
+                            'order_id' => $orderId,
+                            'booking_id' => $bookingId,
+                            'group' => $groupNum . ' of ' . count($roomGroups),
                             'rooms_in_group' => count($group['rooms']),
-                            'api_disabled'   => $disableApi ? 'YES' : 'NO',
+                            'api_disabled' => $disableApi ? 'YES' : 'NO',
                         ]);
                     }
 
                     // 6. Submit to API and record response
                     $this->submitAndRecordBooking(
-                        $apiData, $bookingId, $orderId, $groupNum,
-                        $totalApiPrice, $disableApi, $debugLogging
+                        $apiData,
+                        $bookingId,
+                        $orderId,
+                        $groupNum,
+                        $totalApiPrice,
+                        $disableApi,
+                        $debugLogging,
                     );
                 }
 
-                db_query("COMMIT");
-
+                db_query('COMMIT');
             } catch (ApiException $e) {
-                db_query("ROLLBACK");
+                db_query('ROLLBACK');
 
                 // ROLLBACK undoes the failed status set inside submitAndRecordBooking().
                 // Re-apply failed status OUTSIDE the transaction so it persists.
                 if ($originalBookingId > 0) {
                     $this->bookingRepo->update($originalBookingId, [
-                        'status'   => TravelConstants::STATUS_FAILED,
+                        'status' => TravelConstants::STATUS_FAILED,
                         'order_id' => $orderId,
-                        'notes'    => 'API Error (' . $e->getApiFunction() . ', HTTP ' . $e->getHttpCode() . '): ' . $e->getMessage(),
+                        'notes' => 'API Error (' . $e->getApiFunction() . ', HTTP ' . $e->getHttpCode() . '): ' . $e->getMessage(),
                     ]);
                 }
 
                 fn_log_event('general', 'runtime', [
-                    'message'      => 'Novoton Booking transaction rolled back (API error)',
-                    'order_id'     => $orderId,
+                    'message' => 'Novoton Booking transaction rolled back (API error)',
+                    'order_id' => $orderId,
                     'api_function' => $e->getApiFunction(),
-                    'http_code'    => $e->getHttpCode(),
-                    'error'        => $e->getMessage(),
+                    'http_code' => $e->getHttpCode(),
+                    'error' => $e->getMessage(),
                 ]);
             } catch (NovotonException $e) {
-                db_query("ROLLBACK");
+                db_query('ROLLBACK');
 
                 if ($originalBookingId > 0) {
                     $this->bookingRepo->update($originalBookingId, [
-                        'status'   => TravelConstants::STATUS_FAILED,
+                        'status' => TravelConstants::STATUS_FAILED,
                         'order_id' => $orderId,
-                        'notes'    => 'Booking error (' . json_encode($e->getContext()) . '): ' . $e->getMessage(),
+                        'notes' => 'Booking error (' . json_encode($e->getContext()) . '): ' . $e->getMessage(),
                     ]);
                 }
 
                 fn_log_event('general', 'runtime', [
-                    'message'  => 'Novoton Booking transaction rolled back',
+                    'message' => 'Novoton Booking transaction rolled back',
                     'order_id' => $orderId,
-                    'context'  => $e->getContext(),
-                    'error'    => $e->getMessage(),
+                    'context' => $e->getContext(),
+                    'error' => $e->getMessage(),
                 ]);
             } catch (\Throwable $e) {
-                db_query("ROLLBACK");
+                db_query('ROLLBACK');
 
                 if ($originalBookingId > 0) {
                     $this->bookingRepo->update($originalBookingId, [
-                        'status'   => TravelConstants::STATUS_FAILED,
+                        'status' => TravelConstants::STATUS_FAILED,
                         'order_id' => $orderId,
-                        'notes'    => 'Unexpected error: ' . $e->getMessage(),
+                        'notes' => 'Unexpected error: ' . $e->getMessage(),
                     ]);
                 }
 
                 fn_log_event('general', 'runtime', [
-                    'message'  => 'Novoton Booking transaction rolled back (unexpected)',
+                    'message' => 'Novoton Booking transaction rolled back (unexpected)',
                     'order_id' => $orderId,
-                    'error'    => $e->getMessage(),
+                    'error' => $e->getMessage(),
                 ]);
             }
         }
@@ -265,7 +290,7 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
 
         // Numeric casts
         $bookingData['total_price'] = (float) $bookingData['total_price'];
-        $bookingData['base_price']  = (float) ($bookingData['base_price'] ?? 0);
+        $bookingData['base_price'] = (float) ($bookingData['base_price'] ?? 0);
 
         // Structured JSON fields — prefer already-parsed arrays from hydrated cache
         if (!empty($dbBooking['rooms_data'])) {
@@ -277,10 +302,10 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
 
         if ($debug) {
             fn_log_event('general', 'runtime', [
-                'message'     => 'Novoton - Fetched booking data from database',
-                'booking_id'  => $bookingId,
+                'message' => 'Novoton - Fetched booking data from database',
+                'booking_id' => $bookingId,
                 'total_price' => $dbBooking['total_price'],
-                'hotel_name'  => $dbBooking['hotel_name'],
+                'hotel_name' => $dbBooking['hotel_name'],
             ]);
         }
 
@@ -331,23 +356,23 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
             $childrenAges = [];
             if (!empty($bookingData['children_ages'])) {
                 $childrenAges = is_string($bookingData['children_ages'])
-                    ? array_map('intval', array_filter(explode(',', $bookingData['children_ages']), function ($v) { return $v !== ''; }))
+                    ? array_map('intval', array_filter(explode(',', $bookingData['children_ages']), fn ($v) => $v !== ''))
                     : (array) $bookingData['children_ages'];
             }
 
             $roomsData = [[
-                'room_id'           => PriceInfoFormatter::toScalar($bookingData['room_id'] ?? ''),
-                'room_name'         => PriceInfoFormatter::toScalar($bookingData['room_type'] ?? $bookingData['room_name'] ?? $bookingData['room_id'] ?? ''),
+                'room_id' => PriceInfoFormatter::toScalar($bookingData['room_id'] ?? ''),
+                'room_name' => PriceInfoFormatter::toScalar($bookingData['room_type'] ?? $bookingData['room_name'] ?? $bookingData['room_id'] ?? ''),
                 'room_type_display' => PriceInfoFormatter::toScalar($bookingData['room_type'] ?? $bookingData['room_name'] ?? $bookingData['room_id'] ?? ''),
-                'board_id'          => PriceInfoFormatter::toScalar($bookingData['board_id'] ?? ''),
-                'board_name'        => PriceInfoFormatter::toScalar($bookingData['board_name'] ?? $bookingData['board_id'] ?? ''),
-                'package_name'      => PriceInfoFormatter::toScalar($bookingData['package_name'] ?? ''),
-                'check_in'          => PriceInfoFormatter::toScalar($bookingData['check_in'] ?? ''),
-                'check_out'         => PriceInfoFormatter::toScalar($bookingData['check_out'] ?? ''),
-                'adults'            => PriceInfoFormatter::toInt($bookingData['adults'] ?? 2),
-                'children'          => PriceInfoFormatter::toInt($bookingData['children'] ?? 0),
-                'childrenAges'      => $childrenAges,
-                'price'             => PriceInfoFormatter::toFloat($bookingData['final_price'] ?? 0),
+                'board_id' => PriceInfoFormatter::toScalar($bookingData['board_id'] ?? ''),
+                'board_name' => PriceInfoFormatter::toScalar($bookingData['board_name'] ?? $bookingData['board_id'] ?? ''),
+                'package_name' => PriceInfoFormatter::toScalar($bookingData['package_name'] ?? ''),
+                'check_in' => PriceInfoFormatter::toScalar($bookingData['check_in'] ?? ''),
+                'check_out' => PriceInfoFormatter::toScalar($bookingData['check_out'] ?? ''),
+                'adults' => PriceInfoFormatter::toInt($bookingData['adults'] ?? 2),
+                'children' => PriceInfoFormatter::toInt($bookingData['children'] ?? 0),
+                'childrenAges' => $childrenAges,
+                'price' => PriceInfoFormatter::toFloat($bookingData['final_price'] ?? 0),
             ]];
         }
 
@@ -385,8 +410,8 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
                 $guestsData = $this->guestDataNormalizer->normalize($dbGuests);
                 if ($debug) {
                     fn_log_event('general', 'runtime', [
-                        'message'      => 'Novoton - Fetched guests_data from database (cart was empty)',
-                        'booking_id'   => $bookingId,
+                        'message' => 'Novoton - Fetched guests_data from database (cart was empty)',
+                        'booking_id' => $bookingId,
                         'guests_count' => count($guestsData),
                     ]);
                 }
@@ -400,14 +425,14 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
         $existing = $this->bookingRepo->findUnassignedByHotelDates(
             PriceInfoFormatter::toScalar($bookingData['hotel_id'] ?? ''),
             PriceInfoFormatter::toScalar($bookingData['check_in'] ?? ''),
-            PriceInfoFormatter::toScalar($bookingData['check_out'] ?? '')
+            PriceInfoFormatter::toScalar($bookingData['check_out'] ?? ''),
         );
         if (!empty($existing['guests_data'])) {
             $guestsData = $this->guestDataNormalizer->normalize($existing['guests_data']);
             if ($debug) {
                 fn_log_event('general', 'runtime', [
-                    'message'      => 'Novoton - Fetched guests_data from pending booking record',
-                    'holder_name'  => $existing['holder_name'] ?? '',
+                    'message' => 'Novoton - Fetched guests_data from pending booking record',
+                    'holder_name' => $existing['holder_name'] ?? '',
                     'guests_count' => count($guestsData),
                 ]);
             }
@@ -428,27 +453,27 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
      */
     private function groupRoomsByPackage(array $roomsData, array $bookingData): array
     {
-        $groups          = [];
-        $defaultPackage  = PriceInfoFormatter::toScalar($bookingData['package_name'] ?? '');
-        $defaultCheckIn  = PriceInfoFormatter::toScalar($bookingData['check_in'] ?? '');
+        $groups = [];
+        $defaultPackage = PriceInfoFormatter::toScalar($bookingData['package_name'] ?? '');
+        $defaultCheckIn = PriceInfoFormatter::toScalar($bookingData['check_in'] ?? '');
         $defaultCheckOut = PriceInfoFormatter::toScalar($bookingData['check_out'] ?? '');
 
         foreach ($roomsData as $roomIdx => $room) {
             if (!is_array($room)) {
                 continue;
             }
-            $package  = PriceInfoFormatter::toScalar($room['package_name'] ?? $defaultPackage);
-            $checkIn  = PriceInfoFormatter::toScalar($room['check_in']     ?? $defaultCheckIn);
-            $checkOut = PriceInfoFormatter::toScalar($room['check_out']    ?? $defaultCheckOut);
+            $package = PriceInfoFormatter::toScalar($room['package_name'] ?? $defaultPackage);
+            $checkIn = PriceInfoFormatter::toScalar($room['check_in'] ?? $defaultCheckIn);
+            $checkOut = PriceInfoFormatter::toScalar($room['check_out'] ?? $defaultCheckOut);
 
             $groupKey = md5($package . '|' . $checkIn . '|' . $checkOut);
 
             if (!isset($groups[$groupKey])) {
                 $groups[$groupKey] = [
                     'package_name' => $package,
-                    'check_in'     => $checkIn,
-                    'check_out'    => $checkOut,
-                    'rooms'        => [],
+                    'check_in' => $checkIn,
+                    'check_out' => $checkOut,
+                    'rooms' => [],
                 ];
             }
 
@@ -475,11 +500,11 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
         array $group,
         array $guestsData,
         array $bookingData,
-        float $commission
+        float $commission,
     ): array {
-        $allGuests       = [];
-        $apiRooms        = [];
-        $totalApiPrice   = 0.0;
+        $allGuests = [];
+        $apiRooms = [];
+        $totalApiPrice = 0.0;
         $totalGroupPrice = 0.0;
 
         $groupRooms = is_array($group['rooms'] ?? null) ? $group['rooms'] : [];
@@ -487,12 +512,12 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
             if (!is_array($room)) {
                 continue;
             }
-            $roomIdx      = PriceInfoFormatter::toInt($room['original_index'] ?? 0);
-            $roomNum      = $roomIdx + 1;
-            $adultsCount  = PriceInfoFormatter::toInt($room['adults']   ?? 2);
+            $roomIdx = PriceInfoFormatter::toInt($room['original_index'] ?? 0);
+            $roomNum = $roomIdx + 1;
+            $adultsCount = PriceInfoFormatter::toInt($room['adults'] ?? 2);
             $childrenCount = PriceInfoFormatter::toInt($room['children'] ?? 0);
             $childrenAges = is_array($room['childrenAges'] ?? null) ? $room['childrenAges'] : [];
-            $roomGuests   = [];
+            $roomGuests = [];
 
             // Adults
             for ($i = 1; $i <= $adultsCount; $i++) {
@@ -507,14 +532,14 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
 
                 $guestEntry = is_array($guestsData[$guestKey] ?? null) ? $guestsData[$guestKey] : [];
                 $guest = [
-                    'name'     => $name,
+                    'name' => $name,
                     'birthday' => PriceInfoFormatter::toScalar($guestEntry['birthday'] ?? ''),
-                    'age'      => PriceInfoFormatter::toInt($guestEntry['age'] ?? 30),
-                    'type'     => 'adult',
-                    'room'     => $roomNum,
+                    'age' => PriceInfoFormatter::toInt($guestEntry['age'] ?? 30),
+                    'type' => 'adult',
+                    'room' => $roomNum,
                 ];
                 $roomGuests[] = $guest;
-                $allGuests[]  = $guest;
+                $allGuests[] = $guest;
             }
 
             // Children
@@ -543,26 +568,26 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
                 }
 
                 $guest = [
-                    'name'     => $name,
+                    'name' => $name,
                     'birthday' => PriceInfoFormatter::toScalar($childEntry['birthday'] ?? ''),
-                    'age'      => $age,
-                    'type'     => 'child',
-                    'room'     => $roomNum,
+                    'age' => $age,
+                    'type' => 'child',
+                    'room' => $roomNum,
                 ];
                 $roomGuests[] = $guest;
-                $allGuests[]  = $guest;
+                $allGuests[] = $guest;
             }
 
             // Price: reverse commission to get API (net) price
             $roomPriceWithCommission = PriceInfoFormatter::toFloat($room['price'] ?? 0);
-            $roomApiPrice            = $roomPriceWithCommission / (1 + ($commission / 100));
-            $totalApiPrice   += $roomApiPrice;
+            $roomApiPrice = $roomPriceWithCommission / (1 + ($commission / 100));
+            $totalApiPrice += $roomApiPrice;
             $totalGroupPrice += $roomPriceWithCommission;
 
             $apiRooms[] = [
-                'room_id'  => PriceInfoFormatter::toScalar($room['room_id']  ?? $bookingData['room_id'] ?? ''),
+                'room_id' => PriceInfoFormatter::toScalar($room['room_id'] ?? $bookingData['room_id'] ?? ''),
                 'board_id' => PriceInfoFormatter::toScalar($room['board_id'] ?? $bookingData['board_id'] ?? ''),
-                'guests'   => $roomGuests,
+                'guests' => $roomGuests,
             ];
         }
 
@@ -605,14 +630,14 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
      * @return array<string, mixed>
      */
     private function buildApiBookingRequest(
-        array  $group,
-        array  $allGuests,
-        array  $apiRooms,
-        array  $bookingData,
-        int    $orderId,
-        int    $groupNum,
-        int    $totalGroups,
-        string $orderComment = ''
+        array $group,
+        array $allGuests,
+        array $apiRooms,
+        array $bookingData,
+        int $orderId,
+        int $groupNum,
+        int $totalGroups,
+        string $orderComment = '',
     ): array {
         $suffix = $totalGroups > 1 ? "-G{$groupNum}" : '';
 
@@ -621,23 +646,23 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
             : PriceInfoFormatter::toScalar($bookingData['holder_name'] ?? 'Guest');
 
         $apiData = [
-            'hotel_id'     => PriceInfoFormatter::toScalar($bookingData['hotel_id'] ?? ''),
+            'hotel_id' => PriceInfoFormatter::toScalar($bookingData['hotel_id'] ?? ''),
             'package_name' => PriceInfoFormatter::toScalar($group['package_name'] ?? ''),
-            'check_in'     => PriceInfoFormatter::toScalar($group['check_in'] ?? ''),
-            'check_out'    => PriceInfoFormatter::toScalar($group['check_out'] ?? ''),
-            'holder'       => $firstGuestName,
-            'guests'       => $allGuests,
-            'rooms'        => $apiRooms,
-            'order_num'    => $orderId . $suffix,
-            'remark'       => '',
-            'comment'      => $orderComment,
+            'check_in' => PriceInfoFormatter::toScalar($group['check_in'] ?? ''),
+            'check_out' => PriceInfoFormatter::toScalar($group['check_out'] ?? ''),
+            'holder' => $firstGuestName,
+            'guests' => $allGuests,
+            'rooms' => $apiRooms,
+            'order_num' => $orderId . $suffix,
+            'remark' => '',
+            'comment' => $orderComment,
         ];
 
         // Single-room shortcut
         $groupRoomsArr = is_array($group['rooms'] ?? null) ? $group['rooms'] : [];
         if (count($groupRoomsArr) === 1) {
             $firstGroupRoom = is_array($groupRoomsArr[0] ?? null) ? $groupRoomsArr[0] : [];
-            $apiData['room_id']  = PriceInfoFormatter::toScalar($firstGroupRoom['room_id']  ?? $bookingData['room_id'] ?? '');
+            $apiData['room_id'] = PriceInfoFormatter::toScalar($firstGroupRoom['room_id'] ?? $bookingData['room_id'] ?? '');
             $apiData['board_id'] = PriceInfoFormatter::toScalar($firstGroupRoom['board_id'] ?? $bookingData['board_id'] ?? '');
         }
 
@@ -659,13 +684,13 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
         array $allGuests,
         array $bookingData,
         array $product,
-        int   $orderId,
-        int   $groupNum,
-        int   $totalGroups,
+        int $orderId,
+        int $groupNum,
+        int $totalGroups,
         float $totalApiPrice,
         float $totalGroupPrice,
         array $apiData,
-        bool  $disableApi
+        bool $disableApi,
     ): array {
         $groupRooms = is_array($group['rooms'] ?? null) ? $group['rooms'] : [];
 
@@ -673,24 +698,24 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
         $groupCheckIn = PriceInfoFormatter::toScalar($group['check_in'] ?? '');
         $groupCheckOut = PriceInfoFormatter::toScalar($group['check_out'] ?? '');
         try {
-            $checkInDate  = new \DateTime($groupCheckIn);
+            $checkInDate = new \DateTime($groupCheckIn);
             $checkOutDate = new \DateTime($groupCheckOut);
-            $nights       = $checkInDate->diff($checkOutDate)->days;
+            $nights = $checkInDate->diff($checkOutDate)->days;
         } catch (\Exception $e) {
             fn_log_event('general', 'error', [
-                'message'   => 'Novoton - Invalid date in booking group',
-                'check_in'  => $group['check_in'] ?? '',
+                'message' => 'Novoton - Invalid date in booking group',
+                'check_in' => $group['check_in'] ?? '',
                 'check_out' => $group['check_out'] ?? '',
-                'error'     => $e->getMessage(),
+                'error' => $e->getMessage(),
             ]);
             $nights = PriceInfoFormatter::toInt($bookingData['nights'] ?? 7);
         }
 
-        $orderInfo   = fn_get_order_info($orderId);
+        $orderInfo = fn_get_order_info($orderId);
         /** @var array<string, mixed> $orderInfo */
         $orderInfo = is_array($orderInfo) ? $orderInfo : [];
         $orderUserId = PriceInfoFormatter::toInt($orderInfo['user_id'] ?? 0);
-        $orderEmail  = PriceInfoFormatter::toScalar($orderInfo['email'] ?? '');
+        $orderEmail = PriceInfoFormatter::toScalar($orderInfo['email'] ?? '');
 
         $firstGroupRoom = is_array($groupRooms[0] ?? null) ? $groupRooms[0] : [];
         $firstGuestName = (is_array($allGuests[0] ?? null) && !empty($allGuests[0]['name']))
@@ -698,40 +723,40 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
             : PriceInfoFormatter::toScalar($bookingData['holder_name'] ?? '');
 
         return [
-            'order_id'         => $orderId,
-            'product_id'       => PriceInfoFormatter::toScalar($product['product_id'] ?? ''),
-            'item_id'          => PriceInfoFormatter::toScalar($product['item_id'] ?? ''),
-            'hotel_id'         => PriceInfoFormatter::toScalar($bookingData['hotel_id'] ?? ''),
-            'hotel_name'       => PriceInfoFormatter::toScalar($bookingData['hotel_name'] ?? ''),
-            'package_name'     => PriceInfoFormatter::toScalar($group['package_name'] ?? ''),
-            'room_id'          => implode(', ', array_column($groupRooms, 'room_id')),
-            'room_type'        => PriceInfoFormatter::toScalar($firstGroupRoom['room_type_display'] ?? $firstGroupRoom['room_name'] ?? ''),
-            'board_id'         => PriceInfoFormatter::toScalar($firstGroupRoom['board_id'] ?? $bookingData['board_id'] ?? ''),
-            'board_name'       => PriceInfoFormatter::toScalar($firstGroupRoom['board_name'] ?? $bookingData['board_name'] ?? ''),
-            'check_in'         => $groupCheckIn,
-            'check_out'        => $groupCheckOut,
-            'nights'           => $nights,
-            'adults'           => array_sum(array_column($groupRooms, 'adults')),
-            'children'         => array_sum(array_column($groupRooms, 'children')),
-            'children_ages'    => PriceInfoFormatter::toScalar($bookingData['children_ages'] ?? ''),
-            'num_rooms'        => count($groupRooms),
-            'room_number'      => $groupNum,
-            'total_rooms'      => $totalGroups,
-            'rooms_data'       => json_encode($groupRooms),
-            'guest_name'       => implode(', ', array_column($allGuests, 'name')),
-            'holder_name'      => $firstGuestName,
-            'guests_data'      => json_encode($allGuests),
-            'base_price'       => $totalApiPrice,
-            'total_price'      => $totalGroupPrice,
-            'currency'         => ConfigProvider::getApiCurrency(),
-            'status'           => TravelConstants::STATUS_PENDING,
-            'api_request'      => json_encode($apiData),
-            'notes'                          => $disableApi ? 'API submission disabled - test mode' : '',
-            'user_id'                        => $orderUserId,
-            'guest_email'                    => $orderEmail,
-            'terms_of_payment_raw'           => $bookingData['terms_of_payment_raw'] ?? null,
-            'terms_of_cancellation_raw'      => $bookingData['terms_of_cancellation_raw'] ?? null,
-            'terms_of_payment_formatted'     => $bookingData['terms_of_payment'] ?? $bookingData['terms_of_payment_formatted'] ?? null,
+            'order_id' => $orderId,
+            'product_id' => PriceInfoFormatter::toScalar($product['product_id'] ?? ''),
+            'item_id' => PriceInfoFormatter::toScalar($product['item_id'] ?? ''),
+            'hotel_id' => PriceInfoFormatter::toScalar($bookingData['hotel_id'] ?? ''),
+            'hotel_name' => PriceInfoFormatter::toScalar($bookingData['hotel_name'] ?? ''),
+            'package_name' => PriceInfoFormatter::toScalar($group['package_name'] ?? ''),
+            'room_id' => implode(', ', array_column($groupRooms, 'room_id')),
+            'room_type' => PriceInfoFormatter::toScalar($firstGroupRoom['room_type_display'] ?? $firstGroupRoom['room_name'] ?? ''),
+            'board_id' => PriceInfoFormatter::toScalar($firstGroupRoom['board_id'] ?? $bookingData['board_id'] ?? ''),
+            'board_name' => PriceInfoFormatter::toScalar($firstGroupRoom['board_name'] ?? $bookingData['board_name'] ?? ''),
+            'check_in' => $groupCheckIn,
+            'check_out' => $groupCheckOut,
+            'nights' => $nights,
+            'adults' => array_sum(array_column($groupRooms, 'adults')),
+            'children' => array_sum(array_column($groupRooms, 'children')),
+            'children_ages' => PriceInfoFormatter::toScalar($bookingData['children_ages'] ?? ''),
+            'num_rooms' => count($groupRooms),
+            'room_number' => $groupNum,
+            'total_rooms' => $totalGroups,
+            'rooms_data' => json_encode($groupRooms),
+            'guest_name' => implode(', ', array_column($allGuests, 'name')),
+            'holder_name' => $firstGuestName,
+            'guests_data' => json_encode($allGuests),
+            'base_price' => $totalApiPrice,
+            'total_price' => $totalGroupPrice,
+            'currency' => ConfigProvider::getApiCurrency(),
+            'status' => TravelConstants::STATUS_PENDING,
+            'api_request' => json_encode($apiData),
+            'notes' => $disableApi ? 'API submission disabled - test mode' : '',
+            'user_id' => $orderUserId,
+            'guest_email' => $orderEmail,
+            'terms_of_payment_raw' => $bookingData['terms_of_payment_raw'] ?? null,
+            'terms_of_cancellation_raw' => $bookingData['terms_of_cancellation_raw'] ?? null,
+            'terms_of_payment_formatted' => $bookingData['terms_of_payment'] ?? $bookingData['terms_of_payment_formatted'] ?? null,
             'terms_of_cancellation_formatted' => $bookingData['terms_of_cancellation'] ?? $bookingData['terms_of_cancellation_formatted'] ?? null,
         ];
     }
@@ -747,9 +772,9 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
      */
     private function persistBookingRecord(
         array $record,
-        int   $originalBookingId,
-        int   $groupNum,
-        int   $orderId
+        int $originalBookingId,
+        int $groupNum,
+        int $orderId,
     ): int {
         // Group 1: update the original booking from cart
         if ($groupNum === 1 && $originalBookingId > 0) {
@@ -762,7 +787,7 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
             $orderId,
             PriceInfoFormatter::toScalar($record['hotel_id'] ?? ''),
             PriceInfoFormatter::toScalar($record['check_in'] ?? ''),
-            PriceInfoFormatter::toScalar($record['check_out'] ?? '')
+            PriceInfoFormatter::toScalar($record['check_out'] ?? ''),
         );
 
         if ($existingId) {
@@ -783,12 +808,12 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
      */
     private function submitAndRecordBooking(
         array $apiData,
-        int   $bookingId,
-        int   $orderId,
-        int   $groupNum,
+        int $bookingId,
+        int $orderId,
+        int $groupNum,
         float $totalApiPrice,
-        bool  $disableApi,
-        bool  $debug
+        bool $disableApi,
+        bool $debug,
     ): void {
         if ($disableApi) {
             $this->bookingRepo->update($bookingId, ['notes' => 'API submission disabled - booking saved locally only.']);
@@ -799,20 +824,20 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
             $response = $this->reservations->createReservation($apiData);
 
             if ($response) {
-                $novotonId     = (string) ($response->IdNum   ?? '');
+                $novotonId = (string) ($response->IdNum ?? '');
                 $novotonStatus = Constants::normalizeApiStatus((string) ($response->Status ?? ''));
-                $novotonPrice  = (string) ($response->Price   ?? '');
+                $novotonPrice = (string) ($response->Price ?? '');
 
                 $update = [
                     'novoton_invoice_id' => $novotonId,
-                    'novoton_status'     => $novotonStatus,
-                    'api_price'          => !empty($novotonPrice) ? (float) $novotonPrice : $totalApiPrice,
-                    'api_response'       => json_encode([
-                        'IdNum'    => $novotonId,
-                        'Price'    => $novotonPrice,
+                    'novoton_status' => $novotonStatus,
+                    'api_price' => !empty($novotonPrice) ? (float) $novotonPrice : $totalApiPrice,
+                    'api_response' => json_encode([
+                        'IdNum' => $novotonId,
+                        'Price' => $novotonPrice,
                         'Currency' => (string) ($response->Currency ?? 'EUR'),
-                        'Quota'    => (string) ($response->Quota    ?? ''),
-                        'Status'   => $novotonStatus,
+                        'Quota' => (string) ($response->Quota ?? ''),
+                        'Status' => $novotonStatus,
                     ]),
                 ];
 
@@ -826,25 +851,25 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
 
                 if ($debug) {
                     fn_log_event('general', 'runtime', [
-                        'message'    => 'Novoton Booking - API Response',
-                        'order_id'   => $orderId,
+                        'message' => 'Novoton Booking - API Response',
+                        'order_id' => $orderId,
                         'booking_id' => $bookingId,
                         'novoton_id' => $novotonId,
-                        'status'     => $novotonStatus,
+                        'status' => $novotonStatus,
                     ]);
                 }
             }
         } catch (ApiException $e) {
             $this->bookingRepo->update($bookingId, [
                 'status' => TravelConstants::STATUS_FAILED,
-                'notes'  => 'API Error (' . $e->getApiFunction() . ', HTTP ' . $e->getHttpCode() . '): ' . $e->getMessage(),
+                'notes' => 'API Error (' . $e->getApiFunction() . ', HTTP ' . $e->getHttpCode() . '): ' . $e->getMessage(),
             ]);
 
             fn_log_event('general', 'runtime', [
-                'message'  => 'Novoton Booking API Error',
+                'message' => 'Novoton Booking API Error',
                 'order_id' => $orderId,
-                'group'    => $groupNum,
-                'error'    => $e->getMessage(),
+                'group' => $groupNum,
+                'error' => $e->getMessage(),
             ]);
         }
     }

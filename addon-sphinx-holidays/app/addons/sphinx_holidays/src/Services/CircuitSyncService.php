@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays\Services;
@@ -156,24 +157,24 @@ class CircuitSyncService extends AbstractSyncService implements CircuitSyncServi
         }
 
         return [
-            'circuit_id'        => $id,
-            'name'              => $name,
-            'summary'           => (string) ($raw['summary'] ?? ''),
-            'description'       => (string) ($raw['description'] ?? ''),
-            'duration_days'     => (int) ($raw['duration']['days'] ?? $raw['duration_days'] ?? 0),
-            'duration_nights'   => (int) ($raw['duration']['nights'] ?? $raw['duration_nights'] ?? 0),
-            'transport_type'    => (string) ($raw['transport_type'] ?? ''),
-            'destination_ids'   => !empty($destIds) ? json_encode($destIds) : null,
+            'circuit_id' => $id,
+            'name' => $name,
+            'summary' => (string) ($raw['summary'] ?? ''),
+            'description' => (string) ($raw['description'] ?? ''),
+            'duration_days' => (int) ($raw['duration']['days'] ?? $raw['duration_days'] ?? 0),
+            'duration_nights' => (int) ($raw['duration']['nights'] ?? $raw['duration_nights'] ?? 0),
+            'transport_type' => (string) ($raw['transport_type'] ?? ''),
+            'destination_ids' => !empty($destIds) ? json_encode($destIds) : null,
             'destination_names' => !empty($destNames) ? implode(', ', $destNames) : null,
-            'departure_ids'     => !empty($depIds) ? json_encode($depIds) : null,
-            'departure_names'   => !empty($depNames) ? implode(', ', $depNames) : null,
-            'image_url'         => (string) ($raw['image'] ?? $raw['image_url'] ?? ''),
-            'itinerary_json'    => !empty($raw['itinerary']) ? json_encode($raw['itinerary']) : null,
-            'tags_json'         => !empty($raw['tags']) ? json_encode($raw['tags']) : null,
-            'min_price'         => isset($raw['pricing']['selling_price']) ? (float) $raw['pricing']['selling_price'] : null,
-            'currency'          => (string) ($raw['pricing']['currency'] ?? 'EUR'),
-            'sync_status'       => 'active',
-            'last_synced_at'    => date('Y-m-d H:i:s'),
+            'departure_ids' => !empty($depIds) ? json_encode($depIds) : null,
+            'departure_names' => !empty($depNames) ? implode(', ', $depNames) : null,
+            'image_url' => (string) ($raw['image'] ?? $raw['image_url'] ?? ''),
+            'itinerary_json' => !empty($raw['itinerary']) ? json_encode($raw['itinerary']) : null,
+            'tags_json' => !empty($raw['tags']) ? json_encode($raw['tags']) : null,
+            'min_price' => isset($raw['pricing']['selling_price']) ? (float) $raw['pricing']['selling_price'] : null,
+            'currency' => (string) ($raw['pricing']['currency'] ?? 'EUR'),
+            'sync_status' => 'active',
+            'last_synced_at' => date('Y-m-d H:i:s'),
         ];
     }
 

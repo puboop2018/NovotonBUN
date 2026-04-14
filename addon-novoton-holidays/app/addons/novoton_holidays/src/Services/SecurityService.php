@@ -1,21 +1,21 @@
 <?php
+
 declare(strict_types=1);
+
 /**
  * Novoton Security Service
- * 
+ *
  * Handles input validation, CSRF protection, rate limiting,
  * and secure data handling for the addon.
- * 
+ *
  * @package NovotonHolidays
  * @since 2.7.0
  */
 
 namespace Tygh\Addons\NovotonHolidays\Services;
 
-use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\Repository\CacheRepository;
 use Tygh\Addons\NovotonHolidays\Repository\CacheRepositoryInterface;
-use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\TravelCore\Helpers\ValidationHelpers;
 use Tygh\Addons\TravelCore\TravelConstants;
 use Tygh\Registry;
@@ -31,17 +31,17 @@ class SecurityService implements SecurityServiceInterface
     {
         $this->cacheRepo = $cacheRepo ?? new CacheRepository();
     }
-    
+
     /**
      * Validate booking data
-     * 
+     *
      * @param array<string, mixed> $data Booking data
      * @return array<string, mixed> [valid => bool, errors => array]
      */
     public function validateBookingData(array $data): array
     {
         $errors = [];
-        
+
         // Required fields
         $required = ['hotel_id', 'check_in', 'check_out', 'adults'];
         foreach ($required as $field) {
@@ -49,7 +49,7 @@ class SecurityService implements SecurityServiceInterface
                 $errors[] = "Missing required field: {$field}";
             }
         }
-        
+
         // Validate hotel_id format
         $hotelIdStr = PriceInfoFormatter::toScalar($data['hotel_id'] ?? '');
         if (!empty($hotelIdStr) && !$this->isValidHotelId($hotelIdStr)) {
@@ -104,7 +104,7 @@ class SecurityService implements SecurityServiceInterface
                 }
             }
         }
-        
+
         // Validate price (prevent manipulation)
         if (isset($data['total_price'])) {
             $price = PriceInfoFormatter::toFloat($data['total_price']);
@@ -112,7 +112,7 @@ class SecurityService implements SecurityServiceInterface
                 $errors[] = 'Invalid price value';
             }
         }
-        
+
         // Validate guest names (basic XSS prevention)
         $nameFields = ['holder_name', 'guest_name'];
         foreach ($nameFields as $field) {
@@ -120,16 +120,16 @@ class SecurityService implements SecurityServiceInterface
                 $errors[] = "Invalid characters in {$field}";
             }
         }
-        
+
         return [
             'valid' => empty($errors),
-            'errors' => $errors
+            'errors' => $errors,
         ];
     }
-    
+
     /**
      * Validate search parameters
-     * 
+     *
      * @param array<string, mixed> $params Search parameters
      * @return array<string, mixed> [valid => bool, errors => array, sanitized => array]
      */
@@ -235,7 +235,9 @@ class SecurityService implements SecurityServiceInterface
         $sanitized = [];
 
         foreach ($guests as $key => $guest) {
-            if (!is_array($guest)) continue;
+            if (!is_array($guest)) {
+                continue;
+            }
 
             $guestType = PriceInfoFormatter::toScalar($guest['type'] ?? '');
             $sanitized[$key] = [
@@ -265,13 +267,13 @@ class SecurityService implements SecurityServiceInterface
                 }
             }
         }
-        
+
         return $sanitized;
     }
-    
+
     /**
      * Check CSRF token
-     * 
+     *
      * @param string $token Token to verify
      * @return bool Is valid
      */
@@ -280,20 +282,20 @@ class SecurityService implements SecurityServiceInterface
         if (empty($token)) {
             return false;
         }
-        
+
         // CS-Cart's built-in CSRF check
         if (defined('CSRF_TOKEN_NAME')) {
             return fn_csrf_validate_request([CSRF_TOKEN_NAME => $token]);
         }
-        
+
         // Fallback: check session token
         $session_token = $_SESSION['nvt_csrf_token'] ?? '';
         return hash_equals($session_token, $token);
     }
-    
+
     /**
      * Generate CSRF token
-     * 
+     *
      * @return string Token
      */
     public function generateCsrfToken(): string
@@ -303,10 +305,10 @@ class SecurityService implements SecurityServiceInterface
         }
         return $_SESSION['nvt_csrf_token'];
     }
-    
+
     /**
      * Check rate limit
-     * 
+     *
      * @param string $key Rate limit key (e.g., IP, user_id)
      * @param int $maxRequests Max requests per window
      * @param int $window Window in seconds
@@ -314,42 +316,42 @@ class SecurityService implements SecurityServiceInterface
      */
     public function checkRateLimit(string $key, ?int $maxRequests = null, ?int $window = null): array
     {
-        $maxRequests = $maxRequests ?? ConfigProvider::getRateLimitRequestsPerMin();
-        $window = $window ?? self::RATE_LIMIT_WINDOW;
-        
+        $maxRequests ??= ConfigProvider::getRateLimitRequestsPerMin();
+        $window ??= self::RATE_LIMIT_WINDOW;
+
         $cacheKey = 'nvt_rate_' . md5($key);
         $now = time();
-        
+
         // Get current count
         $data = $this->getRateLimitData($cacheKey);
-        
+
         // Reset if window expired
         if ($data['reset'] <= $now) {
             $data = [
                 'count' => 0,
-                'reset' => $now + $window
+                'reset' => $now + $window,
             ];
         }
-        
+
         // Check if allowed
         $allowed = $data['count'] < $maxRequests;
-        
+
         // Increment counter
         if ($allowed) {
             $data['count']++;
             $this->setRateLimitData($cacheKey, $data);
         }
-        
+
         return [
             'allowed' => $allowed,
             'remaining' => max(0, $maxRequests - $data['count']),
-            'reset' => $data['reset']
+            'reset' => $data['reset'],
         ];
     }
-    
+
     /**
      * Check booking rate limit (stricter)
-     * 
+     *
      * @param string $identifier User ID or session ID
      * @return bool Is allowed
      */
@@ -358,15 +360,15 @@ class SecurityService implements SecurityServiceInterface
         $result = $this->checkRateLimit(
             'booking_' . $identifier,
             ConfigProvider::getRateLimitBookingsPerHour(),
-            3600
+            3600,
         );
-        
+
         return $result['allowed'];
     }
-    
+
     /**
      * Encrypt sensitive data
-     * 
+     *
      * @param string $data Data to encrypt
      * @return string Encrypted data
      */
@@ -374,21 +376,21 @@ class SecurityService implements SecurityServiceInterface
     {
         $key = $this->getEncryptionKey();
         $iv = random_bytes(16);
-        
+
         $encrypted = openssl_encrypt(
             $data,
             'AES-256-CBC',
             $key,
             OPENSSL_RAW_DATA,
-            $iv
+            $iv,
         );
-        
+
         return base64_encode($iv . $encrypted);
     }
-    
+
     /**
      * Decrypt sensitive data
-     * 
+     *
      * @param string $data Encrypted data
      * @return string|null Decrypted data or null on failure
      */
@@ -396,28 +398,28 @@ class SecurityService implements SecurityServiceInterface
     {
         $key = $this->getEncryptionKey();
         $data = base64_decode($data);
-        
+
         if (strlen($data) < 17) {
             return null;
         }
-        
+
         $iv = substr($data, 0, 16);
         $encrypted = substr($data, 16);
-        
+
         $decrypted = openssl_decrypt(
             $encrypted,
             'AES-256-CBC',
             $key,
             OPENSSL_RAW_DATA,
-            $iv
+            $iv,
         );
-        
+
         return $decrypted !== false ? $decrypted : null;
     }
-    
+
     /**
      * Sanitize output for HTML
-     * 
+     *
      * @param string $string String to sanitize
      * @return string Sanitized string
      */
@@ -425,10 +427,10 @@ class SecurityService implements SecurityServiceInterface
     {
         return htmlspecialchars($string, ENT_QUOTES | ENT_HTML5, 'UTF-8');
     }
-    
+
     /**
      * Log security event
-     * 
+     *
      * @param string $event Event type
      * @param array<string, mixed> $data Event data
      */
@@ -440,15 +442,15 @@ class SecurityService implements SecurityServiceInterface
             'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? '',
             'timestamp' => date('Y-m-d H:i:s'),
         ], $data);
-        
+
         fn_log_event('general', 'runtime', [
             'message' => 'NovotonSecurity: ' . $event,
-            'data' => $logData
+            'data' => $logData,
         ]);
     }
-    
+
     // ========== Private Helper Methods ==========
-    
+
     private function isValidDate(string $date): bool
     {
         return ValidationHelpers::isValidDate($date);
@@ -468,7 +470,7 @@ class SecurityService implements SecurityServiceInterface
     {
         return ValidationHelpers::sanitizeName($name);
     }
-    
+
     /**
      * Sanitize general string
      */
@@ -478,7 +480,7 @@ class SecurityService implements SecurityServiceInterface
         $string = strip_tags($string);
         return mb_substr($string, 0, $maxLength);
     }
-    
+
     /**
      * Sanitize hotel ID
      */
@@ -486,7 +488,7 @@ class SecurityService implements SecurityServiceInterface
     {
         return (string) preg_replace('/[^a-zA-Z0-9_-]/', '', substr($hotelId, 0, 50));
     }
-    
+
     /**
      * Get rate limit data from cache
      * @return array<string, mixed>
@@ -512,10 +514,10 @@ class SecurityService implements SecurityServiceInterface
         $this->cacheRepo->upsert(
             $key,
             json_encode($data, JSON_UNESCAPED_UNICODE) ?: '',
-            $data['reset'] + 60
+            $data['reset'] + 60,
         );
     }
-    
+
     /**
      * Get encryption key
      *
@@ -560,26 +562,26 @@ class SecurityService implements SecurityServiceInterface
         // Generate a cryptographically secure random key
         $key = bin2hex(random_bytes(32));
 
-        if (!is_dir($keyDir) && !mkdir($keyDir, 0700, true) && !is_dir($keyDir)) {
+        if (!is_dir($keyDir) && !mkdir($keyDir, 0o700, true) && !is_dir($keyDir)) {
             fn_log_event('general', 'runtime', [
-                'message' => 'Novoton SecurityService: failed to create key directory: ' . $keyDir
+                'message' => 'Novoton SecurityService: failed to create key directory: ' . $keyDir,
             ]);
         }
 
         if (file_put_contents($keyFile, $key, LOCK_EX) === false) {
             fn_log_event('general', 'runtime', [
-                'message' => 'Novoton SecurityService: failed to persist encryption key to ' . $keyFile
+                'message' => 'Novoton SecurityService: failed to persist encryption key to ' . $keyFile,
             ]);
         } else {
-            chmod($keyFile, 0600);
+            chmod($keyFile, 0o600);
             fn_log_event('general', 'runtime', [
-                'message' => 'Novoton SecurityService: generated and persisted new encryption key'
+                'message' => 'Novoton SecurityService: generated and persisted new encryption key',
             ]);
         }
 
         return $key;
     }
-    
+
     /**
      * Get client IP address
      */
@@ -589,9 +591,9 @@ class SecurityService implements SecurityServiceInterface
             'HTTP_CF_CONNECTING_IP',  // Cloudflare
             'HTTP_X_FORWARDED_FOR',
             'HTTP_X_REAL_IP',
-            'REMOTE_ADDR'
+            'REMOTE_ADDR',
         ];
-        
+
         foreach ($headers as $header) {
             if (!empty($_SERVER[$header])) {
                 $ip = $_SERVER[$header];
@@ -604,7 +606,7 @@ class SecurityService implements SecurityServiceInterface
                 }
             }
         }
-        
+
         return '0.0.0.0';
     }
 }

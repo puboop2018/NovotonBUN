@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 /**
  * Centralized debug-logging helper.
  *
@@ -37,8 +39,8 @@ class DebugLogger
     /**
      * Log a debug message via fn_log_event when debug is enabled.
      *
-     * @param string $message  Human-readable summary
-     * @param array<string, mixed>  $context  Arbitrary key-value context (will appear in log)
+     * @param string $message Human-readable summary
+     * @param array<string, mixed> $context Arbitrary key-value context (will appear in log)
      */
     public static function log(string $message, array $context = []): void
     {
@@ -48,7 +50,7 @@ class DebugLogger
 
         fn_log_event('general', 'runtime', array_merge(
             ['message' => $message],
-            $context
+            $context,
         ));
     }
 

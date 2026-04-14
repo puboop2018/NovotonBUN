@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays\Cron\Commands;
@@ -35,41 +36,41 @@ class DeduplicateCommand extends AbstractSyncCommand
         $startMs = (int)(microtime(true) * 1000);
 
         $dryRun = (bool) ($params['dry_run'] ?? false);
-        $limit  = (int)  ($params['limit'] ?? 0);
+        $limit = (int)  ($params['limit'] ?? 0);
 
         $stats = [
-            'groups_processed'     => 0,
-            'hotels_deduplicated'  => 0,
-            'products_removed'     => 0,
-            'products_linked'      => 0,
+            'groups_processed' => 0,
+            'hotels_deduplicated' => 0,
+            'products_removed' => 0,
+            'products_linked' => 0,
         ];
 
         $repo = new HotelRepository();
 
         if ($dryRun) {
-            $this->output("DRY RUN mode — no changes will be made.");
+            $this->output('DRY RUN mode — no changes will be made.');
         }
 
-        $this->output("Finding duplicate hotel groups...");
+        $this->output('Finding duplicate hotel groups...');
 
         $groups = $this->findDuplicateGroups($limit);
 
         if (empty($groups)) {
-            $this->output("No duplicate groups found.");
+            $this->output('No duplicate groups found.');
             $durationMs = (int)(microtime(true) * 1000) - $startMs;
             return [
-                'success'  => true,
-                'dry_run'  => $dryRun,
-                'stats'    => array_merge($stats, ['duration_ms' => $durationMs]),
+                'success' => true,
+                'dry_run' => $dryRun,
+                'stats' => array_merge($stats, ['duration_ms' => $durationMs]),
             ];
         }
 
-        $this->output("Found " . count($groups) . " duplicate group(s).");
+        $this->output('Found ' . count($groups) . ' duplicate group(s).');
 
         foreach ($groups as $group) {
             $hotelIds = explode(',', $group['hotel_ids']);
-            $name     = $group['name'];
-            $cnt      = (int) $group['cnt'];
+            $name = $group['name'];
+            $cnt = (int) $group['cnt'];
 
             $this->output("--- Group: \"{$name}\" (property_type={$group['property_type']}, "
                 . "class={$group['classification']}, region={$group['region_id']}, "
@@ -85,7 +86,7 @@ class DeduplicateCommand extends AbstractSyncCommand
             }
 
             if (count($hotels) < 2) {
-                $this->output("  Skipping — fewer than 2 hotels resolved.");
+                $this->output('  Skipping — fewer than 2 hotels resolved.');
                 continue;
             }
 
@@ -102,7 +103,7 @@ class DeduplicateCommand extends AbstractSyncCommand
                 $canonical = $hotels[0];
             }
 
-            $canonicalId        = $canonical['hotel_id'];
+            $canonicalId = $canonical['hotel_id'];
             $canonicalProductId = (int) ($canonical['product_id'] ?? 0);
 
             $this->output("  Canonical: hotel_id={$canonicalId}, product_id={$canonicalProductId}");
@@ -112,7 +113,7 @@ class DeduplicateCommand extends AbstractSyncCommand
                     continue;
                 }
 
-                $dupHotelId   = $h['hotel_id'];
+                $dupHotelId = $h['hotel_id'];
                 $dupProductId = (int) ($h['product_id'] ?? 0);
 
                 // If duplicate has a different product_id and canonical has one — delete orphan product
@@ -153,13 +154,13 @@ class DeduplicateCommand extends AbstractSyncCommand
             . "{$stats['hotels_deduplicated']} hotels deduplicated, "
             . "{$stats['products_removed']} products removed, "
             . "{$stats['products_linked']} products linked ("
-            . round($durationMs / 1000, 1) . "s)"
+            . round($durationMs / 1000, 1) . 's)'
             . ($dryRun ? ' [DRY RUN]' : ''));
 
         return [
-            'success'  => true,
-            'dry_run'  => $dryRun,
-            'stats'    => $stats,
+            'success' => true,
+            'dry_run' => $dryRun,
+            'stats' => $stats,
         ];
     }
 
@@ -171,7 +172,7 @@ class DeduplicateCommand extends AbstractSyncCommand
      */
     private function findDuplicateGroups(int $limit): array
     {
-        $limitClause = $limit > 0 ? db_quote(" LIMIT ?i", $limit) : '';
+        $limitClause = $limit > 0 ? db_quote(' LIMIT ?i', $limit) : '';
 
         return db_get_array(
             "SELECT name, property_type, classification, region_id, country_code,
@@ -181,8 +182,7 @@ class DeduplicateCommand extends AbstractSyncCommand
              GROUP BY name, property_type, classification, region_id, country_code
              HAVING cnt > 1
              ORDER BY cnt DESC ?p",
-            $limitClause
+            $limitClause,
         );
     }
-
 }

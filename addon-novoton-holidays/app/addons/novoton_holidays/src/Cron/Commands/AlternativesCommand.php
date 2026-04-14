@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 namespace Tygh\Addons\NovotonHolidays\Cron\Commands;
 
 use Tygh\Addons\NovotonHolidays\Constants;
@@ -47,20 +49,20 @@ class AlternativesCommand extends AbstractCronCommand
      */
     private function checkAlternatives(): array
     {
-        $this->output("Checking alternative_RS for pending requests...");
-        $this->output("");
+        $this->output('Checking alternative_RS for pending requests...');
+        $this->output('');
 
         $altRepo = Container::getInstance()->alternativeRequestRepository();
         $pending = $altRepo->findPendingOlderThan(24);
         $pending = fn_novoton_holidays_decrypt_requests_pii($pending);
 
         if (empty($pending)) {
-            $this->output("No pending requests older than 24 hours found.");
+            $this->output('No pending requests older than 24 hours found.');
             return ['success' => true, 'stats' => ['checked' => 0]];
         }
 
-        $this->output("Found " . count($pending) . " pending requests to check.");
-        $this->output("");
+        $this->output('Found ' . count($pending) . ' pending requests to check.');
+        $this->output('');
 
         $found = 0;
         $emailed = 0;
@@ -71,7 +73,7 @@ class AlternativesCommand extends AbstractCronCommand
             $response = $this->api->reservations()->getAlternatives($request['novoton_request_id']);
 
             if (!$response || !isset($response->alternative)) {
-                $this->output("no response");
+                $this->output('no response');
                 usleep(Constants::API_DELAY_MODERATE);
                 continue;
             }
@@ -87,19 +89,19 @@ class AlternativesCommand extends AbstractCronCommand
                     'check_out' => (string)($alt->CheckOut ?? ''),
                     'board_id' => (string)($alt->IdBoard ?? ''),
                     'quota' => (string)($alt->Quota ?? ''),
-                    'total' => (string)($alt->Total ?? '')
+                    'total' => (string)($alt->Total ?? ''),
                 ];
             }
 
             if (empty($alternatives)) {
-                $this->output("no alternatives yet");
+                $this->output('no alternatives yet');
                 usleep(Constants::API_DELAY_MODERATE);
                 continue;
             }
 
             $altRepo->markAlternativesFound($request['request_id'], (string) json_encode($alternatives));
             $found++;
-            $this->output("FOUND " . count($alternatives) . " alternatives", false);
+            $this->output('FOUND ' . count($alternatives) . ' alternatives', false);
 
             // Send email notification
             if (!empty($request['contact_email'])) {
@@ -107,19 +109,19 @@ class AlternativesCommand extends AbstractCronCommand
                 if ($sent) {
                     $emailed++;
                     $altRepo->markNotified($request['request_id']);
-                    $this->output(" -> Email sent");
+                    $this->output(' -> Email sent');
                 } else {
-                    $this->output(" -> Email FAILED");
+                    $this->output(' -> Email FAILED');
                 }
             } else {
-                $this->output("");
+                $this->output('');
             }
 
             usleep(Constants::API_DELAY_MODERATE);
         }
 
-        $this->output("");
-        $this->output("Checked: " . count($pending));
+        $this->output('');
+        $this->output('Checked: ' . count($pending));
         $this->output("Found alternatives: {$found}");
         $this->output("Emails sent: {$emailed}");
 
@@ -131,19 +133,19 @@ class AlternativesCommand extends AbstractCronCommand
      */
     private function checkBookingAlternatives(): array
     {
-        $this->output("Checking alternatives for RQ status bookings...");
-        $this->output("");
+        $this->output('Checking alternatives for RQ status bookings...');
+        $this->output('');
 
         $bookingRepo = Container::getInstance()->bookingRepository();
         $bookings = $bookingRepo->findRqWithoutAlternatives();
 
         if (empty($bookings)) {
-            $this->output("No RQ bookings to check.");
+            $this->output('No RQ bookings to check.');
             return ['success' => true, 'stats' => ['checked' => 0]];
         }
 
-        $this->output("Found " . count($bookings) . " RQ bookings to check.");
-        $this->output("");
+        $this->output('Found ' . count($bookings) . ' RQ bookings to check.');
+        $this->output('');
 
         foreach ($bookings as $booking) {
             $this->output("Booking #{$booking['booking_id']}... ", false);
@@ -151,9 +153,9 @@ class AlternativesCommand extends AbstractCronCommand
             if (!empty($booking['novoton_reservation_id'])) {
                 $this->api->reservations()->getAlternatives($booking['novoton_reservation_id']);
                 $bookingRepo->update((int) $booking['booking_id'], ['alternatives_requested' => 1]);
-                $this->output("checked");
+                $this->output('checked');
             } else {
-                $this->output("no reservation ID");
+                $this->output('no reservation ID');
             }
             usleep(Constants::API_DELAY_MODERATE);
         }
@@ -166,20 +168,20 @@ class AlternativesCommand extends AbstractCronCommand
      */
     private function notifyAlternatives(): array
     {
-        $this->output("Sending notifications for found alternatives...");
-        $this->output("");
+        $this->output('Sending notifications for found alternatives...');
+        $this->output('');
 
         $altRepo = Container::getInstance()->alternativeRequestRepository();
         $requests = $altRepo->findUnnotified();
         $requests = fn_novoton_holidays_decrypt_requests_pii($requests);
 
         if (empty($requests)) {
-            $this->output("No requests with alternatives to notify.");
+            $this->output('No requests with alternatives to notify.');
             return ['success' => true, 'stats' => ['notified' => 0]];
         }
 
-        $this->output("Found " . count($requests) . " requests to notify.");
-        $this->output("");
+        $this->output('Found ' . count($requests) . ' requests to notify.');
+        $this->output('');
 
         $notified = 0;
         foreach ($requests as $request) {
@@ -187,7 +189,7 @@ class AlternativesCommand extends AbstractCronCommand
 
             $alternatives = json_decode($request['alternatives_data'], true);
             if (empty($alternatives)) {
-                $this->output("no alternatives data");
+                $this->output('no alternatives data');
                 continue;
             }
 
@@ -195,13 +197,13 @@ class AlternativesCommand extends AbstractCronCommand
             if ($sent) {
                 $altRepo->markNotified($request['request_id']);
                 $notified++;
-                $this->output("SENT");
+                $this->output('SENT');
             } else {
-                $this->output("FAILED");
+                $this->output('FAILED');
             }
         }
 
-        $this->output("");
+        $this->output('');
         $this->output("Notified: {$notified}");
         return ['success' => true, 'stats' => ['notified' => $notified]];
     }
@@ -248,7 +250,7 @@ class AlternativesCommand extends AbstractCronCommand
                 'from' => 'default_company_orders_department',
                 'data' => $mail_data,
                 'template_code' => 'novoton_alternatives_available',
-                'tpl' => 'addons/novoton_holidays/email/alternatives_available.tpl'
+                'tpl' => 'addons/novoton_holidays/email/alternatives_available.tpl',
             ], 'A');
         } catch (\Exception $e) {
             return false;

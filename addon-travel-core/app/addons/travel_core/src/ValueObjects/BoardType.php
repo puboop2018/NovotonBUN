@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 /**
  * BoardType Value Object
  *
@@ -14,44 +16,44 @@ namespace Tygh\Addons\TravelCore\ValueObjects;
 
 final class BoardType
 {
-    public const ALL_INCLUSIVE       = 'AI';
+    public const ALL_INCLUSIVE = 'AI';
     public const ALL_INCLUSIVE_LIGHT = 'AIL';
     public const ULTRA_ALL_INCLUSIVE = 'UAI';
-    public const FULL_BOARD          = 'FB';
-    public const FULL_BOARD_PLUS     = 'FB+';
-    public const HALF_BOARD          = 'HB';
-    public const HALF_BOARD_PLUS     = 'HB+';
-    public const BED_AND_BREAKFAST   = 'BB';
-    public const ROOM_ONLY           = 'RO';
-    public const SELF_CATERING       = 'SC';
+    public const FULL_BOARD = 'FB';
+    public const FULL_BOARD_PLUS = 'FB+';
+    public const HALF_BOARD = 'HB';
+    public const HALF_BOARD_PLUS = 'HB+';
+    public const BED_AND_BREAKFAST = 'BB';
+    public const ROOM_ONLY = 'RO';
+    public const SELF_CATERING = 'SC';
 
     private const DISPLAY_NAMES = [
-        self::ALL_INCLUSIVE       => 'All Inclusive',
+        self::ALL_INCLUSIVE => 'All Inclusive',
         self::ALL_INCLUSIVE_LIGHT => 'All Inclusive Light',
         self::ULTRA_ALL_INCLUSIVE => 'Ultra All Inclusive',
-        self::FULL_BOARD          => 'Full Board',
-        self::FULL_BOARD_PLUS     => 'Full Board Plus',
-        self::HALF_BOARD          => 'Half Board',
-        self::HALF_BOARD_PLUS     => 'Half Board Plus',
-        self::BED_AND_BREAKFAST   => 'Bed & Breakfast',
-        self::ROOM_ONLY           => 'Room Only',
-        self::SELF_CATERING       => 'Self Catering',
+        self::FULL_BOARD => 'Full Board',
+        self::FULL_BOARD_PLUS => 'Full Board Plus',
+        self::HALF_BOARD => 'Half Board',
+        self::HALF_BOARD_PLUS => 'Half Board Plus',
+        self::BED_AND_BREAKFAST => 'Bed & Breakfast',
+        self::ROOM_ONLY => 'Room Only',
+        self::SELF_CATERING => 'Self Catering',
     ];
 
     private const ALIASES = [
-        'ALL INCL'              => self::ALL_INCLUSIVE,
-        'ALL INCLUSIVE'         => self::ALL_INCLUSIVE,
-        'ALL INCLUSIVE LIGHT'   => self::ALL_INCLUSIVE_LIGHT,
-        'ALL INCLUSIVE SOFT'    => self::ALL_INCLUSIVE_LIGHT,
-        'ALLINC'               => self::ALL_INCLUSIVE,
-        'ULTRA ALL INCL'       => self::ULTRA_ALL_INCLUSIVE,
-        'ULTRA ALL INCLUSIVE'   => self::ULTRA_ALL_INCLUSIVE,
-        'FULL BOARD'           => self::FULL_BOARD,
-        'HALF BOARD'           => self::HALF_BOARD,
-        'BED AND BREAKFAST'    => self::BED_AND_BREAKFAST,
-        'B&B'                  => self::BED_AND_BREAKFAST,
-        'ROOM ONLY'            => self::ROOM_ONLY,
-        'SELF CATERING'        => self::SELF_CATERING,
+        'ALL INCL' => self::ALL_INCLUSIVE,
+        'ALL INCLUSIVE' => self::ALL_INCLUSIVE,
+        'ALL INCLUSIVE LIGHT' => self::ALL_INCLUSIVE_LIGHT,
+        'ALL INCLUSIVE SOFT' => self::ALL_INCLUSIVE_LIGHT,
+        'ALLINC' => self::ALL_INCLUSIVE,
+        'ULTRA ALL INCL' => self::ULTRA_ALL_INCLUSIVE,
+        'ULTRA ALL INCLUSIVE' => self::ULTRA_ALL_INCLUSIVE,
+        'FULL BOARD' => self::FULL_BOARD,
+        'HALF BOARD' => self::HALF_BOARD,
+        'BED AND BREAKFAST' => self::BED_AND_BREAKFAST,
+        'B&B' => self::BED_AND_BREAKFAST,
+        'ROOM ONLY' => self::ROOM_ONLY,
+        'SELF CATERING' => self::SELF_CATERING,
     ];
 
     private string $code;
@@ -141,5 +143,7 @@ final class BoardType
         return false;
     }
 
-    private function __clone() {}
+    private function __clone()
+    {
+    }
 }

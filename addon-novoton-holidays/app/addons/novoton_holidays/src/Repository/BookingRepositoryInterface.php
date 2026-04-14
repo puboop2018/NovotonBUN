@@ -1,9 +1,9 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Repository;
 
-use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\TravelCore\TravelConstants;
 
 /**

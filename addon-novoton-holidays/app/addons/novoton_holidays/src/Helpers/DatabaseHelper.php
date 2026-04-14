@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 /**
  * Novoton Holidays - Database Helper
  *
@@ -15,7 +17,6 @@ declare(strict_types=1);
 namespace Tygh\Addons\NovotonHolidays\Helpers;
 
 use Tygh\Addons\NovotonHolidays\Constants;
-use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 
 class DatabaseHelper implements DatabaseHelperInterface
 {
@@ -35,7 +36,7 @@ class DatabaseHelper implements DatabaseHelperInterface
                 "UPDATE ?:novoton_hotels
                  SET has_room_price = 'Y', last_price_check = NOW()
                  WHERE hotel_id IN (?a)",
-                $withPrices
+                $withPrices,
             );
         }
 
@@ -44,7 +45,7 @@ class DatabaseHelper implements DatabaseHelperInterface
                 "UPDATE ?:novoton_hotels
                  SET has_room_price = 'N', last_price_check = NOW()
                  WHERE hotel_id IN (?a)",
-                $withoutPrices
+                $withoutPrices,
             );
         }
 
@@ -63,16 +64,14 @@ class DatabaseHelper implements DatabaseHelperInterface
             return [];
         }
 
-        $productCodes = array_map(function ($id) {
-            return Constants::PRODUCT_CODE_PREFIX . $id;
-        }, $hotelIds);
+        $productCodes = array_map(fn ($id) => Constants::PRODUCT_CODE_PREFIX . $id, $hotelIds);
 
         $results = \db_get_hash_array(
-            "SELECT product_code, product_id
+            'SELECT product_code, product_id
              FROM ?:products
-             WHERE product_code IN (?a)",
+             WHERE product_code IN (?a)',
             'product_code',
-            $productCodes
+            $productCodes,
         );
 
         $map = [];
@@ -99,8 +98,8 @@ class DatabaseHelper implements DatabaseHelperInterface
         }
 
         return \db_get_fields(
-            "SELECT hotel_id FROM ?:novoton_hotels WHERE hotel_id IN (?a)",
-            $hotelIds
+            'SELECT hotel_id FROM ?:novoton_hotels WHERE hotel_id IN (?a)',
+            $hotelIds,
         );
     }
 
@@ -128,10 +127,10 @@ class DatabaseHelper implements DatabaseHelperInterface
             $hotel['updated_at'] = $now;
 
             $affected = (int) \db_query(
-                "INSERT INTO ?:novoton_hotels ?e
-                 ON DUPLICATE KEY UPDATE ?u",
+                'INSERT INTO ?:novoton_hotels ?e
+                 ON DUPLICATE KEY UPDATE ?u',
                 array_merge($hotel, ['created_at' => $now]),
-                $hotel
+                $hotel,
             );
 
             if ($affected === 1) {
@@ -167,14 +166,14 @@ class DatabaseHelper implements DatabaseHelperInterface
             }
 
             \db_query(
-                "INSERT INTO ?:novoton_hotel_packages
+                'INSERT INTO ?:novoton_hotel_packages
                  (hotel_id, package_id, package_name, created_at)
                  VALUES (?s, ?s, ?s, NOW())
-                 ON DUPLICATE KEY UPDATE package_name = ?s, updated_at = NOW()",
+                 ON DUPLICATE KEY UPDATE package_name = ?s, updated_at = NOW()',
                 $hotelId,
                 $packageId,
                 $packageName,
-                $packageName
+                $packageName,
             );
 
             $count++;
@@ -208,9 +207,9 @@ class DatabaseHelper implements DatabaseHelperInterface
             }
 
             \db_query(
-                "UPDATE ?:novoton_hotels SET product_id = ?i WHERE hotel_id = ?s",
+                'UPDATE ?:novoton_hotels SET product_id = ?i WHERE hotel_id = ?s',
                 $pid,
-                $link['hotel_id']
+                $link['hotel_id'],
             );
 
             $count++;
@@ -266,7 +265,7 @@ class DatabaseHelper implements DatabaseHelperInterface
         }
 
         $whereClause = !empty($where) ? 'WHERE ' . implode(' AND ', $where) : '';
-        $limitClause = $limit > 0 ? "LIMIT ?i" : "";
+        $limitClause = $limit > 0 ? 'LIMIT ?i' : '';
 
         if ($limit > 0) {
             $params[] = $limit;
@@ -287,7 +286,7 @@ class DatabaseHelper implements DatabaseHelperInterface
         $params = [$syncType];
 
         if ($subType !== null) {
-            $query .= " AND notes LIKE ?s";
+            $query .= ' AND notes LIKE ?s';
             // Escape LIKE wildcards in the value before wrapping with %
             $escaped = str_replace(['%', '_'], ['\\%', '\\_'], $subType);
             $params[] = '%"sync_type":"' . $escaped . '"%';
@@ -303,7 +302,7 @@ class DatabaseHelper implements DatabaseHelperInterface
     public function getSyncStats(string $syncType, int $days = 30): array
     {
         $stats = \db_get_row(
-            "SELECT
+            'SELECT
                 COUNT(*) as total_runs,
                 SUM(products_updated) as total_updated,
                 SUM(products_failed) as total_failed,
@@ -311,9 +310,9 @@ class DatabaseHelper implements DatabaseHelperInterface
                 MAX(sync_date) as last_sync
              FROM ?:novoton_sync_log
              WHERE sync_type = ?s
-             AND sync_date > DATE_SUB(NOW(), INTERVAL ?i DAY)",
+             AND sync_date > DATE_SUB(NOW(), INTERVAL ?i DAY)',
             $syncType,
-            $days
+            $days,
         );
 
         return [
@@ -333,9 +332,9 @@ class DatabaseHelper implements DatabaseHelperInterface
     public function cleanupOldLogs(int $days = 90): int
     {
         return (int) \db_query(
-            "DELETE FROM ?:novoton_sync_log
-             WHERE sync_date < DATE_SUB(NOW(), INTERVAL ?i DAY)",
-            $days
+            'DELETE FROM ?:novoton_sync_log
+             WHERE sync_date < DATE_SUB(NOW(), INTERVAL ?i DAY)',
+            $days,
         );
     }
 
@@ -360,5 +359,4 @@ class DatabaseHelper implements DatabaseHelperInterface
         preg_match('/\d+/', $productCode, $matches);
         return $matches[0] ?? null;
     }
-
 }

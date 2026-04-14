@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 /**
  * Travel Group Resolver
  *
@@ -37,7 +39,7 @@ final class TravelGroupResolver
      * Derive travel group canonical codes from resolved facility codes and hotel flags.
      *
      * @param string[] $facilityCodes Resolved canonical facility codes (e.g. ['free_wifi', 'pets_allowed', 'pool'])
-     * @param bool     $isAdultsOnly  Whether the hotel is flagged as adults-only
+     * @param bool $isAdultsOnly Whether the hotel is flagged as adults-only
      * @return string[] Canonical travel group codes (e.g. ['pets_friendly'])
      */
     public static function derive(array $facilityCodes, bool $isAdultsOnly = false): array

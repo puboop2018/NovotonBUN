@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays\Repository;
@@ -42,8 +43,8 @@ class HotelRepository
     private function aliasedListingColumns(string $alias = 'h'): string
     {
         return implode(', ', array_map(
-            static fn(string $col): string => $alias . '.' . $col,
-            self::LISTING_COLUMN_NAMES
+            static fn (string $col): string => $alias . '.' . $col,
+            self::LISTING_COLUMN_NAMES,
         ));
     }
 
@@ -154,7 +155,7 @@ class HotelRepository
                 ValidationHelpers::toString($hotel['is_adults_only'] ?? 'N'),
                 ValidationHelpers::toFloat($hotel['rating'] ?? 0),
                 ValidationHelpers::toInt($hotel['rating_count'] ?? 0),
-                date('Y-m-d H:i:s')
+                date('Y-m-d H:i:s'),
             );
 
             $affected++;
@@ -175,30 +176,30 @@ class HotelRepository
         string $syncStatus = '',
         string $query = '',
         int $page = 1,
-        int $perPage = 50
+        int $perPage = 50,
     ): array {
         $condition = '';
 
         if ($countryCode !== '') {
-            $condition .= db_quote(" AND h.country_code = ?s", $countryCode);
+            $condition .= db_quote(' AND h.country_code = ?s', $countryCode);
         }
         if ($destinationId > 0) {
-            $condition .= db_quote(" AND h.destination_id = ?i", $destinationId);
+            $condition .= db_quote(' AND h.destination_id = ?i', $destinationId);
         }
         if ($regionId > 0) {
-            $condition .= db_quote(" AND h.region_id = ?i", $regionId);
+            $condition .= db_quote(' AND h.region_id = ?i', $regionId);
         }
         if ($syncStatus !== '') {
-            $condition .= db_quote(" AND h.sync_status = ?s", $syncStatus);
+            $condition .= db_quote(' AND h.sync_status = ?s', $syncStatus);
         }
         if ($query !== '') {
             $escaped = addcslashes($query, '%_\\');
-            $condition .= db_quote(" AND h.name LIKE ?l", '%' . $escaped . '%');
+            $condition .= db_quote(' AND h.name LIKE ?l', '%' . $escaped . '%');
         }
 
         $total = (int) db_get_field(
-            "SELECT COUNT(*) FROM ?:sphinx_hotels h WHERE 1 ?p",
-            $condition
+            'SELECT COUNT(*) FROM ?:sphinx_hotels h WHERE 1 ?p',
+            $condition,
         );
 
         $offset = ($page - 1) * $perPage;
@@ -209,7 +210,9 @@ class HotelRepository
              WHERE 1 ?p
              ORDER BY h.country_code ASC, h.name ASC
              LIMIT ?i, ?i",
-            $condition, $offset, $perPage
+            $condition,
+            $offset,
+            $perPage,
         );
 
         return ['items' => $items, 'total' => $total];
@@ -222,8 +225,8 @@ class HotelRepository
     public function getById(string $hotelId): ?array
     {
         $row = db_get_row(
-            "SELECT * FROM ?:sphinx_hotels WHERE hotel_id = ?s",
-            $hotelId
+            'SELECT * FROM ?:sphinx_hotels WHERE hotel_id = ?s',
+            $hotelId,
         );
 
         return $row ?: null;
@@ -236,8 +239,8 @@ class HotelRepository
     public function getByDestination(int $destinationId): array
     {
         return db_get_array(
-            "SELECT " . self::LISTING_COLUMNS . " FROM ?:sphinx_hotels WHERE destination_id = ?i ORDER BY name ASC",
-            $destinationId
+            'SELECT ' . self::LISTING_COLUMNS . ' FROM ?:sphinx_hotels WHERE destination_id = ?i ORDER BY name ASC',
+            $destinationId,
         );
     }
 
@@ -249,7 +252,7 @@ class HotelRepository
     public function getCountsByCountry(): array
     {
         $rows = db_get_array(
-            "SELECT country_code, COUNT(*) as cnt FROM ?:sphinx_hotels WHERE sync_status = 'active' GROUP BY country_code ORDER BY cnt DESC"
+            "SELECT country_code, COUNT(*) as cnt FROM ?:sphinx_hotels WHERE sync_status = 'active' GROUP BY country_code ORDER BY cnt DESC",
         );
 
         $counts = [];
@@ -269,7 +272,7 @@ class HotelRepository
     public function getDistinctCountries(): array
     {
         return db_get_fields(
-            "SELECT DISTINCT country_code FROM ?:sphinx_hotels WHERE country_code != '' ORDER BY country_code"
+            "SELECT DISTINCT country_code FROM ?:sphinx_hotels WHERE country_code != '' ORDER BY country_code",
         );
     }
 
@@ -288,11 +291,11 @@ class HotelRepository
     {
         if ($countryCode !== null) {
             $val = db_get_field(
-                "SELECT MAX(last_synced_at) FROM ?:sphinx_hotels WHERE country_code = ?s",
-                $countryCode
+                'SELECT MAX(last_synced_at) FROM ?:sphinx_hotels WHERE country_code = ?s',
+                $countryCode,
             );
         } else {
-            $val = db_get_field("SELECT MAX(last_synced_at) FROM ?:sphinx_hotels");
+            $val = db_get_field('SELECT MAX(last_synced_at) FROM ?:sphinx_hotels');
         }
         return $val ?: null;
     }
@@ -306,9 +309,9 @@ class HotelRepository
         $query = trim($query);
         $escaped = addcslashes($query, '%_\\');
         return db_get_array(
-            "SELECT " . self::LISTING_COLUMNS . " FROM ?:sphinx_hotels WHERE name LIKE ?l ORDER BY country_code ASC, name ASC LIMIT ?i",
+            'SELECT ' . self::LISTING_COLUMNS . ' FROM ?:sphinx_hotels WHERE name LIKE ?l ORDER BY country_code ASC, name ASC LIMIT ?i',
             '%' . $escaped . '%',
-            $limit
+            $limit,
         );
     }
 
@@ -325,13 +328,13 @@ class HotelRepository
         }
         $escaped = addcslashes($query, '%_\\');
         return db_get_array(
-            "SELECT hotel_id, name, classification, country_code, destination_name
+            'SELECT hotel_id, name, classification, country_code, destination_name
              FROM ?:sphinx_hotels
              WHERE name LIKE ?l
              ORDER BY country_code ASC, name ASC
-             LIMIT ?i",
+             LIMIT ?i',
             '%' . $escaped . '%',
-            $limit
+            $limit,
         );
     }
 
@@ -341,8 +344,9 @@ class HotelRepository
     public function linkToProduct(string $hotelId, int $productId): void
     {
         db_query(
-            "UPDATE ?:sphinx_hotels SET product_id = ?i WHERE hotel_id = ?s",
-            $productId, $hotelId
+            'UPDATE ?:sphinx_hotels SET product_id = ?i WHERE hotel_id = ?s',
+            $productId,
+            $hotelId,
         );
     }
 
@@ -355,10 +359,10 @@ class HotelRepository
     {
         $condition = '';
         if ($countryCode !== '') {
-            $condition .= db_quote(" AND h.country_code = ?s", $countryCode);
+            $condition .= db_quote(' AND h.country_code = ?s', $countryCode);
         }
 
-        $limitClause = $limit > 0 ? db_quote(" LIMIT ?i", $limit) : '';
+        $limitClause = $limit > 0 ? db_quote(' LIMIT ?i', $limit) : '';
         $cols = $this->aliasedListingColumns();
 
         // Product creation needs TEXT/JSON columns excluded from LISTING_COLUMNS
@@ -370,7 +374,8 @@ class HotelRepository
                AND (h.product_id IS NULL OR h.product_id = 0)
                AND h.product_skip_reason IS NULL ?p
              ORDER BY h.country_code ASC, h.name ASC ?p",
-            $condition, $limitClause
+            $condition,
+            $limitClause,
         );
     }
 
@@ -380,7 +385,7 @@ class HotelRepository
     public function countLinked(): int
     {
         return (int) db_get_field(
-            "SELECT COUNT(*) FROM ?:sphinx_hotels WHERE product_id IS NOT NULL AND product_id > 0 AND sync_status = 'active'"
+            "SELECT COUNT(*) FROM ?:sphinx_hotels WHERE product_id IS NOT NULL AND product_id > 0 AND sync_status = 'active'",
         );
     }
 
@@ -394,14 +399,14 @@ class HotelRepository
     {
         if (empty($countryCodes)) {
             return db_get_fields(
-                "SELECT DISTINCT destination_id FROM ?:sphinx_hotels WHERE sync_status = 'active' AND destination_id > 0"
+                "SELECT DISTINCT destination_id FROM ?:sphinx_hotels WHERE sync_status = 'active' AND destination_id > 0",
             );
         }
 
         $placeholders = implode(',', array_fill(0, count($countryCodes), '?s'));
         return db_get_fields(
             "SELECT DISTINCT destination_id FROM ?:sphinx_hotels WHERE sync_status = 'active' AND destination_id > 0 AND country_code IN ($placeholders)",
-            ...$countryCodes
+            ...$countryCodes,
         );
     }
 
@@ -415,7 +420,7 @@ class HotelRepository
         return db_get_hash_single_array(
             "SELECT hotel_id, hotel_id FROM ?:sphinx_hotels WHERE destination_id = ?i AND sync_status = 'active'",
             ['hotel_id', 'hotel_id'],
-            $destinationId
+            $destinationId,
         );
     }
 
@@ -431,8 +436,9 @@ class HotelRepository
         foreach ($boardsByHotel as $hotelId => $boards) {
             $json = !empty($boards) ? (json_encode(array_values(array_unique($boards))) ?: '[]') : '[]';
             db_query(
-                "UPDATE ?:sphinx_hotels SET boards_json = ?s WHERE hotel_id = ?s",
-                $json, (string) $hotelId
+                'UPDATE ?:sphinx_hotels SET boards_json = ?s WHERE hotel_id = ?s',
+                $json,
+                (string) $hotelId,
             );
             $updated++;
         }
@@ -451,17 +457,17 @@ class HotelRepository
      */
     public function findWithBoardsAndProduct(string $countryCode = '', int $limit = 0, int $offset = 0): array
     {
-        $condition = " AND h.boards_json IS NOT NULL AND h.product_id IS NOT NULL AND h.product_id > 0";
+        $condition = ' AND h.boards_json IS NOT NULL AND h.product_id IS NOT NULL AND h.product_id > 0';
         if ($countryCode !== '') {
-            $condition .= db_quote(" AND h.country_code = ?s", $countryCode);
+            $condition .= db_quote(' AND h.country_code = ?s', $countryCode);
         }
 
         $limitClause = '';
         if ($limit > 0) {
-            $limitClause = db_quote(" LIMIT ?i, ?i", $offset, $limit);
+            $limitClause = db_quote(' LIMIT ?i, ?i', $offset, $limit);
         } elseif ($offset > 0) {
             // MySQL max BIGINT UNSIGNED — effectively "no limit, offset only"
-            $limitClause = db_quote(" LIMIT ?i, 18446744073709551615", $offset);
+            $limitClause = db_quote(' LIMIT ?i, 18446744073709551615', $offset);
         }
 
         return db_get_array(
@@ -471,7 +477,8 @@ class HotelRepository
              FROM ?:sphinx_hotels h
              WHERE h.sync_status = 'active' ?p
              ORDER BY h.hotel_id ASC ?p",
-            $condition, $limitClause
+            $condition,
+            $limitClause,
         );
     }
 
@@ -480,15 +487,15 @@ class HotelRepository
      */
     public function countWithBoardsAndProduct(string $countryCode = ''): int
     {
-        $condition = " AND h.boards_json IS NOT NULL AND h.product_id IS NOT NULL AND h.product_id > 0";
+        $condition = ' AND h.boards_json IS NOT NULL AND h.product_id IS NOT NULL AND h.product_id > 0';
         if ($countryCode !== '') {
-            $condition .= db_quote(" AND h.country_code = ?s", $countryCode);
+            $condition .= db_quote(' AND h.country_code = ?s', $countryCode);
         }
 
         return (int) db_get_field(
             "SELECT COUNT(*) FROM ?:sphinx_hotels h
              WHERE h.sync_status = 'active' ?p",
-            $condition
+            $condition,
         );
     }
 
@@ -513,7 +520,8 @@ class HotelRepository
         return (int) db_query(
             "UPDATE ?:sphinx_hotels SET sync_status = 'inactive'
              WHERE country_code = ?s AND sync_status = 'active' AND last_synced_at < ?s",
-            $countryCode, $syncStartedAt
+            $countryCode,
+            $syncStartedAt,
         );
     }
 
@@ -526,8 +534,9 @@ class HotelRepository
     public function markSkipped(string $hotelId, string $reason): void
     {
         db_query(
-            "UPDATE ?:sphinx_hotels SET product_skip_reason = ?s WHERE hotel_id = ?s",
-            $reason, $hotelId
+            'UPDATE ?:sphinx_hotels SET product_skip_reason = ?s WHERE hotel_id = ?s',
+            $reason,
+            $hotelId,
         );
     }
 
@@ -540,16 +549,16 @@ class HotelRepository
     {
         $condition = '';
         if ($countryCode !== '') {
-            $condition .= db_quote(" AND country_code = ?s", $countryCode);
+            $condition .= db_quote(' AND country_code = ?s', $countryCode);
         }
         if ($reason !== '') {
-            $condition .= db_quote(" AND product_skip_reason = ?s", $reason);
+            $condition .= db_quote(' AND product_skip_reason = ?s', $reason);
         }
 
         return (int) db_query(
-            "UPDATE ?:sphinx_hotels SET product_skip_reason = NULL
-             WHERE product_skip_reason IS NOT NULL ?p",
-            $condition
+            'UPDATE ?:sphinx_hotels SET product_skip_reason = NULL
+             WHERE product_skip_reason IS NOT NULL ?p',
+            $condition,
         );
     }
 
@@ -560,11 +569,11 @@ class HotelRepository
     {
         $condition = '';
         if ($reason !== '') {
-            $condition = db_quote(" AND product_skip_reason = ?s", $reason);
+            $condition = db_quote(' AND product_skip_reason = ?s', $reason);
         }
         return (int) db_get_field(
-            "SELECT COUNT(*) FROM ?:sphinx_hotels WHERE product_skip_reason IS NOT NULL ?p",
-            $condition
+            'SELECT COUNT(*) FROM ?:sphinx_hotels WHERE product_skip_reason IS NOT NULL ?p',
+            $condition,
         );
     }
 
@@ -582,9 +591,9 @@ class HotelRepository
         }
 
         return (int) db_query(
-            "UPDATE ?:sphinx_hotels SET sync_status = ?s WHERE hotel_id IN (?a)",
+            'UPDATE ?:sphinx_hotels SET sync_status = ?s WHERE hotel_id IN (?a)',
             $status,
-            $hotelIds
+            $hotelIds,
         );
     }
 
@@ -601,8 +610,8 @@ class HotelRepository
         }
 
         return (int) db_query(
-            "DELETE FROM ?:sphinx_hotels WHERE hotel_id IN (?a)",
-            $hotelIds
+            'DELETE FROM ?:sphinx_hotels WHERE hotel_id IN (?a)',
+            $hotelIds,
         );
     }
 
@@ -612,7 +621,7 @@ class HotelRepository
      * Returns hotel rows with location data needed for placeholder building.
      *
      * @param int $offset Starting offset
-     * @param int $batch  Batch size
+     * @param int $batch Batch size
      * @return array<string, mixed>
      */
     public function fetchLinkedBatchForSeo(int $offset, int $batch): array
@@ -626,7 +635,8 @@ class HotelRepository
              WHERE h.product_id IS NOT NULL AND h.product_id > 0
                AND h.sync_status = 'active'
              LIMIT ?i, ?i",
-            $offset, $batch
+            $offset,
+            $batch,
         );
     }
 
@@ -637,15 +647,14 @@ class HotelRepository
      * corresponding hotel row linking back to them.
      *
      * @param string $productCodePrefix The product code prefix (e.g. 'SPX')
-     * @return int
      */
     public function countOrphanedProducts(string $productCodePrefix): int
     {
         return (int) db_get_field(
-            "SELECT COUNT(*) FROM ?:products p
+            'SELECT COUNT(*) FROM ?:products p
              LEFT JOIN ?:sphinx_hotels h ON h.product_id = p.product_id
-             WHERE p.product_code LIKE ?l AND h.hotel_id IS NULL",
-            $productCodePrefix . '%'
+             WHERE p.product_code LIKE ?l AND h.hotel_id IS NULL',
+            $productCodePrefix . '%',
         );
     }
 
@@ -654,16 +663,17 @@ class HotelRepository
      *
      * Used when fresh image data is fetched from the API during image sync.
      *
-     * @param string $hotelId   The hotel ID
-     * @param string $imageUrl  Primary image URL
+     * @param string $hotelId The hotel ID
+     * @param string $imageUrl Primary image URL
      * @param string $imagesJson JSON-encoded array of image data
-     * @return void
      */
     public function updateImages(string $hotelId, string $imageUrl, string $imagesJson): void
     {
         db_query(
-            "UPDATE ?:sphinx_hotels SET image_url = ?s, images_json = ?s WHERE hotel_id = ?s",
-            $imageUrl, $imagesJson, $hotelId
+            'UPDATE ?:sphinx_hotels SET image_url = ?s, images_json = ?s WHERE hotel_id = ?s',
+            $imageUrl,
+            $imagesJson,
+            $hotelId,
         );
     }
 
@@ -677,8 +687,8 @@ class HotelRepository
         return array_map(
             'intval',
             db_get_fields(
-                "SELECT DISTINCT classification FROM ?:sphinx_hotels WHERE classification IS NOT NULL ORDER BY classification"
-            )
+                'SELECT DISTINCT classification FROM ?:sphinx_hotels WHERE classification IS NOT NULL ORDER BY classification',
+            ),
         );
     }
 
@@ -690,7 +700,7 @@ class HotelRepository
     public function getDistinctPropertyTypes(): array
     {
         return db_get_fields(
-            "SELECT DISTINCT property_type FROM ?:sphinx_hotels WHERE property_type IS NOT NULL AND property_type != '' ORDER BY property_type"
+            "SELECT DISTINCT property_type FROM ?:sphinx_hotels WHERE property_type IS NOT NULL AND property_type != '' ORDER BY property_type",
         );
     }
 }

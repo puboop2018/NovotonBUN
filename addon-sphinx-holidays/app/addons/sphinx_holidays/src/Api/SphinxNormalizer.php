@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays\Api;
@@ -17,7 +18,7 @@ class SphinxNormalizer implements ProviderNormalizerInterface
     /**
      * Collects unrecognized board names during normalization.
      * Callers can retrieve and report these via getUnknownBoards().
-     * @var array<string, int>  raw_value => occurrence count
+     * @var array<string, int> raw_value => occurrence count
      */
     private static array $unknownBoards = [];
 
@@ -25,42 +26,42 @@ class SphinxNormalizer implements ProviderNormalizerInterface
      *  Order matters for partial matching — more specific entries must come first. */
     private const BOARD_MAP = [
         // All Inclusive variants (specific before generic for partial match)
-        'ultra all inclusive'   => 'UAI',
-        'all inclusive light'   => 'AIL',
-        'all inclusive soft'    => 'AIL',
-        'all inclusive plus'    => 'AI',
+        'ultra all inclusive' => 'UAI',
+        'all inclusive light' => 'AIL',
+        'all inclusive soft' => 'AIL',
+        'all inclusive plus' => 'AI',
         'platinum all inclusive' => 'AI',
-        'all inclusive'         => 'AI',
+        'all inclusive' => 'AI',
         // Romanian
-        'pensiune completa'    => 'FB',
-        'pensiune completă'    => 'FB',
-        'demipensiune'         => 'HB',
-        'mic dejun'            => 'BB',
-        'fara masa'            => 'RO',
-        'fără masă'            => 'RO',
-        'self catering'        => 'SC',
+        'pensiune completa' => 'FB',
+        'pensiune completă' => 'FB',
+        'demipensiune' => 'HB',
+        'mic dejun' => 'BB',
+        'fara masa' => 'RO',
+        'fără masă' => 'RO',
+        'self catering' => 'SC',
         // English
-        'full board'           => 'FB',
-        'half board'           => 'HB',
-        'bed and breakfast'    => 'BB',
-        'bed & breakfast'      => 'BB',
-        'room only'            => 'RO',
-        'b&b'                  => 'BB',
-        'buffet breakfast'     => 'BB',
-        'ro'                   => 'RO',
+        'full board' => 'FB',
+        'half board' => 'HB',
+        'bed and breakfast' => 'BB',
+        'bed & breakfast' => 'BB',
+        'room only' => 'RO',
+        'b&b' => 'BB',
+        'buffet breakfast' => 'BB',
+        'ro' => 'RO',
     ];
 
     /** Room type prefix mapping */
     private const ROOM_TYPE_PREFIXES = [
-        'single'    => 'SGL',
-        'double'    => 'DBL',
-        'twin'      => 'TWIN',
-        'triple'    => 'TRP',
-        'quad'      => 'QUAD',
-        'suite'     => 'SUITE',
+        'single' => 'SGL',
+        'double' => 'DBL',
+        'twin' => 'TWIN',
+        'triple' => 'TRP',
+        'quad' => 'QUAD',
+        'suite' => 'SUITE',
         'apartment' => 'APT',
-        'studio'    => 'STUDIO',
-        'family'    => 'DBL',
+        'studio' => 'STUDIO',
+        'family' => 'DBL',
     ];
 
     #[\Override]
@@ -154,18 +155,18 @@ class SphinxNormalizer implements ProviderNormalizerInterface
         $lower = mb_strtolower(trim($rawValue));
 
         $typeMap = [
-            'hotel'       => 'hotel',
-            'villa'       => 'villa',
-            'apartment'   => 'apartment',
-            'resort'      => 'resort',
-            'hostel'      => 'hostel',
+            'hotel' => 'hotel',
+            'villa' => 'villa',
+            'apartment' => 'apartment',
+            'resort' => 'resort',
+            'hostel' => 'hostel',
             'guest_house' => 'guest_house',
-            'guesthouse'  => 'guest_house',
-            'pension'     => 'guest_house',
-            'pensiune'    => 'guest_house',
-            'chalet'      => 'chalet',
-            'cabana'      => 'chalet',
-            'motel'       => 'motel',
+            'guesthouse' => 'guest_house',
+            'pension' => 'guest_house',
+            'pensiune' => 'guest_house',
+            'chalet' => 'chalet',
+            'cabana' => 'chalet',
+            'motel' => 'motel',
         ];
 
         return $typeMap[$lower] ?? null;
@@ -202,11 +203,11 @@ class SphinxNormalizer implements ProviderNormalizerInterface
     public function normalizeBookingStatus(string $sphinxStatus): string
     {
         return match (strtolower($sphinxStatus)) {
-            'confirmed'             => TravelConstants::STATUS_CONFIRMED,
-            'pending', 'on_hold'    => TravelConstants::STATUS_PENDING,
+            'confirmed' => TravelConstants::STATUS_CONFIRMED,
+            'pending', 'on_hold' => TravelConstants::STATUS_PENDING,
             'cancelled', 'canceled' => TravelConstants::STATUS_CANCELLED,
-            'rejected', 'failed'    => TravelConstants::STATUS_FAILED,
-            default                 => TravelConstants::STATUS_PENDING,
+            'rejected', 'failed' => TravelConstants::STATUS_FAILED,
+            default => TravelConstants::STATUS_PENDING,
         };
     }
 }

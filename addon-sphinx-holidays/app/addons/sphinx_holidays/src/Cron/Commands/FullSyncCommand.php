@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays\Cron\Commands;
@@ -115,12 +116,12 @@ class FullSyncCommand
             count(self::SYNC_SEQUENCE),
             $totalSuccess,
             $totalFailed,
-            $durationMs
+            $durationMs,
         );
 
         return [
             'success' => $totalFailed === 0,
-            'stats'   => [
+            'stats' => [
                 'total' => count(self::SYNC_SEQUENCE),
                 'synced' => $totalSuccess,
                 'failed' => $totalFailed,

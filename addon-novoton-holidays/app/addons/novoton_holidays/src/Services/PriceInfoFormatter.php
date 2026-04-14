@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 /**
  * Novoton PriceInfo Formatter
  *
@@ -84,13 +86,21 @@ class PriceInfoFormatter
      */
     public static function matchRoom(string $rowRoom, string $roomId): bool
     {
-        if (empty($roomId)) return true;
-        if (strcasecmp($rowRoom, $roomId) === 0) return true;
-        if (strcasecmp(rawurldecode($rowRoom), $roomId) === 0) return true;
-        if (strcasecmp($rowRoom, rawurlencode($roomId)) === 0) return true;
+        if (empty($roomId)) {
+            return true;
+        }
+        if (strcasecmp($rowRoom, $roomId) === 0) {
+            return true;
+        }
+        if (strcasecmp(rawurldecode($rowRoom), $roomId) === 0) {
+            return true;
+        }
+        if (strcasecmp($rowRoom, rawurlencode($roomId)) === 0) {
+            return true;
+        }
         // Normalize spaces/plus signs for occupancy patterns like "DBL 2+1"
         $normRow = str_replace(['+', '%2B', '%2b'], '+', rawurldecode($rowRoom));
-        $normId  = str_replace(['+', '%2B', '%2b'], '+', rawurldecode($roomId));
+        $normId = str_replace(['+', '%2B', '%2b'], '+', rawurldecode($roomId));
         return strcasecmp(trim($normRow), trim($normId)) === 0;
     }
 
@@ -99,7 +109,9 @@ class PriceInfoFormatter
      */
     public static function matchBoard(string $rowBoard, string $boardId): bool
     {
-        if (empty($boardId)) return true;
+        if (empty($boardId)) {
+            return true;
+        }
         return strcasecmp($rowBoard, $boardId) === 0;
     }
 
@@ -174,7 +186,7 @@ class PriceInfoFormatter
             2 => '2 ND',
             3 => '3 RD',
             4 => '4 TH',
-            5 => '5 TH'
+            5 => '5 TH',
         ];
         return $ordinals[$num] ?? $num . ' TH';
     }
@@ -321,7 +333,7 @@ class PriceInfoFormatter
         // "2-11,99", "0-1.99", "12-17" — extract numeric range with optional decimal
         if (preg_match('/(\d+)\s*-\s*(\d+)[,.](\d+)/', $type, $m)) {
             $fromAge = (int) $m[1];
-            $toAge = (int) $m[2] + (int) $m[3] / pow(10, strlen($m[3]));
+            $toAge = (int) $m[2] + (int) $m[3] / 10 ** strlen($m[3]);
         } elseif (preg_match('/(\d+)\s*-\s*(\d+)/', $type, $m)) {
             $fromAge = (int) $m[1];
             $toAge = (int) $m[2];
@@ -412,7 +424,7 @@ class PriceInfoFormatter
             'success' => false,
             'error' => $message,
             'price' => 0,
-            'debug_log' => $debug ? $debugLog : null
+            'debug_log' => $debug ? $debugLog : null,
         ];
     }
 
@@ -475,14 +487,14 @@ class PriceInfoFormatter
                 'price_key' => $priceKey,
                 'matched_range' => $matchedSeason !== null
                     ? (self::toScalar($matchedSeason['FromDate'] ?? '') . ' to ' . self::toScalar($matchedSeason['ToDate'] ?? ''))
-                    : 'DEFAULT'
+                    : 'DEFAULT',
             ];
         }
 
         return [
             'total_seasons_found' => count($parsedSeasons),
             'seasons_raw' => $parsedSeasons,
-            'night_mapping' => $mapping
+            'night_mapping' => $mapping,
         ];
     }
 

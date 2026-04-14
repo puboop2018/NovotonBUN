@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 /**
  * RoomType Value Object
  *
@@ -14,60 +16,60 @@ namespace Tygh\Addons\TravelCore\ValueObjects;
 
 final class RoomType
 {
-    public const SINGLE       = 'SGL';
-    public const DOUBLE       = 'DBL';
-    public const TWIN         = 'TWIN';
-    public const TRIPLE       = 'TRP';
-    public const QUAD         = 'QUA';
-    public const FAMILY       = 'FAM';
-    public const STUDIO       = 'STUDIO';
-    public const APARTMENT    = 'APP';
-    public const SUITE        = 'SUITE';
+    public const SINGLE = 'SGL';
+    public const DOUBLE = 'DBL';
+    public const TWIN = 'TWIN';
+    public const TRIPLE = 'TRP';
+    public const QUAD = 'QUA';
+    public const FAMILY = 'FAM';
+    public const STUDIO = 'STUDIO';
+    public const APARTMENT = 'APP';
+    public const SUITE = 'SUITE';
     public const JUNIOR_SUITE = 'JST';
-    public const VILLA        = 'VILLA';
-    public const BUNGALOW     = 'BUNGALOW';
-    public const MAISONETTE   = 'MAISONETTE';
-    public const PENTHOUSE    = 'PENTHOUSE';
-    public const DELUXE       = 'DLX';
-    public const SUPERIOR     = 'SUP';
+    public const VILLA = 'VILLA';
+    public const BUNGALOW = 'BUNGALOW';
+    public const MAISONETTE = 'MAISONETTE';
+    public const PENTHOUSE = 'PENTHOUSE';
+    public const DELUXE = 'DLX';
+    public const SUPERIOR = 'SUP';
 
     private const DISPLAY_NAMES = [
-        self::SINGLE       => 'Camera Single',
-        self::DOUBLE       => 'Camera Dubla',
-        self::TWIN         => 'Camera Twin',
-        self::TRIPLE       => 'Camera Tripla',
-        self::QUAD         => 'Camera Cvadrupla',
-        self::FAMILY       => 'Camera Familie',
-        self::STUDIO       => 'Studio',
-        self::APARTMENT    => 'Apartament',
-        self::SUITE        => 'Suita',
+        self::SINGLE => 'Camera Single',
+        self::DOUBLE => 'Camera Dubla',
+        self::TWIN => 'Camera Twin',
+        self::TRIPLE => 'Camera Tripla',
+        self::QUAD => 'Camera Cvadrupla',
+        self::FAMILY => 'Camera Familie',
+        self::STUDIO => 'Studio',
+        self::APARTMENT => 'Apartament',
+        self::SUITE => 'Suita',
         self::JUNIOR_SUITE => 'Junior Suita',
-        self::VILLA        => 'Vila',
-        self::BUNGALOW     => 'Bungalou',
-        self::MAISONETTE   => 'Maisoneta',
-        self::PENTHOUSE    => 'Penthouse',
-        self::DELUXE       => 'Camera Deluxe',
-        self::SUPERIOR     => 'Camera Superior',
+        self::VILLA => 'Vila',
+        self::BUNGALOW => 'Bungalou',
+        self::MAISONETTE => 'Maisoneta',
+        self::PENTHOUSE => 'Penthouse',
+        self::DELUXE => 'Camera Deluxe',
+        self::SUPERIOR => 'Camera Superior',
     ];
 
     private const ALIASES = [
-        'TWN'       => self::TWIN,
-        'TRPL'      => self::TRIPLE,
-        'TRIPLE'    => self::TRIPLE,
-        'QUAD'      => self::QUAD,
-        'FAMILY'    => self::FAMILY,
-        'STD'       => self::STUDIO,
-        'APT'       => self::APARTMENT,
+        'TWN' => self::TWIN,
+        'TRPL' => self::TRIPLE,
+        'TRIPLE' => self::TRIPLE,
+        'QUAD' => self::QUAD,
+        'FAMILY' => self::FAMILY,
+        'STD' => self::STUDIO,
+        'APT' => self::APARTMENT,
         'APARTMENT' => self::APARTMENT,
-        'STE'       => self::SUITE,
-        'JRSUITE'   => self::JUNIOR_SUITE,
-        'JUNIOR'    => self::JUNIOR_SUITE,
-        'VLA'       => self::VILLA,
-        'BNG'       => self::BUNGALOW,
-        'MAI'       => self::MAISONETTE,
-        'PH'        => self::PENTHOUSE,
-        'DELUXE'    => self::DELUXE,
-        'SUPERIOR'  => self::SUPERIOR,
+        'STE' => self::SUITE,
+        'JRSUITE' => self::JUNIOR_SUITE,
+        'JUNIOR' => self::JUNIOR_SUITE,
+        'VLA' => self::VILLA,
+        'BNG' => self::BUNGALOW,
+        'MAI' => self::MAISONETTE,
+        'PH' => self::PENTHOUSE,
+        'DELUXE' => self::DELUXE,
+        'SUPERIOR' => self::SUPERIOR,
     ];
 
     private const BEDROOM_PREFIX_TEMPLATE = 'Apartament %d Dormitoare';
@@ -189,5 +191,7 @@ final class RoomType
         return $map;
     }
 
-    private function __clone() {}
+    private function __clone()
+    {
+    }
 }

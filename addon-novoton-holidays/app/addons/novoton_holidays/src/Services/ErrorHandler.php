@@ -1,11 +1,13 @@
 <?php
+
 declare(strict_types=1);
+
 /**
  * Novoton Error Handler
- * 
+ *
  * Centralized error handling for consistent error responses
  * across the addon.
- * 
+ *
  * @package NovotonHolidays
  * @since 2.7.0
  */
@@ -25,7 +27,7 @@ class ErrorHandler
 
     /** @var bool Whether debug has been auto-initialized from settings */
     private static $initialized = false;
-    
+
     /** @var array<string, mixed> Error messages (translatable) */
     private static $messages = [
         Constants::ERROR_INVALID_DATA => 'Invalid data provided',
@@ -36,7 +38,7 @@ class ErrorHandler
         Constants::ERROR_RATE_LIMITED => 'Too many requests, please wait',
         Constants::ERROR_UNAUTHORIZED => 'Authentication failed',
     ];
-    
+
     /** @var array<string, mixed> Romanian error messages */
     private static $messagesRo = [
         Constants::ERROR_INVALID_DATA => 'Date invalide furnizate',
@@ -47,7 +49,7 @@ class ErrorHandler
         Constants::ERROR_RATE_LIMITED => 'Prea multe solicitări, vă rugăm așteptați',
         Constants::ERROR_UNAUTHORIZED => 'Autentificare eșuată',
     ];
-    
+
     /**
      * Initialize error handler
      *
@@ -94,37 +96,37 @@ class ErrorHandler
             self::logError($code, $message, $context);
         }
     }
-    
+
     /**
      * Check if there are errors
-     * 
+     *
      * @return bool Has errors
      */
     public static function hasErrors(): bool
     {
         return !empty(self::$errors);
     }
-    
+
     /**
      * Get all errors
-     * 
+     *
      * @return list<array<string, mixed>> Errors
      */
     public static function getErrors(): array
     {
         return self::$errors;
     }
-    
+
     /**
      * Get first error
-     * 
+     *
      * @return array<string, mixed>|null First error or null
      */
     public static function getFirstError(): ?array
     {
         return self::$errors[0] ?? null;
     }
-    
+
     /**
      * Clear all errors
      */
@@ -132,10 +134,10 @@ class ErrorHandler
     {
         self::$errors = [];
     }
-    
+
     /**
      * Get error message for code
-     * 
+     *
      * @param string $code Error code
      * @param string $lang Language (en/ro)
      * @return string Message
@@ -145,13 +147,13 @@ class ErrorHandler
         if ($lang === 'ro' && isset(self::$messagesRo[$code])) {
             return self::$messagesRo[$code];
         }
-        
+
         return self::$messages[$code] ?? 'An error occurred';
     }
-    
+
     /**
      * Create error response for AJAX
-     * 
+     *
      * @param string $code Error code
      * @param string $message Custom message
      * @param array<string, mixed> $data Additional data
@@ -168,10 +170,10 @@ class ErrorHandler
             'data' => $data,
         ];
     }
-    
+
     /**
      * Create success response for AJAX
-     * 
+     *
      * @param array<string, mixed> $data Response data
      * @param string $message Success message
      * @return array<string, mixed> Response array
@@ -184,10 +186,10 @@ class ErrorHandler
             'data' => $data,
         ];
     }
-    
+
     /**
      * Handle exception
-     * 
+     *
      * @param \Throwable $e Exception
      * @param string $context Where the exception occurred
      * @return array<string, mixed> Error response
@@ -196,21 +198,21 @@ class ErrorHandler
     {
         $code = Constants::ERROR_API_FAILURE;
         $message = self::$debug ? $e->getMessage() : self::getMessage($code);
-        
+
         self::addError($code, $e->getMessage(), [
             'context' => $context,
-            'exception' => get_class($e),
+            'exception' => $e::class,
             'file' => $e->getFile(),
             'line' => $e->getLine(),
             'trace' => self::$debug ? $e->getTraceAsString() : null,
         ]);
-        
+
         return self::createResponse($code, $message);
     }
-    
+
     /**
      * Log error to CS-Cart log
-     * 
+     *
      * @param string $code Error code
      * @param string $message Message
      * @param array<string, mixed> $context Context
@@ -222,10 +224,10 @@ class ErrorHandler
             'context' => $context,
         ]);
     }
-    
+
     /**
      * Validate required fields
-     * 
+     *
      * @param array<string, mixed> $data Data to validate
      * @param array<string, mixed> $required Required field names
      * @return array<string, mixed> [valid => bool, missing => array]
@@ -233,22 +235,22 @@ class ErrorHandler
     public static function validateRequired(array $data, array $required): array
     {
         $missing = [];
-        
+
         foreach ($required as $field) {
             if (!isset($data[$field]) || $data[$field] === '') {
                 $missing[] = $field;
             }
         }
-        
+
         return [
             'valid' => empty($missing),
             'missing' => $missing,
         ];
     }
-    
+
     /**
      * Format validation errors as user-friendly message
-     * 
+     *
      * @param array<string, mixed> $errors Validation errors
      * @param string $lang Language
      * @return string Formatted message
@@ -258,14 +260,14 @@ class ErrorHandler
         if (empty($errors)) {
             return '';
         }
-        
+
         $prefix = $lang === 'ro' ? 'Câmpuri lipsă: ' : 'Missing fields: ';
         return $prefix . implode(', ', $errors);
     }
-    
+
     /**
      * Check API response for errors
-     * 
+     *
      * @param mixed $response API response
      * @return bool Has error
      */
@@ -275,12 +277,12 @@ class ErrorHandler
             self::addError(Constants::ERROR_API_FAILURE, 'Empty API response');
             return true;
         }
-        
+
         if (is_array($response) && isset($response['error'])) {
             self::addError(Constants::ERROR_API_FAILURE, $response['error']);
             return true;
         }
-        
+
         return false;
     }
 }

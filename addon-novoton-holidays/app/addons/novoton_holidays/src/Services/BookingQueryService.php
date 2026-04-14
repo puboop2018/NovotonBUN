@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 /**
  * Novoton Holidays - Booking Query & Display Service
  *
@@ -16,11 +18,11 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Services;
 
+use Tygh\Addons\NovotonHolidays\Repository\BookingRepositoryInterface;
 use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
 use Tygh\Addons\TravelCore\TravelConstants;
 use Tygh\Addons\TravelCore\ValueObjects\BoardType;
 use Tygh\Addons\TravelCore\ValueObjects\RoomType;
-use Tygh\Addons\NovotonHolidays\Repository\BookingRepositoryInterface;
 
 class BookingQueryService implements BookingQueryServiceInterface
 {
@@ -29,7 +31,7 @@ class BookingQueryService implements BookingQueryServiceInterface
 
     public function __construct(
         BookingRepositoryInterface $bookingRepository,
-        ?GuestDataNormalizer $guestDataNormalizer = null
+        ?GuestDataNormalizer $guestDataNormalizer = null,
     ) {
         $this->bookingRepository = $bookingRepository;
         $this->guestDataNormalizer = $guestDataNormalizer ?? new GuestDataNormalizer();
@@ -48,7 +50,7 @@ class BookingQueryService implements BookingQueryServiceInterface
             'confirmed' => $this->bookingRepository->count(['status' => TravelConstants::STATUS_CONFIRMED]),
             'cancelled' => $this->bookingRepository->count(['status' => TravelConstants::STATUS_CANCELLED]),
             'with_orders' => $this->bookingRepository->count(['has_order' => true]),
-            'orphans' => $this->bookingRepository->count(['no_order' => true])
+            'orphans' => $this->bookingRepository->count(['no_order' => true]),
         ];
     }
 
@@ -85,25 +87,25 @@ class BookingQueryService implements BookingQueryServiceInterface
         $conditions = [];
 
         if (empty($params['show_orphans'])) {
-            $conditions[] = "nb.order_id > 0";
+            $conditions[] = 'nb.order_id > 0';
         }
         if (!empty($params['order_id'])) {
-            $conditions[] = db_quote("nb.order_id = ?i", $params['order_id']);
+            $conditions[] = db_quote('nb.order_id = ?i', $params['order_id']);
         }
         if (!empty($params['hotel_id'])) {
-            $conditions[] = db_quote("nb.hotel_id = ?s", $params['hotel_id']);
+            $conditions[] = db_quote('nb.hotel_id = ?s', $params['hotel_id']);
         }
         if (!empty($params['novoton_status'])) {
-            $conditions[] = db_quote("nb.novoton_status = ?s", $params['novoton_status']);
+            $conditions[] = db_quote('nb.novoton_status = ?s', $params['novoton_status']);
         }
         if (!empty($params['status'])) {
-            $conditions[] = db_quote("nb.status = ?s", $params['status']);
+            $conditions[] = db_quote('nb.status = ?s', $params['status']);
         }
         if (!empty($params['check_in_from'])) {
-            $conditions[] = db_quote("nb.check_in >= ?s", $params['check_in_from']);
+            $conditions[] = db_quote('nb.check_in >= ?s', $params['check_in_from']);
         }
         if (!empty($params['check_in_to'])) {
-            $conditions[] = db_quote("nb.check_in <= ?s", $params['check_in_to']);
+            $conditions[] = db_quote('nb.check_in <= ?s', $params['check_in_to']);
         }
 
         $where_clause = !empty($conditions) ? 'WHERE ' . implode(' AND ', $conditions) : '';
@@ -118,7 +120,7 @@ class BookingQueryService implements BookingQueryServiceInterface
              LEFT JOIN ?:novoton_hotels nh ON nb.hotel_id = nh.hotel_id
              LEFT JOIN ?:orders o ON nb.order_id = o.order_id
              {$where_clause}
-             ORDER BY nb.order_id DESC, nb.booking_id DESC"
+             ORDER BY nb.order_id DESC, nb.booking_id DESC",
         );
     }
 

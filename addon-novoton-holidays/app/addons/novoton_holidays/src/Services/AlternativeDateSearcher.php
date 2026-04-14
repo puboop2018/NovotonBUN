@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 /**
  * Searches nearby dates for availability when the primary search returns nothing.
  *
@@ -17,7 +19,7 @@ class AlternativeDateSearcher implements AlternativeDateSearcherInterface
     /** Maximum total API calls across all dates/rooms/boards to prevent runaway loops */
     private const MAX_API_CALLS = 50;
 
-    /** @var bool */
+    /**  */
     private bool $debug;
 
     /** @var string[] */
@@ -34,14 +36,14 @@ class AlternativeDateSearcher implements AlternativeDateSearcherInterface
      * Uses batch API requests (curl_multi) per date to parallelize room×board
      * combinations. Enforces a hard cap of MAX_API_CALLS to prevent runaway loops.
      *
-     * @param string $hotelId   Hotel identifier
-     * @param string $checkIn   Original check-in date
-     * @param int    $nights    Stay duration
-     * @param int    $adults    Total adults
-     * @param array<string, mixed>  $children  Children ages
-     * @param int    $flexDays  Days to search before/after (0 = use default 10)
-     * @param array<string, mixed>  $rooms     Room XML nodes from HotelAvailabilitySearcher::getRooms()
-     * @param array<string, mixed>  $boardTypes Board type IDs from HotelAvailabilitySearcher::getBoardTypes()
+     * @param string $hotelId Hotel identifier
+     * @param string $checkIn Original check-in date
+     * @param int $nights Stay duration
+     * @param int $adults Total adults
+     * @param array<string, mixed> $children Children ages
+     * @param int $flexDays Days to search before/after (0 = use default 10)
+     * @param array<string, mixed> $rooms Room XML nodes from HotelAvailabilitySearcher::getRooms()
+     * @param array<string, mixed> $boardTypes Board type IDs from HotelAvailabilitySearcher::getBoardTypes()
      * @return array{
      *   results: list<array<string, mixed>>,
      *   check_in: string,
@@ -52,16 +54,16 @@ class AlternativeDateSearcher implements AlternativeDateSearcherInterface
     public function search(
         string $hotelId,
         string $checkIn,
-        int    $nights,
-        int    $adults,
-        array  $children,
-        int    $flexDays,
-        array  $rooms,
-        array  $boardTypes
+        int $nights,
+        int $adults,
+        array $children,
+        int $flexDays,
+        array $rooms,
+        array $boardTypes,
     ): array {
         $searchRange = ($flexDays > 0) ? $flexDays : 10;
-        $nights      = max($nights, 1);
-        $baseDate    = strtotime($checkIn);
+        $nights = max($nights, 1);
+        $baseDate = strtotime($checkIn);
 
         if ($baseDate === false) {
             return ['results' => [], 'check_in' => '', 'check_out' => ''];
@@ -83,7 +85,7 @@ class AlternativeDateSearcher implements AlternativeDateSearcherInterface
         }
 
         $this->log("No results for {$checkIn}. Searching alternative dates (±{$searchRange} days)...");
-        $this->log("Alternative dates to try: " . implode(', ', array_slice($altDates, 0, 5)) . "...");
+        $this->log('Alternative dates to try: ' . implode(', ', array_slice($altDates, 0, 5)) . '...');
 
         $api = fn_novoton_holidays_get_api();
         if (!$api) {
@@ -101,16 +103,16 @@ class AlternativeDateSearcher implements AlternativeDateSearcherInterface
                 continue;
             }
             /** @var object{IdRoom: string, Room: string}|array<string, mixed> $room */
-            $roomId   = is_object($room) ? (string) $room->IdRoom : ($room['IdRoom'] ?? '');
-            $roomName = is_object($room) ? (string) $room->Room   : ($room['Room'] ?? '');
+            $roomId = is_object($room) ? (string) $room->IdRoom : ($room['IdRoom'] ?? '');
+            $roomName = is_object($room) ? (string) $room->Room : ($room['Room'] ?? '');
             if (!empty($roomId)) {
                 $roomData[] = ['id' => $roomId, 'name' => $roomName, 'original' => $room];
             }
         }
 
-        $altResults   = [];
-        $altCheckIn   = '';
-        $altCheckOut  = '';
+        $altResults = [];
+        $altCheckIn = '';
+        $altCheckOut = '';
         $apiCallCount = 0;
 
         foreach ($altDates as $tryCheckIn) {
@@ -118,19 +120,19 @@ class AlternativeDateSearcher implements AlternativeDateSearcherInterface
 
             // Build all room×board requests for this date as a batch
             $batchRequests = [];
-            $requestMeta   = []; // Maps batch key → room/board metadata
+            $requestMeta = []; // Maps batch key → room/board metadata
             foreach ($roomData as $ri => $rd) {
                 foreach ($boardTypes as $bi => $tryBoard) {
                     $batchKey = "r{$ri}_b{$bi}";
                     $batchRequests[$batchKey] = [
-                        'hotel_id'    => $hotelId,
-                        'room_id'     => $rd['id'],
-                        'board_id'    => $tryBoard,
+                        'hotel_id' => $hotelId,
+                        'room_id' => $rd['id'],
+                        'board_id' => $tryBoard,
                         'star_rating' => '',
-                        'check_in'    => $tryCheckIn,
-                        'check_out'   => $tryCheckOut,
-                        'adults'      => $adults,
-                        'children'    => $children,
+                        'check_in' => $tryCheckIn,
+                        'check_out' => $tryCheckOut,
+                        'adults' => $adults,
+                        'children' => $children,
                     ];
                     $requestMeta[$batchKey] = [
                         'roomIdx' => $ri,
@@ -142,7 +144,7 @@ class AlternativeDateSearcher implements AlternativeDateSearcherInterface
             // Enforce API call cap
             $remaining = self::MAX_API_CALLS - $apiCallCount;
             if ($remaining <= 0) {
-                $this->log("API call cap reached ({$apiCallCount}/" . self::MAX_API_CALLS . "). Stopping.");
+                $this->log("API call cap reached ({$apiCallCount}/" . self::MAX_API_CALLS . '). Stopping.');
                 break;
             }
             if (count($batchRequests) > $remaining) {
@@ -162,7 +164,7 @@ class AlternativeDateSearcher implements AlternativeDateSearcherInterface
                     continue;
                 }
                 $meta = $requestMeta[$batchKey];
-                $ri   = $meta['roomIdx'];
+                $ri = $meta['roomIdx'];
 
                 // Skip if we already found a result for this room
                 if (isset($foundRoomIds[$ri])) {
@@ -175,28 +177,28 @@ class AlternativeDateSearcher implements AlternativeDateSearcherInterface
                     if ($rawPrice > 0) {
                         $rd = $roomData[$ri];
                         $foundRoomIds[$ri] = true;
-                        $altCheckIn  = $tryCheckIn;
+                        $altCheckIn = $tryCheckIn;
                         $altCheckOut = $tryCheckOut;
-                        $altPrice     = $pricing->applyCommission($rawPrice);
+                        $altPrice = $pricing->applyCommission($rawPrice);
                         $altResults[] = [
-                            'room'            => $rd['original'],
-                            'room_id'         => $rd['id'],
-                            'room_name'       => $rd['name'] ?: str_replace(['%2b', '%2B'], '+', $rd['id']),
-                            'board_id'        => $meta['boardId'],
-                            'board_name'      => \Tygh\Addons\TravelCore\ValueObjects\BoardType::toDisplayName($meta['boardId']),
-                            'price_data'      => $priceData,
-                            'nights'          => $nights,
-                            'total_price'     => $altPrice,
+                            'room' => $rd['original'],
+                            'room_id' => $rd['id'],
+                            'room_name' => $rd['name'] ?: str_replace(['%2b', '%2B'], '+', $rd['id']),
+                            'board_id' => $meta['boardId'],
+                            'board_name' => \Tygh\Addons\TravelCore\ValueObjects\BoardType::toDisplayName($meta['boardId']),
+                            'price_data' => $priceData,
+                            'nights' => $nights,
+                            'total_price' => $altPrice,
                             'price_per_night' => round($altPrice / $nights, 2),
-                            'check_in'        => $tryCheckIn,
-                            'check_out'       => $tryCheckOut,
+                            'check_in' => $tryCheckIn,
+                            'check_out' => $tryCheckOut,
                         ];
                     }
                 }
             }
 
             if (!empty($altResults)) {
-                $this->log("Found " . count($altResults) . " alternative(s) for {$tryCheckIn}.");
+                $this->log('Found ' . count($altResults) . " alternative(s) for {$tryCheckIn}.");
                 break; // Found results, stop searching dates
             }
         }
@@ -206,8 +208,8 @@ class AlternativeDateSearcher implements AlternativeDateSearcherInterface
         }
 
         return [
-            'results'   => $altResults,
-            'check_in'  => $altCheckIn,
+            'results' => $altResults,
+            'check_in' => $altCheckIn,
             'check_out' => $altCheckOut,
         ];
     }

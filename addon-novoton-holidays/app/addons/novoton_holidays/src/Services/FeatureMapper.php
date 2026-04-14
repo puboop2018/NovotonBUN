@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 /**
  * Feature Mapper Service (Novoton)
  *
@@ -37,7 +39,7 @@ class FeatureMapper
         int $productId,
         string $coreFeatureType,
         string $providerCode,
-        string $apiSource = 'novoton'
+        string $apiSource = 'novoton',
     ): bool {
         $mapping = CoreFeatureMapper::resolveWithVariant($apiSource, $coreFeatureType, $providerCode);
         if (!$mapping) {
@@ -53,7 +55,8 @@ class FeatureMapper
         }
 
         $csFeatureType = db_get_field(
-            "SELECT feature_type FROM ?:product_features WHERE feature_id = ?i", $featureId
+            'SELECT feature_type FROM ?:product_features WHERE feature_id = ?i',
+            $featureId,
         );
 
         return match ($csFeatureType) {
@@ -69,15 +72,15 @@ class FeatureMapper
      * Resolves all codes, groups by cscart_feature_id, then syncs each group.
      * Handles codes mapping to different CS-Cart features (e.g. pool → Hotel Amenities, wifi → Room Amenities).
      *
-     * @param string   $coreFeatureType travel_core feature type (e.g. 'board', 'hotel_facility')
-     * @param string[] $providerCodes   Normalized provider codes
+     * @param string $coreFeatureType travel_core feature type (e.g. 'board', 'hotel_facility')
+     * @param string[] $providerCodes Normalized provider codes
      * @return int Number of successfully assigned features
      */
     public function assignMultipleViaCore(
         int $productId,
         string $coreFeatureType,
         array $providerCodes,
-        string $apiSource = 'novoton'
+        string $apiSource = 'novoton',
     ): int {
         $providerCodes = array_unique(array_filter(array_map('trim', $providerCodes)));
         if (empty($providerCodes)) {
@@ -167,13 +170,13 @@ class FeatureMapper
         // Map Novoton feature types to travel_core setting keys
         $coreTypeMap = [
             'property_rating' => 'stars',
-            'meals'           => 'board',
-            'property_type'   => 'property_type',
-            'hotel_facility'  => 'hotel_facility',
-            'room_facility'   => 'room_facility',
-            'travel_group'    => 'travel_group',
-            'beach_access'    => 'beach_access',
-            'resort'          => 'resort',
+            'meals' => 'board',
+            'property_type' => 'property_type',
+            'hotel_facility' => 'hotel_facility',
+            'room_facility' => 'room_facility',
+            'travel_group' => 'travel_group',
+            'beach_access' => 'beach_access',
+            'resort' => 'resort',
         ];
 
         $coreType = $coreTypeMap[$featureType] ?? $featureType;
@@ -184,9 +187,9 @@ class FeatureMapper
         }
 
         $name = db_get_field(
-            "SELECT description FROM ?:product_features_descriptions WHERE feature_id = ?i AND lang_code = ?s",
+            'SELECT description FROM ?:product_features_descriptions WHERE feature_id = ?i AND lang_code = ?s',
             $featureId,
-            $langCode
+            $langCode,
         );
 
         return $name ?: null;

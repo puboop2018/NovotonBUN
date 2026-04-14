@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Services;
@@ -46,7 +47,7 @@ interface DiscountCalculatorInterface
         string $checkIn,
         int $nights,
         string $roomId,
-        float $subtotal
+        float $subtotal,
     ): array;
 
     /**

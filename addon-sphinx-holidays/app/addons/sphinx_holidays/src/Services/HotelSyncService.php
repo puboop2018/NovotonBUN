@@ -1,13 +1,14 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays\Services;
 
 use Tygh\Addons\SphinxHolidays\Api\SphinxNormalizer;
-use Tygh\Addons\SphinxHolidays\SphinxApi;
-use Tygh\Addons\SphinxHolidays\Repository\DestinationRepository;
 use Tygh\Addons\SphinxHolidays\Contracts\HotelSyncServiceInterface;
+use Tygh\Addons\SphinxHolidays\Repository\DestinationRepository;
 use Tygh\Addons\SphinxHolidays\Repository\HotelRepository;
+use Tygh\Addons\SphinxHolidays\SphinxApi;
 use Tygh\Addons\TravelCore\Helpers\ValidationHelpers;
 
 /**
@@ -60,8 +61,8 @@ class HotelSyncService extends AbstractSyncService implements HotelSyncServiceIn
     public function sync(array $countryCodes = [], array $extraDestinationIds = [], bool $fullSync = false): array
     {
         return $this->runSync($fullSync, [
-            'country_codes'    => $countryCodes,
-            'destination_ids'  => $extraDestinationIds,
+            'country_codes' => $countryCodes,
+            'destination_ids' => $extraDestinationIds,
         ]);
     }
 
@@ -94,7 +95,7 @@ class HotelSyncService extends AbstractSyncService implements HotelSyncServiceIn
         if (!empty($extraDestinationIds)) {
             $labels[] = 'destination IDs: ' . implode(', ', $extraDestinationIds);
         }
-        $this->output("Hotel sync starting for " . implode('; ', $labels));
+        $this->output('Hotel sync starting for ' . implode('; ', $labels));
 
         // Get destination IDs for selected countries (all types under those countries)
         $destinationIds = $this->resolveDestinationIds($countryCodes, $extraDestinationIds);
@@ -157,7 +158,6 @@ class HotelSyncService extends AbstractSyncService implements HotelSyncServiceIn
      * Uses server-side destination_ids filtering to reduce API payload.
      * When updatedSince is set (incremental sync), stale detection is skipped.
      *
-     * @param string $countryCode
      * @param int[] $destinationIds Destination IDs belonging to this country
      * @param string|null $updatedSince Only fetch hotels updated since this datetime
      * @return array<string, mixed>
@@ -197,7 +197,7 @@ class HotelSyncService extends AbstractSyncService implements HotelSyncServiceIn
             }
 
             if (count($destIdChunks) > 1) {
-                $this->output("    Destination chunk " . ($chunkIdx + 1) . '/' . count($destIdChunks) . ' (' . count($destIdChunk) . ' IDs)');
+                $this->output('    Destination chunk ' . ($chunkIdx + 1) . '/' . count($destIdChunks) . ' (' . count($destIdChunk) . ' IDs)');
             }
 
             $page = 1;
@@ -296,8 +296,8 @@ class HotelSyncService extends AbstractSyncService implements HotelSyncServiceIn
             // These IDs come from ConfigProvider::getAllowedDestinationIds() which
             // correctly respects selection_type ('all' vs 'specific').
             $rows = db_get_array(
-                "SELECT destination_id, country_code FROM ?:sphinx_destinations WHERE destination_id IN (?n)",
-                $allowedDestIds
+                'SELECT destination_id, country_code FROM ?:sphinx_destinations WHERE destination_id IN (?n)',
+                $allowedDestIds,
             );
 
             foreach ($rows as $row) {
@@ -313,8 +313,8 @@ class HotelSyncService extends AbstractSyncService implements HotelSyncServiceIn
             // include all destinations for those countries.
             foreach ($countryCodes as $code) {
                 $ids = db_get_fields(
-                    "SELECT destination_id FROM ?:sphinx_destinations WHERE country_code = ?s",
-                    $code
+                    'SELECT destination_id FROM ?:sphinx_destinations WHERE country_code = ?s',
+                    $code,
                 );
                 if (!empty($ids)) {
                     $result[$code] = array_map('intval', $ids);
@@ -346,7 +346,7 @@ class HotelSyncService extends AbstractSyncService implements HotelSyncServiceIn
         }
 
         $propertyType = $this->normalizer->normalizePropertyType(
-            $raw['type'] ?? 'hotel'
+            $raw['type'] ?? 'hotel',
         ) ?? 'hotel';
 
         $classification = (int) ($raw['classification'] ?? 0);
@@ -361,30 +361,30 @@ class HotelSyncService extends AbstractSyncService implements HotelSyncServiceIn
         $address = $raw['address'] ?? [];
 
         return [
-            'hotel_id'          => $id,
-            'name'              => $name,
-            'classification'    => $classification,
-            'property_type'     => $propertyType,
-            'destination_id'    => (int) ($raw['destination_id'] ?? 0),
-            'destination_name'  => (string) ($raw['destination_name'] ?? ''),
-            'region_id'         => (int) ($raw['region_id'] ?? 0),
-            'region_name'       => (string) ($raw['region_name'] ?? ''),
-            'country_code'      => strtoupper((string) ($raw['country_code'] ?? '')),
-            'country_name'      => (string) ($raw['country_name'] ?? ''),
-            'latitude'          => (float) ($raw['latitude'] ?? 0),
-            'longitude'         => (float) ($raw['longitude'] ?? 0),
-            'description'       => html_entity_decode((string) ($raw['description'] ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8'),
+            'hotel_id' => $id,
+            'name' => $name,
+            'classification' => $classification,
+            'property_type' => $propertyType,
+            'destination_id' => (int) ($raw['destination_id'] ?? 0),
+            'destination_name' => (string) ($raw['destination_name'] ?? ''),
+            'region_id' => (int) ($raw['region_id'] ?? 0),
+            'region_name' => (string) ($raw['region_name'] ?? ''),
+            'country_code' => strtoupper((string) ($raw['country_code'] ?? '')),
+            'country_name' => (string) ($raw['country_name'] ?? ''),
+            'latitude' => (float) ($raw['latitude'] ?? 0),
+            'longitude' => (float) ($raw['longitude'] ?? 0),
+            'description' => html_entity_decode((string) ($raw['description'] ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8'),
             'short_description' => html_entity_decode((string) ($raw['short_description'] ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8'),
-            'image_url'         => (string) ($raw['images'][0]['url'] ?? ''),
-            'images_json'       => !empty($raw['images']) ? json_encode($raw['images']) : '[]',
-            'facilities_json'   => !empty($raw['facilities']) ? json_encode($raw['facilities']) : '[]',
-            'is_adults_only'    => $isAdultsOnly,
-            'address'           => trim((string) ($address['street'] ?? '')),
-            'phone'             => trim((string) ($address['phone'] ?? '')),
-            'email'             => trim((string) ($address['email'] ?? '')),
-            'website'           => trim((string) ($address['website'] ?? '')),
-            'rating'            => isset($raw['rating']) ? (float) $raw['rating'] : null,
-            'rating_count'      => isset($raw['rating_count']) ? (int) $raw['rating_count'] : null,
+            'image_url' => (string) ($raw['images'][0]['url'] ?? ''),
+            'images_json' => !empty($raw['images']) ? json_encode($raw['images']) : '[]',
+            'facilities_json' => !empty($raw['facilities']) ? json_encode($raw['facilities']) : '[]',
+            'is_adults_only' => $isAdultsOnly,
+            'address' => trim((string) ($address['street'] ?? '')),
+            'phone' => trim((string) ($address['phone'] ?? '')),
+            'email' => trim((string) ($address['email'] ?? '')),
+            'website' => trim((string) ($address['website'] ?? '')),
+            'rating' => isset($raw['rating']) ? (float) $raw['rating'] : null,
+            'rating_count' => isset($raw['rating_count']) ? (int) $raw['rating_count'] : null,
         ];
     }
 
@@ -404,8 +404,8 @@ class HotelSyncService extends AbstractSyncService implements HotelSyncServiceIn
         $prefixLen = strlen($prefix);
 
         $spxProducts = db_get_array(
-            "SELECT product_id, product_code FROM ?:products WHERE product_code LIKE ?l",
-            $prefix . '%'
+            'SELECT product_id, product_code FROM ?:products WHERE product_code LIKE ?l',
+            $prefix . '%',
         );
 
         $stats = ['total' => count($spxProducts), 'linked' => 0, 'skipped' => 0, 'not_found' => 0, 'errors' => 0];

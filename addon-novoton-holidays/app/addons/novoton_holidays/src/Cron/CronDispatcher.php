@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 namespace Tygh\Addons\NovotonHolidays\Cron;
 
 use Tygh\Addons\TravelCore\Contracts\CronDispatcherInterface;

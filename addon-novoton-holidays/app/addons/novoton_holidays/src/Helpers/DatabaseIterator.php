@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 /**
  * Novoton Holidays - Database Iterator Helper
  *
@@ -74,29 +76,29 @@ class DatabaseIterator implements DatabaseIteratorInterface
 
         if (!empty($filters['country'])) {
             if (is_array($filters['country'])) {
-                $where_parts[] = "country IN (?a)";
+                $where_parts[] = 'country IN (?a)';
                 $params[] = $filters['country'];
             } else {
-                $where_parts[] = "country = ?s";
+                $where_parts[] = 'country = ?s';
                 $params[] = $filters['country'];
             }
         }
 
         if (!empty($filters['has_room_price'])) {
-            $where_parts[] = "has_room_price = ?s";
+            $where_parts[] = 'has_room_price = ?s';
             $params[] = $filters['has_room_price'];
         }
 
         if (!empty($filters['no_product'])) {
-            $where_parts[] = "(product_id IS NULL OR product_id = 0)";
+            $where_parts[] = '(product_id IS NULL OR product_id = 0)';
         }
 
         if (!empty($filters['has_product'])) {
-            $where_parts[] = "product_id IS NOT NULL AND product_id > 0";
+            $where_parts[] = 'product_id IS NOT NULL AND product_id > 0';
         }
 
         if (!empty($filters['no_hotelinfo'])) {
-            $where_parts[] = "hotelinfo_synced_at IS NULL";
+            $where_parts[] = 'hotelinfo_synced_at IS NULL';
         }
 
         $where = !empty($where_parts) ? 'WHERE ' . implode(' AND ', $where_parts) : '';
@@ -139,12 +141,12 @@ class DatabaseIterator implements DatabaseIteratorInterface
         $params = [];
 
         if (!empty($filters['hotel_id'])) {
-            $where_parts[] = "p.hotel_id = ?s";
+            $where_parts[] = 'p.hotel_id = ?s';
             $params[] = $filters['hotel_id'];
         }
 
         if (!empty($filters['countries'])) {
-            $where_parts[] = "h.country IN (?a)";
+            $where_parts[] = 'h.country IN (?a)';
             $params[] = $filters['countries'];
         }
 
@@ -154,7 +156,7 @@ class DatabaseIterator implements DatabaseIteratorInterface
 
         if (!empty($filters['stale'])) {
             // Packages not synced in last 24 hours
-            $where_parts[] = "(p.synced_at IS NULL OR p.synced_at < DATE_SUB(NOW(), INTERVAL 24 HOUR))";
+            $where_parts[] = '(p.synced_at IS NULL OR p.synced_at < DATE_SUB(NOW(), INTERVAL 24 HOUR))';
         }
 
         $where = !empty($where_parts) ? 'WHERE ' . implode(' AND ', $where_parts) : '';
@@ -203,16 +205,16 @@ class DatabaseIterator implements DatabaseIteratorInterface
 
         if (!empty($filters['status'])) {
             if (is_array($filters['status'])) {
-                $where_parts[] = "status IN (?a)";
+                $where_parts[] = 'status IN (?a)';
                 $params[] = $filters['status'];
             } else {
-                $where_parts[] = "status = ?s";
+                $where_parts[] = 'status = ?s';
                 $params[] = $filters['status'];
             }
         }
 
         if (!empty($filters['novoton_status'])) {
-            $where_parts[] = "novoton_status = ?s";
+            $where_parts[] = 'novoton_status = ?s';
             $params[] = $filters['novoton_status'];
         }
 
@@ -385,21 +387,21 @@ class DatabaseIterator implements DatabaseIteratorInterface
 
         if (!empty($filters['country'])) {
             if (is_array($filters['country'])) {
-                $where_parts[] = "country IN (?a)";
+                $where_parts[] = 'country IN (?a)';
                 $params[] = $filters['country'];
             } else {
-                $where_parts[] = "country = ?s";
+                $where_parts[] = 'country = ?s';
                 $params[] = $filters['country'];
             }
         }
 
         if (!empty($filters['has_room_price'])) {
-            $where_parts[] = "has_room_price = ?s";
+            $where_parts[] = 'has_room_price = ?s';
             $params[] = $filters['has_room_price'];
         }
 
         if (!empty($filters['no_product'])) {
-            $where_parts[] = "(product_id IS NULL OR product_id = 0)";
+            $where_parts[] = '(product_id IS NULL OR product_id = 0)';
         }
 
         $where = !empty($where_parts) ? 'WHERE ' . implode(' AND ', $where_parts) : '';

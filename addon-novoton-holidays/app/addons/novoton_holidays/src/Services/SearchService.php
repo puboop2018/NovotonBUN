@@ -1,17 +1,18 @@
 <?php
+
 declare(strict_types=1);
+
 /**
  * Novoton Search Service
- * 
+ *
  * Handles hotel availability search, result processing, and flexible date searches.
  * Extracted from novoton_booking.php for better maintainability.
- * 
+ *
  * @package NovotonHolidays
  * @since 2.7.0
  */
 
 namespace Tygh\Addons\NovotonHolidays\Services;
-
 
 use Tygh\Addons\NovotonHolidays\Api\Contracts\PricingApiClientInterface;
 use Tygh\Addons\NovotonHolidays\Constants;
@@ -45,10 +46,10 @@ class SearchService implements SearchServiceInterface
         }
         $this->pricing = $pricing;
     }
-    
+
     /**
      * Parse search parameters from request
-     * 
+     *
      * @param array<string, mixed> $request Request parameters
      * @return array<string, mixed> Normalized search parameters
      */
@@ -68,7 +69,7 @@ class SearchService implements SearchServiceInterface
             'region' => $request['region'] ?? '',
             'city' => $request['city'] ?? '',
         ];
-        
+
         // Parse multi-room data
         $rooms_data = [];
         if (!empty($request['room_data'])) {
@@ -77,17 +78,17 @@ class SearchService implements SearchServiceInterface
                 $rooms_data = [];
             }
         }
-        
+
         // Create default single room if no room_data
         if (empty($rooms_data)) {
             $children_ages = $this->parseChildrenAges($request, $params['children']);
             $rooms_data = [[
                 'adults' => $params['adults'],
                 'children' => $params['children'],
-                'childrenAges' => $children_ages
+                'childrenAges' => $children_ages,
             ]];
         }
-        
+
         // Calculate totals from rooms
         $totals = $this->calculateRoomTotals($rooms_data);
         $params['total_adults'] = $totals['adults'];
@@ -95,13 +96,13 @@ class SearchService implements SearchServiceInterface
         $params['children_ages'] = $totals['ages'];
         $params['rooms_data'] = $rooms_data;
         $params['num_rooms'] = count($rooms_data);
-        
+
         return $params;
     }
-    
+
     /**
      * Parse children ages from request
-     * 
+     *
      * @param array<string, mixed> $request Request data
      * @param int $children_count Number of children
      * @return list<int> Children ages
@@ -119,10 +120,10 @@ class SearchService implements SearchServiceInterface
         }
         return $ages;
     }
-    
+
     /**
      * Calculate totals from rooms data
-     * 
+     *
      * @param array<string, mixed> $rooms_data Rooms configuration
      * @return array<string, mixed> Totals [adults, children, ages]
      */
@@ -131,7 +132,7 @@ class SearchService implements SearchServiceInterface
         $total_adults = 0;
         $total_children = 0;
         $all_ages = [];
-        
+
         foreach ($rooms_data as $room) {
             $total_adults += (int) ($room['adults'] ?? 2);
             $total_children += (int) ($room['children'] ?? 0);
@@ -143,14 +144,14 @@ class SearchService implements SearchServiceInterface
                 }
             }
         }
-        
+
         return [
             'adults' => $total_adults,
             'children' => $total_children,
-            'ages' => $all_ages
+            'ages' => $all_ages,
         ];
     }
-    
+
     /**
      * Get board name from ID
      *
@@ -163,7 +164,7 @@ class SearchService implements SearchServiceInterface
     {
         return \Tygh\Addons\TravelCore\ValueObjects\BoardType::toDisplayName($board_id);
     }
-    
+
     // =========================================================================
     // BOARD / MEAL PLAN FILTERING (single source of truth)
     // =========================================================================
@@ -174,9 +175,8 @@ class SearchService implements SearchServiceInterface
      * Uses Constants::BOARD_MAPPING to resolve user-facing codes (AI, UAI, FB…)
      * to the API board strings they map to.
      *
-     * @param string $boardId  Board identifier from the API response
+     * @param string $boardId Board identifier from the API response
      * @param string $mealPlan User-selected meal plan code (e.g. 'AI', 'HB')
-     * @return bool
      */
     public static function matchesMealPlan(string $boardId, string $mealPlan): bool
     {
@@ -237,27 +237,27 @@ class SearchService implements SearchServiceInterface
      * Handles both single-result and multi-result responses, applies meal plan
      * filtering, commission, quota lookup, and builds the standard result items.
      *
-     * @param string      $rawXml       Raw XML string from room_price API
-     * @param int         $nights       Number of nights
-     * @param string      $checkIn      Check-in date (Y-m-d)
-     * @param string      $checkOut     Check-out date (Y-m-d)
-     * @param string      $mealPlan     Requested meal plan code (empty = all)
-     * @param array<string, mixed>       $quotaMap     Room ID => quota value map (from hotel_quota)
-     * @param array<string, mixed>       $roomTypeMap  Room ID => Type map (from hotelinfo)
-     * @param int|null    $forRoom      Room number (multi-room), null for single
+     * @param string $rawXml Raw XML string from room_price API
+     * @param int $nights Number of nights
+     * @param string $checkIn Check-in date (Y-m-d)
+     * @param string $checkOut Check-out date (Y-m-d)
+     * @param string $mealPlan Requested meal plan code (empty = all)
+     * @param array<string, mixed> $quotaMap Room ID => quota value map (from hotel_quota)
+     * @param array<string, mixed> $roomTypeMap Room ID => Type map (from hotelinfo)
+     * @param int|null $forRoom Room number (multi-room), null for single
      * @param string|null $occupancyStr Occupancy string for display
      * @return list<array<string, mixed>> List of result items
      */
     public function parseRoomPriceResponse(
         string $rawXml,
-        int    $nights,
+        int $nights,
         string $checkIn,
         string $checkOut,
         string $mealPlan = '',
-        array  $quotaMap = [],
-        array  $roomTypeMap = [],
-        ?int   $forRoom = null,
-        ?string $occupancyStr = null
+        array $quotaMap = [],
+        array $roomTypeMap = [],
+        ?int $forRoom = null,
+        ?string $occupancyStr = null,
     ): array {
         $results = [];
 
@@ -281,22 +281,22 @@ class SearchService implements SearchServiceInterface
 
         if ($numPrices > 1 || $xml->getName() !== 'room_price') {
             // Multi-result: parallel xpath arrays
-            $idRooms        = $xml->xpath('//IdRoom');
-            $boards          = $xml->xpath('//Board');
-            $prices          = $xml->xpath('//Price');
-            $packageNames    = $xml->xpath('//PackageName');
-            $remarks         = $xml->xpath('//remark');
-            $earlyBookings   = $xml->xpath('//early_booking');
-            $extras          = $xml->xpath('//extras');
-            $moreInfos       = $xml->xpath('//MoreInfo');
-            $importants      = $xml->xpath('//Important');
-            $termsPayment    = $xml->xpath('//TermsOfPayment');
+            $idRooms = $xml->xpath('//IdRoom');
+            $boards = $xml->xpath('//Board');
+            $prices = $xml->xpath('//Price');
+            $packageNames = $xml->xpath('//PackageName');
+            $remarks = $xml->xpath('//remark');
+            $earlyBookings = $xml->xpath('//early_booking');
+            $extras = $xml->xpath('//extras');
+            $moreInfos = $xml->xpath('//MoreInfo');
+            $importants = $xml->xpath('//Important');
+            $termsPayment = $xml->xpath('//TermsOfPayment');
             $termsCancellation = $xml->xpath('//TermsOfCancellation');
 
             for ($i = 0; $i < count($prices ?: []); $i++) {
-                $roomId  = isset($idRooms[$i]) ? (string)$idRooms[$i] : '';
-                $boardId = isset($boards[$i])  ? (string)$boards[$i]  : '';
-                $price   = isset($prices[$i])  ? (float) (string) $prices[$i] : 0;
+                $roomId = isset($idRooms[$i]) ? (string)$idRooms[$i] : '';
+                $boardId = isset($boards[$i]) ? (string)$boards[$i] : '';
+                $price = isset($prices[$i]) ? (float) (string) $prices[$i] : 0;
 
                 if (empty($roomId) || $price <= 0) {
                     continue;
@@ -310,28 +310,28 @@ class SearchService implements SearchServiceInterface
                 $quota = self::parseQuotaValue($quotaMap[$roomId] ?? null);
 
                 $item = [
-                    'room'                   => null,
-                    'room_id'                => $roomId,
-                    'room_name'              => str_replace(['%2b', '%2B'], '+', $roomId),
-                    'room_type_display'      => RoomType::formatRoomLabel($roomId, $roomTypeMap[$roomId] ?? ''),
-                    'board_id'               => $boardId,
-                    'board_name'             => BoardType::toDisplayName($boardId),
-                    'package_name'           => rawurldecode(self::xpathValue($packageNames, $i)),
-                    'price_data'             => null,
-                    'nights'                 => $nights,
-                    'total_price'            => $finalPrice,
-                    'price_per_night'        => round($finalPrice / max($nights, 1), 2),
-                    'check_in'               => $checkIn,
-                    'check_out'              => $checkOut,
-                    'rooms_available'        => $quota['availability'],
-                    'is_on_request'          => $quota['is_on_request'],
-                    'remark'                 => self::xpathValue($remarks, $i),
-                    'important'              => self::xpathValue($importants, $i),
-                    'more_info'              => self::xpathValue($moreInfos, $i),
+                    'room' => null,
+                    'room_id' => $roomId,
+                    'room_name' => str_replace(['%2b', '%2B'], '+', $roomId),
+                    'room_type_display' => RoomType::formatRoomLabel($roomId, $roomTypeMap[$roomId] ?? ''),
+                    'board_id' => $boardId,
+                    'board_name' => BoardType::toDisplayName($boardId),
+                    'package_name' => rawurldecode(self::xpathValue($packageNames, $i)),
+                    'price_data' => null,
+                    'nights' => $nights,
+                    'total_price' => $finalPrice,
+                    'price_per_night' => round($finalPrice / max($nights, 1), 2),
+                    'check_in' => $checkIn,
+                    'check_out' => $checkOut,
+                    'rooms_available' => $quota['availability'],
+                    'is_on_request' => $quota['is_on_request'],
+                    'remark' => self::xpathValue($remarks, $i),
+                    'important' => self::xpathValue($importants, $i),
+                    'more_info' => self::xpathValue($moreInfos, $i),
                     'early_booking_discount' => (float) self::xpathValue($earlyBookings, $i, '0'),
-                    'extras'                 => self::xpathValue($extras, $i),
-                    'terms_of_payment'       => isset($termsPayment[$i]) ? (string) $termsPayment[$i]->asXML() : (isset($termsPayment[0]) ? (string) $termsPayment[0]->asXML() : ''),
-                    'terms_of_cancellation'  => isset($termsCancellation[$i]) ? (string) $termsCancellation[$i]->asXML() : (isset($termsCancellation[0]) ? (string) $termsCancellation[0]->asXML() : ''),
+                    'extras' => self::xpathValue($extras, $i),
+                    'terms_of_payment' => isset($termsPayment[$i]) ? (string) $termsPayment[$i]->asXML() : (isset($termsPayment[0]) ? (string) $termsPayment[0]->asXML() : ''),
+                    'terms_of_cancellation' => isset($termsCancellation[$i]) ? (string) $termsCancellation[$i]->asXML() : (isset($termsCancellation[0]) ? (string) $termsCancellation[0]->asXML() : ''),
                     'free_cancellation_date' => isset($termsCancellation[$i])
                         ? fn_novoton_holidays_get_free_cancellation_date((string) $termsCancellation[$i]->asXML())
                         : (isset($termsCancellation[0]) ? fn_novoton_holidays_get_free_cancellation_date((string) $termsCancellation[0]->asXML()) : null),
@@ -348,11 +348,11 @@ class SearchService implements SearchServiceInterface
             }
         } else {
             // Single result (root is room_price itself)
-            $roomId      = (string)$xml->IdRoom;
-            $boardId     = (string)$xml->Board;
-            $price       = (float) (string) $xml->Price;
+            $roomId = (string)$xml->IdRoom;
+            $boardId = (string)$xml->Board;
+            $price = (float) (string) $xml->Price;
             $packageName = (string)$xml->PackageName;
-            $remark      = isset($xml->remark) ? (string)$xml->remark : '';
+            $remark = isset($xml->remark) ? (string)$xml->remark : '';
 
             if (empty($roomId) || $price <= 0) {
                 return [];
@@ -366,28 +366,28 @@ class SearchService implements SearchServiceInterface
             $quota = self::parseQuotaValue($quotaMap[$roomId] ?? null);
 
             $item = [
-                'room'                   => null,
-                'room_id'                => $roomId,
-                'room_name'              => str_replace(['%2b', '%2B'], '+', $roomId),
-                'room_type_display'      => RoomType::formatRoomLabel($roomId, $roomTypeMap[$roomId] ?? ''),
-                'board_id'               => $boardId,
-                'board_name'             => BoardType::toDisplayName($boardId),
-                'package_name'           => rawurldecode($packageName),
-                'price_data'             => null, // SimpleXMLElement not serializable for cache
-                'nights'                 => $nights,
-                'total_price'            => $finalPrice,
-                'price_per_night'        => round($finalPrice / max($nights, 1), 2),
-                'check_in'               => $checkIn,
-                'check_out'              => $checkOut,
-                'rooms_available'        => $quota['availability'],
-                'is_on_request'          => $quota['is_on_request'],
-                'remark'                 => $remark,
-                'important'              => isset($xml->Important) ? (string)$xml->Important : '',
-                'more_info'              => isset($xml->MoreInfo) ? (string)$xml->MoreInfo : '',
+                'room' => null,
+                'room_id' => $roomId,
+                'room_name' => str_replace(['%2b', '%2B'], '+', $roomId),
+                'room_type_display' => RoomType::formatRoomLabel($roomId, $roomTypeMap[$roomId] ?? ''),
+                'board_id' => $boardId,
+                'board_name' => BoardType::toDisplayName($boardId),
+                'package_name' => rawurldecode($packageName),
+                'price_data' => null, // SimpleXMLElement not serializable for cache
+                'nights' => $nights,
+                'total_price' => $finalPrice,
+                'price_per_night' => round($finalPrice / max($nights, 1), 2),
+                'check_in' => $checkIn,
+                'check_out' => $checkOut,
+                'rooms_available' => $quota['availability'],
+                'is_on_request' => $quota['is_on_request'],
+                'remark' => $remark,
+                'important' => isset($xml->Important) ? (string)$xml->Important : '',
+                'more_info' => isset($xml->MoreInfo) ? (string)$xml->MoreInfo : '',
                 'early_booking_discount' => isset($xml->early_booking) ? (float) (string) $xml->early_booking : 0,
-                'extras'                 => isset($xml->extras) ? (string)$xml->extras : '',
-                'terms_of_payment'       => isset($xml->TermsOfPayment) ? (string) $xml->TermsOfPayment->asXML() : '',
-                'terms_of_cancellation'  => isset($xml->TermsOfCancellation) ? (string) $xml->TermsOfCancellation->asXML() : '',
+                'extras' => isset($xml->extras) ? (string)$xml->extras : '',
+                'terms_of_payment' => isset($xml->TermsOfPayment) ? (string) $xml->TermsOfPayment->asXML() : '',
+                'terms_of_cancellation' => isset($xml->TermsOfCancellation) ? (string) $xml->TermsOfCancellation->asXML() : '',
                 'free_cancellation_date' => isset($xml->TermsOfCancellation)
                     ? fn_novoton_holidays_get_free_cancellation_date((string) $xml->TermsOfCancellation->asXML())
                     : null,
@@ -414,8 +414,8 @@ class SearchService implements SearchServiceInterface
      * Extract active early booking discounts from the priceinfo_data JSON
      * stored in novoton_hotel_packages.
      *
-     * @param string $hotelId  Hotel ID
-     * @param string $checkIn  Guest check-in date (Y-m-d)
+     * @param string $hotelId Hotel ID
+     * @param string $checkIn Guest check-in date (Y-m-d)
      * @param string $checkOut Guest check-out date (Y-m-d)
      * @return list<array<string, mixed>> List of applicable discount records
      */
@@ -443,25 +443,31 @@ class SearchService implements SearchServiceInterface
 
         $today = date('Y-m-d');
         foreach ($eb_data as $eb) {
-            $bookTo   = $eb['BookTo']   ?? '';
+            $bookTo = $eb['BookTo'] ?? '';
             $stayFrom = $eb['StayFrom'] ?? '';
-            $stayTo   = $eb['StayTo']   ?? '';
+            $stayTo = $eb['StayTo'] ?? '';
 
-            if (!empty($bookTo) && $bookTo < $today) continue;
-            if (!empty($stayFrom) && $stayFrom > $checkOut) continue;
-            if (!empty($stayTo) && $stayTo < $checkIn) continue;
+            if (!empty($bookTo) && $bookTo < $today) {
+                continue;
+            }
+            if (!empty($stayFrom) && $stayFrom > $checkOut) {
+                continue;
+            }
+            if (!empty($stayTo) && $stayTo < $checkIn) {
+                continue;
+            }
 
             $discounts[] = [
-                'discount'   => (float) ($eb['Reduction'] ?? 0),
+                'discount' => (float) ($eb['Reduction'] ?? 0),
                 'room_types' => $eb['RoomTypes'] ?? 'all',
-                'package'    => $eb['PackageId'] ?? '',
-                'min_stay'   => (int) ($eb['MinStay'] ?? 0),
+                'package' => $eb['PackageId'] ?? '',
+                'min_stay' => (int) ($eb['MinStay'] ?? 0),
                 'booking_to' => $bookTo,
             ];
         }
 
         // Sort by discount DESC, limit to 10
-        usort($discounts, fn($a, $b) => $b['discount'] <=> $a['discount']);
+        usort($discounts, fn ($a, $b) => $b['discount'] <=> $a['discount']);
         return array_slice($discounts, 0, 10);
     }
 
@@ -518,11 +524,11 @@ class SearchService implements SearchServiceInterface
 
             $existing = $unique[$key];
             $existingHasExtras = !empty(trim($existing['extras'] ?? ''));
-            $currentHasExtras  = !empty(trim($result['extras'] ?? ''));
+            $currentHasExtras = !empty(trim($result['extras'] ?? ''));
 
             if ($existingHasExtras !== $currentHasExtras) {
                 // One has extras promotion, one doesn't — combine into one row
-                $standard    = $existingHasExtras ? $result  : $existing;
+                $standard = $existingHasExtras ? $result : $existing;
                 $promotional = $existingHasExtras ? $existing : $result;
 
                 $standard['extras_price'] = $promotional['total_price'];
@@ -530,8 +536,10 @@ class SearchService implements SearchServiceInterface
                 $unique[$key] = $standard;
             } else {
                 // Same type (both with or both without extras) — keep lowest price
-                if ($result['total_price'] > 0
-                    && $result['total_price'] < $existing['total_price']) {
+                if (
+                    $result['total_price'] > 0
+                    && $result['total_price'] < $existing['total_price']
+                ) {
                     $unique[$key] = $result;
                 }
             }
@@ -554,5 +562,4 @@ class SearchService implements SearchServiceInterface
         }
         return (string)$elements[$index];
     }
-
 }

@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Repository;
@@ -15,7 +16,6 @@ interface HotelPackageRepositoryInterface
     /**
      * Find all packages for a hotel (excludes large priceinfo_data JSON).
      *
-     * @param string $hotelId
      * @return list<array<string, mixed>>
      */
     public function findByHotelId(string $hotelId): array;
@@ -24,7 +24,6 @@ interface HotelPackageRepositoryInterface
      * Find all packages for a hotel including full priceinfo_data JSON.
      * Use only when the caller needs to process pricing data.
      *
-     * @param string $hotelId
      * @return list<array<string, mixed>>
      */
     public function findByHotelIdFull(string $hotelId): array;
@@ -32,8 +31,6 @@ interface HotelPackageRepositoryInterface
     /**
      * Find a specific package by hotel + package ID.
      *
-     * @param string $hotelId
-     * @param string $packageId
      * @return array<string, mixed>|null
      */
     public function findByHotelAndPackageId(string $hotelId, string $packageId): ?array;
@@ -41,35 +38,25 @@ interface HotelPackageRepositoryInterface
     /**
      * Find by hotel + package name.
      *
-     * @param string $hotelId
-     * @param string $packageName
      * @return array<string, mixed>|null
      */
     public function findByHotelAndPackageName(string $hotelId, string $packageName): ?array;
 
     /**
      * Check if a package exists.
-     *
-     * @param string $hotelId
-     * @param string $packageId
-     * @return bool
      */
     public function exists(string $hotelId, string $packageId): bool;
 
     /**
      * Upsert (insert or update) a package.
      *
-     * @param string $hotelId
-     * @param string $packageId
-     * @param array<string, mixed>  $data
-     * @return bool
+     * @param array<string, mixed> $data
      */
     public function upsert(string $hotelId, string $packageId, array $data): bool;
 
     /**
      * Delete all packages for a hotel.
      *
-     * @param string $hotelId
      * @return int Number of rows deleted
      */
     public function deleteByHotelId(string $hotelId): int;
@@ -77,23 +64,18 @@ interface HotelPackageRepositoryInterface
     /**
      * Get the first package with an early booking discount for a hotel.
      *
-     * @param string $hotelId
      * @return array<string, mixed>|null The priceinfo_data row, or null
      */
     public function findEarlyBookingPackage(string $hotelId): ?array;
 
     /**
      * Count packages for a hotel.
-     *
-     * @param string $hotelId
-     * @return int
      */
     public function countByHotelId(string $hotelId): int;
 
     /**
      * Get packages for listing (excludes large priceinfo_data JSON).
      *
-     * @param string $hotelId
      * @return list<array<string, mixed>>
      */
     public function findForListing(string $hotelId): array;

@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays\Repository;
@@ -46,7 +47,7 @@ class DestinationRepository
             }
 
             db_query(
-                "INSERT INTO ?:sphinx_destinations
+                'INSERT INTO ?:sphinx_destinations
                     (destination_id, name, type, parent_id, country_code, geoname_id, latitude, longitude, hotel_count, last_synced_at)
                  VALUES (?i, ?s, ?s, ?i, ?s, ?i, ?d, ?d, ?i, ?s)
                  AS new_row
@@ -59,7 +60,7 @@ class DestinationRepository
                     latitude = new_row.latitude,
                     longitude = new_row.longitude,
                     hotel_count = new_row.hotel_count,
-                    last_synced_at = new_row.last_synced_at",
+                    last_synced_at = new_row.last_synced_at',
                 $id,
                 ValidationHelpers::toString($dest['name'] ?? ''),
                 ValidationHelpers::toString($dest['type'] ?? 'destination'),
@@ -69,7 +70,7 @@ class DestinationRepository
                 ValidationHelpers::toFloat($dest['latitude'] ?? 0),
                 ValidationHelpers::toFloat($dest['longitude'] ?? 0),
                 ValidationHelpers::toInt($dest['hotel_count'] ?? 0),
-                date('Y-m-d H:i:s')
+                date('Y-m-d H:i:s'),
             );
 
             $affected++;
@@ -92,26 +93,28 @@ class DestinationRepository
         $condition = '';
 
         if (!empty($type)) {
-            $condition .= db_quote(" AND d.type = ?s", $type);
+            $condition .= db_quote(' AND d.type = ?s', $type);
         }
 
         if ($parentId > 0) {
-            $condition .= db_quote(" AND d.parent_id = ?i", $parentId);
+            $condition .= db_quote(' AND d.parent_id = ?i', $parentId);
         }
 
         $total = ValidationHelpers::toInt(db_get_field(
-            "SELECT COUNT(*) FROM ?:sphinx_destinations d WHERE 1 ?p",
-            $condition
+            'SELECT COUNT(*) FROM ?:sphinx_destinations d WHERE 1 ?p',
+            $condition,
         ));
 
         $offset = ($page - 1) * $perPage;
 
         $items = db_get_array(
-            "SELECT d.* FROM ?:sphinx_destinations d
+            'SELECT d.* FROM ?:sphinx_destinations d
              WHERE 1 ?p
              ORDER BY d.type ASC, d.name ASC
-             LIMIT ?i, ?i",
-            $condition, $offset, $perPage
+             LIMIT ?i, ?i',
+            $condition,
+            $offset,
+            $perPage,
         );
 
         return ['items' => $items, 'total' => $total];
@@ -125,8 +128,8 @@ class DestinationRepository
     {
         /** @var array<string, mixed>|null $row */
         $row = db_get_row(
-            "SELECT * FROM ?:sphinx_destinations WHERE destination_id = ?i",
-            $id
+            'SELECT * FROM ?:sphinx_destinations WHERE destination_id = ?i',
+            $id,
         );
 
         return (is_array($row) && !empty($row)) ? $row : null;
@@ -139,8 +142,8 @@ class DestinationRepository
     public function getChildren(int $parentId): array
     {
         return db_get_array(
-            "SELECT * FROM ?:sphinx_destinations WHERE parent_id = ?i ORDER BY name ASC",
-            $parentId
+            'SELECT * FROM ?:sphinx_destinations WHERE parent_id = ?i ORDER BY name ASC',
+            $parentId,
         );
     }
 
@@ -151,7 +154,7 @@ class DestinationRepository
     public function getCountries(): array
     {
         return db_get_array(
-            "SELECT * FROM ?:sphinx_destinations WHERE type = 'country' ORDER BY name ASC"
+            "SELECT * FROM ?:sphinx_destinations WHERE type = 'country' ORDER BY name ASC",
         );
     }
 
@@ -163,7 +166,7 @@ class DestinationRepository
     public function getCountsByType(): array
     {
         $rows = db_get_array(
-            "SELECT type, COUNT(*) as cnt FROM ?:sphinx_destinations GROUP BY type ORDER BY type"
+            'SELECT type, COUNT(*) as cnt FROM ?:sphinx_destinations GROUP BY type ORDER BY type',
         );
 
         $counts = [];
@@ -184,7 +187,7 @@ class DestinationRepository
      */
     public function getTotal(): int
     {
-        return ValidationHelpers::toInt(db_get_field("SELECT COUNT(*) FROM ?:sphinx_destinations"));
+        return ValidationHelpers::toInt(db_get_field('SELECT COUNT(*) FROM ?:sphinx_destinations'));
     }
 
     /**
@@ -193,7 +196,7 @@ class DestinationRepository
     public function getLastSyncedAt(): ?string
     {
         $val = db_get_field(
-            "SELECT MAX(last_synced_at) FROM ?:sphinx_destinations"
+            'SELECT MAX(last_synced_at) FROM ?:sphinx_destinations',
         );
 
         return is_string($val) && $val !== '' ? $val : null;
@@ -204,7 +207,7 @@ class DestinationRepository
      */
     public function truncate(): void
     {
-        db_query("DELETE FROM ?:sphinx_destinations");
+        db_query('DELETE FROM ?:sphinx_destinations');
     }
 
     /**
@@ -217,7 +220,7 @@ class DestinationRepository
     {
         $countryId = ValidationHelpers::toInt(db_get_field(
             "SELECT destination_id FROM ?:sphinx_destinations WHERE country_code = ?s AND type = 'country' LIMIT 1",
-            $countryCode
+            $countryCode,
         ));
 
         if ($countryId <= 0) {
@@ -225,9 +228,9 @@ class DestinationRepository
         }
 
         return db_get_array(
-            "SELECT destination_id, name, type, hotel_count FROM ?:sphinx_destinations
-             WHERE parent_id = ?i ORDER BY name",
-            $countryId
+            'SELECT destination_id, name, type, hotel_count FROM ?:sphinx_destinations
+             WHERE parent_id = ?i ORDER BY name',
+            $countryId,
         );
     }
 
@@ -240,9 +243,9 @@ class DestinationRepository
     public function getCitiesByParent(int $parentId): array
     {
         return db_get_array(
-            "SELECT destination_id, name, type, hotel_count FROM ?:sphinx_destinations
-             WHERE parent_id = ?i ORDER BY name",
-            $parentId
+            'SELECT destination_id, name, type, hotel_count FROM ?:sphinx_destinations
+             WHERE parent_id = ?i ORDER BY name',
+            $parentId,
         );
     }
 
@@ -261,7 +264,7 @@ class DestinationRepository
             "SELECT * FROM ?:sphinx_destinations
              WHERE LOWER(name) = ?s
              ORDER BY FIELD(type, 'continent', 'country', 'region', 'city', 'destination') ASC",
-            mb_strtolower($name)
+            mb_strtolower($name),
         );
     }
 
@@ -277,9 +280,9 @@ class DestinationRepository
         $escaped = addcslashes($query, '%_\\');
 
         return db_get_array(
-            "SELECT * FROM ?:sphinx_destinations WHERE name LIKE ?l ORDER BY type ASC, name ASC LIMIT ?i",
+            'SELECT * FROM ?:sphinx_destinations WHERE name LIKE ?l ORDER BY type ASC, name ASC LIMIT ?i',
             '%' . $escaped . '%',
-            $limit
+            $limit,
         );
     }
 
@@ -290,7 +293,7 @@ class DestinationRepository
      * all 200k+ rows in a single query. ~80 bytes/row × 200k ≈ 16 MB.
      *
      * @param array<string> $columns Columns to select (must include destination_id)
-     * @param callable      $mapper  fn(array $row): array — transforms each row into the stored value
+     * @param callable $mapper fn(array $row): array — transforms each row into the stored value
      * @return array<int, array<string, mixed>> Keyed by destination_id
      */
     private function loadChunked(array $columns, callable $mapper): array
@@ -304,7 +307,7 @@ class DestinationRepository
             $chunk = db_get_array(
                 "SELECT {$cols} FROM ?:sphinx_destinations ORDER BY destination_id LIMIT ?i, ?i",
                 $offset,
-                $chunkSize
+                $chunkSize,
             );
 
             if (empty($chunk)) {
@@ -336,10 +339,10 @@ class DestinationRepository
     {
         $parentLookup = $this->loadChunked(
             ['destination_id', 'name', 'parent_id'],
-            static fn(array $row): array => [
-                'name'      => $row['name'],
+            static fn (array $row): array => [
+                'name' => $row['name'],
                 'parent_id' => (int) $row['parent_id'],
-            ]
+            ],
         );
 
         if (empty($parentLookup)) {
@@ -367,9 +370,9 @@ class DestinationRepository
 
                 $fullPath = implode(', ', $segments);
                 db_query(
-                    "UPDATE ?:sphinx_destinations SET full_path = ?s WHERE destination_id = ?i",
+                    'UPDATE ?:sphinx_destinations SET full_path = ?s WHERE destination_id = ?i',
                     $fullPath,
-                    $id
+                    $id,
                 );
                 $updated++;
             }
@@ -390,7 +393,7 @@ class DestinationRepository
                     (SELECT COUNT(*) FROM ?:sphinx_destinations c WHERE c.parent_id = d.destination_id) AS country_count
              FROM ?:sphinx_destinations d
              WHERE d.type = 'continent'
-             ORDER BY d.name ASC"
+             ORDER BY d.name ASC",
         );
     }
 
@@ -409,12 +412,12 @@ class DestinationRepository
 
         $this->parentLookup = $this->loadChunked(
             ['destination_id', 'name', 'type', 'parent_id', 'country_code'],
-            static fn(array $row): array => [
-                'name'         => $row['name'],
-                'type'         => $row['type'],
-                'parent_id'    => (int) $row['parent_id'],
+            static fn (array $row): array => [
+                'name' => $row['name'],
+                'type' => $row['type'],
+                'parent_id' => (int) $row['parent_id'],
                 'country_code' => $row['country_code'] ?? '',
-            ]
+            ],
         );
 
         return !empty($this->parentLookup);
@@ -476,14 +479,13 @@ class DestinationRepository
     /**
      * Get the country_code for a destination by its ID.
      *
-     * @param int $destinationId
      * @return string|null Country code or null if not found
      */
     public function getCountryCodeById(int $destinationId): ?string
     {
         $code = db_get_field(
-            "SELECT country_code FROM ?:sphinx_destinations WHERE destination_id = ?i",
-            $destinationId
+            'SELECT country_code FROM ?:sphinx_destinations WHERE destination_id = ?i',
+            $destinationId,
         );
         return ($code !== false && $code !== '') ? (string) $code : null;
     }
@@ -492,13 +494,12 @@ class DestinationRepository
      * Count city-level destinations (city, destination) for a given country code.
      *
      * @param string $countryCode ISO country code
-     * @return int
      */
     public function countCitiesByCountry(string $countryCode): int
     {
         return (int) db_get_field(
             "SELECT COUNT(*) FROM ?:sphinx_destinations WHERE country_code = ?s AND type IN ('city','destination')",
-            $countryCode
+            $countryCode,
         );
     }
 
@@ -520,7 +521,7 @@ class DestinationRepository
              WHERE LOWER(name) = ?s OR LOWER(full_path) LIKE ?l
              ORDER BY FIELD(type, 'continent', 'country', 'region', 'city', 'destination') ASC",
             $lower,
-            $lower . '%'
+            $lower . '%',
         );
     }
 }

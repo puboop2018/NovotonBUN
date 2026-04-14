@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 /**
  * Novoton Holidays - Sync Logger
  *
@@ -22,7 +24,7 @@ class SyncLogger implements SyncLoggerInterface
     /**
      * Sync type labels for email subjects
      */
-    const TYPE_LABELS = [
+    public const TYPE_LABELS = [
         'hotel_list' => 'Hotel List Sync',
         'hotellist' => 'Hotel List Sync',
         'hotel_info' => 'Hotel Accommodation',
@@ -44,19 +46,16 @@ class SyncLogger implements SyncLoggerInterface
 
     /**
      * Current sync type
-     * @var string
      */
     private string $syncType;
 
     /**
      * Start time for duration calculation
-     * @var float
      */
     private float $startTime;
 
     /**
      * Timezone for output
-     * @var string
      */
     private string $timezone;
 
@@ -100,8 +99,6 @@ class SyncLogger implements SyncLoggerInterface
 
     /**
      * Set output callback for custom output handling
-     *
-     * @param callable $callback
      */
     public function setOutputCallback(callable $callback): void
     {
@@ -111,12 +108,11 @@ class SyncLogger implements SyncLoggerInterface
     /**
      * Output a message to console/callback
      *
-     * @param string $message
      * @param bool $newline Add newline at end
      */
     public function output(string $message, bool $newline = true): void
     {
-        $formatted = $message . ($newline ? "\n" : "");
+        $formatted = $message . ($newline ? "\n" : '');
 
         $this->messages[] = $message;
 
@@ -135,14 +131,14 @@ class SyncLogger implements SyncLoggerInterface
      */
     public function outputHeader(?string $mode = null): void
     {
-        $mode = $mode ?? $this->syncType;
+        $mode ??= $this->syncType;
         $datetime = $this->getFormattedDateTime();
 
-        $this->output("===========================================");
-        $this->output("NOVOTON HOLIDAYS CRON - " . strtoupper($mode));
-        $this->output("===========================================");
+        $this->output('===========================================');
+        $this->output('NOVOTON HOLIDAYS CRON - ' . strtoupper($mode));
+        $this->output('===========================================');
         $this->output("Time: {$datetime} ({$this->timezone})");
-        $this->output("");
+        $this->output('');
     }
 
     /**
@@ -152,10 +148,10 @@ class SyncLogger implements SyncLoggerInterface
     {
         $datetime = $this->getFormattedDateTime();
 
-        $this->output("");
-        $this->output("===========================================");
+        $this->output('');
+        $this->output('===========================================');
         $this->output("Completed at: {$datetime} ({$this->timezone})");
-        $this->output("===========================================");
+        $this->output('===========================================');
     }
 
     /**
@@ -168,7 +164,7 @@ class SyncLogger implements SyncLoggerInterface
     public function outputProgress(int $current, int $total, string $prefix = ''): void
     {
         $percent = $total > 0 ? round($current / $total * 100, 1) : 0;
-        $message = $prefix ? "{$prefix}: " : "";
+        $message = $prefix ? "{$prefix}: " : '';
         $message .= "--- Progress: {$current}/{$total} ({$percent}%) ---";
         $this->output($message);
     }
@@ -182,10 +178,10 @@ class SyncLogger implements SyncLoggerInterface
     {
         $s = $stats ?? $this->stats;
 
-        $this->output("");
-        $this->output("========================================");
-        $this->output("SYNC COMPLETED");
-        $this->output("========================================");
+        $this->output('');
+        $this->output('========================================');
+        $this->output('SYNC COMPLETED');
+        $this->output('========================================');
 
         if (isset($s['total']) && $s['total'] > 0) {
             $this->output("Total: {$s['total']}");
@@ -206,8 +202,8 @@ class SyncLogger implements SyncLoggerInterface
             $this->output("Errors: {$s['errors']}");
         }
 
-        $this->output("Duration: " . $this->getFormattedDuration());
-        $this->output("========================================");
+        $this->output('Duration: ' . $this->getFormattedDuration());
+        $this->output('========================================');
     }
 
     /**
@@ -247,8 +243,6 @@ class SyncLogger implements SyncLoggerInterface
 
     /**
      * Get elapsed time in seconds
-     *
-     * @return float
      */
     public function getElapsedTime(): float
     {
@@ -257,8 +251,6 @@ class SyncLogger implements SyncLoggerInterface
 
     /**
      * Get formatted duration string
-     *
-     * @return string
      */
     public function getFormattedDuration(): string
     {
@@ -280,8 +272,6 @@ class SyncLogger implements SyncLoggerInterface
 
     /**
      * Get formatted current datetime
-     *
-     * @return string
      */
     public function getFormattedDateTime(): string
     {
@@ -304,7 +294,7 @@ class SyncLogger implements SyncLoggerInterface
         $notes = !empty($extra) ? json_encode($extra) : '';
 
         return db_query(
-            "INSERT INTO ?:novoton_sync_log SET
+            'INSERT INTO ?:novoton_sync_log SET
              sync_type = ?s,
              sync_date = NOW(),
              products_total = ?i,
@@ -312,14 +302,14 @@ class SyncLogger implements SyncLoggerInterface
              products_failed = ?i,
              duration_seconds = ?i,
              status = ?s,
-             notes = ?s",
+             notes = ?s',
             $this->syncType,
             $stats['total'] ?? 0,
             ($stats['synced'] ?? 0) + ($stats['added'] ?? 0) + ($stats['updated'] ?? 0),
             ($stats['errors'] ?? 0) + ($stats['failed'] ?? 0),
             $duration,
             $status,
-            $notes
+            $notes,
         );
     }
 
@@ -328,7 +318,6 @@ class SyncLogger implements SyncLoggerInterface
      *
      * @param array<string, mixed> $results Detailed results for CSV attachment (optional)
      * @param string $country Country or countries
-     * @return bool
      */
     public function sendEmailReport(array $results = [], string $country = ''): bool
     {
@@ -384,11 +373,10 @@ class SyncLogger implements SyncLoggerInterface
      * Get type label for display
      *
      * @param string|null $type Sync type (uses current if not provided)
-     * @return string
      */
     public static function getTypeLabel(?string $type = null): string
     {
-        $type = $type ?? 'cron';
+        $type ??= 'cron';
         return self::TYPE_LABELS[$type] ?? ucfirst(str_replace('_', ' ', $type));
     }
 

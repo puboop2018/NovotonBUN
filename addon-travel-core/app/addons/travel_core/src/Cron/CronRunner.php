@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Tygh\Addons\TravelCore\Cron;
@@ -83,7 +84,7 @@ class CronRunner
     /**
      * Run the full cron lifecycle: validate mode, dispatch, handle output/errors.
      *
-     * @param string               $mode   Sanitized mode name
+     * @param string $mode Sanitized mode name
      * @param array<string,string> $params Extra CLI/HTTP parameters
      */
     public function run(string $mode, array $params = []): never
@@ -103,7 +104,7 @@ class CronRunner
             exit(1);
         }
 
-        echo "[" . date('Y-m-d H:i:s') . "] {$this->addonLabel} Cron Started - Mode: {$mode}\n";
+        echo '[' . date('Y-m-d H:i:s') . "] {$this->addonLabel} Cron Started - Mode: {$mode}\n";
 
         if (function_exists('fn_log_event')) {
             fn_log_event('general', 'runtime', [
@@ -117,12 +118,12 @@ class CronRunner
             echo "\n[" . date('Y-m-d H:i:s') . "] Cron job completed.\n";
             exit(0);
         } catch (\Throwable $e) {
-            echo "ERROR: " . $e->getMessage() . "\n";
+            echo 'ERROR: ' . $e->getMessage() . "\n";
 
             if (function_exists('fn_log_event')) {
                 fn_log_event('general', 'runtime', [
                     'message' => "{$this->addonLabel} cron error: " . $e->getMessage(),
-                    'trace'   => $e->getTraceAsString(),
+                    'trace' => $e->getTraceAsString(),
                 ]);
             }
 

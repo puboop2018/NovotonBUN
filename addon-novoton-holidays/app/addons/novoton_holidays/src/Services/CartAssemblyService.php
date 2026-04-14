@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Services;
@@ -22,13 +23,13 @@ class CartAssemblyService implements CartAssemblyServiceInterface
     /**
      * Assemble the full cart product array for a Novoton booking.
      *
-     * @param int   $productId   CS-Cart product ID
-     * @param int   $bookingId   Novoton booking ID
+     * @param int $productId CS-Cart product ID
+     * @param int $bookingId Novoton booking ID
      * @param array<string, mixed> $bookingData Raw form data
-     * @param array<string, mixed> $hotelInfo   Hotel data from repository
-     * @param array<string, mixed> $guestsData  Parsed guest data
+     * @param array<string, mixed> $hotelInfo Hotel data from repository
+     * @param array<string, mixed> $guestsData Parsed guest data
      * @param array<string, mixed> $priceResult Result from verifyPrice()
-     * @param array<string, mixed> $roomsData   Parsed rooms data
+     * @param array<string, mixed> $roomsData Parsed rooms data
      * @return array<string, mixed> Cart product entry with 'extra' containing all booking metadata
      */
     #[\Override]
@@ -39,7 +40,7 @@ class CartAssemblyService implements CartAssemblyServiceInterface
         array $hotelInfo,
         array $guestsData,
         array $priceResult,
-        array $roomsData
+        array $roomsData,
     ): array {
         $boardId = $bookingData['board_id'] ?? 'BB';
         $nights = self::calculateNights($bookingData['check_in'], $bookingData['check_out']);
@@ -115,7 +116,7 @@ class CartAssemblyService implements CartAssemblyServiceInterface
      * Adds children_ages_str and room_type_display to each room entry,
      * and syncs children ages from guest form data back to rooms.
      *
-     * @param array<string, mixed> $roomsData  Rooms data array
+     * @param array<string, mixed> $roomsData Rooms data array
      * @param array<string, mixed> $guestsData Parsed guest data
      * @return array<string, mixed> Enriched rooms data
      */
@@ -139,9 +140,7 @@ class CartAssemblyService implements CartAssemblyServiceInterface
 
             // Build display string for children ages
             if (!empty($room['childrenAges']) && is_array($room['childrenAges'])) {
-                $validAges = array_filter($room['childrenAges'], function ($age) {
-                    return $age !== null && $age !== '';
-                });
+                $validAges = array_filter($room['childrenAges'], fn ($age) => $age !== null && $age !== '');
                 $room['children_ages_str'] = !empty($validAges)
                     ? implode(', ', $validAges) . ' ' . __('novoton_holidays.years_old')
                     : '';
@@ -173,7 +172,7 @@ class CartAssemblyService implements CartAssemblyServiceInterface
      *
      * Used by addToCart() for the simpler path (existing booking → cart).
      *
-     * @param array<string, mixed> $booking     Booking record from DB
+     * @param array<string, mixed> $booking Booking record from DB
      * @param array<string, mixed> $bookingData Additional data from form
      * @return array<string, mixed> Cart extra array
      */

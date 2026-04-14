@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 /**
  * Novoton PriceInfo Calculator
  *
@@ -211,7 +213,7 @@ class PriceInfoCalculator
             $byNight[$nightIdx] = [
                 'date' => PriceInfoFormatter::toScalar($nightInfo['date'] ?? ''),
                 'season' => $seasonNum,
-                'price' => $nightTotal
+                'price' => $nightTotal,
             ];
 
             $total += $nightTotal;
@@ -290,15 +292,29 @@ class PriceInfoCalculator
             $rawToDays = PriceInfoFormatter::toScalar($row['ToDays'] ?? '');
             $fromDays = ($rawFromDays !== '') ? (int) (preg_replace('/\D+/', '', $rawFromDays) ?: '1') : 1;
             $toDays = ($rawToDays !== '') ? (int) (preg_replace('/\D+/', '', $rawToDays) ?: '9999') : 9999;
-            if ($fromDays <= 0) $fromDays = 1;
-            if ($toDays <= 0) $toDays = 9999;
+            if ($fromDays <= 0) {
+                $fromDays = 1;
+            }
+            if ($toDays <= 0) {
+                $toDays = 9999;
+            }
 
-            if (!PriceInfoFormatter::matchRoom($rowRoom, $roomId)) continue;
-            if (!PriceInfoFormatter::matchBoard($rowBoard, $boardId)) continue;
-            if (!PriceInfoFormatter::matchAgeType($rowAge, $ageType)) continue;
-            if (!PriceInfoFormatter::matchAccType($rowAcc, $accType)) continue;
+            if (!PriceInfoFormatter::matchRoom($rowRoom, $roomId)) {
+                continue;
+            }
+            if (!PriceInfoFormatter::matchBoard($rowBoard, $boardId)) {
+                continue;
+            }
+            if (!PriceInfoFormatter::matchAgeType($rowAge, $ageType)) {
+                continue;
+            }
+            if (!PriceInfoFormatter::matchAccType($rowAcc, $accType)) {
+                continue;
+            }
 
-            if ($nights < $fromDays || $nights > $toDays) continue;
+            if ($nights < $fromDays || $nights > $toDays) {
+                continue;
+            }
 
             $candidates[] = ['row' => $row, 'fromDays' => $fromDays];
         }
@@ -307,9 +323,7 @@ class PriceInfoCalculator
             return null;
         }
 
-        usort($candidates, function ($a, $b) {
-            return $b['fromDays'] <=> $a['fromDays'];
-        });
+        usort($candidates, fn ($a, $b) => $b['fromDays'] <=> $a['fromDays']);
 
         /** @var array<string, mixed> */
         return is_array($candidates[0]['row'] ?? null) ? $candidates[0]['row'] : [];
@@ -359,7 +373,9 @@ class PriceInfoCalculator
         $code = PriceInfoFormatter::toScalar($row['Code'] ?? '');
         $memoKey = $code . ':' . $priceKey;
 
-        if (isset($visited[$memoKey])) return 0;
+        if (isset($visited[$memoKey])) {
+            return 0;
+        }
         $visited[$memoKey] = true;
 
         $rawPrice = $row[$priceKey] ?? $row['Price1'] ?? 0;
@@ -393,7 +409,7 @@ class PriceInfoCalculator
                 $baseRow = $this->findBestBaseRow(
                     $codeIndex[$baseRef],
                     PriceInfoFormatter::toScalar($row['IdRoom'] ?? ''),
-                    PriceInfoFormatter::toScalar($row['IdBoard'] ?? '')
+                    PriceInfoFormatter::toScalar($row['IdBoard'] ?? ''),
                 );
                 $basePrice = $this->resolvePrice($baseRow, $priceKey, $visited, $depth + 1);
                 return round($basePrice * ($percentValue / 100), 4);

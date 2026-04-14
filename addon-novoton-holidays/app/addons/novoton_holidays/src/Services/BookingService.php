@@ -1,11 +1,13 @@
 <?php
+
 declare(strict_types=1);
+
 /**
  * Novoton Booking Service
- * 
+ *
  * Handles booking creation, cart operations, and order processing.
  * Extracted from novoton_booking.php for better maintainability.
- * 
+ *
  * @package NovotonHolidays
  * @since 2.7.0
  */
@@ -65,10 +67,10 @@ class BookingService implements BookingServiceInterface
         $this->priceVerifier = new PriceVerificationService($pricing);
         $this->debug = ConfigProvider::isDebugLogging();
     }
-    
+
     /**
      * Create a new booking record
-     * 
+     *
      * @param array<string, mixed> $bookingData Booking data from form
      * @param int $product_id Associated product ID
      * @return int Booking ID
@@ -79,7 +81,7 @@ class BookingService implements BookingServiceInterface
         $auth = Tygh::$app['session']['auth'] ?? [];
         $user_id = !empty($auth['user_id']) ? (int) $auth['user_id'] : 0;
         $session_id = session_id();
-        
+
         // Parse and validate data
         $rooms_data = $this->roomsParser->parseRoomsData($bookingData);
         $guests_data = $this->guestService->parseGuestsData($bookingData);
@@ -89,10 +91,10 @@ class BookingService implements BookingServiceInterface
 
         // Calculate totals
         $totals = $this->roomsParser->calculateTotals($rooms_data);
-        
+
         // Get hotel info
         $hotel_info = $this->hotelRepo->findById($bookingData['hotel_id']);
-        
+
         // Build booking record
         $booking_record = [
             'order_id' => 0, // Updated when order is placed
@@ -132,7 +134,7 @@ class BookingService implements BookingServiceInterface
             $booking_record['check_in'],
             $booking_record['check_out'],
             $booking_record['holder_name'],
-            1 // hours
+            1, // hours
         );
         $existing_id = $existing ? (int) $existing['booking_id'] : null;
 
@@ -148,15 +150,15 @@ class BookingService implements BookingServiceInterface
         $this->log('Booking created', [
             'booking_id' => $booking_id,
             'hotel_id' => $bookingData['hotel_id'],
-            'rooms' => count($rooms_data)
+            'rooms' => count($rooms_data),
         ]);
 
         return $booking_id;
     }
-    
+
     /**
      * Update existing booking
-     * 
+     *
      * @param int $booking_id Booking ID
      * @param array<string, mixed> $data Data to update
      * @return bool Success
@@ -173,10 +175,10 @@ class BookingService implements BookingServiceInterface
 
         return $result;
     }
-    
+
     /**
      * Get booking by ID
-     * 
+     *
      * @param int $booking_id Booking ID
      * @return array<string, mixed>|null Booking data
      */
@@ -184,10 +186,10 @@ class BookingService implements BookingServiceInterface
     {
         return $this->bookingRepo->findByIdHydrated($booking_id);
     }
-    
+
     /**
      * Get bookings for order
-     * 
+     *
      * @param int $order_id Order ID
      * @return list<array<string, mixed>> Bookings
      */
@@ -195,10 +197,10 @@ class BookingService implements BookingServiceInterface
     {
         return $this->bookingRepo->findByOrderId($order_id);
     }
-    
+
     /**
      * Link booking to order
-     * 
+     *
      * @param int $booking_id Booking ID
      * @param int $order_id Order ID
      * @return bool Success
@@ -207,19 +209,19 @@ class BookingService implements BookingServiceInterface
     {
         // Get order info for user/email
         $order_info = fn_get_order_info($order_id);
-        
+
         $update = [
             'order_id' => $order_id,
             'user_id' => (int) ($order_info['user_id'] ?? 0),
             'guest_email' => $order_info['email'] ?? '',
         ];
-        
+
         return $this->updateBooking($booking_id, $update);
     }
-    
+
     /**
      * Add booking to cart
-     * 
+     *
      * @param int $booking_id Booking ID
      * @param int $product_id Product ID
      * @param array<string, mixed> $bookingData Additional booking data
@@ -231,36 +233,35 @@ class BookingService implements BookingServiceInterface
         if (!$booking) {
             return false;
         }
-        
+
         // Build cart product
         $product = [
             'product_id' => $product_id,
             'amount' => 1,
             'extra' => $this->cartAssembly->buildCartExtra($booking, $bookingData),
         ];
-        
+
         // Add to cart
         $cart = &Tygh::$app['session']['cart'];
         $auth = &Tygh::$app['session']['auth'];
-        
+
         fn_add_product_to_cart($product, $cart, $auth);
         fn_save_cart_content($cart, $auth['user_id'] ?? 0);
-        
+
         // Calculate cart
         fn_calculate_cart_content($cart, $auth, 'S', true, 'F', true);
-        
+
         $this->log('Added to cart', [
             'booking_id' => $booking_id,
-            'product_id' => $product_id
+            'product_id' => $product_id,
         ]);
-        
+
         return true;
     }
-    
-    
+
     /**
      * Parse rooms data from booking form
-     * 
+     *
      * @param array<string, mixed> $bookingData Form data
      * @return array<string, mixed> Parsed rooms data
      */
@@ -268,10 +269,10 @@ class BookingService implements BookingServiceInterface
     {
         return $this->roomsParser->parseRoomsData($bookingData);
     }
-    
+
     /**
      * Calculate nights between dates
-     * 
+     *
      * @param string $check_in Check-in date
      * @param string $check_out Check-out date
      * @return int Number of nights
@@ -280,7 +281,7 @@ class BookingService implements BookingServiceInterface
     {
         return CartAssemblyService::calculateNights($check_in, $check_out);
     }
-    
+
     /**
      * Verify price via room_price API and extract terms.
      *
@@ -318,10 +319,16 @@ class BookingService implements BookingServiceInterface
         array $hotelInfo,
         array $guestsData,
         array $priceResult,
-        array $roomsData
+        array $roomsData,
     ): array {
         return $this->cartAssembly->assembleCartProduct(
-            $productId, $bookingId, $bookingData, $hotelInfo, $guestsData, $priceResult, $roomsData
+            $productId,
+            $bookingId,
+            $bookingData,
+            $hotelInfo,
+            $guestsData,
+            $priceResult,
+            $roomsData,
         );
     }
 
@@ -353,8 +360,8 @@ class BookingService implements BookingServiceInterface
         $productCode = $prefix . $hotelId;
 
         $productId = (int)db_get_field(
-            "SELECT product_id FROM ?:products WHERE product_code = ?s",
-            $productCode
+            'SELECT product_id FROM ?:products WHERE product_code = ?s',
+            $productCode,
         );
 
         return $productId ?: $fallbackProductId;
@@ -371,7 +378,7 @@ class BookingService implements BookingServiceInterface
         if ($this->debug) {
             fn_log_event('general', 'runtime', array_merge(
                 ['message' => 'NovotonBooking: ' . $message],
-                $context
+                $context,
             ));
         }
     }

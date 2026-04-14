@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 /**
  * Novoton PriceInfo Synchronization Class
  * Path: app/addons/novoton_holidays/src/PriceInfoSync.php
@@ -11,11 +13,10 @@ declare(strict_types=1);
 namespace Tygh\Addons\NovotonHolidays;
 
 use Tygh\Addons\NovotonHolidays\Api\Contracts\NovotonApiKitInterface;
-use Tygh\Addons\NovotonHolidays\Constants;
-use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
-use Tygh\Addons\NovotonHolidays\Services\PriceInfoFormatter;
 use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
 use Tygh\Addons\NovotonHolidays\Exceptions\XmlParsingException;
+use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
+use Tygh\Addons\NovotonHolidays\Services\PriceInfoFormatter;
 
 class PriceInfoSync
 {
@@ -44,7 +45,7 @@ class PriceInfoSync
     {
         $prefixConditions = [];
         foreach ($this->productPrefixes as $prefix) {
-            $prefixConditions[] = db_quote("product_code LIKE ?l", $prefix . '%');
+            $prefixConditions[] = db_quote('product_code LIKE ?l', $prefix . '%');
         }
 
         if (empty($prefixConditions)) {
@@ -54,12 +55,12 @@ class PriceInfoSync
         $condition = implode(' OR ', $prefixConditions);
 
         return db_get_array(
-            "SELECT p.product_id, pd.product, p.product_code, p.status
+            'SELECT p.product_id, pd.product, p.product_code, p.status
              FROM ?:products AS p
              LEFT JOIN ?:product_descriptions AS pd ON p.product_id = pd.product_id AND pd.lang_code = ?s
-             WHERE (" . $condition . ")
+             WHERE (' . $condition . ")
              AND p.status = 'A'",
-            CART_LANGUAGE
+            CART_LANGUAGE,
         );
     }
 
@@ -71,8 +72,8 @@ class PriceInfoSync
     {
         // Try to get from novoton_hotels table
         $hotelId = PriceInfoFormatter::toScalar(db_get_field(
-            "SELECT hotel_id FROM ?:novoton_hotels WHERE product_id = ?i LIMIT 1",
-            PriceInfoFormatter::toInt($product['product_id'] ?? 0)
+            'SELECT hotel_id FROM ?:novoton_hotels WHERE product_id = ?i LIMIT 1',
+            PriceInfoFormatter::toInt($product['product_id'] ?? 0),
         ));
 
         if (empty($hotelId)) {
@@ -101,12 +102,12 @@ class PriceInfoSync
     {
         /** @var array<string, mixed>|null $product */
         $product = db_get_row(
-            "SELECT p.product_id, pd.product, p.product_code
+            'SELECT p.product_id, pd.product, p.product_code
              FROM ?:products AS p
              LEFT JOIN ?:product_descriptions AS pd ON p.product_id = pd.product_id AND pd.lang_code = ?s
-             WHERE p.product_id = ?i",
+             WHERE p.product_id = ?i',
             CART_LANGUAGE,
-            $productId
+            $productId,
         );
 
         if (empty($product) || !is_array($product)) {
@@ -192,7 +193,7 @@ class PriceInfoSync
                     $packageId,
                     $packageName,
                     $priceinfoJson,
-                    $now
+                    $now,
                 );
 
                 $packagesUpdated++;
@@ -201,9 +202,9 @@ class PriceInfoSync
             // Update hotel's packages_count (has_room_price is set exclusively by room_price check)
             if ($packagesUpdated > 0) {
                 db_query(
-                    "UPDATE ?:novoton_hotels SET packages_count = ?i WHERE hotel_id = ?s",
+                    'UPDATE ?:novoton_hotels SET packages_count = ?i WHERE hotel_id = ?s',
                     $packagesUpdated,
-                    $hotelId
+                    $hotelId,
                 );
 
                 $stats['updated'][] = $productCode . ' - ' . $productName;
@@ -214,7 +215,6 @@ class PriceInfoSync
                 $stats['no_data'][] = $productCode . ' - ' . $productName;
                 return false;
             }
-
         } catch (ApiException $e) {
             $stats['failed'][] = $productCode . ' - ' . $productName . ' (API error HTTP ' . $e->getHttpCode() . ': ' . $e->getMessage() . ')';
             return false;
@@ -241,12 +241,12 @@ class PriceInfoSync
             'updated' => [],
             'failed' => [],
             'no_data' => [],
-            'missing' => []
+            'missing' => [],
         ];
 
         // Create log entry
         $logId = db_query(
-            "INSERT INTO ?:novoton_sync_log SET sync_date = NOW(), status = 'running'"
+            "INSERT INTO ?:novoton_sync_log SET sync_date = NOW(), status = 'running'",
         );
 
         $currentIndex = 0;
@@ -263,7 +263,7 @@ class PriceInfoSync
             fn_set_progress('sync_novoton_prices', [
                 'current' => $currentIndex,
                 'total' => $totalProducts,
-                'message' => "Updating $currentIndex of $totalProducts ({$pCode}) - {$pName}"
+                'message' => "Updating $currentIndex of $totalProducts ({$pCode}) - {$pName}",
             ]);
 
             $this->syncProductPrices(PriceInfoFormatter::toInt($product['product_id'] ?? 0), $stats);
@@ -293,15 +293,15 @@ class PriceInfoSync
             count($stats['no_data']),
             count($stats['missing']),
             $logFile,
-            $logId
+            $logId,
         );
 
         // Send email report
         fn_novoton_holidays_send_import_report_email([], 'room_price', [
-            'added'    => 0,
-            'updated'  => count($stats['updated']),
-            'skipped'  => count($stats['no_data']),
-            'errors'   => count($stats['failed']),
+            'added' => 0,
+            'updated' => count($stats['updated']),
+            'skipped' => count($stats['no_data']),
+            'errors' => count($stats['failed']),
             'duration' => $stats['duration'] ?? 'N/A',
         ], $this->defaultCountry);
 
@@ -322,14 +322,14 @@ class PriceInfoSync
                 // Build LIKE conditions for all prefixes and fetch all matching products at once
                 $likeConditions = [];
                 foreach ($this->productPrefixes as $prefix) {
-                    $likeConditions[] = db_quote("product_code LIKE ?l", $prefix . '%');
+                    $likeConditions[] = db_quote('product_code LIKE ?l', $prefix . '%');
                 }
 
                 // Single query to get all product codes matching any prefix
                 $existingProducts = [];
                 if (!empty($likeConditions)) {
                     $productCodes = db_get_fields(
-                        "SELECT product_code FROM ?:products WHERE " . implode(' OR ', $likeConditions)
+                        'SELECT product_code FROM ?:products WHERE ' . implode(' OR ', $likeConditions),
                     );
                     $existingProducts = array_flip($productCodes);
                 }
@@ -353,11 +353,11 @@ class PriceInfoSync
             }
         } catch (ApiException $e) {
             fn_log_event('general', 'runtime', [
-                'message' => 'API error checking missing products (HTTP ' . $e->getHttpCode() . '): ' . $e->getMessage()
+                'message' => 'API error checking missing products (HTTP ' . $e->getHttpCode() . '): ' . $e->getMessage(),
             ]);
         } catch (\Throwable $e) {
             fn_log_event('general', 'runtime', [
-                'message' => 'Error checking missing products: ' . $e->getMessage()
+                'message' => 'Error checking missing products: ' . $e->getMessage(),
             ]);
         }
     }
@@ -378,15 +378,15 @@ class PriceInfoSync
         $filepath = $logDir . $filename;
 
         $content = "Novoton PriceInfo Sync Report (V3)\n";
-        $content .= "Date: " . date('Y-m-d H:i:s') . "\n";
+        $content .= 'Date: ' . date('Y-m-d H:i:s') . "\n";
         $content .= str_repeat('=', 50) . "\n\n";
 
         $content .= "SUMMARY\n";
-        $content .= "Total products: " . $stats['total'] . "\n";
-        $content .= "Updated: " . count($stats['updated']) . "\n";
-        $content .= "Failed: " . count($stats['failed']) . "\n";
-        $content .= "No data: " . count($stats['no_data']) . "\n";
-        $content .= "Missing in CS-Cart: " . count($stats['missing']) . "\n\n";
+        $content .= 'Total products: ' . $stats['total'] . "\n";
+        $content .= 'Updated: ' . count($stats['updated']) . "\n";
+        $content .= 'Failed: ' . count($stats['failed']) . "\n";
+        $content .= 'No data: ' . count($stats['no_data']) . "\n";
+        $content .= 'Missing in CS-Cart: ' . count($stats['missing']) . "\n\n";
 
         if (!empty($stats['updated'])) {
             $content .= str_repeat('=', 50) . "\n";
@@ -431,7 +431,7 @@ class PriceInfoSync
         if (file_put_contents($filepath, $content) === false) {
             fn_log_event('general', 'runtime', [
                 'message' => 'Novoton: Failed to write sync log file',
-                'filepath' => $filepath
+                'filepath' => $filepath,
             ]);
         }
 
@@ -462,8 +462,8 @@ class PriceInfoSync
         // Index-friendly prefix matching: nvt_api_{function}_{hotelId}_%
         foreach ($functions as $fn) {
             db_query(
-                "DELETE FROM ?:novoton_cache WHERE cache_key LIKE ?l",
-                'nvt_api_' . $fn . '_' . $hotelId . '_%'
+                'DELETE FROM ?:novoton_cache WHERE cache_key LIKE ?l',
+                'nvt_api_' . $fn . '_' . $hotelId . '_%',
             );
         }
 

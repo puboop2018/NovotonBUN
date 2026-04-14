@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Services;
@@ -49,10 +50,10 @@ class BookingAdminProvider implements BookingAdminProviderInterface
 
         $statusLabels = [
             'Good' => '<span class="label label-success">Good</span>',
-            'ASK'  => '<span class="label label-warning">ASK</span>',
-            'ST'   => '<span class="label label-danger">ST</span>',
-            'WT'   => '<span class="label label-info">WT</span>',
-            'RQ'   => '<span class="label label-primary">RQ</span>',
+            'ASK' => '<span class="label label-warning">ASK</span>',
+            'ST' => '<span class="label label-danger">ST</span>',
+            'WT' => '<span class="label label-info">WT</span>',
+            'RQ' => '<span class="label label-primary">RQ</span>',
         ];
         $display['status_label'] = $statusLabels[$novotonStatus] ?? '<span class="label">' . htmlspecialchars($booking['status'] ?? '') . '</span>';
 

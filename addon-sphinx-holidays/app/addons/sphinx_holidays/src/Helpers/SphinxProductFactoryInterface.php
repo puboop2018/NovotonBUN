@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays\Helpers;
@@ -23,7 +24,7 @@ interface SphinxProductFactoryInterface
      * Category structure: Root Category (from settings) → Country (dynamic).
      * Region and City are assigned as product features, not categories.
      *
-     * @param array<string, mixed> $hotel     Hotel row from sphinx_hotels
+     * @param array<string, mixed> $hotel Hotel row from sphinx_hotels
      * @param array<string, mixed> $hierarchy Resolved hierarchy: ['city' => ..., 'region' => ..., 'country' => ...]
      * @return array{status: string, product_id: int, reason: string} Status is 'added', 'linked', 'skipped', or 'failed'
      */
@@ -32,7 +33,7 @@ interface SphinxProductFactoryInterface
     /**
      * Resolve the country name from hotel data and hierarchy.
      *
-     * @param array<string, mixed> $hotel     Hotel row
+     * @param array<string, mixed> $hotel Hotel row
      * @param array<string, mixed> $hierarchy Resolved hierarchy
      * @return string Country name, or empty string if unresolvable
      */

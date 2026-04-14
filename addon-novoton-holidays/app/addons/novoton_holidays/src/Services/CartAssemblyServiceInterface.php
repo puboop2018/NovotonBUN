@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Services;
@@ -26,7 +27,7 @@ interface CartAssemblyServiceInterface
         array $hotelInfo,
         array $guestsData,
         array $priceResult,
-        array $roomsData
+        array $roomsData,
     ): array;
 
     /**

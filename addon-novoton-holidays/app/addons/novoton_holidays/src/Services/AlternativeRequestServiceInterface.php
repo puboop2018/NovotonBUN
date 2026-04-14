@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 /**
  * Alternative Request Service Interface
  *
@@ -20,18 +22,18 @@ interface AlternativeRequestServiceInterface
      * (encrypting PII fields), and sends a confirmation email.
      *
      * @param array<string, mixed> $params {
-     *   hotel_id: string,
-     *   hotel_name: string,
-     *   check_in: string,
-     *   check_out: string,
-     *   nights: int,
-     *   adults: int,
-     *   children: int,
-     *   num_rooms: int,
-     *   contact_email: string,
-     *   contact_phone: string,
-     *   notes: string
-     * }
+     *                                     hotel_id: string,
+     *                                     hotel_name: string,
+     *                                     check_in: string,
+     *                                     check_out: string,
+     *                                     nights: int,
+     *                                     adults: int,
+     *                                     children: int,
+     *                                     num_rooms: int,
+     *                                     contact_email: string,
+     *                                     contact_phone: string,
+     *                                     notes: string
+     *                                     }
      * @return array{success: bool, request_id: int, novoton_id: string, message: string, error: string}
      */
     public function submitAlternativeBookingRequest(array $params): array;

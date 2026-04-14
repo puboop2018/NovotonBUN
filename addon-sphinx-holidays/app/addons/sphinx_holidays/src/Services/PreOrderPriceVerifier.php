@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 /**
  * Sphinx Holidays - Pre-Order Price Verifier
  *

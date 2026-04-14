@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 /**
  * Novoton Holidays - Hotel Reporting Repository
  *
@@ -39,13 +41,14 @@ class HotelReportingRepository implements HotelReportingRepositoryInterface
         if (!empty($country)) {
             return db_get_fields(
                 "SELECT DISTINCT city FROM ?:novoton_hotels WHERE country = ?s AND city != '' AND city NOT IN (?a) ORDER BY city",
-                $country, $hidden
+                $country,
+                $hidden,
             );
         }
 
         return db_get_fields(
             "SELECT DISTINCT city FROM ?:novoton_hotels WHERE city != '' AND city NOT IN (?a) ORDER BY city",
-            $hidden
+            $hidden,
         );
     }
 
@@ -56,7 +59,7 @@ class HotelReportingRepository implements HotelReportingRepositoryInterface
     public function getCountryCityPairs(): array
     {
         return db_get_array(
-            "SELECT DISTINCT country, city FROM ?:novoton_hotels WHERE city != '' ORDER BY country, city"
+            "SELECT DISTINCT country, city FROM ?:novoton_hotels WHERE city != '' ORDER BY country, city",
         );
     }
 
@@ -67,7 +70,7 @@ class HotelReportingRepository implements HotelReportingRepositoryInterface
     public function getCountriesWithPriceCounts(): array
     {
         return db_get_array(
-            "SELECT country, COUNT(*) as cnt FROM ?:novoton_hotels WHERE has_room_price = 'Y' GROUP BY country ORDER BY country"
+            "SELECT country, COUNT(*) as cnt FROM ?:novoton_hotels WHERE has_room_price = 'Y' GROUP BY country ORDER BY country",
         );
     }
 
@@ -78,11 +81,11 @@ class HotelReportingRepository implements HotelReportingRepositoryInterface
     public function countWithoutPackagesByCountry(): array
     {
         return db_get_hash_single_array(
-            "SELECT h.country, COUNT(*) as cnt FROM ?:novoton_hotels h
+            'SELECT h.country, COUNT(*) as cnt FROM ?:novoton_hotels h
              LEFT JOIN ?:novoton_hotel_packages p ON h.hotel_id = p.hotel_id
              WHERE p.id IS NULL
-             GROUP BY h.country ORDER BY cnt DESC",
-            ['country', 'cnt']
+             GROUP BY h.country ORDER BY cnt DESC',
+            ['country', 'cnt'],
         );
     }
 
@@ -90,10 +93,10 @@ class HotelReportingRepository implements HotelReportingRepositoryInterface
     public function countWithPackagesByCountry(string $country): int
     {
         return (int) db_get_field(
-            "SELECT COUNT(DISTINCT h.hotel_id) FROM ?:novoton_hotels h
+            'SELECT COUNT(DISTINCT h.hotel_id) FROM ?:novoton_hotels h
              INNER JOIN ?:novoton_hotel_packages p ON h.hotel_id = p.hotel_id
-             WHERE h.country = ?s",
-            $country
+             WHERE h.country = ?s',
+            $country,
         );
     }
 
@@ -109,7 +112,7 @@ class HotelReportingRepository implements HotelReportingRepositoryInterface
              FROM ?:novoton_hotels
              WHERE country = ?s AND city IS NOT NULL AND city != ''
              GROUP BY city ORDER BY hotel_count DESC",
-            $country
+            $country,
         );
     }
 
@@ -117,7 +120,7 @@ class HotelReportingRepository implements HotelReportingRepositoryInterface
     public function countWithCalendarPrices(): int
     {
         return (int) db_get_field(
-            "SELECT COUNT(*) FROM ?:novoton_hotels WHERE calendar_prices_raw IS NOT NULL AND calendar_prices_raw != ''"
+            "SELECT COUNT(*) FROM ?:novoton_hotels WHERE calendar_prices_raw IS NOT NULL AND calendar_prices_raw != ''",
         );
     }
 }

@@ -1,11 +1,12 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays\Services;
 
-use Tygh\Addons\SphinxHolidays\SphinxApi;
 use Tygh\Addons\SphinxHolidays\Contracts\DestinationSyncServiceInterface;
 use Tygh\Addons\SphinxHolidays\Repository\DestinationRepository;
+use Tygh\Addons\SphinxHolidays\SphinxApi;
 use Tygh\Addons\TravelCore\Helpers\ValidationHelpers;
 
 /**
@@ -214,25 +215,25 @@ class DestinationSyncService extends AbstractSyncService implements DestinationS
         // Map common API type values to our canonical types
         $typeMap = [
             'continent' => 'continent',
-            'country'   => 'country',
-            'region'    => 'region',
-            'city'      => 'city',
-            'resort'    => 'destination',
-            'area'      => 'region',
-            'zone'      => 'region',
+            'country' => 'country',
+            'region' => 'region',
+            'city' => 'city',
+            'resort' => 'destination',
+            'area' => 'region',
+            'zone' => 'region',
         ];
         $type = $typeMap[$type] ?? $type;
 
         return [
             'destination_id' => $id,
-            'name'           => trim($name),
-            'type'           => $type,
-            'parent_id'      => ValidationHelpers::toInt($raw['parent_id'] ?? $raw['parent'] ?? 0),
-            'country_code'   => ValidationHelpers::toString($raw['country_code'] ?? $raw['iso'] ?? $raw['iso_code'] ?? ''),
-            'geoname_id'     => ValidationHelpers::toInt($raw['geoname_id'] ?? $raw['geonames_id'] ?? 0),
-            'latitude'       => ValidationHelpers::toFloat($raw['latitude'] ?? $raw['lat'] ?? 0),
-            'longitude'      => ValidationHelpers::toFloat($raw['longitude'] ?? $raw['lng'] ?? $raw['lon'] ?? 0),
-            'hotel_count'    => ValidationHelpers::toInt($raw['hotel_count'] ?? $raw['hotels_count'] ?? 0),
+            'name' => trim($name),
+            'type' => $type,
+            'parent_id' => ValidationHelpers::toInt($raw['parent_id'] ?? $raw['parent'] ?? 0),
+            'country_code' => ValidationHelpers::toString($raw['country_code'] ?? $raw['iso'] ?? $raw['iso_code'] ?? ''),
+            'geoname_id' => ValidationHelpers::toInt($raw['geoname_id'] ?? $raw['geonames_id'] ?? 0),
+            'latitude' => ValidationHelpers::toFloat($raw['latitude'] ?? $raw['lat'] ?? 0),
+            'longitude' => ValidationHelpers::toFloat($raw['longitude'] ?? $raw['lng'] ?? $raw['lon'] ?? 0),
+            'hotel_count' => ValidationHelpers::toInt($raw['hotel_count'] ?? $raw['hotels_count'] ?? 0),
         ];
     }
 }

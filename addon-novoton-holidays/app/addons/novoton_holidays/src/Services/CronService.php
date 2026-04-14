@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 /**
  * Novoton Holidays - Cron Service
  *
@@ -63,12 +65,12 @@ class CronService implements CronServiceInterface
             'updated' => 0,
             'unchanged' => 0,
             'errors' => 0,
-            'details' => []
+            'details' => [],
         ];
 
         $bookings = $this->bookingRepo->findByNovotonStatus(
             Constants::NOVOTON_STATUS_ON_REQUEST,
-            [TravelConstants::STATUS_PENDING, TravelConstants::STATUS_ASK]
+            [TravelConstants::STATUS_PENDING, TravelConstants::STATUS_ASK],
         );
 
         foreach ($bookings as $booking) {
@@ -95,12 +97,14 @@ class CronService implements CronServiceInterface
                     $csStatus = $this->mapNovotonStatus($newStatus);
 
                     $this->bookingRepo->updateStatus(
-                        (int) $booking['booking_id'], $csStatus, $newStatus
+                        (int) $booking['booking_id'],
+                        $csStatus,
+                        $newStatus,
                     );
                     // last_status_check is novoton-specific, update directly
                     $this->bookingRepo->update(
                         (int) $booking['booking_id'],
-                        ['last_status_check' => date('Y-m-d H:i:s')]
+                        ['last_status_check' => date('Y-m-d H:i:s')],
                     );
 
                     $results['updated']++;
@@ -108,22 +112,21 @@ class CronService implements CronServiceInterface
                         'booking_id' => $booking['booking_id'],
                         'hotel' => $booking['hotel_name'],
                         'old_status' => $booking['novoton_status'],
-                        'new_status' => $newStatus
+                        'new_status' => $newStatus,
                     ];
                 } else {
                     $this->bookingRepo->update(
                         (int) $booking['booking_id'],
-                        ['last_status_check' => date('Y-m-d H:i:s')]
+                        ['last_status_check' => date('Y-m-d H:i:s')],
                     );
                     $results['unchanged']++;
                 }
-
             } catch (\Exception $e) {
                 $results['errors']++;
                 fn_log_event('general', 'runtime', [
                     'message' => 'Cron: Error checking ASK booking',
                     'booking_id' => $booking['booking_id'],
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ]);
             }
 
@@ -145,7 +148,7 @@ class CronService implements CronServiceInterface
             'processed' => 0,
             'found' => 0,
             'notified' => 0,
-            'errors' => 0
+            'errors' => 0,
         ];
 
         $pending = $this->altRequestRepo->findPendingWithApiRef(
@@ -168,13 +171,13 @@ class CronService implements CronServiceInterface
                             'hotel_name' => (string)($alt->Hotel ?? ''),
                             'price' => (string)($alt->Price ?? ''),
                             'room' => (string)($alt->Room ?? ''),
-                            'board' => (string)($alt->Board ?? '')
+                            'board' => (string)($alt->Board ?? ''),
                         ];
                     }
 
                     $this->altRequestRepo->markAlternativesFound(
                         (int) $request['request_id'],
-                        (string) json_encode($alternatives)
+                        (string) json_encode($alternatives),
                     );
 
                     $results['found']++;
@@ -185,13 +188,12 @@ class CronService implements CronServiceInterface
                         $results['notified']++;
                     }
                 }
-
             } catch (\Exception $e) {
                 $results['errors']++;
                 fn_log_event('general', 'runtime', [
                     'message' => 'Cron: Error checking alternatives',
                     'request_id' => $request['request_id'],
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ]);
             }
 
@@ -226,7 +228,7 @@ class CronService implements CronServiceInterface
                 'to' => $request['contact_email'],
                 'from' => 'default_company_orders_department',
                 'subj' => 'Alternative Hotels Available - ' . $request['hotel_name'],
-                'body' => $this->formatAlternativesEmail($request, $alternatives)
+                'body' => $this->formatAlternativesEmail($request, $alternatives),
             ]);
 
             $this->altRequestRepo->markNotified((int) $request['request_id']);

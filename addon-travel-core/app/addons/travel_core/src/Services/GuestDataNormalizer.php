@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Tygh\Addons\TravelCore\Services;
@@ -22,22 +23,22 @@ class GuestDataNormalizer implements GuestDataNormalizerInterface
      * All fields expected on a canonical guest entry, with defaults.
      */
     private const GUEST_DEFAULTS = [
-        'name'       => '',
-        'api_name'   => '',
+        'name' => '',
+        'api_name' => '',
         'first_name' => '',
-        'last_name'  => '',
-        'type'       => 'adult',
-        'age'        => 0,
-        'birthday'   => '',
-        'dob'        => '',
-        'room'       => 1,
-        'is_holder'  => 0,
+        'last_name' => '',
+        'type' => 'adult',
+        'age' => 0,
+        'birthday' => '',
+        'dob' => '',
+        'room' => 1,
+        'is_holder' => 0,
     ];
 
     /**
      * Normalize guest data from any supported format into canonical keyed format.
      *
-     * @param array<string, mixed>|string $raw  Raw guest data (JSON string, keyed array, or indexed array)
+     * @param array<string, mixed>|string $raw Raw guest data (JSON string, keyed array, or indexed array)
      * @return array<string, mixed> Canonical keyed array (e.g. ['room1_adult_1' => [...], ...])
      */
     #[\Override]
@@ -99,7 +100,6 @@ class GuestDataNormalizer implements GuestDataNormalizerInterface
      * Keyed format uses string keys matching "room{N}_{type}_{I}".
      *
      * @param array<int|string, mixed> $data
-     * @return bool
      */
     #[\Override]
     public function isKeyedFormat(array $data): bool
@@ -127,7 +127,6 @@ class GuestDataNormalizer implements GuestDataNormalizerInterface
      * Array format uses sequential numeric keys with guest entries.
      *
      * @param array<int|string, mixed> $data
-     * @return bool
      */
     #[\Override]
     public function isArrayFormat(array $data): bool
@@ -241,9 +240,9 @@ class GuestDataNormalizer implements GuestDataNormalizerInterface
     private static function deriveNameFields(array $guest): array
     {
         $firstName = trim($guest['first_name'] ?? '');
-        $lastName  = trim($guest['last_name'] ?? '');
-        $name      = trim($guest['name'] ?? '');
-        $apiName   = trim($guest['api_name'] ?? '');
+        $lastName = trim($guest['last_name'] ?? '');
+        $name = trim($guest['name'] ?? '');
+        $apiName = trim($guest['api_name'] ?? '');
 
         // Build api_name from first/last if missing
         if (empty($apiName) && ($firstName || $lastName)) {
@@ -267,7 +266,7 @@ class GuestDataNormalizer implements GuestDataNormalizerInterface
             $apiName = $name;
         }
 
-        $guest['name']     = $name;
+        $guest['name'] = $name;
         $guest['api_name'] = $apiName;
 
         return $guest;

@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 /**
  * Novoton PriceInfo Calculation Service
  *
@@ -90,15 +92,15 @@ class PriceInfoCalculation implements PriceInfoCalculationInterface
      * Calculate price for a booking
      *
      * @param array<string, mixed> $params Calculation parameters:
-     *   - hotel_id: Hotel ID
-     *   - package_name: Package name
-     *   - check_in: Check-in date (Y-m-d)
-     *   - nights: Number of nights
-     *   - room_id: Room type ID
-     *   - board_id: Board type ID
-     *   - adults: Number of adults
-     *   - children_ages: Array of children ages (e.g., [1.5, 7])
-     *   - booking_date: Date of booking for EB check (default: today)
+     *                                     - hotel_id: Hotel ID
+     *                                     - package_name: Package name
+     *                                     - check_in: Check-in date (Y-m-d)
+     *                                     - nights: Number of nights
+     *                                     - room_id: Room type ID
+     *                                     - board_id: Board type ID
+     *                                     - adults: Number of adults
+     *                                     - children_ages: Array of children ages (e.g., [1.5, 7])
+     *                                     - booking_date: Date of booking for EB check (default: today)
      * @return array<string, mixed> Calculation result with price breakdowns
      */
     public function calculate(array $params): array
@@ -134,7 +136,6 @@ class PriceInfoCalculation implements PriceInfoCalculationInterface
         $childrenAges = $params['children_ages'] ?? [];
         $bookingDate = PriceInfoFormatter::toScalar($params['booking_date'] ?? date('Y-m-d'));
 
-
         if (!is_array($childrenAges)) {
             $childrenAges = !empty($childrenAges) ? explode(',', PriceInfoFormatter::toScalar($childrenAges)) : [];
         }
@@ -151,7 +152,7 @@ class PriceInfoCalculation implements PriceInfoCalculationInterface
             'board_id' => $boardId,
             'adults' => $adults,
             'children_ages' => $childrenAges,
-            'booking_date' => $bookingDate
+            'booking_date' => $bookingDate,
         ]);
 
         // Step 1: Validate occupancy against room capacity
@@ -199,7 +200,11 @@ class PriceInfoCalculation implements PriceInfoCalculationInterface
 
         // Step 8b: Apply reduction_perc_marketing (booking/travel date restricted)
         $percMarketing = $this->discountCalculator->calculateReductionPercMarketing(
-            $bookingDate, $checkIn, $nights, $roomId, $finalPriceTotal
+            $bookingDate,
+            $checkIn,
+            $nights,
+            $roomId,
+            $finalPriceTotal,
         );
         $this->log('Reduction Perc Marketing', $percMarketing);
 
@@ -245,7 +250,7 @@ class PriceInfoCalculation implements PriceInfoCalculationInterface
                     'extras_board' => round(PriceInfoFormatter::toFloat($fees['extras_board'] ?? 0), 2),
                     'handling_fee' => round(PriceInfoFormatter::toFloat($fees['handling_fee'] ?? 0), 2),
                     'company_fee' => round(PriceInfoFormatter::toFloat($fees['company_fee'] ?? 0), 2),
-                    'total_fees' => round(PriceInfoFormatter::toFloat($fees['total'] ?? 0), 2)
+                    'total_fees' => round(PriceInfoFormatter::toFloat($fees['total'] ?? 0), 2),
                 ],
                 'fees_detail' => $fees,
                 'discounts' => [
@@ -253,28 +258,28 @@ class PriceInfoCalculation implements PriceInfoCalculationInterface
                     'reduction' => $reduction,
                     'reduction_period' => $reductionPeriod,
                     'reduction_perc_additional' => $percAdditional,
-                    'reduction_perc_marketing' => $percMarketing
+                    'reduction_perc_marketing' => $percMarketing,
                 ],
                 'priority_rules' => [
                     'priority' => PriceInfoFormatter::toScalar($priceinfo['Priority'] ?? 'No'),
                     'priority_eb' => PriceInfoFormatter::toScalar($priceinfo['PriorityEB'] ?? 'No'),
                     'priority_ext' => PriceInfoFormatter::toScalar($priceinfo['PriorityEXT'] ?? 'No'),
-                    'scenarios' => $finalPrice['scenarios'] ?? []
+                    'scenarios' => $finalPrice['scenarios'] ?? [],
                 ],
                 'applied_discount' => $finalPrice['applied_discount'] ?? 'none',
                 'discount_amount' => round(
                     PriceInfoFormatter::toFloat($finalPrice['discount_amount'] ?? 0) +
                     $percMarketingDiscount +
                     $percAdditionalDiscount,
-                    2
-                )
+                    2,
+                ),
             ],
             'room_capacity' => $roomCapacity,
             'child_age_bands' => $this->parser->getChildAgeBands(),
             'seasons_by_night' => $seasonsByNight,
             'occupancy' => $occupancy,
             'params' => $params,
-            'debug_log' => $this->debug ? $this->debugLog : null
+            'debug_log' => $this->debug ? $this->debugLog : null,
         ];
 
         $this->log('=== PRICE CALCULATION END ===', $result);
@@ -312,7 +317,7 @@ class PriceInfoCalculation implements PriceInfoCalculationInterface
         return PriceInfoFormatter::verifySeasonPriceMapping(
             $this->parser->getPriceinfo() ?? [],
             $checkIn,
-            $nights
+            $nights,
         );
     }
 
@@ -326,7 +331,7 @@ class PriceInfoCalculation implements PriceInfoCalculationInterface
         return PriceInfoFormatter::getSamplePrices(
             $this->parser->getPriceinfo() ?? [],
             $roomId,
-            $boardId
+            $boardId,
         );
     }
 
@@ -358,7 +363,7 @@ class PriceInfoCalculation implements PriceInfoCalculationInterface
     {
         $entry = [
             'time' => date('H:i:s'),
-            'message' => $message
+            'message' => $message,
         ];
         if ($data !== null) {
             $entry['data'] = $data;
@@ -368,7 +373,7 @@ class PriceInfoCalculation implements PriceInfoCalculationInterface
         if ($this->debug) {
             fn_log_event('general', 'runtime', [
                 'message' => 'PriceInfoCalculation: ' . $message,
-                'data' => $data
+                'data' => $data,
             ]);
         }
     }

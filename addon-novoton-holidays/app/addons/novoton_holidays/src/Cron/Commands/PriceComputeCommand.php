@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 namespace Tygh\Addons\NovotonHolidays\Cron\Commands;
 
 use Tygh\Addons\NovotonHolidays\Cron\AbstractCronCommand;
@@ -54,9 +56,9 @@ class PriceComputeCommand extends AbstractCronCommand
      */
     public function execute(): array
     {
-        $this->output("Compute Price Metadata");
-        $this->output("======================");
-        $this->output("");
+        $this->output('Compute Price Metadata');
+        $this->output('======================');
+        $this->output('');
 
         $singleHotel = $this->getParam('hotel_id', '');
         if (!empty($singleHotel)) {
@@ -66,28 +68,28 @@ class PriceComputeCommand extends AbstractCronCommand
         $force = !empty($this->params['force']);
 
         if ($force) {
-            $this->output("Mode: FORCE (all packages with priceinfo_data)");
+            $this->output('Mode: FORCE (all packages with priceinfo_data)');
             $packages = db_get_array(
                 "SELECT id, hotel_id, package_id, priceinfo_data
                  FROM ?:novoton_hotel_packages
-                 WHERE priceinfo_data IS NOT NULL AND priceinfo_data != ''"
+                 WHERE priceinfo_data IS NOT NULL AND priceinfo_data != ''",
             );
         } else {
-            $this->output("Mode: incremental (needs_price_compute = Y)");
+            $this->output('Mode: incremental (needs_price_compute = Y)');
             $packages = db_get_array(
                 "SELECT id, hotel_id, package_id, priceinfo_data
                  FROM ?:novoton_hotel_packages
                  WHERE needs_price_compute = 'Y'
-                   AND priceinfo_data IS NOT NULL AND priceinfo_data != ''"
+                   AND priceinfo_data IS NOT NULL AND priceinfo_data != ''",
             );
         }
 
         $total = count($packages);
         $this->output("Packages to process: {$total}");
-        $this->output("");
+        $this->output('');
 
         if ($total === 0) {
-            $this->output("Nothing to do.");
+            $this->output('Nothing to do.');
             return ['success' => true, 'stats' => ['total' => 0, 'processed' => 0, 'errors' => 0]];
         }
 
@@ -123,7 +125,7 @@ class PriceComputeCommand extends AbstractCronCommand
                     $minPrice,
                     $seasonsCount,
                     $hasEarlyBooking,
-                    PriceInfoFormatter::toInt($pkg['id'] ?? 0)
+                    PriceInfoFormatter::toInt($pkg['id'] ?? 0),
                 );
 
                 $dirtyHotels[$pkgHotelId] = true;
@@ -143,7 +145,7 @@ class PriceComputeCommand extends AbstractCronCommand
         // Recompute calendar prices once per affected hotel
         $hotelCount = count($dirtyHotels);
         if ($hotelCount > 0) {
-            $this->output("");
+            $this->output('');
             $this->output("Recomputing calendar prices for {$hotelCount} hotels...");
             $calErrors = 0;
             foreach (array_keys($dirtyHotels) as $hotelId) {
@@ -159,7 +161,7 @@ class PriceComputeCommand extends AbstractCronCommand
             }
 
             // Update CS-Cart product prices from computed min_price
-            $this->output("Updating product catalog prices...");
+            $this->output('Updating product catalog prices...');
             $priceUpdated = 0;
             foreach (array_keys($dirtyHotels) as $hotelId) {
                 try {
@@ -174,7 +176,7 @@ class PriceComputeCommand extends AbstractCronCommand
         }
 
         $duration = round(microtime(true) - $this->startTime, 1);
-        $this->output("");
+        $this->output('');
         $this->output("Done in {$duration}s: {$processed} computed, {$errors} errors, {$hotelCount} hotels recalculated");
 
         $this->logToSyncTable('compute_prices', $processed, $errors);
@@ -203,11 +205,11 @@ class PriceComputeCommand extends AbstractCronCommand
             "SELECT id, hotel_id, package_id, priceinfo_data
              FROM ?:novoton_hotel_packages
              WHERE hotel_id = ?s AND priceinfo_data IS NOT NULL AND priceinfo_data != ''",
-            $hotelId
+            $hotelId,
         );
 
         if (empty($packages)) {
-            $this->output("No packages with priceinfo_data found.");
+            $this->output('No packages with priceinfo_data found.');
             return ['success' => true, 'stats' => ['hotel_id' => $hotelId, 'processed' => 0]];
         }
 
@@ -239,7 +241,7 @@ class PriceComputeCommand extends AbstractCronCommand
                     $minPrice,
                     $seasonsCount,
                     $hasEarlyBooking,
-                    PriceInfoFormatter::toInt($pkg['id'] ?? 0)
+                    PriceInfoFormatter::toInt($pkg['id'] ?? 0),
                 );
 
                 $processed++;
@@ -253,14 +255,14 @@ class PriceComputeCommand extends AbstractCronCommand
         // Recompute calendar prices for this hotel
         try {
             PriceInfoService::precomputeCalendarPrices($hotelId);
-            $this->output("Calendar prices recomputed.");
+            $this->output('Calendar prices recomputed.');
         } catch (\Throwable $e) {
-            $this->output("Calendar ERROR: " . $e->getMessage());
+            $this->output('Calendar ERROR: ' . $e->getMessage());
         }
 
         // Update CS-Cart product price
         if (self::updateProductPrice($hotelId)) {
-            $this->output("Product catalog price updated.");
+            $this->output('Product catalog price updated.');
         }
 
         $this->output("OK: {$processed} packages computed, {$errors} errors");
@@ -285,12 +287,12 @@ class PriceComputeCommand extends AbstractCronCommand
     {
         /** @var array<string, mixed>|null $row */
         $row = db_get_row(
-            "SELECT h.product_id, MIN(p.min_price) AS lowest_price
+            'SELECT h.product_id, MIN(p.min_price) AS lowest_price
              FROM ?:novoton_hotels h
              JOIN ?:novoton_hotel_packages p ON p.hotel_id = h.hotel_id
              WHERE h.hotel_id = ?s AND p.min_price > 0 AND h.product_id > 0
-             GROUP BY h.product_id",
-            $hotelId
+             GROUP BY h.product_id',
+            $hotelId,
         );
 
         if (empty($row) || !is_array($row) || empty($row['product_id']) || empty($row['lowest_price'])) {
@@ -301,7 +303,7 @@ class PriceComputeCommand extends AbstractCronCommand
         $price = PriceInfoFormatter::toFloat($row['lowest_price']) * (1 + ($commission / 100));
         $price = ConfigProvider::isRoundPrices() ? round($price) : round($price, 2);
 
-        db_query("UPDATE ?:products SET price = ?d WHERE product_id = ?i", $price, PriceInfoFormatter::toInt($row['product_id']));
+        db_query('UPDATE ?:products SET price = ?d WHERE product_id = ?i', $price, PriceInfoFormatter::toInt($row['product_id']));
 
         return true;
     }

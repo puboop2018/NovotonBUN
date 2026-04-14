@@ -1,10 +1,11 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays\Cron\Commands;
 
-use Tygh\Addons\SphinxHolidays\Services\Container;
 use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
+use Tygh\Addons\SphinxHolidays\Services\Container;
 use Tygh\Addons\SphinxHolidays\Services\HotelSyncService;
 
 /**
@@ -49,9 +50,7 @@ class HotelSyncCommand extends AbstractSyncCommand
         // Allow CLI override: country=GR or country=GR,BG
         $countryCodes = [];
         if (!empty($params['country'])) {
-            $countryCodes = array_filter(array_map(function ($c) {
-                return strtoupper(trim($c));
-            }, explode(',', $params['country'])));
+            $countryCodes = array_filter(array_map(fn ($c) => strtoupper(trim($c)), explode(',', $params['country'])));
         }
 
         // Allow CLI override: destination_ids=1234,5678
