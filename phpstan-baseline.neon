@@ -11137,18 +11137,6 @@ parameters:
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/DeduplicateCommand.php
 
 		-
-			message: '#^Binary operation "\+\=" between mixed and int results in an error\.$#'
-			identifier: assignOp.invalid
-			count: 2
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/DestinationSyncCommand.php
-
-		-
-			message: '#^Binary operation "\-" between mixed and mixed results in an error\.$#'
-			identifier: binaryOp.invalid
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/DestinationSyncCommand.php
-
-		-
 			message: '#^Binary operation "\." between mixed and ''sphinx_destination…'' results in an error\.$#'
 			identifier: binaryOp.invalid
 			count: 1
@@ -11215,12 +11203,6 @@ parameters:
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/DestinationSyncCommand.php
 
 		-
-			message: '#^Cannot use \+\+ on mixed\.$#'
-			identifier: postInc.type
-			count: 3
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/DestinationSyncCommand.php
-
-		-
 			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Cron\\Commands\\DestinationSyncCommand\:\:loadState\(\) should return array\<string, mixed\> but returns array\<mixed\>\.$#'
 			identifier: return.type
 			count: 1
@@ -11235,35 +11217,11 @@ parameters:
 		-
 			message: '#^Parameter \#1 \$datetime of function strtotime expects string, mixed given\.$#'
 			identifier: argument.type
-			count: 3
+			count: 2
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/DestinationSyncCommand.php
 
 		-
-			message: '#^Parameter \#1 \$page of method Tygh\\Addons\\SphinxHolidays\\SphinxApi\:\:getDestinations\(\) expects int, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/DestinationSyncCommand.php
-
-		-
-			message: '#^Parameter \#1 \$raw of method Tygh\\Addons\\SphinxHolidays\\Cron\\Commands\\DestinationSyncCommand\:\:normalizeDestination\(\) expects array\<string, mixed\>, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/DestinationSyncCommand.php
-
-		-
-			message: '#^Parameter \#2 \$currentPage of method Tygh\\Addons\\SphinxHolidays\\Cron\\Commands\\DestinationSyncCommand\:\:hasMorePages\(\) expects int, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/DestinationSyncCommand.php
-
-		-
-			message: '#^Parameter \#3 \$updatedSince of method Tygh\\Addons\\SphinxHolidays\\SphinxApi\:\:getDestinations\(\) expects string\|null, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/DestinationSyncCommand.php
-
-		-
-			message: '#^Parameter \#4 \$fetchedSoFar of method Tygh\\Addons\\SphinxHolidays\\Cron\\Commands\\DestinationSyncCommand\:\:hasMorePages\(\) expects int, mixed given\.$#'
+			message: '#^Parameter \#1 \$raw of method Tygh\\Addons\\SphinxHolidays\\Cron\\Commands\\DestinationSyncCommand\:\:normalizeDestination\(\) expects array\<string, mixed\>, array\<mixed, mixed\> given\.$#'
 			identifier: argument.type
 			count: 1
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/DestinationSyncCommand.php
@@ -11287,12 +11245,6 @@ parameters:
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/DestinationSyncCommand.php
 
 		-
-			message: '#^Part \$page \(mixed\) of encapsed string cannot be cast to string\.$#'
-			identifier: encapsedStringPart.nonString
-			count: 2
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/DestinationSyncCommand.php
-
-		-
 			message: '#^Part \$state\[''error''\] \(mixed\) of encapsed string cannot be cast to string\.$#'
 			identifier: encapsedStringPart.nonString
 			count: 1
@@ -11301,13 +11253,13 @@ parameters:
 		-
 			message: '#^Part \$state\[''last_run_at''\] \(mixed\) of encapsed string cannot be cast to string\.$#'
 			identifier: encapsedStringPart.nonString
-			count: 2
+			count: 1
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/DestinationSyncCommand.php
 
 		-
 			message: '#^Part \$state\[''next_page''\] \(mixed\) of encapsed string cannot be cast to string\.$#'
 			identifier: encapsedStringPart.nonString
-			count: 3
+			count: 1
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/DestinationSyncCommand.php
 
 		-
@@ -11331,19 +11283,19 @@ parameters:
 		-
 			message: '#^Part \$state\[''sync_mode''\] \(mixed\) of encapsed string cannot be cast to string\.$#'
 			identifier: encapsedStringPart.nonString
-			count: 2
+			count: 1
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/DestinationSyncCommand.php
 
 		-
 			message: '#^Part \$state\[''synced''\] \(mixed\) of encapsed string cannot be cast to string\.$#'
 			identifier: encapsedStringPart.nonString
-			count: 5
+			count: 1
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/DestinationSyncCommand.php
 
 		-
 			message: '#^Part \$state\[''total''\] \(mixed\) of encapsed string cannot be cast to string\.$#'
 			identifier: encapsedStringPart.nonString
-			count: 4
+			count: 1
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/DestinationSyncCommand.php
 
 		-
