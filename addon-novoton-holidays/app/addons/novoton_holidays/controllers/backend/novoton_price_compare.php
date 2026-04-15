@@ -758,10 +758,10 @@ if ($mode === 'compare') {
     $apiPriceFound = false;
 
     if ($apiResult) {
-        $room_id_decoded = !empty($room_id) ? rawurldecode($room_id) : null;
+        $room_id_decoded = !empty($room_id) ? rawurldecode(TypeCoerce::toString($room_id)) : null;
         $match = fn_novoton_match_price_from_xml($apiResult, $room_id_decoded, $board_id);
         if ($match !== null) {
-            $apiPrice = $match['price'];
+            $apiPrice = TypeCoerce::toFloat($match['price'] ?? 0);
             $apiPriceFound = true;
         }
 
@@ -779,7 +779,7 @@ if ($mode === 'compare') {
     $apiPriceWithCommission = $apiPrice * (1 + $commission / 100);
 
     if ($apiPriceFound) {
-        $calcPrice = $calcResult['price'];
+        $calcPrice = TypeCoerce::toFloat($calcResult['price'] ?? 0);
         $difference = $calcPrice - $apiPriceWithCommission;
         $percentDiff = $apiPriceWithCommission > 0 ? ($difference / $apiPriceWithCommission) * 100 : 0;
         $isMatch = abs($difference) < 1;
@@ -790,7 +790,7 @@ if ($mode === 'compare') {
         echo '<div>';
         echo '<div class="price-label">Calculated</div>';
         echo '<div class="price-big">' . number_format($calcPrice, 2) . '</div>';
-        echo '<div class="price-label">Base: ' . number_format($calcResult['price_without_commission'], 2) . '</div>';
+        echo '<div class="price-label">Base: ' . number_format(TypeCoerce::toFloat($calcResult['price_without_commission'] ?? 0), 2) . '</div>';
         echo '</div>';
 
         echo '<div>';
@@ -823,10 +823,10 @@ if ($mode === 'compare') {
             echo '<div class="step" style="border-color:#f44336;">';
             echo '<div class="step-header"><span class="step-num" style="background:#f44336;">!</span><span class="step-title">Discrepancy Analysis</span></div>';
 
-            $calcBasePrice = $breakdown['base_price'] ?? 0;
-            $calcFees = $fees['total_fees'] ?? 0;
-            $ebPercent = $eb['percent'] ?? 0;
-            $calcDiscount = $breakdown['discount_amount'] ?? 0;
+            $calcBasePrice = TypeCoerce::toFloat($breakdown['base_price'] ?? 0);
+            $calcFees = TypeCoerce::toFloat($fees['total_fees'] ?? 0);
+            $ebPercent = TypeCoerce::toFloat($eb['percent'] ?? 0);
+            $calcDiscount = TypeCoerce::toFloat($breakdown['discount_amount'] ?? 0);
 
             // Reverse-engineer API implied values
             // API price = (API_base * (1 - EB%)) + fees  (if EB applies to base only)
@@ -896,31 +896,32 @@ if ($mode === 'compare') {
                 echo '<tr><th>Person</th><th>Calculated Base</th><th>API Implied Base</th><th>Difference</th><th>% of Adult Rate</th></tr>';
 
                 // Find first adult's total for reference
-                $firstAdultTotal = 0;
-                $apiFirstAdultTotal = 0;
+                $firstAdultTotal = 0.0;
+                $apiFirstAdultTotal = 0.0;
                 foreach ($byPerson as $pKey => $pAmt) {
-                    if (str_starts_with($pKey, 'adult_1')) {
-                        $firstAdultTotal = $pAmt;
-                        $apiFirstAdultTotal = round($pAmt * $scaleFactor, 2);
+                    if (str_starts_with((string) $pKey, 'adult_1')) {
+                        $firstAdultTotal = TypeCoerce::toFloat($pAmt);
+                        $apiFirstAdultTotal = round($firstAdultTotal * $scaleFactor, 2);
                         break;
                     }
                 }
 
                 foreach ($byPerson as $pKey => $pAmt) {
-                    $label = str_replace('_', ' ', ucfirst($pKey));
-                    $apiPAmt = round($pAmt * $scaleFactor, 2);
-                    $pDiff = $pAmt - $apiPAmt;
+                    $pAmtF = TypeCoerce::toFloat($pAmt);
+                    $label = str_replace('_', ' ', ucfirst((string) $pKey));
+                    $apiPAmt = round($pAmtF * $scaleFactor, 2);
+                    $pDiff = $pAmtF - $apiPAmt;
                     $cls = abs($pDiff) < 1 ? 'match' : 'mismatch';
 
                     $pctOfAdult = '';
                     if ($firstAdultTotal > 0) {
-                        $calcPct = round($pAmt / $firstAdultTotal * 100, 1);
+                        $calcPct = round($pAmtF / $firstAdultTotal * 100, 1);
                         $pctOfAdult = $calcPct . '%';
                     }
 
                     echo '<tr>';
                     echo '<td>' . htmlspecialchars($label) . '</td>';
-                    echo '<td>' . number_format($pAmt, 2) . '</td>';
+                    echo '<td>' . number_format($pAmtF, 2) . '</td>';
                     echo '<td>' . number_format($apiPAmt, 2) . '</td>';
                     echo '<td class="' . $cls . '">' . ($pDiff >= 0 ? '+' : '') . number_format($pDiff, 2) . '</td>';
                     echo '<td>' . $pctOfAdult . '</td>';
@@ -982,7 +983,7 @@ if ($mode === 'compare') {
     }
 
     // Raw Seasons Data (merged from Verify mode Section 4)
-    $rawSeasons = $priceinfo['seasons'] ?? [];
+    $rawSeasons = TypeCoerce::toList($priceinfo['seasons'] ?? []);
     if (!empty($rawSeasons)) {
         echo '<span class="collapsible-toggle" onclick="toggleSection(\'raw-seasons-data\')">&#9654; Raw Seasons Data (JSON)</span>';
         echo '<div id="raw-seasons-data" class="collapsible-content">';
@@ -1004,8 +1005,9 @@ if ($mode === 'compare') {
 if ($mode === 'verify') {
     $params = [];
     foreach (['hotel_id', 'package_name', 'room_id', 'board_id', 'check_in', 'nights'] as $param) {
-        if (isset($_REQUEST[$param]) && is_string($_REQUEST[$param])) {
-            $params[$param] = substr(trim($_REQUEST[$param]), 0, 100);
+        $reqVal = $_REQUEST[$param] ?? null;
+        if (is_string($reqVal)) {
+            $params[$param] = substr(trim($reqVal), 0, 100);
         }
     }
     $query = !empty($params) ? '&' . http_build_query($params) : '';
@@ -1019,7 +1021,7 @@ if ($mode === 'verify') {
 if ($mode === 'get_packages') {
     header('Content-Type: application/json; charset=utf-8');
 
-    $hotel_id = $_REQUEST['hotel_id'] ?? '';
+    $hotel_id = RequestCoerce::string($_REQUEST, 'hotel_id');
 
     if (empty($hotel_id)) {
         echo json_encode(['packages' => []]);
@@ -1040,7 +1042,7 @@ if ($mode === 'get_packages') {
 if ($mode === 'get_rooms') {
     header('Content-Type: application/json; charset=utf-8');
 
-    $hotel_id = $_REQUEST['hotel_id'] ?? '';
+    $hotel_id = RequestCoerce::string($_REQUEST, 'hotel_id');
 
     if (empty($hotel_id)) {
         echo json_encode(['rooms' => []]);
@@ -1053,20 +1055,20 @@ if ($mode === 'get_rooms') {
     $rooms_list = [];
 
     if (!empty($hotel_data_json)) {
-        $hotel_data = json_decode($hotel_data_json, true);
+        $hotel_data = TypeCoerce::toStringMap(json_decode($hotel_data_json, true));
         $rooms = $hotel_data['rooms'] ?? [];
 
         // Normalize single room entry to array
-        if (isset($rooms['IdRoom'])) {
+        if (is_array($rooms) && isset($rooms['IdRoom'])) {
             $rooms = [$rooms];
         }
 
-        foreach ($rooms as $room) {
-            $id_room = $room['IdRoom'] ?? '';
+        foreach (TypeCoerce::toRowList($rooms) as $room) {
+            $id_room = TypeCoerce::toString($room['IdRoom'] ?? '');
             if (!empty($id_room)) {
-                $type = $room['Type'] ?? '';
-                $rb = $room['RegularBeds'] ?? $room['RB'] ?? '';
-                $eb = $room['ExtraBeds'] ?? $room['EB'] ?? '';
+                $type = TypeCoerce::toString($room['Type'] ?? '');
+                $rb = TypeCoerce::toString($room['RegularBeds'] ?? $room['RB'] ?? '');
+                $eb = TypeCoerce::toString($room['ExtraBeds'] ?? $room['EB'] ?? '');
                 $label = $id_room;
                 if (!empty($type) && $type !== $id_room) {
                     $label .= ' (' . $type . ')';
