@@ -14,29 +14,31 @@ use Tygh\Addons\TravelCore\Contracts\TravelBookingRepositoryInterface;
  */
 class TravelBookingRepository implements TravelBookingRepositoryInterface
 {
+    use RowNarrowingTrait;
+
     #[\Override]
     public function getProviderInfo(int $bookingId): ?array
     {
-        $row = db_get_row(
+        $row = self::asRow(db_get_row(
             'SELECT provider, provider_booking_id FROM ?:travel_bookings WHERE booking_id = ?i',
             $bookingId,
-        );
+        ));
 
-        return $row ?: null;
+        return $row === [] ? null : $row;
     }
 
     #[\Override]
     public function getById(int $bookingId): ?array
     {
-        $row = db_get_row(
+        $row = self::asRow(db_get_row(
             'SELECT * FROM ?:travel_bookings WHERE booking_id = ?i',
             $bookingId,
-        );
+        ));
 
-        return $row ?: null;
+        return $row === [] ? null : $row;
     }
 
-    /** @return array{items: array<int, array<string, mixed>>, total: int} */
+    /** @return array{items: list<array<string, mixed>>, total: int} */
     #[\Override]
     public function getPaginated(string $condition, string $sortColumn, string $sortOrder, int $offset, int $limit): array
     {
@@ -45,7 +47,7 @@ class TravelBookingRepository implements TravelBookingRepositoryInterface
             $condition,
         );
 
-        $items = db_get_array(
+        $items = self::asRowList(db_get_array(
             "SELECT tb.* FROM ?:travel_bookings tb
              WHERE 1 ?p
              ORDER BY {$sortColumn} {$sortOrder}
@@ -53,7 +55,7 @@ class TravelBookingRepository implements TravelBookingRepositoryInterface
             $condition,
             $offset,
             $limit,
-        );
+        ));
 
         return ['items' => $items, 'total' => $total];
     }

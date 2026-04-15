@@ -53,44 +53,32 @@ class ValidationHelpers
      * Safely extract a scalar string from a mixed value.
      *
      * Arrays and objects become ''; scalars are cast to string and trimmed.
+     *
+     * @deprecated 3.3.0 Use {@see TypeCoerce::toString()} directly.
      */
     public static function toString(mixed $value): string
     {
-        if (is_array($value) || is_object($value)) {
-            return '';
-        }
-        return trim((string) $value);
+        return TypeCoerce::toString($value);
     }
 
     /**
      * Safely extract a float from a mixed value.
+     *
+     * @deprecated 3.3.0 Use {@see TypeCoerce::toFloat()} directly.
      */
     public static function toFloat(mixed $value): float
     {
-        if (is_float($value) || is_int($value)) {
-            return (float) $value;
-        }
-        if (is_string($value) && is_numeric($value)) {
-            return (float) $value;
-        }
-        return 0.0;
+        return TypeCoerce::toFloat($value);
     }
 
     /**
      * Safely extract an int from a mixed value.
+     *
+     * @deprecated 3.3.0 Use {@see TypeCoerce::toInt()} directly.
      */
     public static function toInt(mixed $value): int
     {
-        if (is_int($value)) {
-            return $value;
-        }
-        if (is_float($value)) {
-            return (int) $value;
-        }
-        if (is_string($value) && is_numeric($value)) {
-            return (int) $value;
-        }
-        return 0;
+        return TypeCoerce::toInt($value);
     }
 
     /**

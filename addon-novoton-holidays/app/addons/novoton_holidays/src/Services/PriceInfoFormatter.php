@@ -16,59 +16,40 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Services;
 
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+
 class PriceInfoFormatter
 {
     /**
      * Safely extract a scalar string value from a field that may be array/object
-     * (SimpleXML json_encode of empty elements produces [])
-     */
-    /**
+     * (SimpleXML json_encode of empty elements produces []).
+     *
      * @param mixed $value
+     * @deprecated 3.3.0 Use {@see TypeCoerce::toString()} directly.
      */
     public static function toScalar($value): string
     {
-        if (is_array($value) || is_object($value)) {
-            return '';
-        }
-        if ($value === null) {
-            return '';
-        }
-        if (is_bool($value)) {
-            return $value ? '1' : '';
-        }
-        // At this point $value is int|float|string
-        return trim((string) $value);
+        return TypeCoerce::toString($value);
     }
 
     /**
      * Safely extract a float value from a mixed field.
+     *
+     * @deprecated 3.3.0 Use {@see TypeCoerce::toFloat()} directly.
      */
     public static function toFloat(mixed $value): float
     {
-        if (is_float($value) || is_int($value)) {
-            return (float) $value;
-        }
-        if (is_string($value) && is_numeric($value)) {
-            return (float) $value;
-        }
-        return 0.0;
+        return TypeCoerce::toFloat($value);
     }
 
     /**
      * Safely extract an int value from a mixed field.
+     *
+     * @deprecated 3.3.0 Use {@see TypeCoerce::toInt()} directly.
      */
     public static function toInt(mixed $value): int
     {
-        if (is_int($value)) {
-            return $value;
-        }
-        if (is_float($value)) {
-            return (int) $value;
-        }
-        if (is_string($value) && is_numeric($value)) {
-            return (int) $value;
-        }
-        return 0;
+        return TypeCoerce::toInt($value);
     }
 
     /**
