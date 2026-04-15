@@ -625,41 +625,42 @@ if ($mode === 'compare') {
     echo '<div class="step">';
     echo '<div class="step-header"><span class="step-num">7</span><span class="step-title">Reduction (Free Nights)</span></div>';
 
-    $red = $breakdown['discounts']['reduction'] ?? [];
+    $red = TypeCoerce::toStringMap($discounts['reduction'] ?? []);
     $redApplicable = $red['applicable'] ?? false;
 
     if ($redApplicable) {
         $freeNights = $red['free_nights'] ?? 0;
-        $freeIndices = $red['free_night_indices'] ?? [];
-        echo '<p><span class="badge badge-active">APPLICABLE</span> Free nights: <strong>' . $freeNights . '</strong></p>';
+        $freeIndices = TypeCoerce::toList($red['free_night_indices'] ?? []);
+        echo '<p><span class="badge badge-active">APPLICABLE</span> Free nights: <strong>' . TypeCoerce::toString($freeNights) . '</strong></p>';
 
         // Show which nights are free
         if (!empty($freeIndices) && !empty($byNight)) {
             echo '<table>';
             echo '<tr><th>Night</th><th>Date</th><th>Status</th><th>Value (EUR)</th></tr>';
             foreach ($byNight as $idx => $n) {
+                $nArr = TypeCoerce::toStringMap($n);
                 $isFree = in_array($idx, $freeIndices);
                 echo '<tr' . ($isFree ? ' class="highlight-row"' : '') . '>';
                 echo '<td>' . ($idx + 1) . '</td>';
-                echo '<td>' . ($n['date'] ?? '-') . '</td>';
+                echo '<td>' . TypeCoerce::toString($nArr['date'] ?? '-') . '</td>';
                 echo '<td>' . ($isFree ? '<span class="badge badge-free">FREE</span>' : 'Paid') . '</td>';
-                echo '<td>' . ($isFree ? '-' . number_format($n['price'] ?? 0, 2) : number_format($n['price'] ?? 0, 2)) . '</td>';
+                echo '<td>' . ($isFree ? '-' . number_format(TypeCoerce::toFloat($nArr['price'] ?? 0), 2) : number_format(TypeCoerce::toFloat($nArr['price'] ?? 0), 2)) . '</td>';
                 echo '</tr>';
             }
             echo '</table>';
         }
 
-        $redBd = $red['discount_breakdown'] ?? [];
+        $redBd = TypeCoerce::toStringMap($red['discount_breakdown'] ?? []);
         echo '<table>';
         echo '<tr><th>Component</th><th>Discount (EUR)</th></tr>';
-        echo '<tr><td>Base Price of free nights</td><td>' . number_format($redBd['base_price'] ?? 0, 2) . '</td></tr>';
-        $redDaily = $redBd['extras_daily'] ?? 0;
+        echo '<tr><td>Base Price of free nights</td><td>' . number_format(TypeCoerce::toFloat($redBd['base_price'] ?? 0), 2) . '</td></tr>';
+        $redDaily = TypeCoerce::toFloat($redBd['extras_daily'] ?? 0);
         echo '<tr' . ($redDaily == 0 ? ' class="zero-value"' : '') . '><td>Extras Daily reduction (EXTToDaily)</td><td>' . number_format($redDaily, 2) . '</td></tr>';
-        $redRooms = $redBd['extras_rooms'] ?? 0;
+        $redRooms = TypeCoerce::toFloat($redBd['extras_rooms'] ?? 0);
         echo '<tr' . ($redRooms == 0 ? ' class="zero-value"' : '') . '><td>Extras Rooms reduction (EXTToRooms)</td><td>' . number_format($redRooms, 2) . '</td></tr>';
-        $redBoard = $redBd['extras_board'] ?? 0;
+        $redBoard = TypeCoerce::toFloat($redBd['extras_board'] ?? 0);
         echo '<tr' . ($redBoard == 0 ? ' class="zero-value"' : '') . '><td>Extras Board reduction (EXTToBoard)</td><td>' . number_format($redBoard, 2) . '</td></tr>';
-        echo '<tr class="total-row"><td>Total Reduction Discount</td><td>-' . number_format($red['discount'] ?? 0, 2) . '</td></tr>';
+        echo '<tr class="total-row"><td>Total Reduction Discount</td><td>-' . number_format(TypeCoerce::toFloat($red['discount'] ?? 0), 2) . '</td></tr>';
         echo '</table>';
     } else {
         echo '<p><span class="badge badge-inactive">NOT APPLICABLE</span> No free nights reduction for this stay.</p>';
@@ -672,15 +673,15 @@ if ($mode === 'compare') {
     echo '<div class="step">';
     echo '<div class="step-header"><span class="step-num">8</span><span class="step-title">Priority Rules &amp; Scenario Evaluation</span></div>';
 
-    $prioRules = $breakdown['priority_rules'] ?? [];
-    $scenarios = $prioRules['scenarios'] ?? [];
-    $appliedDiscount = $breakdown['applied_discount'] ?? 'none';
+    $prioRules = TypeCoerce::toStringMap($breakdown['priority_rules'] ?? []);
+    $scenarios = TypeCoerce::toStringMap($prioRules['scenarios'] ?? []);
+    $appliedDiscount = TypeCoerce::toString($breakdown['applied_discount'] ?? 'none');
 
     echo '<table>';
     echo '<tr><th>Setting</th><th>Value</th></tr>';
-    echo '<tr><td>Priority (combinable?)</td><td>' . ($prioRules['priority'] ?? 'No') . ' <span class="info-note">(' . (($prioRules['priority'] ?? 'No') === 'Yes' ? 'NOT combinable' : 'Combinable') . ')</span></td></tr>';
-    echo '<tr><td>PriorityEB (EB forced?)</td><td>' . ($prioRules['priority_eb'] ?? 'No') . '</td></tr>';
-    echo '<tr><td>PriorityEXT</td><td>' . ($prioRules['priority_ext'] ?? 'No') . '</td></tr>';
+    echo '<tr><td>Priority (combinable?)</td><td>' . TypeCoerce::toString($prioRules['priority'] ?? 'No') . ' <span class="info-note">(' . (TypeCoerce::toString($prioRules['priority'] ?? 'No') === 'Yes' ? 'NOT combinable' : 'Combinable') . ')</span></td></tr>';
+    echo '<tr><td>PriorityEB (EB forced?)</td><td>' . TypeCoerce::toString($prioRules['priority_eb'] ?? 'No') . '</td></tr>';
+    echo '<tr><td>PriorityEXT</td><td>' . TypeCoerce::toString($prioRules['priority_ext'] ?? 'No') . '</td></tr>';
     echo '</table>';
 
     if (!empty($scenarios)) {
@@ -698,11 +699,12 @@ if ($mode === 'compare') {
         foreach ($scenarioLabels as $sKey => $sLabel) {
             $sVal = $scenarios[$sKey] ?? null;
             if ($sVal === null) continue;
+            $sValF = TypeCoerce::toFloat($sVal);
             $isActive = ($sKey === $appliedDiscount);
-            $savings = ($scenarios['none'] ?? 0) - $sVal;
+            $savings = TypeCoerce::toFloat($scenarios['none'] ?? 0) - $sValF;
             echo '<tr' . ($isActive ? ' class="highlight-row"' : '') . '>';
             echo '<td>' . $sLabel . '</td>';
-            echo '<td>' . number_format($sVal, 2) . '</td>';
+            echo '<td>' . number_format($sValF, 2) . '</td>';
             echo '<td>' . ($savings > 0 ? '-' . number_format($savings, 2) : '-') . '</td>';
             echo '<td>' . ($isActive ? '<span class="badge badge-active">SELECTED</span>' : '') . '</td>';
             echo '</tr>';
@@ -710,7 +712,7 @@ if ($mode === 'compare') {
         echo '</table>';
     }
 
-    echo '<div class="formula">Selected: ' . htmlspecialchars($appliedDiscount) . ' | Discount amount: -' . number_format($breakdown['discount_amount'] ?? 0, 2) . ' EUR</div>';
+    echo '<div class="formula">Selected: ' . htmlspecialchars($appliedDiscount) . ' | Discount amount: -' . number_format(TypeCoerce::toFloat($breakdown['discount_amount'] ?? 0), 2) . ' EUR</div>';
     echo '</div>';
 
     // =========================================================================
@@ -721,15 +723,18 @@ if ($mode === 'compare') {
 
     echo '<table>';
     echo '<tr><th>Component</th><th>Amount (EUR)</th></tr>';
-    echo '<tr><td>Base Price</td><td>' . number_format($breakdown['base_price'] ?? 0, 2) . '</td></tr>';
-    echo '<tr><td>+ Total Fees</td><td>' . number_format($fees['total_fees'] ?? 0, 2) . '</td></tr>';
-    echo '<tr><td>- Discount (' . htmlspecialchars($appliedDiscount) . ')</td><td>-' . number_format($breakdown['discount_amount'] ?? 0, 2) . '</td></tr>';
-    echo '<tr class="total-row"><td>Price before commission</td><td>' . number_format($calcResult['price_without_commission'], 2) . '</td></tr>';
-    echo '<tr><td>Commission (' . $calcResult['commission'] . '%)</td><td>+' . number_format($calcResult['price'] - $calcResult['price_without_commission'], 2) . '</td></tr>';
-    echo '<tr class="total-row" style="font-size:16px;"><td>FINAL PRICE</td><td>' . number_format($calcResult['price'], 2) . ' EUR</td></tr>';
+    echo '<tr><td>Base Price</td><td>' . number_format(TypeCoerce::toFloat($breakdown['base_price'] ?? 0), 2) . '</td></tr>';
+    echo '<tr><td>+ Total Fees</td><td>' . number_format(TypeCoerce::toFloat($fees['total_fees'] ?? 0), 2) . '</td></tr>';
+    echo '<tr><td>- Discount (' . htmlspecialchars($appliedDiscount) . ')</td><td>-' . number_format(TypeCoerce::toFloat($breakdown['discount_amount'] ?? 0), 2) . '</td></tr>';
+    $calcPriceWithout = TypeCoerce::toFloat($calcResult['price_without_commission'] ?? 0);
+    $calcPriceFinal = TypeCoerce::toFloat($calcResult['price'] ?? 0);
+    $calcCommission = TypeCoerce::toString($calcResult['commission'] ?? '0');
+    echo '<tr class="total-row"><td>Price before commission</td><td>' . number_format($calcPriceWithout, 2) . '</td></tr>';
+    echo '<tr><td>Commission (' . $calcCommission . '%)</td><td>+' . number_format($calcPriceFinal - $calcPriceWithout, 2) . '</td></tr>';
+    echo '<tr class="total-row" style="font-size:16px;"><td>FINAL PRICE</td><td>' . number_format($calcPriceFinal, 2) . ' EUR</td></tr>';
     echo '</table>';
 
-    echo '<div class="formula">' . number_format($calcResult['price_without_commission'], 2) . ' &times; (1 + ' . $calcResult['commission'] . '% ) = ' . number_format($calcResult['price'], 2) . ' EUR</div>';
+    echo '<div class="formula">' . number_format($calcPriceWithout, 2) . ' &times; (1 + ' . $calcCommission . '% ) = ' . number_format($calcPriceFinal, 2) . ' EUR</div>';
     echo '</div>';
 
     // =========================================================================
