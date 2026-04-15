@@ -111,7 +111,7 @@ interface HotelPackageRepositoryInterface
 
     /**
      * Get package names with priceinfo data for a hotel (for AJAX dropdown).
-     * @return array<string, mixed>
+     * @return list<array<string, mixed>>
      */
     public function findPackageNamesWithPriceinfo(string $hotelId): array;
 
@@ -122,13 +122,13 @@ interface HotelPackageRepositoryInterface
 
     /**
      * Get package_id and package_name pairs for a hotel.
-     * @return array<string, mixed>
+     * @return list<array<string, mixed>>
      */
     public function getPackageIdNamePairs(string $hotelId): array;
 
     /**
      * Get package listing data for hotel detail view.
-     * @return array<string, mixed>
+     * @return list<array<string, mixed>>
      */
     public function findForHotelDetail(string $hotelId): array;
 

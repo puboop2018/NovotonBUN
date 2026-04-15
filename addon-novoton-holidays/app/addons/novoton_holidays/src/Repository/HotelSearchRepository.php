@@ -19,6 +19,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Repository;
 
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Repository\RowNarrowingTrait;
 
 class HotelSearchRepository implements HotelSearchRepositoryInterface
@@ -284,11 +285,11 @@ class HotelSearchRepository implements HotelSearchRepositoryInterface
     #[\Override]
     public function findIdsWithPriceinfoData(): array
     {
-        return db_get_fields(
+        return self::asStringList(db_get_fields(
             "SELECT DISTINCT h.hotel_id FROM ?:novoton_hotels h
              INNER JOIN ?:novoton_hotel_packages p ON h.hotel_id = p.hotel_id
              WHERE p.priceinfo_data IS NOT NULL AND p.priceinfo_data != ''",
-        );
+        ));
     }
 
     /**
@@ -297,7 +298,7 @@ class HotelSearchRepository implements HotelSearchRepositoryInterface
     #[\Override]
     public function findLinkedForSeo(int $offset, int $batch): array
     {
-        return db_get_array(
+        return self::asRowList(db_get_array(
             'SELECT hotel_id, product_id, hotel_name, city, country, region,
                     star_rating, hotel_type, property_type, latitude, longitude
              FROM ?:novoton_hotels
@@ -305,7 +306,7 @@ class HotelSearchRepository implements HotelSearchRepositoryInterface
              LIMIT ?i, ?i',
             $offset,
             $batch,
-        );
+        ));
     }
 
     /**
@@ -314,7 +315,7 @@ class HotelSearchRepository implements HotelSearchRepositoryInterface
     #[\Override]
     public function findWithPriceinfoData(int $limit = 200): array
     {
-        return db_get_array(
+        return self::asRowList(db_get_array(
             'SELECT DISTINCT h.hotel_id, h.hotel_name
              FROM ?:novoton_hotels h
              INNER JOIN ?:novoton_hotel_packages p ON h.hotel_id = p.hotel_id
@@ -322,7 +323,7 @@ class HotelSearchRepository implements HotelSearchRepositoryInterface
              ORDER BY h.hotel_name
              LIMIT ?i',
             $limit,
-        );
+        ));
     }
 
     /**
@@ -332,7 +333,7 @@ class HotelSearchRepository implements HotelSearchRepositoryInterface
     public function count(array $filters = []): int
     {
         $where = $this->buildWhereClause($filters);
-        return (int) db_get_field("SELECT COUNT(*) FROM ?:novoton_hotels {$where}");
+        return TypeCoerce::toInt(db_get_field("SELECT COUNT(*) FROM ?:novoton_hotels {$where}"));
     }
 
     /**

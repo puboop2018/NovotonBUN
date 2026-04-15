@@ -625,7 +625,8 @@ if ($mode === 'manage') {
                 $totalInRegion = count($citiesInRegion);
                 $whitelistedInRegion = 0;
                 foreach ($citiesInRegion as $city) {
-                    if (isset($whitelistMap[(int) $city['destination_id']])) {
+                    $cityDestId = \Tygh\Addons\TravelCore\Helpers\TypeCoerce::toInt($city['destination_id'] ?? 0);
+                    if (isset($whitelistMap[$cityDestId])) {
                         $whitelistedInRegion++;
                         $totalCities++;
                     }

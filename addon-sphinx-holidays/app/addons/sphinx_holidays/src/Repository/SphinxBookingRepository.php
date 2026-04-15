@@ -15,30 +15,34 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays\Repository;
 
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+use Tygh\Addons\TravelCore\Repository\RowNarrowingTrait;
 use Tygh\Addons\TravelCore\TravelConstants;
 
 class SphinxBookingRepository
 {
+    use RowNarrowingTrait;
+
     /**
      * Find booking by ID (raw DB row).
      * @return array<string, mixed>|null
      */
     public function findById(int $booking_id): ?array
     {
-        $booking = db_get_row('SELECT * FROM ?:sphinx_bookings WHERE booking_id = ?i', $booking_id);
-        return $booking ?: null;
+        $booking = self::asRow(db_get_row('SELECT * FROM ?:sphinx_bookings WHERE booking_id = ?i', $booking_id));
+        return $booking === [] ? null : $booking;
     }
 
     /**
      * Find bookings by order ID.
-     * @return array<string, mixed>
+     * @return list<array<string, mixed>>
      */
     public function findByOrderId(int $order_id): array
     {
-        return db_get_array(
+        return self::asRowList(db_get_array(
             'SELECT * FROM ?:sphinx_bookings WHERE order_id = ?i ORDER BY booking_id',
             $order_id,
-        );
+        ));
     }
 
     /**
@@ -53,12 +57,12 @@ class SphinxBookingRepository
      */
     public function findPendingDuplicateByOffer(string $offerId, string $pendingStatus): ?int
     {
-        $id = db_get_field(
+        $id = TypeCoerce::toInt(db_get_field(
             'SELECT booking_id FROM ?:sphinx_bookings WHERE offer_id = ?s AND order_id > 0 AND status = ?s LIMIT 1',
             $offerId,
             $pendingStatus,
-        );
-        return $id !== false && $id !== '' ? (int) $id : null;
+        ));
+        return $id > 0 ? $id : null;
     }
 
     /**
@@ -66,7 +70,7 @@ class SphinxBookingRepository
      */
     public function findRecentUnassigned(string $hotel_id, string $check_in, string $check_out, string $holder_name): ?int
     {
-        $id = db_get_field(
+        $id = TypeCoerce::toInt(db_get_field(
             'SELECT booking_id FROM ?:sphinx_bookings
              WHERE order_id = 0 AND hotel_id = ?s AND check_in = ?s AND check_out = ?s
                AND holder_name = ?s AND created_at > DATE_SUB(NOW(), INTERVAL 1 HOUR)
@@ -75,8 +79,8 @@ class SphinxBookingRepository
             $check_in,
             $check_out,
             $holder_name,
-        );
-        return $id !== false && $id !== '' ? (int) $id : null;
+        ));
+        return $id > 0 ? $id : null;
     }
 
     /**
@@ -88,7 +92,7 @@ class SphinxBookingRepository
         $data = self::filterNullValues($data);
 
         return $this->withTransaction(function () use ($data): int {
-            $booking_id = (int) db_query('INSERT INTO ?:sphinx_bookings ?e', $data);
+            $booking_id = TypeCoerce::toInt(db_query('INSERT INTO ?:sphinx_bookings ?e', $data));
 
             if ($booking_id > 0) {
                 $this->syncToTravelBookings($booking_id, $data);
@@ -160,13 +164,12 @@ class SphinxBookingRepository
         );
 
         if ($affected > 0) {
-            $booking_ids = db_get_fields(
+            $id_strings = self::asStringList(db_get_fields(
                 'SELECT booking_id FROM ?:sphinx_bookings WHERE session_id = ?s AND user_id = ?i',
                 $session_id,
                 $user_id,
-            );
-            if (!empty($booking_ids)) {
-                $id_strings = array_map('strval', $booking_ids);
+            ));
+            if (!empty($id_strings)) {
                 db_query(
                     "UPDATE ?:travel_bookings SET user_id = ?i WHERE provider = 'sphinx' AND provider_booking_id IN (?a)",
                     $user_id,
@@ -340,11 +343,11 @@ class SphinxBookingRepository
      *
      * @param list<string> $terminalStatuses Statuses to exclude
      * @param int $daysBack How many days back to look
-     * @return array<string, mixed>
+     * @return list<array<string, mixed>>
      */
     public function findForStatusCheck(array $terminalStatuses, int $daysBack = 90): array
     {
-        return db_get_array(
+        return self::asRowList(db_get_array(
             'SELECT booking_id, order_id, hotel_name, room_type, status, api_booking_ref
              FROM ?:sphinx_bookings
              WHERE order_id > 0
@@ -353,7 +356,7 @@ class SphinxBookingRepository
              ORDER BY created_at DESC',
             $terminalStatuses,
             $daysBack,
-        );
+        ));
     }
 
     /**

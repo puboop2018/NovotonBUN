@@ -203,9 +203,6 @@ use Tygh\Addons\TravelCore\Services\CurrencyService;
     $db_packages = $packageRepo->getPackageIdNamePairs($booking['hotel_id']);
     if (!empty($db_packages)) {
         foreach ($db_packages as $pkg) {
-            if (!is_array($pkg)) {
-                continue;
-            }
             $all_packages[] = [
                 'IdCont' => PriceInfoFormatter::toScalar($pkg['package_id'] ?? ''),
                 'PackageName' => PriceInfoFormatter::toScalar($pkg['package_name'] ?? '')

@@ -259,7 +259,7 @@ class ConfigProvider implements ConfigProviderInterface
      * destinations under that country. For 'specific', includes only the
      * explicitly listed destinations.
      *
-     * @param array<string, mixed> $entries Rows from sphinx_destination_whitelist
+     * @param list<array<string, mixed>> $entries Rows from sphinx_destination_whitelist
      * @return int[] Deduplicated destination IDs
      */
     private static function resolveWhitelistEntries(array $entries): array

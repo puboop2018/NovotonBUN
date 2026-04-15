@@ -13,16 +13,21 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Repository;
 
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+use Tygh\Addons\TravelCore\Repository\RowNarrowingTrait;
+
 class SyncLogRepository implements SyncLogRepositoryInterface
 {
+    use RowNarrowingTrait;
+
     /**
      * Find log by ID
-     * @return list<array<string, mixed>>|null
+     * @return array<string, mixed>|null
      */
     public function findById(int $log_id): ?array
     {
-        $log = db_get_row('SELECT * FROM ?:novoton_sync_log WHERE log_id = ?i', $log_id);
-        return $log ?: null;
+        $log = self::asRow(db_get_row('SELECT * FROM ?:novoton_sync_log WHERE log_id = ?i', $log_id));
+        return $log === [] ? null : $log;
     }
 
     /**
@@ -36,10 +41,10 @@ class SyncLogRepository implements SyncLogRepositoryInterface
             $where = db_quote('WHERE sync_type = ?s', $type);
         }
 
-        return db_get_array(
+        return self::asRowList(db_get_array(
             "SELECT * FROM ?:novoton_sync_log {$where} ORDER BY sync_date DESC LIMIT ?i",
             $limit,
-        );
+        ));
     }
 
     /**
@@ -49,10 +54,10 @@ class SyncLogRepository implements SyncLogRepositoryInterface
     public function findByType(string $type, int $limit = 0): array
     {
         $limit_clause = $limit > 0 ? db_quote(' LIMIT ?i', $limit) : '';
-        return db_get_array(
+        return self::asRowList(db_get_array(
             "SELECT * FROM ?:novoton_sync_log WHERE sync_type = ?s ORDER BY sync_date DESC {$limit_clause}",
             $type,
-        );
+        ));
     }
 
     /**
@@ -61,11 +66,11 @@ class SyncLogRepository implements SyncLogRepositoryInterface
      */
     public function getLastSync(string $type): ?array
     {
-        $log = db_get_row(
+        $log = self::asRow(db_get_row(
             'SELECT * FROM ?:novoton_sync_log WHERE sync_type = ?s ORDER BY sync_date DESC LIMIT 1',
             $type,
-        );
-        return $log ?: null;
+        ));
+        return $log === [] ? null : $log;
     }
 
     /**
@@ -73,11 +78,11 @@ class SyncLogRepository implements SyncLogRepositoryInterface
      */
     public function getLastSyncDate(string $type): ?string
     {
-        $result = db_get_field(
+        $result = TypeCoerce::toString(db_get_field(
             'SELECT sync_date FROM ?:novoton_sync_log WHERE sync_type = ?s ORDER BY sync_date DESC LIMIT 1',
             $type,
-        );
-        return $result ?: null;
+        ));
+        return $result === '' ? null : $result;
     }
 
     /**
@@ -98,8 +103,7 @@ class SyncLogRepository implements SyncLogRepositoryInterface
         ];
 
         $log_data = array_filter($log_data, static fn ($v) => $v !== null);
-        $log_id = db_query('INSERT INTO ?:novoton_sync_log ?e', $log_data);
-        return (int) $log_id;
+        return TypeCoerce::toInt(db_query('INSERT INTO ?:novoton_sync_log ?e', $log_data));
     }
 
     /**
@@ -134,9 +138,9 @@ class SyncLogRepository implements SyncLogRepositoryInterface
     public function count(string $type = ''): int
     {
         if (!empty($type)) {
-            return (int) db_get_field('SELECT COUNT(*) FROM ?:novoton_sync_log WHERE sync_type = ?s', $type);
+            return TypeCoerce::toInt(db_get_field('SELECT COUNT(*) FROM ?:novoton_sync_log WHERE sync_type = ?s', $type));
         }
-        return (int) db_get_field('SELECT COUNT(*) FROM ?:novoton_sync_log');
+        return TypeCoerce::toInt(db_get_field('SELECT COUNT(*) FROM ?:novoton_sync_log'));
     }
 
     /**
@@ -158,11 +162,11 @@ class SyncLogRepository implements SyncLogRepositoryInterface
             $where = db_quote('WHERE sync_type = ?s', $type);
         }
 
-        $items = db_get_array(
+        $items = self::asRowList(db_get_array(
             "SELECT * FROM ?:novoton_sync_log {$where} ORDER BY sync_date DESC LIMIT ?i OFFSET ?i",
             $per_page,
             $offset,
-        );
+        ));
 
         $total = $this->count($type);
         $pages = (int) ceil($total / $per_page);
@@ -187,11 +191,11 @@ class SyncLogRepository implements SyncLogRepositoryInterface
         if ($total <= $keep) {
             return 0;
         }
-        $threshold_id = db_get_field(
+        $threshold_id = TypeCoerce::toInt(db_get_field(
             'SELECT log_id FROM ?:novoton_sync_log ORDER BY sync_date DESC LIMIT 1 OFFSET ?i',
             $keep - 1,
-        );
-        if (!$threshold_id) {
+        ));
+        if ($threshold_id <= 0) {
             return 0;
         }
         return (int) db_query('DELETE FROM ?:novoton_sync_log WHERE log_id < ?i', $threshold_id);
@@ -199,11 +203,11 @@ class SyncLogRepository implements SyncLogRepositoryInterface
 
     /**
      * Get sync statistics
-     * @return array<string, mixed>
+     * @return array<string, array<string, mixed>>
      */
     public function getStats(int $days = 7): array
     {
-        $stats = db_get_array(
+        $stats = self::asRowList(db_get_array(
             'SELECT sync_type,
                     COUNT(*) as count,
                     SUM(products_total) as total_processed,
@@ -214,11 +218,15 @@ class SyncLogRepository implements SyncLogRepositoryInterface
              WHERE sync_date > DATE_SUB(NOW(), INTERVAL ?i DAY)
              GROUP BY sync_type',
             $days,
-        );
+        ));
 
         $result = [];
         foreach ($stats as $row) {
-            $result[$row['sync_type']] = $row;
+            $syncType = TypeCoerce::toString($row['sync_type'] ?? '');
+            if ($syncType === '') {
+                continue;
+            }
+            $result[$syncType] = $row;
         }
         return $result;
     }

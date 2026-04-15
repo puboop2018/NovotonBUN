@@ -13,8 +13,13 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Repository;
 
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+use Tygh\Addons\TravelCore\Repository\RowNarrowingTrait;
+
 class FacilityRepository implements FacilityRepositoryInterface
 {
+    use RowNarrowingTrait;
+
     /** @var array<string, string> Allowed facility name columns by language */
     private const array NAME_COLUMNS = [
         'ro' => 'facility_name_ro',
@@ -28,12 +33,12 @@ class FacilityRepository implements FacilityRepositoryInterface
 
     /**
      * Find facility by ID
-     * @return list<array<string, mixed>>|null
+     * @return array<string, mixed>|null
      */
     public function findById(int $facility_id): ?array
     {
-        $facility = db_get_row('SELECT * FROM ?:novoton_facilities WHERE facility_id = ?i', $facility_id);
-        return $facility ?: null;
+        $facility = self::asRow(db_get_row('SELECT * FROM ?:novoton_facilities WHERE facility_id = ?i', $facility_id));
+        return $facility === [] ? null : $facility;
     }
 
     /**
@@ -43,7 +48,7 @@ class FacilityRepository implements FacilityRepositoryInterface
     public function findAll(string $lang = 'en'): array
     {
         $col = self::nameField($lang);
-        return db_get_array("SELECT facility_id, {$col} as facility_name FROM ?:novoton_facilities ORDER BY {$col}");
+        return self::asRowList(db_get_array("SELECT facility_id, {$col} as facility_name FROM ?:novoton_facilities ORDER BY {$col}"));
     }
 
     /**
@@ -52,7 +57,7 @@ class FacilityRepository implements FacilityRepositoryInterface
      */
     public function findAllFull(): array
     {
-        return db_get_array('SELECT * FROM ?:novoton_facilities ORDER BY facility_name_en');
+        return self::asRowList(db_get_array('SELECT * FROM ?:novoton_facilities ORDER BY facility_name_en'));
     }
 
     /**
@@ -60,7 +65,7 @@ class FacilityRepository implements FacilityRepositoryInterface
      */
     public function exists(int $facility_id): bool
     {
-        return (bool) db_get_field('SELECT 1 FROM ?:novoton_facilities WHERE facility_id = ?i', $facility_id);
+        return TypeCoerce::toInt(db_get_field('SELECT 1 FROM ?:novoton_facilities WHERE facility_id = ?i', $facility_id)) > 0;
     }
 
     /**
@@ -104,7 +109,7 @@ class FacilityRepository implements FacilityRepositoryInterface
      */
     public function count(): int
     {
-        return (int) db_get_field('SELECT COUNT(*) FROM ?:novoton_facilities');
+        return TypeCoerce::toInt(db_get_field('SELECT COUNT(*) FROM ?:novoton_facilities'));
     }
 
     // =========================================================================
@@ -113,29 +118,29 @@ class FacilityRepository implements FacilityRepositoryInterface
 
     /**
      * Get facilities for a hotel
-     * @return array<string, mixed>
+     * @return list<array<string, mixed>>
      */
     public function getForHotel(string $hotel_id, string $lang = 'en'): array
     {
         $col = self::nameField($lang);
 
-        return db_get_array(
+        return self::asRowList(db_get_array(
             "SELECT f.facility_id, f.{$col} as facility_name
              FROM ?:novoton_hotel_facilities hf
              LEFT JOIN ?:novoton_facilities f ON hf.facility_id = f.facility_id
              WHERE hf.hotel_id = ?s
              ORDER BY f.{$col}",
             $hotel_id,
-        );
+        ));
     }
 
     /**
      * Get facility IDs for a hotel
-     * @return array<string, mixed>
+     * @return list<int>
      */
     public function getIdsForHotel(string $hotel_id): array
     {
-        return db_get_fields('SELECT facility_id FROM ?:novoton_hotel_facilities WHERE hotel_id = ?s', $hotel_id);
+        return self::asIntList(db_get_fields('SELECT facility_id FROM ?:novoton_hotel_facilities WHERE hotel_id = ?s', $hotel_id));
     }
 
     /**
@@ -197,10 +202,10 @@ class FacilityRepository implements FacilityRepositoryInterface
      */
     public function countHotelsWithFacility(int $facility_id): int
     {
-        return (int) db_get_field(
+        return TypeCoerce::toInt(db_get_field(
             'SELECT COUNT(*) FROM ?:novoton_hotel_facilities WHERE facility_id = ?i',
             $facility_id,
-        );
+        ));
     }
 
     // =========================================================================
@@ -209,13 +214,13 @@ class FacilityRepository implements FacilityRepositoryInterface
 
     /**
      * Get facilities for a hotel filtered by feature type (hotel_facility, room_facility, travel_group, beach_access)
-     * @return array<string, mixed>
+     * @return list<array<string, mixed>>
      */
     public function getForHotelByType(string $hotel_id, string $facility_type, string $lang = 'en'): array
     {
         $col = self::nameField($lang);
 
-        return db_get_array(
+        return self::asRowList(db_get_array(
             "SELECT f.facility_id, f.{$col} as facility_name
              FROM ?:novoton_hotel_facilities hf
              JOIN ?:novoton_facilities f ON hf.facility_id = f.facility_id
@@ -223,30 +228,34 @@ class FacilityRepository implements FacilityRepositoryInterface
              ORDER BY f.{$col}",
             $hotel_id,
             $facility_type,
-        );
+        ));
     }
 
     /**
      * Get all facilities for a hotel, grouped by feature type.
      * Returns ['hotel_facility' => [['facility_id' => 1, ...], ...], 'travel_group' => [...], ...]
-     * @return array<string, mixed>
+     * @return array<string, list<array<string, mixed>>>
      */
     public function getForHotelGroupedByType(string $hotel_id, string $lang = 'en'): array
     {
         $col = self::nameField($lang);
 
-        $rows = db_get_array(
+        $rows = self::asRowList(db_get_array(
             "SELECT f.facility_id, f.facility_type, f.{$col} as facility_name
              FROM ?:novoton_hotel_facilities hf
              JOIN ?:novoton_facilities f ON hf.facility_id = f.facility_id
              WHERE hf.hotel_id = ?s
              ORDER BY f.facility_type, f.{$col}",
             $hotel_id,
-        );
+        ));
 
         $grouped = [];
         foreach ($rows as $row) {
-            $grouped[$row['facility_type']][] = $row;
+            $type = TypeCoerce::toString($row['facility_type'] ?? '');
+            if ($type === '') {
+                continue;
+            }
+            $grouped[$type][] = $row;
         }
         return $grouped;
     }
@@ -284,7 +293,7 @@ class FacilityRepository implements FacilityRepositoryInterface
      */
     public function getLastSyncedAt(): ?string
     {
-        $val = db_get_field('SELECT MAX(synced_at) FROM ?:novoton_facilities');
-        return ($val !== false && $val !== '' && $val !== null) ? (string) $val : null;
+        $val = TypeCoerce::toString(db_get_field('SELECT MAX(synced_at) FROM ?:novoton_facilities'));
+        return $val === '' ? null : $val;
     }
 }

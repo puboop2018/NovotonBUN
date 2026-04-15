@@ -13,18 +13,22 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Repository;
 
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+use Tygh\Addons\TravelCore\Repository\RowNarrowingTrait;
 use Tygh\Addons\TravelCore\TravelConstants;
 
 class AlternativeRequestRepository implements AlternativeRequestRepositoryInterface
 {
+    use RowNarrowingTrait;
+
     /**
      * Find request by ID.
      * @return array<string, mixed>|null
      */
     public function findById(int $request_id): ?array
     {
-        $row = db_get_row('SELECT * FROM ?:novoton_alternative_requests WHERE request_id = ?i', $request_id);
-        return $row ?: null;
+        $row = self::asRow(db_get_row('SELECT * FROM ?:novoton_alternative_requests WHERE request_id = ?i', $request_id));
+        return $row === [] ? null : $row;
     }
 
     /**
@@ -34,7 +38,7 @@ class AlternativeRequestRepository implements AlternativeRequestRepositoryInterf
     public function create(array $data): int
     {
         db_query('INSERT INTO ?:novoton_alternative_requests ?e', $data);
-        return (int) db_get_field('SELECT LAST_INSERT_ID()');
+        return TypeCoerce::toInt(db_get_field('SELECT LAST_INSERT_ID()'));
     }
 
     /**
@@ -43,7 +47,7 @@ class AlternativeRequestRepository implements AlternativeRequestRepositoryInterf
      */
     public function findPendingOlderThan(int $hours = 24, int $limit = 50): array
     {
-        return db_get_array(
+        return self::asRowList(db_get_array(
             "SELECT * FROM ?:novoton_alternative_requests
              WHERE status = ?s
              AND novoton_request_id IS NOT NULL AND novoton_request_id != ''
@@ -52,7 +56,7 @@ class AlternativeRequestRepository implements AlternativeRequestRepositoryInterf
             TravelConstants::STATUS_PENDING,
             $hours,
             $limit,
-        );
+        ));
     }
 
     /**
@@ -61,14 +65,14 @@ class AlternativeRequestRepository implements AlternativeRequestRepositoryInterf
      */
     public function findPendingWithApiRef(): array
     {
-        return db_get_array(
+        return self::asRowList(db_get_array(
             "SELECT request_id, novoton_request_id, hotel_name, contact_email
              FROM ?:novoton_alternative_requests
              WHERE status = ?s
                AND novoton_request_id != ''
                AND novoton_request_id IS NOT NULL",
             TravelConstants::STATUS_PENDING,
-        );
+        ));
     }
 
     /**
@@ -77,12 +81,12 @@ class AlternativeRequestRepository implements AlternativeRequestRepositoryInterf
      */
     public function findUnnotified(int $limit = 20): array
     {
-        return db_get_array(
+        return self::asRowList(db_get_array(
             "SELECT * FROM ?:novoton_alternative_requests
              WHERE status = 'alternatives_found'
              ORDER BY updated_at ASC LIMIT ?i",
             $limit,
-        );
+        ));
     }
 
     /**
@@ -156,10 +160,10 @@ class AlternativeRequestRepository implements AlternativeRequestRepositoryInterf
      */
     public function countFiltered(string $whereSql = '', array $params = []): int
     {
-        return (int) db_get_field(
+        return TypeCoerce::toInt(db_get_field(
             "SELECT COUNT(*) FROM ?:novoton_alternative_requests {$whereSql}",
             ...$params,
-        );
+        ));
     }
 
     /**
@@ -171,10 +175,10 @@ class AlternativeRequestRepository implements AlternativeRequestRepositoryInterf
      */
     public function findFiltered(string $whereSql = '', array $params = [], int $limit = 30, int $offset = 0): array
     {
-        return db_get_array(
+        return self::asRowList(db_get_array(
             "SELECT * FROM ?:novoton_alternative_requests {$whereSql} ORDER BY created_at DESC LIMIT ?i, ?i",
             ...array_merge($params, [$offset, $limit]),
-        );
+        ));
     }
 
     /**
@@ -184,9 +188,19 @@ class AlternativeRequestRepository implements AlternativeRequestRepositoryInterf
      */
     public function getStatusCounts(): array
     {
-        return db_get_hash_single_array(
+        $raw = db_get_hash_single_array(
             'SELECT status, COUNT(*) as cnt FROM ?:novoton_alternative_requests GROUP BY status',
             ['status', 'cnt'],
         );
+        if (!is_array($raw)) {
+            return [];
+        }
+        $out = [];
+        foreach ($raw as $k => $v) {
+            if (is_string($k)) {
+                $out[$k] = TypeCoerce::toInt($v);
+            }
+        }
+        return $out;
     }
 }

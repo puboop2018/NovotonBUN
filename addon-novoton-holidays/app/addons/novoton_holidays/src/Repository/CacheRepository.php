@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Repository;
 
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+use Tygh\Addons\TravelCore\Repository\RowNarrowingTrait;
+
 /**
  * Cache repository — wraps novoton_cache table.
  *
@@ -11,16 +14,24 @@ namespace Tygh\Addons\NovotonHolidays\Repository;
  */
 class CacheRepository implements CacheRepositoryInterface
 {
+    use RowNarrowingTrait;
+
     /**
-     * @return list<array<string, mixed>>|null
+     * @return array{cache_data: string, expires_at: int}|null
      */
     public function findByKey(string $key): ?array
     {
-        $row = db_get_row(
+        $row = self::asRow(db_get_row(
             'SELECT cache_data, expires_at FROM ?:novoton_cache WHERE cache_key = ?s',
             $key,
-        );
-        return $row ?: null;
+        ));
+        if ($row === []) {
+            return null;
+        }
+        return [
+            'cache_data' => TypeCoerce::toString($row['cache_data'] ?? ''),
+            'expires_at' => TypeCoerce::toInt($row['expires_at'] ?? 0),
+        ];
     }
 
     public function upsert(string $key, string $data, int $expiresAt): void
@@ -56,14 +67,14 @@ class CacheRepository implements CacheRepositoryInterface
 
     public function countAll(): int
     {
-        return (int) db_get_field('SELECT COUNT(*) FROM ?:novoton_cache');
+        return TypeCoerce::toInt(db_get_field('SELECT COUNT(*) FROM ?:novoton_cache'));
     }
 
     public function countExpired(): int
     {
-        return (int) db_get_field(
+        return TypeCoerce::toInt(db_get_field(
             'SELECT COUNT(*) FROM ?:novoton_cache WHERE expires_at < ?i',
             time(),
-        );
+        ));
     }
 }

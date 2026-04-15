@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays\Repository;
 
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+
 /**
  * Repository for sphinx_package_routes table.
  *
@@ -18,15 +20,15 @@ class PackageRouteRepository
      */
     public function findByUniqueKey(string $transportType, int $departureId, int $arrivalId, int $duration): ?int
     {
-        $id = db_get_field(
+        $id = TypeCoerce::toInt(db_get_field(
             'SELECT route_id FROM ?:sphinx_package_routes
              WHERE transport_type = ?s AND departure_id = ?i AND arrival_id = ?i AND duration = ?i',
             $transportType,
             $departureId,
             $arrivalId,
             $duration,
-        );
-        return ($id !== false && $id !== '') ? (int) $id : null;
+        ));
+        return $id > 0 ? $id : null;
     }
 
     /**
@@ -54,9 +56,9 @@ class PackageRouteRepository
      */
     public function getCountryCodeForDestination(int $destinationId): string
     {
-        return (string) db_get_field(
+        return TypeCoerce::toString(db_get_field(
             'SELECT country_code FROM ?:sphinx_destinations WHERE destination_id = ?i',
             $destinationId,
-        );
+        ));
     }
 }

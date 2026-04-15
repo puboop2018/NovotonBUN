@@ -24,8 +24,13 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Repository;
 
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+use Tygh\Addons\TravelCore\Repository\RowNarrowingTrait;
+
 class HotelRepository implements HotelRepositoryInterface
 {
+    use RowNarrowingTrait;
+
     private readonly HotelSearchRepositoryInterface $search;
     private readonly HotelReportingRepositoryInterface $reporting;
     private readonly HotelCacheRepositoryInterface $cache;
@@ -61,13 +66,13 @@ class HotelRepository implements HotelRepositoryInterface
         last_price_check, created_at, updated_at';
 
     /**
-     * @return list<array<string, mixed>>|null
+     * @return array<string, mixed>|null
      */
     #[\Override]
     public function findById(string $hotel_id): ?array
     {
-        $hotel = db_get_row('SELECT * FROM ?:novoton_hotels WHERE hotel_id = ?s', $hotel_id);
-        return $hotel ?: null;
+        $hotel = self::asRow(db_get_row('SELECT * FROM ?:novoton_hotels WHERE hotel_id = ?s', $hotel_id));
+        return $hotel === [] ? null : $hotel;
     }
 
     /**
@@ -76,34 +81,34 @@ class HotelRepository implements HotelRepositoryInterface
     #[\Override]
     public function findBasicById(string $hotel_id): ?array
     {
-        $hotel = db_get_row(
+        $hotel = self::asRow(db_get_row(
             'SELECT ' . self::LISTING_COLUMNS . ' FROM ?:novoton_hotels WHERE hotel_id = ?s',
             $hotel_id,
-        );
-        return $hotel ?: null;
+        ));
+        return $hotel === [] ? null : $hotel;
     }
 
     /**
-     * @return list<array<string, mixed>>|null
+     * @return array<string, mixed>|null
      */
     #[\Override]
     public function findByProductId(int $product_id): ?array
     {
-        $hotel = db_get_row('SELECT * FROM ?:novoton_hotels WHERE product_id = ?i', $product_id);
-        return $hotel ?: null;
+        $hotel = self::asRow(db_get_row('SELECT * FROM ?:novoton_hotels WHERE product_id = ?i', $product_id));
+        return $hotel === [] ? null : $hotel;
     }
 
     #[\Override]
     public function getHotelIdByProduct(int $product_id): ?string
     {
-        $hotel_id = db_get_field('SELECT hotel_id FROM ?:novoton_hotels WHERE product_id = ?i', $product_id);
-        return ($hotel_id !== false && $hotel_id !== '') ? (string) $hotel_id : null;
+        $hotel_id = TypeCoerce::toString(db_get_field('SELECT hotel_id FROM ?:novoton_hotels WHERE product_id = ?i', $product_id));
+        return $hotel_id === '' ? null : $hotel_id;
     }
 
     #[\Override]
     public function exists(string $hotel_id): bool
     {
-        return (bool) db_get_field('SELECT 1 FROM ?:novoton_hotels WHERE hotel_id = ?s', $hotel_id);
+        return TypeCoerce::toInt(db_get_field('SELECT 1 FROM ?:novoton_hotels WHERE hotel_id = ?s', $hotel_id)) > 0;
     }
 
     /**
@@ -193,24 +198,33 @@ class HotelRepository implements HotelRepositoryInterface
         if (empty($hotel_ids)) {
             return [];
         }
-        $rows = db_get_array(
+        $rows = self::asRowList(db_get_array(
             'SELECT hotel_id, city, region, country FROM ?:novoton_hotels WHERE hotel_id IN (?a)',
             $hotel_ids,
-        );
+        ));
         $result = [];
         foreach ($rows as $row) {
-            $result[$row['hotel_id']] = $row;
+            $hotelId = TypeCoerce::toString($row['hotel_id'] ?? '');
+            if ($hotelId === '') {
+                continue;
+            }
+            $result[$hotelId] = [
+                'hotel_id' => $hotelId,
+                'city' => TypeCoerce::toString($row['city'] ?? ''),
+                'region' => TypeCoerce::toString($row['region'] ?? ''),
+                'country' => TypeCoerce::toString($row['country'] ?? ''),
+            ];
         }
         return $result;
     }
 
     /**
-     * @return string[]
+     * @return list<string>
      */
     #[\Override]
     public function getAllIds(): array
     {
-        return db_get_fields('SELECT hotel_id FROM ?:novoton_hotels');
+        return self::asStringList(db_get_fields('SELECT hotel_id FROM ?:novoton_hotels'));
     }
 
     // ════════════════════════════════════════════════════════════════════

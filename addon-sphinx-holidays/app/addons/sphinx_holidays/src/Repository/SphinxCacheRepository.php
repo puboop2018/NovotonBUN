@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays\Repository;
 
+use Tygh\Addons\TravelCore\Repository\RowNarrowingTrait;
+
 /**
  * Cache repository — wraps sphinx_cache table.
  *
@@ -11,16 +13,18 @@ namespace Tygh\Addons\SphinxHolidays\Repository;
  */
 class SphinxCacheRepository
 {
+    use RowNarrowingTrait;
+
     /**
      * @return array<string, mixed>|null
      */
     public function findByKey(string $key): ?array
     {
-        $row = db_get_row(
+        $row = self::asRow(db_get_row(
             'SELECT cache_data, expires_at FROM ?:sphinx_cache WHERE cache_key = ?s',
             $key,
-        );
-        return $row ?: null;
+        ));
+        return $row === [] ? null : $row;
     }
 
     public function upsert(string $key, string $data, int $expiresAt): void

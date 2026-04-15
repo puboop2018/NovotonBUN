@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\TravelCore\Repository;
 
 use Tygh\Addons\TravelCore\Contracts\FeatureMapRepositoryInterface;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 /**
  * Database-backed repository for travel_feature_map + travel_api_alias.
@@ -14,12 +15,14 @@ use Tygh\Addons\TravelCore\Contracts\FeatureMapRepositoryInterface;
  */
 class FeatureMapRepository implements FeatureMapRepositoryInterface
 {
+    use RowNarrowingTrait;
+
     // ── Resolve / lookup ──
 
     #[\Override]
     public function findByAlias(string $apiSource, string $featureType, string $apiValue): ?array
     {
-        $result = db_get_row(
+        $result = self::asRow(db_get_row(
             "SELECT m.map_id, m.feature_type, m.canonical_code, m.display_name_en, m.display_name_ro,
                     m.cscart_feature_id, m.cscart_variant_id, m.variant_source
              FROM ?:travel_api_alias a
@@ -41,9 +44,9 @@ class FeatureMapRepository implements FeatureMapRepositoryInterface
             $apiValue,
             $apiValue,
             $apiValue,
-        );
+        ));
 
-        return $result ?: null;
+        return $result === [] ? null : $result;
     }
 
     #[\Override]
@@ -51,25 +54,25 @@ class FeatureMapRepository implements FeatureMapRepositoryInterface
     {
         $column = $lang === 'ro' ? 'display_name_ro' : 'display_name_en';
 
-        return (string) db_get_field(
+        return TypeCoerce::toString(db_get_field(
             "SELECT `{$column}` FROM ?:travel_feature_map WHERE feature_type = ?s AND canonical_code = ?s AND status = 'A'",
             $featureType,
             $canonicalCode,
-        );
+        ));
     }
 
     /** @return array<string, array<string, mixed>> */
     #[\Override]
     public function allCodes(string $featureType): array
     {
-        return db_get_hash_array(
+        return self::asRowMap(db_get_hash_array(
             "SELECT canonical_code, map_id, display_name_en, display_name_ro, cscart_variant_id
              FROM ?:travel_feature_map
              WHERE feature_type = ?s AND status = 'A'
              ORDER BY position, canonical_code",
             'canonical_code',
             $featureType,
-        );
+        ));
     }
 
     // ── Mutations ──
@@ -214,8 +217,8 @@ class FeatureMapRepository implements FeatureMapRepositoryInterface
     #[\Override]
     public function getUnmappedById(int $unmappedId): ?array
     {
-        $row = db_get_row('SELECT * FROM ?:travel_unmapped_values WHERE unmapped_id = ?i', $unmappedId);
-        return $row ?: null;
+        $row = self::asRow(db_get_row('SELECT * FROM ?:travel_unmapped_values WHERE unmapped_id = ?i', $unmappedId));
+        return $row === [] ? null : $row;
     }
 
     // ── Batch operations ──
@@ -234,9 +237,9 @@ class FeatureMapRepository implements FeatureMapRepositoryInterface
     #[\Override]
     public function getFeatureTypesWithoutFeatureId(): array
     {
-        return db_get_fields(
+        return self::asStringList(db_get_fields(
             'SELECT DISTINCT feature_type FROM ?:travel_feature_map WHERE cscart_feature_id = 0 OR cscart_feature_id IS NULL',
-        );
+        ));
     }
 
     #[\Override]
@@ -249,16 +252,16 @@ class FeatureMapRepository implements FeatureMapRepositoryInterface
         );
     }
 
-    /** @return array<int, array<string, mixed>> */
+    /** @return list<array<string, mixed>> */
     #[\Override]
     public function getUnresolvedMappings(): array
     {
-        return db_get_array(
+        return self::asRowList(db_get_array(
             "SELECT * FROM ?:travel_feature_map
              WHERE (cscart_variant_id IS NULL OR cscart_variant_id = 0)
              AND cscart_feature_id > 0 AND status = 'A'
              AND (variant_source IS NULL OR variant_source != 'manual')",
-        );
+        ));
     }
 
     // ── Stats / listing ──
@@ -267,7 +270,7 @@ class FeatureMapRepository implements FeatureMapRepositoryInterface
     #[\Override]
     public function getTypeStats(): array
     {
-        return db_get_hash_array(
+        return self::asRowMap(db_get_hash_array(
             "SELECT m.feature_type,
                     COUNT(*) AS total,
                     SUM(m.status = 'A') AS active,
@@ -279,44 +282,44 @@ class FeatureMapRepository implements FeatureMapRepositoryInterface
              GROUP BY m.feature_type
              ORDER BY FIELD(m.feature_type, 'hotel_facility', 'room_facility', 'beach_access', 'board', 'resort', 'stars', 'property_type', 'travel_group', 'room_type', 'region', 'city')",
             'feature_type',
-        );
+        ));
     }
 
     /** @return array<string, mixed> */
     #[\Override]
     public function getGlobalStats(): array
     {
-        $row = db_get_row(
+        $row = self::asRow(db_get_row(
             "SELECT COUNT(*) AS total,
                     SUM(status = 'A') AS active,
                     SUM(cscart_variant_id IS NULL OR cscart_variant_id = 0) AS unmapped
              FROM ?:travel_feature_map",
-        );
+        ));
 
         return [
-            'total' => (int) ($row['total'] ?? 0),
-            'active' => (int) ($row['active'] ?? 0),
-            'unmapped' => (int) ($row['unmapped'] ?? 0),
-            'aliases' => (int) db_get_field('SELECT COUNT(*) FROM ?:travel_api_alias'),
+            'total' => TypeCoerce::toInt($row['total'] ?? 0),
+            'active' => TypeCoerce::toInt($row['active'] ?? 0),
+            'unmapped' => TypeCoerce::toInt($row['unmapped'] ?? 0),
+            'aliases' => TypeCoerce::toInt(db_get_field('SELECT COUNT(*) FROM ?:travel_api_alias')),
         ];
     }
 
     #[\Override]
     public function getUnmappedCount(): int
     {
-        return (int) db_get_field('SELECT COUNT(*) FROM ?:travel_unmapped_values');
+        return TypeCoerce::toInt(db_get_field('SELECT COUNT(*) FROM ?:travel_unmapped_values'));
     }
 
-    /** @return array{items: array<int, array<string, mixed>>, total: int} */
+    /** @return array{items: list<array<string, mixed>>, total: int} */
     #[\Override]
     public function getPaginatedMappings(string $condition, int $offset, int $limit): array
     {
-        $total = (int) db_get_field(
+        $total = TypeCoerce::toInt(db_get_field(
             'SELECT COUNT(*) FROM ?:travel_feature_map m WHERE 1 ?p',
             $condition,
-        );
+        ));
 
-        $items = db_get_array(
+        $items = self::asRowList(db_get_array(
             "SELECT m.*, COUNT(a.alias_id) as alias_count,
                     GROUP_CONCAT(DISTINCT a.api_source ORDER BY a.api_source) as api_sources
              FROM ?:travel_feature_map m
@@ -328,7 +331,7 @@ class FeatureMapRepository implements FeatureMapRepositoryInterface
             $condition,
             $offset,
             $limit,
-        );
+        ));
 
         return ['items' => $items, 'total' => $total];
     }
@@ -337,36 +340,36 @@ class FeatureMapRepository implements FeatureMapRepositoryInterface
     #[\Override]
     public function getTypeStatsSingle(string $featureType): array
     {
-        $row = db_get_row(
+        $row = self::asRow(db_get_row(
             "SELECT COUNT(*) AS total,
                     SUM(status = 'A') AS active,
                     SUM(cscart_variant_id IS NULL OR cscart_variant_id = 0) AS unmapped
              FROM ?:travel_feature_map WHERE feature_type = ?s",
             $featureType,
-        );
+        ));
 
         return [
-            'total' => (int) ($row['total'] ?? 0),
-            'active' => (int) ($row['active'] ?? 0),
-            'unmapped' => (int) ($row['unmapped'] ?? 0),
+            'total' => TypeCoerce::toInt($row['total'] ?? 0),
+            'active' => TypeCoerce::toInt($row['active'] ?? 0),
+            'unmapped' => TypeCoerce::toInt($row['unmapped'] ?? 0),
         ];
     }
 
-    /** @return array{items: array<int, array<string, mixed>>, total: int} */
+    /** @return array{items: list<array<string, mixed>>, total: int} */
     #[\Override]
     public function getPaginatedUnmapped(string $condition, int $offset, int $limit): array
     {
-        $total = (int) db_get_field(
+        $total = TypeCoerce::toInt(db_get_field(
             'SELECT COUNT(*) FROM ?:travel_unmapped_values WHERE 1 ?p',
             $condition,
-        );
+        ));
 
-        $items = db_get_array(
+        $items = self::asRowList(db_get_array(
             'SELECT * FROM ?:travel_unmapped_values WHERE 1 ?p ORDER BY hotel_count DESC, last_seen_at DESC LIMIT ?i, ?i',
             $condition,
             $offset,
             $limit,
-        );
+        ));
 
         return ['items' => $items, 'total' => $total];
     }
@@ -375,26 +378,27 @@ class FeatureMapRepository implements FeatureMapRepositoryInterface
     #[\Override]
     public function getMappingById(int $mapId): ?array
     {
-        $row = db_get_row('SELECT * FROM ?:travel_feature_map WHERE map_id = ?i', $mapId);
-        return $row ?: null;
+        $row = self::asRow(db_get_row('SELECT * FROM ?:travel_feature_map WHERE map_id = ?i', $mapId));
+        return $row === [] ? null : $row;
     }
 
-    /** @return array<int, array<string, mixed>> */
+    /** @return list<array<string, mixed>> */
     #[\Override]
     public function getAliasesForMapping(int $mapId): array
     {
-        return db_get_array(
+        return self::asRowList(db_get_array(
             'SELECT * FROM ?:travel_api_alias WHERE map_id = ?i ORDER BY api_source, api_value',
             $mapId,
-        );
+        ));
     }
 
     // ── CS-Cart feature/variant operations (used by admin controller) ──
 
+    /** @return list<string> */
     #[\Override]
     public function getActiveLanguageCodes(): array
     {
-        return db_get_fields("SELECT lang_code FROM ?:languages WHERE status = 'A'");
+        return self::asStringList(db_get_fields("SELECT lang_code FROM ?:languages WHERE status = 'A'"));
     }
 
     #[\Override]
@@ -427,39 +431,43 @@ class FeatureMapRepository implements FeatureMapRepositoryInterface
     #[\Override]
     public function countHotelsWithJsonFacilities(string $table, string $jsonCol): int
     {
-        return (int) db_get_field(
+        return TypeCoerce::toInt(db_get_field(
             "SELECT COUNT(*) FROM ?:{$table} WHERE {$jsonCol} IS NOT NULL AND {$jsonCol} != '[]'",
-        );
+        ));
     }
 
+    /** @return list<array<string, mixed>> */
     #[\Override]
     public function findHotelsBatchForScan(string $table, string $idCol, string $jsonCol, int $offset, int $limit): array
     {
-        return db_get_array(
+        return self::asRowList(db_get_array(
             "SELECT {$idCol}, {$jsonCol} FROM ?:{$table} " .
             "WHERE {$jsonCol} IS NOT NULL AND {$jsonCol} != '[]' " .
             "ORDER BY {$idCol} LIMIT ?i, ?i",
             $offset,
             $limit,
-        );
+        ));
     }
 
+    /** @return list<array<string, mixed>> */
     #[\Override]
     public function findAllCsCartFeatures(string $langCode): array
     {
-        return db_get_array(
+        return self::asRowList(db_get_array(
             'SELECT f.feature_id, f.feature_type, fd.description
              FROM ?:product_features f
              LEFT JOIN ?:product_features_descriptions fd ON f.feature_id = fd.feature_id AND fd.lang_code = ?s
              ORDER BY fd.description',
             $langCode,
-        );
+        ));
     }
 
+    /** @return list<array{variant_id: int|string, name: string|null}> */
     #[\Override]
     public function findVariantsForFeature(int $featureId, string $langCode): array
     {
-        return db_get_array(
+        /** @var list<array{variant_id: int|string, name: string|null}> $rows */
+        $rows = self::asRowList(db_get_array(
             'SELECT v.variant_id, vd.variant as name
              FROM ?:product_feature_variants v
              LEFT JOIN ?:product_feature_variant_descriptions vd ON v.variant_id = vd.variant_id AND vd.lang_code = ?s
@@ -467,6 +475,7 @@ class FeatureMapRepository implements FeatureMapRepositoryInterface
              ORDER BY v.position, vd.variant',
             $langCode,
             $featureId,
-        );
+        ));
+        return $rows;
     }
 }

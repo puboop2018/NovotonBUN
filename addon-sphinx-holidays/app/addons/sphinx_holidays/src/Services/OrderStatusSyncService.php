@@ -293,7 +293,7 @@ class OrderStatusSyncService implements OrderStatusSyncServiceInterface
      * - Are linked to an order (order_id > 0)
      * - Have a non-terminal status (not already cancelled)
      * - Were created in the last 90 days
-     * @return array<string, mixed>
+     * @return list<array<string, mixed>>
      */
     private function getBookingsToCheck(): array
     {

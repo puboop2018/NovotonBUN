@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\TravelCore\Repository;
 
 use Tygh\Addons\TravelCore\Contracts\TravelBookingRepositoryInterface;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 /**
  * Database-backed repository for the travel_bookings table.
@@ -42,10 +43,10 @@ class TravelBookingRepository implements TravelBookingRepositoryInterface
     #[\Override]
     public function getPaginated(string $condition, string $sortColumn, string $sortOrder, int $offset, int $limit): array
     {
-        $total = (int) db_get_field(
+        $total = TypeCoerce::toInt(db_get_field(
             'SELECT COUNT(*) FROM ?:travel_bookings tb WHERE 1 ?p',
             $condition,
-        );
+        ));
 
         $items = self::asRowList(db_get_array(
             "SELECT tb.* FROM ?:travel_bookings tb
