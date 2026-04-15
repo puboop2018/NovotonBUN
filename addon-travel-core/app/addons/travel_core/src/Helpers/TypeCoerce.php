@@ -143,6 +143,44 @@ final class TypeCoerce
     }
 
     /**
+     * Coerce a mixed value into a list of strings (e.g. `db_get_fields()` output).
+     *
+     * Non-arrays return `[]`. Each entry is passed through {@see self::toString()}.
+     *
+     * @return list<string>
+     */
+    public static function toStringList(mixed $value): array
+    {
+        if (!is_array($value)) {
+            return [];
+        }
+        $out = [];
+        foreach ($value as $item) {
+            $out[] = self::toString($item);
+        }
+        return $out;
+    }
+
+    /**
+     * Coerce a mixed value into a list of ints (e.g. `db_get_fields()` on an id column).
+     *
+     * Non-arrays return `[]`. Each entry is passed through {@see self::toInt()}.
+     *
+     * @return list<int>
+     */
+    public static function toIntList(mixed $value): array
+    {
+        if (!is_array($value)) {
+            return [];
+        }
+        $out = [];
+        foreach ($value as $item) {
+            $out[] = self::toInt($item);
+        }
+        return $out;
+    }
+
+    /**
      * Coerce a mixed value into an `array<int, array<string, mixed>>` —
      * the shape of `db_get_array()` with a row-per-entry.
      *

@@ -6,6 +6,7 @@ namespace Tygh\Addons\SphinxHolidays\Cron\Commands;
 
 use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
 use Tygh\Addons\SphinxHolidays\Services\Container;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Helpers\ValidationHelpers;
 use Tygh\Addons\TravelCore\Services\FeatureMapper;
 
@@ -172,13 +173,15 @@ class AddProductsCommand extends AbstractSyncCommand
             $state['total'] = $stateTotal;
 
             // Resolve destination hierarchies for this batch
-            $destinationIds = array_filter(array_unique(array_column($hotels, 'destination_id')));
+            $destinationIds = array_values(array_filter(array_unique(
+                array_map(
+                    static fn ($v): int => (int) $v,
+                    array_column($hotels, 'destination_id'),
+                ),
+            )));
             $hierarchyMap = !empty($destinationIds) ? $destRepo->resolveHierarchies($destinationIds) : [];
 
             foreach ($hotels as $hotel) {
-                if (!is_array($hotel)) {
-                    continue;
-                }
                 $hotelId = ValidationHelpers::toString($hotel['hotel_id'] ?? '');
                 $hotelName = ValidationHelpers::toString($hotel['name'] ?? '');
                 $destId = ValidationHelpers::toInt($hotel['destination_id'] ?? 0);
@@ -494,17 +497,18 @@ class AddProductsCommand extends AbstractSyncCommand
      */
     private function getSkippedBreakdown(): array
     {
-        $rows = db_get_array(
+        $rows = TypeCoerce::toRowList(db_get_array(
             "SELECT product_skip_reason, COUNT(*) AS cnt
              FROM ?:sphinx_hotels
              WHERE product_skip_reason IS NOT NULL AND sync_status = 'active'
              GROUP BY product_skip_reason
              ORDER BY cnt DESC",
-        );
+        ));
 
         $result = [];
         foreach ($rows as $row) {
-            $result[$row['product_skip_reason']] = (int) $row['cnt'];
+            $result[TypeCoerce::toString($row['product_skip_reason'] ?? '')]
+                = TypeCoerce::toInt($row['cnt'] ?? 0);
         }
         return $result;
     }

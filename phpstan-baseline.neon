@@ -5775,67 +5775,7 @@ parameters:
 		-
 			message: '#^Cannot cast mixed to int\.$#'
 			identifier: cast.int
-			count: 12
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepository\:\:findAllForExport\(\) should return list\<array\<string, mixed\>\> but returns mixed\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepository\:\:findByIdWithOwnership\(\) should return list\<array\<string, mixed\>\>\|null but returns mixed\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepository\:\:findByNovotonStatus\(\) should return list\<array\<string, mixed\>\> but returns mixed\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepository\:\:findExisting\(\) should return array\<string, mixed\>\|null but returns array\<mixed, mixed\>\|null\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepository\:\:findForAdminList\(\) should return list\<array\<string, mixed\>\> but returns mixed\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepository\:\:findRqWithoutAlternatives\(\) should return list\<array\<string, mixed\>\> but returns mixed\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepository\:\:findWithOrderDetails\(\) should return array\<string, mixed\>\|null but returns mixed\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepository\:\:getGuestsData\(\) should return string\|null but returns mixed\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepository\:\:getTerms\(\) should return array\<string, mixed\>\|null but returns mixed\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepository.php
-
-		-
-			message: '#^Parameter \#1 \$callback of function array_map expects \(callable\(mixed\)\: mixed\)\|null, ''strval'' given\.$#'
-			identifier: argument.type
-			count: 3
+			count: 10
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepository.php
 
 		-
@@ -5848,12 +5788,6 @@ parameters:
 			message: '#^Parameter \#1 \$raw of method Tygh\\Addons\\TravelCore\\Services\\GuestDataNormalizer\:\:normalize\(\) expects array\<string, mixed\>\|string, mixed given\.$#'
 			identifier: argument.type
 			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepository.php
-
-		-
-			message: '#^Parameter \#2 \$array of function array_map expects array, mixed given\.$#'
-			identifier: argument.type
-			count: 3
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepository.php
 
 		-
@@ -6133,42 +6067,6 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepository.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepository\:\:findAll\(\) should return list\<array\<string, mixed\>\> but returns mixed\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepository\:\:findAllForListing\(\) should return list\<array\<string, mixed\>\> but returns mixed\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepository\:\:findByCountry\(\) should return list\<array\<string, mixed\>\> but returns mixed\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepository\:\:findByCountryForListing\(\) should return list\<array\<string, mixed\>\> but returns mixed\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepository\:\:findByCountryIndexed\(\) should return array\<string, array\<string, mixed\>\> but returns mixed\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepository\:\:findByCountryWithLimit\(\) should return list\<array\<string, mixed\>\> but returns mixed\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepository.php
-
-		-
 			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepository\:\:findForImport\(\) should return list\<array\<string, mixed\>\> but returns mixed\.$#'
 			identifier: return.type
 			count: 1
@@ -6224,12 +6122,6 @@ parameters:
 
 		-
 			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepository\:\:findWithProductsSortedByStaleness\(\) should return list\<array\<string, mixed\>\> but returns mixed\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelSearchRepository\:\:findWithoutPackages\(\) should return list\<array\<string, mixed\>\> but returns mixed\.$#'
 			identifier: return.type
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepository.php
@@ -7425,7 +7317,7 @@ parameters:
 		-
 			message: '#^Cannot cast mixed to string\.$#'
 			identifier: cast.string
-			count: 2
+			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoFormatter.php
 
 		-
@@ -7495,19 +7387,7 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoService.php
 
 		-
-			message: '#^Parameter \#1 \$seasonPrices of method Tygh\\Addons\\NovotonHolidays\\Services\\PriceInfoService\:\:getCheapestRoomTotalBySeason\(\) expects array\<string, mixed\>, array\<mixed\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoService.php
-
-		-
 			message: '#^Parameter \#1 \$string of function trim expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoService.php
-
-		-
-			message: '#^Parameter \#2 \$seasons of method Tygh\\Addons\\NovotonHolidays\\Services\\PriceInfoService\:\:getCheapestRoomTotalBySeason\(\) expects array\<string, mixed\>, array\<mixed, mixed\> given\.$#'
 			identifier: argument.type
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoService.php
@@ -8101,43 +7981,19 @@ parameters:
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/backend/sphinx_holidays.php
 
 		-
-			message: '#^Cannot access offset ''children'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/backend/sphinx_holidays.php
-
-		-
 			message: '#^Cannot access offset ''classification'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
-			count: 2
+			count: 1
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/backend/sphinx_holidays.php
 
 		-
 			message: '#^Cannot access offset ''country_code'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
-			count: 5
+			count: 1
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/backend/sphinx_holidays.php
 
 		-
 			message: '#^Cannot access offset ''destination_id'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 6
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/backend/sphinx_holidays.php
-
-		-
-			message: '#^Cannot access offset ''destination_name'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/backend/sphinx_holidays.php
-
-		-
-			message: '#^Cannot access offset ''full_path'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/backend/sphinx_holidays.php
-
-		-
-			message: '#^Cannot access offset ''hotel_id'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/backend/sphinx_holidays.php
@@ -8152,12 +8008,6 @@ parameters:
 			message: '#^Cannot access offset ''link_status'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/backend/sphinx_holidays.php
-
-		-
-			message: '#^Cannot access offset ''name'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 4
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/backend/sphinx_holidays.php
 
 		-
@@ -8186,12 +8036,6 @@ parameters:
 
 		-
 			message: '#^Cannot access offset ''total_items'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/backend/sphinx_holidays.php
-
-		-
-			message: '#^Cannot access offset ''type'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/backend/sphinx_holidays.php
@@ -9657,7 +9501,7 @@ parameters:
 		-
 			message: '#^Argument of an invalid type mixed supplied for foreach, only iterables are supported\.$#'
 			identifier: foreach.nonIterable
-			count: 3
+			count: 2
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/AddProductsCommand.php
 
 		-
@@ -9673,18 +9517,6 @@ parameters:
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/AddProductsCommand.php
 
 		-
-			message: '#^Cannot access offset ''cnt'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/AddProductsCommand.php
-
-		-
-			message: '#^Cannot access offset ''product_skip_reason'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/AddProductsCommand.php
-
-		-
 			message: '#^Cannot cast mixed to int\.$#'
 			identifier: cast.int
 			count: 1
@@ -9693,12 +9525,6 @@ parameters:
 		-
 			message: '#^Cannot cast mixed to string\.$#'
 			identifier: cast.string
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/AddProductsCommand.php
-
-		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Cron\\Commands\\AddProductsCommand\:\:getSkippedBreakdown\(\) should return array\<string, int\> but returns array\<int\>\.$#'
-			identifier: return.type
 			count: 1
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/AddProductsCommand.php
 
@@ -9727,27 +9553,9 @@ parameters:
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/AddProductsCommand.php
 
 		-
-			message: '#^Parameter \#1 \$array of function array_unique expects an array of values castable to string, list given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/AddProductsCommand.php
-
-		-
 			message: '#^Parameter \#1 \$datetime of function strtotime expects string, mixed given\.$#'
 			identifier: argument.type
 			count: 2
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/AddProductsCommand.php
-
-		-
-			message: '#^Parameter \#1 \$destinationIds of method Tygh\\Addons\\SphinxHolidays\\Repository\\DestinationRepository\:\:resolveHierarchies\(\) expects array\<int\>, array\<int, mixed\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/AddProductsCommand.php
-
-		-
-			message: '#^Parameter \#1 \$hotel of method Tygh\\Addons\\SphinxHolidays\\Helpers\\SphinxProductFactoryInterface\:\:createFromHotel\(\) expects array\<string, mixed\>, array\<mixed\> given\.$#'
-			identifier: argument.type
-			count: 1
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/AddProductsCommand.php
 
 		-
@@ -9789,12 +9597,6 @@ parameters:
 		-
 			message: '#^Part \$state\[''last_run_at''\] \(mixed\) of encapsed string cannot be cast to string\.$#'
 			identifier: encapsedStringPart.nonString
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/AddProductsCommand.php
-
-		-
-			message: '#^Possibly invalid array key type mixed\.$#'
-			identifier: offsetAccess.invalidOffset
 			count: 1
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/AddProductsCommand.php
 
@@ -9844,12 +9646,6 @@ parameters:
 			message: '#^Parameter \#1 \$datetime of function strtotime expects string, mixed given\.$#'
 			identifier: argument.type
 			count: 2
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/AssignBoardsCommand.php
-
-		-
-			message: '#^Parameter \#2 \$hotel of method Tygh\\Addons\\SphinxHolidays\\Services\\SphinxFeatureAssigner\:\:assignAll\(\) expects array\<string, mixed\>, array\<mixed\> given\.$#'
-			identifier: argument.type
-			count: 1
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/AssignBoardsCommand.php
 
 		-
@@ -10729,12 +10525,6 @@ parameters:
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Helpers/SphinxProductFactory.php
 
 		-
-			message: '#^Argument of an invalid type mixed supplied for foreach, only iterables are supported\.$#'
-			identifier: foreach.nonIterable
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Repository/DestinationRepository.php
-
-		-
 			message: '#^Binary operation "\.\=" between '''' and mixed results in an error\.$#'
 			identifier: assignOp.invalid
 			count: 1
@@ -10753,68 +10543,8 @@ parameters:
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Repository/DestinationRepository.php
 
 		-
-			message: '#^Cannot access offset ''destination_id'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Repository/DestinationRepository.php
-
-		-
 			message: '#^Cannot cast mixed to int\.$#'
 			identifier: cast.int
-			count: 5
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Repository/DestinationRepository.php
-
-		-
-			message: '#^Cannot cast mixed to string\.$#'
-			identifier: cast.string
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Repository/DestinationRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Repository\\DestinationRepository\:\:findByExactName\(\) should return array\<string, mixed\> but returns mixed\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Repository/DestinationRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Repository\\DestinationRepository\:\:findByNameOrPath\(\) should return array\<string, mixed\> but returns mixed\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Repository/DestinationRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Repository\\DestinationRepository\:\:getChildren\(\) should return array\<string, mixed\> but returns mixed\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Repository/DestinationRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Repository\\DestinationRepository\:\:getCitiesByParent\(\) should return array\<string, mixed\> but returns mixed\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Repository/DestinationRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Repository\\DestinationRepository\:\:getContinents\(\) should return array\<string, mixed\> but returns mixed\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Repository/DestinationRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Repository\\DestinationRepository\:\:getCountries\(\) should return array\<string, mixed\> but returns mixed\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Repository/DestinationRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Repository\\DestinationRepository\:\:getFiltered\(\) should return array\{items\: array\<int, array\<string, mixed\>\>, total\: int\} but returns array\{items\: mixed, total\: int\}\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Repository/DestinationRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Repository\\DestinationRepository\:\:getRegionsByCountry\(\) should return array\<string, mixed\> but returns mixed\.$#'
-			identifier: return.type
 			count: 1
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Repository/DestinationRepository.php
 
@@ -10822,36 +10552,6 @@ parameters:
 			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Repository\\DestinationRepository\:\:loadChunked\(\) should return array\<int, array\<string, mixed\>\> but returns array\<int, mixed\>\.$#'
 			identifier: return.type
 			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Repository/DestinationRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Repository\\DestinationRepository\:\:resolveHierarchies\(\) should return array\<int, array\{city\: string, region\: string, region_id\: int, country\: string, country_code\: string\}\> but returns non\-empty\-array\<int, array\{city\: mixed, region\: mixed, region_id\: int\<0, max\>, country\: mixed, country_code\: mixed\}\>\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Repository/DestinationRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Repository\\DestinationRepository\:\:search\(\) should return array\<string, mixed\> but returns mixed\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Repository/DestinationRepository.php
-
-		-
-			message: '#^Parameter \#1 \$value of function count expects array\|Countable, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Repository/DestinationRepository.php
-
-		-
-			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, list\<mixed\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Repository/DestinationRepository.php
-
-		-
-			message: '#^Possibly invalid array key type mixed\.$#'
-			identifier: offsetAccess.invalidOffset
-			count: 5
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Repository/DestinationRepository.php
 
 		-
@@ -10903,12 +10603,6 @@ parameters:
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Repository/DestinationWhitelistRepository.php
 
 		-
-			message: '#^Argument of an invalid type mixed supplied for foreach, only iterables are supported\.$#'
-			identifier: foreach.nonIterable
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Repository/HotelRepository.php
-
-		-
 			message: '#^Binary operation "\.\=" between '' AND h\.boards_json…'' and mixed results in an error\.$#'
 			identifier: assignOp.invalid
 			count: 2
@@ -10933,123 +10627,9 @@ parameters:
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Repository/HotelRepository.php
 
 		-
-			message: '#^Cannot access offset ''cnt'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Repository/HotelRepository.php
-
-		-
-			message: '#^Cannot access offset ''country_code'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Repository/HotelRepository.php
-
-		-
 			message: '#^Cannot cast mixed to int\.$#'
 			identifier: cast.int
-			count: 11
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Repository/HotelRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Repository\\HotelRepository\:\:fetchLinkedBatchForSeo\(\) should return array\<string, mixed\> but returns mixed\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Repository/HotelRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Repository\\HotelRepository\:\:findUnlinked\(\) should return array\<string, mixed\> but returns mixed\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Repository/HotelRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Repository\\HotelRepository\:\:findWithBoardsAndProduct\(\) should return array\<string, mixed\> but returns mixed\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Repository/HotelRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Repository\\HotelRepository\:\:getByDestination\(\) should return array\<string, mixed\> but returns mixed\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Repository/HotelRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Repository\\HotelRepository\:\:getById\(\) should return array\<string, mixed\>\|null but returns mixed\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Repository/HotelRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Repository\\HotelRepository\:\:getCountsByCountry\(\) should return array\<string, int\> but returns array\<int\>\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Repository/HotelRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Repository\\HotelRepository\:\:getDestinationIdsByCountry\(\) should return array\<int\> but returns mixed\.$#'
-			identifier: return.type
-			count: 2
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Repository/HotelRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Repository\\HotelRepository\:\:getDistinctCountries\(\) should return array\<string\> but returns mixed\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Repository/HotelRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Repository\\HotelRepository\:\:getDistinctPropertyTypes\(\) should return array\<string\> but returns mixed\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Repository/HotelRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Repository\\HotelRepository\:\:getFiltered\(\) should return array\{items\: array\<int, array\<string, mixed\>\>, total\: int\} but returns array\{items\: mixed, total\: int\}\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Repository/HotelRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Repository\\HotelRepository\:\:getHotelIdsByDestination\(\) should return array\<string, string\> but returns mixed\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Repository/HotelRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Repository\\HotelRepository\:\:getLastSyncedAt\(\) should return string\|null but returns mixed\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Repository/HotelRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Repository\\HotelRepository\:\:search\(\) should return array\<string, mixed\> but returns mixed\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Repository/HotelRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Repository\\HotelRepository\:\:searchByName\(\) should return array\<string, mixed\> but returns mixed\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Repository/HotelRepository.php
-
-		-
-			message: '#^Parameter \#1 \$callback of function array_map expects \(callable\(mixed\)\: mixed\)\|null, ''intval'' given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Repository/HotelRepository.php
-
-		-
-			message: '#^Parameter \#2 \$array of function array_map expects array, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Repository/HotelRepository.php
-
-		-
-			message: '#^Possibly invalid array key type mixed\.$#'
-			identifier: offsetAccess.invalidOffset
-			count: 1
+			count: 10
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Repository/HotelRepository.php
 
 		-
@@ -13309,12 +12889,6 @@ parameters:
 			path: addon-travel-core/app/addons/travel_core/src/Cron/CronRunner.php
 
 		-
-			message: '#^Cannot cast mixed to string\.$#'
-			identifier: cast.string
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Helpers/ValidationHelpers.php
-
-		-
 			message: '#^Cannot access offset ''active'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 2
@@ -13431,24 +13005,6 @@ parameters:
 		-
 			message: '#^Cannot cast mixed to int\.$#'
 			identifier: cast.int
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Repository/TravelBookingRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Repository\\TravelBookingRepository\:\:getById\(\) should return array\<string, mixed\>\|null but returns mixed\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Repository/TravelBookingRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Repository\\TravelBookingRepository\:\:getPaginated\(\) should return array\{items\: array\<int, array\<string, mixed\>\>, total\: int\} but returns array\{items\: mixed, total\: int\}\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Repository/TravelBookingRepository.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Repository\\TravelBookingRepository\:\:getProviderInfo\(\) should return array\<string, mixed\>\|null but returns mixed\.$#'
-			identifier: return.type
 			count: 1
 			path: addon-travel-core/app/addons/travel_core/src/Repository/TravelBookingRepository.php
 

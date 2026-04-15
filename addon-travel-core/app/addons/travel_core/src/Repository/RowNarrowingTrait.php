@@ -95,4 +95,28 @@ trait RowNarrowingTrait
     {
         return TypeCoerce::toStringMap($rows);
     }
+
+    /**
+     * Normalise `db_get_fields()` output to a list of strings.
+     *
+     * Non-array input returns `[]`; each entry is coerced via {@see TypeCoerce::toString()}.
+     *
+     * @return list<string>
+     */
+    protected static function asStringList(mixed $rows): array
+    {
+        return TypeCoerce::toStringList($rows);
+    }
+
+    /**
+     * Normalise `db_get_fields()` output to a list of ints.
+     *
+     * Non-array input returns `[]`; each entry is coerced via {@see TypeCoerce::toInt()}.
+     *
+     * @return list<int>
+     */
+    protected static function asIntList(mixed $rows): array
+    {
+        return TypeCoerce::toIntList($rows);
+    }
 }

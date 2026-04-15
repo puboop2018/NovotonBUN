@@ -19,8 +19,12 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Repository;
 
+use Tygh\Addons\TravelCore\Repository\RowNarrowingTrait;
+
 class HotelSearchRepository implements HotelSearchRepositoryInterface
 {
+    use RowNarrowingTrait;
+
     /**
      * Core columns for hotel listing (excludes large hotel_data JSON).
      *
@@ -43,7 +47,7 @@ class HotelSearchRepository implements HotelSearchRepositoryInterface
         $where = $this->buildWhereClause($filters);
         $limit_clause = $limit > 0 ? db_quote(' LIMIT ?i, ?i', $offset, $limit) : '';
 
-        return db_get_array('SELECT ' . self::LISTING_COLUMNS . " FROM ?:novoton_hotels {$where} ORDER BY hotel_name {$limit_clause}");
+        return self::asRowList(db_get_array('SELECT ' . self::LISTING_COLUMNS . " FROM ?:novoton_hotels {$where} ORDER BY hotel_name {$limit_clause}"));
     }
 
     /**
@@ -56,7 +60,7 @@ class HotelSearchRepository implements HotelSearchRepositoryInterface
         $where = $this->buildWhereClause($filters);
         $limit_clause = $limit > 0 ? db_quote(' LIMIT ?i, ?i', $offset, $limit) : '';
 
-        return db_get_array('SELECT ' . self::LISTING_COLUMNS . " FROM ?:novoton_hotels {$where} ORDER BY hotel_name {$limit_clause}");
+        return self::asRowList(db_get_array('SELECT ' . self::LISTING_COLUMNS . " FROM ?:novoton_hotels {$where} ORDER BY hotel_name {$limit_clause}"));
     }
 
     /**
@@ -65,7 +69,7 @@ class HotelSearchRepository implements HotelSearchRepositoryInterface
     #[\Override]
     public function findByCountry(string $country): array
     {
-        return db_get_array('SELECT ' . self::LISTING_COLUMNS . ' FROM ?:novoton_hotels WHERE country = ?s ORDER BY hotel_name', $country);
+        return self::asRowList(db_get_array('SELECT ' . self::LISTING_COLUMNS . ' FROM ?:novoton_hotels WHERE country = ?s ORDER BY hotel_name', $country));
     }
 
     /**
@@ -74,10 +78,10 @@ class HotelSearchRepository implements HotelSearchRepositoryInterface
     #[\Override]
     public function findByCountryForListing(string $country): array
     {
-        return db_get_array(
+        return self::asRowList(db_get_array(
             'SELECT ' . self::LISTING_COLUMNS . ' FROM ?:novoton_hotels WHERE country = ?s ORDER BY hotel_name',
             $country,
-        );
+        ));
     }
 
     /**
@@ -86,11 +90,11 @@ class HotelSearchRepository implements HotelSearchRepositoryInterface
     #[\Override]
     public function findByCountryIndexed(string $country): array
     {
-        return db_get_hash_array(
+        return self::asRowMap(db_get_hash_array(
             'SELECT hotel_id, hotel_name, city, product_id, has_room_price FROM ?:novoton_hotels WHERE country = ?s ORDER BY hotel_name',
             'hotel_id',
             $country,
-        );
+        ));
     }
 
     /**
@@ -100,10 +104,10 @@ class HotelSearchRepository implements HotelSearchRepositoryInterface
     public function findByCountryWithLimit(string $country, int $limit = 0): array
     {
         $limit_clause = $limit > 0 ? db_quote(' LIMIT ?i', $limit) : '';
-        return db_get_array(
+        return self::asRowList(db_get_array(
             "SELECT hotel_id, hotel_name, city, product_id FROM ?:novoton_hotels WHERE country = ?s ORDER BY hotel_name{$limit_clause}",
             $country,
-        );
+        ));
     }
 
     /**
@@ -115,12 +119,12 @@ class HotelSearchRepository implements HotelSearchRepositoryInterface
         $limit_clause = $limit > 0 ? db_quote(' LIMIT ?i', $limit) : '';
         $cols = preg_replace('/\b(\w+)\b/', 'h.$1', self::LISTING_COLUMNS);
 
-        return db_get_array(
+        return self::asRowList(db_get_array(
             "SELECT {$cols} FROM ?:novoton_hotels h
              LEFT JOIN ?:novoton_hotel_packages p ON h.hotel_id = p.hotel_id
              WHERE p.id IS NULL
              ORDER BY h.hotel_name {$limit_clause}",
-        );
+        ));
     }
 
     /**
@@ -146,7 +150,7 @@ class HotelSearchRepository implements HotelSearchRepositoryInterface
             $params[] = $limit;
         }
 
-        return db_get_array($query, ...$params);
+        return self::asRowList(db_get_array($query, ...$params));
     }
 
     /**
@@ -156,7 +160,7 @@ class HotelSearchRepository implements HotelSearchRepositoryInterface
     public function findUnlinkedForAdmin(string $country, string $filter = 'prices', int $limit = 500): array
     {
         if ($filter === 'packages') {
-            return db_get_array(
+            return self::asRowList(db_get_array(
                 'SELECT h.*
                  FROM ?:novoton_hotels h
                  INNER JOIN ?:novoton_hotel_packages pkg ON h.hotel_id = pkg.hotel_id
@@ -167,10 +171,10 @@ class HotelSearchRepository implements HotelSearchRepositoryInterface
                  LIMIT ?i',
                 $country,
                 $limit,
-            );
+            ));
         }
 
-        return db_get_array(
+        return self::asRowList(db_get_array(
             "SELECT h.*
              FROM ?:novoton_hotels h
              WHERE h.country = ?s
@@ -180,7 +184,7 @@ class HotelSearchRepository implements HotelSearchRepositoryInterface
              LIMIT ?i",
             $country,
             $limit,
-        );
+        ));
     }
 
     /**
@@ -189,13 +193,13 @@ class HotelSearchRepository implements HotelSearchRepositoryInterface
     #[\Override]
     public function findNeedingPriceCheck(int $daysStale = 7, int $limit = 100): array
     {
-        return db_get_array(
+        return self::asRowList(db_get_array(
             'SELECT hotel_id, hotel_name FROM ?:novoton_hotels
              WHERE (last_price_check IS NULL OR last_price_check < DATE_SUB(NOW(), INTERVAL ?i DAY))
              LIMIT ?i',
             $daysStale,
             $limit,
-        );
+        ));
     }
 
     /**
@@ -204,7 +208,7 @@ class HotelSearchRepository implements HotelSearchRepositoryInterface
     #[\Override]
     public function findNeedingPriceUpdate(int $staleHours = 24, int $limit = 100): array
     {
-        return db_get_array(
+        return self::asRowList(db_get_array(
             "SELECT hotel_id, hotel_name, product_id
              FROM ?:novoton_hotels
              WHERE has_room_price = 'Y'
@@ -213,7 +217,7 @@ class HotelSearchRepository implements HotelSearchRepositoryInterface
              LIMIT ?i",
             $staleHours,
             $limit,
-        );
+        ));
     }
 
     /**
@@ -222,14 +226,14 @@ class HotelSearchRepository implements HotelSearchRepositoryInterface
     #[\Override]
     public function findWithProductsSortedByStaleness(int $limit = 50): array
     {
-        return db_get_array(
+        return self::asRowList(db_get_array(
             'SELECT hotel_id, hotel_name, product_id
              FROM ?:novoton_hotels
              WHERE product_id > 0
              ORDER BY CASE WHEN last_price_check IS NULL THEN 0 ELSE 1 END, last_price_check ASC
              LIMIT ?i',
             $limit,
-        );
+        ));
     }
 
     /**
@@ -238,13 +242,13 @@ class HotelSearchRepository implements HotelSearchRepositoryInterface
     #[\Override]
     public function findWithPricesForExport(string $country): array
     {
-        return db_get_array(
+        return self::asRowList(db_get_array(
             "SELECT hotel_id, hotel_name, city, hotel_type, has_room_price, product_id, last_price_check
              FROM ?:novoton_hotels
              WHERE country = ?s AND has_room_price = 'Y'
              ORDER BY city, hotel_name",
             $country,
-        );
+        ));
     }
 
     /**
@@ -268,10 +272,10 @@ class HotelSearchRepository implements HotelSearchRepositoryInterface
 
         $limit_sql = $limit > 0 ? ' LIMIT ' . (int)($limit) : '';
 
-        return db_get_array(
+        return self::asRowList(db_get_array(
             "SELECT * FROM ?:novoton_hotels WHERE {$condition} ORDER BY hotel_name {$limit_sql}",
             ...$params,
-        );
+        ));
     }
 
     /**

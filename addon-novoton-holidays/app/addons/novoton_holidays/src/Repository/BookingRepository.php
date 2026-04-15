@@ -15,11 +15,15 @@ namespace Tygh\Addons\NovotonHolidays\Repository;
 
 use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\Helpers\JsonDecoder;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+use Tygh\Addons\TravelCore\Repository\RowNarrowingTrait;
 use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
 use Tygh\Addons\TravelCore\TravelConstants;
 
 class BookingRepository implements BookingRepositoryInterface
 {
+    use RowNarrowingTrait;
+
     /**
      * Columns selected for listing queries (excludes large JSON/text fields:
      * rooms_data, guests_data, api_request, api_response, alternatives_data,
@@ -52,28 +56,13 @@ class BookingRepository implements BookingRepositoryInterface
     }
 
     /**
-     * Narrow db_get_array() result to list<array<string, mixed>>.
-     * @param mixed $rows
-     * @return list<array<string, mixed>>
-     */
-    private static function asRowList($rows): array
-    {
-        if (!is_array($rows)) {
-            return [];
-        }
-        /** @var list<array<string, mixed>> $rows */
-        return array_values(array_filter($rows, 'is_array'));
-    }
-
-    /**
      * Find booking by ID (raw DB row, no JSON decoding).
      * @return array<string, mixed>|null
      */
     public function findById(int $booking_id): ?array
     {
-        /** @var array<string, mixed>|null $booking */
-        $booking = db_get_row('SELECT * FROM ?:novoton_bookings WHERE booking_id = ?i', $booking_id);
-        return (is_array($booking) && !empty($booking)) ? $booking : null;
+        $booking = self::asRow(db_get_row('SELECT * FROM ?:novoton_bookings WHERE booking_id = ?i', $booking_id));
+        return $booking === [] ? null : $booking;
     }
 
     /**
@@ -224,7 +213,7 @@ class BookingRepository implements BookingRepositoryInterface
      */
     public function findExisting(string $hotel_id, string $check_in, string $check_out, string $holder_name, int $hours = 1): ?array
     {
-        $booking = db_get_row(
+        $booking = self::asRow(db_get_row(
             'SELECT * FROM ?:novoton_bookings
              WHERE order_id = 0
                AND hotel_id = ?s
@@ -238,9 +227,9 @@ class BookingRepository implements BookingRepositoryInterface
             $check_out,
             $holder_name,
             $hours,
-        );
+        ));
 
-        return (is_array($booking) && !empty($booking)) ? $booking : null;
+        return $booking === [] ? null : $booking;
     }
 
     /**
@@ -250,7 +239,7 @@ class BookingRepository implements BookingRepositoryInterface
     public function count(array $filters = []): int
     {
         $where = $this->buildWhereClause($filters);
-        return \Tygh\Addons\NovotonHolidays\Services\PriceInfoFormatter::toInt(db_get_field("SELECT COUNT(*) FROM ?:novoton_bookings {$where}"));
+        return TypeCoerce::toInt(db_get_field("SELECT COUNT(*) FROM ?:novoton_bookings {$where}"));
     }
 
     /**
@@ -263,7 +252,7 @@ class BookingRepository implements BookingRepositoryInterface
 
         db_query('START TRANSACTION');
         try {
-            $booking_id = \Tygh\Addons\NovotonHolidays\Services\PriceInfoFormatter::toInt(db_query('INSERT INTO ?:novoton_bookings ?e', $data));
+            $booking_id = TypeCoerce::toInt(db_query('INSERT INTO ?:novoton_bookings ?e', $data));
 
             if ($booking_id > 0) {
                 $this->syncToTravelBookings($booking_id, $data);
@@ -437,13 +426,12 @@ class BookingRepository implements BookingRepositoryInterface
 
         if ($affected > 0) {
             // Sync user_id to travel_bookings for these bookings
-            $booking_ids = db_get_fields(
+            $id_strings = self::asStringList(db_get_fields(
                 'SELECT booking_id FROM ?:novoton_bookings WHERE session_id = ?s AND user_id = ?i',
                 $session_id,
                 $user_id,
-            );
-            if (!empty($booking_ids)) {
-                $id_strings = array_map('strval', $booking_ids);
+            ));
+            if (!empty($id_strings)) {
                 db_query(
                     "UPDATE ?:travel_bookings SET user_id = ?i WHERE provider = 'novoton' AND provider_booking_id IN (?a)",
                     $user_id,
@@ -465,10 +453,10 @@ class BookingRepository implements BookingRepositoryInterface
     public function linkToUserByEmail(int $user_id, string $email): int
     {
         // Get affected booking IDs before the update
-        $booking_ids = db_get_fields(
+        $id_strings = self::asStringList(db_get_fields(
             'SELECT booking_id FROM ?:novoton_bookings WHERE guest_email = ?s AND user_id = 0',
             $email,
-        );
+        ));
 
         $affected = (int) db_query(
             'UPDATE ?:novoton_bookings SET user_id = ?i WHERE guest_email = ?s AND user_id = 0',
@@ -476,8 +464,7 @@ class BookingRepository implements BookingRepositoryInterface
             $email,
         );
 
-        if ($affected > 0 && !empty($booking_ids)) {
-            $id_strings = array_map('strval', $booking_ids);
+        if ($affected > 0 && !empty($id_strings)) {
             db_query(
                 "UPDATE ?:travel_bookings SET user_id = ?i WHERE provider = 'novoton' AND provider_booking_id IN (?a)",
                 $user_id,
@@ -548,12 +535,11 @@ class BookingRepository implements BookingRepositoryInterface
     public function deleteByProductId(int $product_id): int
     {
         // Clean up travel_bookings for these bookings
-        $booking_ids = db_get_fields(
+        $id_strings = self::asStringList(db_get_fields(
             'SELECT booking_id FROM ?:novoton_bookings WHERE product_id = ?i',
             $product_id,
-        );
-        if (!empty($booking_ids)) {
-            $id_strings = array_map('strval', $booking_ids);
+        ));
+        if (!empty($id_strings)) {
             db_query(
                 "DELETE FROM ?:travel_bookings WHERE provider = 'novoton' AND provider_booking_id IN (?a)",
                 $id_strings,
@@ -568,8 +554,8 @@ class BookingRepository implements BookingRepositoryInterface
      */
     public function getGuestsData(int $booking_id): ?string
     {
-        $data = db_get_field('SELECT guests_data FROM ?:novoton_bookings WHERE booking_id = ?i', $booking_id);
-        return $data ?: null;
+        $data = TypeCoerce::toString(db_get_field('SELECT guests_data FROM ?:novoton_bookings WHERE booking_id = ?i', $booking_id));
+        return $data === '' ? null : $data;
     }
 
     /**
@@ -580,16 +566,15 @@ class BookingRepository implements BookingRepositoryInterface
      */
     public function findUnassignedByHotelDates(string $hotel_id, string $check_in, string $check_out): ?array
     {
-        /** @var array<string, mixed>|null $row */
-        $row = db_get_row(
+        $row = self::asRow(db_get_row(
             'SELECT guests_data, holder_name FROM ?:novoton_bookings
              WHERE hotel_id = ?s AND check_in = ?s AND check_out = ?s AND order_id = 0
              ORDER BY booking_id DESC LIMIT 1',
             $hotel_id,
             $check_in,
             $check_out,
-        );
-        return (is_array($row) && !empty($row)) ? $row : null;
+        ));
+        return $row === [] ? null : $row;
     }
 
     /**
@@ -619,13 +604,13 @@ class BookingRepository implements BookingRepositoryInterface
      */
     public function getTerms(int $booking_id): ?array
     {
-        $terms = db_get_row(
+        $terms = self::asRow(db_get_row(
             'SELECT terms_of_payment_raw, terms_of_cancellation_raw,
                     terms_of_payment_formatted, terms_of_cancellation_formatted
              FROM ?:novoton_bookings WHERE booking_id = ?i',
             $booking_id,
-        );
-        return $terms ?: null;
+        ));
+        return $terms === [] ? null : $terms;
     }
 
     /**
@@ -633,7 +618,7 @@ class BookingRepository implements BookingRepositoryInterface
      */
     public function findIdByOrderAndHotelDates(int $order_id, string $hotel_id, string $check_in, string $check_out): ?int
     {
-        $id = db_get_field(
+        $id = TypeCoerce::toInt(db_get_field(
             'SELECT booking_id FROM ?:novoton_bookings
              WHERE order_id = ?i AND hotel_id = ?s AND check_in = ?s AND check_out = ?s
              LIMIT 1',
@@ -641,8 +626,8 @@ class BookingRepository implements BookingRepositoryInterface
             $hotel_id,
             $check_in,
             $check_out,
-        );
-        return $id ? (int) $id : null;
+        ));
+        return $id > 0 ? $id : null;
     }
 
     /**
@@ -655,14 +640,14 @@ class BookingRepository implements BookingRepositoryInterface
      */
     public function findByNovotonStatus(string $novoton_status, array $statuses, int $limit = 50): array
     {
-        return db_get_array(
+        return self::asRowList(db_get_array(
             'SELECT * FROM ?:novoton_bookings
              WHERE novoton_status = ?s AND status IN (?a)
              ORDER BY created_at DESC LIMIT ?i',
             $novoton_status,
             $statuses,
             $limit,
-        );
+        ));
     }
 
     /**
@@ -671,13 +656,13 @@ class BookingRepository implements BookingRepositoryInterface
      */
     public function findRqWithoutAlternatives(int $limit = 50): array
     {
-        return db_get_array(
+        return self::asRowList(db_get_array(
             'SELECT * FROM ?:novoton_bookings
              WHERE novoton_status = ?s AND alternatives_requested = 0
              ORDER BY created_at ASC LIMIT ?i',
             Constants::NOVOTON_STATUS_ALTERNATIVES_PENDING,
             $limit,
-        );
+        ));
     }
 
     /**
@@ -786,7 +771,7 @@ class BookingRepository implements BookingRepositoryInterface
      */
     public function findForAdminList(string $condition = '', int $limit = 500): array
     {
-        return db_get_array(
+        return self::asRowList(db_get_array(
             "SELECT b.booking_id, b.order_id, b.hotel_id, b.hotel_name, b.room_type,
                     b.check_in, b.check_out, b.nights, b.adults, b.children,
                     b.total_price, b.currency, b.status, b.novoton_status, b.created_at,
@@ -797,7 +782,7 @@ class BookingRepository implements BookingRepositoryInterface
              ORDER BY b.created_at DESC
              LIMIT ?i",
             $limit,
-        );
+        ));
     }
 
     /**
@@ -806,15 +791,15 @@ class BookingRepository implements BookingRepositoryInterface
      */
     public function findWithOrderDetails(int $booking_id): ?array
     {
-        $row = db_get_row(
+        $row = self::asRow(db_get_row(
             'SELECT b.*, o.*, p.product
              FROM ?:novoton_bookings b
              LEFT JOIN ?:orders o ON b.order_id = o.order_id
              LEFT JOIN ?:products p ON b.product_id = p.product_id
              WHERE b.booking_id = ?i',
             $booking_id,
-        );
-        return $row ?: null;
+        ));
+        return $row === [] ? null : $row;
     }
 
     /**
@@ -823,27 +808,27 @@ class BookingRepository implements BookingRepositoryInterface
      */
     public function findAllForExport(): array
     {
-        return db_get_array(
+        return self::asRowList(db_get_array(
             'SELECT b.*, o.email, o.status as order_status
              FROM ?:novoton_bookings b
              LEFT JOIN ?:orders o ON b.order_id = o.order_id
              ORDER BY b.created_at DESC',
-        );
+        ));
     }
 
     /**
      * Find booking by ownership (user_id or session_id) — for frontend security checks.
-     * @return list<array<string, mixed>>|null
+     * @return array<string, mixed>|null
      */
     public function findByIdWithOwnership(int $booking_id, int $user_id, string $session_id): ?array
     {
-        $row = db_get_row(
+        $row = self::asRow(db_get_row(
             'SELECT * FROM ?:novoton_bookings WHERE booking_id = ?i AND (user_id = ?i OR session_id = ?s)',
             $booking_id,
             $user_id,
             $session_id,
-        );
-        return $row ?: null;
+        ));
+        return $row === [] ? null : $row;
     }
 
     /**
@@ -851,13 +836,13 @@ class BookingRepository implements BookingRepositoryInterface
      */
     public function checkOwnership(int $booking_id, int $user_id, string $session_id): ?int
     {
-        $id = db_get_field(
+        $id = TypeCoerce::toInt(db_get_field(
             'SELECT booking_id FROM ?:novoton_bookings WHERE booking_id = ?i AND (user_id = ?i OR session_id = ?s)',
             $booking_id,
             $user_id,
             $session_id,
-        );
-        return $id ? (int) $id : null;
+        ));
+        return $id > 0 ? $id : null;
     }
 
     /**

@@ -198,6 +198,39 @@ class TypeCoerceTest extends TestCase
         $this->assertSame([], TypeCoerce::toStringMap(null));
     }
 
+    // ── toStringList ─────────────────────────────────────────────────────────
+
+    public function testToStringListCoercesEntries(): void
+    {
+        $this->assertSame(
+            ['1', 'two', '3', ''],
+            TypeCoerce::toStringList([1, 'two', 3.0, null]),
+        );
+    }
+
+    public function testToStringListFromNonArray(): void
+    {
+        $this->assertSame([], TypeCoerce::toStringList(null));
+        $this->assertSame([], TypeCoerce::toStringList('x'));
+    }
+
+    public function testToStringListReindexes(): void
+    {
+        $this->assertSame(['a', 'b'], TypeCoerce::toStringList(['x' => 'a', 'y' => 'b']));
+    }
+
+    // ── toIntList ────────────────────────────────────────────────────────────
+
+    public function testToIntListCoercesEntries(): void
+    {
+        $this->assertSame([1, 2, 0, 4], TypeCoerce::toIntList(['1', 2, 'three', '4']));
+    }
+
+    public function testToIntListFromNonArray(): void
+    {
+        $this->assertSame([], TypeCoerce::toIntList(null));
+    }
+
     // ── toRowList ────────────────────────────────────────────────────────────
 
     public function testToRowListFromValidRows(): void

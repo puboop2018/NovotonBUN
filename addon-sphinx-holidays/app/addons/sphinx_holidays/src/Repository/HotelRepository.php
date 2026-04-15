@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays\Repository;
 
-use Tygh\Addons\TravelCore\Helpers\ValidationHelpers;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+use Tygh\Addons\TravelCore\Repository\RowNarrowingTrait;
 
 /**
  * Repository for sphinx_hotels table operations.
@@ -13,6 +14,8 @@ use Tygh\Addons\TravelCore\Helpers\ValidationHelpers;
  */
 class HotelRepository
 {
+    use RowNarrowingTrait;
+
     /**
      * Core columns for hotel listing (excludes large JSON/TEXT columns).
      */
@@ -65,7 +68,7 @@ class HotelRepository
             if (!is_array($hotel)) {
                 continue;
             }
-            $hotelId = ValidationHelpers::toString($hotel['hotel_id'] ?? '');
+            $hotelId = TypeCoerce::toString($hotel['hotel_id'] ?? '');
             if ($hotelId === '') {
                 continue;
             }
@@ -132,29 +135,29 @@ class HotelRepository
                         'Y', ?:sphinx_hotels.product_needs_update
                     )",
                 $hotelId,
-                ValidationHelpers::toString($hotel['name'] ?? ''),
-                ValidationHelpers::toInt($hotel['classification'] ?? 0),
-                ValidationHelpers::toString($hotel['property_type'] ?? 'hotel'),
-                ValidationHelpers::toInt($hotel['destination_id'] ?? 0),
-                ValidationHelpers::toString($hotel['destination_name'] ?? ''),
-                ValidationHelpers::toInt($hotel['region_id'] ?? 0),
-                ValidationHelpers::toString($hotel['region_name'] ?? ''),
-                ValidationHelpers::toString($hotel['country_code'] ?? ''),
-                ValidationHelpers::toString($hotel['country_name'] ?? ''),
-                ValidationHelpers::toFloat($hotel['latitude'] ?? 0),
-                ValidationHelpers::toFloat($hotel['longitude'] ?? 0),
-                ValidationHelpers::toString($hotel['address'] ?? ''),
-                ValidationHelpers::toString($hotel['phone'] ?? ''),
-                ValidationHelpers::toString($hotel['email'] ?? ''),
-                ValidationHelpers::toString($hotel['website'] ?? ''),
-                ValidationHelpers::toString($hotel['description'] ?? ''),
-                ValidationHelpers::toString($hotel['short_description'] ?? ''),
-                ValidationHelpers::toString($hotel['image_url'] ?? ''),
-                ValidationHelpers::toString($hotel['images_json'] ?? '[]'),
-                ValidationHelpers::toString($hotel['facilities_json'] ?? '[]'),
-                ValidationHelpers::toString($hotel['is_adults_only'] ?? 'N'),
-                ValidationHelpers::toFloat($hotel['rating'] ?? 0),
-                ValidationHelpers::toInt($hotel['rating_count'] ?? 0),
+                TypeCoerce::toString($hotel['name'] ?? ''),
+                TypeCoerce::toInt($hotel['classification'] ?? 0),
+                TypeCoerce::toString($hotel['property_type'] ?? 'hotel'),
+                TypeCoerce::toInt($hotel['destination_id'] ?? 0),
+                TypeCoerce::toString($hotel['destination_name'] ?? ''),
+                TypeCoerce::toInt($hotel['region_id'] ?? 0),
+                TypeCoerce::toString($hotel['region_name'] ?? ''),
+                TypeCoerce::toString($hotel['country_code'] ?? ''),
+                TypeCoerce::toString($hotel['country_name'] ?? ''),
+                TypeCoerce::toFloat($hotel['latitude'] ?? 0),
+                TypeCoerce::toFloat($hotel['longitude'] ?? 0),
+                TypeCoerce::toString($hotel['address'] ?? ''),
+                TypeCoerce::toString($hotel['phone'] ?? ''),
+                TypeCoerce::toString($hotel['email'] ?? ''),
+                TypeCoerce::toString($hotel['website'] ?? ''),
+                TypeCoerce::toString($hotel['description'] ?? ''),
+                TypeCoerce::toString($hotel['short_description'] ?? ''),
+                TypeCoerce::toString($hotel['image_url'] ?? ''),
+                TypeCoerce::toString($hotel['images_json'] ?? '[]'),
+                TypeCoerce::toString($hotel['facilities_json'] ?? '[]'),
+                TypeCoerce::toString($hotel['is_adults_only'] ?? 'N'),
+                TypeCoerce::toFloat($hotel['rating'] ?? 0),
+                TypeCoerce::toInt($hotel['rating_count'] ?? 0),
                 date('Y-m-d H:i:s'),
             );
 
@@ -167,7 +170,7 @@ class HotelRepository
     /**
      * Get hotels with optional filters.
      *
-     * @return array{items: array<int, array<string, mixed>>, total: int}
+     * @return array{items: list<array<string, mixed>>, total: int}
      */
     public function getFiltered(
         string $countryCode = '',
@@ -205,7 +208,7 @@ class HotelRepository
         $offset = ($page - 1) * $perPage;
 
         $cols = $this->aliasedListingColumns();
-        $items = db_get_array(
+        $items = self::asRowList(db_get_array(
             "SELECT {$cols} FROM ?:sphinx_hotels h
              WHERE 1 ?p
              ORDER BY h.country_code ASC, h.name ASC
@@ -213,7 +216,7 @@ class HotelRepository
             $condition,
             $offset,
             $perPage,
-        );
+        ));
 
         return ['items' => $items, 'total' => $total];
     }
@@ -224,24 +227,24 @@ class HotelRepository
      */
     public function getById(string $hotelId): ?array
     {
-        $row = db_get_row(
+        $row = self::asRow(db_get_row(
             'SELECT * FROM ?:sphinx_hotels WHERE hotel_id = ?s',
             $hotelId,
-        );
+        ));
 
-        return $row ?: null;
+        return $row === [] ? null : $row;
     }
 
     /**
      * Get hotels by destination ID (excludes large JSON/TEXT columns).
-     * @return array<string, mixed>
+     * @return list<array<string, mixed>>
      */
     public function getByDestination(int $destinationId): array
     {
-        return db_get_array(
+        return self::asRowList(db_get_array(
             'SELECT ' . self::LISTING_COLUMNS . ' FROM ?:sphinx_hotels WHERE destination_id = ?i ORDER BY name ASC',
             $destinationId,
-        );
+        ));
     }
 
     /**
@@ -251,14 +254,17 @@ class HotelRepository
      */
     public function getCountsByCountry(): array
     {
-        $rows = db_get_array(
+        $rows = self::asRowList(db_get_array(
             "SELECT country_code, COUNT(*) as cnt FROM ?:sphinx_hotels WHERE sync_status = 'active' GROUP BY country_code ORDER BY cnt DESC",
-        );
+        ));
 
         $counts = [];
         foreach ($rows as $row) {
-            $code = $row['country_code'] ?: 'unknown';
-            $counts[$code] = (int) $row['cnt'];
+            $code = TypeCoerce::toString($row['country_code'] ?? '');
+            if ($code === '') {
+                $code = 'unknown';
+            }
+            $counts[$code] = TypeCoerce::toInt($row['cnt'] ?? 0);
         }
 
         return $counts;
@@ -267,13 +273,13 @@ class HotelRepository
     /**
      * Get distinct country codes from synced hotels.
      *
-     * @return string[]
+     * @return list<string>
      */
     public function getDistinctCountries(): array
     {
-        return db_get_fields(
+        return self::asStringList(db_get_fields(
             "SELECT DISTINCT country_code FROM ?:sphinx_hotels WHERE country_code != '' ORDER BY country_code",
-        );
+        ));
     }
 
     /**
@@ -290,35 +296,35 @@ class HotelRepository
     public function getLastSyncedAt(?string $countryCode = null): ?string
     {
         if ($countryCode !== null) {
-            $val = db_get_field(
+            $val = TypeCoerce::toString(db_get_field(
                 'SELECT MAX(last_synced_at) FROM ?:sphinx_hotels WHERE country_code = ?s',
                 $countryCode,
-            );
+            ));
         } else {
-            $val = db_get_field('SELECT MAX(last_synced_at) FROM ?:sphinx_hotels');
+            $val = TypeCoerce::toString(db_get_field('SELECT MAX(last_synced_at) FROM ?:sphinx_hotels'));
         }
-        return $val ?: null;
+        return $val === '' ? null : $val;
     }
 
     /**
      * Search hotels by name (excludes large JSON/TEXT columns).
-     * @return array<string, mixed>
+     * @return list<array<string, mixed>>
      */
     public function search(string $query, int $limit = 20): array
     {
         $query = trim($query);
         $escaped = addcslashes($query, '%_\\');
-        return db_get_array(
+        return self::asRowList(db_get_array(
             'SELECT ' . self::LISTING_COLUMNS . ' FROM ?:sphinx_hotels WHERE name LIKE ?l ORDER BY country_code ASC, name ASC LIMIT ?i',
             '%' . $escaped . '%',
             $limit,
-        );
+        ));
     }
 
     /**
      * Lightweight hotel name search for AJAX autocomplete.
      * Returns only the columns needed for the Select2 dropdown display.
-     * @return array<string, mixed>
+     * @return list<array<string, mixed>>
      */
     public function searchByName(string $query, int $limit = 20): array
     {
@@ -327,7 +333,7 @@ class HotelRepository
             return [];
         }
         $escaped = addcslashes($query, '%_\\');
-        return db_get_array(
+        return self::asRowList(db_get_array(
             'SELECT hotel_id, name, classification, country_code, destination_name
              FROM ?:sphinx_hotels
              WHERE name LIKE ?l
@@ -335,7 +341,7 @@ class HotelRepository
              LIMIT ?i',
             '%' . $escaped . '%',
             $limit,
-        );
+        ));
     }
 
     /**
@@ -353,7 +359,7 @@ class HotelRepository
     /**
      * Get unlinked hotels (no product_id) with optional country filter.
      *
-     * @return array<string, mixed> List of hotel rows without linked products
+     * @return list<array<string, mixed>> List of hotel rows without linked products
      */
     public function findUnlinked(string $countryCode = '', int $limit = 0): array
     {
@@ -368,7 +374,7 @@ class HotelRepository
         // Product creation needs TEXT/JSON columns excluded from LISTING_COLUMNS
         $extraCols = ', h.description, h.short_description, h.facilities_json, h.boards_json';
 
-        return db_get_array(
+        return self::asRowList(db_get_array(
             "SELECT {$cols}{$extraCols} FROM ?:sphinx_hotels h
              WHERE h.sync_status = 'active'
                AND (h.product_id IS NULL OR h.product_id = 0)
@@ -376,7 +382,7 @@ class HotelRepository
              ORDER BY h.country_code ASC, h.name ASC ?p",
             $condition,
             $limitClause,
-        );
+        ));
     }
 
     /**
@@ -398,16 +404,16 @@ class HotelRepository
     public function getDestinationIdsByCountry(array $countryCodes): array
     {
         if (empty($countryCodes)) {
-            return db_get_fields(
+            return self::asIntList(db_get_fields(
                 "SELECT DISTINCT destination_id FROM ?:sphinx_hotels WHERE sync_status = 'active' AND destination_id > 0",
-            );
+            ));
         }
 
         $placeholders = implode(',', array_fill(0, count($countryCodes), '?s'));
-        return db_get_fields(
+        return self::asIntList(db_get_fields(
             "SELECT DISTINCT destination_id FROM ?:sphinx_hotels WHERE sync_status = 'active' AND destination_id > 0 AND country_code IN ($placeholders)",
             ...$countryCodes,
-        );
+        ));
     }
 
     /**
@@ -417,24 +423,37 @@ class HotelRepository
      */
     public function getHotelIdsByDestination(int $destinationId): array
     {
-        return db_get_hash_single_array(
+        $raw = db_get_hash_single_array(
             "SELECT hotel_id, hotel_id FROM ?:sphinx_hotels WHERE destination_id = ?i AND sync_status = 'active'",
             ['hotel_id', 'hotel_id'],
             $destinationId,
         );
+        if (!is_array($raw)) {
+            return [];
+        }
+        $out = [];
+        foreach ($raw as $k => $v) {
+            if (is_string($k)) {
+                $out[$k] = TypeCoerce::toString($v);
+            }
+        }
+        return $out;
     }
 
     /**
      * Update boards_json for a batch of hotels.
      *
-     * @param array<string, string[]> $boardsByHotel hotel_id => array of canonical board codes
+     * @param array<string, list<string>> $boardsByHotel hotel_id => array of canonical board codes
      * @return int Number of hotels updated
      */
     public function updateBoardsBatch(array $boardsByHotel): int
     {
         $updated = 0;
         foreach ($boardsByHotel as $hotelId => $boards) {
-            $json = !empty($boards) ? (json_encode(array_values(array_unique($boards))) ?: '[]') : '[]';
+            $encoded = !empty($boards)
+                ? json_encode(array_values(array_unique($boards)))
+                : false;
+            $json = is_string($encoded) ? $encoded : '[]';
             db_query(
                 'UPDATE ?:sphinx_hotels SET boards_json = ?s WHERE hotel_id = ?s',
                 $json,
@@ -453,7 +472,7 @@ class HotelRepository
      * @param string $countryCode Optional country filter
      * @param int $limit Max rows (0 = unlimited)
      * @param int $offset Starting offset for pagination
-     * @return array<string, mixed> List of hotel rows
+     * @return list<array<string, mixed>> List of hotel rows
      */
     public function findWithBoardsAndProduct(string $countryCode = '', int $limit = 0, int $offset = 0): array
     {
@@ -470,7 +489,7 @@ class HotelRepository
             $limitClause = db_quote(' LIMIT ?i, 18446744073709551615', $offset);
         }
 
-        return db_get_array(
+        return self::asRowList(db_get_array(
             "SELECT h.hotel_id, h.product_id, h.boards_json, h.name,
                     h.classification, h.property_type, h.destination_name,
                     h.facilities_json, h.country_code
@@ -479,7 +498,7 @@ class HotelRepository
              ORDER BY h.hotel_id ASC ?p",
             $condition,
             $limitClause,
-        );
+        ));
     }
 
     /**
@@ -622,11 +641,11 @@ class HotelRepository
      *
      * @param int $offset Starting offset
      * @param int $batch Batch size
-     * @return array<string, mixed>
+     * @return list<array<string, mixed>>
      */
     public function fetchLinkedBatchForSeo(int $offset, int $batch): array
     {
-        return db_get_array(
+        return self::asRowList(db_get_array(
             "SELECT h.hotel_id, h.product_id, h.name, h.classification, h.property_type,
                     h.description, h.rating, h.facilities_json, h.boards_json,
                     h.latitude, h.longitude, h.image_url, h.address, h.phone, h.email, h.website,
@@ -637,7 +656,7 @@ class HotelRepository
              LIMIT ?i, ?i",
             $offset,
             $batch,
-        );
+        ));
     }
 
     /**
@@ -680,27 +699,24 @@ class HotelRepository
     /**
      * Get distinct classification values present in the data.
      *
-     * @return int[]
+     * @return list<int>
      */
     public function getDistinctClassifications(): array
     {
-        return array_map(
-            'intval',
-            db_get_fields(
-                'SELECT DISTINCT classification FROM ?:sphinx_hotels WHERE classification IS NOT NULL ORDER BY classification',
-            ),
-        );
+        return self::asIntList(db_get_fields(
+            'SELECT DISTINCT classification FROM ?:sphinx_hotels WHERE classification IS NOT NULL ORDER BY classification',
+        ));
     }
 
     /**
      * Get distinct property_type values present in the data.
      *
-     * @return string[]
+     * @return list<string>
      */
     public function getDistinctPropertyTypes(): array
     {
-        return db_get_fields(
+        return self::asStringList(db_get_fields(
             "SELECT DISTINCT property_type FROM ?:sphinx_hotels WHERE property_type IS NOT NULL AND property_type != '' ORDER BY property_type",
-        );
+        ));
     }
 }

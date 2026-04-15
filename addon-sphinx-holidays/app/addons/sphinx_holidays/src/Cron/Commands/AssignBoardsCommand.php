@@ -181,9 +181,6 @@ class AssignBoardsCommand extends AbstractSyncCommand
             }
 
             foreach ($hotels as $hotel) {
-                if (!is_array($hotel)) {
-                    continue;
-                }
                 // Check time limit within batch
                 if (!$unlimited && (time() - $startTime) > $maxTime) {
                     break 2;
