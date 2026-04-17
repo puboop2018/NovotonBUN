@@ -26,9 +26,13 @@
         <exclude name="PSR12.Files.FileHeader.IncorrectOrder"/>
     </rule>
 
-    <!-- Allow class files with side effects from namespace-level `use` imports -->
+    <!-- Allow files with intentional side effects:
+         - HotelSync.php: namespace-level `use` imports
+         - Services/ServiceLoader.php: CS-Cart BOOTSTRAP guard required on every
+           procedural-helper file before the global function declarations -->
     <rule ref="PSR1.Files.SideEffects">
         <exclude-pattern>*/src/HotelSync.php</exclude-pattern>
+        <exclude-pattern>*/src/Services/ServiceLoader.php</exclude-pattern>
     </rule>
 
     <!-- Line length: warning only, 160 chars -->
