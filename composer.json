@@ -21,6 +21,9 @@
         }
     },
     "scripts": {
+        "post-install-cmd": "@php -r \"is_dir('var') || mkdir('var', 0755, true);\"",
+        "post-update-cmd":  "@php -r \"is_dir('var') || mkdir('var', 0755, true);\"",
+
         "stan": "phpstan analyse --memory-limit=1G",
         "stan:baseline": "phpstan analyse --memory-limit=1G --generate-baseline=phpstan-baseline.neon --allow-empty-baseline",
 
