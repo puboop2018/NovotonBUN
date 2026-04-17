@@ -215,7 +215,9 @@ class SecurityServiceTest extends TestCase
             ],
         ]);
 
-        $this->assertEquals('John', $result[0]['first_name']);
+        // Digits are allowed (Roman-numeral suffixes like "Louis XIV" and
+        // to avoid silent data loss); only !@# are stripped.
+        $this->assertEquals('John123', $result[0]['first_name']);
         $this->assertEquals("O'Brien", $result[0]['last_name']);
     }
 
