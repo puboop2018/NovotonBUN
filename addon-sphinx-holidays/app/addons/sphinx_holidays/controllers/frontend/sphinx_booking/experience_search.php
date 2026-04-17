@@ -14,16 +14,18 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 use Tygh\Tygh;
 use Tygh\Addons\SphinxHolidays\Services\Container;
 use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 
 try {
     $api = Container::getApi();
     $view = Tygh::$app['view'];
 
-    $destination_id = (int)($_REQUEST['destination_id'] ?? 0);
-    $month = trim($_REQUEST['month'] ?? '');
-    $from_date = trim($_REQUEST['from'] ?? '');
-    $to_date = trim($_REQUEST['to'] ?? '');
-    $page = max(1, (int)($_REQUEST['page'] ?? 1));
+    $destination_id = RequestCoerce::int($_REQUEST, 'destination_id');
+    $month = RequestCoerce::string($_REQUEST, 'month');
+    $from_date = RequestCoerce::string($_REQUEST, 'from');
+    $to_date = RequestCoerce::string($_REQUEST, 'to');
+    $page = max(1, RequestCoerce::int($_REQUEST, 'page', 1));
 
     $searchParams = [
         'pagination' => ['page' => $page, 'per_page' => 20],
@@ -44,15 +46,17 @@ try {
 
     $response = $api->getExperienceRates($searchParams);
 
-    $allResults = $response['data'] ?? [];
-    $meta = $response['meta'] ?? [];
+    $allResults = TypeCoerce::toRowList($response['data'] ?? []);
+    $meta = TypeCoerce::toStringMap($response['meta'] ?? null);
 
     // Apply commission
     $cartService = Container::getCartService();
     foreach ($allResults as &$result) {
-        if (isset($result['pricing']['selling_price'])) {
-            $result['pricing']['original_price'] = $result['pricing']['selling_price'];
-            $result['pricing']['selling_price'] = $cartService->applyCommission((float)$result['pricing']['selling_price']);
+        $resultPricing = TypeCoerce::toStringMap($result['pricing'] ?? null);
+        if (isset($resultPricing['selling_price'])) {
+            $resultPricing['original_price'] = $resultPricing['selling_price'];
+            $resultPricing['selling_price'] = $cartService->applyCommission(TypeCoerce::toFloat($resultPricing['selling_price']));
+            $result['pricing'] = $resultPricing;
         }
     }
     unset($result);

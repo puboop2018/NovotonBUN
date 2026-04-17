@@ -17,11 +17,12 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 use Tygh\Tygh;
 use Tygh\Addons\SphinxHolidays\Services\Container;
 use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
-use Tygh\Addons\TravelCore\Helpers\ValidationHelpers;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 
 $view = Tygh::$app['view'];
 
-$offer_id = trim(ValidationHelpers::toString($_REQUEST['offer_id'] ?? ''));
+$offer_id = RequestCoerce::string($_REQUEST, 'offer_id');
 
 if (empty($offer_id)) {
     fn_set_notification('E', __('error'), __('sphinx_holidays.invalid_offer', ['[default]' => 'Invalid offer.']));
@@ -29,10 +30,10 @@ if (empty($offer_id)) {
 }
 
 // Carry forward search params for back navigation
-$adults = max(1, ValidationHelpers::toInt($_REQUEST['adults'] ?? 2));
-$children = max(0, ValidationHelpers::toInt($_REQUEST['children'] ?? 0));
-$children_ages_str = trim(ValidationHelpers::toString($_REQUEST['children_ages'] ?? ''));
-$rooms = max(1, ValidationHelpers::toInt($_REQUEST['rooms'] ?? 1));
+$adults = max(1, RequestCoerce::int($_REQUEST, 'adults', 2));
+$children = max(0, RequestCoerce::int($_REQUEST, 'children'));
+$children_ages_str = RequestCoerce::string($_REQUEST, 'children_ages');
+$rooms = max(1, RequestCoerce::int($_REQUEST, 'rooms', 1));
 
 try {
     $api = Container::getApi();
@@ -52,7 +53,7 @@ try {
     // Apply commission
     /** @var array<string, mixed> $pricing */
     $pricing = is_array($offer['pricing'] ?? null) ? $offer['pricing'] : [];
-    $sellingPrice = ValidationHelpers::toFloat($pricing['selling_price'] ?? 0);
+    $sellingPrice = TypeCoerce::toFloat($pricing['selling_price'] ?? 0);
     $basePrice = $sellingPrice;
     $sellingPrice = Container::getCartService()->applyCommission($sellingPrice);
 
@@ -76,14 +77,14 @@ try {
     }
 
     $view->assign('sphinx_package_booking', [
-        'offer_id' => ValidationHelpers::toString($offer['offer_id'] ?? $offer_id),
-        'destination_name' => ValidationHelpers::toString($offer['destination_name'] ?? ''),
-        'hotel_id' => ValidationHelpers::toString($hotel['id'] ?? ''),
-        'hotel_name' => ValidationHelpers::toString($hotel['name'] ?? ''),
-        'check_in' => ValidationHelpers::toString($hotel['check_in'] ?? ''),
-        'check_out' => ValidationHelpers::toString($hotel['check_out'] ?? ''),
+        'offer_id' => TypeCoerce::toString($offer['offer_id'] ?? $offer_id),
+        'destination_name' => TypeCoerce::toString($offer['destination_name'] ?? ''),
+        'hotel_id' => TypeCoerce::toString($hotel['id'] ?? ''),
+        'hotel_name' => TypeCoerce::toString($hotel['name'] ?? ''),
+        'check_in' => TypeCoerce::toString($hotel['check_in'] ?? ''),
+        'check_out' => TypeCoerce::toString($hotel['check_out'] ?? ''),
         'rooms' => $hotelRooms,
-        'meal_type' => ValidationHelpers::toString($hotel['meal_type_name'] ?? ''),
+        'meal_type' => TypeCoerce::toString($hotel['meal_type_name'] ?? ''),
         'transport_type' => $transportType,
         'flight' => $flight,
         'bus' => $bus,
@@ -94,7 +95,7 @@ try {
         'num_rooms' => $rooms,
         'total_price' => $sellingPrice,
         'base_price' => $basePrice,
-        'currency' => ValidationHelpers::toString($pricing['currency'] ?? ConfigProvider::getDefaultCurrency()),
+        'currency' => TypeCoerce::toString($pricing['currency'] ?? ConfigProvider::getDefaultCurrency()),
         'additional_services' => $offer['additional_services'] ?? [],
         'payment_terms' => $offer['payment_terms'] ?? [],
         'cancellation_fees' => $offer['cancellation_fees'] ?? [],

@@ -13,6 +13,7 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
 use Tygh\Addons\SphinxHolidays\Services\Container;
 use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -21,8 +22,9 @@ try {
     $input = $raw ? json_decode($raw, true) : null;
     if (!is_array($input)) { $input = $_REQUEST; }
 
-    $offer_id = trim($input['offer_id'] ?? '');
-    $original_price = (float)($input['original_price'] ?? 0);
+    $inputMap = TypeCoerce::toStringMap($input);
+    $offer_id = TypeCoerce::toString($inputMap['offer_id'] ?? '');
+    $original_price = TypeCoerce::toFloat($inputMap['original_price'] ?? 0);
 
     if (empty($offer_id)) {
         echo json_encode(['success' => false, 'message' => 'Missing offer_id']);
@@ -37,7 +39,7 @@ try {
         exit;
     }
 
-    $newPrice = Container::getCartService()->applyCommission((float)($verifyResult['price'] ?? 0));
+    $newPrice = Container::getCartService()->applyCommission(TypeCoerce::toFloat($verifyResult['price'] ?? 0));
 
     $priceDiff = $newPrice - $original_price;
     $currency = ConfigProvider::getDefaultCurrency();

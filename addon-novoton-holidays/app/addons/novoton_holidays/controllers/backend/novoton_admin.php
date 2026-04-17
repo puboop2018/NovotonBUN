@@ -9,6 +9,8 @@ use Tygh\Registry;
 use Tygh\Tygh;
 use Tygh\Addons\NovotonHolidays\PriceInfoSync;
 use Tygh\Addons\NovotonHolidays\Services\Container;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
@@ -22,7 +24,7 @@ if ($mode === 'update_prices') {
     
     if (!empty($_REQUEST['single_product']) && !empty($_REQUEST['product_id'])) {
         // Update single product
-        $productId = (int)($_REQUEST['product_id']);
+        $productId = RequestCoerce::int($_REQUEST, 'product_id');
         
         $sync = new PriceInfoSync();
         $stats = [

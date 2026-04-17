@@ -10,6 +10,7 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 use Tygh\Registry;
 use Tygh\Tygh;
 use Tygh\Addons\NovotonHolidays\Services\PriceInfoFormatter;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
 use Tygh\Addons\TravelCore\Services\CurrencyService;
 use Tygh\Addons\NovotonHolidays\Helpers\JsonDecoder;
@@ -23,16 +24,15 @@ use Tygh\Addons\NovotonHolidays\Helpers\JsonDecoder;
     }
 
     // Get booking record — verify ownership (user_id or session_id)
-    /** @var array<string, mixed> $auth */
-    $auth = is_array(Tygh::$app['session']['auth'] ?? null) ? Tygh::$app['session']['auth'] : [];
+    $auth = TypeCoerce::toStringMap(Tygh::$app['session']['auth'] ?? []);
     $current_user_id = PriceInfoFormatter::toInt($auth['user_id'] ?? 0);
-    $current_session_id = Tygh::$app['session']->getID();
+    $current_session_id = TypeCoerce::toString(Tygh::$app['session']->getID());
 
     $bookingRepo = _nvt_booking_repo();
     /** @var array<string, mixed>|null $booking_record */
     $booking_record = $bookingRepo->findByIdWithOwnership($booking_id, $current_user_id, $current_session_id);
 
-    if (empty($booking_record) || !is_array($booking_record)) {
+    if (empty($booking_record)) {
         fn_set_notification('E', __('error'), __('novoton_holidays.invalid_booking_data'));
         return [CONTROLLER_STATUS_REDIRECT, 'checkout.cart'];
     }
