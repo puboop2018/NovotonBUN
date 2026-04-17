@@ -19,6 +19,7 @@ use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 
+/** @var \Smarty $view */
 $view = Tygh::$app['view'];
 
 $circuit_id = RequestCoerce::int($_REQUEST, 'circuit_id');

@@ -21,6 +21,7 @@ use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 
 try {
     $api = Container::getApi();
+    /** @var \Smarty $view */
     $view = Tygh::$app['view'];
 
     $departure_id = RequestCoerce::int($_REQUEST, 'departure_id');
@@ -161,5 +162,7 @@ try {
     fn_set_notification('E', __('error'),
         __('sphinx_holidays.search_error', ['[default]' => 'An error occurred while searching. Please try again later.']));
 
-    Tygh::$app['view']->assign('sphinx_package_results', []);
+    /** @var \Smarty $errorView */
+    $errorView = Tygh::$app['view'];
+    $errorView->assign('sphinx_package_results', []);
 }

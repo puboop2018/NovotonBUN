@@ -112,7 +112,7 @@ use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
     $roomsJsonStr = RequestCoerce::string($_REQUEST, 'rooms_json');
     if (!empty($roomsJsonStr)) {
         $roomsJsonRaw = json_decode($roomsJsonStr, true);
-        $rooms_data = is_array($roomsJsonRaw) ? $roomsJsonRaw : [];
+        $rooms_data = is_array($roomsJsonRaw) ? TypeCoerce::toRowList($roomsJsonRaw) : [];
     }
     if (empty($rooms_data)) {
         $rooms_data = [['room_id' => '', 'room_name' => $roomName, 'adults' => $adults, 'children' => $children]];
@@ -127,10 +127,11 @@ use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
     $booking_record = $cartService->buildBaseBookingRecord(
         $product_id, $hotel_id, $offer_id, $hotelName,
         $parsed_guests, $contact, $basePrice, $total_price, $priceCurrency,
-        $customized ?? $bookingData
+        is_array($customized) ? TypeCoerce::toStringMap($customized) : $bookingData
     );
+    $firstRoom = TypeCoerce::toStringMap($rooms_data[0]);
     $booking_record += [
-        'room_id'       => $rooms_data[0]['room_id'] ?? '',
+        'room_id'       => TypeCoerce::toString($firstRoom['room_id'] ?? ''),
         'room_type'     => 'package',
         'board_id'      => $boardName,
         'check_in'      => $check_in,
@@ -144,7 +145,7 @@ use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
     ];
 
     $booking_id = $cartService->upsertBooking(
-        $booking_record, $hotel_id, $check_in, $check_out, $parsed_guests['holder_name']
+        $booking_record, $hotel_id, $check_in, $check_out, TypeCoerce::toString($parsed_guests['holder_name'])
     );
 
     $product_extra = [
@@ -152,7 +153,7 @@ use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
         'travel_booking_id' => $booking_id, 'travel_provider' => 'sphinx',
         'booking_type' => 'package',
         'hotel_id' => $hotel_id, 'hotel_name' => $hotelName, 'offer_id' => $offer_id,
-        'room_id' => $rooms_data[0]['room_id'] ?? '', 'room_name' => $roomName,
+        'room_id' => TypeCoerce::toString($firstRoom['room_id'] ?? ''), 'room_name' => $roomName,
         'board_id' => $boardName, 'board_name' => $boardName,
         'check_in' => $check_in, 'check_out' => $check_out, 'nights' => $nights,
         'adults' => $adults, 'children' => $children, 'children_ages' => $children_ages,

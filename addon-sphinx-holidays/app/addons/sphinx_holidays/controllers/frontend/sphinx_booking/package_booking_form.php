@@ -20,6 +20,7 @@ use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 
+/** @var \Smarty $view */
 $view = Tygh::$app['view'];
 
 $offer_id = RequestCoerce::string($_REQUEST, 'offer_id');
@@ -41,7 +42,7 @@ try {
     // Verify the offer — this returns full pricing, payment terms, cancellation fees
     $verifyResult = $api->verifyPackageOffer($offer_id);
 
-    if (empty($verifyResult) || !is_array($verifyResult) || empty($verifyResult['data']) || !is_array($verifyResult['data'])) {
+    if (empty($verifyResult) || empty($verifyResult['data']) || !is_array($verifyResult['data'])) {
         fn_set_notification('W', __('warning'),
             __('sphinx_holidays.offer_unavailable', ['[default]' => 'This offer is no longer available.']));
         return [CONTROLLER_STATUS_REDIRECT, 'sphinx_booking.package_search'];

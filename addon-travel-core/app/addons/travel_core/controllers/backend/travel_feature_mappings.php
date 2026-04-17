@@ -27,6 +27,9 @@ if (fn_allowed_for('MULTIVENDOR') || (defined('RESTRICTED_ADMIN') && RESTRICTED_
     return [CONTROLLER_STATUS_DENIED];
 }
 
+/** @var \Smarty $view */
+$view = Tygh::$app['view'];
+
 // Valid feature types — derived from FeatureMapper to stay in sync automatically
 $validFeatureTypes = array_merge(FeatureMapper::STRICT_FEATURE_TYPES, FeatureMapper::DYNAMIC_FEATURE_TYPES);
 
@@ -430,13 +433,13 @@ if ($mode === 'manage') {
         // Providers with scan config (for "Scan Facilities" dropdown)
         $scanProviders = array_keys(TravelProviderRegistry::getAllScanConfigs());
 
-        Tygh::$app['view']->assign('view_mode', 'dashboard');
-        Tygh::$app['view']->assign('type_stats', $typeStats);
-        Tygh::$app['view']->assign('type_labels', $typeLabels);
-        Tygh::$app['view']->assign('unmapped_count', $unmappedCount);
-        Tygh::$app['view']->assign('mapping_stats', $stats);
-        Tygh::$app['view']->assign('feature_types', $validFeatureTypes);
-        Tygh::$app['view']->assign('scan_providers', $scanProviders);
+        $view->assign('view_mode', 'dashboard');
+        $view->assign('type_stats', $typeStats);
+        $view->assign('type_labels', $typeLabels);
+        $view->assign('unmapped_count', $unmappedCount);
+        $view->assign('mapping_stats', $stats);
+        $view->assign('feature_types', $validFeatureTypes);
+        $view->assign('scan_providers', $scanProviders);
 
     } else {
         // ── List mode (feature_type selected, paginated) ──
@@ -540,13 +543,13 @@ if ($mode === 'manage') {
             'total_items'    => $totalItems,
         ];
 
-        Tygh::$app['view']->assign('view_mode', 'list');
-        Tygh::$app['view']->assign('mappings', $mappings);
-        Tygh::$app['view']->assign('search', $search);
-        Tygh::$app['view']->assign('type_stats', $typeStats);
-        Tygh::$app['view']->assign('type_label', $typeLabels[$featureTypeFilter]);
-        Tygh::$app['view']->assign('configured_feature_id', FeatureMapper::getFeatureId($featureTypeFilter));
-        Tygh::$app['view']->assign('feature_types', $validFeatureTypes);
+        $view->assign('view_mode', 'list');
+        $view->assign('mappings', $mappings);
+        $view->assign('search', $search);
+        $view->assign('type_stats', $typeStats);
+        $view->assign('type_label', $typeLabels[$featureTypeFilter]);
+        $view->assign('configured_feature_id', FeatureMapper::getFeatureId($featureTypeFilter));
+        $view->assign('feature_types', $validFeatureTypes);
     }
 }
 
@@ -584,8 +587,8 @@ if ($mode === 'unmapped') {
         'total_items'    => $totalItems,
     ];
 
-    Tygh::$app['view']->assign('unmapped_values', $unmapped);
-    Tygh::$app['view']->assign('search', $search);
+    $view->assign('unmapped_values', $unmapped);
+    $view->assign('search', $search);
 }
 
 // ── GET: Scan progress (intermediate page between batches) ──
@@ -597,11 +600,11 @@ if ($mode === 'scan_progress') {
 
     $percent = $scanTotal > 0 ? round($scanOffset / $scanTotal * 100, 1) : 0;
 
-    Tygh::$app['view']->assign('scan_provider', $provider);
-    Tygh::$app['view']->assign('scan_offset', $scanOffset);
-    Tygh::$app['view']->assign('scan_total', $scanTotal);
-    Tygh::$app['view']->assign('scan_percent', $percent);
-    Tygh::$app['view']->assign('batch_size', $batchSize);
+    $view->assign('scan_provider', $provider);
+    $view->assign('scan_offset', $scanOffset);
+    $view->assign('scan_total', $scanTotal);
+    $view->assign('scan_percent', $percent);
+    $view->assign('batch_size', $batchSize);
 }
 
 // ── GET: Edit single mapping ──
@@ -631,10 +634,10 @@ if ($mode === 'edit') {
     // Load aliases for this mapping
     $aliases = $repo->getAliasesForMapping($mapId);
 
-    Tygh::$app['view']->assign('mapping', $mapping);
-    Tygh::$app['view']->assign('all_features', $allFeatures);
-    Tygh::$app['view']->assign('feature_variants', $featureVariants);
-    Tygh::$app['view']->assign('aliases', $aliases);
+    $view->assign('mapping', $mapping);
+    $view->assign('all_features', $allFeatures);
+    $view->assign('feature_variants', $featureVariants);
+    $view->assign('aliases', $aliases);
 }
 
 // ── GET: AJAX — load variants for a feature (used by edit page) ──

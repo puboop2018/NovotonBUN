@@ -24,6 +24,7 @@ use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 
 try {
     $api = Container::getApi();
+    /** @var \Smarty $view */
     $view = Tygh::$app['view'];
 
     $check_in = RequestCoerce::string($_REQUEST, 'check_in');
@@ -134,13 +135,16 @@ try {
     }
 
     // Store search params in session so search_poll can cache completed results
-    Tygh::$app['session']['sphinx_search_' . $searchResponse['search_id']] = [
+    $searchIdStr = TypeCoerce::toString($searchResponse['search_id']);
+    /** @var array<string, mixed> $session */
+    $session = &Tygh::$app['session'];
+    $session['sphinx_search_' . $searchIdStr] = [
         'params'   => $searchParams,
         'cache_key' => $cacheEnabled && $cacheTtl > 0 ? CacheService::buildSearchKey($searchParams) : '',
         'cache_ttl' => $cacheTtl,
     ];
 
-    $view->assign('sphinx_search_id', $searchResponse['search_id']);
+    $view->assign('sphinx_search_id', $searchIdStr);
     $view->assign('sphinx_search_status', 'pending');
 
 } catch (\Throwable $e) {
@@ -153,6 +157,8 @@ try {
         __('sphinx_holidays.search_error',
             ['[default]' => 'An error occurred while searching. Please try again later.']));
 
-    Tygh::$app['view']->assign('sphinx_search_results', []);
-    Tygh::$app['view']->assign('sphinx_search_status', 'error');
+    /** @var \Smarty $errorView */
+    $errorView = Tygh::$app['view'];
+    $errorView->assign('sphinx_search_results', []);
+    $errorView->assign('sphinx_search_status', 'error');
 }

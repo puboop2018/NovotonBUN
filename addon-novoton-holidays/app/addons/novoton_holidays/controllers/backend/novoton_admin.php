@@ -365,10 +365,10 @@ if ($mode === 'run_cron') {
 
         $output = implode("\n", $outputLines);
 
-        $resultMessage = is_array($result) ? TypeCoerce::toString($result['message'] ?? '') : '';
+        $resultMessage = TypeCoerce::toString($result['message'] ?? '');
         echo json_encode([
             'success' => true,
-            'output'  => $output . "\n" . ($resultMessage !== '' ? $resultMessage : json_encode($result)),
+            'output'  => $output . "\n" . ($resultMessage !== '' ? $resultMessage : (string) json_encode($result)),
         ]);
 
     } catch (Exception $e) {

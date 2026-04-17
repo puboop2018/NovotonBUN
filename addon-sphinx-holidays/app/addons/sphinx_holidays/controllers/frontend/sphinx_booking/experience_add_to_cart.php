@@ -98,7 +98,7 @@ use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
     ];
 
     $booking_id = $cartService->upsertBooking(
-        $booking_record, (string) $experience_id, $departure_date, '', $parsed_guests['holder_name']
+        $booking_record, (string) $experience_id, $departure_date, '', TypeCoerce::toString($parsed_guests['holder_name'])
     );
 
     $product_extra = [

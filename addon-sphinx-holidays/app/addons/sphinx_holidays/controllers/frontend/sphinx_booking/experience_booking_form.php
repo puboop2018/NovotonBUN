@@ -20,6 +20,7 @@ use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 
+/** @var \Smarty $view */
 $view = Tygh::$app['view'];
 
 $experience_id = RequestCoerce::int($_REQUEST, 'experience_id');

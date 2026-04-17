@@ -38,6 +38,9 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
+/** @var \Smarty $view */
+$view = Tygh::$app['view'];
+
 /**
  * Mode: export_hotel_features_csv
  * Generate and immediately download CSV file with hotel features
@@ -438,14 +441,14 @@ if ($mode === 'test_hotel_request') {
     $hotel_id = RequestCoerce::string($_REQUEST, 'hotel_id');
 
     // Pass all form values back to template so they persist after submission (sanitized for XSS)
-    Tygh::$app['view']->assign('hotel_id', htmlspecialchars($hotel_id, ENT_QUOTES, 'UTF-8'));
-    Tygh::$app['view']->assign('package_name', htmlspecialchars(RequestCoerce::string($_REQUEST, 'package_name', ''), ENT_QUOTES, 'UTF-8'));
-    Tygh::$app['view']->assign('check_in', htmlspecialchars(RequestCoerce::string($_REQUEST, 'check_in', ''), ENT_QUOTES, 'UTF-8'));
-    Tygh::$app['view']->assign('check_out', htmlspecialchars(RequestCoerce::string($_REQUEST, 'check_out', ''), ENT_QUOTES, 'UTF-8'));
-    Tygh::$app['view']->assign('adults', htmlspecialchars(RequestCoerce::string($_REQUEST, 'adults', '2'), ENT_QUOTES, 'UTF-8'));
-    Tygh::$app['view']->assign('room_id', htmlspecialchars(RequestCoerce::string($_REQUEST, 'room_id', ''), ENT_QUOTES, 'UTF-8'));
-    Tygh::$app['view']->assign('board_id', htmlspecialchars(RequestCoerce::string($_REQUEST, 'board_id', ''), ENT_QUOTES, 'UTF-8'));
-    Tygh::$app['view']->assign('holder', htmlspecialchars(RequestCoerce::string($_REQUEST, 'holder', ''), ENT_QUOTES, 'UTF-8'));
+    $view->assign('hotel_id', htmlspecialchars($hotel_id, ENT_QUOTES, 'UTF-8'));
+    $view->assign('package_name', htmlspecialchars(RequestCoerce::string($_REQUEST, 'package_name', ''), ENT_QUOTES, 'UTF-8'));
+    $view->assign('check_in', htmlspecialchars(RequestCoerce::string($_REQUEST, 'check_in', ''), ENT_QUOTES, 'UTF-8'));
+    $view->assign('check_out', htmlspecialchars(RequestCoerce::string($_REQUEST, 'check_out', ''), ENT_QUOTES, 'UTF-8'));
+    $view->assign('adults', htmlspecialchars(RequestCoerce::string($_REQUEST, 'adults', '2'), ENT_QUOTES, 'UTF-8'));
+    $view->assign('room_id', htmlspecialchars(RequestCoerce::string($_REQUEST, 'room_id', ''), ENT_QUOTES, 'UTF-8'));
+    $view->assign('board_id', htmlspecialchars(RequestCoerce::string($_REQUEST, 'board_id', ''), ENT_QUOTES, 'UTF-8'));
+    $view->assign('holder', htmlspecialchars(RequestCoerce::string($_REQUEST, 'holder', ''), ENT_QUOTES, 'UTF-8'));
 
     if (!empty($hotel_id)) {
         try {
@@ -458,13 +461,13 @@ if ($mode === 'test_hotel_request') {
 
             $hotel_desc = $hotels->getHotelDescription($hotel_id, 'UK', true);
 
-            Tygh::$app['view']->assign('hotel_info', $hotel_info);
-            Tygh::$app['view']->assign('hotel_desc', $hotel_desc);
-            Tygh::$app['view']->assign('last_request', $last_request);
-            Tygh::$app['view']->assign('last_response', $last_response);
+            $view->assign('hotel_info', $hotel_info);
+            $view->assign('hotel_desc', $hotel_desc);
+            $view->assign('last_request', $last_request);
+            $view->assign('last_response', $last_response);
 
         } catch (Exception $e) {
-            Tygh::$app['view']->assign('error', $e->getMessage());
+            $view->assign('error', $e->getMessage());
         }
     }
 }
@@ -479,10 +482,10 @@ if ($mode === 'test_alternative_rs') {
     $check_in = RequestCoerce::string($_REQUEST, 'check_in', date('Y-m-d', strtotime('+' . Constants::DEFAULT_CHECKIN_DAYS_AHEAD . ' days')));
     $check_out = RequestCoerce::string($_REQUEST, 'check_out', date('Y-m-d', strtotime('+' . (Constants::DEFAULT_CHECKIN_DAYS_AHEAD + Constants::DEFAULT_STAY_NIGHTS) . ' days')));
 
-    Tygh::$app['view']->assign('hotel_id', htmlspecialchars($hotel_id, ENT_QUOTES, 'UTF-8'));
-    Tygh::$app['view']->assign('id_num', htmlspecialchars($id_num, ENT_QUOTES, 'UTF-8'));
-    Tygh::$app['view']->assign('check_in', htmlspecialchars($check_in, ENT_QUOTES, 'UTF-8'));
-    Tygh::$app['view']->assign('check_out', htmlspecialchars($check_out, ENT_QUOTES, 'UTF-8'));
+    $view->assign('hotel_id', htmlspecialchars($hotel_id, ENT_QUOTES, 'UTF-8'));
+    $view->assign('id_num', htmlspecialchars($id_num, ENT_QUOTES, 'UTF-8'));
+    $view->assign('check_in', htmlspecialchars($check_in, ENT_QUOTES, 'UTF-8'));
+    $view->assign('check_out', htmlspecialchars($check_out, ENT_QUOTES, 'UTF-8'));
 
     if (!empty($_REQUEST['search']) && !empty($hotel_id)) {
         try {
@@ -498,11 +501,11 @@ if ($mode === 'test_alternative_rs') {
 
             $results = $api->availability()->searchAvailability($params);
 
-            Tygh::$app['view']->assign('results', $results);
-            Tygh::$app['view']->assign('last_request', $api->getLastRequestFormatted());
+            $view->assign('results', $results);
+            $view->assign('last_request', $api->getLastRequestFormatted());
 
         } catch (Exception $e) {
-            Tygh::$app['view']->assign('error', $e->getMessage());
+            $view->assign('error', $e->getMessage());
         }
     }
 }

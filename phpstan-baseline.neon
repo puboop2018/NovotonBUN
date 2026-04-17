@@ -25,12 +25,6 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_admin.php
 
 		-
-			message: '#^Call to function is_array\(\) with array\<string, mixed\> will always evaluate to true\.$#'
-			identifier: function.alreadyNarrowedType
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_admin.php
-
-		-
 			message: '#^Cannot access offset ''view'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 3
@@ -43,12 +37,6 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_admin.php
 
 		-
-			message: '#^Binary operation "\." between mixed and ''novoton_holidays…'' results in an error\.$#'
-			identifier: binaryOp.invalid
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_alternatives.php
-
-		-
 			message: '#^Cannot access offset ''mailer'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
@@ -57,54 +45,6 @@ parameters:
 		-
 			message: '#^Cannot access offset ''view'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
-			count: 8
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_alternatives.php
-
-		-
-			message: '#^Cannot call method assign\(\) on mixed\.$#'
-			identifier: method.nonObject
-			count: 8
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_alternatives.php
-
-		-
-			message: '#^Cannot call method send\(\) on mixed\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_alternatives.php
-
-		-
-			message: '#^Cannot cast mixed to int\.$#'
-			identifier: cast.int
-			count: 6
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_alternatives.php
-
-		-
-			message: '#^Parameter \#1 \$idNum of method Tygh\\Addons\\NovotonHolidays\\Api\\ReservationApiClient\:\:getAlternatives\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_alternatives.php
-
-		-
-			message: '#^Parameter \#1 \$json of function json_decode expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 4
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_alternatives.php
-
-		-
-			message: '#^Parameter \#1 \$request_id of method Tygh\\Addons\\NovotonHolidays\\Repository\\AlternativeRequestRepositoryInterface\:\:markAlternativesFound\(\) expects int, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_alternatives.php
-
-		-
-			message: '#^Parameter \#1 \$string of function htmlspecialchars expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_alternatives.php
-
-		-
-			message: '#^Parameter \#1 \$string of function strtolower expects string, mixed given\.$#'
-			identifier: argument.type
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_alternatives.php
 
@@ -447,13 +387,7 @@ parameters:
 		-
 			message: '#^Cannot access offset ''view'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
-			count: 20
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_tools.php
-
-		-
-			message: '#^Cannot call method assign\(\) on mixed\.$#'
-			identifier: method.nonObject
-			count: 20
+			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_tools.php
 
 		-
@@ -655,12 +589,6 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/booking_form.php
 
 		-
-			message: '#^Argument of an invalid type mixed supplied for foreach, only iterables are supported\.$#'
-			identifier: foreach.nonIterable
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/edit_booking.php
-
-		-
 			message: '#^Cannot access offset ''auth'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 2
@@ -692,12 +620,6 @@ parameters:
 
 		-
 			message: '#^Cannot call method getID\(\) on mixed\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/edit_booking.php
-
-		-
-			message: '#^Cannot call method getPackageIdNamePairs\(\) on mixed\.$#'
 			identifier: method.nonObject
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/edit_booking.php
@@ -1159,18 +1081,6 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/bookings.php
 
 		-
-			message: '#^Argument of an invalid type mixed supplied for foreach, only iterables are supported\.$#'
-			identifier: foreach.nonIterable
-			count: 8
-			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/email.php
-
-		-
-			message: '#^Binary operation "\." between ''NVT'' and mixed results in an error\.$#'
-			identifier: binaryOp.invalid
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/email.php
-
-		-
 			message: '#^Binary operation "\." between mixed and ''novoton_reports/'' results in an error\.$#'
 			identifier: binaryOp.invalid
 			count: 4
@@ -1179,31 +1089,7 @@ parameters:
 		-
 			message: '#^Call to function is_array\(\) with array\<string, mixed\> will always evaluate to true\.$#'
 			identifier: function.alreadyNarrowedType
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/email.php
-
-		-
-			message: '#^Cannot access offset ''IdBoard'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/email.php
-
-		-
-			message: '#^Cannot access offset ''IdRoom'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/email.php
-
-		-
-			message: '#^Cannot access offset ''hotel_id'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 4
-			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/email.php
-
-		-
-			message: '#^Cannot access offset ''hotel_type'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 2
+			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/email.php
 
 		-
@@ -1213,80 +1099,8 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/email.php
 
 		-
-			message: '#^Cannot access offset ''priceinfo_data'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/email.php
-
-		-
-			message: '#^Cannot access offset ''product_code'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/email.php
-
-		-
-			message: '#^Cannot access offset ''season_price'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/email.php
-
-		-
-			message: '#^Cannot cast mixed to int\.$#'
-			identifier: cast.int
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/email.php
-
-		-
-			message: '#^Cannot cast mixed to string\.$#'
-			identifier: cast.string
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/email.php
-
-		-
 			message: '#^Function fn_novoton_holidays_send_import_report_email\(\) should return bool but returns mixed\.$#'
 			identifier: return.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/email.php
-
-		-
-			message: '#^Parameter \#1 \$array of function array_column expects array, mixed given\.$#'
-			identifier: argument.type
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/email.php
-
-		-
-			message: '#^Parameter \#1 \$boardId of function fn_novoton_holidays_format_board_name expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 4
-			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/email.php
-
-		-
-			message: '#^Parameter \#1 \$hotel_id of function fn_novoton_holidays_get_hotel_data expects int\|string\|null, mixed given\.$#'
-			identifier: argument.type
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/email.php
-
-		-
-			message: '#^Parameter \#1 \$hotel_ids of function fn_novoton_holidays_prefetch_hotel_data expects list\<string\>, non\-empty\-list given\.$#'
-			identifier: argument.type
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/email.php
-
-		-
-			message: '#^Parameter \#1 \$results of function fn_novoton_holidays_generate_import_csv_report expects array\<string, mixed\>, array\<mixed\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/email.php
-
-		-
-			message: '#^Parameter \#1 \$string of function htmlspecialchars expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/email.php
-
-		-
-			message: '#^Parameter \#1 \$value of function fn_novoton_holidays_csv_escape expects string, mixed given\.$#'
-			identifier: argument.type
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/email.php
 
@@ -4795,144 +4609,6 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/CartAssemblyService.php
 
 		-
-			message: '#^Cannot access offset ''age'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/CartAssemblyService.php
-
-		-
-			message: '#^Cannot access offset ''childrenAges'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/CartAssemblyService.php
-
-		-
-			message: '#^Cannot access offset ''children_ages_str'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/CartAssemblyService.php
-
-		-
-			message: '#^Cannot access offset ''email'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/CartAssemblyService.php
-
-		-
-			message: '#^Cannot access offset ''name'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/CartAssemblyService.php
-
-		-
-			message: '#^Cannot access offset ''phone'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/CartAssemblyService.php
-
-		-
-			message: '#^Cannot access offset ''room'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/CartAssemblyService.php
-
-		-
-			message: '#^Cannot access offset ''room_id'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 3
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/CartAssemblyService.php
-
-		-
-			message: '#^Cannot access offset ''room_name'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/CartAssemblyService.php
-
-		-
-			message: '#^Cannot access offset ''room_type_display'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/CartAssemblyService.php
-
-		-
-			message: '#^Cannot access offset ''type'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/CartAssemblyService.php
-
-		-
-			message: '#^Cannot cast mixed to int\.$#'
-			identifier: cast.int
-			count: 6
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/CartAssemblyService.php
-
-		-
-			message: '#^Parameter \#1 \$boardCode of static method Tygh\\Addons\\TravelCore\\ValueObjects\\BoardType\:\:toDisplayName\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/CartAssemblyService.php
-
-		-
-			message: '#^Parameter \#1 \$checkIn of static method Tygh\\Addons\\NovotonHolidays\\Services\\CartAssemblyService\:\:calculateNights\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/CartAssemblyService.php
-
-		-
-			message: '#^Parameter \#1 \$roomCode of static method Tygh\\Addons\\TravelCore\\ValueObjects\\RoomType\:\:normalizeRoomCode\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/CartAssemblyService.php
-
-		-
-			message: '#^Parameter \#1 \$roomId of static method Tygh\\Addons\\TravelCore\\ValueObjects\\RoomType\:\:formatRoomLabel\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 3
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/CartAssemblyService.php
-
-		-
-			message: '#^Parameter \#1 \$xmlString of static method Tygh\\Addons\\NovotonHolidays\\Services\\TermsFormatter\:\:formatCancellationTerms\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/CartAssemblyService.php
-
-		-
-			message: '#^Parameter \#1 \$xmlString of static method Tygh\\Addons\\NovotonHolidays\\Services\\TermsFormatter\:\:formatPaymentTerms\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/CartAssemblyService.php
-
-		-
-			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, array\<mixed\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/CartAssemblyService.php
-
-		-
-			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, list\<mixed\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/CartAssemblyService.php
-
-		-
-			message: '#^Parameter \#2 \$checkIn of static method Tygh\\Addons\\NovotonHolidays\\Services\\TermsFormatter\:\:formatCancellationTerms\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/CartAssemblyService.php
-
-		-
-			message: '#^Parameter \#2 \$checkOut of static method Tygh\\Addons\\NovotonHolidays\\Services\\CartAssemblyService\:\:calculateNights\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/CartAssemblyService.php
-
-		-
-			message: '#^Parameter \#3 \$subject of function str_replace expects array\<string\>\|string, mixed given\.$#'
-			identifier: argument.type
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/CartAssemblyService.php
-
-		-
 			message: '#^Cannot cast mixed to float\.$#'
 			identifier: cast.double
 			count: 2
@@ -6301,33 +5977,9 @@ parameters:
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/frontend/sphinx_booking/booking_form.php
 
 		-
-			message: '#^Cannot call method assign\(\) on mixed\.$#'
-			identifier: method.nonObject
-			count: 2
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/frontend/sphinx_booking/booking_form.php
-
-		-
-			message: '#^Parameter \#10 \$apiResponse of method Tygh\\Addons\\SphinxHolidays\\Services\\CartService\:\:buildBaseBookingRecord\(\) expects array\<string, mixed\>, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/frontend/sphinx_booking/circuit_add_to_cart.php
-
-		-
-			message: '#^Parameter \#5 \$holderName of method Tygh\\Addons\\SphinxHolidays\\Services\\CartService\:\:upsertBooking\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/frontend/sphinx_booking/circuit_add_to_cart.php
-
-		-
 			message: '#^Cannot access offset ''view'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/frontend/sphinx_booking/circuit_booking_form.php
-
-		-
-			message: '#^Cannot call method assign\(\) on mixed\.$#'
-			identifier: method.nonObject
-			count: 2
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/frontend/sphinx_booking/circuit_booking_form.php
 
 		-
@@ -6337,27 +5989,9 @@ parameters:
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/frontend/sphinx_booking/circuit_search.php
 
 		-
-			message: '#^Cannot call method assign\(\) on mixed\.$#'
-			identifier: method.nonObject
-			count: 4
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/frontend/sphinx_booking/circuit_search.php
-
-		-
-			message: '#^Parameter \#5 \$holderName of method Tygh\\Addons\\SphinxHolidays\\Services\\CartService\:\:upsertBooking\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/frontend/sphinx_booking/experience_add_to_cart.php
-
-		-
 			message: '#^Cannot access offset ''view'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/frontend/sphinx_booking/experience_booking_form.php
-
-		-
-			message: '#^Cannot call method assign\(\) on mixed\.$#'
-			identifier: method.nonObject
-			count: 2
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/frontend/sphinx_booking/experience_booking_form.php
 
 		-
@@ -6367,45 +6001,9 @@ parameters:
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/frontend/sphinx_booking/experience_search.php
 
 		-
-			message: '#^Cannot call method assign\(\) on mixed\.$#'
-			identifier: method.nonObject
-			count: 4
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/frontend/sphinx_booking/experience_search.php
-
-		-
-			message: '#^Cannot access offset ''room_id'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 2
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/frontend/sphinx_booking/package_add_to_cart.php
-
-		-
-			message: '#^Parameter \#10 \$apiResponse of method Tygh\\Addons\\SphinxHolidays\\Services\\CartService\:\:buildBaseBookingRecord\(\) expects array\<string, mixed\>, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/frontend/sphinx_booking/package_add_to_cart.php
-
-		-
-			message: '#^Parameter \#5 \$holderName of method Tygh\\Addons\\SphinxHolidays\\Services\\CartService\:\:upsertBooking\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/frontend/sphinx_booking/package_add_to_cart.php
-
-		-
-			message: '#^Call to function is_array\(\) with non\-empty\-array\<string, mixed\> will always evaluate to true\.$#'
-			identifier: function.alreadyNarrowedType
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/frontend/sphinx_booking/package_booking_form.php
-
-		-
 			message: '#^Cannot access offset ''view'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/frontend/sphinx_booking/package_booking_form.php
-
-		-
-			message: '#^Cannot call method assign\(\) on mixed\.$#'
-			identifier: method.nonObject
-			count: 2
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/frontend/sphinx_booking/package_booking_form.php
 
 		-
@@ -6413,18 +6011,6 @@ parameters:
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 2
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/frontend/sphinx_booking/package_search.php
-
-		-
-			message: '#^Cannot call method assign\(\) on mixed\.$#'
-			identifier: method.nonObject
-			count: 5
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/frontend/sphinx_booking/package_search.php
-
-		-
-			message: '#^Binary operation "\." between ''sphinx_search_'' and mixed results in an error\.$#'
-			identifier: binaryOp.invalid
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/frontend/sphinx_booking/search.php
 
 		-
 			message: '#^Cannot access offset ''session'' on mixed\.$#'
@@ -6435,19 +6021,7 @@ parameters:
 		-
 			message: '#^Cannot access offset ''view'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
-			count: 3
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/frontend/sphinx_booking/search.php
-
-		-
-			message: '#^Cannot access offset non\-falsy\-string on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/frontend/sphinx_booking/search.php
-
-		-
-			message: '#^Cannot call method assign\(\) on mixed\.$#'
-			identifier: method.nonObject
-			count: 12
+			count: 2
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/frontend/sphinx_booking/search.php
 
 		-
@@ -8985,13 +8559,13 @@ parameters:
 		-
 			message: '#^Cannot access offset ''view'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
-			count: 25
+			count: 1
 			path: addon-travel-core/app/addons/travel_core/controllers/backend/travel_feature_mappings.php
 
 		-
 			message: '#^Cannot call method assign\(\) on mixed\.$#'
 			identifier: method.nonObject
-			count: 26
+			count: 1
 			path: addon-travel-core/app/addons/travel_core/controllers/backend/travel_feature_mappings.php
 
 		-

@@ -17,6 +17,7 @@ use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 
+/** @var \Smarty $view */
 $view = Tygh::$app['view'];
 
 $offer_id = RequestCoerce::string($_REQUEST, 'offer_id');

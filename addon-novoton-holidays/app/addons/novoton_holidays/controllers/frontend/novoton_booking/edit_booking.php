@@ -174,15 +174,10 @@ use Tygh\Addons\NovotonHolidays\Helpers\JsonDecoder;
 
     // V3: Get all packages from novoton_hotel_packages table
     $all_packages = [];
-    if (!isset($packageRepo)) {
-        $packageRepo = \Tygh\Addons\NovotonHolidays\Services\Container::getInstance()->hotelPackageRepository();
-    }
+    $packageRepo = \Tygh\Addons\NovotonHolidays\Services\Container::getInstance()->hotelPackageRepository();
     $db_packages = $packageRepo->getPackageIdNamePairs($brHotelId);
     if (!empty($db_packages)) {
         foreach ($db_packages as $pkg) {
-            if (!is_array($pkg)) {
-                continue;
-            }
             $all_packages[] = [
                 'IdCont' => PriceInfoFormatter::toScalar($pkg['package_id'] ?? ''),
                 'PackageName' => PriceInfoFormatter::toScalar($pkg['package_name'] ?? '')

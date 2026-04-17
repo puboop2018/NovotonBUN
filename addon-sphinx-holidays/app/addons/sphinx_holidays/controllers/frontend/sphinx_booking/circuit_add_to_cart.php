@@ -125,7 +125,7 @@ use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
     $booking_record = $cartService->buildBaseBookingRecord(
         $product_id, (string) $circuit_id, $offer_id, $title,
         $parsed_guests, $contact, $basePrice, $total_price, $priceCurrency,
-        $customized ?? $bookingData
+        is_array($customized) ? TypeCoerce::toStringMap($customized) : $bookingData
     );
     $booking_record += [
         'room_id'       => $rooms_data[0]['room_id'],
@@ -142,7 +142,7 @@ use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
     ];
 
     $booking_id = $cartService->upsertBooking(
-        $booking_record, (string) $circuit_id, $departure_date, '', $parsed_guests['holder_name']
+        $booking_record, (string) $circuit_id, $departure_date, '', TypeCoerce::toString($parsed_guests['holder_name'])
     );
 
     $product_extra = [
