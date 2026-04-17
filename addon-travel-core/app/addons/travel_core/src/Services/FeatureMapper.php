@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Tygh\Addons\TravelCore\Services;
@@ -41,7 +42,7 @@ class FeatureMapper implements FeatureMapperInterface
      * Strict feature types: unknown codes are logged + skipped, never auto-registered.
      * These have well-defined value sets that shouldn't grow automatically.
      */
-    public const STRICT_FEATURE_TYPES = [
+    public const array STRICT_FEATURE_TYPES = [
         'board', 'room_type', 'stars', 'property_type', 'travel_group',
     ];
 
@@ -49,22 +50,22 @@ class FeatureMapper implements FeatureMapperInterface
      * Dynamic feature types: unknown codes are auto-registered as new mappings.
      * These grow organically as new hotels/facilities appear in API data.
      */
-    public const DYNAMIC_FEATURE_TYPES = [
+    public const array DYNAMIC_FEATURE_TYPES = [
         'hotel_facility', 'room_facility', 'resort', 'region', 'city', 'beach_access',
     ];
 
     /** Feature type → travel_core addon setting key */
-    private const FEATURE_SETTING_KEYS = [
-        'stars'          => 'feature_id_property_rating',
-        'property_type'  => 'feature_id_property_type',
-        'resort'         => 'feature_id_location',
-        'board'          => 'feature_id_meals',
-        'region'         => 'feature_id_region',
-        'city'           => 'feature_id_city',
-        'travel_group'   => 'feature_id_travel_group',
+    private const array FEATURE_SETTING_KEYS = [
+        'stars' => 'feature_id_property_rating',
+        'property_type' => 'feature_id_property_type',
+        'resort' => 'feature_id_location',
+        'board' => 'feature_id_meals',
+        'region' => 'feature_id_region',
+        'city' => 'feature_id_city',
+        'travel_group' => 'feature_id_travel_group',
         'hotel_facility' => 'feature_id_hotel_facility',
-        'room_facility'  => 'feature_id_room_facility',
-        'beach_access'   => 'feature_id_beach_access',
+        'room_facility' => 'feature_id_room_facility',
+        'beach_access' => 'feature_id_beach_access',
     ];
 
     // ── Repository access ──
@@ -96,9 +97,9 @@ class FeatureMapper implements FeatureMapperInterface
      * Uses a single combined query with priority ordering (exact > prefix > contains)
      * and caches results in memory for the duration of the request.
      *
-     * @param string $apiSource   Provider name ('novoton', 'sphinx')
+     * @param string $apiSource Provider name ('novoton', 'sphinx')
      * @param string $featureType Feature type ('board', 'room_type', 'stars', 'hotel_facility', etc.)
-     * @param string $apiValue    Raw value from the API
+     * @param string $apiValue Raw value from the API
      * @return array<string, mixed>|null {map_id, feature_type, canonical_code, display_name_en, display_name_ro, cscart_feature_id, cscart_variant_id, variant_source}
      */
     #[\Override]
@@ -123,7 +124,7 @@ class FeatureMapper implements FeatureMapperInterface
     }
 
     /** All facility sub-types */
-    public const FACILITY_TYPES = ['hotel_facility', 'room_facility', 'beach_access'];
+    public const array FACILITY_TYPES = ['hotel_facility', 'room_facility', 'beach_access'];
 
     /**
      * Resolve a facility API value across all facility sub-types.
@@ -213,10 +214,10 @@ class FeatureMapper implements FeatureMapperInterface
             // Strict: log + skip
             if (function_exists('fn_log_event')) {
                 fn_log_event('general', 'runtime', [
-                    'message'      => "FeatureMapper: Unmapped strict value skipped",
-                    'api_source'   => $apiSource,
+                    'message' => 'FeatureMapper: Unmapped strict value skipped',
+                    'api_source' => $apiSource,
                     'feature_type' => $featureType,
-                    'api_value'    => $apiValue,
+                    'api_value' => $apiValue,
                 ]);
             }
             return null;

@@ -122,6 +122,16 @@
 
 {* Async polling logic *}
 <script>
+window.__sphinxSearchParams = {
+    check_in: "{$sphinx_search_params.check_in|default:''|escape:javascript}",
+    check_out: "{$sphinx_search_params.check_out|default:''|escape:javascript}",
+    nights: {$sphinx_search_params.nights|default:0},
+    currency: "{$sphinx_search_params.currency|default:'EUR'|escape:javascript}",
+    adults: {$sphinx_search_params.adults|default:2},
+    children: {$sphinx_search_params.children|default:0},
+    children_ages: "{$sphinx_search_params.children_ages|default:''|escape:javascript}",
+    rooms: {$sphinx_search_params.rooms|default:1}
+};
 {literal}
 (function() {
     var root = document.querySelector('.sphinx-search-results');
@@ -150,16 +160,7 @@
         ? window.TravelBookingConfig.searchPollDispatch
         : (document.body.getAttribute('data-fn-search-poll-url') || '');
 
-    var searchParams = {{/literal}{
-        check_in: "{$sphinx_search_params.check_in|escape:javascript}",
-        check_out: "{$sphinx_search_params.check_out|escape:javascript}",
-        nights: {$sphinx_search_params.nights|default:0},
-        currency: "{$sphinx_search_params.currency|default:'EUR'|escape:javascript}",
-        adults: {$sphinx_search_params.adults|default:2},
-        children: {$sphinx_search_params.children|default:0},
-        children_ages: "{$sphinx_search_params.children_ages|escape:javascript}",
-        rooms: {$sphinx_search_params.rooms|default:1}
-    }{literal};
+    var searchParams = window.__sphinxSearchParams || {};
 
     function renderCard(result) {
         var stars = '';

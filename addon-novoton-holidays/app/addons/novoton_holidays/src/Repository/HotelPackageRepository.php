@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 /**
  * Novoton Holidays - Hotel Package Repository
  *
@@ -12,12 +14,17 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Repository;
 
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+use Tygh\Addons\TravelCore\Repository\RowNarrowingTrait;
+
 class HotelPackageRepository implements HotelPackageRepositoryInterface
 {
+    use RowNarrowingTrait;
+
     /**
      * Listing columns (excludes large priceinfo_data JSON).
      */
-    private const LISTING_COLUMNS = 'id, hotel_id, package_id, package_name, seasons_count,
+    private const string LISTING_COLUMNS = 'id, hotel_id, package_id, package_name, seasons_count,
         has_early_booking, min_price, currency, needs_price_compute, synced_at, created_at, updated_at';
 
     /**
@@ -25,10 +32,10 @@ class HotelPackageRepository implements HotelPackageRepositoryInterface
      */
     public function findByHotelId(string $hotelId): array
     {
-        return db_get_array(
-            "SELECT " . self::LISTING_COLUMNS . " FROM ?:novoton_hotel_packages WHERE hotel_id = ?s ORDER BY package_name",
-            $hotelId
-        );
+        return self::asRowList(db_get_array(
+            'SELECT ' . self::LISTING_COLUMNS . ' FROM ?:novoton_hotel_packages WHERE hotel_id = ?s ORDER BY package_name',
+            $hotelId,
+        ));
     }
 
     /**
@@ -38,42 +45,45 @@ class HotelPackageRepository implements HotelPackageRepositoryInterface
      */
     public function findByHotelIdFull(string $hotelId): array
     {
-        return db_get_array(
-            "SELECT * FROM ?:novoton_hotel_packages WHERE hotel_id = ?s ORDER BY package_name",
-            $hotelId
-        );
+        return self::asRowList(db_get_array(
+            'SELECT * FROM ?:novoton_hotel_packages WHERE hotel_id = ?s ORDER BY package_name',
+            $hotelId,
+        ));
     }
 
     /**
-     * @return list<array<string, mixed>>|null
+     * @return array<string, mixed>|null
      */
     public function findByHotelAndPackageId(string $hotelId, string $packageId): ?array
     {
-        $row = db_get_row(
-            "SELECT * FROM ?:novoton_hotel_packages WHERE hotel_id = ?s AND package_id = ?s",
-            $hotelId, $packageId
-        );
-        return $row ?: null;
+        $row = self::asRow(db_get_row(
+            'SELECT * FROM ?:novoton_hotel_packages WHERE hotel_id = ?s AND package_id = ?s',
+            $hotelId,
+            $packageId,
+        ));
+        return $row === [] ? null : $row;
     }
 
     /**
-     * @return list<array<string, mixed>>|null
+     * @return array<string, mixed>|null
      */
     public function findByHotelAndPackageName(string $hotelId, string $packageName): ?array
     {
-        $row = db_get_row(
-            "SELECT * FROM ?:novoton_hotel_packages WHERE hotel_id = ?s AND package_name = ?s",
-            $hotelId, $packageName
-        );
-        return $row ?: null;
+        $row = self::asRow(db_get_row(
+            'SELECT * FROM ?:novoton_hotel_packages WHERE hotel_id = ?s AND package_name = ?s',
+            $hotelId,
+            $packageName,
+        ));
+        return $row === [] ? null : $row;
     }
 
     public function exists(string $hotelId, string $packageId): bool
     {
-        return (bool) db_get_field(
-            "SELECT 1 FROM ?:novoton_hotel_packages WHERE hotel_id = ?s AND package_id = ?s",
-            $hotelId, $packageId
-        );
+        return TypeCoerce::toInt(db_get_field(
+            'SELECT 1 FROM ?:novoton_hotel_packages WHERE hotel_id = ?s AND package_id = ?s',
+            $hotelId,
+            $packageId,
+        )) > 0;
     }
 
     /**
@@ -84,28 +94,30 @@ class HotelPackageRepository implements HotelPackageRepositoryInterface
         $data['hotel_id'] = $hotelId;
         $data['package_id'] = $packageId;
         // PHP 8.1+: filter null values to prevent real_escape_string deprecation
-        $data = array_filter($data, static fn($v) => $v !== null);
+        $data = array_filter($data, static fn ($v) => $v !== null);
 
-        $existingId = db_get_field(
-            "SELECT id FROM ?:novoton_hotel_packages WHERE hotel_id = ?s AND package_id = ?s",
-            $hotelId, $packageId
-        );
+        $existingId = TypeCoerce::toInt(db_get_field(
+            'SELECT id FROM ?:novoton_hotel_packages WHERE hotel_id = ?s AND package_id = ?s',
+            $hotelId,
+            $packageId,
+        ));
 
-        if ($existingId) {
+        if ($existingId > 0) {
             return (bool) db_query(
-                "UPDATE ?:novoton_hotel_packages SET ?u WHERE id = ?i",
-                $data, (int) $existingId
+                'UPDATE ?:novoton_hotel_packages SET ?u WHERE id = ?i',
+                $data,
+                $existingId,
             );
         }
 
-        return (bool) db_query("INSERT INTO ?:novoton_hotel_packages ?e", $data);
+        return (bool) db_query('INSERT INTO ?:novoton_hotel_packages ?e', $data);
     }
 
     public function deleteByHotelId(string $hotelId): int
     {
         return (int) db_query(
-            "DELETE FROM ?:novoton_hotel_packages WHERE hotel_id = ?s",
-            $hotelId
+            'DELETE FROM ?:novoton_hotel_packages WHERE hotel_id = ?s',
+            $hotelId,
         );
     }
 
@@ -114,21 +126,21 @@ class HotelPackageRepository implements HotelPackageRepositoryInterface
      */
     public function findEarlyBookingPackage(string $hotelId): ?array
     {
-        $row = db_get_row(
+        $row = self::asRow(db_get_row(
             "SELECT priceinfo_data FROM ?:novoton_hotel_packages
              WHERE hotel_id = ?s AND has_early_booking = 'Y' AND priceinfo_data IS NOT NULL
              ORDER BY synced_at DESC LIMIT 1",
-            $hotelId
-        );
-        return $row ?: null;
+            $hotelId,
+        ));
+        return $row === [] ? null : $row;
     }
 
     public function countByHotelId(string $hotelId): int
     {
-        return (int) db_get_field(
-            "SELECT COUNT(*) FROM ?:novoton_hotel_packages WHERE hotel_id = ?s",
-            $hotelId
-        );
+        return TypeCoerce::toInt(db_get_field(
+            'SELECT COUNT(*) FROM ?:novoton_hotel_packages WHERE hotel_id = ?s',
+            $hotelId,
+        ));
     }
 
     /**
@@ -136,62 +148,63 @@ class HotelPackageRepository implements HotelPackageRepositoryInterface
      */
     public function findForListing(string $hotelId): array
     {
-        return db_get_array(
-            "SELECT " . self::LISTING_COLUMNS . " FROM ?:novoton_hotel_packages
-             WHERE hotel_id = ?s ORDER BY package_name",
-            $hotelId
-        );
+        return self::asRowList(db_get_array(
+            'SELECT ' . self::LISTING_COLUMNS . ' FROM ?:novoton_hotel_packages
+             WHERE hotel_id = ?s ORDER BY package_name',
+            $hotelId,
+        ));
     }
 
     public function getPriceinfoData(string $hotelId, ?string $packageName = null): ?string
     {
         if ($packageName !== null) {
-            $data = db_get_field(
-                "SELECT priceinfo_data FROM ?:novoton_hotel_packages
+            $data = TypeCoerce::toString(db_get_field(
+                'SELECT priceinfo_data FROM ?:novoton_hotel_packages
                  WHERE hotel_id = ?s AND package_name = ?s
-                 ORDER BY synced_at DESC LIMIT 1",
-                $hotelId, $packageName
-            );
+                 ORDER BY synced_at DESC LIMIT 1',
+                $hotelId,
+                $packageName,
+            ));
         } else {
-            $data = db_get_field(
-                "SELECT priceinfo_data FROM ?:novoton_hotel_packages
+            $data = TypeCoerce::toString(db_get_field(
+                'SELECT priceinfo_data FROM ?:novoton_hotel_packages
                  WHERE hotel_id = ?s
-                 ORDER BY synced_at DESC LIMIT 1",
-                $hotelId
-            );
+                 ORDER BY synced_at DESC LIMIT 1',
+                $hotelId,
+            ));
         }
-        return ($data !== false && $data !== '') ? (string) $data : null;
+        return $data === '' ? null : $data;
     }
 
     public function getLastSyncedAt(string $hotelId): ?string
     {
-        $val = db_get_field(
-            "SELECT MAX(synced_at) FROM ?:novoton_hotel_packages WHERE hotel_id = ?s",
-            $hotelId
-        );
-        return ($val !== false && $val !== '') ? (string) $val : null;
+        $val = TypeCoerce::toString(db_get_field(
+            'SELECT MAX(synced_at) FROM ?:novoton_hotel_packages WHERE hotel_id = ?s',
+            $hotelId,
+        ));
+        return $val === '' ? null : $val;
     }
 
     public function getActivePackageName(string $hotelId): ?string
     {
-        $val = db_get_field(
-            "SELECT package_name FROM ?:novoton_hotel_packages
+        $val = TypeCoerce::toString(db_get_field(
+            'SELECT package_name FROM ?:novoton_hotel_packages
              WHERE hotel_id = ?s AND priceinfo_data IS NOT NULL
-             ORDER BY synced_at DESC LIMIT 1",
-            $hotelId
-        );
-        return ($val !== false && $val !== '') ? (string) $val : null;
+             ORDER BY synced_at DESC LIMIT 1',
+            $hotelId,
+        ));
+        return $val === '' ? null : $val;
     }
 
     public function getLatestPriceinfoData(string $hotelId): ?string
     {
-        $val = db_get_field(
-            "SELECT priceinfo_data FROM ?:novoton_hotel_packages
+        $val = TypeCoerce::toString(db_get_field(
+            'SELECT priceinfo_data FROM ?:novoton_hotel_packages
              WHERE hotel_id = ?s AND priceinfo_data IS NOT NULL
-             ORDER BY synced_at DESC LIMIT 1",
-            $hotelId
-        );
-        return ($val !== false && $val !== '') ? (string) $val : null;
+             ORDER BY synced_at DESC LIMIT 1',
+            $hotelId,
+        ));
+        return $val === '' ? null : $val;
     }
 
     /**
@@ -199,25 +212,25 @@ class HotelPackageRepository implements HotelPackageRepositoryInterface
      */
     public function getAllPriceinfoData(string $hotelId): array
     {
-        return db_get_fields(
-            "SELECT priceinfo_data FROM ?:novoton_hotel_packages
-             WHERE hotel_id = ?s AND priceinfo_data IS NOT NULL",
-            $hotelId
-        );
+        return self::asStringList(db_get_fields(
+            'SELECT priceinfo_data FROM ?:novoton_hotel_packages
+             WHERE hotel_id = ?s AND priceinfo_data IS NOT NULL',
+            $hotelId,
+        ));
     }
 
     /**
      * Get package names with priceinfo data for a hotel (for AJAX dropdown).
-     * @return array<string, mixed>
+     * @return list<array<string, mixed>>
      */
     public function findPackageNamesWithPriceinfo(string $hotelId): array
     {
-        return db_get_array(
-            "SELECT package_name FROM ?:novoton_hotel_packages
+        return self::asRowList(db_get_array(
+            'SELECT package_name FROM ?:novoton_hotel_packages
              WHERE hotel_id = ?s AND priceinfo_data IS NOT NULL
-             ORDER BY package_name",
-            $hotelId
-        );
+             ORDER BY package_name',
+            $hotelId,
+        ));
     }
 
     /**
@@ -225,36 +238,36 @@ class HotelPackageRepository implements HotelPackageRepositoryInterface
      */
     public function getFirstPackageName(string $hotelId): ?string
     {
-        $val = db_get_field(
-            "SELECT package_name FROM ?:novoton_hotel_packages WHERE hotel_id = ?s ORDER BY package_name LIMIT 1",
-            $hotelId
-        );
-        return ($val !== false && $val !== '') ? (string) $val : null;
+        $val = TypeCoerce::toString(db_get_field(
+            'SELECT package_name FROM ?:novoton_hotel_packages WHERE hotel_id = ?s ORDER BY package_name LIMIT 1',
+            $hotelId,
+        ));
+        return $val === '' ? null : $val;
     }
 
     /**
      * Get package_id and package_name pairs for a hotel.
-     * @return array<string, mixed>
+     * @return list<array<string, mixed>>
      */
     public function getPackageIdNamePairs(string $hotelId): array
     {
-        return db_get_array(
-            "SELECT package_id, package_name FROM ?:novoton_hotel_packages WHERE hotel_id = ?s ORDER BY package_name",
-            $hotelId
-        );
+        return self::asRowList(db_get_array(
+            'SELECT package_id, package_name FROM ?:novoton_hotel_packages WHERE hotel_id = ?s ORDER BY package_name',
+            $hotelId,
+        ));
     }
 
     /**
      * Get package listing data for hotel detail view.
-     * @return array<string, mixed>
+     * @return list<array<string, mixed>>
      */
     public function findForHotelDetail(string $hotelId): array
     {
-        return db_get_array(
-            "SELECT package_id, package_name, min_price, has_early_booking, synced_at
-             FROM ?:novoton_hotel_packages WHERE hotel_id = ?s ORDER BY package_name",
-            $hotelId
-        );
+        return self::asRowList(db_get_array(
+            'SELECT package_id, package_name, min_price, has_early_booking, synced_at
+             FROM ?:novoton_hotel_packages WHERE hotel_id = ?s ORDER BY package_name',
+            $hotelId,
+        ));
     }
 
     /**
@@ -263,10 +276,13 @@ class HotelPackageRepository implements HotelPackageRepositoryInterface
     public function upsertByHotelAndPackage(string $hotelId, string $packageId, string $packageName): bool
     {
         return (bool) db_query(
-            "INSERT INTO ?:novoton_hotel_packages (hotel_id, package_id, package_name, created_at)
+            'INSERT INTO ?:novoton_hotel_packages (hotel_id, package_id, package_name, created_at)
              VALUES (?s, ?s, ?s, NOW())
-             ON DUPLICATE KEY UPDATE package_name = ?s",
-            $hotelId, $packageId, $packageName, $packageName
+             ON DUPLICATE KEY UPDATE package_name = ?s',
+            $hotelId,
+            $packageId,
+            $packageName,
+            $packageName,
         );
     }
 }

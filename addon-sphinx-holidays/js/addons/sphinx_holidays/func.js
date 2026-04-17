@@ -26,11 +26,12 @@
         // api_key: password input -> large
         $settings.find('[id^="addon_option_sphinx_holidays_api_key"]').addClass('input-text-large');
 
-        // --- Medium fields: category IDs, commission ---
+        // --- Medium fields: commission ---
+        // (hotels_category_id / packages_category_id were removed when those
+        // settings were migrated from text inputs to CS-Cart's AJAX category
+        // picker — the picker manages its own width via core styles.)
         var mediumFields = [
-            'commission',
-            'hotels_category_id',
-            'packages_category_id'
+            'commission'
         ];
 
         $.each(mediumFields, function(i, field) {

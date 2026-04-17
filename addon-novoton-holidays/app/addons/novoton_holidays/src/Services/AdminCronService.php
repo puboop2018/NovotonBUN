@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 /**
  * Admin Cron Service — testable service layer for admin panel cron operations.
  *
@@ -14,12 +16,12 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Services;
 
-use Tygh\Registry;
 use Tygh\Addons\NovotonHolidays\Api\Contracts\NovotonApiKitInterface;
 use Tygh\Addons\NovotonHolidays\Constants;
-use Tygh\Addons\TravelCore\TravelConstants;
 use Tygh\Addons\NovotonHolidays\Helpers\OutputWriterTrait;
 use Tygh\Addons\NovotonHolidays\Repository\CacheRepository;
+use Tygh\Addons\TravelCore\TravelConstants;
+use Tygh\Registry;
 
 class AdminCronService implements AdminCronServiceInterface
 {
@@ -64,10 +66,10 @@ class AdminCronService implements AdminCronServiceInterface
                     }
 
                     $data = [
-                        'hotel_id'   => $hotel_id,
+                        'hotel_id' => $hotel_id,
                         'hotel_name' => (string) ($hotel->Hotel ?? ''),
-                        'city'       => (string) ($hotel->City ?? ''),
-                        'country'    => $country,
+                        'city' => (string) ($hotel->City ?? ''),
+                        'country' => $country,
                         'updated_at' => date('Y-m-d H:i:s'),
                     ];
 
@@ -75,7 +77,7 @@ class AdminCronService implements AdminCronServiceInterface
                     $synced++;
                 }
             } else {
-                $this->output("0 hotels");
+                $this->output('0 hotels');
             }
         }
 
@@ -97,21 +99,21 @@ class AdminCronService implements AdminCronServiceInterface
         $with_prices = 0;
 
         foreach ($hotels as $hotel) {
-            $check_in  = date(TravelConstants::DATE_FORMAT, strtotime('+' . Constants::PRICE_CHECK_OFFSET_DAYS . ' days'));
+            $check_in = date(TravelConstants::DATE_FORMAT, strtotime('+' . Constants::PRICE_CHECK_OFFSET_DAYS . ' days'));
             $check_out = date(TravelConstants::DATE_FORMAT, strtotime('+' . (Constants::PRICE_CHECK_OFFSET_DAYS + TravelConstants::DEFAULT_NIGHTS) . ' days'));
 
             $response = $this->api->pricing()->getRoomPrice([
-                'hotel_id'  => $hotel['hotel_id'],
-                'check_in'  => $check_in,
+                'hotel_id' => $hotel['hotel_id'],
+                'check_in' => $check_in,
                 'check_out' => $check_out,
-                'adults'    => TravelConstants::DEFAULT_ADULTS,
-                'children'  => TravelConstants::DEFAULT_CHILDREN,
-                'rooms'     => TravelConstants::DEFAULT_ROOMS,
+                'adults' => TravelConstants::DEFAULT_ADULTS,
+                'children' => TravelConstants::DEFAULT_CHILDREN,
+                'rooms' => TravelConstants::DEFAULT_ROOMS,
             ]);
             $has_room_price = ($response && isset($response->hotel)) ? 'Y' : 'N';
 
             $hotelRepo->update($hotel['hotel_id'], [
-                'has_room_price'   => $has_room_price,
+                'has_room_price' => $has_room_price,
                 'last_price_check' => date('Y-m-d H:i:s'),
             ]);
 
@@ -148,7 +150,7 @@ class AdminCronService implements AdminCronServiceInterface
         $count = 0;
 
         foreach ($facilities as $f) {
-            $facility_id   = (int) ($f->IdFacility ?? 0);
+            $facility_id = (int) ($f->IdFacility ?? 0);
             $facility_name = (string) ($f->Facility ?? '');
 
             if (empty($facility_id)) {
@@ -166,13 +168,13 @@ class AdminCronService implements AdminCronServiceInterface
      * Create CS-Cart products for hotels that don't have one yet.
      *
      * @param string[] $countries Country codes
-     * @param int      $limit    Max hotels per country
+     * @param int $limit Max hotels per country
      * @return array{success: bool, message: string}
      */
     #[\Override]
     public function addProducts(array $countries, int $limit): array
     {
-        $hotelRepo   = $this->container->hotelRepository();
+        $hotelRepo = $this->container->hotelRepository();
         $grand_added = 0;
         $grand_total = 0;
 
@@ -193,28 +195,28 @@ class AdminCronService implements AdminCronServiceInterface
             $added = 0;
 
             foreach ($hotels as $hotel) {
-                $hotel_id     = $hotel['hotel_id'];
+                $hotel_id = $hotel['hotel_id'];
                 $product_code = 'NVT' . $hotel_id;
 
                 $this->output("[{$hotel_id}] {$hotel['hotel_name']} ... ", false);
 
                 // Check if CS-Cart product already exists with this code
-                $existing = db_get_field("SELECT product_id FROM ?:products WHERE product_code = ?s", $product_code);
+                $existing = db_get_field('SELECT product_id FROM ?:products WHERE product_code = ?s', $product_code);
                 if ($existing) {
                     $hotelRepo->linkToProduct($hotel_id, (int) $existing);
-                    $this->output("LINKED");
+                    $this->output('LINKED');
                     continue;
                 }
 
                 $product_data = [
-                    'product'       => $hotel['hotel_name'],
-                    'product_code'  => $product_code,
-                    'price'         => 0,
-                    'amount'        => ConfigProvider::getDefaultProductQuantity(),
-                    'status'        => 'D',
-                    'company_id'    => Registry::get('runtime.company_id') ?: 1,
+                    'product' => $hotel['hotel_name'],
+                    'product_code' => $product_code,
+                    'price' => 0,
+                    'amount' => ConfigProvider::getDefaultProductQuantity(),
+                    'status' => 'D',
+                    'company_id' => Registry::get('runtime.company_id') ?: 1,
                     'main_category' => $category_id,
-                    'category_ids'  => [$category_id],
+                    'category_ids' => [$category_id],
                 ];
 
                 $product_id = fn_update_product($product_data, 0, CART_LANGUAGE);
@@ -224,7 +226,7 @@ class AdminCronService implements AdminCronServiceInterface
                     $added++;
                     $this->output("ADDED (ID: {$product_id})");
                 } else {
-                    $this->output("FAILED");
+                    $this->output('FAILED');
                 }
 
                 usleep(Constants::API_DELAY_LIGHT);
@@ -251,7 +253,7 @@ class AdminCronService implements AdminCronServiceInterface
     public function checkOffers(string $country): array
     {
         $syncLogRepo = $this->container->syncLogRepository();
-        $last_check  = $syncLogRepo->getLastSyncDate('offers_update')
+        $last_check = $syncLogRepo->getLastSyncDate('offers_update')
                        ?: $syncLogRepo->getLastSyncDate('product_import');
         if (empty($last_check)) {
             $last_check = date('Y-m-d\TH:i:s', strtotime('-7 days'));
@@ -268,7 +270,7 @@ class AdminCronService implements AdminCronServiceInterface
         /** @var mixed $offerRaw */
         $offerRaw = $response->Offer;
         $offers = is_array($offerRaw) ? $offerRaw : [$offerRaw];
-        $count  = count($offers);
+        $count = count($offers);
 
         return ['success' => true, 'message' => "Found {$count} offers"];
     }
@@ -290,7 +292,7 @@ class AdminCronService implements AdminCronServiceInterface
             $items = $bookingRepo->findByNovotonStatus(
                 Constants::NOVOTON_STATUS_ALTERNATIVES_PENDING,
                 [TravelConstants::STATUS_PENDING, TravelConstants::STATUS_CONFIRMED],
-                50
+                50,
             );
         }
 

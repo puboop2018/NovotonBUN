@@ -9,26 +9,28 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
 use Tygh\Tygh;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
-use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
-use Tygh\Addons\TravelCore\Services\CurrencyService;
 use Tygh\Addons\NovotonHolidays\Services\Container;
+use Tygh\Addons\NovotonHolidays\Services\PriceInfoFormatter;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+use Tygh\Addons\TravelCore\Services\CurrencyService;
+use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
 use Tygh\Addons\TravelCore\TravelConstants;
 
     // --- Security: Rate limiting ---
     $security = _nvt_get_security_service();
-    $auth = Tygh::$app['session']['auth'] ?? [];
-    $rate_limit_id = !empty($auth['user_id']) ? (string)$auth['user_id'] : Tygh::$app['session']->getID();
+    $auth = TypeCoerce::toStringMap(Tygh::$app['session']['auth'] ?? null);
+    $rate_limit_id = !empty($auth['user_id']) ? TypeCoerce::toString($auth['user_id']) : Tygh::$app['session']->getID();
     if (!$security->checkBookingRateLimit($rate_limit_id)) {
         $security->logSecurityEvent('rate_limit_exceeded', ['mode' => 'add_to_cart', 'identifier' => $rate_limit_id]);
         fn_set_notification('E', __('error'), 'Too many booking requests. Please try again later.');
         return [CONTROLLER_STATUS_REDIRECT, 'index.index'];
     }
 
-    $bookingData = $_REQUEST;
+    $bookingData = TypeCoerce::toStringMap($_REQUEST);
 
     // Normalize room_id: restore + signs lost by URL decoding
     if (!empty($bookingData['room_id'])) {
-        $bookingData['room_id'] = fn_novoton_holidays_normalize_room_code($bookingData['room_id']);
+        $bookingData['room_id'] = fn_novoton_holidays_normalize_room_code(TypeCoerce::toString($bookingData['room_id']));
     }
 
     // --- Security: Validate booking data via SecurityService ---
@@ -37,7 +39,7 @@ use Tygh\Addons\TravelCore\TravelConstants;
         $security->logSecurityEvent('booking_validation_failed', [
             'mode' => 'add_to_cart',
             'errors' => $validation['errors'],
-            'hotel_id' => $bookingData['hotel_id'] ?? ''
+            'hotel_id' => $bdHotelId ?? ''
         ]);
         fn_set_notification('E', __('error'), __('novoton_holidays.invalid_booking_data'));
         return [CONTROLLER_STATUS_REDIRECT, 'index.index'];
@@ -51,36 +53,37 @@ use Tygh\Addons\TravelCore\TravelConstants;
     
     // Get product ID from hotel ID
     $prefix = ConfigProvider::getFirstProductCodePrefix();
-    $product_code = $prefix . $bookingData['hotel_id'];
-    
-    $product_id = db_get_field(
+    $bdHotelId = TypeCoerce::toString($bookingData['hotel_id'] ?? '');
+    $product_code = $prefix . $bdHotelId;
+
+    $product_id = TypeCoerce::toInt(db_get_field(
         "SELECT product_id FROM ?:products WHERE product_code = ?s",
         $product_code
-    );
-    
-    if (empty($product_id)) {
+    ));
+
+    if ($product_id <= 0) {
         // Try the product_id from form
-        $product_id = (int)($bookingData['product_id'] ?? 0);
+        $product_id = TypeCoerce::toInt($bookingData['product_id'] ?? 0);
     }
-    
-    if (empty($product_id)) {
+
+    if ($product_id <= 0) {
         fn_set_notification('E', __('error'), __('novoton_holidays.product_not_found'));
         return [CONTROLLER_STATUS_REDIRECT, 'index.index'];
     }
     
     // Get hotel info using repository
-    $hotel_info = _nvt_hotel_repo()->findById($bookingData['hotel_id']);
+    $hotel_info = _nvt_hotel_repo()->findById($bdHotelId);
 
     if (empty($hotel_info)) {
         // Hotel not in local DB — auto-create from API (same pattern as OffersUpdateCommand)
         fn_log_event('general', 'runtime', [
             'message' => 'Novoton add_to_cart: hotel_id not in local DB, auto-creating',
-            'hotel_id' => $bookingData['hotel_id'],
+            'hotel_id' => $bdHotelId,
             'product_id' => $product_id,
         ]);
 
         $hotel_data = [
-            'hotel_id' => $bookingData['hotel_id'],
+            'hotel_id' => $bdHotelId,
             'product_id' => (int) $product_id,
             'hotel_name' => '',
             'city' => '',
@@ -94,7 +97,7 @@ use Tygh\Addons\TravelCore\TravelConstants;
         try {
             $api_for_hotel = fn_novoton_holidays_get_api();
             if ($api_for_hotel) {
-                $api_hotel_info = $api_for_hotel->hotels()->getHotelInfo($bookingData['hotel_id']);
+                $api_hotel_info = $api_for_hotel->hotels()->getHotelInfo($bdHotelId);
                 if ($api_hotel_info) {
                     $hotel_data['hotel_name'] = (string) ($api_hotel_info->Hotel ?? '');
                     $hotel_data['city']       = (string) ($api_hotel_info->City ?? '');
@@ -106,58 +109,64 @@ use Tygh\Addons\TravelCore\TravelConstants;
         } catch (\Throwable $e) {
             fn_log_event('general', 'runtime', [
                 'message' => 'Novoton add_to_cart: getHotelInfo failed, using stub',
-                'hotel_id' => $bookingData['hotel_id'],
+                'hotel_id' => $bdHotelId,
                 'error' => $e->getMessage(),
             ]);
         }
 
         _nvt_hotel_repo()->upsert($hotel_data);
-        $hotel_info = _nvt_hotel_repo()->findById($bookingData['hotel_id']);
+        $hotel_info = _nvt_hotel_repo()->findById($bdHotelId);
     }
     
     // Process guest information — sanitize via SecurityService
-    $guests = is_array($bookingData['guests'] ?? null) ? $security->sanitizeGuestData($bookingData['guests']) : [];
-    $contact = $bookingData['contact'] ?? [];
+    $rawGuests = TypeCoerce::toStringMap($bookingData['guests'] ?? null);
+    $guests = $rawGuests !== [] ? $security->sanitizeGuestData($rawGuests) : [];
+    $contact = TypeCoerce::toStringMap($bookingData['contact'] ?? []);
     // Parse guests (no full DOB validation needed at add_to_cart, that happens in update_booking)
     $parsed_guests = \Tygh\Addons\TravelCore\Services\GuestDataService::parseAndValidateGuests($guests, '', 'novoton');
-    $guests_data = $parsed_guests['guests_data'] ?? [];
+    $guests_data = TypeCoerce::toStringMap($parsed_guests['guests_data'] ?? []);
     $guest_names = $parsed_guests['guest_names'] ?? [];
-    $guest_list = $parsed_guests['guest_list'] ?? '';
-    $holder_name = $parsed_guests['holder_name'] ?? '';
-    
+    $guest_list = TypeCoerce::toString($parsed_guests['guest_list'] ?? '');
+    $holder_name = TypeCoerce::toString($parsed_guests['holder_name'] ?? '');
+
     // Get children ages from guests_data (more reliable than form hidden field)
     $all_child_ages = [];
     foreach ($guests_data as $guest) {
-        if (isset($guest['type']) && $guest['type'] === 'child' && isset($guest['age'])) {
-            $all_child_ages[] = (int)($guest['age']);
+        if (!is_array($guest)) {
+            continue;
+        }
+        if (($guest['type'] ?? '') === 'child' && isset($guest['age'])) {
+            $all_child_ages[] = TypeCoerce::toInt($guest['age']);
         }
     }
-    $children_ages = !empty($all_child_ages) ? implode(',', $all_child_ages) : ($bookingData['children_ages'] ?? '');
-    
+    $children_ages = !empty($all_child_ages)
+        ? implode(',', $all_child_ages)
+        : TypeCoerce::toString($bookingData['children_ages'] ?? '');
+
     // Get package name
-    $package_name = $bookingData['package_name'] ?? '';
-    if (empty($package_name) && !empty($bookingData['hotel_id'])) {
+    $package_name = TypeCoerce::toString($bookingData['package_name'] ?? '');
+    if ($package_name === '' && $bdHotelId !== '') {
         // V3: Get first package from novoton_hotel_packages table
         $packageRepo = Container::getInstance()->hotelPackageRepository();
-        $first_pkg = $packageRepo->getFirstPackageName($bookingData['hotel_id']);
+        $first_pkg = $packageRepo->getFirstPackageName($bdHotelId);
         if (!empty($first_pkg)) {
             $package_name = $first_pkg;
         }
     }
-    
+
     // Get total price (from form or recalculate)
-    $total_price = (float)($bookingData['total_price'] ?? 0);
+    $total_price = TypeCoerce::toFloat($bookingData['total_price'] ?? 0);
     
     // Always call API to get terms and verify price (Option A: fetch terms at checkout)
     // IMPORTANT: Include children ages for correct price calculation
     $priceParams = [
-        'hotel_id' => $bookingData['hotel_id'],
-        'room_id' => $bookingData['room_id'],
-        'board_id' => $bookingData['board_id'] ?? '',
+        'hotel_id' => $bdHotelId,
+        'room_id' => TypeCoerce::toString($bookingData['room_id']),
+        'board_id' => TypeCoerce::toString($bookingData['board_id'] ?? ''),
         'star_rating' => '',
-        'check_in' => $bookingData['check_in'],
-        'check_out' => $bookingData['check_out'],
-        'adults' => (int)($bookingData['adults'] ?? 2),
+        'check_in' => TypeCoerce::toString($bookingData['check_in'] ?? ''),
+        'check_out' => TypeCoerce::toString($bookingData['check_out'] ?? ''),
+        'adults' => TypeCoerce::toInt($bookingData['adults'] ?? 2),
         'children' => $all_child_ages  // Include children ages from guest form
     ];
     
@@ -170,10 +179,10 @@ use Tygh\Addons\TravelCore\TravelConstants;
     if (!$priceData || !isset($priceData->Price)) {
         fn_log_event('general', 'runtime', [
             'message' => 'Novoton add_to_cart: PRICE VERIFICATION FAILED - API returned no price',
-            'hotel_id' => $bookingData['hotel_id'],
-            'room_id' => $bookingData['room_id'],
+            'hotel_id' => $bdHotelId,
+            'room_id' => TypeCoerce::toString($bookingData['room_id']),
             'children_ages' => $all_child_ages,
-            'adults' => (int)($bookingData['adults'] ?? 2)
+            'adults' => TypeCoerce::toInt($bookingData['adults'] ?? 2)
         ]);
 
         fn_set_notification('E', __('error'), __('novoton_holidays.price_verification_failed', [
@@ -182,15 +191,15 @@ use Tygh\Addons\TravelCore\TravelConstants;
 
         // Build return URL to booking form with all parameters
         $return_params = [
-            'hotel_id' => $bookingData['hotel_id'],
+            'hotel_id' => $bdHotelId,
             'product_id' => $product_id,
-            'check_in' => $bookingData['check_in'],
-            'check_out' => $bookingData['check_out'],
-            'nights' => $bookingData['nights'] ?? '',
-            'adults' => $bookingData['adults'] ?? 2,
-            'children' => $bookingData['children'] ?? 0,
+            'check_in' => TypeCoerce::toString($bookingData['check_in'] ?? ''),
+            'check_out' => TypeCoerce::toString($bookingData['check_out'] ?? ''),
+            'nights' => TypeCoerce::toString($bookingData['nights'] ?? ''),
+            'adults' => TypeCoerce::toInt($bookingData['adults'] ?? 2),
+            'children' => TypeCoerce::toInt($bookingData['children'] ?? 0),
             'children_ages' => $children_ages,
-            'rooms' => $bookingData['num_rooms'] ?? 1
+            'rooms' => TypeCoerce::toInt($bookingData['num_rooms'] ?? 1)
         ];
         $return_url = 'novoton_booking.booking_form?' . http_build_query($return_params);
 
@@ -226,8 +235,8 @@ use Tygh\Addons\TravelCore\TravelConstants;
                     $price_diff = round($api_price - $total_price, 2);
                     fn_log_event('general', 'runtime', [
                         'message' => 'Novoton PRICE FLOOR: form price below real-time API room_price — using API price',
-                        'hotel_id' => $bookingData['hotel_id'],
-                        'room_id' => $bookingData['room_id'],
+                        'hotel_id' => $bdHotelId,
+                        'room_id' => TypeCoerce::toString($bookingData['room_id']),
                         'form_price' => $total_price,
                         'api_price' => $api_price,
                         'api_price_raw' => $rawPrice,
@@ -236,14 +245,14 @@ use Tygh\Addons\TravelCore\TravelConstants;
 
                     // Send email alert to admin with price discrepancy details
                     fn_novoton_holidays_send_price_alert_email([
-                        'hotel_id'      => $bookingData['hotel_id'],
-                        'hotel_name'    => $hotel_info['hotel_name'] ?? '',
-                        'room_id'       => $bookingData['room_id'],
-                        'board_id'      => $bookingData['board_id'] ?? '',
-                        'check_in'      => $bookingData['check_in'],
-                        'check_out'     => $bookingData['check_out'],
-                        'adults'        => (int)($bookingData['adults'] ?? 2),
-                        'children'      => (int)($bookingData['children'] ?? 0),
+                        'hotel_id'      => $bdHotelId,
+                        'hotel_name'    => TypeCoerce::toString($hotel_info['hotel_name'] ?? ''),
+                        'room_id'       => TypeCoerce::toString($bookingData['room_id']),
+                        'board_id'      => TypeCoerce::toString($bookingData['board_id'] ?? ''),
+                        'check_in'      => TypeCoerce::toString($bookingData['check_in'] ?? ''),
+                        'check_out'     => TypeCoerce::toString($bookingData['check_out'] ?? ''),
+                        'adults'        => TypeCoerce::toInt($bookingData['adults'] ?? 2),
+                        'children'      => TypeCoerce::toInt($bookingData['children'] ?? 0),
                         'children_ages' => $children_ages,
                         'form_price'    => $total_price,
                         'api_price'     => $api_price,
@@ -264,9 +273,9 @@ use Tygh\Addons\TravelCore\TravelConstants;
                     ConfigProvider::getApiCurrency(),
                     'add_to_cart',
                     [
-                        'hotel_name' => $hotel_info['hotel_name'] ?? '',
-                        'hotel_id'   => $bookingData['hotel_id'],
-                        'room_id'    => $bookingData['room_id'],
+                        'hotel_name' => TypeCoerce::toString($hotel_info['hotel_name'] ?? ''),
+                        'hotel_id'   => $bdHotelId,
+                        'room_id'    => TypeCoerce::toString($bookingData['room_id']),
                     ]
                 );
 
@@ -320,94 +329,119 @@ use Tygh\Addons\TravelCore\TravelConstants;
     }
     
     // Calculate nights using DateTime::diff (DST-safe)
-    $nights = (int) ($bookingData['nights'] ?? 0);
+    $nights = TypeCoerce::toInt($bookingData['nights'] ?? 0);
+    $check_in = TypeCoerce::toString($bookingData['check_in'] ?? '');
+    $check_out = TypeCoerce::toString($bookingData['check_out'] ?? '');
     if ($nights <= 0) {
         try {
-            $d1 = new \DateTime($bookingData['check_in']);
-            $d2 = new \DateTime($bookingData['check_out']);
+            $d1 = new \DateTime($check_in);
+            $d2 = new \DateTime($check_out);
             $nights = (int) $d1->diff($d2)->days;
         } catch (\Exception $e) {
             $nights = 7;
         }
     }
-    
+
     // Format board name for display
-    $board_id = $bookingData['board_id'] ?? 'BB';
+    $board_id = TypeCoerce::toString($bookingData['board_id'] ?? 'BB');
+    if ($board_id === '') {
+        $board_id = 'BB';
+    }
     $board_name = fn_novoton_holidays_format_board_name($board_id);
-    
+
     // Parse rooms_data
-    $num_rooms = (int)($bookingData['num_rooms'] ?? 1);
+    $num_rooms = TypeCoerce::toInt($bookingData['num_rooms'] ?? 1);
     $rooms_data = [];
-    if (!empty($bookingData['rooms_data'])) {
-        $rooms_data = is_string($bookingData['rooms_data']) ? json_decode($bookingData['rooms_data'], true) : $bookingData['rooms_data'];
-        if (!is_array($rooms_data)) {
-            $rooms_data = [];
+    $rawRoomsData = $bookingData['rooms_data'] ?? null;
+    if (!empty($rawRoomsData)) {
+        if (is_string($rawRoomsData)) {
+            $decoded = json_decode($rawRoomsData, true);
+            $rooms_data = is_array($decoded) ? $decoded : [];
+        } elseif (is_array($rawRoomsData)) {
+            $rooms_data = $rawRoomsData;
         }
         // Normalize room_id and room_name in each room (restore + lost by URL decoding)
         foreach ($rooms_data as &$rm) {
+            if (!is_array($rm)) {
+                continue;
+            }
             if (!empty($rm['room_id'])) {
-                $rm['room_id'] = fn_novoton_holidays_normalize_room_code($rm['room_id']);
+                $rm['room_id'] = fn_novoton_holidays_normalize_room_code(TypeCoerce::toString($rm['room_id']));
             }
             if (!empty($rm['room_name'])) {
-                $rm['room_name'] = fn_novoton_holidays_normalize_room_code($rm['room_name']);
+                $rm['room_name'] = fn_novoton_holidays_normalize_room_code(TypeCoerce::toString($rm['room_name']));
             }
         }
         unset($rm);
     }
     
     // If rooms_data is still empty, create default with complete info
+    $room_id_str = TypeCoerce::toString($bookingData['room_id']);
     if (empty($rooms_data)) {
         $children_ages_arr = [];
-        if (!empty($bookingData['children_ages'])) {
-            $children_ages_arr = is_string($bookingData['children_ages']) 
-                ? array_map('intval', array_filter(explode(',', $bookingData['children_ages']), function($v) { return $v !== ''; }))
-                : (array)$bookingData['children_ages'];
+        $rawChildrenAges = $bookingData['children_ages'] ?? null;
+        if (is_string($rawChildrenAges) && $rawChildrenAges !== '') {
+            $children_ages_arr = array_map(
+                static fn (string $v): int => (int) $v,
+                array_filter(explode(',', $rawChildrenAges), static fn ($v) => $v !== ''),
+            );
+        } elseif (is_array($rawChildrenAges)) {
+            $children_ages_arr = array_map(
+                static fn ($v): int => TypeCoerce::toInt($v),
+                $rawChildrenAges,
+            );
         }
         $rooms_data = [
             [
-                'room_id' => $bookingData['room_id'],
-                'room_name' => fn_novoton_holidays_format_room_type($bookingData['room_id']),
-                'room_type_display' => fn_novoton_holidays_format_room_type($bookingData['room_id']),
+                'room_id' => $room_id_str,
+                'room_name' => fn_novoton_holidays_format_room_type($room_id_str),
+                'room_type_display' => fn_novoton_holidays_format_room_type($room_id_str),
                 'board_id' => $board_id,
                 'board_name' => $board_name,
-                'adults' => (int)($bookingData['adults'] ?? 2),
-                'children' => (int)($bookingData['children'] ?? 0),
+                'adults' => TypeCoerce::toInt($bookingData['adults'] ?? 2),
+                'children' => TypeCoerce::toInt($bookingData['children'] ?? 0),
                 'childrenAges' => $children_ages_arr,
-                'price' => (float)($bookingData['total_price'] ?? 0)
+                'price' => TypeCoerce::toFloat($bookingData['total_price'] ?? 0)
             ]
         ];
         $num_rooms = 1;
     }
-    
+
     // Add children_ages_str and room_type_display to each room for Smarty display
     // Also sync children ages from guest form back to rooms_data
     foreach ($rooms_data as $room_idx => &$room) {
-        $room_num = $room_idx + 1;
-        
+        if (!is_array($room)) {
+            continue;
+        }
+        $room_num = TypeCoerce::toInt($room_idx) + 1;
+
         // Collect children ages from guests_data for this room
         $child_ages_for_room = [];
-        foreach ($guests_data as $key => $guest) {
-            if (isset($guest['room']) && $guest['room'] == $room_num && $guest['type'] === 'child') {
-                $child_ages_for_room[] = (int)($guest['age']);
+        foreach ($guests_data as $guest) {
+            if (!is_array($guest)) {
+                continue;
+            }
+            if (TypeCoerce::toInt($guest['room'] ?? 0) === $room_num && ($guest['type'] ?? '') === 'child') {
+                $child_ages_for_room[] = TypeCoerce::toInt($guest['age'] ?? 0);
             }
         }
-        
+
         // If we have ages from guest form, update rooms_data
         if (!empty($child_ages_for_room)) {
             $room['childrenAges'] = $child_ages_for_room;
         }
-        
+
         if (!empty($room['childrenAges']) && is_array($room['childrenAges'])) {
             // Filter out null values and format
-            $valid_ages = array_filter($room['childrenAges'], function($age) { return $age !== null && $age !== ''; });
+            $valid_ages = array_filter($room['childrenAges'], static fn ($age) => $age !== null && $age !== '');
             $room['children_ages_str'] = !empty($valid_ages) ? implode(', ', $valid_ages) . ' ' . __('novoton_holidays.years_old') : '';
         } else {
             $room['children_ages_str'] = '';
         }
         // Ensure room_type_display is set (translated room name)
         if (empty($room['room_type_display']) && !empty($room['room_id'])) {
-            $room['room_type_display'] = fn_novoton_holidays_format_room_type($room['room_id']);
-            $room['room_name'] = fn_novoton_holidays_format_room_type($room['room_id']);
+            $room['room_type_display'] = fn_novoton_holidays_format_room_type(TypeCoerce::toString($room['room_id']));
+            $room['room_name'] = fn_novoton_holidays_format_room_type(TypeCoerce::toString($room['room_id']));
         }
     }
     unset($room);
@@ -416,54 +450,57 @@ use Tygh\Addons\TravelCore\TravelConstants;
     // This prevents duplicates from form resubmissions
     $bookingRepo = _nvt_booking_repo();
     $existing = $bookingRepo->findExisting(
-        $bookingData['hotel_id'],
-        $bookingData['check_in'],
-        $bookingData['check_out'],
+        $bdHotelId,
+        $check_in,
+        $check_out,
         $holder_name,
         1 // within last 1 hour
     );
-    $existing_booking_id = $existing ? (int) $existing['booking_id'] : null;
-    
+    $existing_booking_id = $existing !== null ? TypeCoerce::toInt($existing['booking_id'] ?? 0) : 0;
+
     // Extract room_id and room_type from rooms_data for database columns
     // This ensures the columns are populated even for multi-room bookings
     $room_ids_for_db = [];
     $room_types_for_db = [];
     $total_adults = 0;
     $total_children = 0;
-    
+
     foreach ($rooms_data as $room) {
+        if (!is_array($room)) {
+            continue;
+        }
         if (!empty($room['room_id'])) {
-            $room_ids_for_db[] = $room['room_id'];
+            $room_ids_for_db[] = TypeCoerce::toString($room['room_id']);
         }
         if (!empty($room['room_name'])) {
-            $room_types_for_db[] = $room['room_name'];
+            $room_types_for_db[] = TypeCoerce::toString($room['room_name']);
         } elseif (!empty($room['room_type_display'])) {
-            $room_types_for_db[] = $room['room_type_display'];
+            $room_types_for_db[] = TypeCoerce::toString($room['room_type_display']);
         } elseif (!empty($room['room_id'])) {
-            $room_types_for_db[] = fn_novoton_holidays_format_room_type($room['room_id']);
+            $room_types_for_db[] = fn_novoton_holidays_format_room_type(TypeCoerce::toString($room['room_id']));
         }
-        $total_adults += (int)($room['adults'] ?? 0);
-        $total_children += (int)($room['children'] ?? 0);
+        $total_adults += TypeCoerce::toInt($room['adults'] ?? 0);
+        $total_children += TypeCoerce::toInt($room['children'] ?? 0);
     }
-    
+
     // Fallback to bookingData if rooms_data didn't have room_id
     if (empty($room_ids_for_db)) {
-        $room_ids_for_db[] = $bookingData['room_id'];
-        $room_types_for_db[] = fn_novoton_holidays_format_room_type($bookingData['room_id']);
+        $room_ids_for_db[] = $room_id_str;
+        $room_types_for_db[] = fn_novoton_holidays_format_room_type($room_id_str);
     }
-    
+
     // Use totals from rooms_data if available, otherwise from bookingData
-    if ($total_adults == 0) {
-        $total_adults = (int)($bookingData['adults'] ?? 2);
+    if ($total_adults === 0) {
+        $total_adults = TypeCoerce::toInt($bookingData['adults'] ?? 2);
     }
-    if ($total_children == 0) {
-        $total_children = (int)($bookingData['children'] ?? 0);
+    if ($total_children === 0) {
+        $total_children = TypeCoerce::toInt($bookingData['children'] ?? 0);
     }
     
     $room_id_column = implode(', ', $room_ids_for_db);
     $room_type_column = implode(', ', $room_types_for_db);
     
-    if ($existing_booking_id) {
+    if ($existing_booking_id > 0) {
         // Update existing booking instead of creating new one
         $booking_record = [
             'room_id' => $room_id_column,
@@ -475,7 +512,7 @@ use Tygh\Addons\TravelCore\TravelConstants;
             'guests_data' => (new GuestDataNormalizer())->toJson($guests_data),
             'base_price' => $base_price,
             'total_price' => $total_price,
-            'guest_email' => $contact['email'] ?? '',
+            'guest_email' => TypeCoerce::toString($contact['email'] ?? ''),
             'api_request' => json_encode([
                 'guests' => $guests_data,
                 'contact' => $contact,
@@ -483,33 +520,33 @@ use Tygh\Addons\TravelCore\TravelConstants;
             ])
         ];
         // Update user_id if now logged in
-        $auth = Tygh::$app['session']['auth'] ?? [];
-        if (!empty($auth['user_id'])) {
-            $booking_record['user_id'] = (int)($auth['user_id']);
+        $authNow = TypeCoerce::toStringMap(Tygh::$app['session']['auth'] ?? []);
+        if (!empty($authNow['user_id'])) {
+            $booking_record['user_id'] = TypeCoerce::toInt($authNow['user_id']);
         }
         // A79: Use BookingRepository for update
-        _nvt_booking_repo()->update((int) $existing_booking_id, $booking_record);
-        $booking_id = (int) $existing_booking_id;
+        _nvt_booking_repo()->update($existing_booking_id, $booking_record);
+        $booking_id = $existing_booking_id;
     } else {
         // Get current user and session info
-        $auth = Tygh::$app['session']['auth'] ?? [];
-        $user_id = !empty($auth['user_id']) ? (int)($auth['user_id']) : 0;
+        $authNow = TypeCoerce::toStringMap(Tygh::$app['session']['auth'] ?? []);
+        $user_id = TypeCoerce::toInt($authNow['user_id'] ?? 0);
         $session_id = session_id();
-        
+
         // Create new booking record in database
         $booking_record = [
             'order_id' => 0, // Will be updated when order is placed
             'user_id' => $user_id,
             'session_id' => $session_id,
             'product_id' => $product_id,
-            'hotel_id' => $bookingData['hotel_id'],
-            'hotel_name' => $hotel_info['hotel_name'] ?? '',
+            'hotel_id' => $bdHotelId,
+            'hotel_name' => TypeCoerce::toString($hotel_info['hotel_name'] ?? ''),
             'package_name' => $package_name,
             'room_id' => $room_id_column,
             'room_type' => $room_type_column,
             'board_id' => $board_id,
-            'check_in' => $bookingData['check_in'],
-            'check_out' => $bookingData['check_out'],
+            'check_in' => $check_in,
+            'check_out' => $check_out,
             'nights' => $nights,
             'adults' => $total_adults,
             'children' => $total_children,
@@ -519,7 +556,7 @@ use Tygh\Addons\TravelCore\TravelConstants;
             'guest_name' => $guest_list,
             'holder_name' => $holder_name,
             'guest_email' => '',  // Will be set from order at checkout
-            'guest_phone' => $contact['phone'] ?? '',
+            'guest_phone' => TypeCoerce::toString($contact['phone'] ?? ''),
             'guests_data' => (new GuestDataNormalizer())->toJson($guests_data),
             'base_price' => $base_price,
             'total_price' => $total_price,
@@ -531,7 +568,7 @@ use Tygh\Addons\TravelCore\TravelConstants;
                 'rooms_data' => $rooms_data
             ])
         ];
-        
+
         // A79: Use BookingRepository for create
         $booking_id = _nvt_booking_repo()->create($booking_record);
     }
@@ -546,32 +583,32 @@ use Tygh\Addons\TravelCore\TravelConstants;
             'travel_booking' => true,
             'novoton_booking' => true,
             'novoton_booking_id' => $booking_id,
-            'hotel_id' => $bookingData['hotel_id'],
-            'hotel_name' => $hotel_info['hotel_name'] ?? '',
-            'hotel_city' => $hotel_info['city'] ?? '',
-            'hotel_region' => $hotel_info['region'] ?? '',
-            'hotel_country' => $hotel_info['country'] ?? '',
+            'hotel_id' => $bdHotelId,
+            'hotel_name' => TypeCoerce::toString($hotel_info['hotel_name'] ?? ''),
+            'hotel_city' => TypeCoerce::toString($hotel_info['city'] ?? ''),
+            'hotel_region' => TypeCoerce::toString($hotel_info['region'] ?? ''),
+            'hotel_country' => TypeCoerce::toString($hotel_info['country'] ?? ''),
             'package_name' => $package_name,
-            'room_id' => $bookingData['room_id'],
-            'room_name' => str_replace(['%2b', '%2B'], '+', $bookingData['room_id']),
-            'room_type_display' => fn_novoton_holidays_format_room_type($bookingData['room_id']),
+            'room_id' => $room_id_str,
+            'room_name' => str_replace(['%2b', '%2B'], '+', $room_id_str),
+            'room_type_display' => fn_novoton_holidays_format_room_type($room_id_str),
             'board_id' => $board_id,
             'board_name' => $board_name,
-            'check_in' => $bookingData['check_in'],
-            'check_out' => $bookingData['check_out'],
+            'check_in' => $check_in,
+            'check_out' => $check_out,
             'nights' => $nights,
-            'adults' => (int)($bookingData['adults'] ?? 2),
-            'children' => (int)($bookingData['children'] ?? 0),
+            'adults' => TypeCoerce::toInt($bookingData['adults'] ?? 2),
+            'children' => TypeCoerce::toInt($bookingData['children'] ?? 0),
             'children_ages' => $children_ages,
-            'num_rooms' => (int)($num_rooms),  // Explicitly cast to int
+            'num_rooms' => $num_rooms,
             'rooms_data' => $rooms_data,
             'guest_names' => $guest_list,
             'holder_name' => $holder_name,
             'guests_data' => (new GuestDataNormalizer())->toJson($guests_data),
-            'contact_email' => $contact['email'] ?? '',
-            'contact_phone' => $contact['phone'] ?? '',
+            'contact_email' => TypeCoerce::toString($contact['email'] ?? ''),
+            'contact_phone' => TypeCoerce::toString($contact['phone'] ?? ''),
             'terms_of_payment' => fn_novoton_holidays_format_payment_terms($terms_of_payment),
-            'terms_of_cancellation' => fn_novoton_holidays_format_cancellation_terms($terms_of_cancellation, $bookingData['check_in']),
+            'terms_of_cancellation' => fn_novoton_holidays_format_cancellation_terms($terms_of_cancellation, $check_in),
             'terms_of_payment_raw' => $terms_of_payment,
             'terms_of_cancellation_raw' => $terms_of_cancellation,
             'remark' => $remark,
@@ -623,12 +660,12 @@ use Tygh\Addons\TravelCore\TravelConstants;
     // skip the API call and make checkout feel instant.
     if (isset($api_price) && $api_price > 0) {
         $cache_key = md5(implode('|', [
-            $bookingData['hotel_id'],
-            $bookingData['room_id'],
-            $bookingData['board_id'] ?? '',
-            $bookingData['check_in'],
-            $bookingData['check_out'],
-            (int)($bookingData['adults'] ?? 2),
+            $bdHotelId,
+            $room_id_str,
+            TypeCoerce::toString($bookingData['board_id'] ?? ''),
+            $check_in,
+            $check_out,
+            (string) TypeCoerce::toInt($bookingData['adults'] ?? 2),
             $children_ages,
         ]));
         Tygh::$app['session']['novoton_price_cache'][$cache_key] = [

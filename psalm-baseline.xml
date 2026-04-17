@@ -1,0 +1,745 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<files psalm-version="6.16.1@f1f5de594dc76faf8784e02d3dc4716c91c6f6ac">
+  <file src="addon-novoton-holidays/app/addons/novoton_holidays/src/Api/AvailabilityApiClient.php">
+    <LessSpecificImplementedReturnType>
+      <code><![CDATA[array<string, mixed>]]></code>
+    </LessSpecificImplementedReturnType>
+  </file>
+  <file src="addon-novoton-holidays/app/addons/novoton_holidays/src/Api/HotelApiClient.php">
+    <LessSpecificImplementedReturnType>
+      <code><![CDATA[array<string, mixed>]]></code>
+    </LessSpecificImplementedReturnType>
+    <MoreSpecificImplementedParamType>
+      <code><![CDATA[$hotelIds]]></code>
+    </MoreSpecificImplementedParamType>
+  </file>
+  <file src="addon-novoton-holidays/app/addons/novoton_holidays/src/Api/PricingApiClient.php">
+    <FalsableReturnStatement>
+      <code><![CDATA[false]]></code>
+      <code><![CDATA[false]]></code>
+    </FalsableReturnStatement>
+  </file>
+  <file src="addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/AddProductsCommand.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function execute(): array]]></code>
+      <code><![CDATA[public static function getDescription(): string]]></code>
+      <code><![CDATA[public static function getModes(): array]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/AlternativesCommand.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function execute(): array]]></code>
+      <code><![CDATA[public static function getDescription(): string]]></code>
+      <code><![CDATA[public static function getModes(): array]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/BatchedSyncCommand.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function execute(): array]]></code>
+      <code><![CDATA[public static function getDescription(): string]]></code>
+      <code><![CDATA[public static function getModes(): array]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/CalendarPricesCommand.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function execute(): array]]></code>
+      <code><![CDATA[public static function getDescription(): string]]></code>
+      <code><![CDATA[public static function getModes(): array]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/CleanupCommand.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function execute(): array]]></code>
+      <code><![CDATA[public static function getDescription(): string]]></code>
+      <code><![CDATA[public static function getModes(): array]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/DataSyncCommand.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function execute(): array]]></code>
+      <code><![CDATA[public static function getDescription(): string]]></code>
+      <code><![CDATA[public static function getModes(): array]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/FacilitiesBatchSyncCommand.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function execute(): array]]></code>
+      <code><![CDATA[public static function getDescription(): string]]></code>
+      <code><![CDATA[public static function getModes(): array]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/HotelListSyncCommand.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function execute(): array]]></code>
+      <code><![CDATA[public static function getDescription(): string]]></code>
+      <code><![CDATA[public static function getModes(): array]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/HotelSyncCommand.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function execute(): array]]></code>
+      <code><![CDATA[public static function getDescription(): string]]></code>
+      <code><![CDATA[public static function getModes(): array]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/OffersUpdateCommand.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function execute(): array]]></code>
+      <code><![CDATA[public static function getDescription(): string]]></code>
+      <code><![CDATA[public static function getModes(): array]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/PriceComputeCommand.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function execute(): array]]></code>
+      <code><![CDATA[public static function getDescription(): string]]></code>
+      <code><![CDATA[public static function getModes(): array]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/ResInfoCommand.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function execute(): array]]></code>
+      <code><![CDATA[public static function getDescription(): string]]></code>
+      <code><![CDATA[public static function getModes(): array]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/RoomPriceCheckCommand.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function execute(): array]]></code>
+      <code><![CDATA[public static function getDescription(): string]]></code>
+      <code><![CDATA[public static function getModes(): array]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/CronDispatcher.php">
+    <LessSpecificImplementedReturnType>
+      <code><![CDATA[array<string, mixed>]]></code>
+    </LessSpecificImplementedReturnType>
+  </file>
+  <file src="addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/AbstractBatchedSync.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function getStatus(): array]]></code>
+      <code><![CDATA[public function run(array $options = []): array]]></code>
+      <code><![CDATA[public function setBatchSize(int $size): void]]></code>
+      <code><![CDATA[public function setMaxExecutionTime(int $seconds): void]]></code>
+      <code><![CDATA[public function setOutputCallback(callable $callback): void]]></code>
+      <code><![CDATA[public function setUnlimited(bool $unlimited): void]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/BatchedHotelFacilitiesSyncV2.php">
+    <MoreSpecificImplementedParamType>
+      <code><![CDATA[$batch]]></code>
+    </MoreSpecificImplementedParamType>
+  </file>
+  <file src="addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/BatchedHotelInfoSyncV2.php">
+    <MoreSpecificImplementedParamType>
+      <code><![CDATA[$batch]]></code>
+    </MoreSpecificImplementedParamType>
+  </file>
+  <file src="addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/BatchedPriceInfoSyncV2.php">
+    <MoreSpecificImplementedParamType>
+      <code><![CDATA[$batch]]></code>
+    </MoreSpecificImplementedParamType>
+  </file>
+  <file src="addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/DatabaseHelper.php">
+    <LessSpecificImplementedReturnType>
+      <code><![CDATA[string[]]]></code>
+    </LessSpecificImplementedReturnType>
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function batchUpdateHasRoomPriceFlag(array $withPrices, array $withoutPrices): int]]></code>
+      <code><![CDATA[public function cleanupOldLogs(int $days = 90): int]]></code>
+      <code><![CDATA[public function extractHotelId(string $productCode): ?string]]></code>
+      <code><![CDATA[public function getExistingHotelIds(array $hotelIds): array]]></code>
+      <code><![CDATA[public function getHotelsForSync(array $conditions = [], int $limit = 0, array $fields = []): array]]></code>
+      <code><![CDATA[public function getLastSyncDate(string $syncType, ?string $subType = null): ?string]]></code>
+      <code><![CDATA[public function getProductCode(string $hotelId): string]]></code>
+      <code><![CDATA[public function getProductIdsByHotelIds(array $hotelIds): array]]></code>
+      <code><![CDATA[public function getSyncStats(string $syncType, int $days = 30): array]]></code>
+      <code><![CDATA[public function linkProductsToHotels(array $links): int]]></code>
+      <code><![CDATA[public function upsertHotelPackages(string $hotelId, array $packages): int]]></code>
+      <code><![CDATA[public function upsertHotels(array $hotels): array]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/DatabaseIterator.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function countItems(string $table, array $filters = []): int]]></code>
+      <code><![CDATA[public function iterateBookings(array $filters = [], int $chunk_size = self::DEFAULT_CHUNK_SIZE): \Generator]]></code>
+      <code><![CDATA[public function iterateHotelIds(array $filters = [], int $chunk_size = self::DEFAULT_CHUNK_SIZE): \Generator]]></code>
+      <code><![CDATA[public function iterateHotels(array $filters = [], int $chunk_size = self::DEFAULT_CHUNK_SIZE): \Generator]]></code>
+      <code><![CDATA[public function iteratePackages(array $filters = [], int $chunk_size = self::DEFAULT_CHUNK_SIZE): \Generator]]></code>
+      <code><![CDATA[public function iterateQuery(string $query, array $params = [], int $chunk_size = self::DEFAULT_CHUNK_SIZE): \Generator]]></code>
+      <code><![CDATA[public function iterateSyncLogs(string $type = '', int $chunk_size = self::DEFAULT_CHUNK_SIZE): \Generator]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/ProductFactory.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function attachHotelImages(int $productId, string $hotelId, HotelApiClientInterface $api): int]]></code>
+      <code><![CDATA[public function createFromHotel(array $hotel, HotelApiClientInterface $api, int $categoryId): ?int]]></code>
+      <code><![CDATA[public static function buildHotelTitle(string $hotelName, string $city, string $country, string $year): string]]></code>
+      <code><![CDATA[public static function getOrCreateCategory(string $categoryPath): int]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/StateManager.php">
+    <InvalidPropertyAssignmentValue>
+      <code><![CDATA[$this->lockHandle]]></code>
+      <code><![CDATA[$this->lockHandle]]></code>
+    </InvalidPropertyAssignmentValue>
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function acquireLock(int $timeout = 5): bool]]></code>
+      <code><![CDATA[public function clear(): bool]]></code>
+      <code><![CDATA[public function complete(): array]]></code>
+      <code><![CDATA[public function getNextBatch(int $batchSize): array]]></code>
+      <code><![CDATA[public function getStateFilePath(): string]]></code>
+      <code><![CDATA[public function getStatus(): array]]></code>
+      <code><![CDATA[public function increment(int $processed = 0, int $synced = 0, int $errors = 0, ?string $errorId = null): array]]></code>
+      <code><![CDATA[public function isInProgress(): bool]]></code>
+      <code><![CDATA[public function isStale(int $maxAgeHours = 6): bool]]></code>
+      <code><![CDATA[public function load(): array]]></code>
+      <code><![CDATA[public function releaseLock(): void]]></code>
+      <code><![CDATA[public function save(array $state): bool]]></code>
+      <code><![CDATA[public function shouldResume(): bool]]></code>
+      <code><![CDATA[public function start(string $syncType, array $itemIds, array $metadata = []): array]]></code>
+      <code><![CDATA[public function updateProgress(int $processed, int $synced, int $errors, array $errorIds = []): array]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/SyncLogger.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function clearMessages(): void]]></code>
+      <code><![CDATA[public function complete(bool $sendEmail = true, string $country = '', array $extra = []): array]]></code>
+      <code><![CDATA[public function getElapsedTime(): float]]></code>
+      <code><![CDATA[public function getFormattedDateTime(): string]]></code>
+      <code><![CDATA[public function getFormattedDuration(): string]]></code>
+      <code><![CDATA[public function getMessages(): array]]></code>
+      <code><![CDATA[public function getStats(): array]]></code>
+      <code><![CDATA[public function increment(string $key, int $amount = 1): void]]></code>
+      <code><![CDATA[public function logEvent(string $action, array $context = []): void]]></code>
+      <code><![CDATA[public function logToDatabase(?string $status = 'completed', array $extra = []): int|false]]></code>
+      <code><![CDATA[public function output(string $message, bool $newline = true): void]]></code>
+      <code><![CDATA[public function outputFooter(): void]]></code>
+      <code><![CDATA[public function outputHeader(?string $mode = null): void]]></code>
+      <code><![CDATA[public function outputProgress(int $current, int $total, string $prefix = ''): void]]></code>
+      <code><![CDATA[public function outputSummary(?array $stats = null): void]]></code>
+      <code><![CDATA[public function sendEmailReport(array $results = [], string $country = ''): bool]]></code>
+      <code><![CDATA[public function setOutputCallback(callable $callback): void]]></code>
+      <code><![CDATA[public function setStat(string $key, $value): void]]></code>
+      <code><![CDATA[public static function getTypeLabel(?string $type = null): string]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="addon-novoton-holidays/app/addons/novoton_holidays/src/HotelSync.php">
+    <InvalidArrayOffset>
+      <code><![CDATA[$this->stats['duration']]]></code>
+    </InvalidArrayOffset>
+    <InvalidPropertyAssignmentValue>
+      <code><![CDATA[$this->stats]]></code>
+      <code><![CDATA[$this->stats]]></code>
+    </InvalidPropertyAssignmentValue>
+  </file>
+  <file src="addon-novoton-holidays/app/addons/novoton_holidays/src/NovotonHttpClient.php">
+    <LessSpecificImplementedReturnType>
+      <code><![CDATA[array<string, mixed>]]></code>
+    </LessSpecificImplementedReturnType>
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function getApiPassword(): string]]></code>
+      <code><![CDATA[public function getApiUser(): string]]></code>
+      <code><![CDATA[public function getCircuitStatus(): array]]></code>
+      <code><![CDATA[public function isCircuitClosed(): bool]]></code>
+      <code><![CDATA[public function recordFailure(): void]]></code>
+      <code><![CDATA[public function recordSuccess(): void]]></code>
+      <code><![CDATA[public function resetCircuitBreaker(): void]]></code>
+      <code><![CDATA[public function sendBatchRequests(array $requests, int $concurrency = 5): array]]></code>
+      <code><![CDATA[public function sendRequest(string $function, string $xml = '', string $lang = 'UK'): string]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="addon-novoton-holidays/app/addons/novoton_holidays/src/NovotonXmlParser.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function clean($string): string]]></code>
+      <code><![CDATA[public function cleanAndParse($rawString): \SimpleXMLElement]]></code>
+      <code><![CDATA[public function parse($xmlString): \SimpleXMLElement]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/AlternativeRequestRepository.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function countFiltered(string $whereSql = '', array $params = []): int]]></code>
+      <code><![CDATA[public function create(array $data): int]]></code>
+      <code><![CDATA[public function delete(int $request_id): bool]]></code>
+      <code><![CDATA[public function expireOlderThan(int $days = 30): int]]></code>
+      <code><![CDATA[public function findById(int $request_id): ?array]]></code>
+      <code><![CDATA[public function findFiltered(string $whereSql = '', array $params = [], int $limit = 30, int $offset = 0): array]]></code>
+      <code><![CDATA[public function findPendingOlderThan(int $hours = 24, int $limit = 50): array]]></code>
+      <code><![CDATA[public function findPendingWithApiRef(): array]]></code>
+      <code><![CDATA[public function findUnnotified(int $limit = 20): array]]></code>
+      <code><![CDATA[public function getStatusCounts(): array]]></code>
+      <code><![CDATA[public function markAlternativesFound(int $request_id, string $alternatives_json): bool]]></code>
+      <code><![CDATA[public function markNotified(int $request_id): bool]]></code>
+      <code><![CDATA[public function update(int $request_id, array $data): bool]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepository.php">
+    <LessSpecificImplementedReturnType>
+      <code><![CDATA[array<string, mixed>]]></code>
+    </LessSpecificImplementedReturnType>
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function checkOwnership(int $booking_id, int $user_id, string $session_id): ?int]]></code>
+      <code><![CDATA[public function count(array $filters = []): int]]></code>
+      <code><![CDATA[public function countOrphans(int $hours = 48): int]]></code>
+      <code><![CDATA[public function create(array $data): int]]></code>
+      <code><![CDATA[public function delete(int $booking_id): bool]]></code>
+      <code><![CDATA[public function deleteByProductId(int $product_id): int]]></code>
+      <code><![CDATA[public function deleteOrphans(int $hours = 24): int]]></code>
+      <code><![CDATA[public function findAllForExport(): array]]></code>
+      <code><![CDATA[public function findByHotelId(string $hotel_id, int $limit = 100): array]]></code>
+      <code><![CDATA[public function findById(int $booking_id): ?array]]></code>
+      <code><![CDATA[public function findByIdHydrated(int $booking_id, bool $force = false): ?array]]></code>
+      <code><![CDATA[public function findByIdWithOwnership(int $booking_id, int $user_id, string $session_id): ?array]]></code>
+      <code><![CDATA[public function findByNovotonStatus(string $novoton_status, array $statuses, int $limit = 50): array]]></code>
+      <code><![CDATA[public function findByOrderId(int $order_id): array]]></code>
+      <code><![CDATA[public function findByOrderIds(array $order_ids): array]]></code>
+      <code><![CDATA[public function findByProductIds(array $product_ids, array $statuses = [TravelConstants::STATUS_PENDING, TravelConstants::STATUS_CONFIRMED], string $session_id = '', int $user_id = 0): array]]></code>
+      <code><![CDATA[public function findBySessionId(string $session_id): array]]></code>
+      <code><![CDATA[public function findByUserId(int $user_id, int $limit = 100): array]]></code>
+      <code><![CDATA[public function findExisting(string $hotel_id, string $check_in, string $check_out, string $holder_name, int $hours = 1): ?array]]></code>
+      <code><![CDATA[public function findForAdminList(string $condition = '', int $limit = 500): array]]></code>
+      <code><![CDATA[public function findIdByOrderAndHotelDates(int $order_id, string $hotel_id, string $check_in, string $check_out): ?int]]></code>
+      <code><![CDATA[public function findPending(int $limit = 500): array]]></code>
+      <code><![CDATA[public function findRqWithoutAlternatives(int $limit = 50): array]]></code>
+      <code><![CDATA[public function findUnassignedByHotelDates(string $hotel_id, string $check_in, string $check_out): ?array]]></code>
+      <code><![CDATA[public function findWithOrderDetails(int $booking_id): ?array]]></code>
+      <code><![CDATA[public function findWithReservationId(int $limit = 1000): array]]></code>
+      <code><![CDATA[public function getGuestsData(int $booking_id): ?string]]></code>
+      <code><![CDATA[public function getStats(): array]]></code>
+      <code><![CDATA[public function getTerms(int $booking_id): ?array]]></code>
+      <code><![CDATA[public function getUnifiedBookings(array $params = []): array]]></code>
+      <code><![CDATA[public function linkToOrder(int $booking_id, int $order_id): bool]]></code>
+      <code><![CDATA[public function linkToUserByEmail(int $user_id, string $email): int]]></code>
+      <code><![CDATA[public function linkToUserBySession(int $user_id, string $session_id): int]]></code>
+      <code><![CDATA[public function setReservationId(int $booking_id, string $reservation_id, string $status = 'Good'): bool]]></code>
+      <code><![CDATA[public function storeApiData(int $booking_id, $request, $response): bool]]></code>
+      <code><![CDATA[public function update(int $booking_id, array $data): bool]]></code>
+      <code><![CDATA[public function updateStatus(int $booking_id, string $status, string $novoton_status = ''): bool]]></code>
+      <code><![CDATA[public static function hydrateJsonFields(array $booking): array]]></code>
+      <code><![CDATA[public static function invalidateCache(int $booking_id = 0): void]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/CacheRepository.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function countAll(): int]]></code>
+      <code><![CDATA[public function countExpired(): int]]></code>
+      <code><![CDATA[public function deleteAll(?string $prefix = null): int]]></code>
+      <code><![CDATA[public function deleteByKey(string $key): void]]></code>
+      <code><![CDATA[public function deleteExpired(): int]]></code>
+      <code><![CDATA[public function findByKey(string $key): ?array]]></code>
+      <code><![CDATA[public function upsert(string $key, string $data, int $expiresAt): void]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/FacilityRepository.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function clearHotelFacilities(string $hotel_id): bool]]></code>
+      <code><![CDATA[public function count(): int]]></code>
+      <code><![CDATA[public function countHotelsWithFacility(int $facility_id): int]]></code>
+      <code><![CDATA[public function delete(int $facility_id): bool]]></code>
+      <code><![CDATA[public function exists(int $facility_id): bool]]></code>
+      <code><![CDATA[public function findAll(string $lang = 'en'): array]]></code>
+      <code><![CDATA[public function findAllFull(): array]]></code>
+      <code><![CDATA[public function findById(int $facility_id): ?array]]></code>
+      <code><![CDATA[public function getForHotel(string $hotel_id, string $lang = 'en'): array]]></code>
+      <code><![CDATA[public function getForHotelByType(string $hotel_id, string $facility_type, string $lang = 'en'): array]]></code>
+      <code><![CDATA[public function getForHotelGroupedByType(string $hotel_id, string $lang = 'en'): array]]></code>
+      <code><![CDATA[public function getIdsForHotel(string $hotel_id): array]]></code>
+      <code><![CDATA[public function getLastSyncedAt(): ?string]]></code>
+      <code><![CDATA[public function linkToHotel(string $hotel_id, int $facility_id): bool]]></code>
+      <code><![CDATA[public function save(int $facility_id, string $name_en, string $name_ro = ''): bool]]></code>
+      <code><![CDATA[public function setHotelFacilities(string $hotel_id, array $facility_ids): bool]]></code>
+      <code><![CDATA[public function unlinkFromHotel(string $hotel_id, int $facility_id): bool]]></code>
+      <code><![CDATA[public function updateType(int $facility_id, string $facility_type): bool]]></code>
+      <code><![CDATA[public function updateTypeAndTranslation(int $facility_id, string $facility_type, ?string $name_ro = null): bool]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelPackageRepository.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function countByHotelId(string $hotelId): int]]></code>
+      <code><![CDATA[public function deleteByHotelId(string $hotelId): int]]></code>
+      <code><![CDATA[public function exists(string $hotelId, string $packageId): bool]]></code>
+      <code><![CDATA[public function findByHotelAndPackageId(string $hotelId, string $packageId): ?array]]></code>
+      <code><![CDATA[public function findByHotelAndPackageName(string $hotelId, string $packageName): ?array]]></code>
+      <code><![CDATA[public function findByHotelId(string $hotelId): array]]></code>
+      <code><![CDATA[public function findByHotelIdFull(string $hotelId): array]]></code>
+      <code><![CDATA[public function findEarlyBookingPackage(string $hotelId): ?array]]></code>
+      <code><![CDATA[public function findForHotelDetail(string $hotelId): array]]></code>
+      <code><![CDATA[public function findForListing(string $hotelId): array]]></code>
+      <code><![CDATA[public function findPackageNamesWithPriceinfo(string $hotelId): array]]></code>
+      <code><![CDATA[public function getActivePackageName(string $hotelId): ?string]]></code>
+      <code><![CDATA[public function getAllPriceinfoData(string $hotelId): array]]></code>
+      <code><![CDATA[public function getFirstPackageName(string $hotelId): ?string]]></code>
+      <code><![CDATA[public function getLastSyncedAt(string $hotelId): ?string]]></code>
+      <code><![CDATA[public function getLatestPriceinfoData(string $hotelId): ?string]]></code>
+      <code><![CDATA[public function getPackageIdNamePairs(string $hotelId): array]]></code>
+      <code><![CDATA[public function getPriceinfoData(string $hotelId, ?string $packageName = null): ?string]]></code>
+      <code><![CDATA[public function upsert(string $hotelId, string $packageId, array $data): bool]]></code>
+      <code><![CDATA[public function upsertByHotelAndPackage(string $hotelId, string $packageId, string $packageName): bool]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelReportingRepository.php">
+    <LessSpecificImplementedReturnType>
+      <code><![CDATA[list<array<string, mixed>>]]></code>
+      <code><![CDATA[list<array<string, mixed>>]]></code>
+    </LessSpecificImplementedReturnType>
+  </file>
+  <file src="addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelRepository.php">
+    <LessSpecificImplementedReturnType>
+      <code><![CDATA[string[]]]></code>
+    </LessSpecificImplementedReturnType>
+  </file>
+  <file src="addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/SyncLogRepository.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function count(string $type = ''): int]]></code>
+      <code><![CDATA[public function create(string $type, array $data): int]]></code>
+      <code><![CDATA[public function deleteOld(int $days = 30): int]]></code>
+      <code><![CDATA[public function findById(int $log_id): ?array]]></code>
+      <code><![CDATA[public function findByType(string $type, int $limit = 0): array]]></code>
+      <code><![CDATA[public function findPaginated(int $page = 1, int $per_page = 10, string $type = ''): array]]></code>
+      <code><![CDATA[public function findRecent(int $limit = 20, string $type = ''): array]]></code>
+      <code><![CDATA[public function getLastSync(string $type): ?array]]></code>
+      <code><![CDATA[public function getLastSyncDate(string $type): ?string]]></code>
+      <code><![CDATA[public function getStats(int $days = 7): array]]></code>
+      <code><![CDATA[public function logSync(string $type, int $total, int $updated, int $failed = 0, int $duration = 0, string $status = 'completed', array $details = []): int]]></code>
+      <code><![CDATA[public function trimToLatest(int $keep = 100): int]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="addon-novoton-holidays/app/addons/novoton_holidays/src/Services/AlternativeRequestService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function submitAlternativeBookingRequest(array $params): array]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingAdminProvider.php">
+    <InvalidReturnStatement>
+      <code><![CDATA[$actions]]></code>
+    </InvalidReturnStatement>
+    <InvalidReturnType>
+      <code><![CDATA[array]]></code>
+    </InvalidReturnType>
+    <LessSpecificImplementedReturnType>
+      <code><![CDATA[array<string, mixed>]]></code>
+      <code><![CDATA[array<string, mixed>]]></code>
+    </LessSpecificImplementedReturnType>
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function checkStatus(string $providerBookingId): array]]></code>
+      <code><![CDATA[public function getAvailableActions(array $booking): array]]></code>
+      <code><![CDATA[public function getDisplayData(string $providerBookingId): array]]></code>
+      <code><![CDATA[public function getProviderTabs(array $booking): array]]></code>
+      <code><![CDATA[public function getProviderViewUrl(string $providerBookingId): ?string]]></code>
+      <code><![CDATA[public function handleAction(string $action, array $request): array]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingQueryService.php">
+    <InvalidArgument>
+      <code><![CDATA[$room_types]]></code>
+    </InvalidArgument>
+    <LessSpecificImplementedReturnType>
+      <code><![CDATA[array<string, mixed>]]></code>
+    </LessSpecificImplementedReturnType>
+  </file>
+  <file src="addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function addToCart(int $booking_id, int $product_id, array $bookingData): bool]]></code>
+      <code><![CDATA[public function assembleCartProduct(]]></code>
+      <code><![CDATA[public function calculateNights(string $check_in, string $check_out): int]]></code>
+      <code><![CDATA[public function createBooking(array $bookingData, int $product_id): int]]></code>
+      <code><![CDATA[public function enrichRoomsData(array $roomsData, array $guestsData): array]]></code>
+      <code><![CDATA[public function getBooking(int $booking_id): ?array]]></code>
+      <code><![CDATA[public function getBookingsForOrder(int $order_id): array]]></code>
+      <code><![CDATA[public function linkToOrder(int $booking_id, int $order_id): bool]]></code>
+      <code><![CDATA[public function parseRoomsData(array $bookingData): array]]></code>
+      <code><![CDATA[public function resolveProductId(string $hotelId, int $fallbackProductId = 0): int]]></code>
+      <code><![CDATA[public function updateBooking(int $booking_id, array $data): bool]]></code>
+      <code><![CDATA[public function verifyPrice(array $params): array]]></code>
+    </MissingOverrideAttribute>
+    <UnsupportedPropertyReferenceUsage>
+      <code><![CDATA[$auth = &Tygh::$app['session']['auth']]]></code>
+      <code><![CDATA[$cart = &Tygh::$app['session']['cart']]]></code>
+    </UnsupportedPropertyReferenceUsage>
+  </file>
+  <file src="addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingSubmissionService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function submitOrder(int $orderId, array $cart): void]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="addon-novoton-holidays/app/addons/novoton_holidays/src/Services/CacheService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function cleanup(): int]]></code>
+      <code><![CDATA[public function clear(?string $prefix = null): int]]></code>
+      <code><![CDATA[public function delete(string $key): bool]]></code>
+      <code><![CDATA[public function get(string $key): mixed]]></code>
+      <code><![CDATA[public function getStats(): array]]></code>
+      <code><![CDATA[public function remember(string $key, callable $callback, ?int $ttl = null): mixed]]></code>
+      <code><![CDATA[public function set(string $key, mixed $value, ?int $ttl = null): bool]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="addon-novoton-holidays/app/addons/novoton_holidays/src/Services/CronService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function checkAlternatives(): array]]></code>
+      <code><![CDATA[public function checkAskBookings(): array]]></code>
+      <code><![CDATA[public function getCountries(): array]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="addon-novoton-holidays/app/addons/novoton_holidays/src/Services/DiagnosticsService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function testApiConnection(): array]]></code>
+      <code><![CDATA[public function testFacilities(): array]]></code>
+      <code><![CDATA[public function testHotelList(string $country = Constants::DEFAULT_COUNTRY, int $limit = 10): array]]></code>
+      <code><![CDATA[public function testProduct(string $productCode): array]]></code>
+      <code><![CDATA[public function testRoomPrice(array $params): array]]></code>
+      <code><![CDATA[public function testSearch(array $params): array]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="addon-novoton-holidays/app/addons/novoton_holidays/src/Services/FeeCalculator.php">
+    <LessSpecificImplementedReturnType>
+      <code><![CDATA[array<string>]]></code>
+    </LessSpecificImplementedReturnType>
+  </file>
+  <file src="addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PreOrderPriceVerifier.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function verify(array $cart): array]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoCalculation.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function calculate(array $params): array]]></code>
+      <code><![CDATA[public function getParser(): PriceInfoParser]]></code>
+      <code><![CDATA[public function log(string $message, mixed $data = null): void]]></code>
+      <code><![CDATA[public function setDebug(bool $debug): void]]></code>
+      <code><![CDATA[public function verifySeasonPriceMapping(string $checkIn, int $nights): array]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function getActiveEarlyBooking(string $hotelId, ?string $date = null): ?array]]></code>
+      <code><![CDATA[public function getActivePackage(int $productId): ?string]]></code>
+      <code><![CDATA[public function getCalendarPrices(string $hotelId, ?string $targetCurrency = null, int $adults = 2): array]]></code>
+      <code><![CDATA[public function getEarlyBooking(string $hotelId): array]]></code>
+      <code><![CDATA[public function getLastUpdate(int $productId): ?string]]></code>
+      <code><![CDATA[public function getPriceInfo(string $hotelId, string $packageName, string $lang = 'UK'): ?array]]></code>
+      <code><![CDATA[public function getSeasons(string $hotelId): array]]></code>
+      <code><![CDATA[public function getStoredPrices(int|string $productIdOrHotelId, ?string $packageName = null): array]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="addon-novoton-holidays/app/addons/novoton_holidays/src/Services/RoomPriceService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function applyCommission(float $base_price): float]]></code>
+      <code><![CDATA[public function calculatePerNight(float $total_price, int $nights): float]]></code>
+      <code><![CDATA[public function calculatePerPersonPerNight(float $total_price, int $nights, int $guests): float]]></code>
+      <code><![CDATA[public function calculateSavings(float $original_price, float $discounted_price): array]]></code>
+      <code><![CDATA[public function calculateTotal(array $rooms_data): float]]></code>
+      <code><![CDATA[public function format(float $price, ?string $currency = null, bool $include_symbol = true): string]]></code>
+      <code><![CDATA[public function formatRange(float $min_price, float $max_price, ?string $currency = null): string]]></code>
+      <code><![CDATA[public function getCommissionInfo(): array]]></code>
+      <code><![CDATA[public function getMultipleRoomPrices(array $rooms_params): array]]></code>
+      <code><![CDATA[public function getRoomPrice(array $params): ?array]]></code>
+      <code><![CDATA[public function removeCommission(float $price_with_commission): float]]></code>
+      <code><![CDATA[public function setCommission(float $commission): void]]></code>
+      <code><![CDATA[public function validate(float $price, float $min_price = 0, float $max_price = 100000): bool]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SearchService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function calculateRoomTotals(array $rooms_data): array]]></code>
+      <code><![CDATA[public function getBoardName(string $board_id): string]]></code>
+      <code><![CDATA[public function parseRoomPriceResponse(]]></code>
+      <code><![CDATA[public function parseSearchParams(array $request): array]]></code>
+      <code><![CDATA[public static function deduplicateResults(array $results): array]]></code>
+      <code><![CDATA[public static function getDiscountRange(array $discounts): array]]></code>
+      <code><![CDATA[public static function getEarlyBookingDiscounts(string $hotelId, string $checkIn, string $checkOut): array]]></code>
+      <code><![CDATA[public static function matchesMealPlan(string $boardId, string $mealPlan): bool]]></code>
+      <code><![CDATA[public static function parseQuotaValue(?string $quotaValue): array]]></code>
+    </MissingOverrideAttribute>
+    <MoreSpecificImplementedParamType>
+      <code><![CDATA[$discounts]]></code>
+      <code><![CDATA[$results]]></code>
+    </MoreSpecificImplementedParamType>
+  </file>
+  <file src="addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SecurityService.php">
+    <InvalidArgument>
+      <code><![CDATA[$ip]]></code>
+    </InvalidArgument>
+    <InvalidReturnStatement>
+      <code><![CDATA[$ip]]></code>
+    </InvalidReturnStatement>
+    <InvalidReturnType>
+      <code><![CDATA[string]]></code>
+    </InvalidReturnType>
+    <LessSpecificImplementedReturnType>
+      <code><![CDATA[array<string, mixed>]]></code>
+      <code><![CDATA[array<string, mixed>]]></code>
+    </LessSpecificImplementedReturnType>
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function checkBookingRateLimit(string $identifier): bool]]></code>
+      <code><![CDATA[public function checkRateLimit(string $key, ?int $maxRequests = null, ?int $window = null): array]]></code>
+      <code><![CDATA[public function decrypt(string $data): ?string]]></code>
+      <code><![CDATA[public function encrypt(string $data): string]]></code>
+      <code><![CDATA[public function escapeHtml(string $string): string]]></code>
+      <code><![CDATA[public function generateCsrfToken(): string]]></code>
+      <code><![CDATA[public function logSecurityEvent(string $event, array $data = []): void]]></code>
+      <code><![CDATA[public function sanitizeGuestData(array $guests): array]]></code>
+      <code><![CDATA[public function validateBookingData(array $data): array]]></code>
+      <code><![CDATA[public function validateSearchParams(array $params): array]]></code>
+      <code><![CDATA[public function verifyCsrfToken(string $token): bool]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/AbstractSyncCommand.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[abstract public function execute(array $params = []): array;]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/AddProductsCommand.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function output(string $message, bool $addNewline = true): void]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/DestinationSyncCommand.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function output(string $message, bool $addNewline = true): void]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/CronDispatcher.php">
+    <LessSpecificImplementedReturnType>
+      <code><![CDATA[array<string, mixed>]]></code>
+    </LessSpecificImplementedReturnType>
+  </file>
+  <file src="addon-sphinx-holidays/app/addons/sphinx_holidays/src/Helpers/SphinxProductFactory.php">
+    <LessSpecificImplementedReturnType>
+      <code><![CDATA[array<string, mixed>]]></code>
+    </LessSpecificImplementedReturnType>
+  </file>
+  <file src="addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/BookingAdminProvider.php">
+    <InvalidReturnStatement>
+      <code><![CDATA[$actions]]></code>
+    </InvalidReturnStatement>
+    <InvalidReturnType>
+      <code><![CDATA[array<int, array{name: string, label: string, url: string, method: string, css_class: string, icon: string}>]]></code>
+    </InvalidReturnType>
+    <LessSpecificImplementedReturnType>
+      <code><![CDATA[array<string, mixed>]]></code>
+      <code><![CDATA[array<string, mixed>]]></code>
+    </LessSpecificImplementedReturnType>
+  </file>
+  <file src="addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/CacheEndpointService.php">
+    <LessSpecificImplementedReturnType>
+      <code><![CDATA[array<string, mixed>]]></code>
+    </LessSpecificImplementedReturnType>
+  </file>
+  <file src="addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/CacheService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public static function buildSearchKey(array $params): string]]></code>
+      <code><![CDATA[public static function cleanup(): void]]></code>
+      <code><![CDATA[public static function delete(string $key): void]]></code>
+      <code><![CDATA[public static function get(string $key): ?array]]></code>
+      <code><![CDATA[public static function set(string $key, array $data, int $ttl): void]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/CartService.php">
+    <UnsupportedPropertyReferenceUsage>
+      <code><![CDATA[$auth = &Tygh::$app['session']['auth']]]></code>
+      <code><![CDATA[$cart = &Tygh::$app['session']['cart']]]></code>
+    </UnsupportedPropertyReferenceUsage>
+  </file>
+  <file src="addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/CircuitSyncService.php">
+    <InvalidReturnStatement>
+      <code><![CDATA[$this->runSync(true)]]></code>
+    </InvalidReturnStatement>
+    <InvalidReturnType>
+      <code><![CDATA[array{success: bool, total: int, synced: int, failed: int, duration_ms: int, error: string}]]></code>
+    </InvalidReturnType>
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function doSync(bool $fullSync, array $stats, array $context): array]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/ConfigProvider.php">
+    <LessSpecificImplementedReturnType>
+      <code><![CDATA[int[]]]></code>
+      <code><![CDATA[string[]]]></code>
+    </LessSpecificImplementedReturnType>
+    <MissingOverrideAttribute>
+      <code><![CDATA[public static function getAllowedDestinationIds(): array]]></code>
+      <code><![CDATA[public static function getApiBaseUrl(): string]]></code>
+      <code><![CDATA[public static function getApiKey(): string]]></code>
+      <code><![CDATA[public static function getCacheTtlSearch(): int]]></code>
+      <code><![CDATA[public static function getCommission(): float]]></code>
+      <code><![CDATA[public static function getCronAccessKey(): string]]></code>
+      <code><![CDATA[public static function getDefaultCurrency(): string]]></code>
+      <code><![CDATA[public static function getHotelsCategoryId(): int]]></code>
+      <code><![CDATA[public static function getMaxRetries(): int]]></code>
+      <code><![CDATA[public static function getProductCodePrefix(): string]]></code>
+      <code><![CDATA[public static function getRetryDelayMs(): int]]></code>
+      <code><![CDATA[public static function getRetryMultiplier(): float]]></code>
+      <code><![CDATA[public static function getSelectedCountryCodes(): array]]></code>
+      <code><![CDATA[public static function isApiCacheEnabled(): bool]]></code>
+      <code><![CDATA[public static function isConfigured(): bool]]></code>
+      <code><![CDATA[public static function isDebugLogging(): bool]]></code>
+      <code><![CDATA[public static function shouldRoundPrices(): bool]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/DestinationSyncService.php">
+    <InvalidReturnStatement>
+      <code><![CDATA[$this->runSync($fullSync)]]></code>
+    </InvalidReturnStatement>
+    <InvalidReturnType>
+      <code><![CDATA[array{success: bool, total: int, synced: int, failed: int, duration_ms: int, error: string, sync_mode: string}]]></code>
+    </InvalidReturnType>
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function doSync(bool $fullSync, array $stats, array $context): array]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/ExperienceSyncService.php">
+    <InvalidReturnStatement>
+      <code><![CDATA[$this->runSync(true)]]></code>
+    </InvalidReturnStatement>
+    <InvalidReturnType>
+      <code><![CDATA[array{success: bool, total: int, synced: int, failed: int, duration_ms: int, error: string}]]></code>
+    </InvalidReturnType>
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function doSync(bool $fullSync, array $stats, array $context): array]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/PackageRouteSyncService.php">
+    <InvalidReturnStatement>
+      <code><![CDATA[$this->runSync(true, [
+            'departure_ids'   => $departureIds,
+            'destination_ids' => $destinationIds,
+        ])]]></code>
+    </InvalidReturnStatement>
+    <InvalidReturnType>
+      <code><![CDATA[array{success: bool, total: int, synced: int, failed: int, duration_ms: int, error: string}]]></code>
+    </InvalidReturnType>
+  </file>
+  <file src="addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/PreOrderPriceVerifier.php">
+    <LessSpecificImplementedReturnType>
+      <code><![CDATA[array<string, mixed>]]></code>
+    </LessSpecificImplementedReturnType>
+  </file>
+  <file src="addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/SecurityService.php">
+    <LessSpecificImplementedReturnType>
+      <code><![CDATA[array<string, mixed>]]></code>
+    </LessSpecificImplementedReturnType>
+  </file>
+  <file src="addon-travel-core/app/addons/travel_core/src/Services/FeatureMapper.php">
+    <LessSpecificImplementedReturnType>
+      <code><![CDATA[array<string, mixed>|null {map_id, feature_type, canonical_code, display_name_en, display_name_ro, cscart_feature_id, cscart_variant_id, variant_source}]]></code>
+    </LessSpecificImplementedReturnType>
+  </file>
+  <file src="addon-travel-core/app/addons/travel_core/src/Services/GuestDataService.php">
+    <LessSpecificImplementedReturnType>
+      <code><![CDATA[array<string, mixed>]]></code>
+    </LessSpecificImplementedReturnType>
+  </file>
+  <file src="addon-travel-core/app/addons/travel_core/src/Services/PriceChangeDetector.php">
+    <LessSpecificImplementedReturnType>
+      <code><![CDATA[array<string, mixed>]]></code>
+    </LessSpecificImplementedReturnType>
+  </file>
+  <file src="addon-travel-core/app/addons/travel_core/src/Services/TravelProviderRegistry.php">
+    <InvalidReturnStatement>
+      <code><![CDATA[$provider]]></code>
+    </InvalidReturnStatement>
+    <InvalidReturnType>
+      <code><![CDATA[array{name: string, label: string, normalizer: ProviderNormalizerInterface}|null]]></code>
+    </InvalidReturnType>
+  </file>
+</files>

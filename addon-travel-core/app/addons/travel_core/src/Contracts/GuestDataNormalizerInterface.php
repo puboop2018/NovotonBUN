@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Tygh\Addons\TravelCore\Contracts;
@@ -15,7 +16,7 @@ interface GuestDataNormalizerInterface
     /**
      * Normalize guest data from any supported format into canonical keyed format.
      *
-     * @param array<string, mixed>|string $raw  Raw guest data (JSON string, keyed array, or indexed array)
+     * @param array<string, mixed>|string $raw Raw guest data (JSON string, keyed array, or indexed array)
      * @return array<string, mixed> Canonical keyed array (e.g. ['room1_adult_1' => [...], ...])
      */
     public function normalize(array|string $raw): array;
@@ -44,7 +45,6 @@ interface GuestDataNormalizerInterface
      * Keyed format uses string keys matching "room{N}_{type}_{I}".
      *
      * @param array<int|string, mixed> $data
-     * @return bool
      */
     public function isKeyedFormat(array $data): bool;
 
@@ -54,7 +54,6 @@ interface GuestDataNormalizerInterface
      * Array format uses sequential numeric keys with guest entries.
      *
      * @param array<int|string, mixed> $data
-     * @return bool
      */
     public function isArrayFormat(array $data): bool;
 }

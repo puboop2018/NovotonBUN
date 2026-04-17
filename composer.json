@@ -2,14 +2,84 @@
     "name": "novotonbun/dev-tooling",
     "description": "Dev-only tooling for the NovotonBUN monorepo (three CS-Cart addons). Never deployed.",
     "type": "project",
+    "require": {
+        "php": "^8.3"
+    },
     "require-dev": {
-        "phpstan/phpstan": "^2.0"
+        "friendsofphp/php-cs-fixer": "^3.64",
+        "php-parallel-lint/php-parallel-lint": "^1.4",
+        "phpmd/phpmd": "^2.15",
+        "phpro/grumphp": "^2.7",
+        "phpstan/phpstan": "^2.0",
+        "squizlabs/php_codesniffer": "^3.10",
+        "vimeo/psalm": "^6.0"
     },
     "config": {
-        "sort-packages": true
+        "sort-packages": true,
+        "allow-plugins": {
+            "phpro/grumphp": true
+        }
     },
     "scripts": {
+        "post-install-cmd": [
+            "@php -r \"is_dir('var') || mkdir('var', 0755, true);\"",
+            "@hooks:install"
+        ],
+        "post-update-cmd": [
+            "@php -r \"is_dir('var') || mkdir('var', 0755, true);\"",
+            "@hooks:install"
+        ],
+
+        "hooks:install":   "grumphp git:init",
+        "hooks:uninstall": "grumphp git:deinit",
+
         "stan": "phpstan analyse --memory-limit=1G",
-        "stan:baseline": "phpstan analyse --memory-limit=1G --generate-baseline=phpstan-baseline.neon"
+        "stan:baseline": "phpstan analyse --memory-limit=1G --generate-baseline=phpstan-baseline.neon --allow-empty-baseline",
+
+        "psalm": "psalm --no-progress --show-info=false",
+        "psalm:baseline": "psalm --set-baseline=psalm-baseline.xml --no-progress",
+        "psalm:update": "psalm --update-baseline --no-progress",
+
+        "cs": "phpcs --no-cache --report=summary",
+        "cs:fix": "phpcbf",
+
+        "fix": "php-cs-fixer fix",
+        "fix:dry": "php-cs-fixer fix --dry-run --diff",
+
+        "md": "phpmd addon-novoton-holidays/app/addons/novoton_holidays/src,addon-travel-core/app/addons/travel_core/src,addon-sphinx-holidays/app/addons/sphinx_holidays/src text phpmd.xml",
+
+        "test": "cd addon-novoton-holidays/app/addons/novoton_holidays && vendor/bin/phpunit --no-coverage",
+
+        "check": [
+            "@stan",
+            "@psalm",
+            "@cs",
+            "@fix:dry",
+            "@test"
+        ],
+
+        "check:all": [
+            "@stan",
+            "@psalm",
+            "@cs",
+            "@fix:dry",
+            "@md",
+            "@test"
+        ]
+    },
+    "scripts-descriptions": {
+        "stan":          "PHPStan static analysis (level 10)",
+        "stan:baseline": "Regenerate PHPStan baseline from current errors",
+        "psalm":         "Psalm static analysis (level 5)",
+        "psalm:baseline":"Generate Psalm baseline from current errors",
+        "psalm:update":  "Update Psalm baseline (remove fixed entries)",
+        "cs":            "PHP_CodeSniffer — check PSR-12 compliance",
+        "cs:fix":        "PHPCBF — auto-fix PHPCS violations",
+        "fix":           "PHP CS Fixer — auto-format code",
+        "fix:dry":       "PHP CS Fixer — show what would change (dry run)",
+        "md":            "PHPMD — report code quality issues",
+        "test":          "PHPUnit tests for novoton addon",
+        "check":         "Run PHPStan + Psalm + PHPCS + CS Fixer dry-run + PHPUnit",
+        "check:all":     "Run all quality checks including PHPMD"
     }
 }

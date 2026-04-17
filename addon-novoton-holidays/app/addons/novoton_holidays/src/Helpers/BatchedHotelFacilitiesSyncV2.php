@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 /**
  * Novoton Holidays - Batched Hotel Facilities Sync (V2)
  *
@@ -76,11 +78,11 @@ class BatchedHotelFacilitiesSyncV2 extends AbstractBatchedSync
 
         $lastSync = db_get_field(
             "SELECT MAX(sync_date) FROM ?:novoton_sync_log
-             WHERE sync_type = 'hotel_facilities' AND status = 'completed'"
+             WHERE sync_type = 'hotel_facilities' AND status = 'completed'",
         );
 
         if (empty($lastSync)) {
-            $this->logger->output("No previous hotel facilities sync found. Starting full sync.");
+            $this->logger->output('No previous hotel facilities sync found. Starting full sync.');
             return 'full';
         }
 
@@ -95,10 +97,10 @@ class BatchedHotelFacilitiesSyncV2 extends AbstractBatchedSync
         // Check for hotels that never had facilities synced
         $countries = ConfigProvider::getSelectedCountries();
         $unsynced = (int) db_get_field(
-            "SELECT COUNT(*) FROM ?:novoton_hotels h
+            'SELECT COUNT(*) FROM ?:novoton_hotels h
              LEFT JOIN ?:novoton_hotel_facilities hf ON h.hotel_id = hf.hotel_id
-             WHERE h.country IN (?a) AND hf.hotel_id IS NULL",
-            $countries
+             WHERE h.country IN (?a) AND hf.hotel_id IS NULL',
+            $countries,
         );
 
         if ($unsynced > 0) {
@@ -120,20 +122,20 @@ class BatchedHotelFacilitiesSyncV2 extends AbstractBatchedSync
 
         if ($syncType === 'full') {
             return db_get_fields(
-                "SELECT hotel_id FROM ?:novoton_hotels
+                'SELECT hotel_id FROM ?:novoton_hotels
                  WHERE country IN (?a)
-                 ORDER BY hotel_name",
-                $countries
+                 ORDER BY hotel_name',
+                $countries,
             );
         }
 
         // Incremental — only hotels without any facilities
         return db_get_fields(
-            "SELECT h.hotel_id FROM ?:novoton_hotels h
+            'SELECT h.hotel_id FROM ?:novoton_hotels h
              LEFT JOIN ?:novoton_hotel_facilities hf ON h.hotel_id = hf.hotel_id
              WHERE h.country IN (?a) AND hf.hotel_id IS NULL
-             ORDER BY h.hotel_name",
-            $countries
+             ORDER BY h.hotel_name',
+            $countries,
         );
     }
 
@@ -153,9 +155,9 @@ class BatchedHotelFacilitiesSyncV2 extends AbstractBatchedSync
         }
 
         $this->hotelNameCache = db_get_hash_single_array(
-            "SELECT hotel_id, hotel_name FROM ?:novoton_hotels WHERE hotel_id IN (?a)",
+            'SELECT hotel_id, hotel_name FROM ?:novoton_hotels WHERE hotel_id IN (?a)',
             ['hotel_id', 'hotel_name'],
-            $hotelIds
+            $hotelIds,
         );
     }
 
@@ -172,26 +174,26 @@ class BatchedHotelFacilitiesSyncV2 extends AbstractBatchedSync
         try {
             $ok = fn_novoton_holidays_sync_hotel_facilities($hotelId);
         } catch (\Throwable $e) {
-            $this->logger->output("ERROR: " . $e->getMessage());
+            $this->logger->output('ERROR: ' . $e->getMessage());
             return [
                 'success' => false,
                 'message' => $e->getMessage(),
-                'data'    => null,
+                'data' => null,
             ];
         }
 
         if (!$ok) {
-            $this->logger->output("EMPTY/FAILED");
+            $this->logger->output('EMPTY/FAILED');
             return [
                 'success' => false,
                 'message' => 'api_returned_empty',
-                'data'    => null,
+                'data' => null,
             ];
         }
 
         $count = (int) db_get_field(
-            "SELECT COUNT(*) FROM ?:novoton_hotel_facilities WHERE hotel_id = ?s",
-            $hotelId
+            'SELECT COUNT(*) FROM ?:novoton_hotel_facilities WHERE hotel_id = ?s',
+            $hotelId,
         );
 
         // Re-derive travel groups if the hotel has a linked CS-Cart product.
@@ -202,7 +204,7 @@ class BatchedHotelFacilitiesSyncV2 extends AbstractBatchedSync
         return [
             'success' => true,
             'message' => '',
-            'data'    => ['facility_count' => $count],
+            'data' => ['facility_count' => $count],
         ];
     }
 
@@ -217,8 +219,8 @@ class BatchedHotelFacilitiesSyncV2 extends AbstractBatchedSync
     private function refreshTravelGroups(string $hotelId): void
     {
         $hotel = db_get_row(
-            "SELECT product_id, is_adults_only FROM ?:novoton_hotels WHERE hotel_id = ?s",
-            $hotelId
+            'SELECT product_id, is_adults_only FROM ?:novoton_hotels WHERE hotel_id = ?s',
+            $hotelId,
         );
 
         $productId = (int) ($hotel['product_id'] ?? 0);
@@ -227,8 +229,8 @@ class BatchedHotelFacilitiesSyncV2 extends AbstractBatchedSync
         }
 
         $facilityIds = db_get_fields(
-            "SELECT facility_id FROM ?:novoton_hotel_facilities WHERE hotel_id = ?s",
-            $hotelId
+            'SELECT facility_id FROM ?:novoton_hotel_facilities WHERE hotel_id = ?s',
+            $hotelId,
         );
 
         $normalizer = new NovotonNormalizer();

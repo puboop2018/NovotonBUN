@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 /**
  * Price Change Detector Interface
  *
@@ -33,11 +35,11 @@ interface PriceChangeDetectorInterface
      * }
      */
     public function analyse(
-        float  $oldPrice,
-        float  $newPrice,
+        float $oldPrice,
+        float $newPrice,
         string $currency,
         string $context = 'add_to_cart',
-        array  $bookingMeta = []
+        array $bookingMeta = [],
     ): array;
 
     /**

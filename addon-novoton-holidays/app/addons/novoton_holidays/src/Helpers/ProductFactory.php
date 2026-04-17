@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 /**
  * Novoton Holidays - Product Factory
  *
@@ -14,8 +16,8 @@ namespace Tygh\Addons\NovotonHolidays\Helpers;
 
 use Tygh\Addons\NovotonHolidays\Api\Contracts\HotelApiClientInterface;
 use Tygh\Addons\NovotonHolidays\Constants;
-use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
+use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 
 class ProductFactory implements ProductFactoryInterface
 {
@@ -29,31 +31,29 @@ class ProductFactory implements ProductFactoryInterface
     /**
      * Create CS-Cart product from hotel data
      *
-     * @param array<string, mixed>                   $hotel      Hotel data array
-     * @param HotelApiClientInterface $api        Narrow hotel sub-client
-     * @param int                     $categoryId Category to assign product to
+     * @param array<string, mixed> $hotel Hotel data array
+     * @param HotelApiClientInterface $api Narrow hotel sub-client
+     * @param int $categoryId Category to assign product to
      * @return int|null Product ID or null on failure
      */
     public function createFromHotel(array $hotel, HotelApiClientInterface $api, int $categoryId): ?int
     {
         $hotelId = $hotel['hotel_id'];
         $hotelName = $hotel['hotel_name'] ?? '';
-        $city = $hotel['city'] ?? '';
-        $country = $hotel['country'] ?? '';
 
         $productCode = $this->dbHelper->getProductCode($hotelId);
 
         // Check if product already exists
         $existingProductId = db_get_field(
-            "SELECT product_id FROM ?:products WHERE product_code = ?s",
-            $productCode
+            'SELECT product_id FROM ?:products WHERE product_code = ?s',
+            $productCode,
         );
 
         if ($existingProductId) {
             db_query(
-                "UPDATE ?:novoton_hotels SET product_id = ?i WHERE hotel_id = ?s",
+                'UPDATE ?:novoton_hotels SET product_id = ?i WHERE hotel_id = ?s',
                 $existingProductId,
-                $hotelId
+                $hotelId,
             );
             return (int)$existingProductId;
         }
@@ -79,13 +79,13 @@ class ProductFactory implements ProductFactoryInterface
         $seoFields = fn_travel_core_apply_seo_fields('novoton_holidays', $placeholders, 0, $hotelId);
 
         $productData = array_merge([
-            'product_code'     => $productCode,
-            'price'            => 0,
-            'amount'           => ConfigProvider::getDefaultProductQuantity(),
-            'status'           => 'D',
-            'company_id'       => ConfigProvider::getCompanyId(),
-            'main_category'    => $categoryId,
-            'category_ids'     => [$categoryId],
+            'product_code' => $productCode,
+            'price' => 0,
+            'amount' => ConfigProvider::getDefaultProductQuantity(),
+            'status' => 'D',
+            'company_id' => ConfigProvider::getCompanyId(),
+            'main_category' => $categoryId,
+            'category_ids' => [$categoryId],
         ], $seoFields);
 
         $productId = fn_update_product($productData, 0, CART_LANGUAGE);
@@ -96,9 +96,9 @@ class ProductFactory implements ProductFactoryInterface
 
         // Link product to hotel
         db_query(
-            "UPDATE ?:novoton_hotels SET product_id = ?i WHERE hotel_id = ?s",
+            'UPDATE ?:novoton_hotels SET product_id = ?i WHERE hotel_id = ?s',
             $productId,
-            $hotelId
+            $hotelId,
         );
 
         // Attach images
@@ -180,7 +180,7 @@ class ProductFactory implements ProductFactoryInterface
     /**
      * Build the placeholder map for SEO template rendering from Novoton hotel data.
      *
-     * @param array<string, mixed>  $hotel       Hotel row from novoton_hotels table
+     * @param array<string, mixed> $hotel Hotel row from novoton_hotels table
      * @param string $displayName Formatted display name (Title Case, with property type)
      * @param string $description API description text
      * @return array<string, string|array<string, mixed>> Key => value map (keys without braces)
@@ -195,24 +195,24 @@ class ProductFactory implements ProductFactoryInterface
                  JOIN ?:novoton_facilities f ON f.facility_id = hf.facility_id
                  WHERE hf.hotel_id = ?s AND f.facility_name_en != ''
                  LIMIT 5",
-                $hotel['hotel_id']
+                $hotel['hotel_id'],
             ) ?: [];
         }
 
         return [
-            'name'          => $displayName,
-            'raw_name'      => $hotel['hotel_name'] ?? '',
-            'city'          => $hotel['city'] ?? '',
-            'country'       => $hotel['country'] ?? '',
-            'region'        => $hotel['region'] ?? '',
-            'star_rating'   => $hotel['star_rating'] ?? '',
-            'hotel_type'    => $hotel['hotel_type'] ?? '',
+            'name' => $displayName,
+            'raw_name' => $hotel['hotel_name'] ?? '',
+            'city' => $hotel['city'] ?? '',
+            'country' => $hotel['country'] ?? '',
+            'region' => $hotel['region'] ?? '',
+            'star_rating' => $hotel['star_rating'] ?? '',
+            'hotel_type' => $hotel['hotel_type'] ?? '',
             'property_type' => $hotel['property_type'] ?? 'hotel',
-            'year'          => date('Y'),
-            'description'   => $description,
-            'facilities'    => $facilities,
-            'latitude'      => $hotel['latitude'] ?? '',
-            'longitude'     => $hotel['longitude'] ?? '',
+            'year' => date('Y'),
+            'description' => $description,
+            'facilities' => $facilities,
+            'latitude' => $hotel['latitude'] ?? '',
+            'longitude' => $hotel['longitude'] ?? '',
         ];
     }
 }

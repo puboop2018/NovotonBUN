@@ -1,11 +1,12 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays\Services;
 
 use Tygh\Addons\SphinxHolidays\Contracts\BookingRetryServiceInterface;
-use Tygh\Addons\SphinxHolidays\SphinxApi;
 use Tygh\Addons\SphinxHolidays\Repository\SphinxBookingRepository;
+use Tygh\Addons\SphinxHolidays\SphinxApi;
 use Tygh\Addons\TravelCore\TravelConstants;
 
 /**
@@ -100,7 +101,7 @@ class BookingRetryService implements BookingRetryServiceInterface
                 $this->repo->updateApiResponse(
                     $bookingId,
                     $bookResult['booking_reference'],
-                    (string) json_encode($bookResult)
+                    (string) json_encode($bookResult),
                 );
             }
 
@@ -118,7 +119,6 @@ class BookingRetryService implements BookingRetryServiceInterface
                 'message' => 'Booking retry successful',
                 'booking_ref' => $bookResult['booking_reference'] ?? null,
             ];
-
         } catch (\Throwable $e) {
             $this->repo->update($bookingId, [
                 'status' => TravelConstants::STATUS_FAILED,
@@ -146,9 +146,9 @@ class BookingRetryService implements BookingRetryServiceInterface
             : \fn_sphinx_holidays_build_room_occupancy($guestsData, $booking);
 
         $payload = [
-            'offer_id'  => $offerId,
-            'price'     => $price,
-            'currency'  => $currency,
+            'offer_id' => $offerId,
+            'price' => $price,
+            'currency' => $currency,
             'occupancy' => $occupancy,
         ];
         if (!empty($booking['order_id'])) {
@@ -156,10 +156,10 @@ class BookingRetryService implements BookingRetryServiceInterface
         }
 
         $result = match ($type) {
-            'circuit'    => $this->api->bookCircuit($payload),
-            'package'    => $this->api->bookPackage($payload),
+            'circuit' => $this->api->bookCircuit($payload),
+            'package' => $this->api->bookPackage($payload),
             'experience' => $this->api->bookExperience($payload),
-            default      => $this->api->bookHotel($payload),
+            default => $this->api->bookHotel($payload),
         };
 
         return $result ?: [];

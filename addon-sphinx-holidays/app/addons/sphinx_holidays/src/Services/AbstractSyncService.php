@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays\Services;
@@ -32,8 +33,8 @@ abstract class AbstractSyncService
     /**
      * Template method: orchestrates the full sync lifecycle.
      *
-     * @param bool  $fullSync Force full re-fetch (ignores updated_since)
-     * @param array<string, mixed> $context  Additional parameters for the concrete service
+     * @param bool $fullSync Force full re-fetch (ignores updated_since)
+     * @param array<string, mixed> $context Additional parameters for the concrete service
      * @return array{success: bool, total: int, synced: int, skipped: int, failed: int, duration_ms: int, error: string, sync_mode: string}
      */
     protected function runSync(bool $fullSync, array $context = []): array
@@ -42,14 +43,14 @@ abstract class AbstractSyncService
         $logId = $this->logStart($this->getSyncType());
 
         $stats = [
-            'success'     => false,
-            'total'       => 0,
-            'synced'      => 0,
-            'skipped'     => 0,
-            'failed'      => 0,
+            'success' => false,
+            'total' => 0,
+            'synced' => 0,
+            'skipped' => 0,
+            'failed' => 0,
             'duration_ms' => 0,
-            'error'       => '',
-            'sync_mode'   => 'full',
+            'error' => '',
+            'sync_mode' => 'full',
         ];
 
         try {
@@ -60,7 +61,7 @@ abstract class AbstractSyncService
 
             fn_log_event('general', 'runtime', [
                 'message' => "Sphinx {$this->getSyncType()} sync failed: " . $e->getMessage(),
-                'trace'   => $e->getTraceAsString(),
+                'trace' => $e->getTraceAsString(),
             ]);
         }
 
@@ -86,9 +87,9 @@ abstract class AbstractSyncService
     /**
      * Core sync logic — each service implements its own flow.
      *
-     * @param bool  $fullSync Whether this is a full or incremental sync
-     * @param array<string, mixed> $stats    Initialized stats array to populate
-     * @param array<string, mixed> $context  Additional parameters (country codes, destination IDs, etc.)
+     * @param bool $fullSync Whether this is a full or incremental sync
+     * @param array<string, mixed> $stats Initialized stats array to populate
+     * @param array<string, mixed> $context Additional parameters (country codes, destination IDs, etc.)
      * @return array<string, mixed> The populated stats array
      */
     abstract protected function doSync(bool $fullSync, array $stats, array $context): array;
@@ -115,10 +116,10 @@ abstract class AbstractSyncService
     /**
      * Check if there are more pages to fetch.
      *
-     * @param array<string, mixed> $response    Full API response (with pagination metadata)
-     * @param int   $currentPage Current page number
-     * @param int   $perPage     Items per page
-     * @param int   $fetchedSoFar Total items fetched across all pages
+     * @param array<string, mixed> $response Full API response (with pagination metadata)
+     * @param int $currentPage Current page number
+     * @param int $perPage Items per page
+     * @param int $fetchedSoFar Total items fetched across all pages
      */
     protected function hasMorePages(array $response, int $currentPage, int $perPage, int $fetchedSoFar): bool
     {
@@ -151,10 +152,10 @@ abstract class AbstractSyncService
     {
         db_query(
             "INSERT INTO ?:sphinx_sync_log (sync_type, status, started_at) VALUES (?s, 'started', NOW())",
-            $syncType
+            $syncType,
         );
 
-        return (int) db_get_field("SELECT LAST_INSERT_ID()");
+        return (int) db_get_field('SELECT LAST_INSERT_ID()');
     }
 
     /**
@@ -167,7 +168,7 @@ abstract class AbstractSyncService
         }
 
         db_query(
-            "UPDATE ?:sphinx_sync_log SET
+            'UPDATE ?:sphinx_sync_log SET
                 status = ?s,
                 items_total = ?i,
                 items_synced = ?i,
@@ -177,7 +178,7 @@ abstract class AbstractSyncService
                 rate_limit_hits = ?i,
                 sync_mode = ?s,
                 completed_at = NOW()
-             WHERE log_id = ?i",
+             WHERE log_id = ?i',
             $status,
             $stats['total'] ?? 0,
             $stats['synced'] ?? 0,
@@ -186,7 +187,7 @@ abstract class AbstractSyncService
             $stats['duration_ms'] ?? 0,
             $stats['rate_limit_hits'] ?? 0,
             $stats['sync_mode'] ?? 'full',
-            $logId
+            $logId,
         );
     }
 }

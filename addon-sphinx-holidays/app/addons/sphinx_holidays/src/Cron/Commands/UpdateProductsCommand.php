@@ -1,9 +1,9 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays\Cron\Commands;
 
-use Tygh\Registry;
 use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
 use Tygh\Addons\SphinxHolidays\Services\Container;
 use Tygh\Addons\TravelCore\Services\FeatureMapper;
@@ -19,7 +19,7 @@ use Tygh\Addons\TravelCore\Services\FeatureMapper;
  */
 class UpdateProductsCommand extends AbstractSyncCommand
 {
-    private const BATCH_SIZE = 200;
+    private const int BATCH_SIZE = 200;
 
     #[\Override]
     public static function getDescription(): string
@@ -41,14 +41,14 @@ class UpdateProductsCommand extends AbstractSyncCommand
 
         $stats = [
             'updated' => 0,
-            'failed'  => 0,
-            'total'   => 0,
+            'failed' => 0,
+            'total' => 0,
         ];
 
         $processed = 0;
         $effectiveBatch = ($limit > 0 && $limit < $batchSize) ? $limit : $batchSize;
 
-        $this->output("Updating CS-Cart products with changed hotel data...");
+        $this->output('Updating CS-Cart products with changed hotel data...');
 
         while (true) {
             $remaining = ($limit > 0) ? ($limit - $processed) : $effectiveBatch;
@@ -94,12 +94,23 @@ class UpdateProductsCommand extends AbstractSyncCommand
                     foreach ($otherLanguages as $lc) {
                         $fullDescription = $product_data['full_description'] ?? '';
                         db_query(
-                            "INSERT INTO ?:product_descriptions (product_id, lang_code, product, full_description, short_description, page_title, meta_description, meta_keywords)
+                            'INSERT INTO ?:product_descriptions (product_id, lang_code, product, full_description, short_description, page_title, meta_description, meta_keywords)
                              VALUES (?i, ?s, ?s, ?s, ?s, ?s, ?s, ?s)
-                             ON DUPLICATE KEY UPDATE product = ?s, full_description = ?s, short_description = ?s, page_title = ?s, meta_description = ?s, meta_keywords = ?s",
-                            $productId, $lc,
-                            $product_data['product'], $fullDescription, $hotel['short_description'] ?? '', $product_data['page_title'], $product_data['meta_description'], $product_data['meta_keywords'],
-                            $product_data['product'], $fullDescription, $hotel['short_description'] ?? '', $product_data['page_title'], $product_data['meta_description'], $product_data['meta_keywords']
+                             ON DUPLICATE KEY UPDATE product = ?s, full_description = ?s, short_description = ?s, page_title = ?s, meta_description = ?s, meta_keywords = ?s',
+                            $productId,
+                            $lc,
+                            $product_data['product'],
+                            $fullDescription,
+                            $hotel['short_description'] ?? '',
+                            $product_data['page_title'],
+                            $product_data['meta_description'],
+                            $product_data['meta_keywords'],
+                            $product_data['product'],
+                            $fullDescription,
+                            $hotel['short_description'] ?? '',
+                            $product_data['page_title'],
+                            $product_data['meta_description'],
+                            $product_data['meta_keywords'],
                         );
                     }
                 }
@@ -121,7 +132,7 @@ class UpdateProductsCommand extends AbstractSyncCommand
                 // Clear the update flag
                 db_query(
                     "UPDATE ?:sphinx_hotels SET product_needs_update = 'N' WHERE hotel_id = ?s",
-                    $hotelId
+                    $hotelId,
                 );
 
                 $this->output("[{$hotelId}] {$hotel['name']} ... UPDATED");
@@ -137,8 +148,8 @@ class UpdateProductsCommand extends AbstractSyncCommand
 
         return [
             'success' => true,
-            'stats'   => [
-                'total'  => $stats['total'],
+            'stats' => [
+                'total' => $stats['total'],
                 'synced' => $stats['updated'],
                 'failed' => $stats['failed'],
             ],
@@ -153,10 +164,10 @@ class UpdateProductsCommand extends AbstractSyncCommand
     {
         $condition = '';
         if ($countryCode !== '') {
-            $condition .= db_quote(" AND h.country_code = ?s", $countryCode);
+            $condition .= db_quote(' AND h.country_code = ?s', $countryCode);
         }
 
-        $limitClause = $limit > 0 ? db_quote(" LIMIT ?i", $limit) : '';
+        $limitClause = $limit > 0 ? db_quote(' LIMIT ?i', $limit) : '';
 
         return db_get_array(
             "SELECT h.hotel_id, h.product_id, h.name, h.classification, h.property_type,
@@ -168,8 +179,8 @@ class UpdateProductsCommand extends AbstractSyncCommand
                AND h.product_id IS NOT NULL AND h.product_id > 0
                AND h.product_needs_update = 'Y' ?p
              ORDER BY h.country_code ASC, h.hotel_id ASC ?p",
-            $condition, $limitClause
+            $condition,
+            $limitClause,
         );
     }
-
 }

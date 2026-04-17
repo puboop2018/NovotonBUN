@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Repository;
@@ -6,7 +7,7 @@ namespace Tygh\Addons\NovotonHolidays\Repository;
 interface FacilityRepositoryInterface
 {
     /**
-     * @return list<array<string, mixed>>|null
+     * @return array<string, mixed>|null
      */
     public function findById(int $facility_id): ?array;
     /**
@@ -22,11 +23,11 @@ interface FacilityRepositoryInterface
     public function delete(int $facility_id): bool;
     public function count(): int;
     /**
-     * @return array<string, mixed>
+     * @return list<array<string, mixed>>
      */
     public function getForHotel(string $hotel_id, string $lang = 'en'): array;
     /**
-     * @return array<string, mixed>
+     * @return list<int>
      */
     public function getIdsForHotel(string $hotel_id): array;
     public function linkToHotel(string $hotel_id, int $facility_id): bool;
@@ -38,11 +39,11 @@ interface FacilityRepositoryInterface
     public function unlinkFromHotel(string $hotel_id, int $facility_id): bool;
     public function countHotelsWithFacility(int $facility_id): int;
     /**
-     * @return array<string, mixed>
+     * @return list<array<string, mixed>>
      */
     public function getForHotelByType(string $hotel_id, string $facility_type, string $lang = 'en'): array;
     /**
-     * @return array<string, mixed>
+     * @return array<string, list<array<string, mixed>>>
      */
     public function getForHotelGroupedByType(string $hotel_id, string $lang = 'en'): array;
     public function updateType(int $facility_id, string $facility_type): bool;

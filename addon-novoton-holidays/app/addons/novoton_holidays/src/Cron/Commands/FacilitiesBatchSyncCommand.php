@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 namespace Tygh\Addons\NovotonHolidays\Cron\Commands;
 
 use Tygh\Addons\NovotonHolidays\Cron\AbstractCronCommand;
@@ -42,9 +44,9 @@ class FacilitiesBatchSyncCommand extends AbstractCronCommand
      */
     public function execute(): array
     {
-        $this->output("Batched Hotel Facilities Sync");
-        $this->output("==============================");
-        $this->output("");
+        $this->output('Batched Hotel Facilities Sync');
+        $this->output('==============================');
+        $this->output('');
 
         // Resolved via Container so the AbstractBatchedSync-based
         // BatchedHotelFacilitiesSyncV2 handles the sync. The legacy
@@ -52,7 +54,9 @@ class FacilitiesBatchSyncCommand extends AbstractCronCommand
         // The local is typed SyncInterface so future migrations
         // (V3, replacement, etc.) don't need to touch this file.
         $sync = Container::getInstance()->batchedHotelFacilitiesSyncV2();
-        $sync->setOutputCallback(function ($msg) { $this->output(rtrim($msg, "\n")); });
+        $sync->setOutputCallback(function ($msg): void {
+            $this->output(rtrim($msg, "\n"));
+        });
 
         // Apply configuration from request params
         if (!empty($this->params['batch_size'])) {
@@ -63,8 +67,8 @@ class FacilitiesBatchSyncCommand extends AbstractCronCommand
         }
         if (!empty($this->params['unlimited'])) {
             $sync->setUnlimited(true);
-            $this->output("Mode: UNLIMITED (no time limit)");
-            $this->output("");
+            $this->output('Mode: UNLIMITED (no time limit)');
+            $this->output('');
         }
 
         // Status check only
@@ -76,8 +80,8 @@ class FacilitiesBatchSyncCommand extends AbstractCronCommand
         $options = [];
         if (!empty($this->params['force_full'])) {
             $options['force_full'] = true;
-            $this->output("Mode: FORCED FULL SYNC");
-            $this->output("");
+            $this->output('Mode: FORCED FULL SYNC');
+            $this->output('');
         }
         if (!empty($this->params['reset'])) {
             $options['reset'] = true;
@@ -85,7 +89,7 @@ class FacilitiesBatchSyncCommand extends AbstractCronCommand
 
         $result = $sync->run($options);
 
-        $this->output("");
+        $this->output('');
         $this->output("Result: {$result['status']}");
         $this->printResult($result);
 
@@ -107,7 +111,7 @@ class FacilitiesBatchSyncCommand extends AbstractCronCommand
             $this->output("Elapsed: {$status['elapsed']}");
             $this->output("ETA: {$status['eta']}");
         } elseif ($status['status'] === 'idle') {
-            $this->output("Last Sync: " . ($status['last_sync'] ?? 'Never'));
+            $this->output('Last Sync: ' . ($status['last_sync'] ?? 'Never'));
             if (isset($status['last_total'])) {
                 $this->output("Last Total: {$status['last_total']}");
             }
@@ -122,16 +126,16 @@ class FacilitiesBatchSyncCommand extends AbstractCronCommand
     private function printResult(array $result): void
     {
         if ($result['status'] === 'in_progress') {
-            $this->output("Processed this run: " . ($result['synced_this_run'] ?? 0));
+            $this->output('Processed this run: ' . ($result['synced_this_run'] ?? 0));
             $this->output("Total progress: {$result['processed']}/{$result['total']}");
             $this->output("Remaining: {$result['remaining']}");
             $this->output("Estimated runs remaining: {$result['estimated_runs_remaining']}");
-            $this->output("");
-            $this->output("Run this cron again to continue.");
+            $this->output('');
+            $this->output('Run this cron again to continue.');
         } elseif ($result['status'] === 'completed') {
             $this->output("Total synced: {$result['synced']}");
             $this->output("Errors: {$result['errors']}");
-            $this->output("Duration: " . round($result['duration'] / 60, 1) . " minutes");
+            $this->output('Duration: ' . round($result['duration'] / 60, 1) . ' minutes');
 
             $this->sendReport('hotel_facilities_batched', [
                 'sync_type' => $result['sync_type'],

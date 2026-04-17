@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 /**
  * Travel Core Price Change Detector
  *
@@ -18,13 +20,13 @@ use Tygh\Tygh;
 class PriceChangeDetector implements PriceChangeDetectorInterface
 {
     /** Default tolerance threshold (percentage). Changes below this are silent. */
-    private const DEFAULT_TOLERANCE_PERCENT = 1.0;
+    private const float DEFAULT_TOLERANCE_PERCENT = 1.0;
 
     /** Minimum absolute price difference to be considered significant (avoids floating-point noise). */
-    private const MIN_ABSOLUTE_DIFFERENCE = 0.01;
+    private const float MIN_ABSOLUTE_DIFFERENCE = 0.01;
 
     /** Session key for storing price change alerts. */
-    private const SESSION_KEY = 'travel_price_change_alerts';
+    private const string SESSION_KEY = 'travel_price_change_alerts';
 
     public function __construct(
         private readonly float $tolerancePercent = 0.0,
@@ -39,24 +41,24 @@ class PriceChangeDetector implements PriceChangeDetectorInterface
      */
     #[\Override]
     public function analyse(
-        float  $oldPrice,
-        float  $newPrice,
+        float $oldPrice,
+        float $newPrice,
         string $currency,
         string $context = 'add_to_cart',
-        array  $bookingMeta = []
+        array $bookingMeta = [],
     ): array {
         $difference = round($newPrice - $oldPrice, 2);
-        $percent    = $oldPrice > 0
+        $percent = $oldPrice > 0
             ? round(abs($difference) / $oldPrice * 100, 2)
             : 0.0;
 
-        $tolerance   = $this->getTolerancePercent();
+        $tolerance = $this->getTolerancePercent();
         $significant = $percent >= $tolerance && abs($difference) > self::MIN_ABSOLUTE_DIFFERENCE;
 
         $direction = match (true) {
             $difference > 0 => 'increase',
             $difference < 0 => 'decrease',
-            default         => 'none',
+            default => 'none',
         };
 
         $badgeType = 'none';
@@ -65,17 +67,17 @@ class PriceChangeDetector implements PriceChangeDetectorInterface
         }
 
         return [
-            'significant'  => $significant,
-            'direction'    => $direction,
-            'old_price'    => $oldPrice,
-            'new_price'    => $newPrice,
-            'difference'   => $difference,
-            'percent'      => $percent,
-            'currency'     => $currency,
-            'badge_type'   => $badgeType,
-            'context'      => $context,
+            'significant' => $significant,
+            'direction' => $direction,
+            'old_price' => $oldPrice,
+            'new_price' => $newPrice,
+            'difference' => $difference,
+            'percent' => $percent,
+            'currency' => $currency,
+            'badge_type' => $badgeType,
+            'context' => $context,
             'booking_meta' => $bookingMeta,
-            'timestamp'    => time(),
+            'timestamp' => time(),
         ];
     }
 

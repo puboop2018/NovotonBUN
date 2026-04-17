@@ -1,11 +1,12 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays\Services;
 
 use Tygh\Addons\SphinxHolidays\Contracts\OrderStatusSyncServiceInterface;
-use Tygh\Addons\SphinxHolidays\SphinxApi;
 use Tygh\Addons\SphinxHolidays\Repository\SphinxBookingRepository;
+use Tygh\Addons\SphinxHolidays\SphinxApi;
 use Tygh\Addons\TravelCore\TravelConstants;
 
 /**
@@ -23,10 +24,10 @@ class OrderStatusSyncService implements OrderStatusSyncServiceInterface
     private ?\Closure $outputCallback = null;
 
     /** Map Sphinx API booking statuses to our internal TravelConstants statuses */
-    private const STATUS_MAP = [
-        'confirmed'  => TravelConstants::STATUS_CONFIRMED,
+    private const array STATUS_MAP = [
+        'confirmed' => TravelConstants::STATUS_CONFIRMED,
         'on_request' => TravelConstants::STATUS_PENDING,
-        'cancelled'  => TravelConstants::STATUS_CANCELLED,
+        'cancelled' => TravelConstants::STATUS_CANCELLED,
     ];
 
     public function __construct(
@@ -95,7 +96,6 @@ class OrderStatusSyncService implements OrderStatusSyncServiceInterface
                 $apiOrder = $apiResponse['data'][0];
                 $changed = $this->processApiOrder($apiOrder, $orderBookings);
                 $stats['changed'] += $changed;
-
             } catch (\Throwable $e) {
                 $stats['errors']++;
                 $this->output("  Order #{$orderId}: API error - " . $e->getMessage());
@@ -146,7 +146,6 @@ class OrderStatusSyncService implements OrderStatusSyncServiceInterface
                 'new_status' => $updatedBooking['status'] ?? $booking['status'] ?? '',
                 'error' => null,
             ];
-
         } catch (\Throwable $e) {
             return ['changed' => false, 'old_status' => $booking['status'] ?? '', 'new_status' => '', 'error' => $e->getMessage()];
         }
@@ -271,14 +270,14 @@ class OrderStatusSyncService implements OrderStatusSyncServiceInterface
             . "Booking ID: #{$bookingId}\n"
             . "Hotel: {$hotelName}\n"
             . "Status: {$oldStatus} → {$newStatus}\n\n"
-            . "Please review this booking in the admin panel.";
+            . 'Please review this booking in the admin panel.';
 
         try {
             fn_send_mail([
-                'to'      => $adminEmail,
-                'from'    => 'default_company_orders_department',
+                'to' => $adminEmail,
+                'from' => 'default_company_orders_department',
                 'subject' => $subject,
-                'body'    => $body,
+                'body' => $body,
             ], 'A');
         } catch (\Throwable $e) {
             fn_log_event('general', 'runtime', [
@@ -294,7 +293,7 @@ class OrderStatusSyncService implements OrderStatusSyncServiceInterface
      * - Are linked to an order (order_id > 0)
      * - Have a non-terminal status (not already cancelled)
      * - Were created in the last 90 days
-     * @return array<string, mixed>
+     * @return list<array<string, mixed>>
      */
     private function getBookingsToCheck(): array
     {
@@ -307,7 +306,7 @@ class OrderStatusSyncService implements OrderStatusSyncServiceInterface
     private function getAdminEmail(): string
     {
         $email = db_get_field(
-            "SELECT value FROM ?:settings_objects WHERE name = 'company_orders_department'"
+            "SELECT value FROM ?:settings_objects WHERE name = 'company_orders_department'",
         );
         return is_string($email) ? $email : '';
     }

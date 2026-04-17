@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 /**
  * Novoton Holidays - Configuration Provider
  *
@@ -12,8 +14,8 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Services;
 
-use Tygh\Registry;
 use Tygh\Addons\NovotonHolidays\Constants;
+use Tygh\Registry;
 
 class ConfigProvider
 {
@@ -49,7 +51,7 @@ class ConfigProvider
      * Instance constructor for DI / testing.
      *
      * @param array<string, mixed>|null $settings If provided, this instance uses these settings
-     *                             instead of the Registry. Pass null to use Registry.
+     *                                            instead of the Registry. Pass null to use Registry.
      */
     public function __construct(?array $settings = null)
     {
@@ -219,7 +221,7 @@ class ConfigProvider
     public static function getLastExchangeRateUpdate(): string
     {
         return (string) (db_get_field(
-            "SELECT MAX(sync_date) FROM ?:novoton_sync_log WHERE sync_type = 'exchange_rates' AND status = 'completed'"
+            "SELECT MAX(sync_date) FROM ?:novoton_sync_log WHERE sync_type = 'exchange_rates' AND status = 'completed'",
         ) ?: '');
     }
 
@@ -227,8 +229,8 @@ class ConfigProvider
     {
         if (self::$version === null) {
             self::$version = (string) db_get_field(
-                "SELECT version FROM ?:addons WHERE addon = ?s",
-                self::ADDON_ID
+                'SELECT version FROM ?:addons WHERE addon = ?s',
+                self::ADDON_ID,
             ) ?: 'unknown';
         }
 
@@ -396,8 +398,6 @@ class ConfigProvider
     }
 
     /**
-     * @param mixed $default
-     * @return mixed
      */
     public static function get(string $key, mixed $default = null): mixed
     {
@@ -421,7 +421,7 @@ class ConfigProvider
 
         if (empty($email)) {
             $email = db_get_field(
-                "SELECT email FROM ?:users WHERE user_type = 'A' AND status = 'A' ORDER BY user_id LIMIT 1"
+                "SELECT email FROM ?:users WHERE user_type = 'A' AND status = 'A' ORDER BY user_id LIMIT 1",
             );
         }
 

@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 namespace Tygh\Addons\NovotonHolidays\Api;
 
 use Tygh\Addons\NovotonHolidays\Api\Contracts\DestinationApiClientInterface;
@@ -9,8 +11,6 @@ class DestinationApiClient extends ApiClientBase implements DestinationApiClient
 {
     /**
      * 16. resort_list - Destinations List
-     *
-     * @return \SimpleXMLElement
      */
     #[\Override]
     public function getResortList(string $country = '', string $lang = 'UK'): \SimpleXMLElement
@@ -25,8 +25,6 @@ class DestinationApiClient extends ApiClientBase implements DestinationApiClient
 
     /**
      * 25. offers_update - Updated/New Offers
-     *
-     * @return \SimpleXMLElement
      */
     #[\Override]
     public function getOffersUpdate(string $dateTime, string $country = '', string $resort = '', string $hotel = ''): \SimpleXMLElement
@@ -45,8 +43,6 @@ class DestinationApiClient extends ApiClientBase implements DestinationApiClient
 
     /**
      * 24. kickback_RS - Check for kickback (commission)
-     *
-     * @return \SimpleXMLElement
      */
     #[\Override]
     public function getKickbackInfo(string $lang = 'UK'): \SimpleXMLElement

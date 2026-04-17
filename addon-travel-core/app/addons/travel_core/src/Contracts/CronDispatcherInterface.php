@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Tygh\Addons\TravelCore\Contracts;
@@ -20,8 +21,8 @@ interface CronDispatcherInterface
     /**
      * Dispatch a cron job by mode.
      *
-     * @param string $mode   The cron mode to execute
-     * @param array<string, mixed>  $params Additional parameters from CLI or HTTP
+     * @param string $mode The cron mode to execute
+     * @param array<string, mixed> $params Additional parameters from CLI or HTTP
      * @return array{success: bool, error?: string, message?: string} Result from the command
      */
     public function dispatch(string $mode, array $params = []): array;

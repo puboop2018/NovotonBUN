@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays;
@@ -101,7 +102,7 @@ class SphinxApi
     public function getPackageRoutes(int $page = 1, int $perPage = 1000): ?array
     {
         return $this->client->get('/api/v1/static/package-routes', [
-            'page'     => $page,
+            'page' => $page,
             'per_page' => $perPage,
         ]);
     }
@@ -113,7 +114,7 @@ class SphinxApi
     public function getCircuits(int $page = 1, int $perPage = 1000): ?array
     {
         return $this->client->get('/api/v1/static/circuits', [
-            'page'     => $page,
+            'page' => $page,
             'per_page' => $perPage,
         ]);
     }
@@ -125,7 +126,7 @@ class SphinxApi
     public function getExperiences(int $page = 1, int $perPage = 1000): ?array
     {
         return $this->client->get('/api/v1/static/experiences', [
-            'page'     => $page,
+            'page' => $page,
             'per_page' => $perPage,
         ]);
     }
@@ -328,7 +329,7 @@ class SphinxApi
     public function getOrders(int $page = 1, int $perPage = 50, array $filters = []): ?array
     {
         return $this->client->get('/api/v1/orders', array_merge([
-            'page'     => $page,
+            'page' => $page,
             'per_page' => $perPage,
         ], $filters));
     }

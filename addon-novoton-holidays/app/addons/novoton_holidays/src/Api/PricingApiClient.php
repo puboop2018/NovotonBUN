@@ -1,15 +1,17 @@
 <?php
+
 declare(strict_types=1);
+
 namespace Tygh\Addons\NovotonHolidays\Api;
 
 use Tygh\Addons\NovotonHolidays\Api\Contracts\PricingApiClientInterface;
-use Tygh\Addons\TravelCore\Services\CommissionCalculator;
 use Tygh\Addons\NovotonHolidays\Constants;
+use Tygh\Addons\NovotonHolidays\Exceptions\XmlParsingException;
 use Tygh\Addons\NovotonHolidays\NovotonHttpClient;
 use Tygh\Addons\NovotonHolidays\NovotonXmlParser;
 use Tygh\Addons\NovotonHolidays\Services\CacheServiceInterface;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
-use Tygh\Addons\NovotonHolidays\Exceptions\XmlParsingException;
+use Tygh\Addons\TravelCore\Services\CommissionCalculator;
 
 class PricingApiClient extends ApiClientBase implements PricingApiClientInterface
 {
@@ -25,7 +27,7 @@ class PricingApiClient extends ApiClientBase implements PricingApiClientInterfac
         NovotonXmlParser $xmlParser,
         ?CacheServiceInterface $cache,
         bool $enableCache,
-        CommissionCalculator $commissionCalculator
+        CommissionCalculator $commissionCalculator,
     ) {
         parent::__construct($httpClient, $xmlParser, $cache, $enableCache);
         $this->commissionCalculator = $commissionCalculator;
@@ -212,7 +214,7 @@ class PricingApiClient extends ApiClientBase implements PricingApiClientInterfac
             'check_out' => $checkOut,
             'room_id' => $roomId ?: '(empty - all rooms)',
             'board_id' => $boardId ?: '(empty - all boards)',
-            'adults' => $adultsCount
+            'adults' => $adultsCount,
         ];
 
         if (!$bypassCache) {
@@ -297,7 +299,7 @@ class PricingApiClient extends ApiClientBase implements PricingApiClientInterfac
             'resort' => $resort,
             'check_in' => $checkIn,
             'check_out' => $checkOut,
-            'adults' => $adultsCount
+            'adults' => $adultsCount,
         ];
 
         $response = $this->callApi(Constants::API_FUNCTION_ROOM_PRICE, $xml, $params['lang'] ?? 'UK');
@@ -390,8 +392,6 @@ class PricingApiClient extends ApiClientBase implements PricingApiClientInterfac
 
     /**
      * 13. priceinfo - Season prices request
-     *
-     * @return \SimpleXMLElement
      */
     #[\Override]
     public function getPriceInfo(string $hotelId, string $packageName, string $lang = 'UK'): \SimpleXMLElement
@@ -408,8 +408,6 @@ class PricingApiClient extends ApiClientBase implements PricingApiClientInterfac
 
     /**
      * 10. spo - EB (Early booking), extras and other discounts
-     *
-     * @return \SimpleXMLElement
      */
     #[\Override]
     public function getSpecialOffers(string $hotelId, string $packageName = '', string $lang = 'UK'): \SimpleXMLElement

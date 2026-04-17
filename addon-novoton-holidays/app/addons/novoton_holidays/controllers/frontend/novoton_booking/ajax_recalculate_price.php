@@ -9,6 +9,7 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
 use Tygh\Registry;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
+use Tygh\Addons\NovotonHolidays\Services\PriceInfoFormatter;
 use Tygh\Addons\TravelCore\Services\CurrencyService;
 
     // Scoped error handler: log warnings to CS-Cart log, prevent any output.
@@ -82,20 +83,21 @@ use Tygh\Addons\TravelCore\Services\CurrencyService;
     $debug_log('Raw input', $input);
     $debug_log('Decoded data', $data);
     
-    if (empty($data)) {
+    if (empty($data) || !is_array($data)) {
         $debug_log('ERROR: Invalid request data');
         $sendJson(['success' => false, 'message' => 'Invalid request data']);
     }
-    
-    $hotel_id = $data['hotel_id'] ?? '';
-    $room_id = $data['room_id'] ?? '';
-    $board_id = $data['board_id'] ?? '';
-    $check_in = $data['check_in'] ?? '';
-    $nights = (int)($data['nights'] ?? 7);
-    $adults = (int)($data['adults'] ?? 2);
-    $children_ages = $data['children_ages'] ?? [];
-    $package_name = $data['package_name'] ?? '';
-    $original_price = (float)($data['original_price'] ?? 0);
+
+    /** @var array<string, mixed> $data */
+    $hotel_id = PriceInfoFormatter::toScalar($data['hotel_id'] ?? '');
+    $room_id = PriceInfoFormatter::toScalar($data['room_id'] ?? '');
+    $board_id = PriceInfoFormatter::toScalar($data['board_id'] ?? '');
+    $check_in = PriceInfoFormatter::toScalar($data['check_in'] ?? '');
+    $nights = PriceInfoFormatter::toInt($data['nights'] ?? 7);
+    $adults = PriceInfoFormatter::toInt($data['adults'] ?? 2);
+    $children_ages = is_array($data['children_ages'] ?? null) ? $data['children_ages'] : [];
+    $package_name = PriceInfoFormatter::toScalar($data['package_name'] ?? '');
+    $original_price = PriceInfoFormatter::toFloat($data['original_price'] ?? 0);
 
     // Input range validation
     if ($nights < 1 || $nights > 365) {
@@ -321,9 +323,11 @@ use Tygh\Addons\TravelCore\Services\CurrencyService;
 
         // Format price for display using the addon formatter (handles rounding + currency symbol)
         $display_currency_code = CurrencyService::getDisplayCurrency();
-        $currencies = Registry::get('currencies');
-        $display_coefficient = (float) ($currencies[$display_currency_code]['coefficient'] ?? 1.0);
-        $display_symbol = $currencies[$display_currency_code]['symbol'] ?? $display_currency_code;
+        $currenciesRaw = Registry::get('currencies');
+        $currencies = is_array($currenciesRaw) ? $currenciesRaw : [];
+        $currencyEntry = is_array($currencies[$display_currency_code] ?? null) ? $currencies[$display_currency_code] : [];
+        $display_coefficient = PriceInfoFormatter::toFloat($currencyEntry['coefficient'] ?? 1.0);
+        $display_symbol = PriceInfoFormatter::toScalar($currencyEntry['symbol'] ?? $display_currency_code);
         $formatted_price = fn_novoton_holidays_format_price($new_price, $display_coefficient, $display_symbol);
 
         $debug_log('SUCCESS', [

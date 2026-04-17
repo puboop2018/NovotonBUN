@@ -32,6 +32,12 @@ var/tmp/
 vendor/
 node_modules/
 
+# QA tool caches and reports (PHPStan, Psalm, PHP CS Fixer, PHPUnit)
+var/
+phpcs.cache
+.phpunit.result.cache
+.php-cs-fixer.cache
+
 # Legacy pre-split monolithic addon (archived — use addon-* directories instead)
 NovotonBeforeSplit/
 

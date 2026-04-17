@@ -20,8 +20,13 @@ use Tygh\Addons\SphinxHolidays\Services\Container;
 use Tygh\Addons\SphinxHolidays\Services\DestinationSyncService;
 use Tygh\Addons\SphinxHolidays\Services\HotelSyncService;
 use Tygh\Addons\SphinxHolidays\Cron\Commands\AddProductsCommand;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
+
+/** @var \Smarty $view */
+$view = Tygh::$app['view'];
 
 // $mode is set automatically by CS-Cart from the dispatch parameter
 // e.g. dispatch=sphinx_holidays.sync_destinations sets $mode = 'sync_destinations'
@@ -43,10 +48,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $result = $service->sync();
 
-        if ($result['success']) {
-            fn_set_notification('N', __('notice'), __('sphinx_holidays.sync_completed') . ': ' . $result['synced'] . '/' . $result['total']);
+        if (!empty($result['success'])) {
+            fn_set_notification('N', __('notice'), TypeCoerce::toString(__('sphinx_holidays.sync_completed')) . ': ' . TypeCoerce::toInt($result['synced'] ?? 0) . '/' . TypeCoerce::toInt($result['total'] ?? 0));
         } else {
-            fn_set_notification('E', __('error'), __('sphinx_holidays.sync_failed') . ': ' . ($result['error'] ?: 'Unknown error'));
+            fn_set_notification('E', __('error'), TypeCoerce::toString(__('sphinx_holidays.sync_failed')) . ': ' . (TypeCoerce::toString($result['error'] ?? '') ?: 'Unknown error'));
         }
 
         return [CONTROLLER_STATUS_REDIRECT, 'sphinx_holidays.manage'];
@@ -68,10 +73,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $countryCodes = ConfigProvider::getSelectedCountryCodes();
         $result = $service->sync($countryCodes);
 
-        if ($result['success']) {
-            fn_set_notification('N', __('notice'), __('sphinx_holidays.hotel_sync_completed') . ': ' . $result['synced'] . '/' . $result['total']);
+        if (!empty($result['success'])) {
+            fn_set_notification('N', __('notice'), TypeCoerce::toString(__('sphinx_holidays.hotel_sync_completed')) . ': ' . TypeCoerce::toInt($result['synced'] ?? 0) . '/' . TypeCoerce::toInt($result['total'] ?? 0));
         } else {
-            fn_set_notification('E', __('error'), __('sphinx_holidays.hotel_sync_failed') . ': ' . ($result['error'] ?: 'Unknown error'));
+            fn_set_notification('E', __('error'), TypeCoerce::toString(__('sphinx_holidays.hotel_sync_failed')) . ': ' . (TypeCoerce::toString($result['error'] ?? '') ?: 'Unknown error'));
         }
 
         return [CONTROLLER_STATUS_REDIRECT, 'sphinx_holidays.manage'];
@@ -90,12 +95,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $command->setOutputCallback(function($msg) {}); // silent in web context
         $result = $command->execute();
 
-        if ($result['success']) {
-            $added = $result['stats']['added'] ?? 0;
-            $invalid = $result['stats']['invalid_country'] ?? 0;
-            $msg = __('sphinx_holidays.products_created') . ': ' . $added;
+        if (!empty($result['success'])) {
+            $stats = is_array($result['stats'] ?? null) ? $result['stats'] : [];
+            $added = TypeCoerce::toInt($stats['added'] ?? 0);
+            $invalid = TypeCoerce::toInt($stats['invalid_country'] ?? 0);
+            $msg = TypeCoerce::toString(__('sphinx_holidays.products_created')) . ': ' . $added;
             if ($invalid > 0) {
-                $msg .= ' (' . $invalid . ' ' . __('sphinx_holidays.skipped_invalid_country') . ')';
+                $msg .= ' (' . $invalid . ' ' . TypeCoerce::toString(__('sphinx_holidays.skipped_invalid_country')) . ')';
             }
             fn_set_notification('N', __('notice'), $msg);
         } else {
@@ -119,24 +125,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $service = new HotelSyncService($api, $hotelRepo, $destRepo);
 
         $result = $service->relinkExistingProducts();
+        $rLinked = TypeCoerce::toInt($result['linked'] ?? 0);
+        $rSkipped = TypeCoerce::toInt($result['skipped'] ?? 0);
+        $rNotFound = TypeCoerce::toInt($result['not_found'] ?? 0);
+        $rErrors = TypeCoerce::toInt($result['errors'] ?? 0);
+        $rTotal = TypeCoerce::toInt($result['total'] ?? 0);
 
-        if ($result['linked'] > 0 || $result['skipped'] > 0) {
+        if ($rLinked > 0 || $rSkipped > 0) {
             fn_set_notification('N', __('notice'), __('sphinx_holidays.relink_done', [
-                '[linked]'    => $result['linked'],
-                '[skipped]'   => $result['skipped'],
-                '[not_found]' => $result['not_found'],
-                '[errors]'    => $result['errors'],
-                '[total]'     => $result['total'],
+                '[linked]'    => $rLinked,
+                '[skipped]'   => $rSkipped,
+                '[not_found]' => $rNotFound,
+                '[errors]'    => $rErrors,
+                '[total]'     => $rTotal,
             ]));
-        } elseif ($result['total'] === 0) {
+        } elseif ($rTotal === 0) {
             fn_set_notification('W', __('warning'), __('sphinx_holidays.no_spx_products'));
         } else {
             fn_set_notification('W', __('warning'), __('sphinx_holidays.relink_done', [
                 '[linked]'    => 0,
-                '[skipped]'   => $result['skipped'],
-                '[not_found]' => $result['not_found'],
-                '[errors]'    => $result['errors'],
-                '[total]'     => $result['total'],
+                '[skipped]'   => $rSkipped,
+                '[not_found]' => $rNotFound,
+                '[errors]'    => $rErrors,
+                '[total]'     => $rTotal,
             ]));
         }
 
@@ -158,7 +169,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($mode === 'save_whitelist') {
         // Single JSON field to avoid PHP max_input_vars limit
-        $whitelist = json_decode($_REQUEST['whitelist_json'] ?? '[]', true) ?: [];
+        $whitelist = json_decode(TypeCoerce::toString($_REQUEST['whitelist_json'] ?? '[]'), true) ?: [];
 
         $whitelistRepo = Container::getDestinationWhitelistRepository();
         try {
@@ -176,11 +187,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if ($mode === 'bulk_update_hotels') {
-        $hotelIds = $_REQUEST['hotel_ids'] ?? [];
-        $status = $_REQUEST['bulk_status'] ?? '';
+        $hotelIds = RequestCoerce::list($_REQUEST, 'hotel_ids');
+        $status = RequestCoerce::string($_REQUEST, 'bulk_status');
         $validStatuses = ['active', 'inactive', 'pending', 'error'];
 
-        if (empty($hotelIds) || !is_array($hotelIds)) {
+        if (empty($hotelIds)) {
             fn_set_notification('W', __('warning'), __('sphinx_holidays.no_hotels_selected'));
             return [CONTROLLER_STATUS_REDIRECT, 'sphinx_holidays.hotels'];
         }
@@ -191,33 +202,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         // sphinx_hotels.hotel_id is VARCHAR(100) (e.g. "s1-hotel-123") — keep as strings.
-        $hotelIds = array_map('strval', $hotelIds);
+        $hotelIds = array_map(static fn ($v): string => TypeCoerce::toString($v), $hotelIds);
         $hotelRepo = Container::getHotelRepository();
         $affected = $hotelRepo->bulkUpdateStatus($hotelIds, $status);
-        fn_set_notification('N', __('notice'), __('sphinx_holidays.hotels_updated') . ': ' . $affected);
+        fn_set_notification('N', __('notice'), TypeCoerce::toString(__('sphinx_holidays.hotels_updated')) . ': ' . $affected);
 
         return [CONTROLLER_STATUS_REDIRECT, 'sphinx_holidays.hotels'];
     }
 
     if ($mode === 'bulk_delete_hotels') {
-        $hotelIds = $_REQUEST['hotel_ids'] ?? [];
+        $hotelIds = RequestCoerce::stringList($_REQUEST, 'hotel_ids');
 
-        if (empty($hotelIds) || !is_array($hotelIds)) {
+        if (empty($hotelIds)) {
             fn_set_notification('W', __('warning'), __('sphinx_holidays.no_hotels_selected'));
             return [CONTROLLER_STATUS_REDIRECT, 'sphinx_holidays.hotels'];
         }
 
         $hotelRepo = Container::getHotelRepository();
         $affected = $hotelRepo->bulkDelete($hotelIds);
-        fn_set_notification('N', __('notice'), __('sphinx_holidays.hotels_deleted') . ': ' . $affected);
+        fn_set_notification('N', __('notice'), TypeCoerce::toString(__('sphinx_holidays.hotels_deleted')) . ': ' . $affected);
 
         return [CONTROLLER_STATUS_REDIRECT, 'sphinx_holidays.hotels'];
     }
 
     if ($mode === 'bulk_sync_images') {
-        $hotelIds = $_REQUEST['hotel_ids'] ?? [];
+        $hotelIds = RequestCoerce::list($_REQUEST, 'hotel_ids');
 
-        if (empty($hotelIds) || !is_array($hotelIds)) {
+        if (empty($hotelIds)) {
             fn_set_notification('W', __('warning'), __('sphinx_holidays.no_hotels_selected'));
             return [CONTROLLER_STATUS_REDIRECT, 'sphinx_holidays.hotels'];
         }
@@ -229,26 +240,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $skipped = [];
 
         foreach ($hotelIds as $hotelId) {
-            $hotel = $hotelRepo->getById((string) $hotelId);
+            $hotelIdStr = TypeCoerce::toString($hotelId);
+            $hotel = $hotelRepo->getById($hotelIdStr);
             if ($hotel === null) {
-                $skipped[] = "#{$hotelId}: not found";
+                $skipped[] = "#{$hotelIdStr}: not found";
                 continue;
             }
+            $hotelName = TypeCoerce::toString($hotel['name'] ?? '');
             if (empty($hotel['product_id'])) {
-                $skipped[] = "{$hotel['name']}: no linked product";
+                $skipped[] = "{$hotelName}: no linked product";
                 continue;
             }
 
-            $productId = (int) $hotel['product_id'];
+            $productId = TypeCoerce::toInt($hotel['product_id']);
             $imageUrls = [];
 
             // Prefer images_json (full list) over image_url (single thumbnail)
-            $imagesJson = $hotel['images_json'] ?? '';
+            $imagesJson = TypeCoerce::toString($hotel['images_json'] ?? '');
             if ($imagesJson !== '' && $imagesJson !== '[]') {
                 $images = json_decode($imagesJson, true);
                 if (is_array($images)) {
                     foreach ($images as $img) {
-                        $url = is_array($img) ? ($img['url'] ?? '') : (string) $img;
+                        $url = is_array($img) ? TypeCoerce::toString($img['url'] ?? '') : TypeCoerce::toString($img);
                         if ($url !== '') {
                             $imageUrls[] = $url;
                         }
@@ -258,16 +271,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             // Fallback to image_url if images_json was empty
             if (empty($imageUrls) && !empty($hotel['image_url'])) {
-                $imageUrls[] = $hotel['image_url'];
+                $imageUrls[] = TypeCoerce::toString($hotel['image_url']);
             }
 
             if (empty($imageUrls)) {
                 // Fetch fresh data from Sphinx API as fallback
                 $api = Container::getApi();
-                $fresh = $api->getHotel((string) $hotel['hotel_id']);
+                $fresh = $api->getHotel(TypeCoerce::toString($hotel['hotel_id'] ?? ''));
                 if (!empty($fresh['images']) && is_array($fresh['images'])) {
                     foreach ($fresh['images'] as $img) {
-                        $url = is_array($img) ? ($img['url'] ?? '') : (string) $img;
+                        $url = is_array($img) ? TypeCoerce::toString($img['url'] ?? '') : TypeCoerce::toString($img);
                         if ($url !== '') {
                             $imageUrls[] = $url;
                         }
@@ -276,7 +289,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     // Update DB with fresh image data so next sync doesn't need API call
                     if (!empty($imageUrls)) {
                         $hotelRepo->updateImages(
-                            (string) $hotel['hotel_id'],
+                            TypeCoerce::toString($hotel['hotel_id'] ?? ''),
                             $imageUrls[0],
                             (string) json_encode($fresh['images'])
                         );
@@ -284,7 +297,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
 
                 if (empty($imageUrls)) {
-                    $skipped[] = "{$hotel['name']}: no images available (checked API)";
+                    $skipped[] = "{$hotelName}: no images available (checked API)";
                     continue;
                 }
             }
@@ -300,11 +313,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($hotelSynced > 0) {
                 $synced += $hotelSynced;
             } else {
-                $skipped[] = "{$hotel['name']}: image download failed";
+                $skipped[] = "{$hotelName}: image download failed";
             }
         }
 
-        $msg = __('sphinx_holidays.images_synced') . ': ' . $synced;
+        $msg = TypeCoerce::toString(__('sphinx_holidays.images_synced')) . ': ' . $synced;
         if (!empty($skipped)) {
             $msg .= '<br><br><strong>Skipped:</strong><br>' . implode('<br>', $skipped);
         }
@@ -318,7 +331,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 if ($mode === 'get_regions') {
     header('Content-Type: application/json; charset=utf-8');
-    $country_code = isset($_REQUEST['country_code']) ? (string) $_REQUEST['country_code'] : '';
+    $country_code = RequestCoerce::string($_REQUEST, 'country_code');
     if ($country_code === '') {
         echo json_encode(['regions' => []]);
         exit;
@@ -331,7 +344,7 @@ if ($mode === 'get_regions') {
 
 if ($mode === 'get_cities') {
     header('Content-Type: application/json; charset=utf-8');
-    $region_id = (int) ($_REQUEST['region_id'] ?? 0);
+    $region_id = RequestCoerce::int($_REQUEST, 'region_id');
     if ($region_id <= 0) {
         echo json_encode(['cities' => []]);
         exit;
@@ -344,7 +357,7 @@ if ($mode === 'get_cities') {
 
 if ($mode === 'get_destinations_tree') {
     header('Content-Type: application/json; charset=utf-8');
-    $country_code = isset($_REQUEST['country_code']) ? (string) $_REQUEST['country_code'] : '';
+    $country_code = RequestCoerce::string($_REQUEST, 'country_code');
     if ($country_code === '') {
         echo json_encode(['tree' => []]);
         exit;
@@ -353,7 +366,7 @@ if ($mode === 'get_destinations_tree') {
     $regions = $destRepo->getRegionsByCountry($country_code);
     $tree = [];
     foreach ($regions as $region) {
-        $children = $destRepo->getCitiesByParent((int) $region['destination_id']);
+        $children = $destRepo->getCitiesByParent(TypeCoerce::toInt($region['destination_id'] ?? 0));
         $region['children'] = $children;
         $tree[] = $region;
     }
@@ -363,7 +376,7 @@ if ($mode === 'get_destinations_tree') {
 
 if ($mode === 'get_whitelist_children') {
     header('Content-Type: application/json; charset=utf-8');
-    $countryId = (int) ($_REQUEST['country_id'] ?? 0);
+    $countryId = RequestCoerce::int($_REQUEST, 'country_id');
     if ($countryId <= 0) {
         echo json_encode(['children' => []]);
         exit;
@@ -382,7 +395,7 @@ if ($mode === 'get_whitelist_children') {
 
 if ($mode === 'search_destinations') {
     header('Content-Type: application/json; charset=utf-8');
-    $q = trim((string) ($_REQUEST['q'] ?? ''));
+    $q = trim(RequestCoerce::string($_REQUEST, 'q'));
     if (strlen($q) < 2) {
         echo json_encode(['results' => []]);
         exit;
@@ -392,7 +405,7 @@ if ($mode === 'search_destinations') {
     $formatted = [];
     foreach ($results as $r) {
         $formatted[] = [
-            'destination_id' => (int) $r['destination_id'],
+            'destination_id' => TypeCoerce::toInt($r['destination_id'] ?? 0),
             'name' => $r['name'],
             'type' => $r['type'],
             'country_code' => $r['country_code'] ?? '',
@@ -405,7 +418,7 @@ if ($mode === 'search_destinations') {
 
 if ($mode === 'search_hotels') {
     header('Content-Type: application/json; charset=utf-8');
-    $q = trim((string) ($_REQUEST['q'] ?? ''));
+    $q = trim(RequestCoerce::string($_REQUEST, 'q'));
     if (strlen($q) < 2) {
         echo json_encode(['results' => []]);
         exit;
@@ -417,7 +430,7 @@ if ($mode === 'search_hotels') {
         $formatted[] = [
             'hotel_id'         => $r['hotel_id'],
             'name'             => $r['name'],
-            'classification'   => (int) $r['classification'],
+            'classification'   => TypeCoerce::toInt($r['classification'] ?? 0),
             'country_code'     => $r['country_code'] ?? '',
             'destination_name' => $r['destination_name'] ?? '',
         ];
@@ -455,26 +468,26 @@ if ($mode === 'manage') {
     $syncLogRepo = Container::getSyncLogRepository();
     $syncLogs = $syncLogRepo->getRecent(10);
 
-    Tygh::$app['view']->assign('counts_by_type', $countsByType);
-    Tygh::$app['view']->assign('total_destinations', $totalDestinations);
-    Tygh::$app['view']->assign('dest_last_synced', $destLastSynced);
-    Tygh::$app['view']->assign('total_hotels', $totalHotels);
-    Tygh::$app['view']->assign('hotels_by_country', $hotelsByCountry);
-    Tygh::$app['view']->assign('hotel_last_synced', $hotelLastSynced);
-    Tygh::$app['view']->assign('linked_products', $linkedCount);
-    Tygh::$app['view']->assign('unlinked_hotels', $unlinkedCount);
-    Tygh::$app['view']->assign('skipped_hotels', $skippedCount);
-    Tygh::$app['view']->assign('selected_countries', $selectedCountries);
-    Tygh::$app['view']->assign('is_configured', $isConfigured);
+    $view->assign('counts_by_type', $countsByType);
+    $view->assign('total_destinations', $totalDestinations);
+    $view->assign('dest_last_synced', $destLastSynced);
+    $view->assign('total_hotels', $totalHotels);
+    $view->assign('hotels_by_country', $hotelsByCountry);
+    $view->assign('hotel_last_synced', $hotelLastSynced);
+    $view->assign('linked_products', $linkedCount);
+    $view->assign('unlinked_hotels', $unlinkedCount);
+    $view->assign('skipped_hotels', $skippedCount);
+    $view->assign('selected_countries', $selectedCountries);
+    $view->assign('is_configured', $isConfigured);
     // Orphaned SPX products: exist in CS-Cart but not linked in sphinx_hotels
     $orphanedSpxCount = $hotelRepo->countOrphanedProducts(ConfigProvider::getProductCodePrefix());
-    Tygh::$app['view']->assign('orphaned_spx_products', $orphanedSpxCount);
+    $view->assign('orphaned_spx_products', $orphanedSpxCount);
 
-    Tygh::$app['view']->assign('sync_logs', $syncLogs);
+    $view->assign('sync_logs', $syncLogs);
 
     // Cron URLs for the dashboard
     $cron_key = ConfigProvider::getCronAccessKey();
-    $base_url = fn_url('', 'C');
+    $base_url = TypeCoerce::toString(fn_url('', 'C'));
     $cron_urls = [
         'destinations'    => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=destinations",
         'hotels'          => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=hotels",
@@ -490,18 +503,18 @@ if ($mode === 'manage') {
         'update_products' => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=update_products",
         'sync_images'     => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=sync_images",
     ];
-    Tygh::$app['view']->assign('cron_urls', $cron_urls);
-    Tygh::$app['view']->assign('cron_key', $cron_key);
+    $view->assign('cron_urls', $cron_urls);
+    $view->assign('cron_key', $cron_key);
 
 } elseif ($mode === 'destinations') {
     $repository = Container::getDestinationRepository();
 
     $params = [
-        'type'      => $_REQUEST['type'] ?? '',
-        'parent_id' => (int) ($_REQUEST['parent_id'] ?? 0),
-        'q'         => $_REQUEST['q'] ?? '',
-        'page'      => max(1, (int) ($_REQUEST['page'] ?? 1)),
-        'items_per_page' => (int) ($_REQUEST['items_per_page'] ?? 50),
+        'type'      => RequestCoerce::string($_REQUEST, 'type'),
+        'parent_id' => RequestCoerce::int($_REQUEST, 'parent_id'),
+        'q'         => RequestCoerce::string($_REQUEST, 'q'),
+        'page'      => max(1, RequestCoerce::int($_REQUEST, 'page', 1)),
+        'items_per_page' => RequestCoerce::int($_REQUEST, 'items_per_page', 50),
     ];
 
     if (!empty($params['q'])) {
@@ -513,9 +526,9 @@ if ($mode === 'manage') {
         $total = $result['total'];
     }
 
-    Tygh::$app['view']->assign('destinations', $items);
-    Tygh::$app['view']->assign('search', $params);
-    Tygh::$app['view']->assign('total_items', $total);
+    $view->assign('destinations', $items);
+    $view->assign('search', $params);
+    $view->assign('total_items', $total);
 
 } elseif ($mode === 'hotels') {
     [$hotels, $search] = fn_sphinx_holidays_get_hotels($_REQUEST);
@@ -539,13 +552,13 @@ if ($mode === 'manage') {
     ], static fn($v) => $v !== '' && $v !== null);
     $sortUrlBase = 'sphinx_holidays.hotels?' . http_build_query($sortFilterParams);
 
-    Tygh::$app['view']->assign('hotels', $hotels);
-    Tygh::$app['view']->assign('search', $search);
-    Tygh::$app['view']->assign('total_items', $search['total_items']);
-    Tygh::$app['view']->assign('sort_url_base', $sortUrlBase);
-    Tygh::$app['view']->assign('distinct_countries', $distinctCountries);
-    Tygh::$app['view']->assign('distinct_classifications', $distinctClassifications);
-    Tygh::$app['view']->assign('distinct_property_types', $distinctPropertyTypes);
+    $view->assign('hotels', $hotels);
+    $view->assign('search', $search);
+    $view->assign('total_items', $search['total_items']);
+    $view->assign('sort_url_base', $sortUrlBase);
+    $view->assign('distinct_countries', $distinctCountries);
+    $view->assign('distinct_classifications', $distinctClassifications);
+    $view->assign('distinct_property_types', $distinctPropertyTypes);
 
 } elseif ($mode === 'whitelist') {
     $destRepo = Container::getDestinationRepository();
@@ -618,7 +631,8 @@ if ($mode === 'manage') {
                 $totalInRegion = count($citiesInRegion);
                 $whitelistedInRegion = 0;
                 foreach ($citiesInRegion as $city) {
-                    if (isset($whitelistMap[(int) $city['destination_id']])) {
+                    $cityDestId = \Tygh\Addons\TravelCore\Helpers\TypeCoerce::toInt($city['destination_id'] ?? 0);
+                    if (isset($whitelistMap[$cityDestId])) {
                         $whitelistedInRegion++;
                         $totalCities++;
                     }
@@ -641,12 +655,12 @@ if ($mode === 'manage') {
         ];
     }
 
-    Tygh::$app['view']->assign('counts_by_type', $countsByType);
-    Tygh::$app['view']->assign('total_destinations', $totalDestinations);
-    Tygh::$app['view']->assign('countries', $countryData);
-    Tygh::$app['view']->assign('whitelist_map', $whitelistMap);
-    Tygh::$app['view']->assign('whitelisted_country_count', $whitelistedCountryCount);
-    Tygh::$app['view']->assign('whitelisted_region_count', $whitelistedRegionCount);
-    Tygh::$app['view']->assign('sample_cities', $sampleCities);
-    Tygh::$app['view']->assign('whitelist_summary', $whitelistSummary);
+    $view->assign('counts_by_type', $countsByType);
+    $view->assign('total_destinations', $totalDestinations);
+    $view->assign('countries', $countryData);
+    $view->assign('whitelist_map', $whitelistMap);
+    $view->assign('whitelisted_country_count', $whitelistedCountryCount);
+    $view->assign('whitelisted_region_count', $whitelistedRegionCount);
+    $view->assign('sample_cities', $sampleCities);
+    $view->assign('whitelist_summary', $whitelistSummary);
 }

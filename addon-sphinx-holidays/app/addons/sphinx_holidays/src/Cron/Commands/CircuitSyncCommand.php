@@ -1,10 +1,11 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays\Cron\Commands;
 
-use Tygh\Addons\SphinxHolidays\Services\Container;
 use Tygh\Addons\SphinxHolidays\Services\CircuitSyncService;
+use Tygh\Addons\SphinxHolidays\Services\Container;
 
 /**
  * Cron command: sync circuits from Sphinx static API.

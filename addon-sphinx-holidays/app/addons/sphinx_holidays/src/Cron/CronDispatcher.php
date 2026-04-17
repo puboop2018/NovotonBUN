@@ -1,11 +1,12 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays\Cron;
 
 use Tygh\Addons\SphinxHolidays\Cron\Commands\AddProductsCommand;
-use Tygh\Addons\SphinxHolidays\Cron\Commands\AuditFacilitiesCommand;
 use Tygh\Addons\SphinxHolidays\Cron\Commands\AssignBoardsCommand;
+use Tygh\Addons\SphinxHolidays\Cron\Commands\AuditFacilitiesCommand;
 use Tygh\Addons\SphinxHolidays\Cron\Commands\CacheRefreshCommand;
 use Tygh\Addons\SphinxHolidays\Cron\Commands\CircuitSyncCommand;
 use Tygh\Addons\SphinxHolidays\Cron\Commands\CleanupCommand;
@@ -34,22 +35,22 @@ class CronDispatcher implements CronDispatcherInterface
      * @var array<string, class-string>
      */
     private static array $modes = [
-        'destinations'    => DestinationSyncCommand::class,
-        'hotels'          => HotelSyncCommand::class,
-        'package_routes'  => PackageRouteSyncCommand::class,
-        'circuits'        => CircuitSyncCommand::class,
-        'experiences'     => ExperienceSyncCommand::class,
-        'order_status'    => OrderStatusSyncCommand::class,
-        'cache_refresh'   => CacheRefreshCommand::class,
-        'add_products'    => AddProductsCommand::class,
+        'destinations' => DestinationSyncCommand::class,
+        'hotels' => HotelSyncCommand::class,
+        'package_routes' => PackageRouteSyncCommand::class,
+        'circuits' => CircuitSyncCommand::class,
+        'experiences' => ExperienceSyncCommand::class,
+        'order_status' => OrderStatusSyncCommand::class,
+        'cache_refresh' => CacheRefreshCommand::class,
+        'add_products' => AddProductsCommand::class,
         'discover_boards' => DiscoverBoardsCommand::class,
-        'assign_boards'   => AssignBoardsCommand::class,
+        'assign_boards' => AssignBoardsCommand::class,
         'update_products' => UpdateProductsCommand::class,
-        'sync_images'     => SyncImagesCommand::class,
-        'cleanup'         => CleanupCommand::class,
-        'deduplicate'     => DeduplicateCommand::class,
+        'sync_images' => SyncImagesCommand::class,
+        'cleanup' => CleanupCommand::class,
+        'deduplicate' => DeduplicateCommand::class,
         'audit_facilities' => AuditFacilitiesCommand::class,
-        'full'            => FullSyncCommand::class,
+        'full' => FullSyncCommand::class,
     ];
 
     /**
@@ -127,7 +128,7 @@ class CronDispatcher implements CronDispatcherInterface
             $command = new $class();
 
             // Set output callback to echo progress and keep lock file fresh
-            $command->setOutputCallback(function (string $message, bool $addNewline = true) use ($lockFile) {
+            $command->setOutputCallback(function (string $message, bool $addNewline = true) use ($lockFile): void {
                 echo $message . ($addNewline ? "\n" : '');
                 if (ob_get_level() > 0) {
                     ob_flush();
@@ -145,7 +146,9 @@ class CronDispatcher implements CronDispatcherInterface
             if ($lockFp) {
                 flock($lockFp, LOCK_UN);
                 fclose($lockFp);
-                if (file_exists($lockFile)) { unlink($lockFile); }
+                if (file_exists($lockFile)) {
+                    unlink($lockFile);
+                }
             }
         }
 
@@ -153,7 +156,7 @@ class CronDispatcher implements CronDispatcherInterface
     }
 
     /** Maximum lock age before it's considered stale (seconds). */
-    private const STALE_LOCK_THRESHOLD = 1800; // 30 minutes
+    private const int STALE_LOCK_THRESHOLD = 1800; // 30 minutes
 
     /**
      * Acquire an exclusive file lock with stale lock detection.
@@ -201,7 +204,9 @@ class CronDispatcher implements CronDispatcherInterface
         // The unlink+reopen is acceptable here because only stale-lock
         // recovery reaches this path, and concurrent stale recovery is
         // harmless (both processes would try to acquire, only one wins flock)
-        if (file_exists($lockFile)) { unlink($lockFile); }
+        if (file_exists($lockFile)) {
+            unlink($lockFile);
+        }
         $fp = fopen($lockFile, 'c');
         if (!$fp) {
             return false;

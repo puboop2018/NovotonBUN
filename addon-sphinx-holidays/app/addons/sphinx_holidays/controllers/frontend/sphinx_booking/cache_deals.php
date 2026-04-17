@@ -14,13 +14,14 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 use Tygh\Addons\SphinxHolidays\Services\Container;
 use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
 use Tygh\Addons\SphinxHolidays\Services\CacheEndpointService;
+use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 
 header('Content-Type: application/json; charset=utf-8');
 
 try {
-    $type = trim($_REQUEST['type'] ?? 'hotels');
-    $limit = max(1, min(50, (int)($_REQUEST['limit'] ?? 6)));
-    $destination_id = (int)($_REQUEST['destination_id'] ?? 0);
+    $type = RequestCoerce::string($_REQUEST, 'type', 'hotels');
+    $limit = max(1, min(50, RequestCoerce::int($_REQUEST, 'limit', 6)));
+    $destination_id = RequestCoerce::int($_REQUEST, 'destination_id');
 
     $filters = ['limit' => $limit];
     if ($destination_id > 0) {

@@ -1,7 +1,11 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays\Repository;
+
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+use Tygh\Addons\TravelCore\Repository\RowNarrowingTrait;
 
 /**
  * Repository for sphinx_destination_whitelist table.
@@ -12,30 +16,31 @@ namespace Tygh\Addons\SphinxHolidays\Repository;
  */
 class DestinationWhitelistRepository
 {
+    use RowNarrowingTrait;
+
     /**
      * Get distinct country codes from whitelisted destinations.
      *
-     * @return string[]
+     * @return list<string>
      */
     public function getCountryCodes(): array
     {
-        $codes = db_get_fields(
+        return self::asStringList(db_get_fields(
             "SELECT DISTINCT d.country_code FROM ?:sphinx_destination_whitelist w
              JOIN ?:sphinx_destinations d ON w.destination_id = d.destination_id
              WHERE d.country_code != ''
-             ORDER BY d.country_code"
-        );
-        return $codes ?: [];
+             ORDER BY d.country_code",
+        ));
     }
 
     /**
      * Get all whitelist entries.
      *
-     * @return array{destination_id: int, selection_type: string}[]
+     * @return list<array<string, mixed>>
      */
     public function findAll(): array
     {
-        return db_get_array("SELECT destination_id, selection_type FROM ?:sphinx_destination_whitelist");
+        return self::asRowList(db_get_array('SELECT destination_id, selection_type FROM ?:sphinx_destination_whitelist'));
     }
 
     /**
@@ -49,29 +54,36 @@ class DestinationWhitelistRepository
         if (empty($destinationIds)) {
             return [];
         }
-        return db_get_hash_single_array(
-            "SELECT destination_id, country_code FROM ?:sphinx_destinations WHERE destination_id IN (?n)",
+        $raw = db_get_hash_single_array(
+            'SELECT destination_id, country_code FROM ?:sphinx_destinations WHERE destination_id IN (?n)',
             ['destination_id', 'country_code'],
-            $destinationIds
+            $destinationIds,
         );
+        if (!is_array($raw)) {
+            return [];
+        }
+        $out = [];
+        foreach ($raw as $k => $v) {
+            $out[(int) $k] = TypeCoerce::toString($v);
+        }
+        return $out;
     }
 
     /**
      * Get all destination IDs for given country codes.
      *
      * @param string[] $countryCodes
-     * @return int[]
+     * @return list<int>
      */
     public function getDestinationIdsByCountry(array $countryCodes): array
     {
         if (empty($countryCodes)) {
             return [];
         }
-        $ids = db_get_fields(
-            "SELECT destination_id FROM ?:sphinx_destinations WHERE country_code IN (?a)",
-            $countryCodes
-        );
-        return array_map('intval', $ids);
+        return self::asIntList(db_get_fields(
+            'SELECT destination_id FROM ?:sphinx_destinations WHERE country_code IN (?a)',
+            $countryCodes,
+        ));
     }
 
     /**
@@ -79,7 +91,7 @@ class DestinationWhitelistRepository
      */
     public function count(): int
     {
-        return (int) db_get_field("SELECT COUNT(*) FROM ?:sphinx_destination_whitelist");
+        return TypeCoerce::toInt(db_get_field('SELECT COUNT(*) FROM ?:sphinx_destination_whitelist'));
     }
 
     /**
@@ -87,11 +99,11 @@ class DestinationWhitelistRepository
      */
     public function findCountryDestination(string $countryCode): ?int
     {
-        $id = db_get_field(
+        $id = TypeCoerce::toInt(db_get_field(
             "SELECT destination_id FROM ?:sphinx_destinations WHERE country_code = ?s AND type = 'country' LIMIT 1",
-            $countryCode
-        );
-        return ($id !== false && $id !== '') ? (int) $id : null;
+            $countryCode,
+        ));
+        return $id > 0 ? $id : null;
     }
 
     /**
@@ -100,8 +112,9 @@ class DestinationWhitelistRepository
     public function insertIgnore(int $destinationId, string $selectionType = 'all'): void
     {
         db_query(
-            "INSERT IGNORE INTO ?:sphinx_destination_whitelist (destination_id, selection_type) VALUES (?i, ?s)",
-            $destinationId, $selectionType
+            'INSERT IGNORE INTO ?:sphinx_destination_whitelist (destination_id, selection_type) VALUES (?i, ?s)',
+            $destinationId,
+            $selectionType,
         );
     }
 
@@ -111,30 +124,31 @@ class DestinationWhitelistRepository
      * Clears all existing entries and inserts the new list atomically.
      *
      * @param array<array{destination_id: int, selection_type: string}> $entries
-     * @return void
      * @throws \Exception On failure (transaction is rolled back)
      */
     public function replaceAll(array $entries): void
     {
-        db_query("START TRANSACTION");
+        db_query('START TRANSACTION');
         try {
-            db_query("DELETE FROM ?:sphinx_destination_whitelist");
+            db_query('DELETE FROM ?:sphinx_destination_whitelist');
 
             foreach ($entries as $entry) {
                 $destId = $entry['destination_id'];
                 $selType = $entry['selection_type'] === 'all' ? 'all' : 'specific';
                 if ($destId > 0) {
                     db_query(
-                        "INSERT INTO ?:sphinx_destination_whitelist (destination_id, selection_type) VALUES (?i, ?s)
-                         ON DUPLICATE KEY UPDATE selection_type = ?s",
-                        $destId, $selType, $selType
+                        'INSERT INTO ?:sphinx_destination_whitelist (destination_id, selection_type) VALUES (?i, ?s)
+                         ON DUPLICATE KEY UPDATE selection_type = ?s',
+                        $destId,
+                        $selType,
+                        $selType,
                     );
                 }
             }
 
-            db_query("COMMIT");
+            db_query('COMMIT');
         } catch (\Exception $e) {
-            db_query("ROLLBACK");
+            db_query('ROLLBACK');
             throw $e;
         }
     }
@@ -143,17 +157,16 @@ class DestinationWhitelistRepository
      * Get non-country child destination IDs whitelisted for a given country code.
      *
      * @param string $countryCode ISO country code
-     * @return int[]
+     * @return list<int>
      */
     public function getWhitelistedChildIdsByCountry(string $countryCode): array
     {
-        $childIds = db_get_fields(
+        return self::asIntList(db_get_fields(
             "SELECT w.destination_id FROM ?:sphinx_destination_whitelist w
              JOIN ?:sphinx_destinations d ON w.destination_id = d.destination_id
              WHERE d.country_code = ?s AND d.type != 'country'",
-            $countryCode
-        );
-        return array_map('intval', $childIds);
+            $countryCode,
+        ));
     }
 
     /**
@@ -163,28 +176,38 @@ class DestinationWhitelistRepository
      */
     public function getCountsByDestinationType(): array
     {
-        return db_get_hash_single_array(
-            "SELECT d.type, COUNT(*) as cnt FROM ?:sphinx_destination_whitelist w
+        $raw = db_get_hash_single_array(
+            'SELECT d.type, COUNT(*) as cnt FROM ?:sphinx_destination_whitelist w
              JOIN ?:sphinx_destinations d ON w.destination_id = d.destination_id
-             GROUP BY d.type",
-            ['type', 'cnt']
+             GROUP BY d.type',
+            ['type', 'cnt'],
         );
+        if (!is_array($raw)) {
+            return [];
+        }
+        $out = [];
+        foreach ($raw as $k => $v) {
+            if (is_string($k)) {
+                $out[$k] = TypeCoerce::toInt($v);
+            }
+        }
+        return $out;
     }
 
     /**
      * Get sample non-country destination names from the whitelist.
      *
      * @param int $limit Max number of names to return
-     * @return string[]
+     * @return list<string>
      */
     public function getSampleNonCountryNames(int $limit = 5): array
     {
-        return db_get_fields(
+        return self::asStringList(db_get_fields(
             "SELECT d.name FROM ?:sphinx_destination_whitelist w
              JOIN ?:sphinx_destinations d ON w.destination_id = d.destination_id
              WHERE d.type != 'country'
              ORDER BY d.name LIMIT ?i",
-            $limit
-        );
+            $limit,
+        ));
     }
 }

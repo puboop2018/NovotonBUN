@@ -23,6 +23,8 @@ use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\NovotonApi;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Services\Container;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
@@ -35,8 +37,8 @@ if ($mode === 'update_prices') {
         return [CONTROLLER_STATUS_DENIED];
     }
     
-    $product_id = (int)($_REQUEST['product_id'] ?? 0);
-    
+    $product_id = RequestCoerce::int($_REQUEST, 'product_id');
+
     if ($product_id > 0) {
         // Update single product
         $result = fn_novoton_holidays_update_product_prices($product_id);
@@ -56,7 +58,7 @@ if ($mode === 'update_prices') {
     fn_novoton_holidays_stream_page_open('Updating Product Prices');
     echo '<div class="log">';
     
-    $limit = (int)($_REQUEST['limit'] ?? 50);
+    $limit = RequestCoerce::int($_REQUEST, 'limit', 50);
     
     // Get hotels with products
     $hotelRepo = Container::getInstance()->hotelRepository();
@@ -70,16 +72,18 @@ if ($mode === 'update_prices') {
     $no_data = 0;
     
     foreach ($hotels as $hotel) {
-        $result = fn_novoton_holidays_update_product_prices($hotel['product_id']);
-        
+        $hotelProductId = TypeCoerce::toInt($hotel['product_id'] ?? 0);
+        $hotelName = TypeCoerce::toString($hotel['hotel_name'] ?? '');
+        $result = fn_novoton_holidays_update_product_prices($hotelProductId);
+
         if ($result === true) {
-            echo "<span class='success'>✓ " . htmlspecialchars($hotel['hotel_name']) . "</span><br>\n";
+            echo "<span class='success'>✓ " . htmlspecialchars($hotelName) . "</span><br>\n";
             $updated++;
         } elseif ($result === 'no_data') {
-            echo "<span class='warning'>⚠ " . htmlspecialchars($hotel['hotel_name']) . " - No data</span><br>\n";
+            echo "<span class='warning'>⚠ " . htmlspecialchars($hotelName) . " - No data</span><br>\n";
             $no_data++;
         } else {
-            echo "<span class='error'>✗ " . htmlspecialchars($hotel['hotel_name']) . "</span><br>\n";
+            echo "<span class='error'>✗ " . htmlspecialchars($hotelName) . "</span><br>\n";
             $failed++;
         }
         
@@ -118,14 +122,17 @@ if ($mode === 'check_prices') {
 
     // Parse countries: support both multi-select array and legacy single string
     $selected_countries = [];
-    if (!empty($_REQUEST['countries']) && is_array($_REQUEST['countries'])) {
-        $selected_countries = array_map('strtoupper', array_map('trim', $_REQUEST['countries']));
+    $rawCountries = RequestCoerce::list($_REQUEST, 'countries');
+    if (!empty($rawCountries)) {
+        foreach ($rawCountries as $rc) {
+            $selected_countries[] = strtoupper(trim(TypeCoerce::toString($rc)));
+        }
     } elseif (!empty($_REQUEST['country'])) {
-        $selected_countries = [strtoupper(trim($_REQUEST['country']))];
+        $selected_countries = [strtoupper(trim(RequestCoerce::string($_REQUEST, 'country')))];
     }
 
-    $check_in = $_REQUEST['check_in'] ?? $default_check_in;
-    $check_out = $_REQUEST['check_out'] ?? $default_check_out;
+    $check_in = RequestCoerce::string($_REQUEST, 'check_in', $default_check_in);
+    $check_out = RequestCoerce::string($_REQUEST, 'check_out', $default_check_out);
     $run = isset($_REQUEST['run']);
 
     // All available countries from addon constants
@@ -138,7 +145,7 @@ if ($mode === 'check_prices') {
     fn_novoton_holidays_stream_page_open('Checking Hotel Prices (Resort-based)');
 
     // Date / settings form
-    $form = fn_novoton_holidays_stream_form_fields(fn_url('novoton_holidays.check_prices'));
+    $form = fn_novoton_holidays_stream_form_fields(TypeCoerce::toString(fn_url('novoton_holidays.check_prices')));
     echo '<form method="get" action="' . $form['action'] . '">';
     echo $form['hidden_fields'];
     echo '<input type="hidden" name="run" value="1">';
@@ -384,15 +391,18 @@ if ($mode === 'check_prices_hotel') {
 
     // Parse countries: support both multi-select array and legacy single string
     $selected_countries = [];
-    if (!empty($_REQUEST['countries']) && is_array($_REQUEST['countries'])) {
-        $selected_countries = array_map('strtoupper', array_map('trim', $_REQUEST['countries']));
+    $rawCountries = RequestCoerce::list($_REQUEST, 'countries');
+    if (!empty($rawCountries)) {
+        foreach ($rawCountries as $rc) {
+            $selected_countries[] = strtoupper(trim(TypeCoerce::toString($rc)));
+        }
     } elseif (!empty($_REQUEST['country'])) {
-        $selected_countries = [strtoupper(trim($_REQUEST['country']))];
+        $selected_countries = [strtoupper(trim(RequestCoerce::string($_REQUEST, 'country')))];
     }
 
-    $check_in = $_REQUEST['check_in'] ?? $default_check_in;
-    $check_out = $_REQUEST['check_out'] ?? $default_check_out;
-    $limit = (int)($_REQUEST['limit'] ?? 0); // 0 = all hotels
+    $check_in = RequestCoerce::string($_REQUEST, 'check_in', $default_check_in);
+    $check_out = RequestCoerce::string($_REQUEST, 'check_out', $default_check_out);
+    $limit = RequestCoerce::int($_REQUEST, 'limit'); // 0 = all hotels
     $run = isset($_REQUEST['run']);
 
     // All available countries from addon constants
@@ -406,12 +416,12 @@ if ($mode === 'check_prices_hotel') {
 
     echo '<div class="info-box">';
     echo '<strong>Hotel-based query:</strong> Queries each hotel by hotel_id individually.<br>';
-    echo 'Use this to compare with <a href="' . fn_url('novoton_holidays.check_prices') . '">resort-based check</a> and find discrepancies.<br>';
+    echo 'Use this to compare with <a href="' . TypeCoerce::toString(fn_url('novoton_holidays.check_prices')) . '">resort-based check</a> and find discrepancies.<br>';
     echo 'Slower but more accurate - catches hotels with missing/mismatched city names.';
     echo '</div>';
 
     // Date / settings form
-    $form = fn_novoton_holidays_stream_form_fields(fn_url('novoton_holidays.check_prices_hotel'));
+    $form = fn_novoton_holidays_stream_form_fields(TypeCoerce::toString(fn_url('novoton_holidays.check_prices_hotel')));
     echo '<form method="get" action="' . $form['action'] . '">';
     echo $form['hidden_fields'];
     echo '<input type="hidden" name="run" value="1">';
@@ -435,7 +445,7 @@ if ($mode === 'check_prices_hotel') {
         echo '<p class="hint">Select countries, set check-in / check-out dates and click <strong>Check Prices</strong> to start.<br>';
         echo 'This method queries each hotel individually by hotel_id (slower but complete).</p>';
         fn_novoton_holidays_stream_page_close('', [
-            ['url' => fn_url('novoton_holidays.check_prices'), 'label' => 'Resort-based Check']
+            ['url' => TypeCoerce::toString(fn_url('novoton_holidays.check_prices')), 'label' => 'Resort-based Check']
         ]);
         exit;
     }
@@ -481,8 +491,8 @@ if ($mode === 'check_prices_hotel') {
         foreach ($all_hotels as $idx => $hotel) {
             $hotel_num = $idx + 1;
             $hotel_id = $hotel['hotel_id'];
-            $hotel_name = htmlspecialchars($hotel['hotel_name']);
-            $city = htmlspecialchars($hotel['city'] ?: '(no city)');
+            $hotel_name = htmlspecialchars(TypeCoerce::toString($hotel['hotel_name'] ?? ''));
+            $city = htmlspecialchars(TypeCoerce::toString($hotel['city'] ?? '') ?: '(no city)');
 
             // Progress indicator every 50 hotels
             if ($hotel_num % 50 === 0 || $hotel_num === 1) {
@@ -585,7 +595,7 @@ if ($mode === 'check_prices_hotel') {
 
     echo '</div>';
     fn_novoton_holidays_stream_page_close('', [
-        ['url' => fn_url('novoton_holidays.check_prices'), 'label' => 'Resort-based Check']
+        ['url' => TypeCoerce::toString(fn_url('novoton_holidays.check_prices')), 'label' => 'Resort-based Check']
     ]);
     exit;
 }
@@ -599,34 +609,36 @@ if ($mode === 'room_price') {
         return [CONTROLLER_STATUS_DENIED];
     }
     
-    $hotel_id = $_REQUEST['hotel_id'] ?? '';
-    $check_in = $_REQUEST['check_in'] ?? date('Y-m-d', strtotime('+' . Constants::DEFAULT_CHECKIN_DAYS_AHEAD . ' days'));
-    $check_out = $_REQUEST['check_out'] ?? date('Y-m-d', strtotime('+' . (Constants::DEFAULT_CHECKIN_DAYS_AHEAD + Constants::DEFAULT_STAY_NIGHTS) . ' days'));
-    
-    Tygh::$app['view']->assign('hotel_id', $hotel_id);
-    Tygh::$app['view']->assign('check_in', $check_in);
-    Tygh::$app['view']->assign('check_out', $check_out);
-    
+    $hotel_id = RequestCoerce::string($_REQUEST, 'hotel_id');
+    $check_in = RequestCoerce::string($_REQUEST, 'check_in', date('Y-m-d', strtotime('+' . Constants::DEFAULT_CHECKIN_DAYS_AHEAD . ' days')));
+    $check_out = RequestCoerce::string($_REQUEST, 'check_out', date('Y-m-d', strtotime('+' . (Constants::DEFAULT_CHECKIN_DAYS_AHEAD + Constants::DEFAULT_STAY_NIGHTS) . ' days')));
+
+    /** @var \Smarty $view */
+    $view = Tygh::$app['view'];
+    $view->assign('hotel_id', $hotel_id);
+    $view->assign('check_in', $check_in);
+    $view->assign('check_out', $check_out);
+
     if (!empty($hotel_id) && !empty($_REQUEST['check'])) {
         try {
             $api = new NovotonApi();
-            
+
             $params = [
                 'hotel_id' => $hotel_id,
                 'check_in' => $check_in,
                 'check_out' => $check_out,
-                'adults' => (int)($_REQUEST['adults'] ?? 2),
-                'children' => is_array($_REQUEST['children'] ?? []) ? ($_REQUEST['children'] ?? []) : []
+                'adults' => RequestCoerce::int($_REQUEST, 'adults', 2),
+                'children' => RequestCoerce::list($_REQUEST, 'children')
             ];
-            
+
             $result = $api->pricing()->getRoomPrice($params);
 
-            Tygh::$app['view']->assign('result', $result);
-            Tygh::$app['view']->assign('last_request', $api->getLastRequestFormatted());
-            Tygh::$app['view']->assign('last_response', $api->getLastResponse());
-            
+            $view->assign('result', $result);
+            $view->assign('last_request', $api->getLastRequestFormatted());
+            $view->assign('last_response', $api->getLastResponse());
+
         } catch (\Throwable $e) {
-            Tygh::$app['view']->assign('error', $e->getMessage());
+            $view->assign('error', $e->getMessage());
         }
     }
 }
@@ -640,7 +652,7 @@ if ($mode === 'download_active_prices_csv') {
         return [CONTROLLER_STATUS_DENIED];
     }
     
-    $country = (string) preg_replace('/[^A-Z]/', '', strtoupper($_REQUEST['country'] ?? 'BULGARIA'));
+    $country = (string) preg_replace('/[^A-Z]/', '', strtoupper(RequestCoerce::string($_REQUEST, 'country', 'BULGARIA')));
 
     $hotelRepo = Container::getInstance()->hotelRepository();
     $hotels = $hotelRepo->findWithPricesForExport($country);
@@ -649,12 +661,12 @@ if ($mode === 'download_active_prices_csv') {
 
     foreach ($hotels as $hotel) {
         $csv .= implode(';', [
-            $hotel['hotel_id'],
-            '"' . str_replace('"', '""', $hotel['hotel_name']) . '"',
-            $hotel['city'],
-            $hotel['hotel_type'],
-            $hotel['product_id'] ?: '',
-            $hotel['last_price_check'] ?: ''
+            TypeCoerce::toString($hotel['hotel_id'] ?? ''),
+            '"' . str_replace('"', '""', TypeCoerce::toString($hotel['hotel_name'] ?? '')) . '"',
+            TypeCoerce::toString($hotel['city'] ?? ''),
+            TypeCoerce::toString($hotel['hotel_type'] ?? ''),
+            TypeCoerce::toString($hotel['product_id'] ?? ''),
+            TypeCoerce::toString($hotel['last_price_check'] ?? '')
         ]) . "\n";
     }
     
@@ -670,9 +682,9 @@ if ($mode === 'download_active_prices_csv') {
  */
 if ($mode === 'cron_offers_update') {
     // Verify access key
-    $access_key = $_REQUEST['access_key'] ?? '';
+    $access_key = RequestCoerce::string($_REQUEST, 'access_key');
     $expected_key = ConfigProvider::getCronAccessKey();
-    
+
     if (empty($expected_key) || !hash_equals($expected_key, $access_key)) {
         header('HTTP/1.1 403 Forbidden');
         echo 'Invalid access key';
@@ -699,22 +711,25 @@ if ($mode === 'cron_offers_update') {
         echo "Processing " . count($hotels) . " hotels\n\n";
         
         foreach ($hotels as $hotel) {
+            $hotelProductId = TypeCoerce::toInt($hotel['product_id'] ?? 0);
+            $hotelName = TypeCoerce::toString($hotel['hotel_name'] ?? '');
+            $hotelId = TypeCoerce::toString($hotel['hotel_id'] ?? '');
             try {
-                if ($hotel['product_id'] > 0) {
-                    $result = fn_novoton_holidays_update_product_prices($hotel['product_id']);
+                if ($hotelProductId > 0) {
+                    $result = fn_novoton_holidays_update_product_prices($hotelProductId);
                     if ($result === true) {
                         $updated++;
-                        echo "✓ {$hotel['hotel_name']}\n";
+                        echo "✓ {$hotelName}\n";
                     } else {
-                        echo "○ {$hotel['hotel_name']} (no data)\n";
+                        echo "○ {$hotelName} (no data)\n";
                     }
                 } else {
                     // Just update the price check timestamp
-                    $hotelRepo->update((string) $hotel['hotel_id'], ['last_price_check' => date('Y-m-d H:i:s')]);
+                    $hotelRepo->update($hotelId, ['last_price_check' => date('Y-m-d H:i:s')]);
                 }
             } catch (\Throwable $e) {
                 $errors++;
-                echo "✗ {$hotel['hotel_name']}: " . $e->getMessage() . "\n";
+                echo "✗ {$hotelName}: " . $e->getMessage() . "\n";
             }
         }
 

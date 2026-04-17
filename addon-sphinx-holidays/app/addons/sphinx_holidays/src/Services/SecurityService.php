@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 /**
  * Sphinx Security Service
  *
@@ -19,11 +21,11 @@ use Tygh\Addons\TravelCore\TravelConstants;
 
 class SecurityService implements SecurityServiceInterface
 {
-    /** @var int Rate limit window in seconds */
-    private const RATE_LIMIT_WINDOW = 3600;
+    /** Rate limit window in seconds */
+    private const int RATE_LIMIT_WINDOW = 3600;
 
-    /** @var int Max bookings per hour */
-    private const MAX_BOOKINGS_PER_HOUR = 20;
+    /** Max bookings per hour */
+    private const int MAX_BOOKINGS_PER_HOUR = 20;
 
     /**
      * {@inheritdoc}
@@ -50,7 +52,8 @@ class SecurityService implements SecurityServiceInterface
             $errors[] = 'Invalid check-out date format';
         }
 
-        if (!empty($data['check_in']) && !empty($data['check_out'])
+        if (
+            !empty($data['check_in']) && !empty($data['check_out'])
             && strtotime($data['check_out']) <= strtotime($data['check_in'])
         ) {
             $errors[] = 'Check-out must be after check-in';
@@ -148,7 +151,7 @@ class SecurityService implements SecurityServiceInterface
         $cacheRepo->upsert(
             $cacheKey,
             json_encode($record, JSON_UNESCAPED_UNICODE) ?: '',
-            $record['reset'] + 60
+            $record['reset'] + 60,
         );
 
         return true;

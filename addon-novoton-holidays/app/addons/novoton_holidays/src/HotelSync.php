@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 /**
  * Novoton Hotel Synchronization Class (V3 Architecture)
  * Path: app/addons/novoton_holidays/src/HotelSync.php
@@ -12,15 +14,14 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays;
 
-use Tygh\Addons\NovotonHolidays\Api\Contracts\NovotonApiKitInterface;
-use Tygh\Addons\NovotonHolidays\Constants;
-use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
-use Tygh\Addons\NovotonHolidays\Exceptions\SyncException;
-use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
-use Tygh\Addons\NovotonHolidays\Exceptions\XmlParsingException;
 use Tygh\Addons\NovotonHolidays\Api\AdultOnlyDetector;
+use Tygh\Addons\NovotonHolidays\Api\Contracts\NovotonApiKitInterface;
 use Tygh\Addons\NovotonHolidays\Api\PropertyTypeDetector;
+use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
+use Tygh\Addons\NovotonHolidays\Exceptions\SyncException;
+use Tygh\Addons\NovotonHolidays\Exceptions\XmlParsingException;
 use Tygh\Addons\NovotonHolidays\Helpers\OutputWriterTrait;
+use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Services\Container;
 
 class HotelSync
@@ -32,7 +33,7 @@ class HotelSync
     private PropertyTypeDetector $propertyTypeDetector;
     /** @var list<string> */
     private array $selectedCountries;
-    /** @var array<string, mixed> */
+    /** @var array{hotels_processed: int, hotels_updated: int, hotels_failed: int, packages_processed: int, packages_updated: int, packages_failed: int, errors: list<string>} */
     private array $stats;
 
     /**
@@ -57,7 +58,7 @@ class HotelSync
             'packages_processed' => 0,
             'packages_updated' => 0,
             'packages_failed' => 0,
-            'errors' => []
+            'errors' => [],
         ];
     }
 
@@ -156,8 +157,7 @@ class HotelSync
                     $this->executeBatchHotelUpsert($batchData);
                 }
 
-                $this->log("Processed " . count($hotels) . " hotels for {$countryName}");
-
+                $this->log('Processed ' . count($hotels) . " hotels for {$countryName}");
             } catch (SyncException $e) {
                 $this->stats['errors'][] = $e->getMessage();
                 $this->stats['hotels_failed']++;
@@ -193,23 +193,24 @@ class HotelSync
         $values = [];
         foreach ($batchData as $hotel) {
             $star = $hotel['star_rating'];
-            $starSql = ($star !== null) ? db_quote("?i", $star) : "NULL";
+            $starSql = ($star !== null) ? db_quote('?i', $star) : 'NULL';
             $values[] = db_quote(
-                "(?s, ?s, ?s, ?s, ?s, ",
+                '(?s, ?s, ?s, ?s, ?s, ',
                 $hotel['hotel_id'],
                 $hotel['hotel_name'],
                 $hotel['city'],
                 $hotel['country'],
-                $hotel['hotel_type']
-            ) . $starSql . db_quote(", ?s, ?s, NOW(), NOW())",
+                $hotel['hotel_type'],
+            ) . $starSql . db_quote(
+                ', ?s, ?s, NOW(), NOW())',
                 $hotel['property_type'] ?? 'hotel',
-                $hotel['is_adults_only'] ?? 'N'
+                $hotel['is_adults_only'] ?? 'N',
             );
         }
 
-        $sql = "INSERT INTO ?:novoton_hotels
+        $sql = 'INSERT INTO ?:novoton_hotels
                 (hotel_id, hotel_name, city, country, hotel_type, star_rating, property_type, is_adults_only, hotel_list_synced_at, created_at)
-                VALUES " . implode(', ', $values) . " AS new_row
+                VALUES ' . implode(', ', $values) . ' AS new_row
                 ON DUPLICATE KEY UPDATE
                 hotel_name = new_row.hotel_name,
                 city = new_row.city,
@@ -218,7 +219,7 @@ class HotelSync
                 star_rating = new_row.star_rating,
                 property_type = new_row.property_type,
                 is_adults_only = new_row.is_adults_only,
-                hotel_list_synced_at = NOW()";
+                hotel_list_synced_at = NOW()';
 
         db_query($sql);
 
@@ -237,13 +238,13 @@ class HotelSync
     {
         if ($hotelIds === null) {
             // Get hotels that need hotelinfo sync
-            $query = "SELECT hotel_id FROM ?:novoton_hotels
+            $query = 'SELECT hotel_id FROM ?:novoton_hotels
                       WHERE hotelinfo_synced_at IS NULL
                          OR hotelinfo_synced_at < DATE_SUB(NOW(), INTERVAL 7 DAY)
-                      ORDER BY hotelinfo_synced_at ASC";
+                      ORDER BY hotelinfo_synced_at ASC';
 
             if ($limit > 0) {
-                $query .= " LIMIT " . (int)$limit;
+                $query .= ' LIMIT ' . (int)$limit;
             }
 
             $hotelIds = db_get_fields($query);
@@ -253,13 +254,13 @@ class HotelSync
         $hotelNames = [];
         if (!empty($hotelIds)) {
             $hotelNames = db_get_hash_single_array(
-                "SELECT hotel_id, hotel_name FROM ?:novoton_hotels WHERE hotel_id IN (?a)",
+                'SELECT hotel_id, hotel_name FROM ?:novoton_hotels WHERE hotel_id IN (?a)',
                 ['hotel_id', 'hotel_name'],
-                $hotelIds
+                $hotelIds,
             );
         }
 
-        $this->log("Syncing hotelinfo for " . count($hotelIds) . " hotels");
+        $this->log('Syncing hotelinfo for ' . count($hotelIds) . ' hotels');
 
         foreach ($hotelIds as $hotelId) {
             $this->stats['hotels_processed']++;
@@ -337,11 +338,11 @@ class HotelSync
                 $propertyType = $this->propertyTypeDetector->detect($hotelName, $packageNames, $roomNames);
 
                 // Wrap hotel + package updates in a transaction for atomicity
-                db_query("START TRANSACTION");
+                db_query('START TRANSACTION');
                 try {
                     // Update hotel record (V3: hotel_data stores hotelinfo JSON)
                     db_query(
-                        "UPDATE ?:novoton_hotels SET
+                        'UPDATE ?:novoton_hotels SET
                          hotel_data = ?s,
                          latitude = ?s,
                          longitude = ?s,
@@ -349,27 +350,26 @@ class HotelSync
                          packages_count = ?i,
                          property_type = ?s,
                          hotelinfo_synced_at = NOW()
-                         WHERE hotel_id = ?s",
+                         WHERE hotel_id = ?s',
                         $hotelDataJson,
                         $latitude,
                         $longitude,
                         $region,
                         $packagesCount,
                         $propertyType,
-                        $hotelId
+                        $hotelId,
                     );
 
                     // Sync packages for this hotel
                     $this->syncPackagesForHotel($hotelId, $hotelInfo);
-                    db_query("COMMIT");
+                    db_query('COMMIT');
                 } catch (\Exception $txe) {
-                    db_query("ROLLBACK");
+                    db_query('ROLLBACK');
                     throw $txe;
                 }
 
                 $this->stats['hotels_updated']++;
                 $this->log("Updated hotelinfo for hotel {$hotelId}");
-
             } catch (SyncException $e) {
                 $this->stats['errors'][] = $e->getMessage();
                 $this->stats['hotels_failed']++;
@@ -448,7 +448,6 @@ class HotelSync
 
                 $this->stats['packages_updated']++;
                 $synced++;
-
             } catch (SyncException $e) {
                 $this->stats['errors'][] = $e->getMessage();
                 $this->stats['packages_failed']++;
@@ -475,9 +474,9 @@ class HotelSync
 
         // Update packages_count (has_room_price is set exclusively by room_price check)
         db_query(
-            "UPDATE ?:novoton_hotels SET packages_count = ?i WHERE hotel_id = ?s",
+            'UPDATE ?:novoton_hotels SET packages_count = ?i WHERE hotel_id = ?s',
             $synced,
-            $hotelId
+            $hotelId,
         );
 
         return $synced;
@@ -501,13 +500,13 @@ class HotelSync
                 $pkg['hotel_id'],
                 $pkg['package_id'],
                 $pkg['package_name'],
-                $pkg['priceinfo_data']
+                $pkg['priceinfo_data'],
             );
         }
 
-        $sql = "INSERT INTO ?:novoton_hotel_packages
+        $sql = 'INSERT INTO ?:novoton_hotel_packages
                 (hotel_id, package_id, package_name, priceinfo_data, needs_price_compute, synced_at)
-                VALUES " . implode(', ', $values) . " AS new_row
+                VALUES ' . implode(', ', $values) . " AS new_row
                 ON DUPLICATE KEY UPDATE
                 package_name = new_row.package_name,
                 priceinfo_data = new_row.priceinfo_data,
@@ -528,14 +527,14 @@ class HotelSync
     {
         $startTime = time();
 
-        $this->log("Starting full sync...");
+        $this->log('Starting full sync...');
 
         // Step 1: Sync hotel list
-        $this->log("Step 1: Syncing hotel list...");
+        $this->log('Step 1: Syncing hotel list...');
         $this->syncHotelList($country);
 
         // Step 2: Sync hotelinfo for hotels
-        $this->log("Step 2: Syncing hotelinfo...");
+        $this->log('Step 2: Syncing hotelinfo...');
         $this->syncHotelInfo(null, $hotelLimit);
 
         $this->stats['duration'] = time() - $startTime;
@@ -561,19 +560,19 @@ class HotelSync
         $startTime = time();
 
         // Get packages that need priceinfo sync
-        $query = "SELECT hp.hotel_id, hp.package_id, hp.package_name
+        $query = 'SELECT hp.hotel_id, hp.package_id, hp.package_name
                   FROM ?:novoton_hotel_packages hp
                   WHERE hp.synced_at IS NULL
                      OR hp.synced_at < DATE_SUB(NOW(), INTERVAL 1 DAY)
-                  ORDER BY hp.synced_at ASC";
+                  ORDER BY hp.synced_at ASC';
 
         if ($limit > 0) {
-            $query .= " LIMIT " . (int)$limit;
+            $query .= ' LIMIT ' . (int)$limit;
         }
 
         $packages = db_get_array($query);
 
-        $this->log("Syncing priceinfo for " . count($packages) . " packages");
+        $this->log('Syncing priceinfo for ' . count($packages) . ' packages');
 
         foreach ($packages as $pkg) {
             $this->stats['packages_processed']++;
@@ -600,11 +599,10 @@ class HotelSync
                      WHERE hotel_id = ?s AND package_id = ?s",
                     $priceInfoJson,
                     $pkg['hotel_id'],
-                    $pkg['package_id']
+                    $pkg['package_id'],
                 );
 
                 $this->stats['packages_updated']++;
-
             } catch (SyncException $e) {
                 $this->stats['errors'][] = $e->getMessage();
                 $this->stats['packages_failed']++;
@@ -643,11 +641,11 @@ class HotelSync
     private function log(string $message): void
     {
         if (defined('CONSOLE') && CONSOLE) {
-            $this->output("[" . date('Y-m-d H:i:s') . "] {$message}");
+            $this->output('[' . date('Y-m-d H:i:s') . "] {$message}");
         }
 
         fn_log_event('novoton_holidays', 'sync', [
-            'message' => $message
+            'message' => $message,
         ]);
     }
 
@@ -658,11 +656,11 @@ class HotelSync
     {
         $syncRepo = Container::getInstance()->syncLogRepository();
         $syncRepo->create('hotels', [
-            'total'    => $this->stats['hotels_processed'] + $this->stats['packages_processed'],
-            'updated'  => $this->stats['hotels_updated'] + $this->stats['packages_updated'],
-            'failed'   => $this->stats['hotels_failed'] + $this->stats['packages_failed'],
+            'total' => $this->stats['hotels_processed'] + $this->stats['packages_processed'],
+            'updated' => $this->stats['hotels_updated'] + $this->stats['packages_updated'],
+            'failed' => $this->stats['hotels_failed'] + $this->stats['packages_failed'],
             'duration' => $this->stats['duration'] ?? 0,
-            'status'   => 'completed',
+            'status' => 'completed',
         ]);
     }
 }

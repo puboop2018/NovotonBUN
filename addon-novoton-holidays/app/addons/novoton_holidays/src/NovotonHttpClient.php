@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 /**
  * Novoton HTTP Client
  * Handles HTTP requests, retries with exponential backoff, and circuit breaker.
@@ -9,7 +11,6 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays;
 
-use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
 
 class NovotonHttpClient implements HttpClientInterface
@@ -44,7 +45,7 @@ class NovotonHttpClient implements HttpClientInterface
     {
         if (empty($settings['api_url'])) {
             throw new \InvalidArgumentException(
-                'Novoton API URL not configured — set api_url in addon settings'
+                'Novoton API URL not configured — set api_url in addon settings',
             );
         }
         $apiUrl = $settings['api_url'];
@@ -116,7 +117,7 @@ class NovotonHttpClient implements HttpClientInterface
             fn_log_event('general', 'runtime', [
                 'message' => 'Novoton API request blocked by circuit breaker',
                 'function' => $function,
-                'seconds_until_retry' => $secondsUntilRetry
+                'seconds_until_retry' => $secondsUntilRetry,
             ]);
             $this->lastError = 'Circuit breaker open - API temporarily unavailable';
             throw ApiException::circuitBreakerOpen($function, $secondsUntilRetry);
@@ -129,7 +130,7 @@ class NovotonHttpClient implements HttpClientInterface
             'key' => $this->apiKey,
             'id' => $this->apiId,
             'xml' => $xml,
-            'lang' => $lang
+            'lang' => $lang,
         ];
 
         $lastError = '';
@@ -168,18 +169,18 @@ class NovotonHttpClient implements HttpClientInterface
             $isRetryable = $this->isRetryableError($lastError, $lastHttpCode);
 
             if ($isRetryable && $attempt < $this->maxRetries) {
-                $delayMs = $this->retryDelayMs * pow($this->retryMultiplier, $attempt - 1);
+                $delayMs = $this->retryDelayMs * $this->retryMultiplier ** ($attempt - 1);
 
                 fn_log_event('general', 'runtime', [
                     'message' => "Novoton API retry attempt $attempt/$this->maxRetries",
                     'function' => $function,
                     'error' => $lastError,
                     'http_code' => $lastHttpCode,
-                    'delay_ms' => $delayMs
+                    'delay_ms' => $delayMs,
                 ]);
 
                 usleep($delayMs * 1000);
-            } else if (!$isRetryable) {
+            } elseif (!$isRetryable) {
                 break;
             }
         }
@@ -195,7 +196,7 @@ class NovotonHttpClient implements HttpClientInterface
                 'message' => "Novoton API Error after {$attempts} attempts: {$lastError}",
                 'function' => $function,
                 'http_code' => $lastHttpCode,
-                'circuit_status' => $this->getCircuitStatus()
+                'circuit_status' => $this->getCircuitStatus(),
             ]);
             throw ApiException::requestFailed($function, $lastError, $lastHttpCode, $attempts);
         }
@@ -235,7 +236,7 @@ class NovotonHttpClient implements HttpClientInterface
                     'key' => $this->apiKey,
                     'id' => $this->apiId,
                     'xml' => $req['xml'],
-                    'lang' => $req['lang'] ?? 'UK'
+                    'lang' => $req['lang'] ?? 'UK',
                 ];
 
                 $ch = curl_init();
@@ -317,7 +318,7 @@ class NovotonHttpClient implements HttpClientInterface
             fn_log_event('general', 'runtime', [
                 'message' => 'Novoton API circuit breaker OPENED after ' . $this->failureCount . ' failures',
                 'threshold' => $this->circuitBreakerThreshold,
-                'timeout_seconds' => $this->circuitBreakerTimeout
+                'timeout_seconds' => $this->circuitBreakerTimeout,
             ]);
         }
     }
@@ -330,7 +331,7 @@ class NovotonHttpClient implements HttpClientInterface
         if ($this->failureCount > 0 || $this->circuitOpen) {
             fn_log_event('general', 'runtime', [
                 'message' => 'Novoton API circuit breaker RESET after success',
-                'previous_failures' => $this->failureCount
+                'previous_failures' => $this->failureCount,
             ]);
         }
         $this->failureCount = 0;
@@ -349,7 +350,7 @@ class NovotonHttpClient implements HttpClientInterface
             'threshold' => $this->circuitBreakerThreshold,
             'last_failure' => $this->lastFailureTime > 0 ? date('Y-m-d H:i:s', $this->lastFailureTime) : null,
             'timeout_seconds' => $this->circuitBreakerTimeout,
-            'seconds_until_retry' => $this->circuitOpen ? max(0, $this->circuitBreakerTimeout - (time() - $this->lastFailureTime)) : 0
+            'seconds_until_retry' => $this->circuitOpen ? max(0, $this->circuitBreakerTimeout - (time() - $this->lastFailureTime)) : 0,
         ];
     }
 
@@ -368,7 +369,7 @@ class NovotonHttpClient implements HttpClientInterface
         fn_log_event('general', 'runtime', [
             'message' => 'Novoton API circuit breaker manually reset',
             'was_open' => $wasOpen,
-            'previous_failures' => $previousFailures
+            'previous_failures' => $previousFailures,
         ]);
     }
 
@@ -384,7 +385,7 @@ class NovotonHttpClient implements HttpClientInterface
             'Operation timed out',
             'SSL connection timeout',
             'Network is unreachable',
-            'Empty reply from server'
+            'Empty reply from server',
         ];
 
         foreach ($retryableErrors as $retryable) {

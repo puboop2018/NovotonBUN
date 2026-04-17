@@ -184,6 +184,10 @@ return [
         'en' => 'Available Placeholders',
         'ro' => 'Placeholder-e Disponibile',
     ],
+    'sphinx_holidays.seo_placeholders_title' => [
+        'en' => 'Sphinx placeholders to use',
+        'ro' => 'Placeholder-e Sphinx disponibile',
+    ],
     'sphinx_holidays.placeholders_hint' => [
         'en' => 'Use these tags in your SEO templates:',
         'ro' => 'Folosiți aceste tag-uri în șabloanele SEO:',

@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 /**
  * Novoton Cache Service Interface
  *
@@ -28,8 +30,6 @@ interface CacheServiceInterface
 
     /**
      * Get or compute and cache a value.
-     *
-     * @return mixed
      */
     public function remember(string $key, callable $callback, ?int $ttl = null): mixed;
 

@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Tygh\Addons\TravelCore\Contracts;
@@ -50,14 +51,14 @@ interface GuestDataServiceInterface extends GuestParserInterface, GuestDisplayIn
     /**
      * Parse and validate guest data from a booking form submission.
      *
-     * @param array<string, mixed>  $guests   Raw guests array from form
-     * @param string $checkIn  Check-in date for child age validation
+     * @param array<string, mixed> $guests Raw guests array from form
+     * @param string $checkIn Check-in date for child age validation
      * @param string $provider Provider name for log messages
      * @return array<string, mixed>|false Parsed result or false if validation fails
      */
     public static function parseAndValidateGuests(
         array $guests,
         string $checkIn = '',
-        string $provider = ''
+        string $provider = '',
     ): array|false;
 }

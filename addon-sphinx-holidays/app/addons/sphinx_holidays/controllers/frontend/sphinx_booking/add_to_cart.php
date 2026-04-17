@@ -14,6 +14,8 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 use Tygh\Addons\SphinxHolidays\Services\CartService;
 use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
 use Tygh\Addons\SphinxHolidays\Services\Container;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 
     $cartService = new CartService();
 
@@ -22,10 +24,10 @@ use Tygh\Addons\SphinxHolidays\Services\Container;
         return $rateLimited;
     }
 
-    $bookingData = $_REQUEST;
-    $offer_id = trim($bookingData['offer_id'] ?? '');
-    $hotel_id = trim($bookingData['hotel_id'] ?? '');
-    $product_id = (int) ($bookingData['product_id'] ?? 0);
+    $bookingData = TypeCoerce::toStringMap($_REQUEST);
+    $offer_id = RequestCoerce::string($_REQUEST, 'offer_id');
+    $hotel_id = RequestCoerce::string($_REQUEST, 'hotel_id');
+    $product_id = RequestCoerce::int($_REQUEST, 'product_id');
 
     if (empty($offer_id)) {
         fn_set_notification('E', __('error'),
@@ -48,7 +50,7 @@ use Tygh\Addons\SphinxHolidays\Services\Container;
     }
 
     // Price with commission
-    $basePrice = (float) ($verifyResult['price'] ?? 0);
+    $basePrice = TypeCoerce::toFloat($verifyResult['price'] ?? 0);
     $total_price = $cartService->applyCommission($basePrice);
 
     if ($total_price <= 0) {
@@ -66,8 +68,8 @@ use Tygh\Addons\SphinxHolidays\Services\Container;
     }
 
     // Guest validation
-    $check_in = $verifyResult['check_in'] ?? $bookingData['check_in'] ?? '';
-    $parsed_guests = $cartService->parseGuests($bookingData['guests'] ?? [], $check_in);
+    $check_in = TypeCoerce::toString($verifyResult['check_in'] ?? $bookingData['check_in'] ?? '');
+    $parsed_guests = $cartService->parseGuests(RequestCoerce::stringMap($_REQUEST, 'guests'), $check_in);
     if ($parsed_guests === false) {
         return [CONTROLLER_STATUS_REDIRECT, 'sphinx_booking.booking_form?' . http_build_query([
             'offer_id' => $offer_id, 'hotel_id' => $hotel_id, 'product_id' => $product_id,
@@ -75,15 +77,15 @@ use Tygh\Addons\SphinxHolidays\Services\Container;
     }
 
     // Extract offer details
-    $contact     = $bookingData['contact'] ?? [];
-    $hotelName   = $verifyResult['hotel_name'] ?? '';
-    $roomName    = $verifyResult['room_name'] ?? $verifyResult['room_type'] ?? '';
-    $boardName   = $verifyResult['board_name'] ?? $verifyResult['board_type'] ?? '';
-    $boardId     = $verifyResult['board_code'] ?? $boardName;
-    $roomId      = $verifyResult['room_code'] ?? $roomName;
-    $check_out   = $verifyResult['check_out'] ?? $bookingData['check_out'] ?? '';
-    $adults      = (int) ($verifyResult['adults'] ?? $bookingData['adults'] ?? 2);
-    $children    = (int) ($verifyResult['children'] ?? $bookingData['children'] ?? 0);
+    $contact     = RequestCoerce::stringMap($_REQUEST, 'contact');
+    $hotelName   = TypeCoerce::toString($verifyResult['hotel_name'] ?? '');
+    $roomName    = TypeCoerce::toString($verifyResult['room_name'] ?? $verifyResult['room_type'] ?? '');
+    $boardName   = TypeCoerce::toString($verifyResult['board_name'] ?? $verifyResult['board_type'] ?? '');
+    $boardId     = TypeCoerce::toString($verifyResult['board_code'] ?? $boardName);
+    $roomId      = TypeCoerce::toString($verifyResult['room_code'] ?? $roomName);
+    $check_out   = TypeCoerce::toString($verifyResult['check_out'] ?? $bookingData['check_out'] ?? '');
+    $adults      = TypeCoerce::toInt($verifyResult['adults'] ?? $bookingData['adults'] ?? 2);
+    $children    = TypeCoerce::toInt($verifyResult['children'] ?? $bookingData['children'] ?? 0);
     $currency    = ConfigProvider::getDefaultCurrency();
 
     $nights = 0;
@@ -96,12 +98,12 @@ use Tygh\Addons\SphinxHolidays\Services\Container;
     }
 
     $all_child_ages = [];
-    foreach ($parsed_guests['guests_data'] as $guest) {
-        if (($guest['type'] ?? '') === 'child' && isset($guest['age'])) {
-            $all_child_ages[] = (int) $guest['age'];
+    foreach (TypeCoerce::toRowList($parsed_guests['guests_data']) as $guest) {
+        if (TypeCoerce::toString($guest['type'] ?? '') === 'child' && isset($guest['age'])) {
+            $all_child_ages[] = TypeCoerce::toInt($guest['age']);
         }
     }
-    $children_ages = !empty($all_child_ages) ? implode(',', $all_child_ages) : ($bookingData['children_ages'] ?? '');
+    $children_ages = !empty($all_child_ages) ? implode(',', $all_child_ages) : TypeCoerce::toString($bookingData['children_ages'] ?? '');
 
     $rooms_data = [[
         'room_id' => $roomId, 'room_name' => $roomName, 'room_type_display' => $roomName,
@@ -130,7 +132,7 @@ use Tygh\Addons\SphinxHolidays\Services\Container;
     ];
 
     $booking_id = $cartService->upsertBooking(
-        $booking_record, $hotel_id, $check_in, $check_out, $parsed_guests['holder_name']
+        $booking_record, $hotel_id, $check_in, $check_out, TypeCoerce::toString($parsed_guests['holder_name'])
     );
 
     // Assemble cart extras
@@ -145,11 +147,11 @@ use Tygh\Addons\SphinxHolidays\Services\Container;
         'num_rooms' => 1, 'rooms_data' => $rooms_data,
         'guest_names' => $parsed_guests['guest_list'], 'holder_name' => $parsed_guests['holder_name'],
         'guests_data' => json_encode($parsed_guests['guests_data'], JSON_UNESCAPED_UNICODE),
-        'contact_email' => $contact['email'] ?? '', 'contact_phone' => $contact['phone'] ?? '',
+        'contact_email' => TypeCoerce::toString($contact['email'] ?? ''), 'contact_phone' => TypeCoerce::toString($contact['phone'] ?? ''),
         'total_price' => $total_price, 'currency' => $currency,
     ];
 
     return $cartService->addToCartAndRedirect(
         $product_id, $total_price, $currency, $product_extra,
-        __('sphinx_holidays.added_to_cart', ['[default]' => 'Hotel booking added to cart.'])
+        TypeCoerce::toString(__('sphinx_holidays.added_to_cart', ['[default]' => 'Hotel booking added to cart.']))
     );

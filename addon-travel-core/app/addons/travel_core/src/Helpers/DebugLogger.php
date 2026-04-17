@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 /**
  * Travel Core Debug Logger
  *
@@ -59,7 +61,7 @@ class DebugLogger
 
         fn_log_event('general', 'runtime', array_merge(
             ['message' => $message],
-            $context
+            $context,
         ));
     }
 

@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 /**
  * Novoton Holidays - Alternative Request Service
  *
@@ -17,14 +19,13 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Services;
 
-use Tygh\Registry;
-use Tygh\Tygh;
 use Tygh\Addons\NovotonHolidays\Api\Contracts\ReservationApiClientInterface;
 use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
 use Tygh\Addons\NovotonHolidays\NovotonApi;
 use Tygh\Addons\NovotonHolidays\Repository\AlternativeRequestRepository;
 use Tygh\Addons\NovotonHolidays\Repository\AlternativeRequestRepositoryInterface;
 use Tygh\Addons\TravelCore\TravelConstants;
+use Tygh\Tygh;
 
 class AlternativeRequestService implements AlternativeRequestServiceInterface
 {
@@ -37,7 +38,7 @@ class AlternativeRequestService implements AlternativeRequestServiceInterface
     public function __construct(
         ?SecurityServiceInterface $security = null,
         ?ReservationApiClientInterface $reservations = null,
-        ?AlternativeRequestRepositoryInterface $altRequestRepo = null
+        ?AlternativeRequestRepositoryInterface $altRequestRepo = null,
     ) {
         $this->security = $security;
         $this->reservations = $reservations;
@@ -77,18 +78,18 @@ class AlternativeRequestService implements AlternativeRequestServiceInterface
      * (encrypting PII fields), and sends a confirmation email.
      *
      * @param array<string, mixed> $params {
-     *   hotel_id: string,
-     *   hotel_name: string,
-     *   check_in: string,
-     *   check_out: string,
-     *   nights: int,
-     *   adults: int,
-     *   children: int,
-     *   num_rooms: int,
-     *   contact_email: string,
-     *   contact_phone: string,
-     *   notes: string
-     * }
+     *                                     hotel_id: string,
+     *                                     hotel_name: string,
+     *                                     check_in: string,
+     *                                     check_out: string,
+     *                                     nights: int,
+     *                                     adults: int,
+     *                                     children: int,
+     *                                     num_rooms: int,
+     *                                     contact_email: string,
+     *                                     contact_phone: string,
+     *                                     notes: string
+     *                                     }
      * @return array{success: bool, request_id: int, novoton_id: string, message: string, error: string}
      */
     public function submitAlternativeBookingRequest(array $params): array
@@ -119,7 +120,7 @@ class AlternativeRequestService implements AlternativeRequestServiceInterface
         }
 
         // Verify hotel exists (FK constraint: novoton_alternative_requests.hotel_id -> novoton_hotels.hotel_id)
-        $hotelExists = db_get_field("SELECT hotel_id FROM ?:novoton_hotels WHERE hotel_id = ?s", $hotelId);
+        $hotelExists = db_get_field('SELECT hotel_id FROM ?:novoton_hotels WHERE hotel_id = ?s', $hotelId);
         if (!$hotelExists) {
             return [
                 'success' => false,
@@ -174,13 +175,21 @@ class AlternativeRequestService implements AlternativeRequestServiceInterface
 
             // Store in DB — encrypt PII
             $requestRecord = $this->buildRequestRecord(
-                $hotelId, $hotelName, $checkIn, $checkOut, $nights,
-                $adults, $children, $numRooms,
-                $contactEmail, $contactPhone, $notes,
+                $hotelId,
+                $hotelName,
+                $checkIn,
+                $checkOut,
+                $nights,
+                $adults,
+                $children,
+                $numRooms,
+                $contactEmail,
+                $contactPhone,
+                $notes,
                 TravelConstants::STATUS_PENDING,
                 $apiResult['xml_sent'] ?? '',
                 $apiResult['xml_response'] ?? '',
-                $apiResult['id_num'] ?? ''
+                $apiResult['id_num'] ?? '',
             );
 
             $security->logSecurityEvent('alternative_request_created', [
@@ -218,13 +227,21 @@ class AlternativeRequestService implements AlternativeRequestServiceInterface
 
             // Still save request even if API fails
             $requestRecord = $this->buildRequestRecord(
-                $hotelId, $hotelName, $checkIn, $checkOut, $nights,
-                $adults, $children, $numRooms,
-                $contactEmail, $contactPhone, $notes,
+                $hotelId,
+                $hotelName,
+                $checkIn,
+                $checkOut,
+                $nights,
+                $adults,
+                $children,
+                $numRooms,
+                $contactEmail,
+                $contactPhone,
+                $notes,
                 'pending_manual',
                 '',
                 $e->getMessage(),
-                ''
+                '',
             );
 
             $requestId = $this->altRequestRepo->create($requestRecord);
@@ -244,10 +261,21 @@ class AlternativeRequestService implements AlternativeRequestServiceInterface
      * @return array<string, mixed>
      */
     private function buildRequestRecord(
-        string $hotelId, string $hotelName, string $checkIn, string $checkOut,
-        int $nights, int $adults, int $children, int $numRooms,
-        string $contactEmail, string $contactPhone, string $notes,
-        string $status, string $apiRequestXml, string $apiResponse, string $novotonRequestId
+        string $hotelId,
+        string $hotelName,
+        string $checkIn,
+        string $checkOut,
+        int $nights,
+        int $adults,
+        int $children,
+        int $numRooms,
+        string $contactEmail,
+        string $contactPhone,
+        string $notes,
+        string $status,
+        string $apiRequestXml,
+        string $apiResponse,
+        string $novotonRequestId,
     ): array {
         $security = $this->getSecurity();
 

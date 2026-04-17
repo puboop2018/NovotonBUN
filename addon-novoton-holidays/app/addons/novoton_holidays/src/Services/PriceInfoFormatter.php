@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 /**
  * Novoton PriceInfo Formatter
  *
@@ -14,21 +16,40 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Services;
 
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+
 class PriceInfoFormatter
 {
     /**
      * Safely extract a scalar string value from a field that may be array/object
-     * (SimpleXML json_encode of empty elements produces [])
-     */
-    /**
+     * (SimpleXML json_encode of empty elements produces []).
+     *
      * @param mixed $value
+     * @deprecated 3.3.0 Use {@see TypeCoerce::toString()} directly.
      */
     public static function toScalar($value): string
     {
-        if (is_array($value) || is_object($value)) {
-            return '';
-        }
-        return trim((string) $value);
+        return TypeCoerce::toString($value);
+    }
+
+    /**
+     * Safely extract a float value from a mixed field.
+     *
+     * @deprecated 3.3.0 Use {@see TypeCoerce::toFloat()} directly.
+     */
+    public static function toFloat(mixed $value): float
+    {
+        return TypeCoerce::toFloat($value);
+    }
+
+    /**
+     * Safely extract an int value from a mixed field.
+     *
+     * @deprecated 3.3.0 Use {@see TypeCoerce::toInt()} directly.
+     */
+    public static function toInt(mixed $value): int
+    {
+        return TypeCoerce::toInt($value);
     }
 
     /**
@@ -36,8 +57,8 @@ class PriceInfoFormatter
      */
     public static function feeKey(string $idAge): string
     {
-        $s = trim(preg_replace('/\s+/', ' ', $idAge));
-        $s = preg_replace('/\s+BY\s+\d+\s+AD\s*$/i', '', $s);
+        $s = trim((string) preg_replace('/\s+/', ' ', $idAge));
+        $s = (string) preg_replace('/\s+BY\s+\d+\s+AD\s*$/i', '', $s);
         return trim($s);
     }
 
@@ -46,13 +67,21 @@ class PriceInfoFormatter
      */
     public static function matchRoom(string $rowRoom, string $roomId): bool
     {
-        if (empty($roomId)) return true;
-        if (strcasecmp($rowRoom, $roomId) === 0) return true;
-        if (strcasecmp(rawurldecode($rowRoom), $roomId) === 0) return true;
-        if (strcasecmp($rowRoom, rawurlencode($roomId)) === 0) return true;
+        if (empty($roomId)) {
+            return true;
+        }
+        if (strcasecmp($rowRoom, $roomId) === 0) {
+            return true;
+        }
+        if (strcasecmp(rawurldecode($rowRoom), $roomId) === 0) {
+            return true;
+        }
+        if (strcasecmp($rowRoom, rawurlencode($roomId)) === 0) {
+            return true;
+        }
         // Normalize spaces/plus signs for occupancy patterns like "DBL 2+1"
         $normRow = str_replace(['+', '%2B', '%2b'], '+', rawurldecode($rowRoom));
-        $normId  = str_replace(['+', '%2B', '%2b'], '+', rawurldecode($roomId));
+        $normId = str_replace(['+', '%2B', '%2b'], '+', rawurldecode($roomId));
         return strcasecmp(trim($normRow), trim($normId)) === 0;
     }
 
@@ -61,7 +90,9 @@ class PriceInfoFormatter
      */
     public static function matchBoard(string $rowBoard, string $boardId): bool
     {
-        if (empty($boardId)) return true;
+        if (empty($boardId)) {
+            return true;
+        }
         return strcasecmp($rowBoard, $boardId) === 0;
     }
 
@@ -78,8 +109,8 @@ class PriceInfoFormatter
      */
     public static function matchAgeType(string $rowAge, string $ageType): bool
     {
-        $rowAge = trim(preg_replace('/\s+/', ' ', $rowAge));
-        $ageType = trim(preg_replace('/\s+/', ' ', $ageType));
+        $rowAge = trim((string) preg_replace('/\s+/', ' ', $rowAge));
+        $ageType = trim((string) preg_replace('/\s+/', ' ', $ageType));
 
         if (strcasecmp($rowAge, $ageType) === 0) {
             return true;
@@ -136,7 +167,7 @@ class PriceInfoFormatter
             2 => '2 ND',
             3 => '3 RD',
             4 => '4 TH',
-            5 => '5 TH'
+            5 => '5 TH',
         ];
         return $ordinals[$num] ?? $num . ' TH';
     }
@@ -208,9 +239,13 @@ class PriceInfoFormatter
         // This avoids double-counting when a room has no separate positional
         // adult pricing (all adults are plain "ADULT").
         if ($position !== null && ($type === 'ADULT' || $type === 'ADT' || $type === 'ADULTS')) {
-            $normalizedIdAge = trim(preg_replace('/\s+/', ' ', $idAge));
-            foreach ($occupancy['adults'] as $adult) {
-                $adultAgeNorm = strtoupper(trim(preg_replace('/\s+/', ' ', $adult['age_type'] ?? '')));
+            $normalizedIdAge = trim((string) preg_replace('/\s+/', ' ', $idAge));
+            $adults = is_array($occupancy['adults'] ?? null) ? $occupancy['adults'] : [];
+            foreach ($adults as $adult) {
+                if (!is_array($adult)) {
+                    continue;
+                }
+                $adultAgeNorm = strtoupper(trim((string) preg_replace('/\s+/', ' ', self::toScalar($adult['age_type'] ?? ''))));
                 if ($adultAgeNorm === $normalizedIdAge) {
                     return 1;
                 }
@@ -235,16 +270,22 @@ class PriceInfoFormatter
      */
     private static function countByType(array $occupancy, string $type): int
     {
+        $adults = is_array($occupancy['adults'] ?? null) ? $occupancy['adults'] : [];
+        $children = is_array($occupancy['children'] ?? null) ? $occupancy['children'] : [];
+
         // Adult types
         if ($type === 'ADULT' || $type === 'ADT' || $type === 'ADULTS') {
-            return count($occupancy['adults']);
+            return count($adults);
         }
 
         // Infant types
         if (str_contains($type, 'INFANT') || $type === 'INF') {
             $count = 0;
-            foreach ($occupancy['children'] as $child) {
-                if (($child['age'] ?? 0) < 2) {
+            foreach ($children as $child) {
+                if (!is_array($child)) {
+                    continue;
+                }
+                if (self::toFloat($child['age'] ?? 0) < 2) {
                     $count++;
                 }
             }
@@ -273,15 +314,19 @@ class PriceInfoFormatter
         // "2-11,99", "0-1.99", "12-17" — extract numeric range with optional decimal
         if (preg_match('/(\d+)\s*-\s*(\d+)[,.](\d+)/', $type, $m)) {
             $fromAge = (int) $m[1];
-            $toAge = (int) $m[2] + (int) $m[3] / pow(10, strlen($m[3]));
+            $toAge = (int) $m[2] + (int) $m[3] / 10 ** strlen($m[3]);
         } elseif (preg_match('/(\d+)\s*-\s*(\d+)/', $type, $m)) {
             $fromAge = (int) $m[1];
             $toAge = (int) $m[2];
         }
 
         $count = 0;
-        foreach ($occupancy['children'] as $child) {
-            $childAge = $child['age'] ?? 0;
+        $children = is_array($occupancy['children'] ?? null) ? $occupancy['children'] : [];
+        foreach ($children as $child) {
+            if (!is_array($child)) {
+                continue;
+            }
+            $childAge = self::toFloat($child['age'] ?? 0);
             if ($childAge >= $fromAge && $childAge <= $toAge) {
                 $count++;
             }
@@ -305,7 +350,7 @@ class PriceInfoFormatter
      */
     public static function correlatesWithSeasonAgeTypes(string $feeIdAge, array $seasonAgeTypes): bool
     {
-        $feeNorm = strtoupper(trim(preg_replace('/\s+/', ' ', str_replace(',', '.', $feeIdAge))));
+        $feeNorm = strtoupper(trim((string) preg_replace('/\s+/', ' ', str_replace(',', '.', $feeIdAge))));
         if ($feeNorm === '') {
             return false;
         }
@@ -360,7 +405,7 @@ class PriceInfoFormatter
             'success' => false,
             'error' => $message,
             'price' => 0,
-            'debug_log' => $debug ? $debugLog : null
+            'debug_log' => $debug ? $debugLog : null,
         ];
     }
 
@@ -375,16 +420,18 @@ class PriceInfoFormatter
     public static function verifySeasonPriceMapping(array $priceinfo, string $checkIn, int $nights): array
     {
         $seasons = $priceinfo['seasons'] ?? [];
-
+        /** @var list<array<string, mixed>> $parsedSeasons */
         $parsedSeasons = [];
-        if (isset($seasons['Season'])) {
+        if (is_array($seasons) && isset($seasons['Season'])) {
             $parsedSeasons = [$seasons];
-        } elseif (isset($seasons[0]['Season'])) {
-            $parsedSeasons = $seasons;
-        } elseif (isset($seasons['season'])) {
-            $parsedSeasons = $seasons['season'];
-            if (isset($parsedSeasons['Season'])) {
-                $parsedSeasons = [$parsedSeasons];
+        } elseif (is_array($seasons) && isset($seasons[0]) && is_array($seasons[0]) && isset($seasons[0]['Season'])) {
+            $parsedSeasons = array_values(array_filter($seasons, 'is_array'));
+        } elseif (is_array($seasons) && isset($seasons['season'])) {
+            $nested = $seasons['season'];
+            if (is_array($nested) && isset($nested['Season'])) {
+                $parsedSeasons = [$nested];
+            } elseif (is_array($nested)) {
+                $parsedSeasons = array_values(array_filter($nested, 'is_array'));
             }
         }
 
@@ -397,12 +444,13 @@ class PriceInfoFormatter
             $dateStr = $currentDate->format('Y-m-d');
 
             $seasonNum = 1;
+            /** @var array<string, mixed>|null $matchedSeason */
             $matchedSeason = null;
 
             foreach ($parsedSeasons as $season) {
-                $from = $season['FromDate'] ?? $season['DateFrom'] ?? '';
-                $to = $season['ToDate'] ?? $season['DateTo'] ?? '';
-                $id = (int) ($season['Season'] ?? $season['IdSeason'] ?? 1);
+                $from = self::toScalar($season['FromDate'] ?? $season['DateFrom'] ?? '');
+                $to = self::toScalar($season['ToDate'] ?? $season['DateTo'] ?? '');
+                $id = self::toInt($season['Season'] ?? $season['IdSeason'] ?? 1);
 
                 if ($dateStr >= $from && $dateStr <= $to) {
                     $seasonNum = $id;
@@ -418,14 +466,16 @@ class PriceInfoFormatter
                 'date' => $dateStr,
                 'season_num' => $seasonNum,
                 'price_key' => $priceKey,
-                'matched_range' => $matchedSeason ? ($matchedSeason['FromDate'] . ' to ' . $matchedSeason['ToDate']) : 'DEFAULT'
+                'matched_range' => $matchedSeason !== null
+                    ? (self::toScalar($matchedSeason['FromDate'] ?? '') . ' to ' . self::toScalar($matchedSeason['ToDate'] ?? ''))
+                    : 'DEFAULT',
             ];
         }
 
         return [
             'total_seasons_found' => count($parsedSeasons),
             'seasons_raw' => $parsedSeasons,
-            'night_mapping' => $mapping
+            'night_mapping' => $mapping,
         ];
     }
 
@@ -440,28 +490,34 @@ class PriceInfoFormatter
     public static function getSamplePrices(array $priceinfo, string $roomId, string $boardId): array
     {
         $seasonPrices = $priceinfo['season_price'] ?? [];
+        if (!is_array($seasonPrices)) {
+            return [];
+        }
         if (isset($seasonPrices['IdRoom'])) {
             $seasonPrices = [$seasonPrices];
         }
 
         $samples = [];
         foreach ($seasonPrices as $row) {
-            $rowRoom = $row['IdRoom'] ?? '';
-            $rowBoard = $row['IdBoard'] ?? '';
+            if (!is_array($row)) {
+                continue;
+            }
+            $rowRoom = self::toScalar($row['IdRoom'] ?? '');
+            $rowBoard = self::toScalar($row['IdBoard'] ?? '');
 
             if (self::matchRoom($rowRoom, $roomId) && self::matchBoard($rowBoard, $boardId)) {
                 $sample = [
-                    'IdAge' => $row['IdAge'] ?? '',
-                    'IdAcc' => $row['IdAcc'] ?? '',
-                    'Code' => $row['Code'] ?? '',
-                    'Base' => $row['Base'] ?? '',
-                    'RoomPrice' => $row['RoomPrice'] ?? 'No',
+                    'IdAge' => self::toScalar($row['IdAge'] ?? ''),
+                    'IdAcc' => self::toScalar($row['IdAcc'] ?? ''),
+                    'Code' => self::toScalar($row['Code'] ?? ''),
+                    'Base' => self::toScalar($row['Base'] ?? ''),
+                    'RoomPrice' => self::toScalar($row['RoomPrice'] ?? 'No'),
                 ];
 
                 for ($i = 1; $i <= 20; $i++) {
                     $key = 'Price' . $i;
                     if (isset($row[$key]) && $row[$key] !== '') {
-                        $sample[$key] = $row[$key];
+                        $sample[$key] = self::toScalar($row[$key]);
                     }
                 }
 

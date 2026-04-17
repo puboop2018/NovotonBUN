@@ -1,11 +1,13 @@
 <?php
+
 declare(strict_types=1);
+
 namespace Tygh\Addons\NovotonHolidays\Cron\Commands;
 
 use Tygh\Addons\NovotonHolidays\Constants;
-use Tygh\Addons\TravelCore\TravelConstants;
 use Tygh\Addons\NovotonHolidays\Cron\AbstractCronCommand;
 use Tygh\Addons\NovotonHolidays\Services\Container;
+use Tygh\Addons\TravelCore\TravelConstants;
 
 class ResInfoCommand extends AbstractCronCommand
 {
@@ -27,8 +29,8 @@ class ResInfoCommand extends AbstractCronCommand
      */
     public function execute(): array
     {
-        $this->output("Checking ASK bookings status...");
-        $this->output("");
+        $this->output('Checking ASK bookings status...');
+        $this->output('');
 
         $repo = Container::getInstance()->bookingRepository();
         $ask_bookings = $repo->findByNovotonStatus(Constants::NOVOTON_STATUS_ON_REQUEST, [TravelConstants::STATUS_PENDING, TravelConstants::STATUS_ASK]);
@@ -37,10 +39,10 @@ class ResInfoCommand extends AbstractCronCommand
         $updated = 0;
 
         if (empty($ask_bookings)) {
-            $this->output("No pending ASK bookings found.");
+            $this->output('No pending ASK bookings found.');
         } else {
             $this->output("Found {$checked} pending ASK bookings.");
-            $this->output("");
+            $this->output('');
 
             foreach ($ask_bookings as $booking) {
                 $this->output("Booking #{$booking['booking_id']} (Order #{$booking['order_id']})...");
@@ -48,14 +50,14 @@ class ResInfoCommand extends AbstractCronCommand
                 $reservation_id = $booking['novoton_confirm_id'] ?: ($booking['novoton_res_num'] ?? '');
 
                 if (empty($reservation_id)) {
-                    $this->output("  No reservation ID - skipping");
+                    $this->output('  No reservation ID - skipping');
                     continue;
                 }
 
                 $response = $this->api->reservations()->getReservationInfo($reservation_id);
 
                 if (!$response || !isset($response->Status)) {
-                    $this->output("  No response from API");
+                    $this->output('  No response from API');
                     continue;
                 }
 
@@ -63,27 +65,27 @@ class ResInfoCommand extends AbstractCronCommand
 
                 if ($new_status === TravelConstants::STATUS_CONFIRMED || $new_status === strtolower(Constants::NOVOTON_STATUS_CONFIRMED)) {
                     $repo->update((int) $booking['booking_id'], [
-                        'status'            => TravelConstants::STATUS_CONFIRMED,
-                        'novoton_status'    => Constants::NOVOTON_STATUS_CONFIRMED,
+                        'status' => TravelConstants::STATUS_CONFIRMED,
+                        'novoton_status' => Constants::NOVOTON_STATUS_CONFIRMED,
                         'last_status_check' => date('Y-m-d H:i:s'),
-                        'updated_at'        => date('Y-m-d H:i:s'),
+                        'updated_at' => date('Y-m-d H:i:s'),
                     ]);
-                    $this->output("  -> Updated to CONFIRMED");
+                    $this->output('  -> Updated to CONFIRMED');
                     $updated++;
                 } elseif ($new_status === TravelConstants::STATUS_CANCELLED || $new_status === strtolower(Constants::NOVOTON_STATUS_CANCELLED) || $new_status === 'rejected') {
                     $repo->update((int) $booking['booking_id'], [
-                        'status'            => TravelConstants::STATUS_CANCELLED,
-                        'novoton_status'    => Constants::NOVOTON_STATUS_CANCELLED,
+                        'status' => TravelConstants::STATUS_CANCELLED,
+                        'novoton_status' => Constants::NOVOTON_STATUS_CANCELLED,
                         'last_status_check' => date('Y-m-d H:i:s'),
-                        'updated_at'        => date('Y-m-d H:i:s'),
+                        'updated_at' => date('Y-m-d H:i:s'),
                     ]);
-                    $this->output("  -> Updated to CANCELLED");
+                    $this->output('  -> Updated to CANCELLED');
                     $updated++;
                 } else {
                     $repo->update((int) $booking['booking_id'], [
                         'last_status_check' => date('Y-m-d H:i:s'),
                     ]);
-                    $this->output("  -> Status unchanged: " . (string)$response->Status);
+                    $this->output('  -> Status unchanged: ' . (string)$response->Status);
                 }
             }
         }

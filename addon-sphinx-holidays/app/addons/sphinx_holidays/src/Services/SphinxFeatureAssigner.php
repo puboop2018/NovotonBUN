@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays\Services;
@@ -24,7 +25,7 @@ class SphinxFeatureAssigner implements SphinxFeatureAssignerInterface
 {
     use CsCartFeatureAssignment;
 
-    private const API_SOURCE = 'sphinx';
+    private const string API_SOURCE = 'sphinx';
 
     /** @var array<string, int> featureId:variantName → variant_id cache */
     private array $locationVariantCache = [];
@@ -68,16 +69,16 @@ class SphinxFeatureAssigner implements SphinxFeatureAssignerInterface
      *
      * Shared pattern for stars, property_type, resort.
      *
-     * @param int     $productId   CS-Cart product ID
-     * @param string  $featureType Feature type key
-     * @param ?string $rawValue    Raw value from hotel data
-     * @param bool    $autoCreate  Auto-create variant if mapping exists but no variant
+     * @param int $productId CS-Cart product ID
+     * @param string $featureType Feature type key
+     * @param ?string $rawValue Raw value from hotel data
+     * @param bool $autoCreate Auto-create variant if mapping exists but no variant
      */
     private function assignMappedSelectBox(
         int $productId,
         string $featureType,
         ?string $rawValue,
-        bool $autoCreate = true
+        bool $autoCreate = true,
     ): void {
         if ($rawValue === null || $rawValue === '') {
             return;
@@ -127,16 +128,16 @@ class SphinxFeatureAssigner implements SphinxFeatureAssignerInterface
      *
      * Shared pattern for boards, travel_group.
      *
-     * @param int      $productId   CS-Cart product ID
-     * @param string   $featureType Feature type key
-     * @param string[] $codes       Canonical codes to resolve
-     * @param bool     $autoCreate  Auto-create variants if mapping exists but no variant
+     * @param int $productId CS-Cart product ID
+     * @param string $featureType Feature type key
+     * @param string[] $codes Canonical codes to resolve
+     * @param bool $autoCreate Auto-create variants if mapping exists but no variant
      */
     private function collectAndSyncCheckboxFeature(
         int $productId,
         string $featureType,
         array $codes,
-        bool $autoCreate = true
+        bool $autoCreate = true,
     ): void {
         $featureId = $this->getFeatureId($featureType);
         if ($featureId <= 0) {
@@ -344,7 +345,7 @@ class SphinxFeatureAssigner implements SphinxFeatureAssignerInterface
                        AND cscart_feature_id = ?i
                        AND cscart_variant_id IS NOT NULL AND cscart_variant_id > 0
                      LIMIT 1",
-                    $featureId
+                    $featureId,
                 );
                 if ($hasMappedSibling > 0) {
                     $variantId = $this->autoCreateVariant($featureId, $mapping);
@@ -365,7 +366,7 @@ class SphinxFeatureAssigner implements SphinxFeatureAssignerInterface
 
         if (!empty($unmapped)) {
             fn_log_event('general', 'runtime', [
-                'message' => "Sphinx: product {$productId} has " . count($unmapped) . " unmapped facilities: " . implode(', ', array_slice($unmapped, 0, 10)),
+                'message' => "Sphinx: product {$productId} has " . count($unmapped) . ' unmapped facilities: ' . implode(', ', array_slice($unmapped, 0, 10)),
             ]);
         }
     }
@@ -383,7 +384,7 @@ class SphinxFeatureAssigner implements SphinxFeatureAssignerInterface
         $facilityCodes = $this->getHotelFacilityCodes($hotel);
         $groupCodes = TravelGroupResolver::derive(
             $facilityCodes,
-            ($hotel['is_adults_only'] ?? 'N') === 'Y'
+            ($hotel['is_adults_only'] ?? 'N') === 'Y',
         );
 
         if (empty($groupCodes)) {
@@ -428,11 +429,13 @@ class SphinxFeatureAssigner implements SphinxFeatureAssignerInterface
         }
 
         $variantId = (int) db_get_field(
-            "SELECT pf.variant_id FROM ?:product_feature_variant_descriptions pf
+            'SELECT pf.variant_id FROM ?:product_feature_variant_descriptions pf
              WHERE pf.variant = ?s AND pf.lang_code = ?s
              AND pf.variant_id IN (SELECT variant_id FROM ?:product_feature_variants WHERE feature_id = ?i)
-             LIMIT 1",
-            $name, CART_LANGUAGE, $featureId
+             LIMIT 1',
+            $name,
+            CART_LANGUAGE,
+            $featureId,
         );
 
         if ($variantId <= 0) {
@@ -464,8 +467,9 @@ class SphinxFeatureAssigner implements SphinxFeatureAssignerInterface
 
         if ($variantId > 0 && !empty($mapping['map_id'])) {
             db_query(
-                "UPDATE ?:travel_feature_map SET cscart_variant_id = ?i WHERE map_id = ?i",
-                $variantId, (int) $mapping['map_id']
+                'UPDATE ?:travel_feature_map SET cscart_variant_id = ?i WHERE map_id = ?i',
+                $variantId,
+                (int) $mapping['map_id'],
             );
             FeatureMapper::clearCache();
         }

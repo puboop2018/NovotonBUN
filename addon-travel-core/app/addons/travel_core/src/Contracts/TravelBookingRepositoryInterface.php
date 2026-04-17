@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Tygh\Addons\TravelCore\Contracts;
@@ -28,11 +29,11 @@ interface TravelBookingRepositoryInterface
     /**
      * Get paginated bookings with filter condition.
      *
-     * @param string $condition  SQL condition fragment (must be pre-quoted via db_quote)
+     * @param string $condition SQL condition fragment (must be pre-quoted via db_quote)
      * @param string $sortColumn Safe sort column expression (e.g. 'tb.created_at')
-     * @param string $sortOrder  'ASC' or 'DESC'
-     * @param int    $offset     Pagination offset
-     * @param int    $limit      Items per page
+     * @param string $sortOrder 'ASC' or 'DESC'
+     * @param int $offset Pagination offset
+     * @param int $limit Items per page
      *
      * @return array{items: array<int, array<string, mixed>>, total: int}
      */

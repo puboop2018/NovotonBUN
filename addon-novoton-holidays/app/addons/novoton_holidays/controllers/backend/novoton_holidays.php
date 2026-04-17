@@ -21,6 +21,8 @@ use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\NovotonApi;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Services\Container;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
@@ -81,6 +83,9 @@ foreach ($include_map as $entry) {
 // CS-Cart then renders views/novoton_holidays/{mode}.tpl
 // ============================================================================
 
+/** @var \Smarty $view */
+$view = Tygh::$app['view'];
+
 // ============================================================================
 // POST HANDLERS
 // ============================================================================
@@ -96,7 +101,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $clean_excluded = [];
         if (is_array($excluded)) {
             foreach ($excluded as $resort) {
-                $resort = trim($resort);
+                $resort = trim(TypeCoerce::toString($resort));
                 if (!empty($resort)) {
                     $clean_excluded[] = $resort;
                 }
@@ -179,7 +184,7 @@ if ($mode === 'recompute_calendar_prices') {
  */
 if ($mode === 'add_hotels_as_products') {
     try {
-        $country = (string) preg_replace('/[^A-Z\s]/', '', strtoupper($_REQUEST['country'] ?? 'BULGARIA'));
+        $country = (string) preg_replace('/[^A-Z\s]/', '', strtoupper(RequestCoerce::string($_REQUEST, 'country', 'BULGARIA')));
 
         $hotelRepo = Container::getInstance()->hotelRepository();
 
@@ -206,12 +211,12 @@ if ($mode === 'add_hotels_as_products') {
 
         $available_countries = ConfigProvider::getSelectedCountries();
 
-        Tygh::$app['view']->assign('country', $country);
-        Tygh::$app['view']->assign('stats', $stats);
-        Tygh::$app['view']->assign('resorts', $resorts);
-        Tygh::$app['view']->assign('categories', $categories);
-        Tygh::$app['view']->assign('languages', $languages);
-        Tygh::$app['view']->assign('available_countries', $available_countries);
+        $view->assign('country', $country);
+        $view->assign('stats', $stats);
+        $view->assign('resorts', $resorts);
+        $view->assign('categories', $categories);
+        $view->assign('languages', $languages);
+        $view->assign('available_countries', $available_countries);
     } catch (\Throwable $e) {
         fn_set_notification('E', __('error'), 'Add Hotels as Products error: ' . $e->getMessage());
         fn_log_event('general', 'runtime', ['message' => 'Novoton: add_hotels_as_products failed: ' . $e->getMessage() . ' at ' . $e->getFile() . ':' . $e->getLine()]);
@@ -227,8 +232,9 @@ if ($mode === 'view_hotels_to_add') {
         return [CONTROLLER_STATUS_DENIED];
     }
 
-    $country = (string) preg_replace('/[^A-Z\s]/', '', strtoupper($_REQUEST['country'] ?? 'BULGARIA'));
-    $filter = in_array($_REQUEST['filter'] ?? '', ['prices', 'packages']) ? $_REQUEST['filter'] : 'prices';
+    $country = (string) preg_replace('/[^A-Z\s]/', '', strtoupper(RequestCoerce::string($_REQUEST, 'country', 'BULGARIA')));
+    $filter_raw = RequestCoerce::string($_REQUEST, 'filter');
+    $filter = in_array($filter_raw, ['prices', 'packages'], true) ? $filter_raw : 'prices';
 
     $hotelRepo = Container::getInstance()->hotelRepository();
 
@@ -243,13 +249,13 @@ if ($mode === 'view_hotels_to_add') {
 
     $countries = $hotelRepo->getCountriesWithPriceCounts();
 
-    Tygh::$app['view']->assign('hotels', $hotels);
-    Tygh::$app['view']->assign('country', $country);
-    Tygh::$app['view']->assign('filter', $filter);
-    Tygh::$app['view']->assign('stats', $stats);
-    Tygh::$app['view']->assign('countries', $countries);
-    Tygh::$app['view']->assign('in_cart_count', $stats['with_product']);
-    Tygh::$app['view']->assign('current_year', date('Y'));
+    $view->assign('hotels', $hotels);
+    $view->assign('country', $country);
+    $view->assign('filter', $filter);
+    $view->assign('stats', $stats);
+    $view->assign('countries', $countries);
+    $view->assign('in_cart_count', $stats['with_product']);
+    $view->assign('current_year', date('Y'));
 }
 
 /**
@@ -269,7 +275,7 @@ if ($mode === 'list_facilities') {
     $feature_type_options = [];
     foreach ($facility_feature_types as $ft) {
         $settingKey = 'addons.travel_core.feature_id_' . $ft;
-        $featureId = (int) Registry::get($settingKey);
+        $featureId = TypeCoerce::toInt(Registry::get($settingKey));
         $label = ucwords(str_replace('_', ' ', $ft));
         if ($featureId > 0) {
             $featureName = db_get_field(
@@ -277,7 +283,7 @@ if ($mode === 'list_facilities') {
                 $featureId, DESCR_SL
             );
             if ($featureName) {
-                $label .= " → {$featureName} #{$featureId}";
+                $label .= ' → ' . TypeCoerce::toString($featureName) . " #{$featureId}";
             } else {
                 $label .= " → #{$featureId}";
             }
@@ -287,10 +293,10 @@ if ($mode === 'list_facilities') {
         $feature_type_options[$ft] = $label;
     }
 
-    Tygh::$app['view']->assign('facilities', $facilities);
-    Tygh::$app['view']->assign('facilities_count', $count);
-    Tygh::$app['view']->assign('last_sync', $last_sync);
-    Tygh::$app['view']->assign('feature_type_options', $feature_type_options);
+    $view->assign('facilities', $facilities);
+    $view->assign('facilities_count', $count);
+    $view->assign('last_sync', $last_sync);
+    $view->assign('feature_type_options', $feature_type_options);
 }
 
 // ============================================================================
@@ -305,13 +311,13 @@ if ($mode === 'room_price') {
         return [CONTROLLER_STATUS_DENIED];
     }
 
-    $hotel_id = $_REQUEST['hotel_id'] ?? '';
-    $check_in = $_REQUEST['check_in'] ?? date('Y-m-d', strtotime('+' . Constants::DEFAULT_CHECKIN_DAYS_AHEAD . ' days'));
-    $check_out = $_REQUEST['check_out'] ?? date('Y-m-d', strtotime('+' . (Constants::DEFAULT_CHECKIN_DAYS_AHEAD + Constants::DEFAULT_STAY_NIGHTS) . ' days'));
+    $hotel_id = RequestCoerce::string($_REQUEST, 'hotel_id');
+    $check_in = RequestCoerce::string($_REQUEST, 'check_in', date('Y-m-d', strtotime('+' . Constants::DEFAULT_CHECKIN_DAYS_AHEAD . ' days')));
+    $check_out = RequestCoerce::string($_REQUEST, 'check_out', date('Y-m-d', strtotime('+' . (Constants::DEFAULT_CHECKIN_DAYS_AHEAD + Constants::DEFAULT_STAY_NIGHTS) . ' days')));
 
-    Tygh::$app['view']->assign('hotel_id', $hotel_id);
-    Tygh::$app['view']->assign('check_in', $check_in);
-    Tygh::$app['view']->assign('check_out', $check_out);
+    $view->assign('hotel_id', $hotel_id);
+    $view->assign('check_in', $check_in);
+    $view->assign('check_out', $check_out);
 
     if (!empty($hotel_id) && !empty($_REQUEST['check'])) {
         try {
@@ -321,18 +327,18 @@ if ($mode === 'room_price') {
                 'hotel_id' => $hotel_id,
                 'check_in' => $check_in,
                 'check_out' => $check_out,
-                'adults' => (int)($_REQUEST['adults'] ?? 2),
-                'children' => is_array($_REQUEST['children'] ?? []) ? ($_REQUEST['children'] ?? []) : []
+                'adults' => RequestCoerce::int($_REQUEST, 'adults', 2),
+                'children' => RequestCoerce::list($_REQUEST, 'children'),
             ];
 
             $result = $api->pricing()->getRoomPrice($params);
 
-            Tygh::$app['view']->assign('result', $result);
-            Tygh::$app['view']->assign('last_request', $api->getLastRequestFormatted());
-            Tygh::$app['view']->assign('last_response', $api->getLastResponse());
+            $view->assign('result', $result);
+            $view->assign('last_request', $api->getLastRequestFormatted());
+            $view->assign('last_response', $api->getLastResponse());
 
         } catch (\Throwable $e) {
-            Tygh::$app['view']->assign('error', $e->getMessage());
+            $view->assign('error', $e->getMessage());
         }
     }
 }
@@ -345,16 +351,16 @@ if ($mode === 'room_price') {
  * Mode: test_hotel_request
  */
 if ($mode === 'test_hotel_request') {
-    $hotel_id = $_REQUEST['hotel_id'] ?? '';
+    $hotel_id = RequestCoerce::string($_REQUEST, 'hotel_id');
 
-    Tygh::$app['view']->assign('hotel_id', htmlspecialchars($hotel_id, ENT_QUOTES, 'UTF-8'));
-    Tygh::$app['view']->assign('package_name', htmlspecialchars($_REQUEST['package_name'] ?? '', ENT_QUOTES, 'UTF-8'));
-    Tygh::$app['view']->assign('check_in', htmlspecialchars($_REQUEST['check_in'] ?? '', ENT_QUOTES, 'UTF-8'));
-    Tygh::$app['view']->assign('check_out', htmlspecialchars($_REQUEST['check_out'] ?? '', ENT_QUOTES, 'UTF-8'));
-    Tygh::$app['view']->assign('adults', htmlspecialchars($_REQUEST['adults'] ?? '2', ENT_QUOTES, 'UTF-8'));
-    Tygh::$app['view']->assign('room_id', htmlspecialchars($_REQUEST['room_id'] ?? '', ENT_QUOTES, 'UTF-8'));
-    Tygh::$app['view']->assign('board_id', htmlspecialchars($_REQUEST['board_id'] ?? '', ENT_QUOTES, 'UTF-8'));
-    Tygh::$app['view']->assign('holder', htmlspecialchars($_REQUEST['holder'] ?? '', ENT_QUOTES, 'UTF-8'));
+    $view->assign('hotel_id', htmlspecialchars($hotel_id, ENT_QUOTES, 'UTF-8'));
+    $view->assign('package_name', htmlspecialchars(RequestCoerce::string($_REQUEST, 'package_name'), ENT_QUOTES, 'UTF-8'));
+    $view->assign('check_in', htmlspecialchars(RequestCoerce::string($_REQUEST, 'check_in'), ENT_QUOTES, 'UTF-8'));
+    $view->assign('check_out', htmlspecialchars(RequestCoerce::string($_REQUEST, 'check_out'), ENT_QUOTES, 'UTF-8'));
+    $view->assign('adults', htmlspecialchars(RequestCoerce::string($_REQUEST, 'adults', '2'), ENT_QUOTES, 'UTF-8'));
+    $view->assign('room_id', htmlspecialchars(RequestCoerce::string($_REQUEST, 'room_id'), ENT_QUOTES, 'UTF-8'));
+    $view->assign('board_id', htmlspecialchars(RequestCoerce::string($_REQUEST, 'board_id'), ENT_QUOTES, 'UTF-8'));
+    $view->assign('holder', htmlspecialchars(RequestCoerce::string($_REQUEST, 'holder'), ENT_QUOTES, 'UTF-8'));
 
     if (!empty($hotel_id)) {
         try {
@@ -367,13 +373,13 @@ if ($mode === 'test_hotel_request') {
 
             $hotel_desc = $hotels->getHotelDescription($hotel_id, 'UK', true);
 
-            Tygh::$app['view']->assign('hotel_info', $hotel_info);
-            Tygh::$app['view']->assign('hotel_desc', $hotel_desc);
-            Tygh::$app['view']->assign('last_request', $last_request);
-            Tygh::$app['view']->assign('last_response', $last_response);
+            $view->assign('hotel_info', $hotel_info);
+            $view->assign('hotel_desc', $hotel_desc);
+            $view->assign('last_request', $last_request);
+            $view->assign('last_response', $last_response);
 
         } catch (\Exception $e) {
-            Tygh::$app['view']->assign('error', $e->getMessage());
+            $view->assign('error', $e->getMessage());
         }
     }
 }
@@ -382,15 +388,15 @@ if ($mode === 'test_hotel_request') {
  * Mode: test_alternative_rs
  */
 if ($mode === 'test_alternative_rs') {
-    $hotel_id = $_REQUEST['hotel_id'] ?? '';
-    $id_num = $_REQUEST['id_num'] ?? '';
-    $check_in = $_REQUEST['check_in'] ?? date('Y-m-d', strtotime('+' . Constants::DEFAULT_CHECKIN_DAYS_AHEAD . ' days'));
-    $check_out = $_REQUEST['check_out'] ?? date('Y-m-d', strtotime('+' . (Constants::DEFAULT_CHECKIN_DAYS_AHEAD + Constants::DEFAULT_STAY_NIGHTS) . ' days'));
+    $hotel_id = RequestCoerce::string($_REQUEST, 'hotel_id');
+    $id_num = RequestCoerce::string($_REQUEST, 'id_num');
+    $check_in = RequestCoerce::string($_REQUEST, 'check_in', date('Y-m-d', strtotime('+' . Constants::DEFAULT_CHECKIN_DAYS_AHEAD . ' days')));
+    $check_out = RequestCoerce::string($_REQUEST, 'check_out', date('Y-m-d', strtotime('+' . (Constants::DEFAULT_CHECKIN_DAYS_AHEAD + Constants::DEFAULT_STAY_NIGHTS) . ' days')));
 
-    Tygh::$app['view']->assign('hotel_id', htmlspecialchars($hotel_id, ENT_QUOTES, 'UTF-8'));
-    Tygh::$app['view']->assign('id_num', htmlspecialchars($id_num, ENT_QUOTES, 'UTF-8'));
-    Tygh::$app['view']->assign('check_in', htmlspecialchars($check_in, ENT_QUOTES, 'UTF-8'));
-    Tygh::$app['view']->assign('check_out', htmlspecialchars($check_out, ENT_QUOTES, 'UTF-8'));
+    $view->assign('hotel_id', htmlspecialchars($hotel_id, ENT_QUOTES, 'UTF-8'));
+    $view->assign('id_num', htmlspecialchars($id_num, ENT_QUOTES, 'UTF-8'));
+    $view->assign('check_in', htmlspecialchars($check_in, ENT_QUOTES, 'UTF-8'));
+    $view->assign('check_out', htmlspecialchars($check_out, ENT_QUOTES, 'UTF-8'));
 
     if (!empty($_REQUEST['search']) && !empty($hotel_id)) {
         try {
@@ -400,17 +406,17 @@ if ($mode === 'test_alternative_rs') {
                 'hotel_id' => $hotel_id,
                 'check_in' => $check_in,
                 'check_out' => $check_out,
-                'adults' => (int)($_REQUEST['adults'] ?? 2),
-                'children' => (int)($_REQUEST['children'] ?? 0),
+                'adults' => RequestCoerce::int($_REQUEST, 'adults', 2),
+                'children' => RequestCoerce::int($_REQUEST, 'children', 0),
             ];
 
             $results = $api->availability()->searchAvailability($params);
 
-            Tygh::$app['view']->assign('results', $results);
-            Tygh::$app['view']->assign('last_request', $api->getLastRequestFormatted());
+            $view->assign('results', $results);
+            $view->assign('last_request', $api->getLastRequestFormatted());
 
         } catch (\Exception $e) {
-            Tygh::$app['view']->assign('error', $e->getMessage());
+            $view->assign('error', $e->getMessage());
         }
     }
 }
@@ -440,7 +446,7 @@ if ($mode === 'manage' || empty($mode)) {
             'with_packages' => $hotelRepo->count(['has_packages' => true]),
             'without_packages' => $hotelRepo->count(['no_packages' => true]),
         ],
-        'bookings' => $bookingRepo->getStats(),
+        'bookings' => (new \Tygh\Addons\NovotonHolidays\Services\BookingQueryService($bookingRepo))->getStats(),
         'by_country' => []
     ];
 
@@ -464,8 +470,8 @@ if ($mode === 'manage' || empty($mode)) {
         'resort_list' => $syncLogRepo->getLastSyncDate('resort_list'),
     ];
 
-    $cron_key = $addon_settings['cron_access_key'] ?? '';
-    $base_url = Registry::get('config.http_location') . '/';
+    $cron_key = TypeCoerce::toString($addon_settings['cron_access_key'] ?? '');
+    $base_url = TypeCoerce::toString(Registry::get('config.http_location')) . '/';
 
     $cron_urls = [
         'hotel_info_batched' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=hotel_info_batched",
@@ -483,15 +489,15 @@ if ($mode === 'manage' || empty($mode)) {
 
     $xml_feed_url = $base_url . "index.php?dispatch=novoton_export.hotel_features_xml&access_key={$cron_key}";
 
-    Tygh::$app['view']->assign('stats', $stats);
-    Tygh::$app['view']->assign('countries', $countries);
-    Tygh::$app['view']->assign('recent_syncs', $recent_syncs);
-    Tygh::$app['view']->assign('last_syncs', $last_syncs);
-    Tygh::$app['view']->assign('cron_urls', $cron_urls);
-    Tygh::$app['view']->assign('cron_key', $cron_key);
-    Tygh::$app['view']->assign('xml_feed_url', $xml_feed_url);
-    Tygh::$app['view']->assign('addon_settings', $addon_settings);
-    Tygh::$app['view']->assign('addon_version', ConfigProvider::getVersion());
+    $view->assign('stats', $stats);
+    $view->assign('countries', $countries);
+    $view->assign('recent_syncs', $recent_syncs);
+    $view->assign('last_syncs', $last_syncs);
+    $view->assign('cron_urls', $cron_urls);
+    $view->assign('cron_key', $cron_key);
+    $view->assign('xml_feed_url', $xml_feed_url);
+    $view->assign('addon_settings', $addon_settings);
+    $view->assign('addon_version', ConfigProvider::getVersion());
 
     $resorts_by_country = [];
     $hidden_resorts = array_map('strtoupper', ConfigProvider::getHiddenResorts());
@@ -502,16 +508,16 @@ if ($mode === 'manage' || empty($mode)) {
         }
         $resorts_by_country[$resort['country']][] = $resort['city'];
     }
-    Tygh::$app['view']->assign('resorts_by_country', $resorts_by_country);
+    $view->assign('resorts_by_country', $resorts_by_country);
 
     $excluded_resorts = [];
     if (!empty($addon_settings['excluded_resorts'])) {
-        $excluded_resorts = json_decode($addon_settings['excluded_resorts'], true);
+        $excluded_resorts = json_decode(TypeCoerce::toString($addon_settings['excluded_resorts']), true);
         if (!is_array($excluded_resorts)) {
             $excluded_resorts = [];
         }
     }
-    Tygh::$app['view']->assign('excluded_resorts', $excluded_resorts);
+    $view->assign('excluded_resorts', $excluded_resorts);
 }
 
 /**
@@ -521,18 +527,20 @@ if ($mode === 'hotels') {
     $hotelRepo = Container::getInstance()->hotelRepository();
 
     $filters = [];
-    if (!empty($_REQUEST['country'])) {
-        $filters['country'] = $_REQUEST['country'];
+    $req_country = RequestCoerce::string($_REQUEST, 'country');
+    if (!empty($req_country)) {
+        $filters['country'] = $req_country;
     }
-    if (!empty($_REQUEST['has_room_price'])) {
-        $filters['has_room_price'] = $_REQUEST['has_room_price'];
+    $req_has_room_price = RequestCoerce::string($_REQUEST, 'has_room_price');
+    if (!empty($req_has_room_price)) {
+        $filters['has_room_price'] = $req_has_room_price;
     }
     if (!empty($_REQUEST['has_product'])) {
         $filters['has_product'] = true;
     }
 
-    $items_per_page = Registry::get('settings.Appearance.admin_elements_per_page') ?: 30;
-    $page = (int)($_REQUEST['page'] ?? 1);
+    $items_per_page = TypeCoerce::toInt(Registry::get('settings.Appearance.admin_elements_per_page')) ?: 30;
+    $page = RequestCoerce::int($_REQUEST, 'page', 1);
     $offset = ($page - 1) * $items_per_page;
 
     $hotels = $hotelRepo->findAll($filters, $items_per_page, $offset);
@@ -540,19 +548,19 @@ if ($mode === 'hotels') {
 
     $countries = $hotelRepo->getCountries();
 
-    Tygh::$app['view']->assign('hotels', $hotels);
-    Tygh::$app['view']->assign('total', $total);
-    Tygh::$app['view']->assign('page', $page);
-    Tygh::$app['view']->assign('items_per_page', $items_per_page);
-    Tygh::$app['view']->assign('countries', $countries);
-    Tygh::$app['view']->assign('filters', $filters);
+    $view->assign('hotels', $hotels);
+    $view->assign('total', $total);
+    $view->assign('page', $page);
+    $view->assign('items_per_page', $items_per_page);
+    $view->assign('countries', $countries);
+    $view->assign('filters', $filters);
 }
 
 /**
  * Mode: view_hotel
  */
 if ($mode === 'view_hotel') {
-    $hotel_id = $_REQUEST['hotel_id'] ?? '';
+    $hotel_id = RequestCoerce::string($_REQUEST, 'hotel_id');
 
     if (empty($hotel_id)) {
         return [CONTROLLER_STATUS_REDIRECT, 'novoton_holidays.hotels'];
@@ -570,12 +578,14 @@ if ($mode === 'view_hotel') {
     $hotel['packages'] = $packageRepo->findForHotelDetail($hotel_id);
 
     if (!empty($hotel['hotel_data'])) {
-        $hotelData = json_decode($hotel['hotel_data'], true);
-        if (!empty($hotelData['rooms'])) {
-            $hotel['rooms'] = isset($hotelData['rooms']['IdRoom']) ? [$hotelData['rooms']] : $hotelData['rooms'];
+        $hotelData = TypeCoerce::toStringMap(json_decode(TypeCoerce::toString($hotel['hotel_data']), true));
+        $rooms = TypeCoerce::toStringMap($hotelData['rooms'] ?? []);
+        if (!empty($rooms)) {
+            $hotel['rooms'] = isset($rooms['IdRoom']) ? [$rooms] : TypeCoerce::toRowList($hotelData['rooms'] ?? []);
         }
-        if (!empty($hotelData['boards'])) {
-            $hotel['boards'] = isset($hotelData['boards']['IdBoard']) ? [$hotelData['boards']] : $hotelData['boards'];
+        $boards = TypeCoerce::toStringMap($hotelData['boards'] ?? []);
+        if (!empty($boards)) {
+            $hotel['boards'] = isset($boards['IdBoard']) ? [$boards] : TypeCoerce::toRowList($hotelData['boards'] ?? []);
         }
     }
 
@@ -584,7 +594,7 @@ if ($mode === 'view_hotel') {
     $bookingRepo = Container::getInstance()->bookingRepository();
     $bookings = $bookingRepo->findByHotelId($hotel_id);
 
-    Tygh::$app['view']->assign('hotel', $hotel);
-    Tygh::$app['view']->assign('facilities', $facilities);
-    Tygh::$app['view']->assign('bookings', $bookings);
+    $view->assign('hotel', $hotel);
+    $view->assign('facilities', $facilities);
+    $view->assign('bookings', $bookings);
 }

@@ -23,6 +23,8 @@ use Tygh\Registry;
 use Tygh\Addons\TravelCore\TravelConstants;
 use Tygh\Addons\TravelCore\Services\TravelProviderRegistry;
 use Tygh\Addons\TravelCore\Repository\TravelBookingRepository;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
@@ -46,7 +48,7 @@ if (fn_allowed_for('MULTIVENDOR') || (defined('RESTRICTED_ADMIN') && RESTRICTED_
  */
 function _travel_bookings_enrich(array $booking): array
 {
-    $providerName = $booking['provider'] ?? '';
+    $providerName = TypeCoerce::toString($booking['provider'] ?? '');
     if (empty($providerName)) {
         return $booking;
     }
@@ -56,7 +58,7 @@ function _travel_bookings_enrich(array $booking): array
         return $booking;
     }
 
-    $providerBookingId = (string) ($booking['provider_booking_id'] ?? $booking['booking_id'] ?? '');
+    $providerBookingId = TypeCoerce::toString($booking['provider_booking_id'] ?? $booking['booking_id'] ?? '');
     if (empty($providerBookingId)) {
         return $booking;
     }
@@ -77,14 +79,14 @@ function _travel_bookings_enrich(array $booking): array
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($mode === 'bulk_check_status') {
-        $provider = $_REQUEST['provider'] ?? '';
+        $provider = RequestCoerce::string($_REQUEST, 'provider');
         if (!empty($provider)) {
             $providerInfo = TravelProviderRegistry::get($provider);
             if ($providerInfo && !empty($providerInfo['status_sync_callback'])) {
                 $result = call_user_func($providerInfo['status_sync_callback']);
                 if (is_array($result)) {
-                    $checked = $result['checked'] ?? $result['processed'] ?? 0;
-                    $changed = $result['changed'] ?? $result['updated'] ?? 0;
+                    $checked = TypeCoerce::toString($result['checked'] ?? $result['processed'] ?? 0);
+                    $changed = TypeCoerce::toString($result['changed'] ?? $result['updated'] ?? 0);
                     fn_set_notification('N', __('notice'),
                         "Status sync for {$provider}: {$checked} checked, {$changed} changed."
                     );
@@ -97,27 +99,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if ($mode === 'check_status') {
-        $booking_id = (int)($_REQUEST['booking_id'] ?? 0);
+        $booking_id = RequestCoerce::int($_REQUEST, 'booking_id');
         if ($booking_id > 0) {
             $booking = $bookingRepo->getProviderInfo($booking_id);
             if ($booking) {
-                $providerInfo = TravelProviderRegistry::get($booking['provider']);
+                $bookingProvider = TypeCoerce::toString($booking['provider'] ?? '');
+                $providerInfo = TravelProviderRegistry::get($bookingProvider);
                 try {
                     if ($providerInfo && !empty($providerInfo['single_status_callback'])) {
                         $result = call_user_func($providerInfo['single_status_callback'], $booking_id);
-                        if (!empty($result['changed'])) {
-                            fn_set_notification('N', __('notice'), "Status updated: {$result['old_status']} → {$result['new_status']}");
+                        $resultMap = is_array($result) ? $result : [];
+                        if (!empty($resultMap['changed'])) {
+                            $oldStatus = TypeCoerce::toString($resultMap['old_status'] ?? '');
+                            $newStatus = TypeCoerce::toString($resultMap['new_status'] ?? '');
+                            fn_set_notification('N', __('notice'), "Status updated: {$oldStatus} → {$newStatus}");
                         } else {
                             fn_set_notification('N', __('notice'), 'No status change detected.');
                         }
                     } else {
                         // Fallback: try BookingAdminProvider directly
-                        $adminProvider = TravelProviderRegistry::getBookingAdminProvider($booking['provider']);
+                        $adminProvider = TravelProviderRegistry::getBookingAdminProvider($bookingProvider);
                         if ($adminProvider) {
-                            $pbId = (string) ($booking['provider_booking_id'] ?? $booking_id);
+                            $pbId = TypeCoerce::toString($booking['provider_booking_id'] ?? $booking_id);
                             $result = $adminProvider->checkStatus($pbId);
                             if (!empty($result['changed'])) {
-                                fn_set_notification('N', __('notice'), "Status updated: {$result['old_status']} → {$result['new_status']}");
+                                $oldStatus = $result['old_status'];
+                                $newStatus = $result['new_status'];
+                                fn_set_notification('N', __('notice'), "Status updated: {$oldStatus} → {$newStatus}");
                             } else {
                                 fn_set_notification('N', __('notice'), $result['error'] ?? 'No status change detected.');
                             }
@@ -138,12 +146,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Provider-specific actions delegated via BookingAdminProviderInterface::handleAction()
     if ($mode === 'provider_action') {
-        $provider = $_REQUEST['provider'] ?? '';
-        $providerAction = $_REQUEST['provider_action'] ?? '';
+        $provider = RequestCoerce::string($_REQUEST, 'provider');
+        $providerAction = RequestCoerce::string($_REQUEST, 'provider_action');
 
         if (!empty($provider) && !empty($providerAction)) {
             $adminProvider = TravelProviderRegistry::getBookingAdminProvider($provider);
             if ($adminProvider !== null) {
+                /** @var array<string, mixed> $_REQUEST */
                 $result = $adminProvider->handleAction($providerAction, $_REQUEST);
 
                 if (!empty($result['notification'])) {
@@ -167,16 +176,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 if ($mode === 'manage') {
     // Filters
     $params = [
-        'provider'       => $_REQUEST['provider'] ?? '',
-        'status'         => $_REQUEST['status'] ?? '',
-        'order_id'       => (int)($_REQUEST['order_id'] ?? 0),
-        'hotel_name'     => $_REQUEST['hotel_name'] ?? '',
-        'date_from'      => $_REQUEST['date_from'] ?? '',
-        'date_to'        => $_REQUEST['date_to'] ?? '',
-        'sort_by'        => $_REQUEST['sort_by'] ?? 'created_at',
-        'sort_order'     => ($_REQUEST['sort_order'] ?? 'desc') === 'asc' ? 'asc' : 'desc',
-        'page'           => (int)($_REQUEST['page'] ?? 1),
-        'items_per_page' => (int)($_REQUEST['items_per_page'] ?? 20),
+        'provider'       => RequestCoerce::string($_REQUEST, 'provider'),
+        'status'         => RequestCoerce::string($_REQUEST, 'status'),
+        'order_id'       => RequestCoerce::int($_REQUEST, 'order_id'),
+        'hotel_name'     => RequestCoerce::string($_REQUEST, 'hotel_name'),
+        'date_from'      => RequestCoerce::string($_REQUEST, 'date_from'),
+        'date_to'        => RequestCoerce::string($_REQUEST, 'date_to'),
+        'sort_by'        => RequestCoerce::string($_REQUEST, 'sort_by', 'created_at'),
+        'sort_order'     => RequestCoerce::string($_REQUEST, 'sort_order', 'desc') === 'asc' ? 'asc' : 'desc',
+        'page'           => RequestCoerce::int($_REQUEST, 'page', 1),
+        'items_per_page' => RequestCoerce::int($_REQUEST, 'items_per_page', 20),
     ];
 
     $condition = '';
@@ -238,15 +247,17 @@ if ($mode === 'manage') {
     // Sort order toggle for column headers
     $sort_order_toggle = ($params['sort_order'] === 'asc') ? 'desc' : 'asc';
 
-    Tygh::$app['view']->assign('bookings', $bookings);
-    Tygh::$app['view']->assign('search', $params);
-    Tygh::$app['view']->assign('total_items', $total);
-    Tygh::$app['view']->assign('providers', $providers);
-    Tygh::$app['view']->assign('statuses', $statuses);
-    Tygh::$app['view']->assign('sort_order_toggle', $sort_order_toggle);
+    /** @var \Smarty $view */
+    $view = Tygh::$app['view'];
+    $view->assign('bookings', $bookings);
+    $view->assign('search', $params);
+    $view->assign('total_items', $total);
+    $view->assign('providers', $providers);
+    $view->assign('statuses', $statuses);
+    $view->assign('sort_order_toggle', $sort_order_toggle);
 
 } elseif ($mode === 'view') {
-    $booking_id = (int)($_REQUEST['booking_id'] ?? 0);
+    $booking_id = RequestCoerce::int($_REQUEST, 'booking_id');
 
     if (empty($booking_id)) {
         return [CONTROLLER_STATUS_NO_PAGE];
@@ -262,22 +273,26 @@ if ($mode === 'manage') {
     $booking = _travel_bookings_enrich($booking);
 
     // Decode guests JSON for display
-    if (!empty($booking['guests_json'])) {
-        $decoded = json_decode($booking['guests_json'], true);
+    $guestsJson = TypeCoerce::toString($booking['guests_json'] ?? '');
+    if (!empty($guestsJson)) {
+        $decoded = json_decode($guestsJson, true);
         if (is_array($decoded)) {
             $booking['guests_decoded'] = $decoded;
         }
     }
 
     // Get order info if linked
-    if (!empty($booking['order_id']) && (int) $booking['order_id'] > 0) {
-        $order = fn_get_order_info((int) $booking['order_id']);
-        Tygh::$app['view']->assign('order', $order);
+    $orderId = TypeCoerce::toInt($booking['order_id'] ?? 0);
+    if ($orderId > 0) {
+        $order = fn_get_order_info($orderId);
+        /** @var \Smarty $view */
+        $view = Tygh::$app['view'];
+        $view->assign('order', $order);
     }
 
     // Get provider-specific tabs
     $providerTabs = [];
-    $providerName = $booking['provider'] ?? '';
+    $providerName = TypeCoerce::toString($booking['provider'] ?? '');
     if (!empty($providerName)) {
         $adminProvider = TravelProviderRegistry::getBookingAdminProvider($providerName);
         if ($adminProvider !== null) {
@@ -285,6 +300,8 @@ if ($mode === 'manage') {
         }
     }
 
-    Tygh::$app['view']->assign('booking', $booking);
-    Tygh::$app['view']->assign('provider_tabs', $providerTabs);
+    /** @var \Smarty $view */
+    $view = Tygh::$app['view'];
+    $view->assign('booking', $booking);
+    $view->assign('provider_tabs', $providerTabs);
 }

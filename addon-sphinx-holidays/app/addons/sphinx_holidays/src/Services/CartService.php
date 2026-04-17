@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays\Services;
@@ -34,9 +35,14 @@ final class CartService implements CartServiceInterface
         $rateLimitId = !empty($auth['user_id']) ? (string) $auth['user_id'] : (string) session_id();
 
         if (!$security->checkBookingRateLimit($rateLimitId)) {
-            fn_set_notification('E', __('error'),
-                __('sphinx_holidays.rate_limit_exceeded',
-                    ['[default]' => 'Too many booking requests. Please try again later.']));
+            fn_set_notification(
+                'E',
+                __('error'),
+                __(
+                    'sphinx_holidays.rate_limit_exceeded',
+                    ['[default]' => 'Too many booking requests. Please try again later.'],
+                ),
+            );
             return [CONTROLLER_STATUS_REDIRECT, $errorRedirect];
         }
 
@@ -55,9 +61,14 @@ final class CartService implements CartServiceInterface
         $pending = $repo->findPendingDuplicateByOffer($offerId, TravelConstants::STATUS_PENDING);
 
         if ($pending !== null) {
-            fn_set_notification('W', __('warning'),
-                __('sphinx_holidays.duplicate_booking',
-                    ['[default]' => 'A booking for this offer is already pending.']));
+            fn_set_notification(
+                'W',
+                __('warning'),
+                __(
+                    'sphinx_holidays.duplicate_booking',
+                    ['[default]' => 'A booking for this offer is already pending.'],
+                ),
+            );
             return [CONTROLLER_STATUS_REDIRECT, $redirectUrl];
         }
 
@@ -112,8 +123,8 @@ final class CartService implements CartServiceInterface
 
         $productCode = ConfigProvider::getProductCodePrefix() . $entityId;
         return (int) db_get_field(
-            "SELECT product_id FROM ?:products WHERE product_code = ?s",
-            $productCode
+            'SELECT product_id FROM ?:products WHERE product_code = ?s',
+            $productCode,
         );
     }
 
@@ -171,13 +182,13 @@ final class CartService implements CartServiceInterface
         $cartPrice = $currencyService->convertFromApiCurrency($totalPrice, $primaryCurrency);
 
         $cart['products'][$cartId] = [
-            'product_id'     => $productId,
-            'amount'         => 1,
-            'price'          => $cartPrice,
-            'base_price'     => $cartPrice,
+            'product_id' => $productId,
+            'amount' => 1,
+            'price' => $cartPrice,
+            'base_price' => $cartPrice,
             'original_price' => $cartPrice,
-            'extra'          => $productExtra,
-            'stored_price'   => 'Y',
+            'extra' => $productExtra,
+            'stored_price' => 'Y',
         ];
 
         fn_calculate_cart_content($cart, $auth, 'S', true, 'F', true);
@@ -213,23 +224,23 @@ final class CartService implements CartServiceInterface
         $auth = Tygh::$app['session']['auth'] ?? [];
 
         return [
-            'order_id'      => 0,
-            'user_id'       => !empty($auth['user_id']) ? (int) $auth['user_id'] : 0,
-            'session_id'    => session_id(),
-            'product_id'    => $productId,
-            'hotel_id'      => $entityId,
-            'hotel_name'    => $hotelName,
-            'offer_id'      => $offerId,
-            'guest_name'    => $parsedGuests['guest_list'] ?? '',
-            'holder_name'   => $parsedGuests['holder_name'] ?? '',
-            'guest_email'   => $contact['email'] ?? '',
-            'guest_phone'   => $contact['phone'] ?? '',
-            'guests_data'   => json_encode($parsedGuests['guests_data'] ?? [], JSON_UNESCAPED_UNICODE),
-            'base_price'    => $basePrice,
-            'total_price'   => $totalPrice,
-            'currency'      => $currency,
-            'status'        => TravelConstants::STATUS_PENDING,
-            'api_response'  => json_encode($apiResponse, JSON_UNESCAPED_UNICODE),
+            'order_id' => 0,
+            'user_id' => !empty($auth['user_id']) ? (int) $auth['user_id'] : 0,
+            'session_id' => session_id(),
+            'product_id' => $productId,
+            'hotel_id' => $entityId,
+            'hotel_name' => $hotelName,
+            'offer_id' => $offerId,
+            'guest_name' => $parsedGuests['guest_list'] ?? '',
+            'holder_name' => $parsedGuests['holder_name'] ?? '',
+            'guest_email' => $contact['email'] ?? '',
+            'guest_phone' => $contact['phone'] ?? '',
+            'guests_data' => json_encode($parsedGuests['guests_data'] ?? [], JSON_UNESCAPED_UNICODE),
+            'base_price' => $basePrice,
+            'total_price' => $totalPrice,
+            'currency' => $currency,
+            'status' => TravelConstants::STATUS_PENDING,
+            'api_response' => json_encode($apiResponse, JSON_UNESCAPED_UNICODE),
         ];
     }
 }

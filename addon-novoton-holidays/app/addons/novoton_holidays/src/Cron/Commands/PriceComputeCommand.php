@@ -1,9 +1,12 @@
 <?php
+
 declare(strict_types=1);
+
 namespace Tygh\Addons\NovotonHolidays\Cron\Commands;
 
 use Tygh\Addons\NovotonHolidays\Cron\AbstractCronCommand;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
+use Tygh\Addons\NovotonHolidays\Services\PriceInfoFormatter;
 use Tygh\Addons\NovotonHolidays\Services\PriceInfoService;
 
 /**
@@ -53,9 +56,9 @@ class PriceComputeCommand extends AbstractCronCommand
      */
     public function execute(): array
     {
-        $this->output("Compute Price Metadata");
-        $this->output("======================");
-        $this->output("");
+        $this->output('Compute Price Metadata');
+        $this->output('======================');
+        $this->output('');
 
         $singleHotel = $this->getParam('hotel_id', '');
         if (!empty($singleHotel)) {
@@ -65,28 +68,28 @@ class PriceComputeCommand extends AbstractCronCommand
         $force = !empty($this->params['force']);
 
         if ($force) {
-            $this->output("Mode: FORCE (all packages with priceinfo_data)");
+            $this->output('Mode: FORCE (all packages with priceinfo_data)');
             $packages = db_get_array(
                 "SELECT id, hotel_id, package_id, priceinfo_data
                  FROM ?:novoton_hotel_packages
-                 WHERE priceinfo_data IS NOT NULL AND priceinfo_data != ''"
+                 WHERE priceinfo_data IS NOT NULL AND priceinfo_data != ''",
             );
         } else {
-            $this->output("Mode: incremental (needs_price_compute = Y)");
+            $this->output('Mode: incremental (needs_price_compute = Y)');
             $packages = db_get_array(
                 "SELECT id, hotel_id, package_id, priceinfo_data
                  FROM ?:novoton_hotel_packages
                  WHERE needs_price_compute = 'Y'
-                   AND priceinfo_data IS NOT NULL AND priceinfo_data != ''"
+                   AND priceinfo_data IS NOT NULL AND priceinfo_data != ''",
             );
         }
 
         $total = count($packages);
         $this->output("Packages to process: {$total}");
-        $this->output("");
+        $this->output('');
 
         if ($total === 0) {
-            $this->output("Nothing to do.");
+            $this->output('Nothing to do.');
             return ['success' => true, 'stats' => ['total' => 0, 'processed' => 0, 'errors' => 0]];
         }
 
@@ -95,11 +98,16 @@ class PriceComputeCommand extends AbstractCronCommand
         $dirtyHotels = [];
 
         foreach ($packages as $pkg) {
+            if (!is_array($pkg)) {
+                continue;
+            }
+            $pkgHotelId = PriceInfoFormatter::toScalar($pkg['hotel_id'] ?? '');
+            $pkgPackageId = PriceInfoFormatter::toScalar($pkg['package_id'] ?? '');
             try {
-                $priceinfo = json_decode($pkg['priceinfo_data'], true);
-                if (empty($priceinfo)) {
+                $priceinfo = json_decode(PriceInfoFormatter::toScalar($pkg['priceinfo_data'] ?? ''), true);
+                if (empty($priceinfo) || !is_array($priceinfo)) {
                     $errors++;
-                    $this->output("  ERROR [{$pkg['hotel_id']}/{$pkg['package_id']}]: invalid JSON");
+                    $this->output("  ERROR [{$pkgHotelId}/{$pkgPackageId}]: invalid JSON");
                     continue;
                 }
 
@@ -117,14 +125,14 @@ class PriceComputeCommand extends AbstractCronCommand
                     $minPrice,
                     $seasonsCount,
                     $hasEarlyBooking,
-                    (int) $pkg['id']
+                    PriceInfoFormatter::toInt($pkg['id'] ?? 0),
                 );
 
-                $dirtyHotels[$pkg['hotel_id']] = true;
+                $dirtyHotels[$pkgHotelId] = true;
                 $processed++;
             } catch (\Throwable $e) {
                 $errors++;
-                $this->output("  ERROR [{$pkg['hotel_id']}/{$pkg['package_id']}]: " . $e->getMessage());
+                $this->output("  ERROR [{$pkgHotelId}/{$pkgPackageId}]: " . $e->getMessage());
             }
 
             if (($processed + $errors) % 200 === 0) {
@@ -137,7 +145,7 @@ class PriceComputeCommand extends AbstractCronCommand
         // Recompute calendar prices once per affected hotel
         $hotelCount = count($dirtyHotels);
         if ($hotelCount > 0) {
-            $this->output("");
+            $this->output('');
             $this->output("Recomputing calendar prices for {$hotelCount} hotels...");
             $calErrors = 0;
             foreach (array_keys($dirtyHotels) as $hotelId) {
@@ -153,7 +161,7 @@ class PriceComputeCommand extends AbstractCronCommand
             }
 
             // Update CS-Cart product prices from computed min_price
-            $this->output("Updating product catalog prices...");
+            $this->output('Updating product catalog prices...');
             $priceUpdated = 0;
             foreach (array_keys($dirtyHotels) as $hotelId) {
                 try {
@@ -168,7 +176,7 @@ class PriceComputeCommand extends AbstractCronCommand
         }
 
         $duration = round(microtime(true) - $this->startTime, 1);
-        $this->output("");
+        $this->output('');
         $this->output("Done in {$duration}s: {$processed} computed, {$errors} errors, {$hotelCount} hotels recalculated");
 
         $this->logToSyncTable('compute_prices', $processed, $errors);
@@ -197,11 +205,11 @@ class PriceComputeCommand extends AbstractCronCommand
             "SELECT id, hotel_id, package_id, priceinfo_data
              FROM ?:novoton_hotel_packages
              WHERE hotel_id = ?s AND priceinfo_data IS NOT NULL AND priceinfo_data != ''",
-            $hotelId
+            $hotelId,
         );
 
         if (empty($packages)) {
-            $this->output("No packages with priceinfo_data found.");
+            $this->output('No packages with priceinfo_data found.');
             return ['success' => true, 'stats' => ['hotel_id' => $hotelId, 'processed' => 0]];
         }
 
@@ -209,9 +217,12 @@ class PriceComputeCommand extends AbstractCronCommand
         $errors = 0;
 
         foreach ($packages as $pkg) {
+            if (!is_array($pkg)) {
+                continue;
+            }
             try {
-                $priceinfo = json_decode($pkg['priceinfo_data'], true);
-                if (empty($priceinfo)) {
+                $priceinfo = json_decode(PriceInfoFormatter::toScalar($pkg['priceinfo_data'] ?? ''), true);
+                if (empty($priceinfo) || !is_array($priceinfo)) {
                     $errors++;
                     continue;
                 }
@@ -230,27 +241,28 @@ class PriceComputeCommand extends AbstractCronCommand
                     $minPrice,
                     $seasonsCount,
                     $hasEarlyBooking,
-                    (int) $pkg['id']
+                    PriceInfoFormatter::toInt($pkg['id'] ?? 0),
                 );
 
                 $processed++;
             } catch (\Throwable $e) {
                 $errors++;
-                $this->output("  ERROR [{$pkg['package_id']}]: " . $e->getMessage());
+                $pkgId = PriceInfoFormatter::toScalar($pkg['package_id'] ?? '');
+                $this->output("  ERROR [{$pkgId}]: " . $e->getMessage());
             }
         }
 
         // Recompute calendar prices for this hotel
         try {
             PriceInfoService::precomputeCalendarPrices($hotelId);
-            $this->output("Calendar prices recomputed.");
+            $this->output('Calendar prices recomputed.');
         } catch (\Throwable $e) {
-            $this->output("Calendar ERROR: " . $e->getMessage());
+            $this->output('Calendar ERROR: ' . $e->getMessage());
         }
 
         // Update CS-Cart product price
         if (self::updateProductPrice($hotelId)) {
-            $this->output("Product catalog price updated.");
+            $this->output('Product catalog price updated.');
         }
 
         $this->output("OK: {$processed} packages computed, {$errors} errors");
@@ -273,24 +285,25 @@ class PriceComputeCommand extends AbstractCronCommand
      */
     public static function updateProductPrice(string $hotelId): bool
     {
+        /** @var array<string, mixed>|null $row */
         $row = db_get_row(
-            "SELECT h.product_id, MIN(p.min_price) AS lowest_price
+            'SELECT h.product_id, MIN(p.min_price) AS lowest_price
              FROM ?:novoton_hotels h
              JOIN ?:novoton_hotel_packages p ON p.hotel_id = h.hotel_id
              WHERE h.hotel_id = ?s AND p.min_price > 0 AND h.product_id > 0
-             GROUP BY h.product_id",
-            $hotelId
+             GROUP BY h.product_id',
+            $hotelId,
         );
 
-        if (empty($row) || empty($row['product_id']) || empty($row['lowest_price'])) {
+        if (empty($row) || !is_array($row) || empty($row['product_id']) || empty($row['lowest_price'])) {
             return false;
         }
 
         $commission = ConfigProvider::getCommission();
-        $price = (float) $row['lowest_price'] * (1 + ($commission / 100));
+        $price = PriceInfoFormatter::toFloat($row['lowest_price']) * (1 + ($commission / 100));
         $price = ConfigProvider::isRoundPrices() ? round($price) : round($price, 2);
 
-        db_query("UPDATE ?:products SET price = ?d WHERE product_id = ?i", $price, (int) $row['product_id']);
+        db_query('UPDATE ?:products SET price = ?d WHERE product_id = ?i', $price, PriceInfoFormatter::toInt($row['product_id']));
 
         return true;
     }
@@ -322,15 +335,18 @@ class PriceComputeCommand extends AbstractCronCommand
         }
 
         foreach ($seasonPrices as $sp) {
-            $idAge = (string) ($sp['IdAge'] ?? '');
+            if (!is_array($sp)) {
+                continue;
+            }
+            $idAge = PriceInfoFormatter::toScalar($sp['IdAge'] ?? '');
 
             // Must contain ADULT (case-insensitive)
-            if (!str_contains(strtolower($idAge), strtolower('ADULT'))) {
+            if (!str_contains(strtolower($idAge), 'adult')) {
                 continue;
             }
 
             // Exclude supplementary "3 RD ADULT" / "3RD ADULT" rows
-            if (str_contains(strtolower($idAge), strtolower('3 RD')) || str_contains(strtolower($idAge), strtolower('3RD'))) {
+            if (str_contains(strtolower($idAge), '3 rd') || str_contains(strtolower($idAge), '3rd')) {
                 continue;
             }
 
@@ -340,14 +356,14 @@ class PriceComputeCommand extends AbstractCronCommand
                     continue;
                 }
 
-                $priceVal = (string) $sp[$priceKey];
+                $priceVal = PriceInfoFormatter::toScalar($sp[$priceKey]);
 
                 // Skip percentage values
                 if (str_contains($priceVal, '%')) {
                     continue;
                 }
 
-                $price = (float) $priceVal;
+                $price = PriceInfoFormatter::toFloat($priceVal);
                 if ($price > 0 && ($minPrice === null || $price < $minPrice)) {
                     $minPrice = $price;
                 }

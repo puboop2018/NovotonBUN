@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 namespace Tygh\Addons\NovotonHolidays\Cron\Commands;
 
 use Tygh\Addons\NovotonHolidays\Cron\AbstractCronCommand;
@@ -33,10 +35,12 @@ class RoomPriceCheckCommand extends AbstractCronCommand
         $country = strtoupper($this->getParam('country', ''));
         $check_out = date('Y-m-d', (int) strtotime($check_in . ' + ' . $nights . ' days'));
 
-        $this->output("Checking hotels with active prices...");
+        $this->output('Checking hotels with active prices...');
         $this->output("Check-in: {$check_in}, Check-out: {$check_out}, Nights: {$nights}, Limit: {$limit}");
-        if ($country) $this->output("Country: {$country}");
-        $this->output("");
+        if ($country) {
+            $this->output("Country: {$country}");
+        }
+        $this->output('');
 
         $conditions = $country ? ['country' => $country] : [];
         $hotels = $dbHelper->getHotelsForSync($conditions, $limit, ['hotel_id', 'hotel_name', 'country']);
@@ -52,7 +56,7 @@ class RoomPriceCheckCommand extends AbstractCronCommand
                 'check_in' => $check_in,
                 'check_out' => $check_out,
                 'adults' => 2,
-                'children' => 0
+                'children' => 0,
             ];
 
             $best_price = 0;
@@ -100,10 +104,10 @@ class RoomPriceCheckCommand extends AbstractCronCommand
             $withoutPricesCount += count($withoutPricesIds);
         }
 
-        $this->output("");
+        $this->output('');
         $this->output("Hotels WITH prices: {$withPricesCount}");
         $this->output("Hotels WITHOUT prices: {$withoutPricesCount}");
-        $this->output("Total checked: " . ($withPricesCount + $withoutPricesCount));
+        $this->output('Total checked: ' . ($withPricesCount + $withoutPricesCount));
 
         $stats = ['with_prices' => $withPricesCount, 'without_prices' => $withoutPricesCount];
         $this->logComplete('room_price', $stats);

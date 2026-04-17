@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 /**
  * Novoton PriceInfo Fee Calculator
  *
@@ -42,7 +44,7 @@ class FeeCalculator implements FeeCalculatorInterface
             'handling_fee' => 0,
             'company_fee' => 0,
             'total' => 0,
-            'details' => []
+            'details' => [],
         ];
 
         // Collect the set of distinct IdAge values present in season_price for
@@ -106,19 +108,29 @@ class FeeCalculator implements FeeCalculatorInterface
             '4' => 'CHD 12-17.99',
         ];
 
-        $priceinfo = $this->parser->getPriceinfo();
+        $priceinfo = $this->parser->getPriceinfo() ?? [];
         $seasonPrices = $priceinfo['season_price'] ?? [];
+        if (!is_array($seasonPrices)) {
+            $seasonPrices = [];
+        }
         if (isset($seasonPrices['IdRoom'])) {
             $seasonPrices = [$seasonPrices];
         }
 
         $ageTypes = [];
         foreach ($seasonPrices as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
             $rowRoom = PriceInfoFormatter::toScalar($row['IdRoom'] ?? '');
             $rowBoard = PriceInfoFormatter::toScalar($row['IdBoard'] ?? '');
 
-            if (!PriceInfoFormatter::matchRoom($rowRoom, $roomId)) continue;
-            if (!PriceInfoFormatter::matchBoard($rowBoard, $boardId)) continue;
+            if (!PriceInfoFormatter::matchRoom($rowRoom, $roomId)) {
+                continue;
+            }
+            if (!PriceInfoFormatter::matchBoard($rowBoard, $boardId)) {
+                continue;
+            }
 
             $rawIdAge = PriceInfoFormatter::toScalar($row['IdAge'] ?? '');
             if (!empty($row['fAge']) && is_string($row['fAge'])) {
@@ -139,30 +151,35 @@ class FeeCalculator implements FeeCalculatorInterface
      * Calculate extras_daily fees
      *
      * @param array<string, mixed> $seasonAgeTypes Resolved IdAge values from season_price for the booked room/board.
-     *                              Entries whose IdAge does not correlate are skipped.
+     *                                             Entries whose IdAge does not correlate are skipped.
      * @param array<string, mixed> $occupancy
      */
     private function calculateExtrasDaily(array $occupancy, string $checkIn, int $nights, array $seasonAgeTypes = []): float
     {
-        $priceinfo = $this->parser->getPriceinfo();
+        $priceinfo = $this->parser->getPriceinfo() ?? [];
         $extrasDaily = $priceinfo['extras_daily'] ?? [];
-        if (empty($extrasDaily)) return 0;
+        if (empty($extrasDaily) || !is_array($extrasDaily)) {
+            return 0.0;
+        }
 
         if (isset($extrasDaily['IdAge'])) {
             $extrasDaily = [$extrasDaily];
         }
 
-        $total = 0;
+        $total = 0.0;
         $checkInDate = new \DateTime($checkIn);
         $checkOutDate = clone $checkInDate;
         $checkOutDate->modify("+{$nights} days");
 
         foreach ($extrasDaily as $extra) {
-            $fromDate = $extra['FromDate'] ?? '';
-            $toDate = $extra['ToDate'] ?? '';
+            if (!is_array($extra)) {
+                continue;
+            }
+            $fromDate = PriceInfoFormatter::toScalar($extra['FromDate'] ?? '');
+            $toDate = PriceInfoFormatter::toScalar($extra['ToDate'] ?? '');
             $idAge = PriceInfoFormatter::toScalar($extra['IdAge'] ?? '');
-            $price = (float) ($extra['Price'] ?? 0);
-            $type = $extra['Type'] ?? 'Day';
+            $price = PriceInfoFormatter::toFloat($extra['Price'] ?? 0);
+            $type = PriceInfoFormatter::toScalar($extra['Type'] ?? 'Day');
 
             if (!PriceInfoFormatter::datesOverlap($checkIn, $checkOutDate->format('Y-m-d'), $fromDate, $toDate)) {
                 continue;
@@ -202,16 +219,18 @@ class FeeCalculator implements FeeCalculatorInterface
      * Calculate handling_fee
      *
      * @param array<string, mixed> $seasonAgeTypes Resolved IdAge values from season_price for the booked room/board.
-     *                              Only handling_fee entries whose IdAge correlates with one of these
-     *                              are considered.
+     *                                             Only handling_fee entries whose IdAge correlates with one of these
+     *                                             are considered.
      * @param array<string, mixed> $occupancy
      * @return array<string, mixed>
      */
     private function calculateHandlingFee(array $occupancy, string $checkIn, int $nights, array $seasonAgeTypes = []): array
     {
-        $priceinfo = $this->parser->getPriceinfo();
+        $priceinfo = $this->parser->getPriceinfo() ?? [];
         $handlingFees = $priceinfo['handling_fee'] ?? [];
-        if (empty($handlingFees)) return ['total' => 0, 'entries' => []];
+        if (empty($handlingFees) || !is_array($handlingFees)) {
+            return ['total' => 0, 'entries' => []];
+        }
 
         if (isset($handlingFees['Price1']) || isset($handlingFees['ToDays'])) {
             $handlingFees = [$handlingFees];
@@ -231,6 +250,9 @@ class FeeCalculator implements FeeCalculatorInterface
         $seasonAgeSet = array_map('strtoupper', array_map('trim', $seasonAgeTypes));
 
         foreach ($handlingFees as $idx => $fee) {
+            if (!is_array($fee)) {
+                continue;
+            }
             $fromDate = PriceInfoFormatter::toScalar($fee['FromDate'] ?? '');
             $toDate = PriceInfoFormatter::toScalar($fee['ToDate'] ?? '');
             $idAge = PriceInfoFormatter::toScalar($fee['IdAge'] ?? '');
@@ -282,7 +304,9 @@ class FeeCalculator implements FeeCalculatorInterface
                 $count = PriceInfoFormatter::countMatchingPersons($occupancy, $feeIdAge);
                 $countMethod = "matched '{$feeIdAge}'";
             } else {
-                $count = count($occupancy['adults']) + count($occupancy['children']);
+                $occAdults = is_array($occupancy['adults'] ?? null) ? $occupancy['adults'] : [];
+                $occChildren = is_array($occupancy['children'] ?? null) ? $occupancy['children'] : [];
+                $count = count($occAdults) + count($occChildren);
                 $countMethod = 'all_persons (empty IdAge)';
             }
 
@@ -316,31 +340,39 @@ class FeeCalculator implements FeeCalculatorInterface
      */
     private function calculateExtrasSingle(array $occupancy, string $checkIn, int $nights, string $roomId = ''): float
     {
-        $priceinfo = $this->parser->getPriceinfo();
+        $priceinfo = $this->parser->getPriceinfo() ?? [];
         $extrasSingle = $priceinfo['extras_single'] ?? [];
-        if (empty($extrasSingle)) return 0;
+        if (empty($extrasSingle) || !is_array($extrasSingle)) {
+            return 0.0;
+        }
 
-        if (count($occupancy['adults']) !== 1) return 0;
+        $occAdults = is_array($occupancy['adults'] ?? null) ? $occupancy['adults'] : [];
+        if (count($occAdults) !== 1) {
+            return 0.0;
+        }
 
-        if (!empty($roomId) && str_contains(strtolower($roomId), strtolower('SGL'))) {
-            return 0;
+        if (!empty($roomId) && str_contains(strtolower($roomId), 'sgl')) {
+            return 0.0;
         }
 
         if (isset($extrasSingle['Price'])) {
             $extrasSingle = [$extrasSingle];
         }
 
-        $total = 0;
+        $total = 0.0;
         $checkInDate = new \DateTime($checkIn);
         $checkOutDate = clone $checkInDate;
         $checkOutDate->modify("+{$nights} days");
 
         foreach ($extrasSingle as $extra) {
-            $fromDate = $extra['FromDate'] ?? '';
-            $toDate = $extra['ToDate'] ?? '';
-            $price = (float) ($extra['Price'] ?? 0);
-            $type = $extra['Type'] ?? 'Stay';
-            $idRoom = $extra['IdRoom'] ?? '';
+            if (!is_array($extra)) {
+                continue;
+            }
+            $fromDate = PriceInfoFormatter::toScalar($extra['FromDate'] ?? '');
+            $toDate = PriceInfoFormatter::toScalar($extra['ToDate'] ?? '');
+            $price = PriceInfoFormatter::toFloat($extra['Price'] ?? 0);
+            $type = PriceInfoFormatter::toScalar($extra['Type'] ?? 'Stay');
+            $idRoom = PriceInfoFormatter::toScalar($extra['IdRoom'] ?? '');
 
             if (!empty($idRoom) && !empty($roomId)) {
                 if (!PriceInfoFormatter::matchRoom($idRoom, $roomId)) {
@@ -375,25 +407,30 @@ class FeeCalculator implements FeeCalculatorInterface
      */
     private function calculateExtrasRooms(array $occupancy, string $checkIn, int $nights, string $roomId = ''): float
     {
-        $priceinfo = $this->parser->getPriceinfo();
+        $priceinfo = $this->parser->getPriceinfo() ?? [];
         $extrasRooms = $priceinfo['extras_rooms'] ?? [];
-        if (empty($extrasRooms)) return 0;
+        if (empty($extrasRooms) || !is_array($extrasRooms)) {
+            return 0.0;
+        }
 
         if (isset($extrasRooms['IdRoom']) || isset($extrasRooms['Price'])) {
             $extrasRooms = [$extrasRooms];
         }
 
-        $total = 0;
+        $total = 0.0;
         $checkInDate = new \DateTime($checkIn);
         $checkOutDate = clone $checkInDate;
         $checkOutDate->modify("+{$nights} days");
 
         foreach ($extrasRooms as $extra) {
-            $fromDate = $extra['FromDate'] ?? '';
-            $toDate = $extra['ToDate'] ?? '';
-            $price = (float) ($extra['Price'] ?? 0);
-            $type = $extra['Type'] ?? 'Day';
-            $idRoom = $extra['IdRoom'] ?? '';
+            if (!is_array($extra)) {
+                continue;
+            }
+            $fromDate = PriceInfoFormatter::toScalar($extra['FromDate'] ?? '');
+            $toDate = PriceInfoFormatter::toScalar($extra['ToDate'] ?? '');
+            $price = PriceInfoFormatter::toFloat($extra['Price'] ?? 0);
+            $type = PriceInfoFormatter::toScalar($extra['Type'] ?? 'Day');
+            $idRoom = PriceInfoFormatter::toScalar($extra['IdRoom'] ?? '');
 
             if (!empty($idRoom) && !empty($roomId)) {
                 if (!PriceInfoFormatter::matchRoom($idRoom, $roomId)) {
@@ -431,28 +468,35 @@ class FeeCalculator implements FeeCalculatorInterface
     private function calculateExtrasBoard(array $occupancy, string $checkIn, int $nights, string $boardId): float
     {
         // No board supplement when booking the base board (empty boardId).
-        if (empty($boardId)) return 0;
+        if (empty($boardId)) {
+            return 0;
+        }
 
-        $priceinfo = $this->parser->getPriceinfo();
+        $priceinfo = $this->parser->getPriceinfo() ?? [];
         $extrasBoard = $priceinfo['extras_board'] ?? [];
-        if (empty($extrasBoard)) return 0;
+        if (empty($extrasBoard) || !is_array($extrasBoard)) {
+            return 0.0;
+        }
 
         if (isset($extrasBoard['IdBoard']) || isset($extrasBoard['Price'])) {
             $extrasBoard = [$extrasBoard];
         }
 
-        $total = 0;
+        $total = 0.0;
         $checkInDate = new \DateTime($checkIn);
         $checkOutDate = clone $checkInDate;
         $checkOutDate->modify("+{$nights} days");
 
         foreach ($extrasBoard as $extra) {
-            $fromDate = $extra['FromDate'] ?? '';
-            $toDate = $extra['ToDate'] ?? '';
-            $price = (float) ($extra['Price'] ?? 0);
-            $type = $extra['Type'] ?? 'Day';
-            $idBoard = $extra['IdBoard'] ?? '';
-            $idAge = $extra['IdAge'] ?? '';
+            if (!is_array($extra)) {
+                continue;
+            }
+            $fromDate = PriceInfoFormatter::toScalar($extra['FromDate'] ?? '');
+            $toDate = PriceInfoFormatter::toScalar($extra['ToDate'] ?? '');
+            $price = PriceInfoFormatter::toFloat($extra['Price'] ?? 0);
+            $type = PriceInfoFormatter::toScalar($extra['Type'] ?? 'Day');
+            $idBoard = PriceInfoFormatter::toScalar($extra['IdBoard'] ?? '');
+            $idAge = PriceInfoFormatter::toScalar($extra['IdAge'] ?? '');
 
             if (!empty($idBoard)) {
                 if (strcasecmp($idBoard, $boardId) !== 0) {
@@ -469,9 +513,13 @@ class FeeCalculator implements FeeCalculatorInterface
             $personCount = 1;
             if (!empty($idAge)) {
                 $personCount = PriceInfoFormatter::countMatchingPersons($occupancy, $idAge);
-                if ($personCount === 0) continue;
+                if ($personCount === 0) {
+                    continue;
+                }
             } else {
-                $personCount = count($occupancy['adults']) + count($occupancy['children']);
+                $occAdults = is_array($occupancy['adults'] ?? null) ? $occupancy['adults'] : [];
+                $occChildren = is_array($occupancy['children'] ?? null) ? $occupancy['children'] : [];
+                $personCount = count($occAdults) + count($occChildren);
             }
 
             if ($type === 'Stay') {
@@ -496,17 +544,22 @@ class FeeCalculator implements FeeCalculatorInterface
      */
     private function calculateCompanyFee(string $roomId): float
     {
-        $priceinfo = $this->parser->getPriceinfo();
+        $priceinfo = $this->parser->getPriceinfo() ?? [];
         $companyFees = $priceinfo['company_fee'] ?? [];
-        if (empty($companyFees)) return 0;
+        if (empty($companyFees) || !is_array($companyFees)) {
+            return 0.0;
+        }
 
         if (isset($companyFees['Price']) || isset($companyFees['IdRoom'])) {
             $companyFees = [$companyFees];
         }
 
         foreach ($companyFees as $fee) {
-            $feeRoomId = $fee['IdRoom'] ?? '';
-            $price = (float) ($fee['Price'] ?? 0);
+            if (!is_array($fee)) {
+                continue;
+            }
+            $feeRoomId = PriceInfoFormatter::toScalar($fee['IdRoom'] ?? '');
+            $price = PriceInfoFormatter::toFloat($fee['Price'] ?? 0);
 
             if (empty($feeRoomId) || PriceInfoFormatter::matchRoom($feeRoomId, $roomId)) {
                 return $price;

@@ -17,10 +17,13 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 use Tygh\Tygh;
 use Tygh\Addons\SphinxHolidays\Services\Container;
 use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 
+/** @var \Smarty $view */
 $view = Tygh::$app['view'];
 
-$offer_id = trim($_REQUEST['offer_id'] ?? '');
+$offer_id = RequestCoerce::string($_REQUEST, 'offer_id');
 
 if (empty($offer_id)) {
     fn_set_notification('E', __('error'), __('sphinx_holidays.invalid_offer', ['[default]' => 'Invalid offer.']));
@@ -28,10 +31,10 @@ if (empty($offer_id)) {
 }
 
 // Carry forward search params for back navigation
-$adults = max(1, (int)($_REQUEST['adults'] ?? 2));
-$children = max(0, (int)($_REQUEST['children'] ?? 0));
-$children_ages_str = trim($_REQUEST['children_ages'] ?? '');
-$rooms = max(1, (int)($_REQUEST['rooms'] ?? 1));
+$adults = max(1, RequestCoerce::int($_REQUEST, 'adults', 2));
+$children = max(0, RequestCoerce::int($_REQUEST, 'children'));
+$children_ages_str = RequestCoerce::string($_REQUEST, 'children_ages');
+$rooms = max(1, RequestCoerce::int($_REQUEST, 'rooms', 1));
 
 try {
     $api = Container::getApi();
@@ -39,45 +42,50 @@ try {
     // Verify the offer — this returns full pricing, payment terms, cancellation fees
     $verifyResult = $api->verifyPackageOffer($offer_id);
 
-    if (empty($verifyResult) || empty($verifyResult['data'])) {
+    if (empty($verifyResult) || empty($verifyResult['data']) || !is_array($verifyResult['data'])) {
         fn_set_notification('W', __('warning'),
             __('sphinx_holidays.offer_unavailable', ['[default]' => 'This offer is no longer available.']));
         return [CONTROLLER_STATUS_REDIRECT, 'sphinx_booking.package_search'];
     }
 
+    /** @var array<string, mixed> $offer */
     $offer = $verifyResult['data'];
 
     // Apply commission
-    $sellingPrice = (float)($offer['pricing']['selling_price'] ?? 0);
+    /** @var array<string, mixed> $pricing */
+    $pricing = is_array($offer['pricing'] ?? null) ? $offer['pricing'] : [];
+    $sellingPrice = TypeCoerce::toFloat($pricing['selling_price'] ?? 0);
     $basePrice = $sellingPrice;
     $sellingPrice = Container::getCartService()->applyCommission($sellingPrice);
 
     // Parse hotel info
-    $hotel = $offer['hotel'] ?? [];
-    $hotelRooms = $hotel['rooms'] ?? [];
+    /** @var array<string, mixed> $hotel */
+    $hotel = is_array($offer['hotel'] ?? null) ? $offer['hotel'] : [];
+    $hotelRooms = is_array($hotel['rooms'] ?? null) ? $hotel['rooms'] : [];
 
     // Parse transport info
-    $flight = $offer['flight'] ?? null;
-    $bus = $offer['bus'] ?? [];
-    $transfers = $offer['transfers'] ?? [];
+    /** @var array<string, mixed>|null $flight */
+    $flight = is_array($offer['flight'] ?? null) ? $offer['flight'] : null;
+    $bus = is_array($offer['bus'] ?? null) ? $offer['bus'] : [];
+    $transfers = is_array($offer['transfers'] ?? null) ? $offer['transfers'] : [];
 
     // Determine transport type
     $transportType = 'hotel-only';
-    if (!empty($flight['outbound'])) {
+    if (is_array($flight) && !empty($flight['outbound'])) {
         $transportType = 'flight';
     } elseif (!empty($bus)) {
         $transportType = 'bus';
     }
 
     $view->assign('sphinx_package_booking', [
-        'offer_id' => $offer['offer_id'] ?? $offer_id,
-        'destination_name' => $offer['destination_name'] ?? '',
-        'hotel_id' => $hotel['id'] ?? '',
-        'hotel_name' => $hotel['name'] ?? '',
-        'check_in' => $hotel['check_in'] ?? '',
-        'check_out' => $hotel['check_out'] ?? '',
+        'offer_id' => TypeCoerce::toString($offer['offer_id'] ?? $offer_id),
+        'destination_name' => TypeCoerce::toString($offer['destination_name'] ?? ''),
+        'hotel_id' => TypeCoerce::toString($hotel['id'] ?? ''),
+        'hotel_name' => TypeCoerce::toString($hotel['name'] ?? ''),
+        'check_in' => TypeCoerce::toString($hotel['check_in'] ?? ''),
+        'check_out' => TypeCoerce::toString($hotel['check_out'] ?? ''),
         'rooms' => $hotelRooms,
-        'meal_type' => $hotel['meal_type_name'] ?? '',
+        'meal_type' => TypeCoerce::toString($hotel['meal_type_name'] ?? ''),
         'transport_type' => $transportType,
         'flight' => $flight,
         'bus' => $bus,
@@ -88,7 +96,7 @@ try {
         'num_rooms' => $rooms,
         'total_price' => $sellingPrice,
         'base_price' => $basePrice,
-        'currency' => $offer['pricing']['currency'] ?? ConfigProvider::getDefaultCurrency(),
+        'currency' => TypeCoerce::toString($pricing['currency'] ?? ConfigProvider::getDefaultCurrency()),
         'additional_services' => $offer['additional_services'] ?? [],
         'payment_terms' => $offer['payment_terms'] ?? [],
         'cancellation_fees' => $offer['cancellation_fees'] ?? [],

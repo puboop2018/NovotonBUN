@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 /**
  * Novoton Holidays - Alternative Request Repository
  *
@@ -11,19 +13,22 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Repository;
 
-use Tygh\Addons\NovotonHolidays\Constants;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+use Tygh\Addons\TravelCore\Repository\RowNarrowingTrait;
 use Tygh\Addons\TravelCore\TravelConstants;
 
 class AlternativeRequestRepository implements AlternativeRequestRepositoryInterface
 {
+    use RowNarrowingTrait;
+
     /**
      * Find request by ID.
      * @return array<string, mixed>|null
      */
     public function findById(int $request_id): ?array
     {
-        $row = db_get_row("SELECT * FROM ?:novoton_alternative_requests WHERE request_id = ?i", $request_id);
-        return $row ?: null;
+        $row = self::asRow(db_get_row('SELECT * FROM ?:novoton_alternative_requests WHERE request_id = ?i', $request_id));
+        return $row === [] ? null : $row;
     }
 
     /**
@@ -32,8 +37,8 @@ class AlternativeRequestRepository implements AlternativeRequestRepositoryInterf
      */
     public function create(array $data): int
     {
-        db_query("INSERT INTO ?:novoton_alternative_requests ?e", $data);
-        return (int) db_get_field("SELECT LAST_INSERT_ID()");
+        db_query('INSERT INTO ?:novoton_alternative_requests ?e', $data);
+        return TypeCoerce::toInt(db_get_field('SELECT LAST_INSERT_ID()'));
     }
 
     /**
@@ -42,7 +47,7 @@ class AlternativeRequestRepository implements AlternativeRequestRepositoryInterf
      */
     public function findPendingOlderThan(int $hours = 24, int $limit = 50): array
     {
-        return db_get_array(
+        return self::asRowList(db_get_array(
             "SELECT * FROM ?:novoton_alternative_requests
              WHERE status = ?s
              AND novoton_request_id IS NOT NULL AND novoton_request_id != ''
@@ -50,8 +55,8 @@ class AlternativeRequestRepository implements AlternativeRequestRepositoryInterf
              ORDER BY created_at ASC LIMIT ?i",
             TravelConstants::STATUS_PENDING,
             $hours,
-            $limit
-        );
+            $limit,
+        ));
     }
 
     /**
@@ -60,14 +65,14 @@ class AlternativeRequestRepository implements AlternativeRequestRepositoryInterf
      */
     public function findPendingWithApiRef(): array
     {
-        return db_get_array(
+        return self::asRowList(db_get_array(
             "SELECT request_id, novoton_request_id, hotel_name, contact_email
              FROM ?:novoton_alternative_requests
              WHERE status = ?s
                AND novoton_request_id != ''
                AND novoton_request_id IS NOT NULL",
-            TravelConstants::STATUS_PENDING
-        );
+            TravelConstants::STATUS_PENDING,
+        ));
     }
 
     /**
@@ -76,12 +81,12 @@ class AlternativeRequestRepository implements AlternativeRequestRepositoryInterf
      */
     public function findUnnotified(int $limit = 20): array
     {
-        return db_get_array(
+        return self::asRowList(db_get_array(
             "SELECT * FROM ?:novoton_alternative_requests
              WHERE status = 'alternatives_found'
              ORDER BY updated_at ASC LIMIT ?i",
-            $limit
-        );
+            $limit,
+        ));
     }
 
     /**
@@ -91,9 +96,9 @@ class AlternativeRequestRepository implements AlternativeRequestRepositoryInterf
     public function update(int $request_id, array $data): bool
     {
         return (bool) db_query(
-            "UPDATE ?:novoton_alternative_requests SET ?u WHERE request_id = ?i",
+            'UPDATE ?:novoton_alternative_requests SET ?u WHERE request_id = ?i',
             $data,
-            $request_id
+            $request_id,
         );
     }
 
@@ -104,8 +109,8 @@ class AlternativeRequestRepository implements AlternativeRequestRepositoryInterf
     {
         return $this->update($request_id, [
             'alternatives_data' => $alternatives_json,
-            'status'            => 'alternatives_found',
-            'updated_at'        => date('Y-m-d H:i:s'),
+            'status' => 'alternatives_found',
+            'updated_at' => date('Y-m-d H:i:s'),
         ]);
     }
 
@@ -115,7 +120,7 @@ class AlternativeRequestRepository implements AlternativeRequestRepositoryInterf
     public function markNotified(int $request_id): bool
     {
         return $this->update($request_id, [
-            'status'      => 'notified',
+            'status' => 'notified',
             'notified_at' => date('Y-m-d H:i:s'),
         ]);
     }
@@ -132,7 +137,7 @@ class AlternativeRequestRepository implements AlternativeRequestRepositoryInterf
              SET status = 'expired', updated_at = NOW()
              WHERE status IN ('pending', 'pending_manual')
              AND created_at < DATE_SUB(NOW(), INTERVAL ?i DAY)",
-            $days
+            $days,
         );
     }
 
@@ -142,40 +147,38 @@ class AlternativeRequestRepository implements AlternativeRequestRepositoryInterf
     public function delete(int $request_id): bool
     {
         return (bool) db_query(
-            "DELETE FROM ?:novoton_alternative_requests WHERE request_id = ?i",
-            $request_id
+            'DELETE FROM ?:novoton_alternative_requests WHERE request_id = ?i',
+            $request_id,
         );
     }
 
     /**
      * Count requests matching optional status/conditions.
      *
-     * @param string $whereSql  Pre-built WHERE clause (e.g. "WHERE status = 'pending'")
-     * @param list<mixed>  $params    Bound parameters for the WHERE clause
+     * @param string $whereSql Pre-built WHERE clause (e.g. "WHERE status = 'pending'")
+     * @param list<mixed> $params Bound parameters for the WHERE clause
      */
     public function countFiltered(string $whereSql = '', array $params = []): int
     {
-        return (int) db_get_field(
+        return TypeCoerce::toInt(db_get_field(
             "SELECT COUNT(*) FROM ?:novoton_alternative_requests {$whereSql}",
-            ...$params
-        );
+            ...$params,
+        ));
     }
 
     /**
      * Find requests with pagination and optional WHERE clause.
      *
-     * @param string $whereSql  Pre-built WHERE clause
-     * @param list<mixed>  $params    Bound parameters
-     * @param int    $limit
-     * @param int    $offset
+     * @param string $whereSql Pre-built WHERE clause
+     * @param list<mixed> $params Bound parameters
      * @return list<array<string, mixed>>
      */
     public function findFiltered(string $whereSql = '', array $params = [], int $limit = 30, int $offset = 0): array
     {
-        return db_get_array(
+        return self::asRowList(db_get_array(
             "SELECT * FROM ?:novoton_alternative_requests {$whereSql} ORDER BY created_at DESC LIMIT ?i, ?i",
-            ...array_merge($params, [$offset, $limit])
-        );
+            ...array_merge($params, [$offset, $limit]),
+        ));
     }
 
     /**
@@ -185,9 +188,19 @@ class AlternativeRequestRepository implements AlternativeRequestRepositoryInterf
      */
     public function getStatusCounts(): array
     {
-        return db_get_hash_single_array(
-            "SELECT status, COUNT(*) as cnt FROM ?:novoton_alternative_requests GROUP BY status",
-            ['status', 'cnt']
+        $raw = db_get_hash_single_array(
+            'SELECT status, COUNT(*) as cnt FROM ?:novoton_alternative_requests GROUP BY status',
+            ['status', 'cnt'],
         );
+        if (!is_array($raw)) {
+            return [];
+        }
+        $out = [];
+        foreach ($raw as $k => $v) {
+            if (is_string($k)) {
+                $out[$k] = TypeCoerce::toInt($v);
+            }
+        }
+        return $out;
     }
 }

@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 /**
  * Novoton XML Parser
  * Handles XML cleaning (entity sanitization) and parsing.
@@ -13,8 +15,8 @@ use Tygh\Addons\NovotonHolidays\Exceptions\XmlParsingException;
 
 class NovotonXmlParser implements XmlParserInterface
 {
-    private const STREAMING_THRESHOLD = 1_000_000;
-    private const OPTIMIZATION_THRESHOLD = 100_000;
+    private const int STREAMING_THRESHOLD = 1_000_000;
+    private const int OPTIMIZATION_THRESHOLD = 100_000;
 
     /**
      * Clean XML entities
@@ -66,7 +68,7 @@ class NovotonXmlParser implements XmlParserInterface
         if (empty($xmlString)) {
             fn_log_event('general', 'runtime', [
                 'message' => 'XML Parse Error - Empty response',
-                'raw_response' => '(empty)'
+                'raw_response' => '(empty)',
             ]);
             throw new XmlParsingException('XML Parse Error - Empty response', [], 0);
         }
@@ -98,12 +100,12 @@ class NovotonXmlParser implements XmlParserInterface
                     'message' => 'XML Parse Error',
                     'errors' => implode('; ', array_slice($error_messages, 0, 5)),
                     'response_size' => $size,
-                    'raw_response_first_500' => substr($xmlString, 0, 500)
+                    'raw_response_first_500' => substr($xmlString, 0, 500),
                 ]);
                 throw new XmlParsingException(
                     'XML Parse Error: ' . implode('; ', array_slice($error_messages, 0, 5)),
                     $error_messages,
-                    $size
+                    $size,
                 );
             }
 
@@ -157,12 +159,12 @@ class NovotonXmlParser implements XmlParserInterface
                     'message' => 'XML Parse Error (streaming mode)',
                     'errors' => implode('; ', array_slice($error_messages, 0, 5)),
                     'response_size' => $size,
-                    'raw_response_first_500' => substr($xmlString, 0, 500)
+                    'raw_response_first_500' => substr($xmlString, 0, 500),
                 ]);
                 throw new XmlParsingException(
                     'XML Parse Error (streaming): ' . implode('; ', array_slice($error_messages, 0, 5)),
                     $error_messages,
-                    $size
+                    $size,
                 );
             }
 

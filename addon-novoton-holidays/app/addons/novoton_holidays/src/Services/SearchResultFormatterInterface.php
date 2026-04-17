@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Services;
@@ -13,12 +14,12 @@ interface SearchResultFormatterInterface
     /**
      * Assign all search-result template variables to the view.
      *
-     * @param list<array<string, mixed>> $results       Primary result rows
+     * @param list<array<string, mixed>> $results Primary result rows
      * @param array<string, mixed> $novotonParams Template params (from normalizer)
-     * @param array<string, mixed> $searchResult  Output from HotelAvailabilitySearcher::search()
-     * @param array<string, mixed> $altResult     Output from AlternativeDateSearcher::search()
-     * @param array<string, mixed> $searchParams  Raw (sanitized) request params
-     * @param array<string, mixed> $debugLog      Debug lines (empty when debug is off)
+     * @param array<string, mixed> $searchResult Output from HotelAvailabilitySearcher::search()
+     * @param array<string, mixed> $altResult Output from AlternativeDateSearcher::search()
+     * @param array<string, mixed> $searchParams Raw (sanitized) request params
+     * @param array<string, mixed> $debugLog Debug lines (empty when debug is off)
      */
     public function assignToView(
         array $results,
@@ -26,7 +27,7 @@ interface SearchResultFormatterInterface
         array $searchResult,
         array $altResult,
         array $searchParams,
-        array $debugLog
+        array $debugLog,
     ): void;
 
     /**

@@ -1,9 +1,11 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Tygh\Addons\TravelCore\Repository;
 
 use Tygh\Addons\TravelCore\Contracts\TravelBookingRepositoryInterface;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 /**
  * Database-backed repository for the travel_bookings table.
@@ -13,44 +15,48 @@ use Tygh\Addons\TravelCore\Contracts\TravelBookingRepositoryInterface;
  */
 class TravelBookingRepository implements TravelBookingRepositoryInterface
 {
+    use RowNarrowingTrait;
+
     #[\Override]
     public function getProviderInfo(int $bookingId): ?array
     {
-        $row = db_get_row(
-            "SELECT provider, provider_booking_id FROM ?:travel_bookings WHERE booking_id = ?i",
-            $bookingId
-        );
+        $row = self::asRow(db_get_row(
+            'SELECT provider, provider_booking_id FROM ?:travel_bookings WHERE booking_id = ?i',
+            $bookingId,
+        ));
 
-        return $row ?: null;
+        return $row === [] ? null : $row;
     }
 
     #[\Override]
     public function getById(int $bookingId): ?array
     {
-        $row = db_get_row(
-            "SELECT * FROM ?:travel_bookings WHERE booking_id = ?i",
-            $bookingId
-        );
+        $row = self::asRow(db_get_row(
+            'SELECT * FROM ?:travel_bookings WHERE booking_id = ?i',
+            $bookingId,
+        ));
 
-        return $row ?: null;
+        return $row === [] ? null : $row;
     }
 
-    /** @return array{items: array<int, array<string, mixed>>, total: int} */
+    /** @return array{items: list<array<string, mixed>>, total: int} */
     #[\Override]
     public function getPaginated(string $condition, string $sortColumn, string $sortOrder, int $offset, int $limit): array
     {
-        $total = (int) db_get_field(
-            "SELECT COUNT(*) FROM ?:travel_bookings tb WHERE 1 ?p",
-            $condition
-        );
+        $total = TypeCoerce::toInt(db_get_field(
+            'SELECT COUNT(*) FROM ?:travel_bookings tb WHERE 1 ?p',
+            $condition,
+        ));
 
-        $items = db_get_array(
+        $items = self::asRowList(db_get_array(
             "SELECT tb.* FROM ?:travel_bookings tb
              WHERE 1 ?p
              ORDER BY {$sortColumn} {$sortOrder}
              LIMIT ?i, ?i",
-            $condition, $offset, $limit
-        );
+            $condition,
+            $offset,
+            $limit,
+        ));
 
         return ['items' => $items, 'total' => $total];
     }

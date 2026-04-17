@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 /**
  * Novoton Holidays - State Manager
  *
@@ -23,7 +25,6 @@ class StateManager implements StateManagerInterface
 {
     /**
      * State file path
-     * @var string
      */
     private string $stateFile;
 
@@ -36,7 +37,7 @@ class StateManager implements StateManagerInterface
     /**
      * Default state structure
      */
-    const DEFAULT_STATE = [
+    public const array DEFAULT_STATE = [
         'status' => 'idle',
         'sync_type' => null,
         'started_at' => null,
@@ -149,7 +150,9 @@ class StateManager implements StateManagerInterface
 
             // Atomically replace the state file
             if (!rename($tempFile, $this->stateFile)) {
-                if (file_exists($tempFile)) { unlink($tempFile); }
+                if (file_exists($tempFile)) {
+                    unlink($tempFile);
+                }
                 return false;
             }
 
@@ -212,8 +215,6 @@ class StateManager implements StateManagerInterface
 
     /**
      * Check if a sync is in progress
-     *
-     * @return bool
      */
     public function isInProgress(): bool
     {
@@ -439,8 +440,6 @@ class StateManager implements StateManagerInterface
     /**
      * Check if sync should be resumed.
      * Returns false for stale states (older than 6 hours with no activity).
-     *
-     * @return bool
      */
     public function shouldResume(): bool
     {
@@ -499,9 +498,6 @@ class StateManager implements StateManagerInterface
 
     /**
      * Format duration in human readable format
-     *
-     * @param int $seconds
-     * @return string
      */
     private function formatDuration(int $seconds): string
     {
@@ -521,8 +517,6 @@ class StateManager implements StateManagerInterface
 
     /**
      * Get state file path
-     *
-     * @return string
      */
     public function getStateFilePath(): string
     {

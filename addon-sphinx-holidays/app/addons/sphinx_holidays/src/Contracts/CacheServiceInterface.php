@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays\Contracts;
@@ -21,9 +22,9 @@ interface CacheServiceInterface
     /**
      * Store a value in cache with a TTL.
      *
-     * @param string $key  Cache key
-     * @param array<string, mixed>  $data Data to cache
-     * @param int    $ttl  Time-to-live in seconds
+     * @param string $key Cache key
+     * @param array<string, mixed> $data Data to cache
+     * @param int $ttl Time-to-live in seconds
      */
     public static function set(string $key, array $data, int $ttl): void;
 

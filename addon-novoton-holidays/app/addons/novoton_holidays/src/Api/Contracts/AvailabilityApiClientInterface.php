@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 /**
  * Contract for the Novoton Availability API sub-client.
  *
