@@ -21,6 +21,8 @@ use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\NovotonApi;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Services\Container;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
@@ -96,7 +98,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $clean_excluded = [];
         if (is_array($excluded)) {
             foreach ($excluded as $resort) {
-                $resort = trim($resort);
+                $resort = trim(TypeCoerce::toString($resort));
                 if (!empty($resort)) {
                     $clean_excluded[] = $resort;
                 }
@@ -179,7 +181,7 @@ if ($mode === 'recompute_calendar_prices') {
  */
 if ($mode === 'add_hotels_as_products') {
     try {
-        $country = (string) preg_replace('/[^A-Z\s]/', '', strtoupper($_REQUEST['country'] ?? 'BULGARIA'));
+        $country = (string) preg_replace('/[^A-Z\s]/', '', strtoupper(RequestCoerce::string($_REQUEST, 'country', 'BULGARIA')));
 
         $hotelRepo = Container::getInstance()->hotelRepository();
 
@@ -227,8 +229,9 @@ if ($mode === 'view_hotels_to_add') {
         return [CONTROLLER_STATUS_DENIED];
     }
 
-    $country = (string) preg_replace('/[^A-Z\s]/', '', strtoupper($_REQUEST['country'] ?? 'BULGARIA'));
-    $filter = in_array($_REQUEST['filter'] ?? '', ['prices', 'packages']) ? $_REQUEST['filter'] : 'prices';
+    $country = (string) preg_replace('/[^A-Z\s]/', '', strtoupper(RequestCoerce::string($_REQUEST, 'country', 'BULGARIA')));
+    $filter_raw = RequestCoerce::string($_REQUEST, 'filter');
+    $filter = in_array($filter_raw, ['prices', 'packages'], true) ? $filter_raw : 'prices';
 
     $hotelRepo = Container::getInstance()->hotelRepository();
 
@@ -269,7 +272,7 @@ if ($mode === 'list_facilities') {
     $feature_type_options = [];
     foreach ($facility_feature_types as $ft) {
         $settingKey = 'addons.travel_core.feature_id_' . $ft;
-        $featureId = (int) Registry::get($settingKey);
+        $featureId = TypeCoerce::toInt(Registry::get($settingKey));
         $label = ucwords(str_replace('_', ' ', $ft));
         if ($featureId > 0) {
             $featureName = db_get_field(
@@ -277,7 +280,7 @@ if ($mode === 'list_facilities') {
                 $featureId, DESCR_SL
             );
             if ($featureName) {
-                $label .= " → {$featureName} #{$featureId}";
+                $label .= ' → ' . TypeCoerce::toString($featureName) . " #{$featureId}";
             } else {
                 $label .= " → #{$featureId}";
             }
