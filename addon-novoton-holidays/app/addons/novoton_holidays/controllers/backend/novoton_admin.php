@@ -58,14 +58,17 @@ if ($mode === 'update_prices') {
         
         try {
             $stats = $sync->syncAllProducts();
-            
+
             fn_set_progress('finish');
-            
+
             // Show summary
+            $updatedList = is_array($stats['updated'] ?? null) ? $stats['updated'] : [];
+            $failedList = is_array($stats['failed'] ?? null) ? $stats['failed'] : [];
+            $noDataList = is_array($stats['no_data'] ?? null) ? $stats['no_data'] : [];
             $message = __('novoton_holidays.sync_completed') . ': ';
-            $message .= count($stats['updated']) . ' ' . __('novoton_holidays.updated') . ', ';
-            $message .= count($stats['failed']) . ' ' . __('novoton_holidays.failed') . ', ';
-            $message .= count($stats['no_data']) . ' ' . __('novoton_holidays.no_data');
+            $message .= count($updatedList) . ' ' . __('novoton_holidays.updated') . ', ';
+            $message .= count($failedList) . ' ' . __('novoton_holidays.failed') . ', ';
+            $message .= count($noDataList) . ' ' . __('novoton_holidays.no_data');
             
             fn_set_notification('N', __('notice'), $message);
             
@@ -84,7 +87,9 @@ if ($mode === 'sync_logs') {
     $syncLogRepo = Container::getInstance()->syncLogRepository();
     $logs = $syncLogRepo->findRecent(50);
 
-    Tygh::$app['view']->assign('sync_logs', $logs);
+    /** @var \Smarty $view */
+    $view = Tygh::$app['view'];
+    $view->assign('sync_logs', $logs);
 }
 
 // View bookings
@@ -92,34 +97,40 @@ if ($mode === 'bookings') {
 
     $condition = '';
 
-    if (!empty($_REQUEST['order_id'])) {
-        $condition .= db_quote(" AND b.order_id = ?i", (int)$_REQUEST['order_id']);
+    $reqOrderId = RequestCoerce::int($_REQUEST, 'order_id');
+    if (!empty($reqOrderId)) {
+        $condition .= db_quote(" AND b.order_id = ?i", $reqOrderId);
     }
 
+    $reqStatus = RequestCoerce::string($_REQUEST, 'status');
     $allowed_statuses = ['pending', 'confirmed', 'cancelled', 'failed', 'ASK', 'Good', 'XX'];
-    if (!empty($_REQUEST['status']) && in_array($_REQUEST['status'], $allowed_statuses, true)) {
-        $condition .= db_quote(" AND b.status = ?s", $_REQUEST['status']);
+    if (!empty($reqStatus) && in_array($reqStatus, $allowed_statuses, true)) {
+        $condition .= db_quote(" AND b.status = ?s", $reqStatus);
     }
 
-    if (!empty($_REQUEST['date_from']) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $_REQUEST['date_from'])) {
-        $condition .= db_quote(" AND b.check_in >= ?s", $_REQUEST['date_from']);
+    $reqDateFrom = RequestCoerce::string($_REQUEST, 'date_from');
+    if (!empty($reqDateFrom) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $reqDateFrom)) {
+        $condition .= db_quote(" AND b.check_in >= ?s", $reqDateFrom);
     }
 
-    if (!empty($_REQUEST['date_to']) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $_REQUEST['date_to'])) {
-        $condition .= db_quote(" AND b.check_in <= ?s", $_REQUEST['date_to']);
+    $reqDateTo = RequestCoerce::string($_REQUEST, 'date_to');
+    if (!empty($reqDateTo) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $reqDateTo)) {
+        $condition .= db_quote(" AND b.check_in <= ?s", $reqDateTo);
     }
 
     $bookingRepo = Container::getInstance()->bookingRepository();
     $bookings = $bookingRepo->findForAdminList($condition, 500);
 
-    Tygh::$app['view']->assign('bookings', $bookings);
-    Tygh::$app['view']->assign('search', array_intersect_key($_REQUEST, array_flip(['order_id', 'status', 'date_from', 'date_to', 'dispatch'])));
+    /** @var \Smarty $view */
+    $view = Tygh::$app['view'];
+    $view->assign('bookings', $bookings);
+    $view->assign('search', array_intersect_key($_REQUEST, array_flip(['order_id', 'status', 'date_from', 'date_to', 'dispatch'])));
 }
 
 // View booking details
 if ($mode === 'booking_details') {
 
-    $bookingId = (int)($_REQUEST['booking_id'] ?? 0);
+    $bookingId = RequestCoerce::int($_REQUEST, 'booking_id');
 
     if ($bookingId <= 0) {
         fn_set_notification('E', __('error'), __('novoton_holidays.booking_not_found'));
@@ -128,19 +139,22 @@ if ($mode === 'booking_details') {
 
     $bookingRepo = Container::getInstance()->bookingRepository();
     $booking = $bookingRepo->findWithOrderDetails($bookingId);
-    
+
     if ($booking) {
         // Get invoice from Novoton
         $api = _nvt_api();
-        
+
         try {
-            $invoice = $api->reservations()->getInvoiceXml($booking['novoton_invoice_id']);
+            $invoiceId = TypeCoerce::toString($booking['novoton_invoice_id'] ?? '');
+            $invoice = $api->reservations()->getInvoiceXml($invoiceId);
             $booking['invoice'] = $invoice;
         } catch (Exception $e) {
             fn_set_notification('W', __('warning'), __('novoton_holidays.failed_to_get_invoice'));
         }
-        
-        Tygh::$app['view']->assign('booking', $booking);
+
+        /** @var \Smarty $view */
+        $view = Tygh::$app['view'];
+        $view->assign('booking', $booking);
     } else {
         fn_set_notification('E', __('error'), __('novoton_holidays.booking_not_found'));
         return [CONTROLLER_STATUS_REDIRECT, 'novoton_admin.bookings'];
@@ -150,22 +164,23 @@ if ($mode === 'booking_details') {
 // Download log file
 if ($mode === 'download_log') {
     
-    $logFile = $_REQUEST['log_file'] ?? '';
-    
+    $logFile = RequestCoerce::string($_REQUEST, 'log_file');
+
     // Security: Sanitize filename to prevent path traversal
     $logFile = basename($logFile); // Remove any path components
-    $logFile = preg_replace('/[^a-zA-Z0-9_\-\.]/', '', $logFile); // Only allow safe characters
-    
+    $logFile = (string) preg_replace('/[^a-zA-Z0-9_\-\.]/', '', $logFile); // Only allow safe characters
+
     if (empty($logFile)) {
         fn_set_notification('E', __('error'), __('novoton_holidays.invalid_log_file'));
         return [CONTROLLER_STATUS_REDIRECT, 'novoton_admin.sync_logs'];
     }
-    
-    $logPath = fn_get_files_dir_path() . 'novoton_logs/' . $logFile;
-    
+
+    $filesDir = TypeCoerce::toString(fn_get_files_dir_path());
+    $logPath = $filesDir . 'novoton_logs/' . $logFile;
+
     // Security: Verify the resolved path is within the expected directory
     $realLogPath = realpath($logPath);
-    $expectedDir = realpath(fn_get_files_dir_path() . 'novoton_logs/');
+    $expectedDir = realpath($filesDir . 'novoton_logs/');
     
     if ($realLogPath === false || $expectedDir === false || !str_starts_with($realLogPath, $expectedDir)) {
         fn_set_notification('E', __('error'), __('novoton_holidays.log_file_not_found'));
@@ -194,21 +209,21 @@ if ($mode === 'export_bookings') {
     $csv = "Booking ID,Order ID,Hotel Name,Room Type,Check-in,Check-out,Adults,Children,Price,Currency,Status,Email,Created\n";
     
     foreach ($bookings as $booking) {
-        $num_children = (int)($booking['children'] ?? 0);
+        $num_children = TypeCoerce::toInt($booking['children'] ?? 0);
         $csv .= implode(',', [
-            $booking['novoton_invoice_id'] ?? '',
-            $booking['order_id'],
-            '"' . str_replace('"', '""', $booking['hotel_name'] ?? '') . '"',
-            '"' . str_replace('"', '""', $booking['room_type'] ?? '') . '"',
-            $booking['check_in'],
-            $booking['check_out'],
-            $booking['adults'],
-            $num_children,
-            $booking['total_price'],
-            $booking['currency'],
-            $booking['status'],
-            '"' . str_replace('"', '""', $booking['email'] ?? '') . '"',
-            $booking['created_at']
+            TypeCoerce::toString($booking['novoton_invoice_id'] ?? ''),
+            TypeCoerce::toString($booking['order_id'] ?? ''),
+            '"' . str_replace('"', '""', TypeCoerce::toString($booking['hotel_name'] ?? '')) . '"',
+            '"' . str_replace('"', '""', TypeCoerce::toString($booking['room_type'] ?? '')) . '"',
+            TypeCoerce::toString($booking['check_in'] ?? ''),
+            TypeCoerce::toString($booking['check_out'] ?? ''),
+            TypeCoerce::toString($booking['adults'] ?? ''),
+            (string) $num_children,
+            TypeCoerce::toString($booking['total_price'] ?? ''),
+            TypeCoerce::toString($booking['currency'] ?? ''),
+            TypeCoerce::toString($booking['status'] ?? ''),
+            '"' . str_replace('"', '""', TypeCoerce::toString($booking['email'] ?? '')) . '"',
+            TypeCoerce::toString($booking['created_at'] ?? '')
         ]) . "\n";
     }
     
@@ -245,9 +260,9 @@ if ($mode === 'run_cron') {
     header('Content-Type: application/json');
     
     // Accept 'cron_mode' or legacy 'task' parameter for the cron job to run
-    $cron_mode = $_REQUEST['cron_mode'] ?? ($_REQUEST['task'] ?? '');
+    $cron_mode_raw = RequestCoerce::string($_REQUEST, 'cron_mode') ?: RequestCoerce::string($_REQUEST, 'task');
     // Sanitize: only alphanumeric and underscores
-    $cron_mode = preg_replace('/[^a-z0-9_]/', '', strtolower($cron_mode));
+    $cron_mode = (string) preg_replace('/[^a-z0-9_]/', '', strtolower($cron_mode_raw));
     $allowed_modes = [
         'hotel_list', 'room_price', 'list_facilities', 'resort_list',
         'add_hotels_as_products', 'offers_update',
@@ -262,14 +277,17 @@ if ($mode === 'run_cron') {
     
     // Build parameters
     $params = ['mode' => $cron_mode];
-    if (!empty($_REQUEST['country'])) {
-        $params['country'] = strtoupper($_REQUEST['country']);
+    $reqCountry = RequestCoerce::string($_REQUEST, 'country');
+    if (!empty($reqCountry)) {
+        $params['country'] = strtoupper($reqCountry);
     }
-    if (!empty($_REQUEST['limit'])) {
-        $params['limit'] = (int)($_REQUEST['limit']);
+    $reqLimit = RequestCoerce::int($_REQUEST, 'limit');
+    if (!empty($reqLimit)) {
+        $params['limit'] = $reqLimit;
     }
-    if (!empty($_REQUEST['days'])) {
-        $params['days'] = (int)($_REQUEST['days']);
+    $reqDays = RequestCoerce::int($_REQUEST, 'days');
+    if (!empty($reqDays)) {
+        $params['days'] = $reqDays;
     }
     
     try {
@@ -293,7 +311,7 @@ if ($mode === 'run_cron') {
                 break;
 
             case 'resort_list':
-                $country = $params['country'] ?? 'BULGARIA';
+                $country = TypeCoerce::toString($params['country'] ?? 'BULGARIA');
                 $result = fn_novoton_holidays_sync_resorts_list($country);
                 break;
 
@@ -302,9 +320,9 @@ if ($mode === 'run_cron') {
                 break;
 
             case 'add_hotels_as_products':
-                $limit = (int) ($params['limit'] ?? 50);
+                $limit = TypeCoerce::toInt($params['limit'] ?? 50);
                 if (!empty($params['country'])) {
-                    $countries = [strtoupper($params['country'])];
+                    $countries = [strtoupper(TypeCoerce::toString($params['country']))];
                 } else {
                     $countries = \Tygh\Addons\NovotonHolidays\Services\ConfigProvider::getSelectedCountries();
                 }
@@ -312,7 +330,7 @@ if ($mode === 'run_cron') {
                 break;
 
             case 'offers_update':
-                $country = $params['country'] ?? 'BULGARIA';
+                $country = TypeCoerce::toString($params['country'] ?? 'BULGARIA');
                 $result = $service->checkOffers($country);
                 break;
 
@@ -337,7 +355,7 @@ if ($mode === 'run_cron') {
                 break;
 
             case 'expire_requests':
-                $days = (int) ($params['days'] ?? 30);
+                $days = TypeCoerce::toInt($params['days'] ?? 30);
                 $result = $service->expireRequests($days);
                 break;
 
@@ -347,9 +365,10 @@ if ($mode === 'run_cron') {
 
         $output = implode("\n", $outputLines);
 
+        $resultMessage = is_array($result) ? TypeCoerce::toString($result['message'] ?? '') : '';
         echo json_encode([
             'success' => true,
-            'output'  => $output . "\n" . ($result['message'] ?? json_encode($result)),
+            'output'  => $output . "\n" . ($resultMessage !== '' ? $resultMessage : json_encode($result)),
         ]);
 
     } catch (Exception $e) {

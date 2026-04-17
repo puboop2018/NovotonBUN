@@ -71,10 +71,11 @@ use Tygh\Addons\NovotonHolidays\Helpers\JsonDecoder;
     $guests_data = [];
 
     // Rooms: try cart first (may have user selections), then database
-    if ($cart_item !== null && !empty($cart_item['extra']['rooms_data'] ?? null)) {
-        /** @var array<string, mixed> $cartExtra */
-        $cartExtra = is_array($cart_item['extra']) ? $cart_item['extra'] : [];
-        $rooms_data = JsonDecoder::decode(PriceInfoFormatter::toScalar($cartExtra['rooms_data'] ?? ''), 'edit_booking:cart_rooms_data');
+    if ($cart_item !== null) {
+        $cartExtra = TypeCoerce::toStringMap($cart_item['extra'] ?? []);
+        if (!empty($cartExtra['rooms_data'])) {
+            $rooms_data = JsonDecoder::decode(PriceInfoFormatter::toScalar($cartExtra['rooms_data']), 'edit_booking:cart_rooms_data');
+        }
     }
     if (empty($rooms_data)) {
         $rooms_data = JsonDecoder::decode(PriceInfoFormatter::toScalar($booking_record['rooms_data'] ?? ''), 'edit_booking:db_rooms_data');
@@ -85,7 +86,9 @@ use Tygh\Addons\NovotonHolidays\Helpers\JsonDecoder;
     // session expiry loses it, and cart_id hash changes can make it stale.
     // update_booking.php writes to DB first (line 127), so DB always has the
     // latest guest data regardless of cart state.
-    $guests_data = (new GuestDataNormalizer())->normalize($booking_record['guests_data'] ?? '');
+    $rawGuestsData = $booking_record['guests_data'] ?? '';
+    $guestsInput = is_array($rawGuestsData) ? TypeCoerce::toStringMap($rawGuestsData) : TypeCoerce::toString($rawGuestsData);
+    $guests_data = (new GuestDataNormalizer())->normalize($guestsInput);
     
     // Ensure dob field is in DD/MM/YYYY format for each guest (template expects this format)
     foreach ($guests_data as $key => &$guest) {
@@ -188,31 +191,34 @@ use Tygh\Addons\NovotonHolidays\Helpers\JsonDecoder;
     }
     
     // Assign to view
-    Tygh::$app['view']->assign('booking_data', $booking);
+    /** @var \Smarty $view */
+    $view = Tygh::$app['view'];
+    $view->assign('booking_data', $booking);
     $novoton_display_currency = CurrencyService::getDisplayCurrency();
-    $currencies = \Tygh\Registry::get('currencies');
-    $novoton_display_coefficient = (float) ($currencies[$novoton_display_currency]['coefficient'] ?? 1.0);
-    $novoton_display_symbol = $currencies[$novoton_display_currency]['symbol'] ?? $novoton_display_currency;
+    $currenciesMap = TypeCoerce::toStringMap(\Tygh\Registry::get('currencies'));
+    $currencyEntry = TypeCoerce::toStringMap($currenciesMap[$novoton_display_currency] ?? []);
+    $novoton_display_coefficient = TypeCoerce::toFloat($currencyEntry['coefficient'] ?? 1.0);
+    $novoton_display_symbol = TypeCoerce::toString($currencyEntry['symbol'] ?? $novoton_display_currency);
 
-    Tygh::$app['view']->assign('novoton_display_currency', $novoton_display_currency);
-    Tygh::$app['view']->assign('novoton_display_coefficient', $novoton_display_coefficient);
-    Tygh::$app['view']->assign('novoton_display_symbol', $novoton_display_symbol);
-    Tygh::$app['view']->assign('booking_id', $booking_id);
-    Tygh::$app['view']->assign('cart_id', $cart_id);
-    Tygh::$app['view']->assign('is_edit_mode', true);
-    Tygh::$app['view']->assign('product_id', $booking_record['product_id']);
-    Tygh::$app['view']->assign('hotel_name', $hotel_name);
-    Tygh::$app['view']->assign('hotel_city', $hotel_info['city'] ?? $booking_record['hotel_city'] ?? '');
-    Tygh::$app['view']->assign('hotel_region', $hotel_info['region'] ?? '');
-    Tygh::$app['view']->assign('hotel_country', $hotel_info['country'] ?? $booking_record['hotel_country'] ?? 'BULGARIA');
-    Tygh::$app['view']->assign('hotel_stars', $hotel_stars);
-    Tygh::$app['view']->assign('package_name', $package_name);
-    Tygh::$app['view']->assign('hotel_all_packages', $all_packages);
-    Tygh::$app['view']->assign('auth', Tygh::$app['session']['auth'] ?? []);
-    
+    $view->assign('novoton_display_currency', $novoton_display_currency);
+    $view->assign('novoton_display_coefficient', $novoton_display_coefficient);
+    $view->assign('novoton_display_symbol', $novoton_display_symbol);
+    $view->assign('booking_id', $booking_id);
+    $view->assign('cart_id', $cart_id);
+    $view->assign('is_edit_mode', true);
+    $view->assign('product_id', $booking_record['product_id']);
+    $view->assign('hotel_name', $hotel_name);
+    $view->assign('hotel_city', $hotel_info['city'] ?? $booking_record['hotel_city'] ?? '');
+    $view->assign('hotel_region', $hotel_info['region'] ?? '');
+    $view->assign('hotel_country', $hotel_info['country'] ?? $booking_record['hotel_country'] ?? 'BULGARIA');
+    $view->assign('hotel_stars', $hotel_stars);
+    $view->assign('package_name', $package_name);
+    $view->assign('hotel_all_packages', $all_packages);
+    $view->assign('auth', TypeCoerce::toStringMap(Tygh::$app['session']['auth'] ?? []));
+
     // Page setup
     $page_title = __('novoton_holidays.edit_booking');
-    Tygh::$app['view']->assign('page_title', $page_title);
+    $view->assign('page_title', $page_title);
     Registry::set('navigation.dynamic.page_title', $page_title);
     fn_add_breadcrumb($page_title);
     
