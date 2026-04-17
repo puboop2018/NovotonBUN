@@ -47,6 +47,10 @@ composer test          # PHPUnit
 composer cs:fix        # PHPCBF: fix PHPCS violations
 composer fix           # PHP CS Fixer: apply formatter rules
 
+# ── Pre-commit hook (auto-run on composer install) ──
+composer hooks:install    # Re-install the GrumPHP pre-commit hook
+composer hooks:uninstall  # Remove it (e.g. temporary opt-out)
+
 # ── Baselines (after new legitimate legacy warnings) ──
 composer stan:baseline # Regenerate PHPStan baseline
 composer psalm:baseline # Regenerate Psalm baseline
