@@ -69,13 +69,6 @@ interface BookingRepositoryInterface
     public function delete(int $booking_id): bool;
     public function deleteOrphans(int $hours = 24): int;
     public function countOrphans(int $hours = 48): int;
-    /** @return array<string, int> */
-    public function getStats(): array;
-    /**
-     * @param array<string, mixed> $params
-     * @return list<BookingRow>
-     */
-    public function getUnifiedBookings(array $params = []): array;
     public function linkToUserBySession(int $user_id, string $session_id): int;
     public function linkToUserByEmail(int $user_id, string $email): int;
     public function deleteByProductId(int $product_id): int;

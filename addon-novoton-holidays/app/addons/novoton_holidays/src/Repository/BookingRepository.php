@@ -48,13 +48,6 @@ class BookingRepository implements BookingRepositoryInterface
      */
     private static array $hydratedCache = [];
 
-    private readonly GuestDataNormalizer $guestDataNormalizer;
-
-    public function __construct(?GuestDataNormalizer $guestDataNormalizer = null)
-    {
-        $this->guestDataNormalizer = $guestDataNormalizer ?? new GuestDataNormalizer();
-    }
-
     /**
      * Find booking by ID (raw DB row, no JSON decoding).
      * @return array<string, mixed>|null
@@ -382,31 +375,6 @@ class BookingRepository implements BookingRepositoryInterface
             $hours,
         );
         return (int) $affected;
-    }
-
-    // ── Display queries delegated to BookingQueryService ──
-
-    /**
-     * Get booking statistics.
-     * @deprecated Use BookingQueryService::getStats() directly
-     * @return array<string, mixed>
-     */
-    public function getStats(): array
-    {
-        $queryService = new \Tygh\Addons\NovotonHolidays\Services\BookingQueryService($this, $this->guestDataNormalizer);
-        return $queryService->getStats();
-    }
-
-    /**
-     * Get unified booking list.
-     * @deprecated Use BookingQueryService::getUnifiedBookings() directly
-     * @param array<string, mixed> $params
-     * @return list<array<string, mixed>>
-     */
-    public function getUnifiedBookings(array $params = []): array
-    {
-        $queryService = new \Tygh\Addons\NovotonHolidays\Services\BookingQueryService($this, $this->guestDataNormalizer);
-        return $queryService->getUnifiedBookings($params);
     }
 
     /**

@@ -62,19 +62,9 @@ if (!function_exists('_nvt_get_cache_service')) {
     }
 }
 
-// Service delegation helpers (wired up for gradual migration from inline code)
-if (!function_exists('_nvt_get_search_service')) {
-    /** @return \Tygh\Addons\NovotonHolidays\Services\SearchServiceInterface */
-    function _nvt_get_search_service() {
-        return _nvt_search_service();
-    }
-}
-if (!function_exists('_nvt_get_booking_service')) {
-    /** @return \Tygh\Addons\NovotonHolidays\Services\BookingServiceInterface */
-    function _nvt_get_booking_service() {
-        return _nvt_booking_service();
-    }
-}
+// Service delegation helpers (remaining ones have live callers; the
+// _nvt_get_search_service and _nvt_get_booking_service wrappers were
+// dropped in the audit cleanup — zero callers anywhere in the three addons.)
 if (!function_exists('_nvt_get_price_service')) {
     /** @return \Tygh\Addons\NovotonHolidays\Services\RoomPriceServiceInterface */
     function _nvt_get_price_service() {

@@ -612,27 +612,6 @@ function fn_novoton_holidays_setup_db(): void
 }
 
 /**
- * Ensure travel_core feature mappings are seeded.
- *
- * @deprecated Since 4.0.0 — Feature mappings now managed by travel_core.
- * Kept as a thin wrapper for backward compatibility with cron callers.
- *
- * @return array{configured: string[], unconfigured: string[], seeded: int}
- */
-function fn_novoton_holidays_ensure_feature_mappings(): array
-{
-    // Delegate to travel_core
-    if (function_exists('fn_travel_core_seed_feature_map')) {
-        fn_travel_core_seed_feature_map();
-    }
-    if (function_exists('fn_novoton_holidays_seed_travel_aliases')) {
-        fn_novoton_holidays_seed_travel_aliases();
-    }
-
-    return ['configured' => [], 'unconfigured' => [], 'seeded' => 0];
-}
-
-/**
  * Verify addon theme assets are in place.
  *
  * Addon color fields are registered via schema.post.php (Theme Editor

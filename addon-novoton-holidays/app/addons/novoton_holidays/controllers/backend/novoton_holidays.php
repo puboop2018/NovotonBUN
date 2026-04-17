@@ -446,7 +446,7 @@ if ($mode === 'manage' || empty($mode)) {
             'with_packages' => $hotelRepo->count(['has_packages' => true]),
             'without_packages' => $hotelRepo->count(['no_packages' => true]),
         ],
-        'bookings' => $bookingRepo->getStats(),
+        'bookings' => (new \Tygh\Addons\NovotonHolidays\Services\BookingQueryService($bookingRepo))->getStats(),
         'by_country' => []
     ];
 
