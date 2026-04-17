@@ -12,10 +12,10 @@ use Tygh\Tygh;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Services\Container;
 use Tygh\Addons\NovotonHolidays\Services\PriceInfoFormatter;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Services\CurrencyService;
 
-    /** @var array<string, mixed> $bookingData */
-    $bookingData = $_REQUEST;
+    $bookingData = TypeCoerce::toStringMap($_REQUEST);
 
     // Normalize room_id: restore + signs lost by URL decoding
     if (!empty($bookingData['room_id'])) {
@@ -58,13 +58,13 @@ use Tygh\Addons\TravelCore\Services\CurrencyService;
     
     // Validate required data
     if (empty($bookingData['hotel_id']) || empty($bookingData['check_in']) || empty($bookingData['check_out'])) {
-        fn_set_notification('E', __('error'), __('novoton_holidays.invalid_booking_data') . ' (missing hotel_id, check_in, or check_out)');
+        fn_set_notification('E', __('error'), TypeCoerce::toString(__('novoton_holidays.invalid_booking_data')) . ' (missing hotel_id, check_in, or check_out)');
         return [CONTROLLER_STATUS_REDIRECT, 'index.index'];
     }
     
     // For non-multi-room, room_id is required
     if (!$is_multi_room && empty($bookingData['room_id'])) {
-        fn_set_notification('E', __('error'), __('novoton_holidays.invalid_booking_data') . ' (missing room_id)');
+        fn_set_notification('E', __('error'), TypeCoerce::toString(__('novoton_holidays.invalid_booking_data')) . ' (missing room_id)');
         return [CONTROLLER_STATUS_REDIRECT, 'index.index'];
     }
     
@@ -90,7 +90,7 @@ use Tygh\Addons\TravelCore\Services\CurrencyService;
             CART_LANGUAGE
         ));
         if (!empty($product_name)) {
-            if (empty($hotel_info) || !is_array($hotel_info)) {
+            if (empty($hotel_info)) {
                 $hotel_info = [];
             }
             $hotel_info['hotel_name'] = $product_name;
@@ -132,9 +132,7 @@ use Tygh\Addons\TravelCore\Services\CurrencyService;
     if (empty($booking['rooms_data'])) {
         $children_ages_arr = [];
         if (!empty($booking['children_ages'])) {
-            $children_ages_arr = is_string($booking['children_ages'])
-                ? array_map('intval', array_filter(explode(',', $booking['children_ages']), function($v) { return $v !== ''; }))
-                : (array)$booking['children_ages'];
+            $children_ages_arr = array_map('intval', array_filter(explode(',', $booking['children_ages']), function($v) { return $v !== ''; }));
         }
 
         // Z3: Format board name consistently
@@ -161,11 +159,7 @@ use Tygh\Addons\TravelCore\Services\CurrencyService;
     // Parse children ages if string (for legacy support)
     $children_ages_array = [];
     if (!empty($booking['children_ages'])) {
-        if (is_string($booking['children_ages'])) {
-            $children_ages_array = array_map('intval', array_filter(explode(',', $booking['children_ages']), function($v) { return $v !== ''; }));
-        } else {
-            $children_ages_array = (array)$booking['children_ages'];
-        }
+        $children_ages_array = array_map('intval', array_filter(explode(',', $booking['children_ages']), function($v) { return $v !== ''; }));
     }
     $booking['children_ages_array'] = $children_ages_array;
     
@@ -216,22 +210,24 @@ use Tygh\Addons\TravelCore\Services\CurrencyService;
 
     // V3: Try to get from hotel_data JSON first
     if (!empty($hotel_info['hotel_data'])) {
-        $hotelData = json_decode($hotel_info['hotel_data'], true);
+        $hotelData = TypeCoerce::toStringMap(json_decode(TypeCoerce::toString($hotel_info['hotel_data']), true));
         if (!empty($hotelData['ages'])) {
-            $ages = isset($hotelData['ages']['IdAge']) ? [$hotelData['ages']] : $hotelData['ages'];
+            $agesRaw = TypeCoerce::toStringMap($hotelData['ages']);
+            $ages = isset($agesRaw['IdAge']) ? [$agesRaw] : TypeCoerce::toRowList($hotelData['ages']);
             foreach ($ages as $age) {
                 $age_categories[] = [
-                    'id' => $age['IdAge'] ?? '',
-                    'is_child' => ($age['fAge'] ?? '0') === '1',
-                    'from_year' => (float)($age['FromYear'] ?? 0),
-                    'to_year' => (float)($age['ToYear'] ?? 99)
+                    'id' => TypeCoerce::toString($age['IdAge'] ?? ''),
+                    'is_child' => TypeCoerce::toString($age['fAge'] ?? '0') === '1',
+                    'from_year' => TypeCoerce::toFloat($age['FromYear'] ?? 0),
+                    'to_year' => TypeCoerce::toFloat($age['ToYear'] ?? 99)
                 ];
             }
         }
         if (!empty($hotelData['rooms'])) {
-            $rooms_db = isset($hotelData['rooms']['IdRoom']) ? [$hotelData['rooms']] : $hotelData['rooms'];
+            $roomsRaw = TypeCoerce::toStringMap($hotelData['rooms']);
+            $rooms_db = isset($roomsRaw['IdRoom']) ? [$roomsRaw] : TypeCoerce::toRowList($hotelData['rooms']);
             foreach ($rooms_db as $r) {
-                $rid = $r['IdRoom'] ?? $r['id'] ?? '';
+                $rid = TypeCoerce::toString($r['IdRoom'] ?? $r['id'] ?? '');
                 if ($rid) $room_limits[$rid] = $r;
             }
         }
@@ -294,24 +290,27 @@ use Tygh\Addons\TravelCore\Services\CurrencyService;
     ];
     
     // Assign to view
-    Tygh::$app['view']->assign('booking_data', $booking);
+    /** @var \Smarty $view */
+    $view = Tygh::$app['view'];
+    $view->assign('booking_data', $booking);
     $novoton_display_currency = CurrencyService::getDisplayCurrency();
-    $currencies = \Tygh\Registry::get('currencies');
-    $novoton_display_coefficient = (float) ($currencies[$novoton_display_currency]['coefficient'] ?? 1.0);
-    $novoton_display_symbol = $currencies[$novoton_display_currency]['symbol'] ?? $novoton_display_currency;
+    $currenciesMap = TypeCoerce::toStringMap(\Tygh\Registry::get('currencies'));
+    $currencyEntry = TypeCoerce::toStringMap($currenciesMap[$novoton_display_currency] ?? []);
+    $novoton_display_coefficient = TypeCoerce::toFloat($currencyEntry['coefficient'] ?? 1.0);
+    $novoton_display_symbol = TypeCoerce::toString($currencyEntry['symbol'] ?? $novoton_display_currency);
 
-    Tygh::$app['view']->assign('novoton_display_currency', $novoton_display_currency);
-    Tygh::$app['view']->assign('novoton_display_coefficient', $novoton_display_coefficient);
-    Tygh::$app['view']->assign('novoton_display_symbol', $novoton_display_symbol);
-    Tygh::$app['view']->assign('product_id', $product_id);
-    Tygh::$app['view']->assign('hotel_name', $hotel_info['hotel_name'] ?? 'Hotel');
-    Tygh::$app['view']->assign('hotel_city', $hotel_info['city'] ?? '');
-    Tygh::$app['view']->assign('hotel_region', $hotel_info['region'] ?? '');
-    Tygh::$app['view']->assign('hotel_country', $hotel_info['country'] ?? 'BULGARIA');
-    Tygh::$app['view']->assign('hotel_stars', $hotel_stars);
-    Tygh::$app['view']->assign('package_name', $package_name);
-    Tygh::$app['view']->assign('hotel_all_packages', $all_packages);
-    Tygh::$app['view']->assign('auth', Tygh::$app['session']['auth'] ?? []);
+    $view->assign('novoton_display_currency', $novoton_display_currency);
+    $view->assign('novoton_display_coefficient', $novoton_display_coefficient);
+    $view->assign('novoton_display_symbol', $novoton_display_symbol);
+    $view->assign('product_id', $product_id);
+    $view->assign('hotel_name', $hotel_info['hotel_name'] ?? 'Hotel');
+    $view->assign('hotel_city', $hotel_info['city'] ?? '');
+    $view->assign('hotel_region', $hotel_info['region'] ?? '');
+    $view->assign('hotel_country', $hotel_info['country'] ?? 'BULGARIA');
+    $view->assign('hotel_stars', $hotel_stars);
+    $view->assign('package_name', $package_name);
+    $view->assign('hotel_all_packages', $all_packages);
+    $view->assign('auth', TypeCoerce::toStringMap(Tygh::$app['session']['auth'] ?? []));
 
     // Calendar prices: per-date approximate total for the cheapest room
     // Uses guest count to calculate realistic per-night totals
@@ -320,21 +319,21 @@ use Tygh\Addons\TravelCore\Services\CurrencyService;
     if (ConfigProvider::isShowCalendarPrices()) {
         $calendar_adults = max(1, (int) $booking['adults']);
         $priceInfoService = Container::getInstance()->priceInfoService();
-        $calendarData = $priceInfoService->getCalendarPrices($bookingData['hotel_id'], $novoton_display_currency, $calendar_adults);
+        $calendarData = $priceInfoService->getCalendarPrices(TypeCoerce::toString($bookingData['hotel_id']), $novoton_display_currency, $calendar_adults);
         if (!empty($calendarData['prices'])) {
             $calendar_prices_json = json_encode($calendarData['prices'], JSON_UNESCAPED_UNICODE);
             $calendar_prices_currency = $calendarData['currency'];
         }
     }
-    Tygh::$app['view']->assign('calendar_prices_json', $calendar_prices_json);
-    Tygh::$app['view']->assign('calendar_prices_currency', $calendar_prices_currency);
-    Tygh::$app['view']->assign('show_calendar_prices', ConfigProvider::isShowCalendarPrices() ? 'Y' : 'N');
+    $view->assign('calendar_prices_json', $calendar_prices_json);
+    $view->assign('calendar_prices_currency', $calendar_prices_currency);
+    $view->assign('show_calendar_prices', ConfigProvider::isShowCalendarPrices() ? 'Y' : 'N');
 
     // Terms are now fetched directly from API at checkout (Option A)
     // No need to pass through booking form
 
     // Page setup
     $page_title = __('novoton_holidays.complete_booking');
-    Tygh::$app['view']->assign('page_title', $page_title);
+    $view->assign('page_title', $page_title);
     Registry::set('navigation.dynamic.page_title', $page_title);
     fn_add_breadcrumb($page_title);

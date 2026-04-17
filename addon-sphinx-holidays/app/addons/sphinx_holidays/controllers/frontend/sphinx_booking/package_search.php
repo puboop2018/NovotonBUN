@@ -16,20 +16,22 @@ use Tygh\Tygh;
 use Tygh\Addons\SphinxHolidays\Services\Container;
 use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
 use Tygh\Addons\SphinxHolidays\Services\CacheService;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 
 try {
     $api = Container::getApi();
     $view = Tygh::$app['view'];
 
-    $departure_id = (int)($_REQUEST['departure_id'] ?? 0);
-    $destination_id = (int)($_REQUEST['destination_id'] ?? 0);
-    $departure_date = trim($_REQUEST['departure_date'] ?? '');
-    $nights = max(1, (int)($_REQUEST['nights'] ?? 7));
-    $adults = max(1, (int)($_REQUEST['adults'] ?? 2));
-    $children = max(0, (int)($_REQUEST['children'] ?? 0));
-    $children_ages_str = trim($_REQUEST['children_ages'] ?? '');
-    $rooms = max(1, (int)($_REQUEST['rooms'] ?? 1));
-    $transport = trim($_REQUEST['transport'] ?? '');
+    $departure_id = RequestCoerce::int($_REQUEST, 'departure_id');
+    $destination_id = RequestCoerce::int($_REQUEST, 'destination_id');
+    $departure_date = RequestCoerce::string($_REQUEST, 'departure_date');
+    $nights = max(1, RequestCoerce::int($_REQUEST, 'nights', 7));
+    $adults = max(1, RequestCoerce::int($_REQUEST, 'adults', 2));
+    $children = max(0, RequestCoerce::int($_REQUEST, 'children'));
+    $children_ages_str = RequestCoerce::string($_REQUEST, 'children_ages');
+    $rooms = max(1, RequestCoerce::int($_REQUEST, 'rooms', 1));
+    $transport = RequestCoerce::string($_REQUEST, 'transport');
 
     if (empty($departure_date) || empty($destination_id)) {
         fn_set_notification('W', __('warning'),
@@ -80,7 +82,7 @@ try {
         $cacheKey = CacheService::buildSearchKey(array_merge(['_type' => 'package'], $searchParams));
         $cached = CacheService::get($cacheKey);
         if ($cached !== null) {
-            $allResults = $cached['results'] ?? [];
+            $allResults = TypeCoerce::toRowList($cached['results'] ?? []);
             $fromCache = true;
         }
     }
@@ -88,7 +90,7 @@ try {
     if (!$fromCache) {
         $searchResponse = $api->searchPackages($searchParams);
 
-        $searchId = $searchResponse['search_id'] ?? '';
+        $searchId = TypeCoerce::toString($searchResponse['search_id'] ?? '');
         if (empty($searchId) && empty($searchResponse['cursor'])) {
             fn_set_notification('E', __('error'),
                 __('sphinx_holidays.search_error', ['[default]' => 'Search failed. Please try again.']));
@@ -98,7 +100,7 @@ try {
 
         // Poll for results using search_id + cursor
         $maxPolls = ConfigProvider::getSearchMaxPolls();
-        $cursor = $searchResponse['cursor'] ?? null;
+        $cursor = isset($searchResponse['cursor']) ? TypeCoerce::toString($searchResponse['cursor']) : null;
         $pollCount = 0;
 
         do {
@@ -107,13 +109,14 @@ try {
             $pollResponse = $api->getPackageResults($searchId, $cursor);
             if ($pollResponse === null) break;
 
-            if (!empty($pollResponse['data'])) {
-                foreach ($pollResponse['data'] as $result) {
+            $pollData = TypeCoerce::toRowList($pollResponse['data'] ?? []);
+            if (!empty($pollData)) {
+                foreach ($pollData as $result) {
                     $allResults[] = $result;
                 }
             }
 
-            $cursor = $pollResponse['cursor'] ?? null;
+            $cursor = isset($pollResponse['cursor']) ? TypeCoerce::toString($pollResponse['cursor']) : null;
             if ($cursor === null) break;
 
         } while ($pollCount < $maxPolls);
@@ -127,9 +130,11 @@ try {
     // Apply commission to pricing.selling_price
     $cartService = Container::getCartService();
     foreach ($allResults as &$result) {
-        if (isset($result['pricing']['selling_price'])) {
-            $result['pricing']['original_selling_price'] = $result['pricing']['selling_price'];
-            $result['pricing']['selling_price'] = $cartService->applyCommission((float)$result['pricing']['selling_price']);
+        $resultPricing = TypeCoerce::toStringMap($result['pricing'] ?? null);
+        if (isset($resultPricing['selling_price'])) {
+            $resultPricing['original_selling_price'] = $resultPricing['selling_price'];
+            $resultPricing['selling_price'] = $cartService->applyCommission(TypeCoerce::toFloat($resultPricing['selling_price']));
+            $result['pricing'] = $resultPricing;
         }
     }
     unset($result);

@@ -14,7 +14,6 @@ use Tygh\Tygh;
 use Tygh\Registry;
 use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
-use Tygh\Addons\TravelCore\Helpers\ValidationHelpers;
 use Tygh\Addons\TravelCore\Services\FeatureMapper;
 use Tygh\Addons\TravelCore\Services\TravelProviderRegistry;
 use Tygh\Addons\TravelCore\TravelConstants;
@@ -36,34 +35,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Update mapping
     if ($mode === 'update') {
-        $mapId = ValidationHelpers::toInt($_REQUEST['map_id'] ?? 0);
+        $mapId = RequestCoerce::int($_REQUEST, 'map_id');
         if ($mapId > 0 && !empty($_REQUEST['mapping_data']) && is_array($_REQUEST['mapping_data'])) {
-            /** @var array<string, mixed> $data */
-            $data = $_REQUEST['mapping_data'];
+            $data = TypeCoerce::toStringMap($_REQUEST['mapping_data']);
             $updateData = [];
 
             // Allowed editable fields
             if (isset($data['display_name_en'])) {
-                $updateData['display_name_en'] = ValidationHelpers::toString($data['display_name_en']);
+                $updateData['display_name_en'] = TypeCoerce::toString($data['display_name_en']);
             }
             if (isset($data['display_name_ro'])) {
-                $updateData['display_name_ro'] = ValidationHelpers::toString($data['display_name_ro']);
+                $updateData['display_name_ro'] = TypeCoerce::toString($data['display_name_ro']);
             }
             if (isset($data['cscart_feature_id'])) {
-                $updateData['cscart_feature_id'] = ValidationHelpers::toInt($data['cscart_feature_id']) ?: null;
+                $updateData['cscart_feature_id'] = TypeCoerce::toInt($data['cscart_feature_id']) ?: null;
             }
             if (isset($data['cscart_variant_id'])) {
-                $updateData['cscart_variant_id'] = ValidationHelpers::toInt($data['cscart_variant_id']) ?: null;
+                $updateData['cscart_variant_id'] = TypeCoerce::toInt($data['cscart_variant_id']) ?: null;
                 // Mark as manually set to prevent auto-overwrite
-                if (ValidationHelpers::toInt($data['cscart_variant_id'] ?? 0) > 0) {
+                if (TypeCoerce::toInt($data['cscart_variant_id'] ?? 0) > 0) {
                     $updateData['variant_source'] = 'manual';
                 }
             }
             if (isset($data['position'])) {
-                $updateData['position'] = ValidationHelpers::toInt($data['position']);
+                $updateData['position'] = TypeCoerce::toInt($data['position']);
             }
             if (isset($data['status'])) {
-                $updateData['status'] = ValidationHelpers::toString($data['status']) === 'A' ? 'A' : 'D';
+                $updateData['status'] = TypeCoerce::toString($data['status']) === 'A' ? 'A' : 'D';
             }
 
             if (!empty($updateData)) {
@@ -73,13 +71,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-        $redirectParams = !empty($_REQUEST['feature_type_filter']) ? '&feature_type=' . urlencode(ValidationHelpers::toString($_REQUEST['feature_type_filter'])) : '';
+        $redirectParams = !empty($_REQUEST['feature_type_filter']) ? '&feature_type=' . urlencode(TypeCoerce::toString($_REQUEST['feature_type_filter'])) : '';
         return [CONTROLLER_STATUS_REDIRECT, 'travel_feature_mappings.manage' . $redirectParams];
     }
 
     // Bulk update (toggle status, delete)
     if ($mode === 'bulk_update') {
-        $action = ValidationHelpers::toString($_REQUEST['dispatch_extra'] ?? '');
+        $action = RequestCoerce::string($_REQUEST, 'dispatch_extra');
         $ids = RequestCoerce::intList($_REQUEST, 'map_ids');
 
         if (!empty($ids)) {
@@ -97,7 +95,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             FeatureMapper::clearCache();
         }
 
-        $redirectParams = !empty($_REQUEST['feature_type']) ? '&feature_type=' . urlencode(ValidationHelpers::toString($_REQUEST['feature_type'])) : '';
+        $redirectParams = !empty($_REQUEST['feature_type']) ? '&feature_type=' . urlencode(TypeCoerce::toString($_REQUEST['feature_type'])) : '';
         return [CONTROLLER_STATUS_REDIRECT, 'travel_feature_mappings.manage' . $redirectParams];
     }
 
@@ -131,7 +129,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Group unmapped rows by cscart_feature_id for batch lookup
         $byFeature = [];
         foreach ($unmapped as $mapping) {
-            $fid = ValidationHelpers::toInt($mapping['cscart_feature_id'] ?? 0);
+            $fid = TypeCoerce::toInt($mapping['cscart_feature_id'] ?? 0);
             if ($fid > 0) {
                 $byFeature[$fid][] = $mapping;
             } else {
@@ -157,7 +155,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             foreach ($mappings as $mapping) {
                 $mappingMap = TypeCoerce::toStringMap($mapping);
-                $nameEn = trim(ValidationHelpers::toString($mappingMap['display_name_en'] ?? ''));
+                $nameEn = trim(TypeCoerce::toString($mappingMap['display_name_en'] ?? ''));
                 if ($nameEn === '') {
                     $failed++;
                     continue;
@@ -192,11 +190,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
 
                 if ($variantId) {
-                    FeatureMapper::updateVariantId(ValidationHelpers::toInt($mappingMap['map_id'] ?? 0), ValidationHelpers::toInt($variantId), 'auto');
+                    FeatureMapper::updateVariantId(TypeCoerce::toInt($mappingMap['map_id'] ?? 0), TypeCoerce::toInt($variantId), 'auto');
                     $resolved++;
                 } else {
                     // Auto-create the variant
-                    $nameRo = trim(ValidationHelpers::toString($mappingMap['display_name_ro'] ?? '')) ?: $nameEn;
+                    $nameRo = trim(TypeCoerce::toString($mappingMap['display_name_ro'] ?? '')) ?: $nameEn;
                     $languages = $repo->getActiveLanguageCodes();
                     if (empty($languages)) {
                         $languages = ['en'];
@@ -592,10 +590,10 @@ if ($mode === 'unmapped') {
 
 // ── GET: Scan progress (intermediate page between batches) ──
 if ($mode === 'scan_progress') {
-    $provider = preg_replace('/[^a-z0-9_]/', '', strtolower((string) ($_REQUEST['scan_provider'] ?? '')));
-    $scanOffset = max(0, (int) ($_REQUEST['scan_offset'] ?? 0));
-    $scanTotal = max(0, (int) ($_REQUEST['scan_total'] ?? 0));
-    $batchSize = min(max((int) ($_REQUEST['batch_size'] ?? TravelConstants::BATCH_SIZE_DEFAULT), TravelConstants::BATCH_SIZE_MIN), TravelConstants::BATCH_SIZE_MAX);
+    $provider = preg_replace('/[^a-z0-9_]/', '', strtolower(RequestCoerce::string($_REQUEST, 'scan_provider')));
+    $scanOffset = max(0, RequestCoerce::int($_REQUEST, 'scan_offset'));
+    $scanTotal = max(0, RequestCoerce::int($_REQUEST, 'scan_total'));
+    $batchSize = min(max(RequestCoerce::int($_REQUEST, 'batch_size', TravelConstants::BATCH_SIZE_DEFAULT), TravelConstants::BATCH_SIZE_MIN), TravelConstants::BATCH_SIZE_MAX);
 
     $percent = $scanTotal > 0 ? round($scanOffset / $scanTotal * 100, 1) : 0;
 
@@ -608,7 +606,7 @@ if ($mode === 'scan_progress') {
 
 // ── GET: Edit single mapping ──
 if ($mode === 'edit') {
-    $mapId = (int) ($_REQUEST['map_id'] ?? 0);
+    $mapId = RequestCoerce::int($_REQUEST, 'map_id');
 
     if ($mapId <= 0) {
         fn_set_notification('E', __('error'), __('travel_core.fm_mapping_not_found'));
@@ -641,7 +639,7 @@ if ($mode === 'edit') {
 
 // ── GET: AJAX — load variants for a feature (used by edit page) ──
 if ($mode === 'get_variants') {
-    $featureId = (int) ($_REQUEST['feature_id'] ?? 0);
+    $featureId = RequestCoerce::int($_REQUEST, 'feature_id');
     $variants = [];
 
     if ($featureId > 0) {

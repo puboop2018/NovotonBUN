@@ -18,13 +18,15 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 use Tygh\Tygh;
 use Tygh\Addons\SphinxHolidays\Services\Container;
 use Tygh\Addons\SphinxHolidays\Services\CacheService;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 
 header('Content-Type: application/json; charset=utf-8');
 
 try {
-    $searchId = trim($_REQUEST['search_id'] ?? '');
-    $cursor = $_REQUEST['cursor'] ?? null;
-    $finalize = !empty($_REQUEST['finalize']);
+    $searchId = RequestCoerce::string($_REQUEST, 'search_id');
+    $cursor = RequestCoerce::string($_REQUEST, 'cursor');
+    $finalize = RequestCoerce::bool($_REQUEST, 'finalize');
 
     if ($searchId === '') {
         echo json_encode(['status' => 'error', 'error' => 'Missing search_id']);
@@ -32,32 +34,34 @@ try {
     }
 
     $api = Container::getApi();
-    $pollResponse = $api->getHotelResults($searchId, $cursor !== null && $cursor !== '' ? $cursor : null);
+    $pollResponse = $api->getHotelResults($searchId, $cursor !== '' ? $cursor : null);
 
     if ($pollResponse === null) {
         echo json_encode(['status' => 'error', 'error' => 'API returned null']);
         exit;
     }
 
-    $results = $pollResponse['results'] ?? [];
-    $status = $pollResponse['status'] ?? 'completed';
-    $nextCursor = $pollResponse['next_cursor'] ?? null;
+    $results = TypeCoerce::toRowList($pollResponse['results'] ?? []);
+    $status = TypeCoerce::toString($pollResponse['status'] ?? 'completed');
+    $nextCursor = isset($pollResponse['next_cursor']) ? TypeCoerce::toString($pollResponse['next_cursor']) : null;
 
     // Apply commission to each result
     $cartService = Container::getCartService();
     foreach ($results as &$result) {
         if (isset($result['price'])) {
             $result['original_price'] = $result['price'];
-            $result['price'] = $cartService->applyCommission((float) $result['price']);
+            $result['price'] = $cartService->applyCommission(TypeCoerce::toFloat($result['price']));
         }
         if (!empty($result['offers'])) {
-            foreach ($result['offers'] as &$offer) {
+            $offers = TypeCoerce::toRowList($result['offers']);
+            foreach ($offers as &$offer) {
                 if (isset($offer['price'])) {
                     $offer['original_price'] = $offer['price'];
-                    $offer['price'] = $cartService->applyCommission((float) $offer['price']);
+                    $offer['price'] = $cartService->applyCommission(TypeCoerce::toFloat($offer['price']));
                 }
             }
             unset($offer);
+            $result['offers'] = $offers;
         }
     }
     unset($result);
@@ -82,21 +86,21 @@ try {
 
     // On completion, persist the full result set to cache for future searches
     if (($status === 'completed' || $finalize) && !empty($slimResults)) {
-        $searchMeta = Tygh::$app['session']['sphinx_search_' . $searchId] ?? null;
-        if ($searchMeta !== null && !empty($searchMeta['cache_key']) && !empty($searchMeta['cache_ttl'])) {
+        $searchMeta = TypeCoerce::toStringMap(Tygh::$app['session']['sphinx_search_' . $searchId] ?? null);
+        if (!empty($searchMeta['cache_key']) && !empty($searchMeta['cache_ttl'])) {
             // Accumulate results across multiple poll batches via session
-            $cachedBatch = Tygh::$app['session']['sphinx_results_' . $searchId] ?? [];
+            $cachedBatch = TypeCoerce::toRowList(Tygh::$app['session']['sphinx_results_' . $searchId] ?? null);
             $cachedBatch = array_merge($cachedBatch, $slimResults);
-            CacheService::set($searchMeta['cache_key'], [
+            CacheService::set(TypeCoerce::toString($searchMeta['cache_key']), [
                 'results' => $cachedBatch,
                 'search_id' => $searchId,
-            ], (int) $searchMeta['cache_ttl']);
+            ], TypeCoerce::toInt($searchMeta['cache_ttl']));
             unset(Tygh::$app['session']['sphinx_results_' . $searchId]);
             unset(Tygh::$app['session']['sphinx_search_' . $searchId]);
         }
     } elseif (!empty($slimResults)) {
         // Accumulate intermediate results in session for final caching
-        $existing = Tygh::$app['session']['sphinx_results_' . $searchId] ?? [];
+        $existing = TypeCoerce::toRowList(Tygh::$app['session']['sphinx_results_' . $searchId] ?? null);
         Tygh::$app['session']['sphinx_results_' . $searchId] = array_merge($existing, $slimResults);
     }
 

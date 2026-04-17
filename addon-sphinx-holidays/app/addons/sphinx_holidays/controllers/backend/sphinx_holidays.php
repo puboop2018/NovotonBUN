@@ -20,11 +20,13 @@ use Tygh\Addons\SphinxHolidays\Services\Container;
 use Tygh\Addons\SphinxHolidays\Services\DestinationSyncService;
 use Tygh\Addons\SphinxHolidays\Services\HotelSyncService;
 use Tygh\Addons\SphinxHolidays\Cron\Commands\AddProductsCommand;
-use Tygh\Addons\TravelCore\Helpers\ValidationHelpers;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
+
+/** @var \Smarty $view */
+$view = Tygh::$app['view'];
 
 // $mode is set automatically by CS-Cart from the dispatch parameter
 // e.g. dispatch=sphinx_holidays.sync_destinations sets $mode = 'sync_destinations'
@@ -47,9 +49,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $result = $service->sync();
 
         if (!empty($result['success'])) {
-            fn_set_notification('N', __('notice'), TypeCoerce::toString(__('sphinx_holidays.sync_completed')) . ': ' . ValidationHelpers::toInt($result['synced'] ?? 0) . '/' . ValidationHelpers::toInt($result['total'] ?? 0));
+            fn_set_notification('N', __('notice'), TypeCoerce::toString(__('sphinx_holidays.sync_completed')) . ': ' . TypeCoerce::toInt($result['synced'] ?? 0) . '/' . TypeCoerce::toInt($result['total'] ?? 0));
         } else {
-            fn_set_notification('E', __('error'), TypeCoerce::toString(__('sphinx_holidays.sync_failed')) . ': ' . (ValidationHelpers::toString($result['error'] ?? '') ?: 'Unknown error'));
+            fn_set_notification('E', __('error'), TypeCoerce::toString(__('sphinx_holidays.sync_failed')) . ': ' . (TypeCoerce::toString($result['error'] ?? '') ?: 'Unknown error'));
         }
 
         return [CONTROLLER_STATUS_REDIRECT, 'sphinx_holidays.manage'];
@@ -72,9 +74,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $result = $service->sync($countryCodes);
 
         if (!empty($result['success'])) {
-            fn_set_notification('N', __('notice'), TypeCoerce::toString(__('sphinx_holidays.hotel_sync_completed')) . ': ' . ValidationHelpers::toInt($result['synced'] ?? 0) . '/' . ValidationHelpers::toInt($result['total'] ?? 0));
+            fn_set_notification('N', __('notice'), TypeCoerce::toString(__('sphinx_holidays.hotel_sync_completed')) . ': ' . TypeCoerce::toInt($result['synced'] ?? 0) . '/' . TypeCoerce::toInt($result['total'] ?? 0));
         } else {
-            fn_set_notification('E', __('error'), TypeCoerce::toString(__('sphinx_holidays.hotel_sync_failed')) . ': ' . (ValidationHelpers::toString($result['error'] ?? '') ?: 'Unknown error'));
+            fn_set_notification('E', __('error'), TypeCoerce::toString(__('sphinx_holidays.hotel_sync_failed')) . ': ' . (TypeCoerce::toString($result['error'] ?? '') ?: 'Unknown error'));
         }
 
         return [CONTROLLER_STATUS_REDIRECT, 'sphinx_holidays.manage'];
@@ -95,8 +97,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if (!empty($result['success'])) {
             $stats = is_array($result['stats'] ?? null) ? $result['stats'] : [];
-            $added = ValidationHelpers::toInt($stats['added'] ?? 0);
-            $invalid = ValidationHelpers::toInt($stats['invalid_country'] ?? 0);
+            $added = TypeCoerce::toInt($stats['added'] ?? 0);
+            $invalid = TypeCoerce::toInt($stats['invalid_country'] ?? 0);
             $msg = TypeCoerce::toString(__('sphinx_holidays.products_created')) . ': ' . $added;
             if ($invalid > 0) {
                 $msg .= ' (' . $invalid . ' ' . TypeCoerce::toString(__('sphinx_holidays.skipped_invalid_country')) . ')';
@@ -123,11 +125,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $service = new HotelSyncService($api, $hotelRepo, $destRepo);
 
         $result = $service->relinkExistingProducts();
-        $rLinked = ValidationHelpers::toInt($result['linked'] ?? 0);
-        $rSkipped = ValidationHelpers::toInt($result['skipped'] ?? 0);
-        $rNotFound = ValidationHelpers::toInt($result['not_found'] ?? 0);
-        $rErrors = ValidationHelpers::toInt($result['errors'] ?? 0);
-        $rTotal = ValidationHelpers::toInt($result['total'] ?? 0);
+        $rLinked = TypeCoerce::toInt($result['linked'] ?? 0);
+        $rSkipped = TypeCoerce::toInt($result['skipped'] ?? 0);
+        $rNotFound = TypeCoerce::toInt($result['not_found'] ?? 0);
+        $rErrors = TypeCoerce::toInt($result['errors'] ?? 0);
+        $rTotal = TypeCoerce::toInt($result['total'] ?? 0);
 
         if ($rLinked > 0 || $rSkipped > 0) {
             fn_set_notification('N', __('notice'), __('sphinx_holidays.relink_done', [
@@ -167,7 +169,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($mode === 'save_whitelist') {
         // Single JSON field to avoid PHP max_input_vars limit
-        $whitelist = json_decode(ValidationHelpers::toString($_REQUEST['whitelist_json'] ?? '[]'), true) ?: [];
+        $whitelist = json_decode(TypeCoerce::toString($_REQUEST['whitelist_json'] ?? '[]'), true) ?: [];
 
         $whitelistRepo = Container::getDestinationWhitelistRepository();
         try {
@@ -466,22 +468,22 @@ if ($mode === 'manage') {
     $syncLogRepo = Container::getSyncLogRepository();
     $syncLogs = $syncLogRepo->getRecent(10);
 
-    Tygh::$app['view']->assign('counts_by_type', $countsByType);
-    Tygh::$app['view']->assign('total_destinations', $totalDestinations);
-    Tygh::$app['view']->assign('dest_last_synced', $destLastSynced);
-    Tygh::$app['view']->assign('total_hotels', $totalHotels);
-    Tygh::$app['view']->assign('hotels_by_country', $hotelsByCountry);
-    Tygh::$app['view']->assign('hotel_last_synced', $hotelLastSynced);
-    Tygh::$app['view']->assign('linked_products', $linkedCount);
-    Tygh::$app['view']->assign('unlinked_hotels', $unlinkedCount);
-    Tygh::$app['view']->assign('skipped_hotels', $skippedCount);
-    Tygh::$app['view']->assign('selected_countries', $selectedCountries);
-    Tygh::$app['view']->assign('is_configured', $isConfigured);
+    $view->assign('counts_by_type', $countsByType);
+    $view->assign('total_destinations', $totalDestinations);
+    $view->assign('dest_last_synced', $destLastSynced);
+    $view->assign('total_hotels', $totalHotels);
+    $view->assign('hotels_by_country', $hotelsByCountry);
+    $view->assign('hotel_last_synced', $hotelLastSynced);
+    $view->assign('linked_products', $linkedCount);
+    $view->assign('unlinked_hotels', $unlinkedCount);
+    $view->assign('skipped_hotels', $skippedCount);
+    $view->assign('selected_countries', $selectedCountries);
+    $view->assign('is_configured', $isConfigured);
     // Orphaned SPX products: exist in CS-Cart but not linked in sphinx_hotels
     $orphanedSpxCount = $hotelRepo->countOrphanedProducts(ConfigProvider::getProductCodePrefix());
-    Tygh::$app['view']->assign('orphaned_spx_products', $orphanedSpxCount);
+    $view->assign('orphaned_spx_products', $orphanedSpxCount);
 
-    Tygh::$app['view']->assign('sync_logs', $syncLogs);
+    $view->assign('sync_logs', $syncLogs);
 
     // Cron URLs for the dashboard
     $cron_key = ConfigProvider::getCronAccessKey();
@@ -501,8 +503,8 @@ if ($mode === 'manage') {
         'update_products' => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=update_products",
         'sync_images'     => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=sync_images",
     ];
-    Tygh::$app['view']->assign('cron_urls', $cron_urls);
-    Tygh::$app['view']->assign('cron_key', $cron_key);
+    $view->assign('cron_urls', $cron_urls);
+    $view->assign('cron_key', $cron_key);
 
 } elseif ($mode === 'destinations') {
     $repository = Container::getDestinationRepository();
@@ -524,9 +526,9 @@ if ($mode === 'manage') {
         $total = $result['total'];
     }
 
-    Tygh::$app['view']->assign('destinations', $items);
-    Tygh::$app['view']->assign('search', $params);
-    Tygh::$app['view']->assign('total_items', $total);
+    $view->assign('destinations', $items);
+    $view->assign('search', $params);
+    $view->assign('total_items', $total);
 
 } elseif ($mode === 'hotels') {
     [$hotels, $search] = fn_sphinx_holidays_get_hotels($_REQUEST);
@@ -550,13 +552,13 @@ if ($mode === 'manage') {
     ], static fn($v) => $v !== '' && $v !== null);
     $sortUrlBase = 'sphinx_holidays.hotels?' . http_build_query($sortFilterParams);
 
-    Tygh::$app['view']->assign('hotels', $hotels);
-    Tygh::$app['view']->assign('search', $search);
-    Tygh::$app['view']->assign('total_items', $search['total_items']);
-    Tygh::$app['view']->assign('sort_url_base', $sortUrlBase);
-    Tygh::$app['view']->assign('distinct_countries', $distinctCountries);
-    Tygh::$app['view']->assign('distinct_classifications', $distinctClassifications);
-    Tygh::$app['view']->assign('distinct_property_types', $distinctPropertyTypes);
+    $view->assign('hotels', $hotels);
+    $view->assign('search', $search);
+    $view->assign('total_items', $search['total_items']);
+    $view->assign('sort_url_base', $sortUrlBase);
+    $view->assign('distinct_countries', $distinctCountries);
+    $view->assign('distinct_classifications', $distinctClassifications);
+    $view->assign('distinct_property_types', $distinctPropertyTypes);
 
 } elseif ($mode === 'whitelist') {
     $destRepo = Container::getDestinationRepository();
@@ -653,12 +655,12 @@ if ($mode === 'manage') {
         ];
     }
 
-    Tygh::$app['view']->assign('counts_by_type', $countsByType);
-    Tygh::$app['view']->assign('total_destinations', $totalDestinations);
-    Tygh::$app['view']->assign('countries', $countryData);
-    Tygh::$app['view']->assign('whitelist_map', $whitelistMap);
-    Tygh::$app['view']->assign('whitelisted_country_count', $whitelistedCountryCount);
-    Tygh::$app['view']->assign('whitelisted_region_count', $whitelistedRegionCount);
-    Tygh::$app['view']->assign('sample_cities', $sampleCities);
-    Tygh::$app['view']->assign('whitelist_summary', $whitelistSummary);
+    $view->assign('counts_by_type', $countsByType);
+    $view->assign('total_destinations', $totalDestinations);
+    $view->assign('countries', $countryData);
+    $view->assign('whitelist_map', $whitelistMap);
+    $view->assign('whitelisted_country_count', $whitelistedCountryCount);
+    $view->assign('whitelisted_region_count', $whitelistedRegionCount);
+    $view->assign('sample_cities', $sampleCities);
+    $view->assign('whitelist_summary', $whitelistSummary);
 }

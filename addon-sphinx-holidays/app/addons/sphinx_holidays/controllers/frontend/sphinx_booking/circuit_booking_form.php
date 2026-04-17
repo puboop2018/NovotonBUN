@@ -16,15 +16,17 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 use Tygh\Tygh;
 use Tygh\Addons\SphinxHolidays\Services\Container;
 use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 
 $view = Tygh::$app['view'];
 
-$circuit_id = (int)($_REQUEST['circuit_id'] ?? 0);
-$departure_date = trim($_REQUEST['departure_date'] ?? '');
-$departure_id = (int)($_REQUEST['departure_id'] ?? 0);
-$adults = max(1, (int)($_REQUEST['adults'] ?? 2));
-$children = max(0, (int)($_REQUEST['children'] ?? 0));
-$children_ages_str = trim($_REQUEST['children_ages'] ?? '');
+$circuit_id = RequestCoerce::int($_REQUEST, 'circuit_id');
+$departure_date = RequestCoerce::string($_REQUEST, 'departure_date');
+$departure_id = RequestCoerce::int($_REQUEST, 'departure_id');
+$adults = max(1, RequestCoerce::int($_REQUEST, 'adults', 2));
+$children = max(0, RequestCoerce::int($_REQUEST, 'children'));
+$children_ages_str = RequestCoerce::string($_REQUEST, 'children_ages');
 
 if (empty($circuit_id) || empty($departure_date)) {
     fn_set_notification('E', __('error'), __('sphinx_holidays.invalid_circuit', ['[default]' => 'Invalid circuit selection.']));
@@ -49,7 +51,7 @@ try {
     }
 
     $quoteResponse = $api->getCircuitQuote($quoteParams);
-    $quotes = $quoteResponse['data'] ?? [];
+    $quotes = TypeCoerce::toRowList($quoteResponse['data'] ?? []);
 
     if (empty($quotes)) {
         fn_set_notification('W', __('warning'),
@@ -59,42 +61,46 @@ try {
 
     // Take the first quote (or let user select if multiple)
     $quote = $quotes[0];
-    $offer_id = $quote['offer_id'] ?? '';
+    $offer_id = TypeCoerce::toString($quote['offer_id'] ?? '');
 
     // Apply commission
-    $sellingPrice = (float)($quote['pricing']['selling_price'] ?? 0);
+    $quotePricing = TypeCoerce::toStringMap($quote['pricing'] ?? null);
+    $sellingPrice = TypeCoerce::toFloat($quotePricing['selling_price'] ?? 0);
     $basePrice = $sellingPrice;
     $sellingPrice = Container::getCartService()->applyCommission($sellingPrice);
 
     // Parse rooms from quote
-    $rooms = $quote['rooms'] ?? [];
+    $rooms = TypeCoerce::toRowList($quote['rooms'] ?? []);
 
     // Parse additional services (optional/mandatory)
-    $additionalServices = $quote['additional_services'] ?? [];
+    $additionalServices = TypeCoerce::toList($quote['additional_services'] ?? []);
+
+    $quoteDeparture = TypeCoerce::toStringMap($quote['departure'] ?? null);
+    $quoteDuration = TypeCoerce::toStringMap($quote['duration'] ?? null);
 
     $view->assign('sphinx_circuit_booking', [
         'offer_id' => $offer_id,
         'circuit_id' => $circuit_id,
-        'title' => $quote['title'] ?? '',
+        'title' => TypeCoerce::toString($quote['title'] ?? ''),
         'departure_date' => $departure_date,
         'departure_id' => $departure_id,
-        'departure_name' => $quote['departure']['name'] ?? '',
-        'transport_type' => $quote['transport_type'] ?? '',
-        'duration_days' => $quote['duration']['days'] ?? 0,
-        'duration_nights' => $quote['duration']['nights'] ?? 0,
-        'summary' => $quote['summary'] ?? '',
-        'image' => $quote['image'] ?? '',
+        'departure_name' => TypeCoerce::toString($quoteDeparture['name'] ?? ''),
+        'transport_type' => TypeCoerce::toString($quote['transport_type'] ?? ''),
+        'duration_days' => TypeCoerce::toInt($quoteDuration['days'] ?? 0),
+        'duration_nights' => TypeCoerce::toInt($quoteDuration['nights'] ?? 0),
+        'summary' => TypeCoerce::toString($quote['summary'] ?? ''),
+        'image' => TypeCoerce::toString($quote['image'] ?? ''),
         'rooms' => $rooms,
-        'meal_type' => $quote['meal_type_name'] ?? '',
+        'meal_type' => TypeCoerce::toString($quote['meal_type_name'] ?? ''),
         'adults' => $adults,
         'children' => $children,
         'children_ages' => $children_ages_str,
         'total_price' => $sellingPrice,
         'base_price' => $basePrice,
-        'currency' => $quote['pricing']['currency'] ?? ConfigProvider::getDefaultCurrency(),
+        'currency' => TypeCoerce::toString($quotePricing['currency'] ?? ConfigProvider::getDefaultCurrency()),
         'additional_services' => $additionalServices,
-        'payment_terms' => $quote['payment_terms'] ?? [],
-        'cancellation_fees' => $quote['cancellation_fees'] ?? [],
+        'payment_terms' => TypeCoerce::toList($quote['payment_terms'] ?? []),
+        'cancellation_fees' => TypeCoerce::toList($quote['cancellation_fees'] ?? []),
         'flight' => $quote['flight'] ?? null,
         'verified' => true,
     ]);

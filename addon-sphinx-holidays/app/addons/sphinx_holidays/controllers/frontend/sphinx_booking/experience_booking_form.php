@@ -17,16 +17,18 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 use Tygh\Tygh;
 use Tygh\Addons\SphinxHolidays\Services\Container;
 use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 
 $view = Tygh::$app['view'];
 
-$experience_id = (int)($_REQUEST['experience_id'] ?? 0);
-$departure_date = trim($_REQUEST['departure_date'] ?? '');
-$adults = max(1, (int)($_REQUEST['adults'] ?? 1));
-$children = max(0, (int)($_REQUEST['children'] ?? 0));
-$children_ages_str = trim($_REQUEST['children_ages'] ?? '');
-$pickup_point_code = trim($_REQUEST['pickup_point_code'] ?? '');
-$pickup_point_time = trim($_REQUEST['pickup_point_time'] ?? '');
+$experience_id = RequestCoerce::int($_REQUEST, 'experience_id');
+$departure_date = RequestCoerce::string($_REQUEST, 'departure_date');
+$adults = max(1, RequestCoerce::int($_REQUEST, 'adults', 1));
+$children = max(0, RequestCoerce::int($_REQUEST, 'children'));
+$children_ages_str = RequestCoerce::string($_REQUEST, 'children_ages');
+$pickup_point_code = RequestCoerce::string($_REQUEST, 'pickup_point_code');
+$pickup_point_time = RequestCoerce::string($_REQUEST, 'pickup_point_time');
 
 if (empty($experience_id) || empty($departure_date)) {
     fn_set_notification('E', __('error'), __('sphinx_holidays.invalid_experience', ['[default]' => 'Invalid experience selection.']));
@@ -54,7 +56,7 @@ try {
     }
 
     $quoteResponse = $api->getExperienceQuote($quoteParams);
-    $quotes = $quoteResponse['data'] ?? [];
+    $quotes = TypeCoerce::toRowList($quoteResponse['data'] ?? []);
 
     if (empty($quotes)) {
         fn_set_notification('W', __('warning'),
@@ -63,23 +65,26 @@ try {
     }
 
     $quote = $quotes[0];
-    $offer_id = $quote['offer_id'] ?? '';
+    $offer_id = TypeCoerce::toString($quote['offer_id'] ?? '');
 
     // Apply commission
-    $sellingPrice = (float)($quote['pricing']['selling_price'] ?? 0);
+    $quotePricing = TypeCoerce::toStringMap($quote['pricing'] ?? null);
+    $sellingPrice = TypeCoerce::toFloat($quotePricing['selling_price'] ?? 0);
     $basePrice = $sellingPrice;
     $sellingPrice = Container::getCartService()->applyCommission($sellingPrice);
+
+    $quoteDuration = TypeCoerce::toStringMap($quote['duration'] ?? null);
 
     $view->assign('sphinx_experience_booking', [
         'offer_id' => $offer_id,
         'experience_id' => $experience_id,
-        'title' => $quote['title'] ?? '',
+        'title' => TypeCoerce::toString($quote['title'] ?? ''),
         'departure_date' => $departure_date,
-        'duration_days' => $quote['duration']['days'] ?? 0,
-        'duration_minutes' => $quote['duration']['minutes'] ?? 0,
-        'duration_description' => $quote['duration']['description'] ?? '',
-        'summary' => $quote['summary'] ?? '',
-        'image' => $quote['image'] ?? '',
+        'duration_days' => TypeCoerce::toInt($quoteDuration['days'] ?? 0),
+        'duration_minutes' => TypeCoerce::toInt($quoteDuration['minutes'] ?? 0),
+        'duration_description' => TypeCoerce::toString($quoteDuration['description'] ?? ''),
+        'summary' => TypeCoerce::toString($quote['summary'] ?? ''),
+        'image' => TypeCoerce::toString($quote['image'] ?? ''),
         'adults' => $adults,
         'children' => $children,
         'children_ages' => $children_ages_str,
@@ -87,9 +92,9 @@ try {
         'pickup_point_time' => $pickup_point_time,
         'total_price' => $sellingPrice,
         'base_price' => $basePrice,
-        'currency' => $quote['pricing']['currency'] ?? ConfigProvider::getDefaultCurrency(),
-        'payment_terms' => $quote['payment_terms'] ?? [],
-        'cancellation_fees' => $quote['cancellation_fees'] ?? [],
+        'currency' => TypeCoerce::toString($quotePricing['currency'] ?? ConfigProvider::getDefaultCurrency()),
+        'payment_terms' => TypeCoerce::toList($quote['payment_terms'] ?? []),
+        'cancellation_fees' => TypeCoerce::toList($quote['cancellation_fees'] ?? []),
         'verified' => true,
     ]);
 
