@@ -16,6 +16,8 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 use Tygh\Addons\SphinxHolidays\Services\CartService;
 use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
 use Tygh\Addons\SphinxHolidays\Services\Container;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 
     $cartService = new CartService();
 
@@ -23,9 +25,9 @@ use Tygh\Addons\SphinxHolidays\Services\Container;
         return $rateLimited;
     }
 
-    $bookingData = $_REQUEST;
-    $offer_id = trim($bookingData['offer_id'] ?? '');
-    $circuit_id = (int) ($bookingData['circuit_id'] ?? 0);
+    $bookingData = TypeCoerce::toStringMap($_REQUEST);
+    $offer_id = RequestCoerce::string($_REQUEST, 'offer_id');
+    $circuit_id = RequestCoerce::int($_REQUEST, 'circuit_id');
 
     if (empty($offer_id) || empty($circuit_id)) {
         fn_set_notification('E', __('error'),
@@ -38,13 +40,13 @@ use Tygh\Addons\SphinxHolidays\Services\Container;
     }
 
     // Optional: customize circuit with selected services
-    $selected_services = $bookingData['services'] ?? [];
+    $selected_services = RequestCoerce::list($_REQUEST, 'services');
     $customized = null;
-    if (!empty($selected_services) && is_array($selected_services)) {
+    if (!empty($selected_services)) {
         try {
             $customized = Container::getApi()->customizeCircuit([
                 'offer_id' => $offer_id,
-                'service_codes' => array_values($selected_services),
+                'service_codes' => $selected_services,
             ]);
             if (!empty($customized['data'])) {
                 $customized = $customized['data'];
@@ -55,9 +57,11 @@ use Tygh\Addons\SphinxHolidays\Services\Container;
     }
 
     // Pricing
-    $total_price   = (float) ($customized['pricing']['selling_price'] ?? $bookingData['total_price'] ?? 0);
-    $basePrice     = (float) ($customized['pricing']['supplier_price'] ?? $bookingData['base_price'] ?? $total_price);
-    $priceCurrency = $customized['pricing']['currency'] ?? $bookingData['currency'] ?? ConfigProvider::getDefaultCurrency();
+    $customizedMap = TypeCoerce::toStringMap($customized);
+    $customizedPricing = TypeCoerce::toStringMap($customizedMap['pricing'] ?? null);
+    $total_price   = TypeCoerce::toFloat($customizedPricing['selling_price'] ?? $bookingData['total_price'] ?? 0);
+    $basePrice     = TypeCoerce::toFloat($customizedPricing['supplier_price'] ?? $bookingData['base_price'] ?? $total_price);
+    $priceCurrency = TypeCoerce::toString($customizedPricing['currency'] ?? $bookingData['currency'] ?? ConfigProvider::getDefaultCurrency());
     $total_price   = $cartService->applyCommission($total_price);
 
     if ($total_price <= 0) {
@@ -67,7 +71,7 @@ use Tygh\Addons\SphinxHolidays\Services\Container;
     }
 
     // Resolve product
-    $product_id = $cartService->resolveProductId((string) $circuit_id, (int) ($bookingData['product_id'] ?? 0));
+    $product_id = $cartService->resolveProductId((string) $circuit_id, RequestCoerce::int($_REQUEST, 'product_id'));
     if (empty($product_id)) {
         fn_set_notification('E', __('error'),
             __('sphinx_holidays.product_not_found', ['[default]' => 'Circuit product not found.']));
@@ -75,8 +79,8 @@ use Tygh\Addons\SphinxHolidays\Services\Container;
     }
 
     // Guest validation
-    $departure_date = trim($bookingData['departure_date'] ?? '');
-    $parsed_guests = $cartService->parseGuests($bookingData['guests'] ?? [], $departure_date);
+    $departure_date = RequestCoerce::string($_REQUEST, 'departure_date');
+    $parsed_guests = $cartService->parseGuests(RequestCoerce::stringMap($_REQUEST, 'guests'), $departure_date);
     if ($parsed_guests === false) {
         return [CONTROLLER_STATUS_REDIRECT, 'sphinx_booking.circuit_booking_form?' . http_build_query([
             'circuit_id' => $circuit_id, 'departure_date' => $departure_date,
@@ -84,25 +88,29 @@ use Tygh\Addons\SphinxHolidays\Services\Container;
     }
 
     // Extract type-specific fields
-    $contact         = $bookingData['contact'] ?? [];
-    $title           = trim($bookingData['title'] ?? '');
-    $departure_name  = trim($bookingData['departure_name'] ?? '');
-    $transport_type  = trim($bookingData['transport_type'] ?? '');
-    $duration_days   = (int) ($bookingData['duration_days'] ?? 0);
-    $duration_nights = (int) ($bookingData['duration_nights'] ?? 0);
-    $adults          = (int) ($bookingData['adults'] ?? 2);
-    $children        = (int) ($bookingData['children'] ?? 0);
-    $children_ages   = trim($bookingData['children_ages'] ?? '');
+    $contact         = RequestCoerce::stringMap($_REQUEST, 'contact');
+    $title           = RequestCoerce::string($_REQUEST, 'title');
+    $departure_name  = RequestCoerce::string($_REQUEST, 'departure_name');
+    $transport_type  = RequestCoerce::string($_REQUEST, 'transport_type');
+    $duration_days   = RequestCoerce::int($_REQUEST, 'duration_days');
+    $duration_nights = RequestCoerce::int($_REQUEST, 'duration_nights');
+    $adults          = RequestCoerce::int($_REQUEST, 'adults', 2);
+    $children        = RequestCoerce::int($_REQUEST, 'children');
+    $children_ages   = RequestCoerce::string($_REQUEST, 'children_ages');
 
-    $rooms = $customized['rooms'] ?? json_decode($bookingData['rooms_json'] ?? '[]', true) ?: [];
+    $customizedRooms = TypeCoerce::toRowList($customizedMap['rooms'] ?? null);
+    $roomsJsonRaw = json_decode(RequestCoerce::string($_REQUEST, 'rooms_json', '[]'), true);
+    $roomsFallback = is_array($roomsJsonRaw) ? $roomsJsonRaw : [];
+    $rooms = !empty($customizedRooms) ? $customizedRooms : TypeCoerce::toRowList($roomsFallback);
     $rooms_data = [];
     foreach ($rooms as $room) {
+        $childrenAgesArr = TypeCoerce::toList($room['children_ages'] ?? []);
         $rooms_data[] = [
-            'room_id'      => $room['code'] ?? '',
-            'room_name'    => $room['name'] ?? '',
-            'adults'       => (int) ($room['adults'] ?? $adults),
-            'children'     => count($room['children_ages'] ?? []),
-            'childrenAges' => $room['children_ages'] ?? [],
+            'room_id'      => TypeCoerce::toString($room['code'] ?? ''),
+            'room_name'    => TypeCoerce::toString($room['name'] ?? ''),
+            'adults'       => TypeCoerce::toInt($room['adults'] ?? $adults),
+            'children'     => count($childrenAgesArr),
+            'childrenAges' => $childrenAgesArr,
         ];
     }
     if (empty($rooms_data)) {
@@ -117,7 +125,7 @@ use Tygh\Addons\SphinxHolidays\Services\Container;
     $booking_record = $cartService->buildBaseBookingRecord(
         $product_id, (string) $circuit_id, $offer_id, $title,
         $parsed_guests, $contact, $basePrice, $total_price, $priceCurrency,
-        $customized ?? $bookingData
+        is_array($customized) ? TypeCoerce::toStringMap($customized) : $bookingData
     );
     $booking_record += [
         'room_id'       => $rooms_data[0]['room_id'],
@@ -134,7 +142,7 @@ use Tygh\Addons\SphinxHolidays\Services\Container;
     ];
 
     $booking_id = $cartService->upsertBooking(
-        $booking_record, (string) $circuit_id, $departure_date, '', $parsed_guests['holder_name']
+        $booking_record, (string) $circuit_id, $departure_date, '', TypeCoerce::toString($parsed_guests['holder_name'])
     );
 
     $product_extra = [
@@ -149,11 +157,11 @@ use Tygh\Addons\SphinxHolidays\Services\Container;
         'num_rooms' => count($rooms_data), 'rooms_data' => $rooms_data,
         'guest_names' => $parsed_guests['guest_list'], 'holder_name' => $parsed_guests['holder_name'],
         'guests_data' => json_encode($parsed_guests['guests_data'], JSON_UNESCAPED_UNICODE),
-        'contact_email' => $contact['email'] ?? '', 'contact_phone' => $contact['phone'] ?? '',
+        'contact_email' => TypeCoerce::toString($contact['email'] ?? ''), 'contact_phone' => TypeCoerce::toString($contact['phone'] ?? ''),
         'total_price' => $total_price, 'currency' => $priceCurrency,
     ];
 
     return $cartService->addToCartAndRedirect(
         $product_id, $total_price, $priceCurrency, $product_extra,
-        __('sphinx_holidays.circuit_added_to_cart', ['[default]' => 'Circuit booking added to cart.'])
+        TypeCoerce::toString(__('sphinx_holidays.circuit_added_to_cart', ['[default]' => 'Circuit booking added to cart.']))
     );

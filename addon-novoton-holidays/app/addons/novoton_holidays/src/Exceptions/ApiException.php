@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 namespace Tygh\Addons\NovotonHolidays\Exceptions;
 
 /**
@@ -40,7 +42,7 @@ class ApiException extends NovotonException
             "Circuit breaker open — API temporarily unavailable ({$secondsUntilRetry}s until retry)",
             $function,
             503,
-            ['seconds_until_retry' => $secondsUntilRetry]
+            ['seconds_until_retry' => $secondsUntilRetry],
         );
     }
 
@@ -50,7 +52,7 @@ class ApiException extends NovotonException
             "API request failed after {$attempts} attempts: {$error}",
             $function,
             $httpCode,
-            ['attempts' => $attempts]
+            ['attempts' => $attempts],
         );
     }
 }

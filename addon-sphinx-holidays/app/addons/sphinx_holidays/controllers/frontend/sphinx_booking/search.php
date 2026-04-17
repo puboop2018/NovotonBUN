@@ -19,22 +19,25 @@ use Tygh\Tygh;
 use Tygh\Addons\SphinxHolidays\Services\Container;
 use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
 use Tygh\Addons\SphinxHolidays\Services\CacheService;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 
 try {
     $api = Container::getApi();
+    /** @var \Smarty $view */
     $view = Tygh::$app['view'];
 
-    $check_in = trim($_REQUEST['check_in'] ?? '');
-    $check_out = trim($_REQUEST['check_out'] ?? '');
-    $hotel_id = trim($_REQUEST['hotel_id'] ?? '');
-    $destination_id = (int) ($_REQUEST['destination_id'] ?? 0);
-    $adults = max(1, (int) ($_REQUEST['adults'] ?? 2));
-    $children = max(0, (int) ($_REQUEST['children'] ?? 0));
-    $children_ages_str = trim($_REQUEST['children_ages'] ?? '');
-    $rooms = max(1, (int) ($_REQUEST['rooms'] ?? 1));
+    $check_in = RequestCoerce::string($_REQUEST, 'check_in');
+    $check_out = RequestCoerce::string($_REQUEST, 'check_out');
+    $hotel_id = RequestCoerce::string($_REQUEST, 'hotel_id');
+    $destination_id = RequestCoerce::int($_REQUEST, 'destination_id');
+    $adults = max(1, RequestCoerce::int($_REQUEST, 'adults', 2));
+    $children = max(0, RequestCoerce::int($_REQUEST, 'children'));
+    $children_ages_str = RequestCoerce::string($_REQUEST, 'children_ages');
+    $rooms = max(1, RequestCoerce::int($_REQUEST, 'rooms', 1));
 
     if (empty($check_out) && !empty($check_in)) {
-        $nights = max(1, (int) ($_REQUEST['nights'] ?? 7));
+        $nights = max(1, RequestCoerce::int($_REQUEST, 'nights', 7));
         $check_out = date('Y-m-d', (int) strtotime($check_in . " + {$nights} days"));
     }
 
@@ -109,8 +112,9 @@ try {
         $cacheKey = CacheService::buildSearchKey($searchParams);
         $cached = CacheService::get($cacheKey);
         if ($cached !== null) {
-            $view->assign('sphinx_search_results', $cached['results'] ?? []);
-            $view->assign('sphinx_search_id', $cached['search_id'] ?? '');
+            $cachedMap = TypeCoerce::toStringMap($cached);
+            $view->assign('sphinx_search_results', TypeCoerce::toRowList($cachedMap['results'] ?? []));
+            $view->assign('sphinx_search_id', TypeCoerce::toString($cachedMap['search_id'] ?? ''));
             $view->assign('sphinx_search_status', 'completed');
             return;
         }
@@ -123,7 +127,7 @@ try {
         fn_log_event('general', 'runtime', [
             'message' => 'Sphinx searchHotels returned no search_id',
             'search_params' => $searchParams,
-            'api_response' => is_array($searchResponse) ? json_encode($searchResponse) : (string) $searchResponse,
+            'api_response' => is_array($searchResponse) ? json_encode($searchResponse) : TypeCoerce::toString($searchResponse),
         ]);
         fn_set_notification('E', __('error'),
             __('sphinx_holidays.search_error', ['[default]' => 'Search failed. Please try again.']));
@@ -131,13 +135,16 @@ try {
     }
 
     // Store search params in session so search_poll can cache completed results
-    Tygh::$app['session']['sphinx_search_' . $searchResponse['search_id']] = [
+    $searchIdStr = TypeCoerce::toString($searchResponse['search_id']);
+    /** @var array<string, mixed> $session */
+    $session = &Tygh::$app['session'];
+    $session['sphinx_search_' . $searchIdStr] = [
         'params'   => $searchParams,
         'cache_key' => $cacheEnabled && $cacheTtl > 0 ? CacheService::buildSearchKey($searchParams) : '',
         'cache_ttl' => $cacheTtl,
     ];
 
-    $view->assign('sphinx_search_id', $searchResponse['search_id']);
+    $view->assign('sphinx_search_id', $searchIdStr);
     $view->assign('sphinx_search_status', 'pending');
 
 } catch (\Throwable $e) {
@@ -150,6 +157,8 @@ try {
         __('sphinx_holidays.search_error',
             ['[default]' => 'An error occurred while searching. Please try again later.']));
 
-    Tygh::$app['view']->assign('sphinx_search_results', []);
-    Tygh::$app['view']->assign('sphinx_search_status', 'error');
+    /** @var \Smarty $errorView */
+    $errorView = Tygh::$app['view'];
+    $errorView->assign('sphinx_search_results', []);
+    $errorView->assign('sphinx_search_status', 'error');
 }

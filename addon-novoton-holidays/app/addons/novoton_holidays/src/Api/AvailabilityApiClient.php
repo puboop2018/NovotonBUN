@@ -1,15 +1,17 @@
 <?php
+
 declare(strict_types=1);
+
 namespace Tygh\Addons\NovotonHolidays\Api;
 
 use Tygh\Addons\NovotonHolidays\Api\Contracts\AvailabilityApiClientInterface;
-use Tygh\Addons\TravelCore\Services\CommissionCalculator;
 use Tygh\Addons\NovotonHolidays\Constants;
+use Tygh\Addons\NovotonHolidays\Helpers\DebugLogger;
 use Tygh\Addons\NovotonHolidays\NovotonHttpClient;
 use Tygh\Addons\NovotonHolidays\NovotonXmlParser;
 use Tygh\Addons\NovotonHolidays\Services\CacheServiceInterface;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
-use Tygh\Addons\NovotonHolidays\Helpers\DebugLogger;
+use Tygh\Addons\TravelCore\Services\CommissionCalculator;
 
 class AvailabilityApiClient extends ApiClientBase implements AvailabilityApiClientInterface
 {
@@ -20,7 +22,7 @@ class AvailabilityApiClient extends ApiClientBase implements AvailabilityApiClie
         NovotonXmlParser $xmlParser,
         ?CacheServiceInterface $cache,
         bool $enableCache,
-        CommissionCalculator $commissionCalculator
+        CommissionCalculator $commissionCalculator,
     ) {
         parent::__construct($httpClient, $xmlParser, $cache, $enableCache);
         $this->commissionCalculator = $commissionCalculator;
@@ -91,8 +93,6 @@ class AvailabilityApiClient extends ApiClientBase implements AvailabilityApiClie
 
     /**
      * 4. hotel_quota - Free allotments for a single room
-     *
-     * @return \SimpleXMLElement
      */
     #[\Override]
     public function getHotelQuota(string $hotelId, string $roomId, string $checkIn, string $checkOut, string $roomType = ''): \SimpleXMLElement
@@ -108,8 +108,6 @@ class AvailabilityApiClient extends ApiClientBase implements AvailabilityApiClie
 
     /**
      * 21. hotel_quota_add - Allotments additional
-     *
-     * @return \SimpleXMLElement
      */
     #[\Override]
     public function getHotelQuotaAdditional(string $hotelId, string $roomId, string $checkIn, string $checkOut): \SimpleXMLElement
@@ -264,7 +262,9 @@ class AvailabilityApiClient extends ApiClientBase implements AvailabilityApiClie
             $nights = (int) ($offer->Nights ?? $offer->nights ?? 7);
             $availability = (int) ($offer->Availability ?? $offer->Avail ?? $offer->avail ?? 0);
 
-            if ($price <= 0) continue;
+            if ($price <= 0) {
+                continue;
+            }
 
             $results[] = [
                 'room_id' => $roomType,
@@ -277,7 +277,7 @@ class AvailabilityApiClient extends ApiClientBase implements AvailabilityApiClie
                 'total_price' => $this->commissionCalculator->apply($price),
                 'price_per_night' => round($this->commissionCalculator->apply($price) / max($nights, 1), 2),
                 'currency' => ConfigProvider::getApiCurrency(),
-                'availability' => $availability
+                'availability' => $availability,
             ];
         }
 
@@ -298,7 +298,9 @@ class AvailabilityApiClient extends ApiClientBase implements AvailabilityApiClie
      */
     private function extractOffersRecursive($data, &$results, $params): void
     {
-        if (!is_array($data)) return;
+        if (!is_array($data)) {
+            return;
+        }
 
         if (isset($data['Price']) || isset($data['price'])) {
             $price = (float) ($data['Price'] ?? $data['price'] ?? 0);
@@ -316,12 +318,12 @@ class AvailabilityApiClient extends ApiClientBase implements AvailabilityApiClie
                     'total_price' => $this->commissionCalculator->apply($price),
                     'price_per_night' => round($this->commissionCalculator->apply($price) / max($nights, 1), 2),
                     'currency' => ConfigProvider::getApiCurrency(),
-                    'availability' => (int) ($data['Availability'] ?? $data['Avail'] ?? 1)
+                    'availability' => (int) ($data['Availability'] ?? $data['Avail'] ?? 1),
                 ];
             }
         }
 
-        foreach ($data as $key => $value) {
+        foreach ($data as $value) {
             if (is_array($value)) {
                 $this->extractOffersRecursive($value, $results, $params);
             }

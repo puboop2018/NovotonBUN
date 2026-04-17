@@ -7,6 +7,8 @@ declare(strict_types=1);
 
 use Tygh\Registry;
 use Tygh\Tygh;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
@@ -14,13 +16,16 @@ if (fn_allowed_for('MULTIVENDOR') || (defined('RESTRICTED_ADMIN') && RESTRICTED_
     return [CONTROLLER_STATUS_DENIED];
 }
 
+/** @var \Smarty $view */
+$view = Tygh::$app['view'];
+
 $altRequestRepo = _nvt_alternative_request_repo();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Check alternatives for a request
     if ($mode === 'check_alternatives' || $mode === 'alternative_rs') {
-        $request_id = (int)($_REQUEST['request_id'] ?? 0);
+        $request_id = RequestCoerce::int($_REQUEST, 'request_id');
 
         if ($request_id > 0) {
             $request = $altRequestRepo->findById($request_id);
@@ -28,13 +33,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             if ($request && !empty($request['novoton_request_id'])) {
                 // Load API
-                $src_dir = Registry::get('config.dir.addons') . 'novoton_holidays/src/';
+                $src_dir = TypeCoerce::toString(Registry::get('config.dir.addons')) . 'novoton_holidays/src/';
                 if (file_exists($src_dir . 'NovotonApi.php')) {
                     require_once($src_dir . 'NovotonApi.php');
                 }
-                
+
                 $api = _nvt_api();
-                $response = $api->reservations()->getAlternatives($request['novoton_request_id']);
+                $novotonReqId = TypeCoerce::toString($request['novoton_request_id']);
+                $response = $api->reservations()->getAlternatives($novotonReqId);
                 
                 if ($response && isset($response->alternative)) {
                     $alternatives = [];
@@ -70,15 +76,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     // Notify customer about alternatives
     if ($mode === 'notify_customer') {
-        $request_id = (int)($_REQUEST['request_id'] ?? 0);
-        
+        $request_id = RequestCoerce::int($_REQUEST, 'request_id');
+
         if ($request_id > 0) {
             $request = $altRequestRepo->findById($request_id);
             $request = $request ? fn_novoton_holidays_decrypt_request_pii($request) : $request;
 
             if ($request && !empty($request['alternatives_data'])) {
-                $alternatives = json_decode($request['alternatives_data'], true);
-                
+                $alternatives = json_decode(TypeCoerce::toString($request['alternatives_data']), true);
+
                 if (!empty($alternatives)) {
                     // Send email to customer
                     $mail_data = [
@@ -88,7 +94,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         'check_in' => $request['check_in'],
                         'check_out' => $request['check_out']
                     ];
-                    
+
+                    /** @var \Tygh\Mailer\Mailer $mailer */
                     $mailer = Tygh::$app['mailer'];
                     $result = $mailer->send([
                         'to' => $request['contact_email'],
@@ -113,7 +120,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     // Delete request
     if ($mode === 'delete') {
-        $request_id = (int)($_REQUEST['request_id'] ?? 0);
+        $request_id = RequestCoerce::int($_REQUEST, 'request_id');
         
         if ($request_id > 0) {
             $altRequestRepo->delete($request_id);
@@ -128,19 +135,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $pending = $altRequestRepo->findPendingOlderThan(0);
         
         if (!empty($pending)) {
-            $src_dir = Registry::get('config.dir.addons') . 'novoton_holidays/src/';
+            $src_dir = TypeCoerce::toString(Registry::get('config.dir.addons')) . 'novoton_holidays/src/';
             if (file_exists($src_dir . 'NovotonApi.php')) {
                 require_once($src_dir . 'NovotonApi.php');
             }
-            
+
             $api = _nvt_api();
             $found = 0;
-            
+
             foreach ($pending as $request) {
                 if (empty($request['novoton_request_id'])) {
                     continue;
                 }
-                $response = $api->reservations()->getAlternatives($request['novoton_request_id']);
+                $novotonReqId = TypeCoerce::toString($request['novoton_request_id']);
+                $response = $api->reservations()->getAlternatives($novotonReqId);
 
                 if ($response && isset($response->alternative)) {
                     $alternatives = [];
@@ -157,7 +165,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                     
                     if (!empty($alternatives)) {
-                        $altRequestRepo->markAlternativesFound($request['request_id'], (string) json_encode($alternatives));
+                        $altRequestRepo->markAlternativesFound(TypeCoerce::toInt($request['request_id'] ?? 0), (string) json_encode($alternatives));
                         $found++;
                     }
                 }
@@ -177,12 +185,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // View/manage alternative requests
 if ($mode === 'manage') {
     
-    $items_per_page = (int)(Registry::get('settings.Appearance.admin_elements_per_page') ?: 30);
-    $page = isset($_REQUEST['page']) ? (int)($_REQUEST['page']) : 1;
-    
+    $items_per_page = TypeCoerce::toInt(Registry::get('settings.Appearance.admin_elements_per_page')) ?: 30;
+    $page = RequestCoerce::int($_REQUEST, 'page', 1);
+
     // Filters
-    $status_filter = htmlspecialchars($_REQUEST['status'] ?? '', ENT_QUOTES, 'UTF-8');
-    $search_email = htmlspecialchars($_REQUEST['email'] ?? '', ENT_QUOTES, 'UTF-8');
+    $status_filter = htmlspecialchars(RequestCoerce::string($_REQUEST, 'status'), ENT_QUOTES, 'UTF-8');
+    $search_email = htmlspecialchars(RequestCoerce::string($_REQUEST, 'email'), ENT_QUOTES, 'UTF-8');
     
     $where = [];
     $params = [];
@@ -213,46 +221,46 @@ if ($mode === 'manage') {
     // Post-decrypt email filter (LIKE doesn't work on encrypted data)
     if (!empty($search_email_filter)) {
         $requests = array_filter($requests, function($req) use ($search_email_filter) {
-            return str_contains(strtolower($req['contact_email'] ?? ''), strtolower($search_email_filter));
+            return str_contains(strtolower(TypeCoerce::toString($req['contact_email'] ?? '')), strtolower($search_email_filter));
         });
         $total_items = count($requests);
     }
 
     foreach ($requests as &$req) {
         if (!empty($req['alternatives_data'])) {
-            $req['alternatives'] = json_decode($req['alternatives_data'], true);
+            $req['alternatives'] = json_decode(TypeCoerce::toString($req['alternatives_data']), true);
         }
     }
 
     // Get status counts for tabs
     $status_counts = $altRequestRepo->getStatusCounts();
     
-    Tygh::$app['view']->assign('requests', $requests);
-    Tygh::$app['view']->assign('status_counts', $status_counts);
-    Tygh::$app['view']->assign('status_filter', $status_filter);
-    Tygh::$app['view']->assign('search_email', $search_email);
-    Tygh::$app['view']->assign('total_items', $total_items);
-    Tygh::$app['view']->assign('items_per_page', $items_per_page);
-    Tygh::$app['view']->assign('page', $page);
+    $view->assign('requests', $requests);
+    $view->assign('status_counts', $status_counts);
+    $view->assign('status_filter', $status_filter);
+    $view->assign('search_email', $search_email);
+    $view->assign('total_items', $total_items);
+    $view->assign('items_per_page', $items_per_page);
+    $view->assign('page', $page);
 }
 
 // View single request details
 if ($mode === 'view') {
-    $request_id = (int)($_REQUEST['request_id'] ?? 0);
-    
+    $request_id = RequestCoerce::int($_REQUEST, 'request_id');
+
     if ($request_id > 0) {
         $request = $altRequestRepo->findById($request_id);
         $request = $request ? fn_novoton_holidays_decrypt_request_pii($request) : $request;
 
         if ($request) {
             if (!empty($request['alternatives_data'])) {
-                $request['alternatives'] = json_decode($request['alternatives_data'], true);
+                $request['alternatives'] = json_decode(TypeCoerce::toString($request['alternatives_data']), true);
             }
             if (!empty($request['api_response'])) {
-                $request['api_response_decoded'] = json_decode($request['api_response'], true);
+                $request['api_response_decoded'] = json_decode(TypeCoerce::toString($request['api_response']), true);
             }
-            
-            Tygh::$app['view']->assign('request', $request);
+
+            $view->assign('request', $request);
         } else {
             return [CONTROLLER_STATUS_NO_PAGE];
         }

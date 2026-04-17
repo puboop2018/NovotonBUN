@@ -27,6 +27,8 @@ use Tygh\Addons\NovotonHolidays\NovotonApi;
 use Tygh\Addons\NovotonHolidays\Services\PriceInfoCalculation;
 use Tygh\Addons\NovotonHolidays\Services\PriceInfoFormatter;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 
 /**
  * Mode: compare
@@ -35,14 +37,14 @@ use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 if ($mode === 'compare') {
     header('Content-Type: text/html; charset=utf-8');
 
-    $hotel_id = $_REQUEST['hotel_id'] ?? '';
-    $package_name = $_REQUEST['package_name'] ?? '';
-    $room_id = $_REQUEST['room_id'] ?? '';
-    $board_id = $_REQUEST['board_id'] ?? '';
-    $check_in = $_REQUEST['check_in'] ?? date('Y') . '-07-01';
-    $nights = (int)($_REQUEST['nights'] ?? 7);
-    $adults = (int)($_REQUEST['adults'] ?? 2);
-    $children_ages = $_REQUEST['children_ages'] ?? '';
+    $hotel_id = PriceInfoFormatter::toScalar($_REQUEST['hotel_id'] ?? '');
+    $package_name = PriceInfoFormatter::toScalar($_REQUEST['package_name'] ?? '');
+    $room_id = PriceInfoFormatter::toScalar($_REQUEST['room_id'] ?? '');
+    $board_id = PriceInfoFormatter::toScalar($_REQUEST['board_id'] ?? '');
+    $check_in = PriceInfoFormatter::toScalar($_REQUEST['check_in'] ?? date('Y') . '-07-01');
+    $nights = PriceInfoFormatter::toInt($_REQUEST['nights'] ?? 7);
+    $adults = PriceInfoFormatter::toInt($_REQUEST['adults'] ?? 2);
+    $children_ages = PriceInfoFormatter::toScalar($_REQUEST['children_ages'] ?? '');
     $show_debug = ConfigProvider::isDebugLogging();
 
     // Parse children ages
@@ -146,11 +148,11 @@ if ($mode === 'compare') {
         'booking_date' => date('Y-m-d')
     ]);
 
-    if (!$calcResult['success']) {
+    if (empty($calcResult['success'])) {
         echo '<div class="result-box result-mismatch">';
-        echo '<strong>Calculation Error:</strong> ' . htmlspecialchars($calcResult['error'] ?? 'Unknown error');
+        echo '<strong>Calculation Error:</strong> ' . htmlspecialchars(PriceInfoFormatter::toScalar($calcResult['error'] ?? 'Unknown error'));
         echo '</div>';
-        echo '<a href="' . fn_url('novoton_price_compare.manage') . '" class="btn">&larr; Back to Form</a>';
+        echo '<a href="' . TypeCoerce::toString(fn_url('novoton_price_compare.manage')) . '" class="btn">&larr; Back to Form</a>';
         echo '</div></body></html>';
         exit;
     }
@@ -161,33 +163,36 @@ if ($mode === 'compare') {
     echo '<div class="step">';
     echo '<div class="step-header"><span class="step-num">1</span><span class="step-title">Room Capacity &amp; Hotel Age Bands</span></div>';
 
-    $roomCap = $calcResult['room_capacity'] ?? [];
+    $roomCap = is_array($calcResult['room_capacity'] ?? null) ? $calcResult['room_capacity'] : [];
     echo '<div class="grid-2">';
 
     // Room capacity
     echo '<div>';
     echo '<table>';
     echo '<tr><th colspan="2">Room Capacity</th></tr>';
-    echo '<tr><td>Regular Beds (RB)</td><td>' . ($roomCap['RB'] ?? '-') . '</td></tr>';
-    echo '<tr><td>Extra Beds (EB)</td><td>' . ($roomCap['EB'] ?? '-') . '</td></tr>';
-    echo '<tr><td>Max Adults</td><td>' . ($roomCap['maxADT'] ?? '-') . '</td></tr>';
-    echo '<tr><td>Max Children</td><td>' . ($roomCap['maxCHD'] ?? '-') . '</td></tr>';
-    echo '<tr><td>Min Persons</td><td>' . ($roomCap['minPAX'] ?? '-') . '</td></tr>';
+    echo '<tr><td>Regular Beds (RB)</td><td>' . PriceInfoFormatter::toScalar($roomCap['RB'] ?? '-') . '</td></tr>';
+    echo '<tr><td>Extra Beds (EB)</td><td>' . PriceInfoFormatter::toScalar($roomCap['EB'] ?? '-') . '</td></tr>';
+    echo '<tr><td>Max Adults</td><td>' . PriceInfoFormatter::toScalar($roomCap['maxADT'] ?? '-') . '</td></tr>';
+    echo '<tr><td>Max Children</td><td>' . PriceInfoFormatter::toScalar($roomCap['maxCHD'] ?? '-') . '</td></tr>';
+    echo '<tr><td>Min Persons</td><td>' . PriceInfoFormatter::toScalar($roomCap['minPAX'] ?? '-') . '</td></tr>';
     echo '</table>';
     echo '</div>';
 
     // Child age bands
     echo '<div>';
-    $ageBands = $calcResult['child_age_bands'] ?? [];
+    $ageBands = is_array($calcResult['child_age_bands'] ?? null) ? $calcResult['child_age_bands'] : [];
     echo '<table>';
     echo '<tr><th colspan="3">Hotel Child Age Bands</th></tr>';
     echo '<tr><th>Band</th><th>From</th><th>To</th></tr>';
     if (!empty($ageBands)) {
         foreach ($ageBands as $ab) {
+            if (!is_array($ab)) {
+                continue;
+            }
             echo '<tr>';
-            echo '<td><span class="badge badge-child">' . htmlspecialchars($ab['label']) . '</span></td>';
-            echo '<td>' . $ab['from'] . '</td>';
-            echo '<td>' . $ab['to'] . '</td>';
+            echo '<td><span class="badge badge-child">' . htmlspecialchars(PriceInfoFormatter::toScalar($ab['label'] ?? '')) . '</span></td>';
+            echo '<td>' . PriceInfoFormatter::toScalar($ab['from'] ?? '') . '</td>';
+            echo '<td>' . PriceInfoFormatter::toScalar($ab['to'] ?? '') . '</td>';
             echo '</tr>';
         }
     } else {
@@ -204,34 +209,34 @@ if ($mode === 'compare') {
     echo '<div class="step">';
     echo '<div class="step-header"><span class="step-num">2</span><span class="step-title">Occupancy Structure (RB vs EB assignment)</span></div>';
 
-    $occupancy = $calcResult['occupancy'] ?? [];
+    $occupancy = TypeCoerce::toStringMap($calcResult['occupancy'] ?? []);
     echo '<table>';
     echo '<tr><th>#</th><th>Type</th><th>Age Type</th><th>Bed Type</th><th>Details</th></tr>';
 
     $personNum = 1;
     if (!empty($occupancy['adults'])) {
-        foreach ($occupancy['adults'] as $a) {
-            $accBadge = ($a['acc_type'] ?? '') === 'REGULAR' ? 'badge-rb' : 'badge-eb';
-            $accLabel = ($a['acc_type'] ?? '') === 'REGULAR' ? 'RB' : 'EB';
+        foreach (TypeCoerce::toRowList($occupancy['adults']) as $a) {
+            $accBadge = TypeCoerce::toString($a['acc_type'] ?? '') === 'REGULAR' ? 'badge-rb' : 'badge-eb';
+            $accLabel = TypeCoerce::toString($a['acc_type'] ?? '') === 'REGULAR' ? 'RB' : 'EB';
             echo '<tr>';
             echo '<td>' . $personNum++ . '</td>';
             echo '<td><span class="badge badge-adult">Adult</span></td>';
-            echo '<td>' . htmlspecialchars($a['age_type'] ?? 'ADULT') . '</td>';
+            echo '<td>' . htmlspecialchars(TypeCoerce::toString($a['age_type'] ?? 'ADULT')) . '</td>';
             echo '<td><span class="badge ' . $accBadge . '">' . $accLabel . '</span></td>';
-            echo '<td>Position ' . ($a['position'] ?? $a['index'] ?? '-') . '</td>';
+            echo '<td>Position ' . TypeCoerce::toString($a['position'] ?? $a['index'] ?? '-') . '</td>';
             echo '</tr>';
         }
     }
     if (!empty($occupancy['children'])) {
-        foreach ($occupancy['children'] as $c) {
-            $accBadge = in_array(($c['acc_type'] ?? ''), ['REGULAR', 'RB']) ? 'badge-rb' : 'badge-eb';
-            $accLabel = in_array(($c['acc_type'] ?? ''), ['REGULAR', 'RB']) ? 'RB' : 'EB';
+        foreach (TypeCoerce::toRowList($occupancy['children']) as $c) {
+            $accBadge = in_array(TypeCoerce::toString($c['acc_type'] ?? ''), ['REGULAR', 'RB']) ? 'badge-rb' : 'badge-eb';
+            $accLabel = in_array(TypeCoerce::toString($c['acc_type'] ?? ''), ['REGULAR', 'RB']) ? 'RB' : 'EB';
             echo '<tr>';
             echo '<td>' . $personNum++ . '</td>';
             echo '<td><span class="badge badge-child">Child</span></td>';
-            echo '<td>' . htmlspecialchars($c['age_type'] ?? '-') . '</td>';
+            echo '<td>' . htmlspecialchars(TypeCoerce::toString($c['age_type'] ?? '-')) . '</td>';
             echo '<td><span class="badge ' . $accBadge . '">' . $accLabel . '</span></td>';
-            echo '<td>Age ' . ($c['age'] ?? '?') . ', Position ' . ($c['position'] ?? $c['index'] ?? '-') . '</td>';
+            echo '<td>Age ' . TypeCoerce::toString($c['age'] ?? '?') . ', Position ' . TypeCoerce::toString($c['position'] ?? $c['index'] ?? '-') . '</td>';
             echo '</tr>';
         }
     }
@@ -244,15 +249,16 @@ if ($mode === 'compare') {
     echo '<div class="step">';
     echo '<div class="step-header"><span class="step-num">3</span><span class="step-title">Season Mapping (date &rarr; season &rarr; price column)</span></div>';
 
-    $seasonsByNight = $calcResult['seasons_by_night'] ?? [];
+    $seasonsByNight = TypeCoerce::toList($calcResult['seasons_by_night'] ?? []);
     if (!empty($seasonsByNight)) {
         echo '<table>';
         echo '<tr><th>Night</th><th>Date</th><th>Season</th><th>Price Column</th></tr>';
         foreach ($seasonsByNight as $idx => $sn) {
-            $sNum = $sn['season'] ?? '?';
+            $snArr = TypeCoerce::toStringMap($sn);
+            $sNum = TypeCoerce::toString($snArr['season'] ?? '?');
             echo '<tr>';
             echo '<td>' . ($idx + 1) . '</td>';
-            echo '<td>' . ($sn['date'] ?? '-') . '</td>';
+            echo '<td>' . TypeCoerce::toString($snArr['date'] ?? '-') . '</td>';
             echo '<td><span class="badge badge-season season-' . $sNum . '">Season ' . $sNum . '</span></td>';
             echo '<td><strong>Price' . $sNum . '</strong></td>';
             echo '</tr>';
@@ -263,18 +269,19 @@ if ($mode === 'compare') {
     }
 
     // Season Date Ranges (merged from Verify mode Section 1)
-    $seasonMapping = $calculator->verifySeasonPriceMapping($check_in, $nights);
-    if (!empty($seasonMapping['seasons_raw'])) {
-        echo '<span class="collapsible-toggle" onclick="toggleSection(\'season-date-ranges\')">&#9654; Season Date Ranges (' . count($seasonMapping['seasons_raw']) . ' seasons defined)</span>';
+    $seasonMapping = TypeCoerce::toStringMap($calculator->verifySeasonPriceMapping($check_in, $nights));
+    $seasonsRaw = TypeCoerce::toRowList($seasonMapping['seasons_raw'] ?? []);
+    if (!empty($seasonsRaw)) {
+        echo '<span class="collapsible-toggle" onclick="toggleSection(\'season-date-ranges\')">&#9654; Season Date Ranges (' . count($seasonsRaw) . ' seasons defined)</span>';
         echo '<div id="season-date-ranges" class="collapsible-content">';
         echo '<table>';
         echo '<tr><th>Season #</th><th>From Date</th><th>To Date</th><th>Price Column</th></tr>';
-        foreach ($seasonMapping['seasons_raw'] as $season) {
-            $seasonNum = $season['Season'] ?? $season['IdSeason'] ?? '?';
+        foreach ($seasonsRaw as $season) {
+            $seasonNum = TypeCoerce::toString($season['Season'] ?? $season['IdSeason'] ?? '?');
             echo '<tr>';
             echo '<td><span class="badge badge-season season-' . $seasonNum . '">Season ' . $seasonNum . '</span></td>';
-            echo '<td>' . htmlspecialchars($season['FromDate'] ?? '-') . '</td>';
-            echo '<td>' . htmlspecialchars($season['ToDate'] ?? '-') . '</td>';
+            echo '<td>' . htmlspecialchars(TypeCoerce::toString($season['FromDate'] ?? '-')) . '</td>';
+            echo '<td>' . htmlspecialchars(TypeCoerce::toString($season['ToDate'] ?? '-')) . '</td>';
             echo '<td><strong>Price' . $seasonNum . '</strong></td>';
             echo '</tr>';
         }
@@ -289,11 +296,11 @@ if ($mode === 'compare') {
     echo '<div class="step">';
     echo '<div class="step-header"><span class="step-num">4</span><span class="step-title">Base Price Calculation</span></div>';
 
-    $breakdown = $calcResult['breakdown'] ?? [];
-    $byNight = $breakdown['base_per_night'] ?? [];
-    $byPerson = $breakdown['base_per_person'] ?? [];
-    $byPersonByNight = $breakdown['base_per_person_per_night'] ?? [];
-    $matchedRows = $breakdown['matched_rows'] ?? [];
+    $breakdown = TypeCoerce::toStringMap($calcResult['breakdown'] ?? []);
+    $byNight = TypeCoerce::toList($breakdown['base_per_night'] ?? []);
+    $byPerson = TypeCoerce::toStringMap($breakdown['base_per_person'] ?? []);
+    $byPersonByNight = TypeCoerce::toStringMap($breakdown['base_per_person_per_night'] ?? []);
+    $matchedRows = TypeCoerce::toStringMap($breakdown['matched_rows'] ?? []);
 
     // Per-person per-night matrix (main breakdown table)
     if (!empty($byPersonByNight) && !empty($byNight)) {
@@ -306,26 +313,28 @@ if ($mode === 'compare') {
         // Header row: Night dates
         echo '<tr><th>Person</th><th>Age Type</th><th>Acc Type</th>';
         foreach ($byNight as $idx => $n) {
-            $sNum = $n['season'] ?? '?';
-            echo '<th style="text-align:right;"><span class="badge badge-season season-' . $sNum . '">S' . $sNum . '</span><br><small>' . ($n['date'] ?? '') . '</small></th>';
+            $nArr = TypeCoerce::toStringMap($n);
+            $sNum = TypeCoerce::toString($nArr['season'] ?? '?');
+            echo '<th style="text-align:right;"><span class="badge badge-season season-' . $sNum . '">S' . $sNum . '</span><br><small>' . TypeCoerce::toString($nArr['date'] ?? '') . '</small></th>';
         }
         echo '<th style="text-align:right;font-weight:bold;">Total</th></tr>';
 
         // One row per person
         foreach ($personKeys as $pKey) {
-            $rowInfo = $matchedRows[$pKey] ?? [];
-            $personTotal = $byPerson[$pKey] ?? 0;
+            $rowInfo = TypeCoerce::toStringMap($matchedRows[$pKey] ?? []);
+            $personTotal = TypeCoerce::toFloat($byPerson[$pKey] ?? 0);
             $isAdult = str_starts_with((string) $pKey, 'adult_');
             $badgeClass = $isAdult ? 'badge-adult' : 'badge-child';
             $label = str_replace('_', ' ', ucfirst((string) $pKey));
 
             echo '<tr>';
             echo '<td><span class="badge ' . $badgeClass . '">' . htmlspecialchars($label) . '</span></td>';
-            echo '<td><small>' . htmlspecialchars(trim($rowInfo['age_type'] ?? '-')) . '</small></td>';
-            echo '<td><small>' . htmlspecialchars($rowInfo['acc_type'] ?? '-') . '</small></td>';
+            echo '<td><small>' . htmlspecialchars(trim(TypeCoerce::toString($rowInfo['age_type'] ?? '-'))) . '</small></td>';
+            echo '<td><small>' . htmlspecialchars(TypeCoerce::toString($rowInfo['acc_type'] ?? '-')) . '</small></td>';
 
             foreach ($byNight as $idx => $n) {
-                $nightPrice = $byPersonByNight[$pKey][$idx] ?? 0;
+                $pnByNight = TypeCoerce::toList($byPersonByNight[$pKey] ?? []);
+                $nightPrice = TypeCoerce::toFloat($pnByNight[$idx] ?? 0);
                 $cls = ($nightPrice == 0) ? ' class="zero-value"' : '';
                 echo '<td style="text-align:right;"' . $cls . '>' . number_format($nightPrice, 2) . '</td>';
             }
@@ -336,9 +345,10 @@ if ($mode === 'compare') {
         // Night totals row
         echo '<tr class="total-row"><td colspan="3">Night Total</td>';
         foreach ($byNight as $idx => $n) {
-            echo '<td style="text-align:right;">' . number_format($n['price'] ?? 0, 2) . '</td>';
+            $nArr = TypeCoerce::toStringMap($n);
+            echo '<td style="text-align:right;">' . number_format(TypeCoerce::toFloat($nArr['price'] ?? 0), 2) . '</td>';
         }
-        $basePriceVal = $breakdown['base_price'] ?? 0;
+        $basePriceVal = TypeCoerce::toFloat($breakdown['base_price'] ?? 0);
         echo '<td style="text-align:right;">' . number_format($basePriceVal, 2) . '</td>';
         echo '</tr>';
 
@@ -353,16 +363,17 @@ if ($mode === 'compare') {
             echo '<table>';
             echo '<tr><th>Person</th><th>Matched Age Type</th><th>Code</th><th>Base</th><th>Raw Price</th><th>Is %</th><th>RoomPrice</th></tr>';
             foreach ($matchedRows as $pKey => $mRow) {
-                $label = str_replace('_', ' ', ucfirst($pKey));
-                $isPercent = $mRow['is_percentage'] ?? false;
+                $mRowArr = TypeCoerce::toStringMap($mRow);
+                $label = str_replace('_', ' ', ucfirst((string) $pKey));
+                $isPercent = $mRowArr['is_percentage'] ?? false;
                 echo '<tr>';
                 echo '<td>' . htmlspecialchars($label) . '</td>';
-                echo '<td>' . htmlspecialchars($mRow['row_age'] ?? '-') . '</td>';
-                echo '<td>' . htmlspecialchars($mRow['code'] ?? '-') . '</td>';
-                echo '<td>' . htmlspecialchars($mRow['base'] ?? '-') . '</td>';
-                echo '<td>' . htmlspecialchars($mRow['raw_price'] ?? '-') . ($isPercent ? '%' : '') . '</td>';
+                echo '<td>' . htmlspecialchars(TypeCoerce::toString($mRowArr['row_age'] ?? '-')) . '</td>';
+                echo '<td>' . htmlspecialchars(TypeCoerce::toString($mRowArr['code'] ?? '-')) . '</td>';
+                echo '<td>' . htmlspecialchars(TypeCoerce::toString($mRowArr['base'] ?? '-')) . '</td>';
+                echo '<td>' . htmlspecialchars(TypeCoerce::toString($mRowArr['raw_price'] ?? '-')) . ($isPercent ? '%' : '') . '</td>';
                 echo '<td>' . ($isPercent ? '<span class="badge badge-active">Yes</span>' : 'No') . '</td>';
-                echo '<td>' . htmlspecialchars($mRow['room_price'] ?? 'No') . '</td>';
+                echo '<td>' . htmlspecialchars(TypeCoerce::toString($mRowArr['room_price'] ?? 'No')) . '</td>';
                 echo '</tr>';
             }
             echo '</table>';
@@ -373,14 +384,15 @@ if ($mode === 'compare') {
             echo '<h3>Per-Night Breakdown</h3>';
             echo '<table>';
             echo '<tr><th>Night</th><th>Date</th><th>Season</th><th>Price (EUR)</th></tr>';
-            $nightTotal = 0;
+            $nightTotal = 0.0;
             foreach ($byNight as $idx => $n) {
-                $sNum = $n['season'] ?? '?';
-                $nightPrice = $n['price'] ?? 0;
+                $nArr = TypeCoerce::toStringMap($n);
+                $sNum = TypeCoerce::toString($nArr['season'] ?? '?');
+                $nightPrice = TypeCoerce::toFloat($nArr['price'] ?? 0);
                 $nightTotal += $nightPrice;
                 echo '<tr>';
                 echo '<td>' . ($idx + 1) . '</td>';
-                echo '<td>' . ($n['date'] ?? '-') . '</td>';
+                echo '<td>' . TypeCoerce::toString($nArr['date'] ?? '-') . '</td>';
                 echo '<td><span class="badge badge-season season-' . $sNum . '">S' . $sNum . '</span></td>';
                 echo '<td>' . number_format($nightPrice, 2) . '</td>';
                 echo '</tr>';
@@ -395,14 +407,14 @@ if ($mode === 'compare') {
             echo '<table>';
             echo '<tr><th>Person</th><th>Total (EUR)</th></tr>';
             foreach ($byPerson as $key => $amount) {
-                $label = str_replace('_', ' ', ucfirst($key));
-                echo '<tr><td>' . htmlspecialchars($label) . '</td><td>' . number_format($amount, 2) . '</td></tr>';
+                $label = str_replace('_', ' ', ucfirst((string) $key));
+                echo '<tr><td>' . htmlspecialchars($label) . '</td><td>' . number_format(TypeCoerce::toFloat($amount), 2) . '</td></tr>';
             }
             echo '</table>';
         }
     }
 
-    $basePriceVal = $breakdown['base_price'] ?? 0;
+    $basePriceVal = TypeCoerce::toFloat($breakdown['base_price'] ?? 0);
     echo '<div class="formula">Base Price = ' . number_format($basePriceVal, 2) . ' EUR</div>';
     if ($basePriceVal == 0) {
         echo '<div style="background:#fff3cd;color:#856404;padding:10px;border-radius:4px;margin-top:8px;">';
@@ -412,7 +424,7 @@ if ($mode === 'compare') {
     }
 
     // All Season Price Rows for selected room/board (merged from Verify mode Section 2)
-    $samplePrices = $calculator->getSamplePrices($room_id, $board_id);
+    $samplePrices = TypeCoerce::toRowList($calculator->getSamplePrices(TypeCoerce::toString($room_id), TypeCoerce::toString($board_id)));
     if (!empty($samplePrices)) {
         echo '<span class="collapsible-toggle" onclick="toggleSection(\'season-price-rows\')">&#9654; All Season Price Rows for Room/Board (' . count($samplePrices) . ' rows)</span>';
         echo '<div id="season-price-rows" class="collapsible-content">';
@@ -439,14 +451,14 @@ if ($mode === 'compare') {
 
         foreach ($samplePrices as $sample) {
             echo '<tr>';
-            echo '<td>' . htmlspecialchars($sample['IdAge']) . '</td>';
-            echo '<td>' . htmlspecialchars($sample['IdAcc']) . '</td>';
-            echo '<td>' . htmlspecialchars($sample['Code']) . '</td>';
-            echo '<td>' . htmlspecialchars($sample['Base']) . '</td>';
-            echo '<td>' . htmlspecialchars($sample['RoomPrice']) . '</td>';
+            echo '<td>' . htmlspecialchars(TypeCoerce::toString($sample['IdAge'] ?? '')) . '</td>';
+            echo '<td>' . htmlspecialchars(TypeCoerce::toString($sample['IdAcc'] ?? '')) . '</td>';
+            echo '<td>' . htmlspecialchars(TypeCoerce::toString($sample['Code'] ?? '')) . '</td>';
+            echo '<td>' . htmlspecialchars(TypeCoerce::toString($sample['Base'] ?? '')) . '</td>';
+            echo '<td>' . htmlspecialchars(TypeCoerce::toString($sample['RoomPrice'] ?? '')) . '</td>';
             foreach (array_keys($usedPriceCols) as $col) {
                 $val = $sample['Price' . $col] ?? '-';
-                echo '<td style="background:#fffde7;">' . htmlspecialchars((string)$val) . '</td>';
+                echo '<td style="background:#fffde7;">' . htmlspecialchars(TypeCoerce::toString($val)) . '</td>';
             }
             echo '</tr>';
         }
@@ -462,7 +474,7 @@ if ($mode === 'compare') {
     echo '<div class="step">';
     echo '<div class="step-header"><span class="step-num">5</span><span class="step-title">Fees &amp; Supplements</span></div>';
 
-    $fees = $breakdown['fees'] ?? [];
+    $fees = TypeCoerce::toStringMap($breakdown['fees'] ?? []);
     echo '<table>';
     echo '<tr><th>Fee Type</th><th>Amount (EUR)</th></tr>';
 
@@ -475,16 +487,16 @@ if ($mode === 'compare') {
         'company_fee' => 'Company Fee (per-room flat fee)'
     ];
     foreach ($feeTypes as $fKey => $fLabel) {
-        $val = $fees[$fKey] ?? 0;
+        $val = TypeCoerce::toFloat($fees[$fKey] ?? 0);
         $cls = ($val == 0) ? ' class="zero-value"' : '';
         echo '<tr' . $cls . '><td>' . $fLabel . '</td><td>' . number_format($val, 2) . '</td></tr>';
     }
-    echo '<tr class="total-row"><td>Total Fees</td><td>' . number_format($fees['total_fees'] ?? 0, 2) . '</td></tr>';
+    echo '<tr class="total-row"><td>Total Fees</td><td>' . number_format(TypeCoerce::toFloat($fees['total_fees'] ?? 0), 2) . '</td></tr>';
     echo '</table>';
 
     // Handling Fee breakdown (per-entry details)
-    $feesDetail = $breakdown['fees_detail'] ?? [];
-    $hfEntries = $feesDetail['handling_fee_entries'] ?? [];
+    $feesDetail = TypeCoerce::toStringMap($breakdown['fees_detail'] ?? []);
+    $hfEntries = TypeCoerce::toRowList($feesDetail['handling_fee_entries'] ?? []);
     if (!empty($hfEntries)) {
         echo '<h3>Handling Fee Breakdown</h3>';
         echo '<p style="font-size:0.9em;color:#666;">Each entry from priceinfo handling_fee. '
@@ -493,35 +505,36 @@ if ($mode === 'compare') {
         echo '<tr><th>#</th><th>IdAge</th><th>Tier</th><th>Price/person</th><th>Count</th><th>Subtotal</th><th>Explanation</th></tr>';
         foreach ($hfEntries as $hfe) {
             if (isset($hfe['skipped'])) {
-                echo '<tr class="zero-value"><td>' . ($hfe['entry'] ?? '') . '</td><td>' . htmlspecialchars($hfe['idAge'] ?? '') . '</td>'
-                   . '<td colspan="4">Skipped: ' . htmlspecialchars($hfe['skipped']) . ' (dates: ' . ($hfe['fromDate'] ?? '') . ' - ' . ($hfe['toDate'] ?? '') . ')</td><td></td></tr>';
+                echo '<tr class="zero-value"><td>' . TypeCoerce::toString($hfe['entry'] ?? '') . '</td><td>' . htmlspecialchars(TypeCoerce::toString($hfe['idAge'] ?? '')) . '</td>'
+                   . '<td colspan="4">Skipped: ' . htmlspecialchars(TypeCoerce::toString($hfe['skipped'])) . ' (dates: ' . TypeCoerce::toString($hfe['fromDate'] ?? '') . ' - ' . TypeCoerce::toString($hfe['toDate'] ?? '') . ')</td><td></td></tr>';
                 continue;
             }
-            $subtotal = $hfe['subtotal'] ?? 0;
+            $subtotal = TypeCoerce::toFloat($hfe['subtotal'] ?? 0);
             $cls = ($subtotal == 0) ? ' class="zero-value"' : '';
             echo '<tr' . $cls . '>';
-            echo '<td>' . ($hfe['entry'] ?? '') . '</td>';
-            echo '<td>' . htmlspecialchars($hfe['idAge'] ?? '') . '</td>';
-            echo '<td style="font-size:0.85em">' . htmlspecialchars($hfe['tier'] ?? '') . '</td>';
-            echo '<td>' . number_format($hfe['price'] ?? 0, 2) . '</td>';
-            echo '<td>' . ($hfe['count'] ?? 0) . '</td>';
+            echo '<td>' . TypeCoerce::toString($hfe['entry'] ?? '') . '</td>';
+            echo '<td>' . htmlspecialchars(TypeCoerce::toString($hfe['idAge'] ?? '')) . '</td>';
+            echo '<td style="font-size:0.85em">' . htmlspecialchars(TypeCoerce::toString($hfe['tier'] ?? '')) . '</td>';
+            echo '<td>' . number_format(TypeCoerce::toFloat($hfe['price'] ?? 0), 2) . '</td>';
+            echo '<td>' . TypeCoerce::toString($hfe['count'] ?? 0) . '</td>';
             echo '<td>' . number_format($subtotal, 2) . '</td>';
-            echo '<td style="font-size:0.85em">' . htmlspecialchars($hfe['count_method'] ?? '') . '</td>';
+            echo '<td style="font-size:0.85em">' . htmlspecialchars(TypeCoerce::toString($hfe['count_method'] ?? '')) . '</td>';
             echo '</tr>';
         }
         echo '</table>';
     }
 
-    $basePlusFees = ($breakdown['base_price'] ?? 0) + ($fees['total_fees'] ?? 0);
-    echo '<div class="formula">Subtotal (Base + Fees) = ' . number_format($breakdown['base_price'] ?? 0, 2) . ' + ' . number_format($fees['total_fees'] ?? 0, 2) . ' = ' . number_format($basePlusFees, 2) . ' EUR</div>';
+    $basePlusFees = TypeCoerce::toFloat($breakdown['base_price'] ?? 0) + TypeCoerce::toFloat($fees['total_fees'] ?? 0);
+    echo '<div class="formula">Subtotal (Base + Fees) = ' . number_format(TypeCoerce::toFloat($breakdown['base_price'] ?? 0), 2) . ' + ' . number_format(TypeCoerce::toFloat($fees['total_fees'] ?? 0), 2) . ' = ' . number_format($basePlusFees, 2) . ' EUR</div>';
 
     // Handling-Fee ↔ Season-Price Age Type Correlation (merged from Verify mode Section 3)
-    $seasonAgeTypes = $calculator->collectSeasonPriceAgeTypes($room_id, $board_id);
-    $priceinfo = $calculator->getParser()->getPriceinfo() ?? [];
+    $seasonAgeTypes = TypeCoerce::toStringList($calculator->collectSeasonPriceAgeTypes(TypeCoerce::toString($room_id), TypeCoerce::toString($board_id)));
+    $priceinfo = TypeCoerce::toStringMap($calculator->getParser()->getPriceinfo() ?? []);
     $handlingFeesRaw = $priceinfo['handling_fee'] ?? [];
-    if (isset($handlingFeesRaw['Price1']) || isset($handlingFeesRaw['ToDays'])) {
+    if (is_array($handlingFeesRaw) && (isset($handlingFeesRaw['Price1']) || isset($handlingFeesRaw['ToDays']))) {
         $handlingFeesRaw = [$handlingFeesRaw];
     }
+    $handlingFeesRaw = TypeCoerce::toRowList($handlingFeesRaw);
 
     if (!empty($seasonAgeTypes) || !empty($handlingFeesRaw)) {
         echo '<span class="collapsible-toggle" onclick="toggleSection(\'age-type-correlation\')">&#9654; Handling-Fee &harr; Season-Price Age Type Correlation</span>';
@@ -544,8 +557,8 @@ if ($mode === 'compare') {
             echo '<table>';
             echo '<tr><th>#</th><th>IdAge</th><th>FromDate</th><th>ToDate</th><th>Price1</th><th>Price2</th><th>Correlates?</th></tr>';
             foreach ($handlingFeesRaw as $idx => $fee) {
-                $feeIdAge = trim((string) preg_replace('/\s+/', ' ', $fee['IdAge'] ?? ''));
-                $feeKey = trim(preg_replace('/\s+BY\s+\d+\s+AD\s*$/i', '', $feeIdAge));
+                $feeIdAge = trim((string) preg_replace('/\s+/', ' ', TypeCoerce::toString($fee['IdAge'] ?? '')));
+                $feeKey = trim((string) preg_replace('/\s+BY\s+\d+\s+AD\s*$/i', '', $feeIdAge));
                 $feeUpper = strtoupper($feeKey);
 
                 $correlates = empty($seasonAgeSet);
@@ -564,10 +577,10 @@ if ($mode === 'compare') {
                 echo '<tr' . (!$correlates ? ' style="opacity:0.6;"' : '') . '>';
                 echo '<td>' . $idx . '</td>';
                 echo '<td>' . htmlspecialchars($feeIdAge) . '</td>';
-                echo '<td>' . htmlspecialchars($fee['FromDate'] ?? '-') . '</td>';
-                echo '<td>' . htmlspecialchars($fee['ToDate'] ?? '-') . '</td>';
-                echo '<td>' . htmlspecialchars($fee['Price1'] ?? '-') . '</td>';
-                echo '<td>' . htmlspecialchars($fee['Price2'] ?? '-') . '</td>';
+                echo '<td>' . htmlspecialchars(TypeCoerce::toString($fee['FromDate'] ?? '-')) . '</td>';
+                echo '<td>' . htmlspecialchars(TypeCoerce::toString($fee['ToDate'] ?? '-')) . '</td>';
+                echo '<td>' . htmlspecialchars(TypeCoerce::toString($fee['Price1'] ?? '-')) . '</td>';
+                echo '<td>' . htmlspecialchars(TypeCoerce::toString($fee['Price2'] ?? '-')) . '</td>';
                 echo '<td><span class="' . $statusClass . '">' . $statusText . '</span></td>';
                 echo '</tr>';
             }
@@ -583,22 +596,23 @@ if ($mode === 'compare') {
     echo '<div class="step">';
     echo '<div class="step-header"><span class="step-num">6</span><span class="step-title">Early Booking (EB) Discount</span></div>';
 
-    $eb = $breakdown['discounts']['early_booking'] ?? [];
+    $discounts = TypeCoerce::toStringMap($breakdown['discounts'] ?? []);
+    $eb = TypeCoerce::toStringMap($discounts['early_booking'] ?? []);
     $ebApplicable = $eb['applicable'] ?? false;
 
     if ($ebApplicable) {
-        echo '<p><span class="badge badge-active">APPLICABLE</span> Discount: <strong>' . ($eb['percent'] ?? 0) . '%</strong></p>';
-        $ebBd = $eb['discount_breakdown'] ?? [];
+        echo '<p><span class="badge badge-active">APPLICABLE</span> Discount: <strong>' . TypeCoerce::toString($eb['percent'] ?? 0) . '%</strong></p>';
+        $ebBd = TypeCoerce::toStringMap($eb['discount_breakdown'] ?? []);
         echo '<table>';
         echo '<tr><th>Component</th><th>Discount (EUR)</th></tr>';
-        echo '<tr><td>Base Price discount</td><td>' . number_format($ebBd['base_price'] ?? 0, 2) . '</td></tr>';
-        $ebDaily = $ebBd['extras_daily'] ?? 0;
+        echo '<tr><td>Base Price discount</td><td>' . number_format(TypeCoerce::toFloat($ebBd['base_price'] ?? 0), 2) . '</td></tr>';
+        $ebDaily = TypeCoerce::toFloat($ebBd['extras_daily'] ?? 0);
         echo '<tr' . ($ebDaily == 0 ? ' class="zero-value"' : '') . '><td>Extras Daily discount (EBToDaily)</td><td>' . number_format($ebDaily, 2) . '</td></tr>';
-        $ebRooms = $ebBd['extras_rooms'] ?? 0;
+        $ebRooms = TypeCoerce::toFloat($ebBd['extras_rooms'] ?? 0);
         echo '<tr' . ($ebRooms == 0 ? ' class="zero-value"' : '') . '><td>Extras Rooms discount (EBToRooms)</td><td>' . number_format($ebRooms, 2) . '</td></tr>';
-        $ebBoard = $ebBd['extras_board'] ?? 0;
+        $ebBoard = TypeCoerce::toFloat($ebBd['extras_board'] ?? 0);
         echo '<tr' . ($ebBoard == 0 ? ' class="zero-value"' : '') . '><td>Extras Board discount (EBToBoard)</td><td>' . number_format($ebBoard, 2) . '</td></tr>';
-        echo '<tr class="total-row"><td>Total EB Discount</td><td>-' . number_format($eb['discount'] ?? 0, 2) . '</td></tr>';
+        echo '<tr class="total-row"><td>Total EB Discount</td><td>-' . number_format(TypeCoerce::toFloat($eb['discount'] ?? 0), 2) . '</td></tr>';
         echo '</table>';
     } else {
         echo '<p><span class="badge badge-inactive">NOT APPLICABLE</span> No early booking discount for this booking.</p>';
@@ -611,41 +625,42 @@ if ($mode === 'compare') {
     echo '<div class="step">';
     echo '<div class="step-header"><span class="step-num">7</span><span class="step-title">Reduction (Free Nights)</span></div>';
 
-    $red = $breakdown['discounts']['reduction'] ?? [];
+    $red = TypeCoerce::toStringMap($discounts['reduction'] ?? []);
     $redApplicable = $red['applicable'] ?? false;
 
     if ($redApplicable) {
         $freeNights = $red['free_nights'] ?? 0;
-        $freeIndices = $red['free_night_indices'] ?? [];
-        echo '<p><span class="badge badge-active">APPLICABLE</span> Free nights: <strong>' . $freeNights . '</strong></p>';
+        $freeIndices = TypeCoerce::toList($red['free_night_indices'] ?? []);
+        echo '<p><span class="badge badge-active">APPLICABLE</span> Free nights: <strong>' . TypeCoerce::toString($freeNights) . '</strong></p>';
 
         // Show which nights are free
         if (!empty($freeIndices) && !empty($byNight)) {
             echo '<table>';
             echo '<tr><th>Night</th><th>Date</th><th>Status</th><th>Value (EUR)</th></tr>';
             foreach ($byNight as $idx => $n) {
+                $nArr = TypeCoerce::toStringMap($n);
                 $isFree = in_array($idx, $freeIndices);
                 echo '<tr' . ($isFree ? ' class="highlight-row"' : '') . '>';
                 echo '<td>' . ($idx + 1) . '</td>';
-                echo '<td>' . ($n['date'] ?? '-') . '</td>';
+                echo '<td>' . TypeCoerce::toString($nArr['date'] ?? '-') . '</td>';
                 echo '<td>' . ($isFree ? '<span class="badge badge-free">FREE</span>' : 'Paid') . '</td>';
-                echo '<td>' . ($isFree ? '-' . number_format($n['price'] ?? 0, 2) : number_format($n['price'] ?? 0, 2)) . '</td>';
+                echo '<td>' . ($isFree ? '-' . number_format(TypeCoerce::toFloat($nArr['price'] ?? 0), 2) : number_format(TypeCoerce::toFloat($nArr['price'] ?? 0), 2)) . '</td>';
                 echo '</tr>';
             }
             echo '</table>';
         }
 
-        $redBd = $red['discount_breakdown'] ?? [];
+        $redBd = TypeCoerce::toStringMap($red['discount_breakdown'] ?? []);
         echo '<table>';
         echo '<tr><th>Component</th><th>Discount (EUR)</th></tr>';
-        echo '<tr><td>Base Price of free nights</td><td>' . number_format($redBd['base_price'] ?? 0, 2) . '</td></tr>';
-        $redDaily = $redBd['extras_daily'] ?? 0;
+        echo '<tr><td>Base Price of free nights</td><td>' . number_format(TypeCoerce::toFloat($redBd['base_price'] ?? 0), 2) . '</td></tr>';
+        $redDaily = TypeCoerce::toFloat($redBd['extras_daily'] ?? 0);
         echo '<tr' . ($redDaily == 0 ? ' class="zero-value"' : '') . '><td>Extras Daily reduction (EXTToDaily)</td><td>' . number_format($redDaily, 2) . '</td></tr>';
-        $redRooms = $redBd['extras_rooms'] ?? 0;
+        $redRooms = TypeCoerce::toFloat($redBd['extras_rooms'] ?? 0);
         echo '<tr' . ($redRooms == 0 ? ' class="zero-value"' : '') . '><td>Extras Rooms reduction (EXTToRooms)</td><td>' . number_format($redRooms, 2) . '</td></tr>';
-        $redBoard = $redBd['extras_board'] ?? 0;
+        $redBoard = TypeCoerce::toFloat($redBd['extras_board'] ?? 0);
         echo '<tr' . ($redBoard == 0 ? ' class="zero-value"' : '') . '><td>Extras Board reduction (EXTToBoard)</td><td>' . number_format($redBoard, 2) . '</td></tr>';
-        echo '<tr class="total-row"><td>Total Reduction Discount</td><td>-' . number_format($red['discount'] ?? 0, 2) . '</td></tr>';
+        echo '<tr class="total-row"><td>Total Reduction Discount</td><td>-' . number_format(TypeCoerce::toFloat($red['discount'] ?? 0), 2) . '</td></tr>';
         echo '</table>';
     } else {
         echo '<p><span class="badge badge-inactive">NOT APPLICABLE</span> No free nights reduction for this stay.</p>';
@@ -658,15 +673,15 @@ if ($mode === 'compare') {
     echo '<div class="step">';
     echo '<div class="step-header"><span class="step-num">8</span><span class="step-title">Priority Rules &amp; Scenario Evaluation</span></div>';
 
-    $prioRules = $breakdown['priority_rules'] ?? [];
-    $scenarios = $prioRules['scenarios'] ?? [];
-    $appliedDiscount = $breakdown['applied_discount'] ?? 'none';
+    $prioRules = TypeCoerce::toStringMap($breakdown['priority_rules'] ?? []);
+    $scenarios = TypeCoerce::toStringMap($prioRules['scenarios'] ?? []);
+    $appliedDiscount = TypeCoerce::toString($breakdown['applied_discount'] ?? 'none');
 
     echo '<table>';
     echo '<tr><th>Setting</th><th>Value</th></tr>';
-    echo '<tr><td>Priority (combinable?)</td><td>' . ($prioRules['priority'] ?? 'No') . ' <span class="info-note">(' . (($prioRules['priority'] ?? 'No') === 'Yes' ? 'NOT combinable' : 'Combinable') . ')</span></td></tr>';
-    echo '<tr><td>PriorityEB (EB forced?)</td><td>' . ($prioRules['priority_eb'] ?? 'No') . '</td></tr>';
-    echo '<tr><td>PriorityEXT</td><td>' . ($prioRules['priority_ext'] ?? 'No') . '</td></tr>';
+    echo '<tr><td>Priority (combinable?)</td><td>' . TypeCoerce::toString($prioRules['priority'] ?? 'No') . ' <span class="info-note">(' . (TypeCoerce::toString($prioRules['priority'] ?? 'No') === 'Yes' ? 'NOT combinable' : 'Combinable') . ')</span></td></tr>';
+    echo '<tr><td>PriorityEB (EB forced?)</td><td>' . TypeCoerce::toString($prioRules['priority_eb'] ?? 'No') . '</td></tr>';
+    echo '<tr><td>PriorityEXT</td><td>' . TypeCoerce::toString($prioRules['priority_ext'] ?? 'No') . '</td></tr>';
     echo '</table>';
 
     if (!empty($scenarios)) {
@@ -684,11 +699,12 @@ if ($mode === 'compare') {
         foreach ($scenarioLabels as $sKey => $sLabel) {
             $sVal = $scenarios[$sKey] ?? null;
             if ($sVal === null) continue;
+            $sValF = TypeCoerce::toFloat($sVal);
             $isActive = ($sKey === $appliedDiscount);
-            $savings = ($scenarios['none'] ?? 0) - $sVal;
+            $savings = TypeCoerce::toFloat($scenarios['none'] ?? 0) - $sValF;
             echo '<tr' . ($isActive ? ' class="highlight-row"' : '') . '>';
             echo '<td>' . $sLabel . '</td>';
-            echo '<td>' . number_format($sVal, 2) . '</td>';
+            echo '<td>' . number_format($sValF, 2) . '</td>';
             echo '<td>' . ($savings > 0 ? '-' . number_format($savings, 2) : '-') . '</td>';
             echo '<td>' . ($isActive ? '<span class="badge badge-active">SELECTED</span>' : '') . '</td>';
             echo '</tr>';
@@ -696,7 +712,7 @@ if ($mode === 'compare') {
         echo '</table>';
     }
 
-    echo '<div class="formula">Selected: ' . htmlspecialchars($appliedDiscount) . ' | Discount amount: -' . number_format($breakdown['discount_amount'] ?? 0, 2) . ' EUR</div>';
+    echo '<div class="formula">Selected: ' . htmlspecialchars($appliedDiscount) . ' | Discount amount: -' . number_format(TypeCoerce::toFloat($breakdown['discount_amount'] ?? 0), 2) . ' EUR</div>';
     echo '</div>';
 
     // =========================================================================
@@ -707,15 +723,18 @@ if ($mode === 'compare') {
 
     echo '<table>';
     echo '<tr><th>Component</th><th>Amount (EUR)</th></tr>';
-    echo '<tr><td>Base Price</td><td>' . number_format($breakdown['base_price'] ?? 0, 2) . '</td></tr>';
-    echo '<tr><td>+ Total Fees</td><td>' . number_format($fees['total_fees'] ?? 0, 2) . '</td></tr>';
-    echo '<tr><td>- Discount (' . htmlspecialchars($appliedDiscount) . ')</td><td>-' . number_format($breakdown['discount_amount'] ?? 0, 2) . '</td></tr>';
-    echo '<tr class="total-row"><td>Price before commission</td><td>' . number_format($calcResult['price_without_commission'], 2) . '</td></tr>';
-    echo '<tr><td>Commission (' . $calcResult['commission'] . '%)</td><td>+' . number_format($calcResult['price'] - $calcResult['price_without_commission'], 2) . '</td></tr>';
-    echo '<tr class="total-row" style="font-size:16px;"><td>FINAL PRICE</td><td>' . number_format($calcResult['price'], 2) . ' EUR</td></tr>';
+    echo '<tr><td>Base Price</td><td>' . number_format(TypeCoerce::toFloat($breakdown['base_price'] ?? 0), 2) . '</td></tr>';
+    echo '<tr><td>+ Total Fees</td><td>' . number_format(TypeCoerce::toFloat($fees['total_fees'] ?? 0), 2) . '</td></tr>';
+    echo '<tr><td>- Discount (' . htmlspecialchars($appliedDiscount) . ')</td><td>-' . number_format(TypeCoerce::toFloat($breakdown['discount_amount'] ?? 0), 2) . '</td></tr>';
+    $calcPriceWithout = TypeCoerce::toFloat($calcResult['price_without_commission'] ?? 0);
+    $calcPriceFinal = TypeCoerce::toFloat($calcResult['price'] ?? 0);
+    $calcCommission = TypeCoerce::toString($calcResult['commission'] ?? '0');
+    echo '<tr class="total-row"><td>Price before commission</td><td>' . number_format($calcPriceWithout, 2) . '</td></tr>';
+    echo '<tr><td>Commission (' . $calcCommission . '%)</td><td>+' . number_format($calcPriceFinal - $calcPriceWithout, 2) . '</td></tr>';
+    echo '<tr class="total-row" style="font-size:16px;"><td>FINAL PRICE</td><td>' . number_format($calcPriceFinal, 2) . ' EUR</td></tr>';
     echo '</table>';
 
-    echo '<div class="formula">' . number_format($calcResult['price_without_commission'], 2) . ' &times; (1 + ' . $calcResult['commission'] . '% ) = ' . number_format($calcResult['price'], 2) . ' EUR</div>';
+    echo '<div class="formula">' . number_format($calcPriceWithout, 2) . ' &times; (1 + ' . $calcCommission . '% ) = ' . number_format($calcPriceFinal, 2) . ' EUR</div>';
     echo '</div>';
 
     // =========================================================================
@@ -739,10 +758,10 @@ if ($mode === 'compare') {
     $apiPriceFound = false;
 
     if ($apiResult) {
-        $room_id_decoded = !empty($room_id) ? rawurldecode($room_id) : null;
+        $room_id_decoded = !empty($room_id) ? rawurldecode(TypeCoerce::toString($room_id)) : null;
         $match = fn_novoton_match_price_from_xml($apiResult, $room_id_decoded, $board_id);
         if ($match !== null) {
-            $apiPrice = $match['price'];
+            $apiPrice = TypeCoerce::toFloat($match['price'] ?? 0);
             $apiPriceFound = true;
         }
 
@@ -760,7 +779,7 @@ if ($mode === 'compare') {
     $apiPriceWithCommission = $apiPrice * (1 + $commission / 100);
 
     if ($apiPriceFound) {
-        $calcPrice = $calcResult['price'];
+        $calcPrice = TypeCoerce::toFloat($calcResult['price'] ?? 0);
         $difference = $calcPrice - $apiPriceWithCommission;
         $percentDiff = $apiPriceWithCommission > 0 ? ($difference / $apiPriceWithCommission) * 100 : 0;
         $isMatch = abs($difference) < 1;
@@ -771,7 +790,7 @@ if ($mode === 'compare') {
         echo '<div>';
         echo '<div class="price-label">Calculated</div>';
         echo '<div class="price-big">' . number_format($calcPrice, 2) . '</div>';
-        echo '<div class="price-label">Base: ' . number_format($calcResult['price_without_commission'], 2) . '</div>';
+        echo '<div class="price-label">Base: ' . number_format(TypeCoerce::toFloat($calcResult['price_without_commission'] ?? 0), 2) . '</div>';
         echo '</div>';
 
         echo '<div>';
@@ -804,10 +823,10 @@ if ($mode === 'compare') {
             echo '<div class="step" style="border-color:#f44336;">';
             echo '<div class="step-header"><span class="step-num" style="background:#f44336;">!</span><span class="step-title">Discrepancy Analysis</span></div>';
 
-            $calcBasePrice = $breakdown['base_price'] ?? 0;
-            $calcFees = $fees['total_fees'] ?? 0;
-            $ebPercent = $eb['percent'] ?? 0;
-            $calcDiscount = $breakdown['discount_amount'] ?? 0;
+            $calcBasePrice = TypeCoerce::toFloat($breakdown['base_price'] ?? 0);
+            $calcFees = TypeCoerce::toFloat($fees['total_fees'] ?? 0);
+            $ebPercent = TypeCoerce::toFloat($eb['percent'] ?? 0);
+            $calcDiscount = TypeCoerce::toFloat($breakdown['discount_amount'] ?? 0);
 
             // Reverse-engineer API implied values
             // API price = (API_base * (1 - EB%)) + fees  (if EB applies to base only)
@@ -877,31 +896,32 @@ if ($mode === 'compare') {
                 echo '<tr><th>Person</th><th>Calculated Base</th><th>API Implied Base</th><th>Difference</th><th>% of Adult Rate</th></tr>';
 
                 // Find first adult's total for reference
-                $firstAdultTotal = 0;
-                $apiFirstAdultTotal = 0;
+                $firstAdultTotal = 0.0;
+                $apiFirstAdultTotal = 0.0;
                 foreach ($byPerson as $pKey => $pAmt) {
-                    if (str_starts_with($pKey, 'adult_1')) {
-                        $firstAdultTotal = $pAmt;
-                        $apiFirstAdultTotal = round($pAmt * $scaleFactor, 2);
+                    if (str_starts_with((string) $pKey, 'adult_1')) {
+                        $firstAdultTotal = TypeCoerce::toFloat($pAmt);
+                        $apiFirstAdultTotal = round($firstAdultTotal * $scaleFactor, 2);
                         break;
                     }
                 }
 
                 foreach ($byPerson as $pKey => $pAmt) {
-                    $label = str_replace('_', ' ', ucfirst($pKey));
-                    $apiPAmt = round($pAmt * $scaleFactor, 2);
-                    $pDiff = $pAmt - $apiPAmt;
+                    $pAmtF = TypeCoerce::toFloat($pAmt);
+                    $label = str_replace('_', ' ', ucfirst((string) $pKey));
+                    $apiPAmt = round($pAmtF * $scaleFactor, 2);
+                    $pDiff = $pAmtF - $apiPAmt;
                     $cls = abs($pDiff) < 1 ? 'match' : 'mismatch';
 
                     $pctOfAdult = '';
                     if ($firstAdultTotal > 0) {
-                        $calcPct = round($pAmt / $firstAdultTotal * 100, 1);
+                        $calcPct = round($pAmtF / $firstAdultTotal * 100, 1);
                         $pctOfAdult = $calcPct . '%';
                     }
 
                     echo '<tr>';
                     echo '<td>' . htmlspecialchars($label) . '</td>';
-                    echo '<td>' . number_format($pAmt, 2) . '</td>';
+                    echo '<td>' . number_format($pAmtF, 2) . '</td>';
                     echo '<td>' . number_format($apiPAmt, 2) . '</td>';
                     echo '<td class="' . $cls . '">' . ($pDiff >= 0 ? '+' : '') . number_format($pDiff, 2) . '</td>';
                     echo '<td>' . $pctOfAdult . '</td>';
@@ -963,7 +983,7 @@ if ($mode === 'compare') {
     }
 
     // Raw Seasons Data (merged from Verify mode Section 4)
-    $rawSeasons = $priceinfo['seasons'] ?? [];
+    $rawSeasons = TypeCoerce::toList($priceinfo['seasons'] ?? []);
     if (!empty($rawSeasons)) {
         echo '<span class="collapsible-toggle" onclick="toggleSection(\'raw-seasons-data\')">&#9654; Raw Seasons Data (JSON)</span>';
         echo '<div id="raw-seasons-data" class="collapsible-content">';
@@ -973,7 +993,7 @@ if ($mode === 'compare') {
         echo '</div>';
     }
 
-    echo '<a href="' . fn_url('novoton_price_compare.manage') . '" class="btn">&larr; Back to Form</a>';
+    echo '<a href="' . TypeCoerce::toString(fn_url('novoton_price_compare.manage')) . '" class="btn">&larr; Back to Form</a>';
     echo '</div></body></html>';
     exit;
 }
@@ -985,8 +1005,9 @@ if ($mode === 'compare') {
 if ($mode === 'verify') {
     $params = [];
     foreach (['hotel_id', 'package_name', 'room_id', 'board_id', 'check_in', 'nights'] as $param) {
-        if (isset($_REQUEST[$param]) && is_string($_REQUEST[$param])) {
-            $params[$param] = substr(trim($_REQUEST[$param]), 0, 100);
+        $reqVal = $_REQUEST[$param] ?? null;
+        if (is_string($reqVal)) {
+            $params[$param] = substr(trim($reqVal), 0, 100);
         }
     }
     $query = !empty($params) ? '&' . http_build_query($params) : '';
@@ -1000,7 +1021,7 @@ if ($mode === 'verify') {
 if ($mode === 'get_packages') {
     header('Content-Type: application/json; charset=utf-8');
 
-    $hotel_id = $_REQUEST['hotel_id'] ?? '';
+    $hotel_id = RequestCoerce::string($_REQUEST, 'hotel_id');
 
     if (empty($hotel_id)) {
         echo json_encode(['packages' => []]);
@@ -1021,7 +1042,7 @@ if ($mode === 'get_packages') {
 if ($mode === 'get_rooms') {
     header('Content-Type: application/json; charset=utf-8');
 
-    $hotel_id = $_REQUEST['hotel_id'] ?? '';
+    $hotel_id = RequestCoerce::string($_REQUEST, 'hotel_id');
 
     if (empty($hotel_id)) {
         echo json_encode(['rooms' => []]);
@@ -1034,20 +1055,20 @@ if ($mode === 'get_rooms') {
     $rooms_list = [];
 
     if (!empty($hotel_data_json)) {
-        $hotel_data = json_decode($hotel_data_json, true);
+        $hotel_data = TypeCoerce::toStringMap(json_decode($hotel_data_json, true));
         $rooms = $hotel_data['rooms'] ?? [];
 
         // Normalize single room entry to array
-        if (isset($rooms['IdRoom'])) {
+        if (is_array($rooms) && isset($rooms['IdRoom'])) {
             $rooms = [$rooms];
         }
 
-        foreach ($rooms as $room) {
-            $id_room = $room['IdRoom'] ?? '';
+        foreach (TypeCoerce::toRowList($rooms) as $room) {
+            $id_room = TypeCoerce::toString($room['IdRoom'] ?? '');
             if (!empty($id_room)) {
-                $type = $room['Type'] ?? '';
-                $rb = $room['RegularBeds'] ?? $room['RB'] ?? '';
-                $eb = $room['ExtraBeds'] ?? $room['EB'] ?? '';
+                $type = TypeCoerce::toString($room['Type'] ?? '');
+                $rb = TypeCoerce::toString($room['RegularBeds'] ?? $room['RB'] ?? '');
+                $eb = TypeCoerce::toString($room['ExtraBeds'] ?? $room['EB'] ?? '');
                 $label = $id_room;
                 if (!empty($type) && $type !== $id_room) {
                     $label .= ' (' . $type . ')';

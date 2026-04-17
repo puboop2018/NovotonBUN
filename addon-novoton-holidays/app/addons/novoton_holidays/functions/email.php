@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 use Tygh\Registry;
 use Tygh\Tygh;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
@@ -42,7 +43,7 @@ function fn_novoton_holidays_csv_escape(string $value): string
 /**
  * Generate CSV report from import results
  *
- * @param array<string, mixed> $results Array of import results
+ * @param list<array<string, mixed>> $results Array of import results
  * @param string $import_type Type of import (manual/cron)
  * @param array<string, mixed> $summary Summary statistics
  * @return string CSV content
@@ -64,18 +65,22 @@ function fn_novoton_holidays_generate_import_csv_report($results, $import_type =
         'Timestamp'
     ]);
 
+    $pif = \Tygh\Addons\NovotonHolidays\Services\PriceInfoFormatter::class;
     // Data rows
     foreach ($results as $row) {
+        if (!is_array($row)) {
+            continue;
+        }
         $csv_lines[] = implode(';', [
-            fn_novoton_holidays_csv_escape((string)($row['hotel_id'] ?? '')),
-            fn_novoton_holidays_csv_escape((string)($row['hotel_name'] ?? '')),
-            fn_novoton_holidays_csv_escape((string)($row['action'] ?? '')),
-            fn_novoton_holidays_csv_escape((string)($row['product_id'] ?? '')),
-            fn_novoton_holidays_csv_escape((string)($row['star_rating'] ?? '')),
-            fn_novoton_holidays_csv_escape((string)($row['description'] ?? '')),
-            fn_novoton_holidays_csv_escape((string)($row['facilities'] ?? '')),
-            fn_novoton_holidays_csv_escape((string)($row['error'] ?? '')),
-            fn_novoton_holidays_csv_escape((string)($row['timestamp'] ?? date('Y-m-d H:i:s')))
+            fn_novoton_holidays_csv_escape($pif::toScalar($row['hotel_id'] ?? '')),
+            fn_novoton_holidays_csv_escape($pif::toScalar($row['hotel_name'] ?? '')),
+            fn_novoton_holidays_csv_escape($pif::toScalar($row['action'] ?? '')),
+            fn_novoton_holidays_csv_escape($pif::toScalar($row['product_id'] ?? '')),
+            fn_novoton_holidays_csv_escape($pif::toScalar($row['star_rating'] ?? '')),
+            fn_novoton_holidays_csv_escape($pif::toScalar($row['description'] ?? '')),
+            fn_novoton_holidays_csv_escape($pif::toScalar($row['facilities'] ?? '')),
+            fn_novoton_holidays_csv_escape($pif::toScalar($row['error'] ?? '')),
+            fn_novoton_holidays_csv_escape($pif::toScalar($row['timestamp'] ?? date('Y-m-d H:i:s')))
         ]);
     }
 
@@ -96,19 +101,22 @@ function fn_novoton_holidays_generate_import_csv_report($results, $import_type =
  */
 function fn_novoton_holidays_send_import_report_email($results, $import_type, $summary, $country = ''): bool
 {
+    $pif = \Tygh\Addons\NovotonHolidays\Services\PriceInfoFormatter::class;
     // Get admin email from settings
-    $admin_email = Registry::get('settings.Company.company_orders_email');
+    $admin_email = $pif::toScalar(Registry::get('settings.Company.company_orders_email'));
     if (empty($admin_email)) {
-        $admin_email = Registry::get('settings.Company.company_site_administrator');
+        $admin_email = $pif::toScalar(Registry::get('settings.Company.company_site_administrator'));
     }
     if (empty($admin_email)) {
-        $admin_email = db_get_field("SELECT email FROM ?:users WHERE user_type = 'A' AND status = 'A' ORDER BY user_id LIMIT 1");
+        $admin_email = $pif::toScalar(db_get_field("SELECT email FROM ?:users WHERE user_type = 'A' AND status = 'A' ORDER BY user_id LIMIT 1"));
     }
-    
+
     if (empty($admin_email)) {
         fn_log_event('general', 'runtime', 'Cannot send cron report: no admin email found');
         return false;
     }
+
+    $import_type = TypeCoerce::toString($import_type);
 
     // Build type label for email subject
     $type_labels = [
@@ -125,17 +133,19 @@ function fn_novoton_holidays_send_import_report_email($results, $import_type, $s
     ];
     $type_label = $type_labels[$import_type] ?? ucfirst(str_replace('_', ' ', $import_type));
 
+    $summary = TypeCoerce::toStringMap($summary);
+    $results = TypeCoerce::toRowList($results);
     // Prepare data for email template
     $email_data = [
         'import_type_label' => $type_label,
         'country' => $country ?: 'ALL',
         'date' => date('d.m.Y H:i T'),
         'summary' => [
-            'added'    => $summary['added'] ?? 0,
-            'updated'  => $summary['updated'] ?? 0,
-            'skipped'  => $summary['skipped'] ?? 0,
-            'errors'   => $summary['errors'] ?? 0,
-            'duration' => $summary['duration'] ?? 'N/A',
+            'added'    => $pif::toInt($summary['added'] ?? 0),
+            'updated'  => $pif::toInt($summary['updated'] ?? 0),
+            'skipped'  => $pif::toInt($summary['skipped'] ?? 0),
+            'errors'   => $pif::toInt($summary['errors'] ?? 0),
+            'duration' => $pif::toScalar($summary['duration'] ?? 'N/A'),
         ],
         'results_count' => count($results),
     ];
@@ -208,20 +218,21 @@ function fn_novoton_holidays_send_price_alert_email(array $data): bool
         return false;
     }
 
+    $pif = \Tygh\Addons\NovotonHolidays\Services\PriceInfoFormatter::class;
     $email_data = [
-        'hotel_id'       => $data['hotel_id'] ?? '',
-        'hotel_name'     => $data['hotel_name'] ?? '',
-        'room_id'        => $data['room_id'] ?? '',
-        'board_id'       => $data['board_id'] ?? '',
-        'check_in'       => $data['check_in'] ?? '',
-        'check_out'      => $data['check_out'] ?? '',
-        'adults'         => $data['adults'] ?? 2,
-        'children'       => $data['children'] ?? 0,
-        'children_ages'  => $data['children_ages'] ?? '',
-        'form_price'     => number_format((float)($data['form_price'] ?? 0), 2),
-        'api_price'      => number_format((float)($data['api_price'] ?? 0), 2),
-        'api_price_raw'  => number_format((float)($data['api_price_raw'] ?? 0), 2),
-        'difference'     => number_format((float)($data['difference'] ?? 0), 2),
+        'hotel_id'       => $pif::toScalar($data['hotel_id'] ?? ''),
+        'hotel_name'     => $pif::toScalar($data['hotel_name'] ?? ''),
+        'room_id'        => $pif::toScalar($data['room_id'] ?? ''),
+        'board_id'       => $pif::toScalar($data['board_id'] ?? ''),
+        'check_in'       => $pif::toScalar($data['check_in'] ?? ''),
+        'check_out'      => $pif::toScalar($data['check_out'] ?? ''),
+        'adults'         => $pif::toInt($data['adults'] ?? 2),
+        'children'       => $pif::toInt($data['children'] ?? 0),
+        'children_ages'  => $pif::toScalar($data['children_ages'] ?? ''),
+        'form_price'     => number_format($pif::toFloat($data['form_price'] ?? 0), 2),
+        'api_price'      => number_format($pif::toFloat($data['api_price'] ?? 0), 2),
+        'api_price_raw'  => number_format($pif::toFloat($data['api_price_raw'] ?? 0), 2),
+        'difference'     => number_format($pif::toFloat($data['difference'] ?? 0), 2),
         'date'           => date('d.m.Y H:i:s'),
     ];
 
@@ -229,7 +240,7 @@ function fn_novoton_holidays_send_price_alert_email(array $data): bool
         /** @var \Tygh\Mailer\Mailer $mailer */
         $mailer = Tygh::$app['mailer'];
 
-        return $mailer->send([
+        return (bool) $mailer->send([
             'to'            => $admin_email,
             'from'          => 'default_company_orders_department',
             'data'          => $email_data,
@@ -262,7 +273,8 @@ function fn_novoton_holidays_send_price_discrepancy_email(array $data): bool
         return false;
     }
 
-    $type = $data['type'] ?? 'price_lower';
+    $pif = \Tygh\Addons\NovotonHolidays\Services\PriceInfoFormatter::class;
+    $type = $pif::toScalar($data['type'] ?? 'price_lower');
     $isPriceLower = ($type === 'price_lower');
 
     $subject_prefix = $isPriceLower
@@ -273,20 +285,20 @@ function fn_novoton_holidays_send_price_discrepancy_email(array $data): bool
         'type'           => $type,
         'is_price_lower' => $isPriceLower,
         'subject_prefix' => $subject_prefix,
-        'hotel_id'       => $data['hotel_id'] ?? '',
-        'hotel_name'     => $data['hotel_name'] ?? '',
-        'room_id'        => $data['room_id'] ?? '',
-        'board_id'       => $data['board_id'] ?? '',
-        'check_in'       => $data['check_in'] ?? '',
-        'check_out'      => $data['check_out'] ?? '',
-        'adults'         => $data['adults'] ?? 2,
-        'children'       => $data['children'] ?? 0,
-        'children_ages'  => $data['children_ages'] ?? '',
-        'form_price'     => number_format((float)($data['form_price'] ?? 0), 2),
-        'api_price'      => number_format((float)($data['api_price'] ?? 0), 2),
-        'api_price_raw'  => number_format((float)($data['api_price_raw'] ?? 0), 2),
-        'difference'     => number_format((float)($data['difference'] ?? 0), 2),
-        'percent'        => $data['percent'] ?? 0,
+        'hotel_id'       => $pif::toScalar($data['hotel_id'] ?? ''),
+        'hotel_name'     => $pif::toScalar($data['hotel_name'] ?? ''),
+        'room_id'        => $pif::toScalar($data['room_id'] ?? ''),
+        'board_id'       => $pif::toScalar($data['board_id'] ?? ''),
+        'check_in'       => $pif::toScalar($data['check_in'] ?? ''),
+        'check_out'      => $pif::toScalar($data['check_out'] ?? ''),
+        'adults'         => $pif::toInt($data['adults'] ?? 2),
+        'children'       => $pif::toInt($data['children'] ?? 0),
+        'children_ages'  => $pif::toScalar($data['children_ages'] ?? ''),
+        'form_price'     => number_format($pif::toFloat($data['form_price'] ?? 0), 2),
+        'api_price'      => number_format($pif::toFloat($data['api_price'] ?? 0), 2),
+        'api_price_raw'  => number_format($pif::toFloat($data['api_price_raw'] ?? 0), 2),
+        'difference'     => number_format($pif::toFloat($data['difference'] ?? 0), 2),
+        'percent'        => $pif::toFloat($data['percent'] ?? 0),
         'date'           => date('d.m.Y H:i:s'),
     ];
 
@@ -294,7 +306,7 @@ function fn_novoton_holidays_send_price_discrepancy_email(array $data): bool
         /** @var \Tygh\Mailer\Mailer $mailer */
         $mailer = Tygh::$app['mailer'];
 
-        return $mailer->send([
+        return (bool) $mailer->send([
             'to'            => $admin_email,
             'from'          => 'default_company_orders_department',
             'data'          => $email_data,
@@ -383,22 +395,29 @@ function fn_novoton_holidays_generate_hotel_features_csv(): array
         $star_labels_fallback = NOVOTON_STAR_LABELS;
 
         // Pre-fetch hotel data in batch (2 queries) instead of N+1 inside the loop
-        $hotel_ids = array_column($hotels, 'hotel_id');
+        $hotels = TypeCoerce::toRowList($hotels);
+        $hotel_ids = [];
+        foreach ($hotels as $h) {
+            $hotel_ids[] = TypeCoerce::toString($h['hotel_id'] ?? '');
+        }
         if (!empty($hotel_ids)) {
             fn_novoton_holidays_prefetch_hotel_data($hotel_ids);
         }
 
         foreach ($hotels as $hotel) {
-            $product_code = !empty($hotel['product_code']) ? $hotel['product_code'] : \Tygh\Addons\NovotonHolidays\Constants::PRODUCT_CODE_PREFIX . $hotel['hotel_id'];
-            $stars = (int)($hotel['hotel_type']); // "4*" -> 4, "Apart" -> 0
+            $hotel_id_str = TypeCoerce::toString($hotel['hotel_id'] ?? '');
+            $product_code = !empty($hotel['product_code'])
+                ? TypeCoerce::toString($hotel['product_code'])
+                : \Tygh\Addons\NovotonHolidays\Constants::PRODUCT_CODE_PREFIX . $hotel_id_str;
+            $stars = TypeCoerce::toInt($hotel['hotel_type'] ?? 0); // "4*" -> 4, "Apart" -> 0
 
             // V3: Get boards via fn_novoton_holidays_get_hotel_data() (hotel_data is audit/cache only)
             $board_names = [];
-            $hotel_full = fn_novoton_holidays_get_hotel_data($hotel['hotel_id']);
+            $hotel_full = fn_novoton_holidays_get_hotel_data($hotel_id_str) ?? [];
             if (!empty($hotel_full['boards'])) {
-                foreach ($hotel_full['boards'] as $b) {
-                    $code = is_array($b) ? ($b['IdBoard'] ?? $b['Board'] ?? '') : (string)$b;
-                    if (!empty($code)) {
+                foreach (TypeCoerce::toList($hotel_full['boards']) as $b) {
+                    $code = is_array($b) ? TypeCoerce::toString($b['IdBoard'] ?? $b['Board'] ?? '') : TypeCoerce::toString($b);
+                    if ($code !== '') {
                         $board_names[] = fn_novoton_holidays_format_board_name($code);
                     }
                 }
@@ -406,17 +425,19 @@ function fn_novoton_holidays_generate_hotel_features_csv(): array
 
             // Fallback: extract board types from priceinfo season_price data
             if (empty($board_names) && !empty($hotel_full['packages'])) {
-                foreach ($hotel_full['packages'] as $pkg) {
+                foreach (TypeCoerce::toRowList($hotel_full['packages']) as $pkg) {
                     $pi = $pkg['priceinfo_data'] ?? null;
                     if (is_string($pi)) {
                         $pi = json_decode($pi, true);
                     }
                     if ($pi === null) continue;
-                    if (!empty($pi['season_price'])) {
-                        $sp_list = isset($pi['season_price']['IdRoom']) ? [$pi['season_price']] : $pi['season_price'];
+                    $piMap = TypeCoerce::toStringMap($pi);
+                    if (!empty($piMap['season_price'])) {
+                        $seasonPrice = TypeCoerce::toStringMap($piMap['season_price']);
+                        $sp_list = isset($seasonPrice['IdRoom']) ? [$seasonPrice] : TypeCoerce::toRowList($piMap['season_price']);
                         foreach ($sp_list as $sp) {
-                            $bid = $sp['IdBoard'] ?? '';
-                            if (!empty($bid)) {
+                            $bid = TypeCoerce::toString($sp['IdBoard'] ?? '');
+                            if ($bid !== '') {
                                 $board_names[] = fn_novoton_holidays_format_board_name($bid);
                             }
                         }
@@ -445,7 +466,7 @@ function fn_novoton_holidays_generate_hotel_features_csv(): array
 
             $result['count']++;
         }
-        
+
         // Save to file in novoton_reports directory
         $filename = 'novoton_hotel_features.csv';
         $dir = fn_get_files_dir_path() . 'novoton_reports/';
@@ -526,25 +547,30 @@ function fn_novoton_holidays_generate_hotel_features_xml(): array
         $dom->appendChild($root);
 
         // Pre-fetch hotel data in batch to avoid N+1 queries inside the loop
-        $hotel_ids = array_column($hotels, 'hotel_id');
+        $hotels = TypeCoerce::toRowList($hotels);
+        $hotel_ids = [];
+        foreach ($hotels as $h) {
+            $hotel_ids[] = TypeCoerce::toString($h['hotel_id'] ?? '');
+        }
         if (!empty($hotel_ids)) {
             fn_novoton_holidays_prefetch_hotel_data($hotel_ids);
         }
 
         foreach ($hotels as $hotel) {
+            $hotel_id_str = TypeCoerce::toString($hotel['hotel_id'] ?? '');
             $product_code = !empty($hotel['product_code'])
-                ? $hotel['product_code']
-                : \Tygh\Addons\NovotonHolidays\Constants::PRODUCT_CODE_PREFIX . $hotel['hotel_id'];
+                ? TypeCoerce::toString($hotel['product_code'])
+                : \Tygh\Addons\NovotonHolidays\Constants::PRODUCT_CODE_PREFIX . $hotel_id_str;
 
-            $stars = (int)($hotel['hotel_type']); // "4*" -> 4, "Apart" -> 0
+            $stars = TypeCoerce::toInt($hotel['hotel_type'] ?? 0); // "4*" -> 4, "Apart" -> 0
 
             // Boards via hotel data
             $board_names = [];
-            $hotel_full  = fn_novoton_holidays_get_hotel_data($hotel['hotel_id']);
+            $hotel_full  = fn_novoton_holidays_get_hotel_data($hotel_id_str) ?? [];
             if (!empty($hotel_full['boards'])) {
-                foreach ($hotel_full['boards'] as $b) {
-                    $code = is_array($b) ? ($b['IdBoard'] ?? $b['Board'] ?? '') : (string) $b;
-                    if (!empty($code)) {
+                foreach (TypeCoerce::toList($hotel_full['boards']) as $b) {
+                    $code = is_array($b) ? TypeCoerce::toString($b['IdBoard'] ?? $b['Board'] ?? '') : TypeCoerce::toString($b);
+                    if ($code !== '') {
                         $board_names[] = fn_novoton_holidays_format_board_name($code);
                     }
                 }
@@ -552,17 +578,19 @@ function fn_novoton_holidays_generate_hotel_features_xml(): array
 
             // Fallback: extract board types from priceinfo season_price data
             if (empty($board_names) && !empty($hotel_full['packages'])) {
-                foreach ($hotel_full['packages'] as $pkg) {
+                foreach (TypeCoerce::toRowList($hotel_full['packages']) as $pkg) {
                     $pi = $pkg['priceinfo_data'] ?? null;
                     if (is_string($pi)) {
                         $pi = json_decode($pi, true);
                     }
                     if ($pi === null) continue;
-                    if (!empty($pi['season_price'])) {
-                        $sp_list = isset($pi['season_price']['IdRoom']) ? [$pi['season_price']] : $pi['season_price'];
+                    $piMap = TypeCoerce::toStringMap($pi);
+                    if (!empty($piMap['season_price'])) {
+                        $seasonPrice = TypeCoerce::toStringMap($piMap['season_price']);
+                        $sp_list = isset($seasonPrice['IdRoom']) ? [$seasonPrice] : TypeCoerce::toRowList($piMap['season_price']);
                         foreach ($sp_list as $sp) {
-                            $bid = $sp['IdBoard'] ?? '';
-                            if (!empty($bid)) {
+                            $bid = TypeCoerce::toString($sp['IdBoard'] ?? '');
+                            if ($bid !== '') {
                                 $board_names[] = fn_novoton_holidays_format_board_name($bid);
                             }
                         }

@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 /**
  * Sphinx Holidays - Pre-Order Price Verifier
  *
@@ -14,7 +16,6 @@ declare(strict_types=1);
 namespace Tygh\Addons\SphinxHolidays\Services;
 
 use Tygh\Addons\TravelCore\Contracts\PreOrderPriceVerifierInterface;
-use Tygh\Addons\TravelCore\Services\CommissionCalculator;
 
 class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
 {
@@ -97,12 +98,7 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
                 continue;
             }
 
-            $commission = ConfigProvider::getCommission();
-            $roundPrices = ConfigProvider::shouldRoundPrices() ? 'Y' : 'N';
-            if ($commission > 0) {
-                $calculator = new CommissionCalculator($commission, $roundPrices);
-                $apiPrice = $calculator->apply($apiPrice);
-            }
+            $apiPrice = Container::getCartService()->applyCommission($apiPrice);
 
             // Compare prices
             $diff = abs($formPrice - $apiPrice);

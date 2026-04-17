@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 /**
  * Commission Calculator Interface
  *
@@ -23,8 +25,6 @@ interface CommissionCalculatorInterface
 
     /**
      * Get commission percentage.
-     *
-     * @return float
      */
     public function getCommission(): float;
 

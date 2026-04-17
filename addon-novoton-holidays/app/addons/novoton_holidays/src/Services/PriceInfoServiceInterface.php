@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 /**
  * PriceInfo Service Interface
  *
@@ -17,9 +19,9 @@ interface PriceInfoServiceInterface
     /**
      * Get price info for hotel package (for product tab).
      *
-     * @param string $hotelId     Hotel ID
+     * @param string $hotelId Hotel ID
      * @param string $packageName Package name
-     * @param string $lang        Language
+     * @param string $lang Language
      * @return array<string, mixed>|null Parsed price info
      */
     public function getPriceInfo(string $hotelId, string $packageName, string $lang = 'UK'): ?array;
@@ -27,8 +29,8 @@ interface PriceInfoServiceInterface
     /**
      * Get prices stored in database for product.
      *
-     * @param int|string  $productIdOrHotelId Product ID or Hotel ID
-     * @param string|null $packageName        Optional package name filter
+     * @param int|string $productIdOrHotelId Product ID or Hotel ID
+     * @param string|null $packageName Optional package name filter
      * @return array<string, mixed> Prices grouped by room
      */
     public function getStoredPrices(int|string $productIdOrHotelId, ?string $packageName = null): array;
@@ -68,8 +70,8 @@ interface PriceInfoServiceInterface
     /**
      * Get active early booking discount.
      *
-     * @param string      $hotelId Hotel ID
-     * @param string|null $date    Date to check (default: today)
+     * @param string $hotelId Hotel ID
+     * @param string|null $date Date to check (default: today)
      * @return array<string, mixed>|null Active discount or null
      */
     public function getActiveEarlyBooking(string $hotelId, ?string $date = null): ?array;
@@ -81,9 +83,9 @@ interface PriceInfoServiceInterface
      * of adults, with commission and currency conversion applied.
      * Used for calendar price display on the product detail page.
      *
-     * @param string      $hotelId        Hotel ID
-     * @param string|null $targetCurrency  Target currency code (null = display currency)
-     * @param int         $adults          Number of adults (default 2)
+     * @param string $hotelId Hotel ID
+     * @param string|null $targetCurrency Target currency code (null = display currency)
+     * @param int $adults Number of adults (default 2)
      * @return array<string, mixed> ['prices' => [date => price], 'currency' => string]
      */
     public function getCalendarPrices(string $hotelId, ?string $targetCurrency = null, int $adults = 2): array;

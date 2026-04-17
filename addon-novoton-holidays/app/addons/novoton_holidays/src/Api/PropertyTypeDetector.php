@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 /**
  * Property Type Detector
  *
@@ -22,7 +24,7 @@ class PropertyTypeDetector
      * Keyword → property_type mapping, ordered by specificity (most specific first).
      * 'hotel' is last because it's the most generic and also the default.
      */
-    private const KEYWORD_MAP = [
+    private const array KEYWORD_MAP = [
         ['pattern' => '/\bVILLAS?\b/i',              'type' => 'villa'],
         ['pattern' => '/\bAPART(?:MENTS?|HOTEL)?\b/i', 'type' => 'apartment'],
         ['pattern' => '/\bCHALETS?\b/i',             'type' => 'chalet'],
@@ -45,7 +47,7 @@ class PropertyTypeDetector
      * Only room types that strongly imply the overall property type.
      * Suite, Deluxe, Superior etc. do NOT determine property type.
      */
-    private const ROOM_KEYWORD_MAP = [
+    private const array ROOM_KEYWORD_MAP = [
         ['pattern' => '/\bAPART/i',    'type' => 'apartment'],
         ['pattern' => '/\bVILLA/i',    'type' => 'villa'],
         ['pattern' => '/\bBUNGALOW/i', 'type' => 'cabin'],
@@ -56,10 +58,10 @@ class PropertyTypeDetector
     /**
      * Detect property type using the 3-pass cascade.
      *
-     * @param string   $hotelName    Hotel name from API
+     * @param string $hotelName Hotel name from API
      * @param string[] $packageNames Package names (can be empty)
-     * @param string[] $roomNames    Room names/IDs (can be empty)
-     * @return string  Canonical property type code (never null)
+     * @param string[] $roomNames Room names/IDs (can be empty)
+     * @return string Canonical property type code (never null)
      */
     public function detect(string $hotelName, array $packageNames = [], array $roomNames = []): string
     {
@@ -104,9 +106,9 @@ class PropertyTypeDetector
     /**
      * Match a text against a keyword map.
      *
-     * @param string $text       Text to scan
-     * @param list<array{pattern: string, type: string}>  $keywordMap Array of ['pattern' => regex, 'type' => code]
-     * @return string|null       Matched type or null
+     * @param string $text Text to scan
+     * @param list<array{pattern: string, type: string}> $keywordMap Array of ['pattern' => regex, 'type' => code]
+     * @return string|null Matched type or null
      */
     private function matchAgainst(string $text, array $keywordMap): ?string
     {

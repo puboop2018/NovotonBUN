@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 /**
  * Novoton Provider Normalizer
  *
@@ -70,15 +72,15 @@ class NovotonNormalizer implements ProviderNormalizerInterface
         $lower = mb_strtolower($value);
 
         $prefixMap = [
-            'single'    => 'SGL',
-            'double'    => 'DBL',
-            'twin'      => 'TWIN',
-            'triple'    => 'TRP',
-            'quad'      => 'QUAD',
-            'suite'     => 'SUITE',
+            'single' => 'SGL',
+            'double' => 'DBL',
+            'twin' => 'TWIN',
+            'triple' => 'TRP',
+            'quad' => 'QUAD',
+            'suite' => 'SUITE',
             'apartment' => 'APT',
-            'studio'    => 'STUDIO',
-            'family'    => 'DBL',
+            'studio' => 'STUDIO',
+            'family' => 'DBL',
         ];
 
         foreach ($prefixMap as $prefix => $code) {

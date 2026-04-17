@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 namespace Tygh\Addons\NovotonHolidays\Cron\Commands;
 
 use Tygh\Addons\NovotonHolidays\Cron\AbstractCronCommand;
@@ -43,9 +45,9 @@ class CalendarPricesCommand extends AbstractCronCommand
      */
     public function execute(): array
     {
-        $this->output("Recompute Calendar Prices");
-        $this->output("========================");
-        $this->output("");
+        $this->output('Recompute Calendar Prices');
+        $this->output('========================');
+        $this->output('');
 
         // Single hotel mode
         $singleHotel = $this->getParam('hotel_id', '');
@@ -57,28 +59,28 @@ class CalendarPricesCommand extends AbstractCronCommand
 
         // Find hotels that need recomputation
         if ($staleOnly) {
-            $this->output("Mode: stale_only (NULL calendar_prices_raw)");
+            $this->output('Mode: stale_only (NULL calendar_prices_raw)');
             $hotel_ids = db_get_fields(
                 "SELECT DISTINCT h.hotel_id FROM ?:novoton_hotels h
                  INNER JOIN ?:novoton_hotel_packages p ON h.hotel_id = p.hotel_id
                  WHERE p.priceinfo_data IS NOT NULL AND p.priceinfo_data != ''
-                   AND (h.calendar_prices_raw IS NULL OR h.calendar_prices_raw = '')"
+                   AND (h.calendar_prices_raw IS NULL OR h.calendar_prices_raw = '')",
             );
         } else {
-            $this->output("Mode: full (all hotels with priceinfo)");
+            $this->output('Mode: full (all hotels with priceinfo)');
             $hotel_ids = db_get_fields(
                 "SELECT DISTINCT h.hotel_id FROM ?:novoton_hotels h
                  INNER JOIN ?:novoton_hotel_packages p ON h.hotel_id = p.hotel_id
-                 WHERE p.priceinfo_data IS NOT NULL AND p.priceinfo_data != ''"
+                 WHERE p.priceinfo_data IS NOT NULL AND p.priceinfo_data != ''",
             );
         }
 
         $total = count($hotel_ids);
         $this->output("Hotels to process: {$total}");
-        $this->output("");
+        $this->output('');
 
         if ($total === 0) {
-            $this->output("Nothing to do.");
+            $this->output('Nothing to do.');
             return ['success' => true, 'stats' => ['total' => 0, 'processed' => 0, 'errors' => 0]];
         }
 
@@ -103,7 +105,7 @@ class CalendarPricesCommand extends AbstractCronCommand
         }
 
         $duration = round(microtime(true) - $this->startTime, 1);
-        $this->output("");
+        $this->output('');
         $this->output("Done in {$duration}s: {$processed} computed, {$errors} errors");
 
         $this->logToSyncTable('recompute_calendar_prices', $processed);
@@ -128,10 +130,10 @@ class CalendarPricesCommand extends AbstractCronCommand
 
         try {
             PriceInfoService::precomputeCalendarPrices($hotelId);
-            $this->output("Good");
+            $this->output('Good');
             return ['success' => true, 'stats' => ['hotel_id' => $hotelId]];
         } catch (\Throwable $e) {
-            $this->output("ERROR: " . $e->getMessage());
+            $this->output('ERROR: ' . $e->getMessage());
             return ['success' => false, 'error' => $e->getMessage()];
         }
     }

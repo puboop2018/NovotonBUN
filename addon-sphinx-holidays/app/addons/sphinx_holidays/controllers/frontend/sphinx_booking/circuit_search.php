@@ -15,15 +15,18 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 use Tygh\Tygh;
 use Tygh\Addons\SphinxHolidays\Services\Container;
 use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 
 try {
     $api = Container::getApi();
+    /** @var \Smarty $view */
     $view = Tygh::$app['view'];
 
-    $destination_id = (int)($_REQUEST['destination_id'] ?? 0);
-    $transport_type = trim($_REQUEST['transport_type'] ?? '');
-    $month = trim($_REQUEST['month'] ?? '');
-    $page = max(1, (int)($_REQUEST['page'] ?? 1));
+    $destination_id = RequestCoerce::int($_REQUEST, 'destination_id');
+    $transport_type = RequestCoerce::string($_REQUEST, 'transport_type');
+    $month = RequestCoerce::string($_REQUEST, 'month');
+    $page = max(1, RequestCoerce::int($_REQUEST, 'page', 1));
 
     $searchParams = [
         'pagination' => ['page' => $page, 'per_page' => 20],
@@ -41,15 +44,17 @@ try {
 
     $response = $api->getCircuitRates($searchParams);
 
-    $allResults = $response['data'] ?? [];
-    $meta = $response['meta'] ?? [];
+    $allResults = TypeCoerce::toRowList($response['data'] ?? []);
+    $meta = TypeCoerce::toStringMap($response['meta'] ?? null);
 
     // Apply commission
     $cartService = Container::getCartService();
     foreach ($allResults as &$result) {
-        if (isset($result['pricing']['selling_price'])) {
-            $result['pricing']['original_price'] = $result['pricing']['selling_price'];
-            $result['pricing']['selling_price'] = $cartService->applyCommission((float)$result['pricing']['selling_price']);
+        $resultPricing = TypeCoerce::toStringMap($result['pricing'] ?? null);
+        if (isset($resultPricing['selling_price'])) {
+            $resultPricing['original_price'] = $resultPricing['selling_price'];
+            $resultPricing['selling_price'] = $cartService->applyCommission(TypeCoerce::toFloat($resultPricing['selling_price']));
+            $result['pricing'] = $resultPricing;
         }
     }
     unset($result);
@@ -71,5 +76,7 @@ try {
     ]);
     fn_set_notification('E', __('error'),
         __('sphinx_holidays.search_error', ['[default]' => 'An error occurred while searching. Please try again later.']));
-    Tygh::$app['view']->assign('sphinx_circuit_results', []);
+    /** @var \Smarty $errorView */
+    $errorView = Tygh::$app['view'];
+    $errorView->assign('sphinx_circuit_results', []);
 }

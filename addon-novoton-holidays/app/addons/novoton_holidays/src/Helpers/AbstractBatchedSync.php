@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 /**
  * Novoton Holidays - Abstract Batched Sync
  *
@@ -43,43 +45,36 @@ abstract class AbstractBatchedSync implements SyncInterface
 
     /**
      * API instance
-     * @var NovotonApi|null
      */
     protected ?NovotonApi $api = null;
 
     /**
      * Batch size
-     * @var int
      */
     protected int $batchSize;
 
     /**
      * Maximum execution time per run (seconds)
-     * @var int
      */
     protected int $maxExecutionTime;
 
     /**
      * Unlimited mode (no time limit)
-     * @var bool
      */
     protected bool $unlimited = false;
 
     /**
      * Start time of current run
-     * @var int
      */
     protected int $startTime;
 
     /**
      * Memory usage threshold as fraction of PHP memory_limit (0.0 to 1.0)
-     * @var float
      */
     protected float $memoryThreshold = 0.85;
 
     /**
      * Per-item warning threshold in seconds
-     * @var int
      */
     protected int $itemTimeoutWarning = 30;
 
@@ -111,8 +106,6 @@ abstract class AbstractBatchedSync implements SyncInterface
 
     /**
      * Get unique name for this sync type
-     *
-     * @return string
      */
     abstract protected function getSyncName(): string;
 
@@ -127,7 +120,6 @@ abstract class AbstractBatchedSync implements SyncInterface
     /**
      * Get item IDs to sync based on sync type
      *
-     * @param string $syncType
      * @param array<string, mixed> $options
      * @return array<string, mixed>
      */
@@ -143,8 +135,6 @@ abstract class AbstractBatchedSync implements SyncInterface
 
     /**
      * Set batch size
-     *
-     * @param int $size
      */
     public function setBatchSize(int $size): void
     {
@@ -153,8 +143,6 @@ abstract class AbstractBatchedSync implements SyncInterface
 
     /**
      * Set maximum execution time
-     *
-     * @param int $seconds
      */
     public function setMaxExecutionTime(int $seconds): void
     {
@@ -163,8 +151,6 @@ abstract class AbstractBatchedSync implements SyncInterface
 
     /**
      * Set unlimited mode
-     *
-     * @param bool $unlimited
      */
     public function setUnlimited(bool $unlimited): void
     {
@@ -173,8 +159,6 @@ abstract class AbstractBatchedSync implements SyncInterface
 
     /**
      * Set output callback for logger
-     *
-     * @param callable $callback
      */
     public function setOutputCallback(callable $callback): void
     {
@@ -211,8 +195,6 @@ abstract class AbstractBatchedSync implements SyncInterface
 
     /**
      * Check if time limit has been reached
-     *
-     * @return bool
      */
     protected function isTimeLimitReached(): bool
     {
@@ -321,11 +303,16 @@ abstract class AbstractBatchedSync implements SyncInterface
         $value = (int)$limit;
         $unit = strtolower(substr($limit, -1));
         switch ($unit) {
-            case 'g': $value *= 1024;
-            // fall through
-            case 'm': $value *= 1024;
-            // fall through
-            case 'k': $value *= 1024;
+            case 'g':
+                $value *= 1024;
+                // fall through
+                // no break
+            case 'm':
+                $value *= 1024;
+                // fall through
+                // no break
+            case 'k':
+                $value *= 1024;
         }
         return $value;
     }
@@ -343,7 +330,7 @@ abstract class AbstractBatchedSync implements SyncInterface
         // Handle reset option
         if (!empty($options['reset'])) {
             $this->state->clear();
-            $this->logger->output("State reset. Ready for new sync.");
+            $this->logger->output('State reset. Ready for new sync.');
             return ['status' => 'reset'];
         }
 
@@ -366,7 +353,7 @@ abstract class AbstractBatchedSync implements SyncInterface
         $syncType = $this->determineSyncType($options);
 
         if ($syncType === 'none') {
-            $this->logger->output("No sync needed at this time.");
+            $this->logger->output('No sync needed at this time.');
             return ['status' => 'skipped', 'reason' => 'No sync needed'];
         }
 
@@ -376,11 +363,11 @@ abstract class AbstractBatchedSync implements SyncInterface
         $itemIds = $this->getItemsToSync($syncType, $options);
 
         if (empty($itemIds)) {
-            $this->logger->output("No items to sync.");
+            $this->logger->output('No items to sync.');
             return ['status' => 'skipped', 'reason' => 'No items found'];
         }
 
-        $this->logger->output("Found " . count($itemIds) . " items to sync.");
+        $this->logger->output('Found ' . count($itemIds) . ' items to sync.');
 
         // Create new state
         $metadata = $this->getMetadata($options);
@@ -542,13 +529,13 @@ abstract class AbstractBatchedSync implements SyncInterface
             return;
         }
 
-        $this->logger->output("\nRetrying " . count($errorIds) . " failed items...");
+        $this->logger->output("\nRetrying " . count($errorIds) . ' failed items...');
 
         $recoveredIds = [];
 
         foreach ($errorIds as $retryId) {
             if ($this->isLimitReached()) {
-                $this->logger->output("Retry stopped early: resource limit reached.");
+                $this->logger->output('Retry stopped early: resource limit reached.');
                 break;
             }
 
@@ -569,8 +556,8 @@ abstract class AbstractBatchedSync implements SyncInterface
         // then patch in the retry outcome.
         $recoveredCount = count($recoveredIds);
         $freshState = $this->state->load();
-        $freshState['synced']   = (int) ($freshState['synced'] ?? 0) + $recoveredCount;
-        $freshState['errors']   = max(0, (int) ($freshState['errors'] ?? 0) - $recoveredCount);
+        $freshState['synced'] = (int) ($freshState['synced'] ?? 0) + $recoveredCount;
+        $freshState['errors'] = max(0, (int) ($freshState['errors'] ?? 0) - $recoveredCount);
         $freshState['error_ids'] = array_values(array_diff(
             $freshState['error_ids'] ?? [],
             $recoveredIds,

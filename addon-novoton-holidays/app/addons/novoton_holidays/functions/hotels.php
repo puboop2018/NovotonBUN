@@ -21,46 +21,46 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
  */
 function fn_novoton_holidays_normalize_package(array $pkg, bool $include_priceinfo_details = false): array
 {
+    $pif = \Tygh\Addons\NovotonHolidays\Services\PriceInfoFormatter::class;
     $packageData = [
-        'IdCont' => $pkg['package_id'],
-        'PackageName' => $pkg['package_name'],
-        'min_price' => $pkg['min_price'],
-        'has_early_booking' => $pkg['has_early_booking'],
-        'seasons_count' => $pkg['seasons_count'],
-        'synced_at' => $pkg['synced_at']
+        'IdCont' => $pif::toScalar($pkg['package_id'] ?? ''),
+        'PackageName' => $pif::toScalar($pkg['package_name'] ?? ''),
+        'min_price' => $pif::toFloat($pkg['min_price'] ?? 0),
+        'has_early_booking' => $pkg['has_early_booking'] ?? false,
+        'seasons_count' => $pif::toInt($pkg['seasons_count'] ?? 0),
+        'synced_at' => $pif::toScalar($pkg['synced_at'] ?? '')
     ];
 
     // Decode priceinfo only when detailed extraction is requested.
     // When called from prefetch (false), priceinfo_data is excluded from
     // the SELECT to avoid transferring 50-200KB of JSON per package row.
     if ($include_priceinfo_details && !empty($pkg['priceinfo_data'])) {
-        $priceinfo = json_decode($pkg['priceinfo_data'], true);
-        if ($priceinfo === null) return $packageData;
-        if ($priceinfo) {
-            $packageData['priceinfo'] = $priceinfo;
+        $piJson = $pif::toScalar($pkg['priceinfo_data']);
+        $priceinfo = json_decode($piJson, true);
+        if ($priceinfo === null || !is_array($priceinfo)) return $packageData;
+        $packageData['priceinfo'] = $priceinfo;
 
-            // Extract detailed priceinfo components if requested
-            // Extract seasons for display
-            if (isset($priceinfo['seasons']['season'])) {
-                $packageData['seasons'] = $priceinfo['seasons']['season'];
-                // Normalize single season to array
-                if (isset($packageData['seasons']['IdSeason'])) {
-                    $packageData['seasons'] = [$packageData['seasons']];
-                }
+        // Extract detailed priceinfo components if requested
+        // Extract seasons for display
+        if (isset($priceinfo['seasons']['season'])) {
+            $packageData['seasons'] = $priceinfo['seasons']['season'];
+            // Normalize single season to array
+            if (is_array($packageData['seasons']) && isset($packageData['seasons']['IdSeason'])) {
+                $packageData['seasons'] = [$packageData['seasons']];
             }
+        }
 
-            // Extract early booking for display
-            if (isset($priceinfo['early_booking'])) {
-                $packageData['early_booking'] = $priceinfo['early_booking'];
-            }
+        // Extract early booking for display
+        if (isset($priceinfo['early_booking'])) {
+            $packageData['early_booking'] = $priceinfo['early_booking'];
+        }
 
-            // Extract season prices for display
-            if (isset($priceinfo['season_price'])) {
-                $packageData['season_price'] = $priceinfo['season_price'];
-                // Normalize single entry to array
-                if (isset($packageData['season_price']['IdRoom'])) {
-                    $packageData['season_price'] = [$packageData['season_price']];
-                }
+        // Extract season prices for display
+        if (isset($priceinfo['season_price'])) {
+            $packageData['season_price'] = $priceinfo['season_price'];
+            // Normalize single entry to array
+            if (is_array($packageData['season_price']) && isset($packageData['season_price']['IdRoom'])) {
+                $packageData['season_price'] = [$packageData['season_price']];
             }
         }
     }
@@ -95,28 +95,27 @@ function &_novoton_hotel_data_cache(): array
 function _novoton_enrich_hotel_row(array $hotel, ?array $packages = null): array
 {
     // Decode hotel_data JSON (stores hotelinfo API response)
-    $hotelInfoJson = $hotel['hotel_data'] ?? '';
+    $pif = \Tygh\Addons\NovotonHolidays\Services\PriceInfoFormatter::class;
+    $hotelInfoJson = $pif::toScalar($hotel['hotel_data'] ?? '');
     if (!empty($hotelInfoJson)) {
         $hotelInfo = json_decode($hotelInfoJson, true);
-        if ($hotelInfo === null) return $hotel;
-        if ($hotelInfo) {
-            if (isset($hotelInfo['rooms'])) {
-                $hotel['rooms'] = $hotelInfo['rooms'];
-                if (isset($hotel['rooms']['IdRoom'])) {
-                    $hotel['rooms'] = [$hotel['rooms']];
-                }
+        if ($hotelInfo === null || !is_array($hotelInfo)) return $hotel;
+        if (isset($hotelInfo['rooms'])) {
+            $hotel['rooms'] = $hotelInfo['rooms'];
+            if (is_array($hotel['rooms']) && isset($hotel['rooms']['IdRoom'])) {
+                $hotel['rooms'] = [$hotel['rooms']];
             }
-            if (isset($hotelInfo['boards'])) {
-                $hotel['boards'] = $hotelInfo['boards'];
-                if (isset($hotel['boards']['IdBoard'])) {
-                    $hotel['boards'] = [$hotel['boards']];
-                }
-            }
-            if (isset($hotelInfo['ages'])) {
-                $hotel['ages'] = $hotelInfo['ages'];
-            }
-            $hotel['full_data'] = $hotelInfo;
         }
+        if (isset($hotelInfo['boards'])) {
+            $hotel['boards'] = $hotelInfo['boards'];
+            if (is_array($hotel['boards']) && isset($hotel['boards']['IdBoard'])) {
+                $hotel['boards'] = [$hotel['boards']];
+            }
+        }
+        if (isset($hotelInfo['ages'])) {
+            $hotel['ages'] = $hotelInfo['ages'];
+        }
+        $hotel['full_data'] = $hotelInfo;
     }
 
     // Attach packages — use pre-fetched if provided, otherwise query
@@ -127,11 +126,14 @@ function _novoton_enrich_hotel_row(array $hotel, ?array $packages = null): array
             "SELECT id, hotel_id, package_id, package_name, min_price, has_early_booking,
                     seasons_count, currency, synced_at
              FROM ?:novoton_hotel_packages WHERE hotel_id = ?s ORDER BY package_name",
-            $hotel['hotel_id']
+            $pif::toScalar($hotel['hotel_id'] ?? '')
         );
         if (!empty($rows)) {
             $hotel['packages'] = [];
             foreach ($rows as $pkg) {
+                if (!is_array($pkg)) {
+                    continue;
+                }
                 $hotel['packages'][] = fn_novoton_holidays_normalize_package($pkg, false);
             }
         }
@@ -153,12 +155,13 @@ function fn_novoton_holidays_prefetch_hotel_data(array $hotel_ids): void
 {
     $cache = &_novoton_hotel_data_cache();
 
+    $pif = \Tygh\Addons\NovotonHolidays\Services\PriceInfoFormatter::class;
     // Filter to IDs not already cached
     $missing = [];
     foreach ($hotel_ids as $id) {
-        $id = (string) $id;
-        if ($id !== '' && !isset($cache[$id])) {
-            $missing[] = $id;
+        $idStr = $pif::toScalar($id);
+        if ($idStr !== '' && !isset($cache[$idStr])) {
+            $missing[] = $idStr;
         }
     }
     if (empty($missing)) {
@@ -183,12 +186,16 @@ function fn_novoton_holidays_prefetch_hotel_data(array $hotel_ids): void
     // Group & normalize packages by hotel_id
     $pkgs_by_hotel = [];
     foreach ($all_packages as $pkg) {
-        $pkgs_by_hotel[$pkg['hotel_id']][] = fn_novoton_holidays_normalize_package($pkg, false);
+        if (!is_array($pkg)) {
+            continue;
+        }
+        $pkgHotelId = $pif::toScalar($pkg['hotel_id'] ?? '');
+        $pkgs_by_hotel[$pkgHotelId][] = fn_novoton_holidays_normalize_package($pkg, false);
     }
 
     // Enrich and cache each hotel
     foreach ($missing as $hotel_id) {
-        if (!isset($hotels[$hotel_id])) {
+        if (!isset($hotels[$hotel_id]) || !is_array($hotels[$hotel_id])) {
             continue;
         }
         $cache[$hotel_id] = _novoton_enrich_hotel_row(
@@ -230,7 +237,7 @@ function fn_novoton_holidays_get_hotel_data(string|int|null $hotel_id, bool $for
         $hotel_id
     );
 
-    if ($hotel) {
+    if (is_array($hotel)) {
         $cache[$hotel_id] = _novoton_enrich_hotel_row($hotel);
     }
 
@@ -260,9 +267,11 @@ function fn_novoton_holidays_get_hotel_prices(int $product_id, bool $force = fal
         $hotel_id = fn_novoton_holidays_get_hotel_id_by_product($product_id);
     }
 
+    $pif = \Tygh\Addons\NovotonHolidays\Services\PriceInfoFormatter::class;
+
     // Fallback: extract hotel_id from product_code
     if (empty($hotel_id)) {
-        $product_code = db_get_field("SELECT product_code FROM ?:products WHERE product_id = ?i", $product_id);
+        $product_code = $pif::toScalar(db_get_field("SELECT product_code FROM ?:products WHERE product_id = ?i", $product_id));
         if (!empty($product_code) && preg_match('/\d+/', $product_code, $m)) {
             $hotel_id = $m[0];
         }
@@ -277,15 +286,15 @@ function fn_novoton_holidays_get_hotel_prices(int $product_id, bool $force = fal
         "SELECT * FROM ?:novoton_hotel_packages
          WHERE hotel_id = ?s AND priceinfo_data IS NOT NULL AND priceinfo_data != ''
          ORDER BY synced_at DESC LIMIT 1",
-        $hotel_id
+        $pif::toScalar($hotel_id)
     );
 
-    if (empty($package) || empty($package['priceinfo_data'])) {
+    if (empty($package) || !is_array($package) || empty($package['priceinfo_data'])) {
         return [];
     }
 
-    $priceinfo = json_decode($package['priceinfo_data'], true);
-    if ($priceinfo === null) return [];
+    $priceinfo = json_decode($pif::toScalar($package['priceinfo_data']), true);
+    if ($priceinfo === null || !is_array($priceinfo)) return [];
     if (empty($priceinfo) || empty($priceinfo['season_price'])) {
         return [];
     }
@@ -295,7 +304,9 @@ function fn_novoton_holidays_get_hotel_prices(int $product_id, bool $force = fal
     $season_prices = $priceinfo['season_price'];
 
     // Normalize single entry to array
-    if (isset($season_prices['IdRoom'])) {
+    if (!is_array($season_prices)) {
+        $season_prices = [];
+    } elseif (isset($season_prices['IdRoom'])) {
         $season_prices = [$season_prices];
     }
 
@@ -303,10 +314,13 @@ function fn_novoton_holidays_get_hotel_prices(int $product_id, bool $force = fal
     $age_type_map = \Tygh\Addons\NovotonHolidays\Constants::AGE_TYPE_MAP;
 
     foreach ($season_prices as $sp) {
-        $room_id = $sp['IdRoom'] ?? '';
-        $board_id = $sp['IdBoard'] ?? '';
-        $id_age = $sp['IdAge'] ?? '1';
-        $id_acc = $sp['IdAcc'] ?? 'REGULAR';
+        if (!is_array($sp)) {
+            continue;
+        }
+        $room_id = $pif::toScalar($sp['IdRoom'] ?? '');
+        $board_id = $pif::toScalar($sp['IdBoard'] ?? '');
+        $id_age = $pif::toScalar($sp['IdAge'] ?? '1');
+        $id_acc = $pif::toScalar($sp['IdAcc'] ?? 'REGULAR');
 
         if (empty($room_id) || empty($board_id)) {
             continue;
@@ -315,7 +329,7 @@ function fn_novoton_holidays_get_hotel_prices(int $product_id, bool $force = fal
         // Determine age_type from IdAge or fAge field
         $age_type = $age_type_map[$id_age] ?? $id_age;
         if (isset($sp['fAge']) && !empty($sp['fAge'])) {
-            $age_type = $sp['fAge'];
+            $age_type = $pif::toScalar($sp['fAge']);
         }
 
         // Build flat price entry
@@ -325,10 +339,10 @@ function fn_novoton_holidays_get_hotel_prices(int $product_id, bool $force = fal
             'board_id' => $board_id,
             'age_type' => $age_type,
             'acc_type' => $id_acc,
-            'star_rating' => $sp['IdStar'] ?? '',
-            'code' => $sp['Code'] ?? '',
-            'base' => $sp['Base'] ?? '',
-            'room_price' => $sp['RoomPrice'] ?? 'No',
+            'star_rating' => $pif::toScalar($sp['IdStar'] ?? ''),
+            'code' => $pif::toScalar($sp['Code'] ?? ''),
+            'base' => $pif::toScalar($sp['Base'] ?? ''),
+            'room_price' => $pif::toScalar($sp['RoomPrice'] ?? 'No'),
         ];
 
         // Add all Price columns (Price1 through Price20)
@@ -341,7 +355,7 @@ function fn_novoton_holidays_get_hotel_prices(int $product_id, bool $force = fal
                 if (is_string($val) && str_contains($val, '%')) {
                     $entry[$target_key] = $val; // Keep as string for template to handle
                 } else {
-                    $entry[$target_key] = (float)($val);
+                    $entry[$target_key] = $pif::toFloat($val);
                 }
             }
         }
@@ -370,12 +384,12 @@ function fn_novoton_holidays_get_package_priceinfo(string $hotel_id, string $pac
         $package_id
     );
 
-    if (empty($pkg) || empty($pkg['priceinfo_data'])) {
+    if (empty($pkg) || !is_array($pkg) || empty($pkg['priceinfo_data'])) {
         return null;
     }
 
-    $data = json_decode($pkg['priceinfo_data'], true);
-    if ($data === null) return null;
+    $data = json_decode(\Tygh\Addons\NovotonHolidays\Services\PriceInfoFormatter::toScalar($pkg['priceinfo_data']), true);
+    if ($data === null || !is_array($data)) return null;
     return $data;
 }
 
@@ -396,23 +410,23 @@ function fn_novoton_holidays_get_package_priceinfo_by_name(string $hotel_id, str
         $package_name
     );
 
-    if (empty($pkg) || empty($pkg['priceinfo_data'])) {
+    if (empty($pkg) || !is_array($pkg) || empty($pkg['priceinfo_data'])) {
         return null;
     }
 
-    $data = json_decode($pkg['priceinfo_data'], true);
-    if ($data === null) return null;
+    $data = json_decode(\Tygh\Addons\NovotonHolidays\Services\PriceInfoFormatter::toScalar($pkg['priceinfo_data']), true);
+    if ($data === null || !is_array($data)) return null;
     return $data;
 }
 
 /**
  * Get total hotels count
- * 
+ *
  * @return int Count
  */
 function fn_novoton_holidays_get_hotels_count(): int
 {
-    return (int)db_get_field("SELECT COUNT(*) FROM ?:novoton_hotels");
+    return \Tygh\Addons\NovotonHolidays\Services\PriceInfoFormatter::toInt(db_get_field("SELECT COUNT(*) FROM ?:novoton_hotels"));
 }
 
 /**

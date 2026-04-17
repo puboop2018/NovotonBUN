@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays\Contracts;
@@ -14,8 +15,8 @@ interface SphinxFeatureAssignerInterface
     /**
      * Assign all features from a sphinx_hotels row to a CS-Cart product.
      *
-     * @param int   $productId CS-Cart product ID
-     * @param array<string, mixed> $hotel     Row from sphinx_hotels table
+     * @param int $productId CS-Cart product ID
+     * @param array<string, mixed> $hotel Row from sphinx_hotels table
      */
     public function assignAll(int $productId, array $hotel): void;
 }

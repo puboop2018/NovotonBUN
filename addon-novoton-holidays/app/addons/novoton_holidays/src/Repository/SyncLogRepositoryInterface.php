@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Repository;
@@ -6,7 +7,7 @@ namespace Tygh\Addons\NovotonHolidays\Repository;
 interface SyncLogRepositoryInterface
 {
     /**
-     * @return list<array<string, mixed>>|null
+     * @return array<string, mixed>|null
      */
     public function findById(int $log_id): ?array;
     /**
@@ -29,7 +30,7 @@ interface SyncLogRepositoryInterface
     public function deleteOld(int $days = 30): int;
     public function count(string $type = ''): int;
     /**
-     * @return array<string, mixed>
+     * @return array<string, array<string, mixed>>
      */
     public function getStats(int $days = 7): array;
     /**

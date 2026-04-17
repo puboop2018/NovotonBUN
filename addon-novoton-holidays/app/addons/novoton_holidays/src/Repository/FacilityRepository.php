@@ -1,20 +1,27 @@
 <?php
+
 declare(strict_types=1);
+
 /**
  * Novoton Holidays - Facility Repository
- * 
+ *
  * Centralized database access for facilities data.
- * 
+ *
  * @package NovotonHolidays
  * @since 2.8.0
  */
 
 namespace Tygh\Addons\NovotonHolidays\Repository;
 
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+use Tygh\Addons\TravelCore\Repository\RowNarrowingTrait;
+
 class FacilityRepository implements FacilityRepositoryInterface
 {
+    use RowNarrowingTrait;
+
     /** @var array<string, string> Allowed facility name columns by language */
-    private const NAME_COLUMNS = [
+    private const array NAME_COLUMNS = [
         'ro' => 'facility_name_ro',
         'en' => 'facility_name_en',
     ];
@@ -26,12 +33,12 @@ class FacilityRepository implements FacilityRepositoryInterface
 
     /**
      * Find facility by ID
-     * @return list<array<string, mixed>>|null
+     * @return array<string, mixed>|null
      */
     public function findById(int $facility_id): ?array
     {
-        $facility = db_get_row("SELECT * FROM ?:novoton_facilities WHERE facility_id = ?i", $facility_id);
-        return $facility ?: null;
+        $facility = self::asRow(db_get_row('SELECT * FROM ?:novoton_facilities WHERE facility_id = ?i', $facility_id));
+        return $facility === [] ? null : $facility;
     }
 
     /**
@@ -41,16 +48,16 @@ class FacilityRepository implements FacilityRepositoryInterface
     public function findAll(string $lang = 'en'): array
     {
         $col = self::nameField($lang);
-        return db_get_array("SELECT facility_id, {$col} as facility_name FROM ?:novoton_facilities ORDER BY {$col}");
+        return self::asRowList(db_get_array("SELECT facility_id, {$col} as facility_name FROM ?:novoton_facilities ORDER BY {$col}"));
     }
-    
+
     /**
      * Find all facilities with all columns (for admin listing).
      * @return list<array<string, mixed>>
      */
     public function findAllFull(): array
     {
-        return db_get_array("SELECT * FROM ?:novoton_facilities ORDER BY facility_name_en");
+        return self::asRowList(db_get_array('SELECT * FROM ?:novoton_facilities ORDER BY facility_name_en'));
     }
 
     /**
@@ -58,9 +65,9 @@ class FacilityRepository implements FacilityRepositoryInterface
      */
     public function exists(int $facility_id): bool
     {
-        return (bool) db_get_field("SELECT 1 FROM ?:novoton_facilities WHERE facility_id = ?i", $facility_id);
+        return TypeCoerce::toInt(db_get_field('SELECT 1 FROM ?:novoton_facilities WHERE facility_id = ?i', $facility_id)) > 0;
     }
-    
+
     /**
      * Save facility (insert or update)
      */
@@ -69,106 +76,112 @@ class FacilityRepository implements FacilityRepositoryInterface
         if (empty($name_ro)) {
             $name_ro = $name_en;
         }
-        
+
         if ($this->exists($facility_id)) {
             return (bool) db_query(
-                "UPDATE ?:novoton_facilities SET facility_name_en = ?s, facility_name_ro = ?s WHERE facility_id = ?i",
-                $name_en, $name_ro, $facility_id
+                'UPDATE ?:novoton_facilities SET facility_name_en = ?s, facility_name_ro = ?s WHERE facility_id = ?i',
+                $name_en,
+                $name_ro,
+                $facility_id,
             );
         }
-        
+
         return (bool) db_query(
-            "INSERT INTO ?:novoton_facilities (facility_id, facility_name_en, facility_name_ro) VALUES (?i, ?s, ?s)",
-            $facility_id, $name_en, $name_ro
+            'INSERT INTO ?:novoton_facilities (facility_id, facility_name_en, facility_name_ro) VALUES (?i, ?s, ?s)',
+            $facility_id,
+            $name_en,
+            $name_ro,
         );
     }
-    
+
     /**
      * Delete facility
      */
     public function delete(int $facility_id): bool
     {
         // Delete hotel links first
-        db_query("DELETE FROM ?:novoton_hotel_facilities WHERE facility_id = ?i", $facility_id);
-        return (bool) db_query("DELETE FROM ?:novoton_facilities WHERE facility_id = ?i", $facility_id);
+        db_query('DELETE FROM ?:novoton_hotel_facilities WHERE facility_id = ?i', $facility_id);
+        return (bool) db_query('DELETE FROM ?:novoton_facilities WHERE facility_id = ?i', $facility_id);
     }
-    
+
     /**
      * Count facilities
      */
     public function count(): int
     {
-        return (int) db_get_field("SELECT COUNT(*) FROM ?:novoton_facilities");
+        return TypeCoerce::toInt(db_get_field('SELECT COUNT(*) FROM ?:novoton_facilities'));
     }
-    
+
     // =========================================================================
     // Hotel-Facility Links
     // =========================================================================
-    
+
     /**
      * Get facilities for a hotel
-     * @return array<string, mixed>
+     * @return list<array<string, mixed>>
      */
     public function getForHotel(string $hotel_id, string $lang = 'en'): array
     {
         $col = self::nameField($lang);
 
-        return db_get_array(
+        return self::asRowList(db_get_array(
             "SELECT f.facility_id, f.{$col} as facility_name
              FROM ?:novoton_hotel_facilities hf
              LEFT JOIN ?:novoton_facilities f ON hf.facility_id = f.facility_id
              WHERE hf.hotel_id = ?s
              ORDER BY f.{$col}",
-            $hotel_id
-        );
+            $hotel_id,
+        ));
     }
-    
+
     /**
      * Get facility IDs for a hotel
-     * @return array<string, mixed>
+     * @return list<int>
      */
     public function getIdsForHotel(string $hotel_id): array
     {
-        return db_get_fields("SELECT facility_id FROM ?:novoton_hotel_facilities WHERE hotel_id = ?s", $hotel_id);
+        return self::asIntList(db_get_fields('SELECT facility_id FROM ?:novoton_hotel_facilities WHERE hotel_id = ?s', $hotel_id));
     }
-    
+
     /**
      * Link facility to hotel
      */
     public function linkToHotel(string $hotel_id, int $facility_id): bool
     {
         return (bool) db_query(
-            "INSERT IGNORE INTO ?:novoton_hotel_facilities (hotel_id, facility_id) VALUES (?s, ?i)",
-            $hotel_id, $facility_id
+            'INSERT IGNORE INTO ?:novoton_hotel_facilities (hotel_id, facility_id) VALUES (?s, ?i)',
+            $hotel_id,
+            $facility_id,
         );
     }
-    
+
     /**
      * Unlink facility from hotel
      */
     public function unlinkFromHotel(string $hotel_id, int $facility_id): bool
     {
         return (bool) db_query(
-            "DELETE FROM ?:novoton_hotel_facilities WHERE hotel_id = ?s AND facility_id = ?i",
-            $hotel_id, $facility_id
+            'DELETE FROM ?:novoton_hotel_facilities WHERE hotel_id = ?s AND facility_id = ?i',
+            $hotel_id,
+            $facility_id,
         );
     }
-    
+
     /**
      * Clear all facilities for a hotel
      */
     public function clearHotelFacilities(string $hotel_id): bool
     {
-        return (bool) db_query("DELETE FROM ?:novoton_hotel_facilities WHERE hotel_id = ?s", $hotel_id);
+        return (bool) db_query('DELETE FROM ?:novoton_hotel_facilities WHERE hotel_id = ?s', $hotel_id);
     }
-    
+
     /**
      * Set facilities for a hotel (replace all)
      * @param list<int> $facility_ids
      */
     public function setHotelFacilities(string $hotel_id, array $facility_ids): bool
     {
-        db_query("START TRANSACTION");
+        db_query('START TRANSACTION');
         try {
             $this->clearHotelFacilities($hotel_id);
 
@@ -176,23 +189,23 @@ class FacilityRepository implements FacilityRepositoryInterface
                 $this->linkToHotel($hotel_id, (int) $facility_id);
             }
 
-            db_query("COMMIT");
+            db_query('COMMIT');
             return true;
         } catch (\Exception $e) {
-            db_query("ROLLBACK");
+            db_query('ROLLBACK');
             throw $e;
         }
     }
-    
+
     /**
      * Count hotels with a specific facility
      */
     public function countHotelsWithFacility(int $facility_id): int
     {
-        return (int) db_get_field(
-            "SELECT COUNT(*) FROM ?:novoton_hotel_facilities WHERE facility_id = ?i",
-            $facility_id
-        );
+        return TypeCoerce::toInt(db_get_field(
+            'SELECT COUNT(*) FROM ?:novoton_hotel_facilities WHERE facility_id = ?i',
+            $facility_id,
+        ));
     }
 
     // =========================================================================
@@ -201,43 +214,48 @@ class FacilityRepository implements FacilityRepositoryInterface
 
     /**
      * Get facilities for a hotel filtered by feature type (hotel_facility, room_facility, travel_group, beach_access)
-     * @return array<string, mixed>
+     * @return list<array<string, mixed>>
      */
     public function getForHotelByType(string $hotel_id, string $facility_type, string $lang = 'en'): array
     {
         $col = self::nameField($lang);
 
-        return db_get_array(
+        return self::asRowList(db_get_array(
             "SELECT f.facility_id, f.{$col} as facility_name
              FROM ?:novoton_hotel_facilities hf
              JOIN ?:novoton_facilities f ON hf.facility_id = f.facility_id
              WHERE hf.hotel_id = ?s AND f.facility_type = ?s
              ORDER BY f.{$col}",
-            $hotel_id, $facility_type
-        );
+            $hotel_id,
+            $facility_type,
+        ));
     }
 
     /**
      * Get all facilities for a hotel, grouped by feature type.
      * Returns ['hotel_facility' => [['facility_id' => 1, ...], ...], 'travel_group' => [...], ...]
-     * @return array<string, mixed>
+     * @return array<string, list<array<string, mixed>>>
      */
     public function getForHotelGroupedByType(string $hotel_id, string $lang = 'en'): array
     {
         $col = self::nameField($lang);
 
-        $rows = db_get_array(
+        $rows = self::asRowList(db_get_array(
             "SELECT f.facility_id, f.facility_type, f.{$col} as facility_name
              FROM ?:novoton_hotel_facilities hf
              JOIN ?:novoton_facilities f ON hf.facility_id = f.facility_id
              WHERE hf.hotel_id = ?s
              ORDER BY f.facility_type, f.{$col}",
-            $hotel_id
-        );
+            $hotel_id,
+        ));
 
         $grouped = [];
         foreach ($rows as $row) {
-            $grouped[$row['facility_type']][] = $row;
+            $type = TypeCoerce::toString($row['facility_type'] ?? '');
+            if ($type === '') {
+                continue;
+            }
+            $grouped[$type][] = $row;
         }
         return $grouped;
     }
@@ -248,8 +266,9 @@ class FacilityRepository implements FacilityRepositoryInterface
     public function updateType(int $facility_id, string $facility_type): bool
     {
         return (bool) db_query(
-            "UPDATE ?:novoton_facilities SET facility_type = ?s WHERE facility_id = ?i",
-            $facility_type, $facility_id
+            'UPDATE ?:novoton_facilities SET facility_type = ?s WHERE facility_id = ?i',
+            $facility_type,
+            $facility_id,
         );
     }
 
@@ -260,8 +279,10 @@ class FacilityRepository implements FacilityRepositoryInterface
     {
         if ($name_ro !== null) {
             return (bool) db_query(
-                "UPDATE ?:novoton_facilities SET facility_type = ?s, facility_name_ro = ?s WHERE facility_id = ?i",
-                $facility_type, $name_ro, $facility_id
+                'UPDATE ?:novoton_facilities SET facility_type = ?s, facility_name_ro = ?s WHERE facility_id = ?i',
+                $facility_type,
+                $name_ro,
+                $facility_id,
             );
         }
         return $this->updateType($facility_id, $facility_type);
@@ -272,7 +293,7 @@ class FacilityRepository implements FacilityRepositoryInterface
      */
     public function getLastSyncedAt(): ?string
     {
-        $val = db_get_field("SELECT MAX(synced_at) FROM ?:novoton_facilities");
-        return ($val !== false && $val !== '' && $val !== null) ? (string) $val : null;
+        $val = TypeCoerce::toString(db_get_field('SELECT MAX(synced_at) FROM ?:novoton_facilities'));
+        return $val === '' ? null : $val;
     }
 }

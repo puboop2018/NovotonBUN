@@ -1,11 +1,12 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays\Cron\Commands;
 
-use Tygh\Addons\SphinxHolidays\Services\Container;
-use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
 use Tygh\Addons\SphinxHolidays\Services\CacheEndpointService;
+use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
+use Tygh\Addons\SphinxHolidays\Services\Container;
 
 /**
  * Cron command: refresh cached hotel/package deals from Sphinx cache endpoints.
@@ -44,19 +45,18 @@ class CacheRefreshCommand extends AbstractSyncCommand
 
             return [
                 'success' => $stats['errors'] === 0,
-                'stats'   => $stats,
+                'stats' => $stats,
             ];
         } catch (\Throwable $e) {
-            $this->output("Cache refresh FAILED: " . $e->getMessage());
+            $this->output('Cache refresh FAILED: ' . $e->getMessage());
             fn_log_event('general', 'runtime', [
                 'message' => 'Sphinx cache refresh failed: ' . $e->getMessage(),
             ]);
 
             return [
                 'success' => false,
-                'stats'   => ['errors' => 1, 'error_message' => $e->getMessage()],
+                'stats' => ['errors' => 1, 'error_message' => $e->getMessage()],
             ];
         }
     }
-
 }

@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 /**
  * Novoton Holidays - Terms Formatter
  *
@@ -58,7 +60,7 @@ class TermsFormatter
      * Format cancellation terms XML for display.
      *
      * @param string $xmlString Raw XML string from Novoton API
-     * @param string $checkIn   Check-in date for relative calculations
+     * @param string $checkIn Check-in date for relative calculations
      * @return string Formatted cancellation terms (newline-separated)
      */
     public static function formatCancellationTerms(string $xmlString, string $checkIn = ''): string
@@ -146,7 +148,7 @@ class TermsFormatter
         $phpFormat = str_replace(
             ['%d', '%m', '%Y', '%y', '%B', '%b', '%A', '%a'],
             ['d', 'm', 'Y', 'y', 'F', 'M', 'l', 'D'],
-            $dateFormat
+            $dateFormat,
         );
 
         return date($phpFormat, $timestamp);
@@ -216,7 +218,7 @@ class TermsFormatter
      * Parse cancellation terms from XML string.
      *
      * @param string $xmlString XML terms string
-     * @param string $checkIn   Check-in date for relative calculations
+     * @param string $checkIn Check-in date for relative calculations
      * @return list<array<string, mixed>> Parsed cancellation terms
      */
     public static function parseCancellationTerms(string $xmlString, string $checkIn = ''): array
@@ -267,9 +269,7 @@ class TermsFormatter
                     $terms[] = $term;
                 }
 
-                usort($terms, function ($a, $b) {
-                    return strcmp($a['till_date'], $b['till_date']);
-                });
+                usort($terms, fn ($a, $b) => strcmp($a['till_date'], $b['till_date']));
             } else {
                 $cancelRules = $xml->xpath('//CancelRule') ?: $xml->xpath('//cancelRule') ?: [];
 
@@ -293,9 +293,7 @@ class TermsFormatter
                     }
                 }
 
-                usort($terms, function ($a, $b) {
-                    return $b['days_before'] - $a['days_before'];
-                });
+                usort($terms, fn ($a, $b) => $b['days_before'] - $a['days_before']);
             }
         } catch (\Exception $e) {
             fn_log_event('general', 'runtime', ['message' => 'Novoton: cancellation terms parse error: ' . $e->getMessage()]);
@@ -308,7 +306,6 @@ class TermsFormatter
      * Parse an XML string, handling CDATA and wrapping in root if needed.
      *
      * @param string $xmlString Raw XML
-     * @return \SimpleXMLElement|null
      */
     private static function parseXmlString(string $xmlString): ?\SimpleXMLElement
     {

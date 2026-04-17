@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 /**
  * Novoton PriceInfo Calculator
  *
@@ -37,45 +39,58 @@ class PriceInfoCalculator
      */
     public function calculateBasePrice(array $occupancy, array $seasonsByNight, string $roomId, string $boardId, int $nights): array
     {
-        $priceinfo = $this->parser->getPriceinfo();
+        $priceinfo = $this->parser->getPriceinfo() ?? [];
         $seasonPrices = $priceinfo['season_price'] ?? [];
+        if (!is_array($seasonPrices)) {
+            $seasonPrices = [];
+        }
         if (isset($seasonPrices['IdRoom'])) {
             $seasonPrices = [$seasonPrices];
         }
 
-        $total = 0;
+        $total = 0.0;
         $byNight = [];
         $byPerson = [];
         $byPersonByNight = [];  // person_key => [nightIdx => price]
         $matchedRows = [];      // person_key => matched row info (first night only)
 
+        /** @var list<array<string, mixed>> $adults */
+        $adults = is_array($occupancy['adults'] ?? null) ? $occupancy['adults'] : [];
+        /** @var list<array<string, mixed>> $children */
+        $children = is_array($occupancy['children'] ?? null) ? $occupancy['children'] : [];
+
         // Initialize per-person entries so every occupant appears in the output
-        foreach ($occupancy['adults'] as $adult) {
-            $key = 'adult_' . $adult['index'];
+        foreach ($adults as $adult) {
+            $key = 'adult_' . PriceInfoFormatter::toScalar($adult['index'] ?? '');
             $byPerson[$key] = 0;
             $byPersonByNight[$key] = [];
         }
-        foreach ($occupancy['children'] as $child) {
-            $key = 'child_' . $child['index'];
+        foreach ($children as $child) {
+            $key = 'child_' . PriceInfoFormatter::toScalar($child['index'] ?? '');
             $byPerson[$key] = 0;
             $byPersonByNight[$key] = [];
         }
 
         foreach ($seasonsByNight as $nightIdx => $nightInfo) {
-            $nightTotal = 0;
-            $seasonNum = $nightInfo['season'];
+            if (!is_array($nightInfo)) {
+                continue;
+            }
+            $nightTotal = 0.0;
+            $seasonNum = PriceInfoFormatter::toInt($nightInfo['season'] ?? 1);
             $priceKey = 'Price' . $seasonNum;
 
             $roomPriceCharged = false;
 
             // Adults
-            foreach ($occupancy['adults'] as $adult) {
-                $personKey = 'adult_' . $adult['index'];
-                $row = $this->findSeasonPriceRow($seasonPrices, $roomId, $boardId, $adult['age_type'], $adult['acc_type'], $nights);
+            foreach ($adults as $adult) {
+                $personKey = 'adult_' . PriceInfoFormatter::toScalar($adult['index'] ?? '');
+                $adultAgeType = PriceInfoFormatter::toScalar($adult['age_type'] ?? '');
+                $adultAccType = PriceInfoFormatter::toScalar($adult['acc_type'] ?? '');
+                $row = $this->findSeasonPriceRow($seasonPrices, $roomId, $boardId, $adultAgeType, $adultAccType, $nights);
 
                 if ($row) {
-                    $isRoomPrice = ($row['RoomPrice'] ?? 'No') === 'Yes';
-                    $isExtraBed = str_contains(strtolower($adult['acc_type']), strtolower('EXTRA'));
+                    $isRoomPrice = PriceInfoFormatter::toScalar($row['RoomPrice'] ?? 'No') === 'Yes';
+                    $isExtraBed = str_contains(strtolower($adultAccType), 'extra');
 
                     // RoomPrice dedup: only skip regular-bed occupants covered by
                     // the per-room charge.  Extra-bed guests always have their own
@@ -101,22 +116,22 @@ class PriceInfoCalculator
                     if (!isset($matchedRows[$personKey])) {
                         $rowCode = PriceInfoFormatter::toScalar($row['Code'] ?? '');
                         $rowBase = PriceInfoFormatter::toScalar($row['Base'] ?? '');
-                        $rawPrice = $row[$priceKey] ?? $row['Price1'] ?? '';
+                        $rawPrice = PriceInfoFormatter::toScalar($row[$priceKey] ?? $row['Price1'] ?? '');
                         $isPercentage = false;
-                        if (is_string($rawPrice) && str_contains($rawPrice, '%')) {
+                        if (str_contains($rawPrice, '%')) {
                             $isPercentage = true;
                         } elseif ($rowCode !== '' && $rowBase !== '' && $rowCode !== $rowBase) {
                             $isPercentage = true;
                         }
                         $matchedRows[$personKey] = [
-                            'age_type' => $adult['age_type'],
-                            'acc_type' => $adult['acc_type'],
+                            'age_type' => $adultAgeType,
+                            'acc_type' => $adultAccType,
                             'row_age' => PriceInfoFormatter::toScalar($row['fAge'] ?? $row['IdAge'] ?? ''),
                             'code' => $rowCode,
                             'base' => $rowBase,
-                            'raw_price' => (string)$rawPrice,
+                            'raw_price' => $rawPrice,
                             'is_percentage' => $isPercentage,
-                            'room_price' => $row['RoomPrice'] ?? 'No',
+                            'room_price' => PriceInfoFormatter::toScalar($row['RoomPrice'] ?? 'No'),
                         ];
                     }
                 } else {
@@ -125,26 +140,28 @@ class PriceInfoCalculator
             }
 
             // Children
-            foreach ($occupancy['children'] as $child) {
-                $personKey = 'child_' . $child['index'];
+            foreach ($children as $child) {
+                $personKey = 'child_' . PriceInfoFormatter::toScalar($child['index'] ?? '');
+                $childAgeType = PriceInfoFormatter::toScalar($child['age_type'] ?? '');
+                $childAccType = PriceInfoFormatter::toScalar($child['acc_type'] ?? '');
                 $row = null;
-                if ($child['by_1_ad']) {
-                    $ageTypeBy1Ad = $child['age_type'] . ' BY 1 AD';
-                    $row = $this->findSeasonPriceRow($seasonPrices, $roomId, $boardId, $ageTypeBy1Ad, $child['acc_type'], $nights);
+                if (!empty($child['by_1_ad'])) {
+                    $ageTypeBy1Ad = $childAgeType . ' BY 1 AD';
+                    $row = $this->findSeasonPriceRow($seasonPrices, $roomId, $boardId, $ageTypeBy1Ad, $childAccType, $nights);
 
                     if (!$row) {
-                        $ageTypeBy1AdLower = $child['age_type'] . ' by 1 ad';
-                        $row = $this->findSeasonPriceRow($seasonPrices, $roomId, $boardId, $ageTypeBy1AdLower, $child['acc_type'], $nights);
+                        $ageTypeBy1AdLower = $childAgeType . ' by 1 ad';
+                        $row = $this->findSeasonPriceRow($seasonPrices, $roomId, $boardId, $ageTypeBy1AdLower, $childAccType, $nights);
                     }
                 }
 
                 if (!$row) {
-                    $row = $this->findSeasonPriceRow($seasonPrices, $roomId, $boardId, $child['age_type'], $child['acc_type'], $nights);
+                    $row = $this->findSeasonPriceRow($seasonPrices, $roomId, $boardId, $childAgeType, $childAccType, $nights);
                 }
 
                 if ($row) {
-                    $childRoomPrice = ($row['RoomPrice'] ?? 'No') === 'Yes';
-                    $isExtraBed = str_contains(strtolower($child['acc_type']), strtolower('EXTRA'));
+                    $childRoomPrice = PriceInfoFormatter::toScalar($row['RoomPrice'] ?? 'No') === 'Yes';
+                    $isExtraBed = str_contains(strtolower($childAccType), 'extra');
 
                     // Same RoomPrice dedup logic: only skip regular-bed children
                     // (rare — a child occupying a regular bed in the room).
@@ -170,22 +187,22 @@ class PriceInfoCalculator
                     if (!isset($matchedRows[$personKey])) {
                         $rowCode = PriceInfoFormatter::toScalar($row['Code'] ?? '');
                         $rowBase = PriceInfoFormatter::toScalar($row['Base'] ?? '');
-                        $rawPrice = $row[$priceKey] ?? $row['Price1'] ?? '';
+                        $rawPrice = PriceInfoFormatter::toScalar($row[$priceKey] ?? $row['Price1'] ?? '');
                         $isPercentage = false;
-                        if (is_string($rawPrice) && str_contains($rawPrice, '%')) {
+                        if (str_contains($rawPrice, '%')) {
                             $isPercentage = true;
                         } elseif ($rowCode !== '' && $rowBase !== '' && $rowCode !== $rowBase) {
                             $isPercentage = true;
                         }
                         $matchedRows[$personKey] = [
-                            'age_type' => $child['age_type'],
-                            'acc_type' => $child['acc_type'],
+                            'age_type' => $childAgeType,
+                            'acc_type' => $childAccType,
                             'row_age' => PriceInfoFormatter::toScalar($row['fAge'] ?? $row['IdAge'] ?? ''),
                             'code' => $rowCode,
                             'base' => $rowBase,
-                            'raw_price' => (string)$rawPrice,
+                            'raw_price' => $rawPrice,
                             'is_percentage' => $isPercentage,
-                            'room_price' => $row['RoomPrice'] ?? 'No',
+                            'room_price' => PriceInfoFormatter::toScalar($row['RoomPrice'] ?? 'No'),
                         ];
                     }
                 } else {
@@ -194,9 +211,9 @@ class PriceInfoCalculator
             }
 
             $byNight[$nightIdx] = [
-                'date' => $nightInfo['date'],
+                'date' => PriceInfoFormatter::toScalar($nightInfo['date'] ?? ''),
                 'season' => $seasonNum,
-                'price' => $nightTotal
+                'price' => $nightTotal,
             ];
 
             $total += $nightTotal;
@@ -219,9 +236,12 @@ class PriceInfoCalculator
     public function findBaseCodeRow(array $seasonPrices, string $roomId, string $boardId): ?array
     {
         foreach ($seasonPrices as $row) {
-            $rowRoom = is_string($row['IdRoom'] ?? '') ? ($row['IdRoom'] ?? '') : '';
-            $rowBoard = is_string($row['IdBoard'] ?? '') ? ($row['IdBoard'] ?? '') : '';
-            $code = is_string($row['Code'] ?? '') ? ($row['Code'] ?? '') : '';
+            if (!is_array($row)) {
+                continue;
+            }
+            $rowRoom = PriceInfoFormatter::toScalar($row['IdRoom'] ?? '');
+            $rowBoard = PriceInfoFormatter::toScalar($row['IdBoard'] ?? '');
+            $code = PriceInfoFormatter::toScalar($row['Code'] ?? '');
 
             if (PriceInfoFormatter::matchRoom($rowRoom, $roomId) && PriceInfoFormatter::matchBoard($rowBoard, $boardId) && $code === 'Base') {
                 return $row;
@@ -250,6 +270,9 @@ class PriceInfoCalculator
         $candidates = [];
 
         foreach ($seasonPrices as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
             $rowRoom = PriceInfoFormatter::toScalar($row['IdRoom'] ?? '');
             $rowBoard = PriceInfoFormatter::toScalar($row['IdBoard'] ?? '');
             $rowAcc = PriceInfoFormatter::toScalar($row['IdAcc'] ?? '');
@@ -269,15 +292,29 @@ class PriceInfoCalculator
             $rawToDays = PriceInfoFormatter::toScalar($row['ToDays'] ?? '');
             $fromDays = ($rawFromDays !== '') ? (int) (preg_replace('/\D+/', '', $rawFromDays) ?: '1') : 1;
             $toDays = ($rawToDays !== '') ? (int) (preg_replace('/\D+/', '', $rawToDays) ?: '9999') : 9999;
-            if ($fromDays <= 0) $fromDays = 1;
-            if ($toDays <= 0) $toDays = 9999;
+            if ($fromDays <= 0) {
+                $fromDays = 1;
+            }
+            if ($toDays <= 0) {
+                $toDays = 9999;
+            }
 
-            if (!PriceInfoFormatter::matchRoom($rowRoom, $roomId)) continue;
-            if (!PriceInfoFormatter::matchBoard($rowBoard, $boardId)) continue;
-            if (!PriceInfoFormatter::matchAgeType($rowAge, $ageType)) continue;
-            if (!PriceInfoFormatter::matchAccType($rowAcc, $accType)) continue;
+            if (!PriceInfoFormatter::matchRoom($rowRoom, $roomId)) {
+                continue;
+            }
+            if (!PriceInfoFormatter::matchBoard($rowBoard, $boardId)) {
+                continue;
+            }
+            if (!PriceInfoFormatter::matchAgeType($rowAge, $ageType)) {
+                continue;
+            }
+            if (!PriceInfoFormatter::matchAccType($rowAcc, $accType)) {
+                continue;
+            }
 
-            if ($nights < $fromDays || $nights > $toDays) continue;
+            if ($nights < $fromDays || $nights > $toDays) {
+                continue;
+            }
 
             $candidates[] = ['row' => $row, 'fromDays' => $fromDays];
         }
@@ -286,11 +323,10 @@ class PriceInfoCalculator
             return null;
         }
 
-        usort($candidates, function ($a, $b) {
-            return $b['fromDays'] <=> $a['fromDays'];
-        });
+        usort($candidates, fn ($a, $b) => $b['fromDays'] <=> $a['fromDays']);
 
-        return $candidates[0]['row'];
+        /** @var array<string, mixed> */
+        return is_array($candidates[0]['row'] ?? null) ? $candidates[0]['row'] : [];
     }
 
     /**
@@ -321,7 +357,7 @@ class PriceInfoCalculator
      * When multiple rows share the same Code, the lookup prefers the row
      * matching the current row's IdRoom and IdBoard.
      */
-    private const MAX_RESOLVE_DEPTH = 10;
+    private const int MAX_RESOLVE_DEPTH = 10;
 
     /**
      * @param array<string, mixed> $row
@@ -337,7 +373,9 @@ class PriceInfoCalculator
         $code = PriceInfoFormatter::toScalar($row['Code'] ?? '');
         $memoKey = $code . ':' . $priceKey;
 
-        if (isset($visited[$memoKey])) return 0;
+        if (isset($visited[$memoKey])) {
+            return 0;
+        }
         $visited[$memoKey] = true;
 
         $rawPrice = $row[$priceKey] ?? $row['Price1'] ?? 0;
@@ -359,7 +397,7 @@ class PriceInfoCalculator
             $base = PriceInfoFormatter::toScalar($row['Base'] ?? '');
             if ($code !== '' && $base !== '' && $code !== $base) {
                 $isPercentage = true;
-                $percentValue = (float) $rawPrice;
+                $percentValue = PriceInfoFormatter::toFloat($rawPrice);
             }
         }
 
@@ -371,7 +409,7 @@ class PriceInfoCalculator
                 $baseRow = $this->findBestBaseRow(
                     $codeIndex[$baseRef],
                     PriceInfoFormatter::toScalar($row['IdRoom'] ?? ''),
-                    PriceInfoFormatter::toScalar($row['IdBoard'] ?? '')
+                    PriceInfoFormatter::toScalar($row['IdBoard'] ?? ''),
                 );
                 $basePrice = $this->resolvePrice($baseRow, $priceKey, $visited, $depth + 1);
                 return round($basePrice * ($percentValue / 100), 4);
@@ -379,7 +417,7 @@ class PriceInfoCalculator
             return 0;
         }
 
-        return (float) $rawPrice;
+        return PriceInfoFormatter::toFloat($rawPrice);
     }
 
     /**

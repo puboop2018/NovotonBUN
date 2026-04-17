@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays\Services;
@@ -29,7 +30,7 @@ class CacheService implements CacheServiceInterface
     public static function get(string $key): ?array
     {
         // Probabilistic cleanup: ~1% of reads trigger expired entry removal
-        if (mt_rand(1, 100) === 1) {
+        if (random_int(1, 100) === 1) {
             self::cleanup();
         }
 

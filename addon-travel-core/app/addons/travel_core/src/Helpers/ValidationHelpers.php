@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Tygh\Addons\TravelCore\Helpers;
@@ -34,7 +35,7 @@ class ValidationHelpers
      */
     public static function sanitizeName(string $name, int $maxLength = 100): string
     {
-        $name = preg_replace('/[^\p{L}\s\'-]/u', '', $name);
+        $name = (string) preg_replace('/[^\p{L}\s\'-]/u', '', $name);
         return mb_substr(trim($name), 0, $maxLength);
     }
 
@@ -46,6 +47,38 @@ class ValidationHelpers
     public static function isValidEntityId(string $id, int $maxLength = 50): bool
     {
         return (bool) preg_match('/^[a-zA-Z0-9_-]{1,' . $maxLength . '}$/', $id);
+    }
+
+    /**
+     * Safely extract a scalar string from a mixed value.
+     *
+     * Arrays and objects become ''; scalars are cast to string and trimmed.
+     *
+     * @deprecated 3.3.0 Use {@see TypeCoerce::toString()} directly.
+     */
+    public static function toString(mixed $value): string
+    {
+        return TypeCoerce::toString($value);
+    }
+
+    /**
+     * Safely extract a float from a mixed value.
+     *
+     * @deprecated 3.3.0 Use {@see TypeCoerce::toFloat()} directly.
+     */
+    public static function toFloat(mixed $value): float
+    {
+        return TypeCoerce::toFloat($value);
+    }
+
+    /**
+     * Safely extract an int from a mixed value.
+     *
+     * @deprecated 3.3.0 Use {@see TypeCoerce::toInt()} directly.
+     */
+    public static function toInt(mixed $value): int
+    {
+        return TypeCoerce::toInt($value);
     }
 
     /**

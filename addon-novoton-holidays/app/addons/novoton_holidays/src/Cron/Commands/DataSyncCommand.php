@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 namespace Tygh\Addons\NovotonHolidays\Cron\Commands;
 
 use Tygh\Addons\NovotonHolidays\Constants;
@@ -48,9 +50,9 @@ class DataSyncCommand extends AbstractCronCommand
             $countries = [Constants::DEFAULT_COUNTRY];
         }
 
-        $this->output("Syncing resort list from Novoton API...");
-        $this->output("Countries: " . implode(', ', $countries));
-        $this->output("");
+        $this->output('Syncing resort list from Novoton API...');
+        $this->output('Countries: ' . implode(', ', $countries));
+        $this->output('');
 
         $totalAdded = 0;
         $totalUpdated = 0;
@@ -69,12 +71,12 @@ class DataSyncCommand extends AbstractCronCommand
                 $this->output("{$total} resorts ({$added} added, {$updated} updated)");
             } else {
                 $totalErrors++;
-                $this->output("Error: " . ($result['error'] ?? 'Unknown error'));
+                $this->output('Error: ' . ($result['error'] ?? 'Unknown error'));
             }
         }
 
-        $this->output("");
-        $this->output("Total: " . ($totalAdded + $totalUpdated) . " resorts synced (new: {$totalAdded}), errors: {$totalErrors}");
+        $this->output('');
+        $this->output('Total: ' . ($totalAdded + $totalUpdated) . " resorts synced (new: {$totalAdded}), errors: {$totalErrors}");
 
         // Sync new resorts to feature mapping table
         $this->syncFeatureMappings();
@@ -83,7 +85,7 @@ class DataSyncCommand extends AbstractCronCommand
         $this->sendReport('resort_list', [
             'added' => $totalAdded, 'updated' => $totalUpdated,
             'countries' => count($countries),
-            'duration' => $this->getDuration() . 's'
+            'duration' => $this->getDuration() . 's',
         ]);
 
         return ['success' => $totalErrors === 0, 'stats' => ['added' => $totalAdded, 'updated' => $totalUpdated]];
@@ -94,8 +96,8 @@ class DataSyncCommand extends AbstractCronCommand
      */
     private function syncFacilities(): array
     {
-        $this->output("Syncing facilities list from Novoton API...");
-        $this->output("");
+        $this->output('Syncing facilities list from Novoton API...');
+        $this->output('');
 
         $result = fn_novoton_holidays_sync_facilities_list();
 
@@ -106,10 +108,10 @@ class DataSyncCommand extends AbstractCronCommand
         if (!empty($result['success'])) {
             $added = $result['added'] ?? 0;
             $updated = $result['updated'] ?? 0;
-            $this->output("Synced " . ($result['total'] ?? ($added + $updated)) . " facilities ({$added} added, {$updated} updated).");
+            $this->output('Synced ' . ($result['total'] ?? ($added + $updated)) . " facilities ({$added} added, {$updated} updated).");
         } else {
             $errors = 1;
-            $this->output("Error: " . ($result['error'] ?? 'Unknown error'));
+            $this->output('Error: ' . ($result['error'] ?? 'Unknown error'));
         }
 
         // Sync new facilities to feature mapping table
@@ -118,7 +120,7 @@ class DataSyncCommand extends AbstractCronCommand
         $this->logToSyncTable('facilities', $added + $updated, $errors);
         $this->sendReport('facilities', [
             'added' => $added, 'updated' => $updated, 'errors' => $errors,
-            'duration' => $this->getDuration() . 's'
+            'duration' => $this->getDuration() . 's',
         ]);
 
         return ['success' => $errors === 0, 'stats' => ['added' => $added, 'updated' => $updated]];
@@ -137,10 +139,9 @@ class DataSyncCommand extends AbstractCronCommand
             if (function_exists('fn_novoton_holidays_seed_travel_aliases')) {
                 fn_novoton_holidays_seed_travel_aliases();
             }
-            $this->output("Feature mappings synced via travel_core.");
+            $this->output('Feature mappings synced via travel_core.');
         } catch (\Exception $e) {
-            $this->output("Warning: Feature mapping sync failed: " . $e->getMessage());
+            $this->output('Warning: Feature mapping sync failed: ' . $e->getMessage());
         }
     }
-
 }

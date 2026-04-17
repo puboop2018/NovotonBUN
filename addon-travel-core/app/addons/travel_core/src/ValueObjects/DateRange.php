@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 /**
  * DateRange Value Object
  *
@@ -21,9 +23,9 @@ final class DateRange
 
     private function __construct(string $checkIn, string $checkOut, int $nights)
     {
-        $this->checkIn  = $checkIn;
+        $this->checkIn = $checkIn;
         $this->checkOut = $checkOut;
-        $this->nights   = $nights;
+        $this->nights = $nights;
     }
 
     public static function fromCheckInAndNights(string $checkIn, int $nights): self
@@ -36,7 +38,7 @@ final class DateRange
             throw new InvalidArgumentException("Nights must be between 1 and 30, got: {$nights}");
         }
 
-        $checkInDate  = date('Y-m-d', $ts);
+        $checkInDate = date('Y-m-d', $ts);
         $checkOutDate = date('Y-m-d', strtotime("+{$nights} days", $ts));
 
         return new self($checkInDate, $checkOutDate, $nights);
@@ -44,7 +46,7 @@ final class DateRange
 
     public static function fromDates(string $checkIn, string $checkOut): self
     {
-        $tsIn  = strtotime($checkIn);
+        $tsIn = strtotime($checkIn);
         $tsOut = strtotime($checkOut);
 
         if ($tsIn === false) {
@@ -62,15 +64,24 @@ final class DateRange
         return new self(date('Y-m-d', $tsIn), date('Y-m-d', $tsOut), $nights);
     }
 
-    public function checkIn(): string  { return $this->checkIn; }
-    public function checkOut(): string { return $this->checkOut; }
-    public function nights(): int      { return $this->nights; }
+    public function checkIn(): string
+    {
+        return $this->checkIn;
+    }
+    public function checkOut(): string
+    {
+        return $this->checkOut;
+    }
+    public function nights(): int
+    {
+        return $this->nights;
+    }
 
     public function shift(int $days): self
     {
         return self::fromCheckInAndNights(
             date('Y-m-d', (int) strtotime("{$days} days", (int) strtotime($this->checkIn))),
-            $this->nights
+            $this->nights,
         );
     }
 

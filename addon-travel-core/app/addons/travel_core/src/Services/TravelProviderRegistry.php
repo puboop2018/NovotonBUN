@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Tygh\Addons\TravelCore\Services;
@@ -19,7 +20,7 @@ class TravelProviderRegistry
      * Known provider addon names.
      * Used by travel_core to check dependencies at uninstall time.
      */
-    public const KNOWN_PROVIDER_ADDONS = ['novoton_holidays', 'sphinx_holidays'];
+    public const array KNOWN_PROVIDER_ADDONS = ['novoton_holidays', 'sphinx_holidays'];
 
     /** @var array<string, array{name: string, label: string, normalizer: ProviderNormalizerInterface, booking_admin_provider?: BookingAdminProviderInterface, status_sync_callback?: callable, single_status_callback?: callable, scan_config?: array{table: string, id_col: string, json_col: string}}> */
     private static array $providers = [];
@@ -122,17 +123,17 @@ class TravelProviderRegistry
     /**
      * Register facility scan configuration for a provider.
      *
-     * @param string $name    Provider name ('sphinx', 'novoton', etc.)
-     * @param string $table   Database table containing hotel data
-     * @param string $idCol   Column name for hotel ID
+     * @param string $name Provider name ('sphinx', 'novoton', etc.)
+     * @param string $table Database table containing hotel data
+     * @param string $idCol Column name for hotel ID
      * @param string $jsonCol Column name containing facilities JSON array
      */
     public static function setScanConfig(string $name, string $table, string $idCol, string $jsonCol): void
     {
         if (isset(self::$providers[$name])) {
             self::$providers[$name]['scan_config'] = [
-                'table'    => $table,
-                'id_col'   => $idCol,
+                'table' => $table,
+                'id_col' => $idCol,
                 'json_col' => $jsonCol,
             ];
         }

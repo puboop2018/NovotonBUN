@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 /**
  * Booking Submission Service Interface
  *
@@ -24,8 +26,8 @@ interface BookingSubmissionServiceInterface
      *   - Sends ALL rooms in SINGLE API request IF same hotel, package, and dates
      *   - Sends SEPARATE API calls if rooms have different packages or dates
      *
-     * @param int   $orderId Order ID
-     * @param array<string, mixed> $cart    Cart data
+     * @param int $orderId Order ID
+     * @param array<string, mixed> $cart Cart data
      */
     public function submitOrder(int $orderId, array $cart): void;
 }

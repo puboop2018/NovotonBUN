@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Tygh\Addons\TravelCore\ValueObjects;
@@ -28,7 +29,7 @@ class RequestDebugInfo
         string $lastResponseRaw = '',
         array $lastRequestFormatted = [],
         string $lastError = '',
-        int $lastHttpCode = 0
+        int $lastHttpCode = 0,
     ) {
         $this->lastRequest = $lastRequest;
         $this->lastResponse = $lastResponse;
@@ -49,7 +50,7 @@ class RequestDebugInfo
             $client->lastResponseRaw ?? '',
             $client->lastRequestFormatted ?? [],
             $client->lastError ?? '',
-            $client->lastHttpCode ?? 0
+            $client->lastHttpCode ?? 0,
         );
     }
 

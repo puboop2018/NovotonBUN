@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 /**
  * Novoton Holidays - Sync Interface
  *
@@ -48,15 +50,11 @@ interface SyncInterface
 
     /**
      * Set unlimited mode (no time limit)
-     *
-     * @param bool $unlimited
      */
     public function setUnlimited(bool $unlimited): void;
 
     /**
      * Set output callback for logger.
-     *
-     * @param callable $callback
      */
     public function setOutputCallback(callable $callback): void;
 }

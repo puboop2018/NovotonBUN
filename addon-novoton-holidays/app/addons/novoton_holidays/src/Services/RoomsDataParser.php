@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Services;
@@ -57,7 +58,7 @@ class RoomsDataParser
      *
      * Concatenates room_id and room display names from all rooms.
      *
-     * @param array<string, mixed> $roomsData   Parsed rooms data
+     * @param array<string, mixed> $roomsData Parsed rooms data
      * @param array<string, mixed> $bookingData Booking data fallback
      * @return array{room_id: string, room_type: string}
      */
@@ -140,7 +141,7 @@ class RoomsDataParser
         if (is_string($bookingData['children_ages'])) {
             return array_map('intval', array_filter(
                 explode(',', $bookingData['children_ages']),
-                function (string $v): bool { return $v !== ''; }
+                fn (string $v): bool => $v !== '',
             ));
         }
 

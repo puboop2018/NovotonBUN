@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Tygh\Addons\TravelCore\Services;
@@ -70,8 +71,9 @@ class VariantResolver implements VariantResolverInterface
         // Check if stored variant still exists in CS-Cart
         if ($variantId > 0) {
             $exists = db_get_field(
-                "SELECT variant_id FROM ?:product_feature_variants WHERE variant_id = ?i AND feature_id = ?i",
-                $variantId, $featureId
+                'SELECT variant_id FROM ?:product_feature_variants WHERE variant_id = ?i AND feature_id = ?i',
+                $variantId,
+                $featureId,
             );
             if ($exists) {
                 return $variantId;
@@ -137,12 +139,14 @@ class VariantResolver implements VariantResolverInterface
         foreach ($candidates as [$lang, $name]) {
             // Pass 1: Exact match
             $variantId = db_get_field(
-                "SELECT v.variant_id
+                'SELECT v.variant_id
                  FROM ?:product_feature_variants v
                  JOIN ?:product_feature_variant_descriptions vd ON v.variant_id = vd.variant_id
                  WHERE v.feature_id = ?i AND vd.lang_code = ?s AND vd.variant = ?s
-                 LIMIT 1",
-                $featureId, $lang, $name
+                 LIMIT 1',
+                $featureId,
+                $lang,
+                $name,
             );
             if ((int) $variantId > 0) {
                 return (int) $variantId;
@@ -150,12 +154,14 @@ class VariantResolver implements VariantResolverInterface
 
             // Pass 2: Case-insensitive match
             $variantId = db_get_field(
-                "SELECT v.variant_id
+                'SELECT v.variant_id
                  FROM ?:product_feature_variants v
                  JOIN ?:product_feature_variant_descriptions vd ON v.variant_id = vd.variant_id
                  WHERE v.feature_id = ?i AND vd.lang_code = ?s AND LOWER(vd.variant) = LOWER(?s)
-                 LIMIT 1",
-                $featureId, $lang, $name
+                 LIMIT 1',
+                $featureId,
+                $lang,
+                $name,
             );
             if ((int) $variantId > 0) {
                 return (int) $variantId;
@@ -164,11 +170,12 @@ class VariantResolver implements VariantResolverInterface
             // Pass 3: Normalized match — strips punctuation, collapses whitespace
             $normalized = self::normalizeName($name);
             $rows = db_get_array(
-                "SELECT v.variant_id, vd.variant
+                'SELECT v.variant_id, vd.variant
                  FROM ?:product_feature_variants v
                  JOIN ?:product_feature_variant_descriptions vd ON v.variant_id = vd.variant_id
-                 WHERE v.feature_id = ?i AND vd.lang_code = ?s",
-                $featureId, $lang
+                 WHERE v.feature_id = ?i AND vd.lang_code = ?s',
+                $featureId,
+                $lang,
             );
             foreach ($rows as $row) {
                 if (self::normalizeName($row['variant']) === $normalized) {

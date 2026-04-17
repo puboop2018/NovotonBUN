@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 /**
  * Travel Core Date Helper
  *
@@ -18,20 +20,20 @@ class DateHelper
     private static $roMonths = [
         1 => 'ianuarie', 2 => 'februarie', 3 => 'martie', 4 => 'aprilie',
         5 => 'mai', 6 => 'iunie', 7 => 'iulie', 8 => 'august',
-        9 => 'septembrie', 10 => 'octombrie', 11 => 'noiembrie', 12 => 'decembrie'
+        9 => 'septembrie', 10 => 'octombrie', 11 => 'noiembrie', 12 => 'decembrie',
     ];
 
     /** @var array<int, string> Romanian short month names */
     private static $roMonthsShort = [
         1 => 'ian', 2 => 'feb', 3 => 'mar', 4 => 'apr',
         5 => 'mai', 6 => 'iun', 7 => 'iul', 8 => 'aug',
-        9 => 'sep', 10 => 'oct', 11 => 'noi', 12 => 'dec'
+        9 => 'sep', 10 => 'oct', 11 => 'noi', 12 => 'dec',
     ];
 
     /** @var array<int, string> Romanian day names */
     private static $roDays = [
         0 => 'duminică', 1 => 'luni', 2 => 'marți', 3 => 'miercuri',
-        4 => 'joi', 5 => 'vineri', 6 => 'sâmbătă'
+        4 => 'joi', 5 => 'vineri', 6 => 'sâmbătă',
     ];
 
     /**
@@ -54,12 +56,12 @@ class DateHelper
         $dayOfWeek = (int)date('w', $timestamp);
 
         return match ($format) {
-            'full'            => self::$roDays[$dayOfWeek] . ', ' . $day . ' ' . self::$roMonths[$month] . ' ' . $year,
-            'medium'          => $day . ' ' . self::$roMonths[$month] . ' ' . $year,
-            'short'           => $day . ' ' . self::$roMonthsShort[$month] . ' ' . $year,
-            'day_month'       => $day . ' ' . self::$roMonths[$month],
+            'full' => self::$roDays[$dayOfWeek] . ', ' . $day . ' ' . self::$roMonths[$month] . ' ' . $year,
+            'medium' => $day . ' ' . self::$roMonths[$month] . ' ' . $year,
+            'short' => $day . ' ' . self::$roMonthsShort[$month] . ' ' . $year,
+            'day_month' => $day . ' ' . self::$roMonths[$month],
             'day_month_short' => $day . ' ' . self::$roMonthsShort[$month],
-            default           => date('d.m.Y', $timestamp),
+            default => date('d.m.Y', $timestamp),
         };
     }
 

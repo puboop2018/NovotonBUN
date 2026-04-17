@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 /**
  * Novoton Security Service Interface
  *
@@ -35,9 +37,9 @@ interface SecurityServiceInterface extends BaseSecurityServiceInterface
     /**
      * Check rate limit.
      *
-     * @param string   $key         Rate limit key (e.g., IP, user_id)
+     * @param string $key Rate limit key (e.g., IP, user_id)
      * @param int|null $maxRequests Max requests per window
-     * @param int|null $window      Window in seconds
+     * @param int|null $window Window in seconds
      * @return array{allowed: bool, remaining: int, reset: int}
      */
     public function checkRateLimit(string $key, ?int $maxRequests = null, ?int $window = null): array;
@@ -70,7 +72,7 @@ interface SecurityServiceInterface extends BaseSecurityServiceInterface
      * Log security event.
      *
      * @param string $event Event type
-     * @param array<string, mixed>  $data  Event data
+     * @param array<string, mixed> $data Event data
      */
     public function logSecurityEvent(string $event, array $data = []): void;
 }

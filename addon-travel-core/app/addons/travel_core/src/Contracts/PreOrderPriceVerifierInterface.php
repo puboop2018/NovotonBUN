@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 /**
  * Pre-Order Price Verifier Interface
  *
@@ -23,9 +25,9 @@ interface PreOrderPriceVerifierInterface
      *
      * @param array<string, mixed> $cart CS-Cart cart data
      * @return array{allow: bool, corrections: array<string, mixed>, notifications: array<int, array<string, mixed>>}
-     *   - allow: whether the order should proceed (typically always true)
-     *   - corrections: cart_id => price correction data
-     *   - notifications: list of discrepancy data for admin alerts
+     *                                                                                                                - allow: whether the order should proceed (typically always true)
+     *                                                                                                                - corrections: cart_id => price correction data
+     *                                                                                                                - notifications: list of discrepancy data for admin alerts
      */
     public function verify(array $cart): array;
 }

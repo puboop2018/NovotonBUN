@@ -29,11 +29,17 @@ declare(strict_types=1);
 use Tygh\Tygh;
 use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\NovotonApi;
-use Tygh\Addons\NovotonHolidays\Services\DiagnosticsService;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Services\Container;
+use Tygh\Addons\NovotonHolidays\Services\DiagnosticsService;
+use Tygh\Addons\NovotonHolidays\Services\PriceInfoFormatter;
+use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
+
+/** @var \Smarty $view */
+$view = Tygh::$app['view'];
 
 /**
  * Mode: export_hotel_features_csv
@@ -126,42 +132,48 @@ if ($mode === 'test_api') {
 
     $diag = Container::getInstance()->diagnosticsService();
     $result = $diag->testApiConnection();
+    $config = TypeCoerce::toStringMap($result['config']);
+    $sampleHotel = TypeCoerce::toStringMap($result['sample_hotel'] ?? null);
 
     echo "========================================\n";
     echo "   NOVOTON API CONNECTION TEST\n";
     echo "========================================\n\n";
 
     echo "Configuration:\n";
-    echo "- API URL: " . $result['config']['api_url'] . "\n";
-    echo "- API User: " . $result['config']['api_user'] . "\n";
-    echo "- API Password: " . ($result['config']['api_password_set'] ? '***SET***' : 'NOT SET') . "\n";
-    echo "- API Key: " . ($result['config']['api_key_set'] ? '***SET***' : 'NOT SET') . "\n";
-    echo "- Selected Countries: " . $result['config']['selected_countries'] . "\n\n";
+    echo '- API URL: ' . TypeCoerce::toString($config['api_url'] ?? '') . "\n";
+    echo '- API User: ' . TypeCoerce::toString($config['api_user'] ?? '') . "\n";
+    echo '- API Password: ' . (!empty($config['api_password_set']) ? '***SET***' : 'NOT SET') . "\n";
+    echo '- API Key: ' . (!empty($config['api_key_set']) ? '***SET***' : 'NOT SET') . "\n";
+    echo '- Selected Countries: ' . TypeCoerce::toString($config['selected_countries'] ?? '') . "\n\n";
 
-    if ($result['success']) {
+    if (!empty($result['success'])) {
         echo "API instance created successfully.\n\n";
         echo "Testing getHotelList('BULGARIA', '%', '%', '%')...\n";
-        echo "SUCCESS! " . $result['message'] . "\n\n";
+        echo 'SUCCESS! ' . TypeCoerce::toString($result['message']) . "\n\n";
 
-        if ($result['sample_hotel']) {
+        if ($sampleHotel !== []) {
             echo "Sample hotel:\n";
-            echo "- ID: " . $result['sample_hotel']['id'] . "\n";
-            echo "- Name: " . $result['sample_hotel']['name'] . "\n";
-            echo "- City: " . $result['sample_hotel']['city'] . "\n";
+            echo '- ID: ' . TypeCoerce::toString($sampleHotel['id'] ?? '') . "\n";
+            echo '- Name: ' . TypeCoerce::toString($sampleHotel['name'] ?? '') . "\n";
+            echo '- City: ' . TypeCoerce::toString($sampleHotel['city'] ?? '') . "\n";
         }
     } else {
-        echo $result['message'] . "\n";
+        echo TypeCoerce::toString($result['message']) . "\n";
         if (!empty($result['error'])) {
-            echo "Error: " . $result['error'] . "\n";
+            echo 'Error: ' . TypeCoerce::toString($result['error']) . "\n";
         }
         if (!empty($result['last_request'])) {
-            echo "Last request:\n" . (is_array($result['last_request']) ? json_encode($result['last_request'], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) : $result['last_request']) . "\n";
+            $lastReq = $result['last_request'];
+            $lastReqStr = is_array($lastReq)
+                ? (string) json_encode($lastReq, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
+                : TypeCoerce::toString($lastReq);
+            echo "Last request:\n" . $lastReqStr . "\n";
         }
         if (!empty($result['last_http_code'])) {
-            echo "Last HTTP code: " . $result['last_http_code'] . "\n";
+            echo 'Last HTTP code: ' . TypeCoerce::toString($result['last_http_code']) . "\n";
         }
         if (!empty($result['raw_response_preview'])) {
-            echo "\nRaw response (first 500 chars):\n" . $result['raw_response_preview'] . "\n";
+            echo "\nRaw response (first 500 chars):\n" . TypeCoerce::toString($result['raw_response_preview']) . "\n";
         }
     }
 
@@ -213,32 +225,37 @@ if ($mode === 'test_hotel_list') {
 
     header('Content-Type: text/html; charset=utf-8');
 
-    $country = $_REQUEST['country'] ?? 'BULGARIA';
-    $limit = (int)($_REQUEST['limit'] ?? 10);
+    $country = RequestCoerce::string($_REQUEST, 'country', 'BULGARIA');
+    $limit = RequestCoerce::int($_REQUEST, 'limit', 10);
 
     echo '<h2>Hotel List Test - ' . htmlspecialchars($country) . '</h2>';
 
     $diag = Container::getInstance()->diagnosticsService();
     $result = $diag->testHotelList($country, $limit);
 
-    if ($result['success']) {
-        echo "<p>Total hotels: {$result['total']}</p>";
+    if (!empty($result['success'])) {
+        $rTotal = PriceInfoFormatter::toInt($result['total'] ?? 0);
+        echo "<p>Total hotels: {$rTotal}</p>";
         echo '<table border="1" cellpadding="5">';
         echo '<tr><th>ID</th><th>Name</th><th>City</th><th>Stars</th><th>Type</th></tr>';
-        foreach ($result['hotels'] as $hotel) {
+        $rHotels = is_array($result['hotels'] ?? null) ? $result['hotels'] : [];
+        foreach ($rHotels as $hotel) {
+            if (!is_array($hotel)) {
+                continue;
+            }
             echo '<tr>';
-            echo '<td>' . htmlspecialchars($hotel['id']) . '</td>';
-            echo '<td>' . htmlspecialchars($hotel['name']) . '</td>';
-            echo '<td>' . htmlspecialchars($hotel['city']) . '</td>';
-            echo '<td>' . htmlspecialchars($hotel['stars']) . '</td>';
-            echo '<td>' . htmlspecialchars($hotel['type']) . '</td>';
+            echo '<td>' . htmlspecialchars(PriceInfoFormatter::toScalar($hotel['id'] ?? '')) . '</td>';
+            echo '<td>' . htmlspecialchars(PriceInfoFormatter::toScalar($hotel['name'] ?? '')) . '</td>';
+            echo '<td>' . htmlspecialchars(PriceInfoFormatter::toScalar($hotel['city'] ?? '')) . '</td>';
+            echo '<td>' . htmlspecialchars(PriceInfoFormatter::toScalar($hotel['stars'] ?? '')) . '</td>';
+            echo '<td>' . htmlspecialchars(PriceInfoFormatter::toScalar($hotel['type'] ?? '')) . '</td>';
             echo '</tr>';
         }
         echo '</table>';
     } else {
         echo '<p style="color:red">No results or error</p>';
         if (!empty($result['error'])) {
-            echo '<pre>' . htmlspecialchars($result['error']) . '</pre>';
+            echo '<pre>' . htmlspecialchars(PriceInfoFormatter::toScalar($result['error'])) . '</pre>';
         }
     }
 
@@ -256,12 +273,12 @@ if ($mode === 'test_room_price') {
 
     header('Content-Type: text/html; charset=utf-8');
 
-    $hotel_id = $_REQUEST['hotel_id'] ?? '';
-    $room_id = $_REQUEST['room_id'] ?? '';
-    $board_id = $_REQUEST['board_id'] ?? 'AI';
-    $check_in = $_REQUEST['check_in'] ?? date('Y-m-d', strtotime('+' . Constants::DEFAULT_CHECKIN_DAYS_AHEAD . ' days'));
-    $check_out = $_REQUEST['check_out'] ?? date('Y-m-d', strtotime('+' . (Constants::DEFAULT_CHECKIN_DAYS_AHEAD + Constants::DEFAULT_STAY_NIGHTS) . ' days'));
-    $adults = (int)($_REQUEST['adults'] ?? 2);
+    $hotel_id = RequestCoerce::string($_REQUEST, 'hotel_id', '');
+    $room_id = RequestCoerce::string($_REQUEST, 'room_id', '');
+    $board_id = RequestCoerce::string($_REQUEST, 'board_id', 'AI');
+    $check_in = RequestCoerce::string($_REQUEST, 'check_in', date('Y-m-d', strtotime('+' . Constants::DEFAULT_CHECKIN_DAYS_AHEAD . ' days')));
+    $check_out = RequestCoerce::string($_REQUEST, 'check_out', date('Y-m-d', strtotime('+' . (Constants::DEFAULT_CHECKIN_DAYS_AHEAD + Constants::DEFAULT_STAY_NIGHTS) . ' days')));
+    $adults = RequestCoerce::int($_REQUEST, 'adults', 2);
 
     echo '<h2>Room Price Test</h2>';
 
@@ -321,11 +338,11 @@ if ($mode === 'test_search') {
 
     header('Content-Type: text/html; charset=utf-8');
 
-    $hotel_id = $_REQUEST['hotel_id'] ?? '';
-    $check_in = $_REQUEST['check_in'] ?? date('Y-m-d', strtotime('+' . Constants::DEFAULT_CHECKIN_DAYS_AHEAD . ' days'));
-    $check_out = $_REQUEST['check_out'] ?? date('Y-m-d', strtotime('+' . (Constants::DEFAULT_CHECKIN_DAYS_AHEAD + Constants::DEFAULT_STAY_NIGHTS) . ' days'));
-    $adults = (int)($_REQUEST['adults'] ?? 2);
-    $children = (int)($_REQUEST['children'] ?? 0);
+    $hotel_id = RequestCoerce::string($_REQUEST, 'hotel_id', '');
+    $check_in = RequestCoerce::string($_REQUEST, 'check_in', date('Y-m-d', strtotime('+' . Constants::DEFAULT_CHECKIN_DAYS_AHEAD . ' days')));
+    $check_out = RequestCoerce::string($_REQUEST, 'check_out', date('Y-m-d', strtotime('+' . (Constants::DEFAULT_CHECKIN_DAYS_AHEAD + Constants::DEFAULT_STAY_NIGHTS) . ' days')));
+    $adults = RequestCoerce::int($_REQUEST, 'adults', 2);
+    $children = RequestCoerce::int($_REQUEST, 'children', 0);
 
     echo '<h2>Search Availability Test</h2>';
 
@@ -421,17 +438,17 @@ if ($mode === 'test_facilities') {
  * Diagnostic page for hotel info request (uses Smarty templates, kept as-is)
  */
 if ($mode === 'test_hotel_request') {
-    $hotel_id = $_REQUEST['hotel_id'] ?? '';
+    $hotel_id = RequestCoerce::string($_REQUEST, 'hotel_id');
 
     // Pass all form values back to template so they persist after submission (sanitized for XSS)
-    Tygh::$app['view']->assign('hotel_id', htmlspecialchars($hotel_id, ENT_QUOTES, 'UTF-8'));
-    Tygh::$app['view']->assign('package_name', htmlspecialchars($_REQUEST['package_name'] ?? '', ENT_QUOTES, 'UTF-8'));
-    Tygh::$app['view']->assign('check_in', htmlspecialchars($_REQUEST['check_in'] ?? '', ENT_QUOTES, 'UTF-8'));
-    Tygh::$app['view']->assign('check_out', htmlspecialchars($_REQUEST['check_out'] ?? '', ENT_QUOTES, 'UTF-8'));
-    Tygh::$app['view']->assign('adults', htmlspecialchars($_REQUEST['adults'] ?? '2', ENT_QUOTES, 'UTF-8'));
-    Tygh::$app['view']->assign('room_id', htmlspecialchars($_REQUEST['room_id'] ?? '', ENT_QUOTES, 'UTF-8'));
-    Tygh::$app['view']->assign('board_id', htmlspecialchars($_REQUEST['board_id'] ?? '', ENT_QUOTES, 'UTF-8'));
-    Tygh::$app['view']->assign('holder', htmlspecialchars($_REQUEST['holder'] ?? '', ENT_QUOTES, 'UTF-8'));
+    $view->assign('hotel_id', htmlspecialchars($hotel_id, ENT_QUOTES, 'UTF-8'));
+    $view->assign('package_name', htmlspecialchars(RequestCoerce::string($_REQUEST, 'package_name', ''), ENT_QUOTES, 'UTF-8'));
+    $view->assign('check_in', htmlspecialchars(RequestCoerce::string($_REQUEST, 'check_in', ''), ENT_QUOTES, 'UTF-8'));
+    $view->assign('check_out', htmlspecialchars(RequestCoerce::string($_REQUEST, 'check_out', ''), ENT_QUOTES, 'UTF-8'));
+    $view->assign('adults', htmlspecialchars(RequestCoerce::string($_REQUEST, 'adults', '2'), ENT_QUOTES, 'UTF-8'));
+    $view->assign('room_id', htmlspecialchars(RequestCoerce::string($_REQUEST, 'room_id', ''), ENT_QUOTES, 'UTF-8'));
+    $view->assign('board_id', htmlspecialchars(RequestCoerce::string($_REQUEST, 'board_id', ''), ENT_QUOTES, 'UTF-8'));
+    $view->assign('holder', htmlspecialchars(RequestCoerce::string($_REQUEST, 'holder', ''), ENT_QUOTES, 'UTF-8'));
 
     if (!empty($hotel_id)) {
         try {
@@ -444,13 +461,13 @@ if ($mode === 'test_hotel_request') {
 
             $hotel_desc = $hotels->getHotelDescription($hotel_id, 'UK', true);
 
-            Tygh::$app['view']->assign('hotel_info', $hotel_info);
-            Tygh::$app['view']->assign('hotel_desc', $hotel_desc);
-            Tygh::$app['view']->assign('last_request', $last_request);
-            Tygh::$app['view']->assign('last_response', $last_response);
+            $view->assign('hotel_info', $hotel_info);
+            $view->assign('hotel_desc', $hotel_desc);
+            $view->assign('last_request', $last_request);
+            $view->assign('last_response', $last_response);
 
         } catch (Exception $e) {
-            Tygh::$app['view']->assign('error', $e->getMessage());
+            $view->assign('error', $e->getMessage());
         }
     }
 }
@@ -460,15 +477,15 @@ if ($mode === 'test_hotel_request') {
  * Test alternative search (uses Smarty templates, kept as-is)
  */
 if ($mode === 'test_alternative_rs') {
-    $hotel_id = $_REQUEST['hotel_id'] ?? '';
-    $id_num = $_REQUEST['id_num'] ?? '';
-    $check_in = $_REQUEST['check_in'] ?? date('Y-m-d', strtotime('+' . Constants::DEFAULT_CHECKIN_DAYS_AHEAD . ' days'));
-    $check_out = $_REQUEST['check_out'] ?? date('Y-m-d', strtotime('+' . (Constants::DEFAULT_CHECKIN_DAYS_AHEAD + Constants::DEFAULT_STAY_NIGHTS) . ' days'));
+    $hotel_id = RequestCoerce::string($_REQUEST, 'hotel_id');
+    $id_num = RequestCoerce::string($_REQUEST, 'id_num');
+    $check_in = RequestCoerce::string($_REQUEST, 'check_in', date('Y-m-d', strtotime('+' . Constants::DEFAULT_CHECKIN_DAYS_AHEAD . ' days')));
+    $check_out = RequestCoerce::string($_REQUEST, 'check_out', date('Y-m-d', strtotime('+' . (Constants::DEFAULT_CHECKIN_DAYS_AHEAD + Constants::DEFAULT_STAY_NIGHTS) . ' days')));
 
-    Tygh::$app['view']->assign('hotel_id', htmlspecialchars($hotel_id, ENT_QUOTES, 'UTF-8'));
-    Tygh::$app['view']->assign('id_num', htmlspecialchars($id_num, ENT_QUOTES, 'UTF-8'));
-    Tygh::$app['view']->assign('check_in', htmlspecialchars($check_in, ENT_QUOTES, 'UTF-8'));
-    Tygh::$app['view']->assign('check_out', htmlspecialchars($check_out, ENT_QUOTES, 'UTF-8'));
+    $view->assign('hotel_id', htmlspecialchars($hotel_id, ENT_QUOTES, 'UTF-8'));
+    $view->assign('id_num', htmlspecialchars($id_num, ENT_QUOTES, 'UTF-8'));
+    $view->assign('check_in', htmlspecialchars($check_in, ENT_QUOTES, 'UTF-8'));
+    $view->assign('check_out', htmlspecialchars($check_out, ENT_QUOTES, 'UTF-8'));
 
     if (!empty($_REQUEST['search']) && !empty($hotel_id)) {
         try {
@@ -478,17 +495,17 @@ if ($mode === 'test_alternative_rs') {
                 'hotel_id' => $hotel_id,
                 'check_in' => $check_in,
                 'check_out' => $check_out,
-                'adults' => (int)($_REQUEST['adults'] ?? 2),
-                'children' => (int)($_REQUEST['children'] ?? 0),
+                'adults' => RequestCoerce::int($_REQUEST, 'adults', 2),
+                'children' => RequestCoerce::int($_REQUEST, 'children', 0),
             ];
 
             $results = $api->availability()->searchAvailability($params);
 
-            Tygh::$app['view']->assign('results', $results);
-            Tygh::$app['view']->assign('last_request', $api->getLastRequestFormatted());
+            $view->assign('results', $results);
+            $view->assign('last_request', $api->getLastRequestFormatted());
 
         } catch (Exception $e) {
-            Tygh::$app['view']->assign('error', $e->getMessage());
+            $view->assign('error', $e->getMessage());
         }
     }
 }
@@ -504,7 +521,7 @@ if ($mode === 'test_product') {
 
     header('Content-Type: text/plain; charset=utf-8');
 
-    $product_code = $_REQUEST['product_code'] ?? '';
+    $product_code = RequestCoerce::string($_REQUEST, 'product_code');
     if ($product_code === '') {
         echo "ERROR: product_code parameter is required.\n";
         exit;
@@ -516,55 +533,64 @@ if ($mode === 'test_product') {
 
     $diag = Container::getInstance()->diagnosticsService();
     $result = $diag->testProduct($product_code);
+    $product = TypeCoerce::toStringMap($result['product'] ?? null);
+    $hotelInfo = TypeCoerce::toStringMap($result['hotel_info'] ?? []);
+    $packagesDb = TypeCoerce::toRowList($result['packages_db']);
 
-    if (!$result['product']) {
-        echo $result['error'] . "\n";
+    if ($product === []) {
+        echo TypeCoerce::toString($result['error']) . "\n";
         exit;
     }
 
-    echo "Product ID: {$result['product']['product_id']}\n";
-    echo "Product Name: {$result['product']['product']}\n";
-    echo "Product Code: {$result['product']['product_code']}\n\n";
-    echo "Extracted Hotel ID: {$result['hotel_id']}\n\n";
+    echo 'Product ID: ' . TypeCoerce::toString($product['product_id'] ?? '') . "\n";
+    echo 'Product Name: ' . TypeCoerce::toString($product['product'] ?? '') . "\n";
+    echo 'Product Code: ' . TypeCoerce::toString($product['product_code'] ?? '') . "\n\n";
+    echo 'Extracted Hotel ID: ' . TypeCoerce::toString($result['hotel_id']) . "\n\n";
 
-    if (!$result['success']) {
-        echo $result['error'] . "\n";
+    if (empty($result['success'])) {
+        echo TypeCoerce::toString($result['error']) . "\n";
         exit;
     }
 
     echo "=== STEP 1: Get Hotel Info ===\n";
     echo "Hotel info retrieved successfully\n";
 
-    if (!empty($result['hotel_info']['packages'])) {
+    $hotelPackages = TypeCoerce::toList($hotelInfo['packages'] ?? []);
+    if ($hotelPackages !== []) {
         echo "Packages found\n";
-        echo "Package count: " . count($result['hotel_info']['packages']) . "\n\n";
-        foreach ($result['hotel_info']['packages'] as $idx => $pkgName) {
-            echo "  " . ($idx + 1) . ". " . $pkgName . "\n";
+        echo 'Package count: ' . count($hotelPackages) . "\n\n";
+        foreach ($hotelPackages as $idx => $pkgName) {
+            echo '  ' . (TypeCoerce::toInt($idx) + 1) . '. ' . TypeCoerce::toString($pkgName) . "\n";
         }
     }
 
-    if (!empty($result['hotel_info']['rooms'])) {
+    $hotelRooms = TypeCoerce::toRowList($hotelInfo['rooms'] ?? []);
+    if ($hotelRooms !== []) {
         echo "\n=== ROOMS ===\n";
-        foreach ($result['hotel_info']['rooms'] as $room) {
-            echo "  - " . $room['id'] . " (Max: " . $room['max_adults'] . " adults)\n";
+        foreach ($hotelRooms as $room) {
+            echo '  - ' . TypeCoerce::toString($room['id'] ?? '')
+                . ' (Max: ' . TypeCoerce::toString($room['max_adults'] ?? '') . " adults)\n";
         }
     }
 
-    if (!empty($result['hotel_info']['boards'])) {
+    $hotelBoards = TypeCoerce::toList($hotelInfo['boards'] ?? []);
+    if ($hotelBoards !== []) {
         echo "\n=== BOARDS ===\n";
-        foreach ($result['hotel_info']['boards'] as $boardId) {
-            echo "  - {$boardId}\n";
+        foreach ($hotelBoards as $boardId) {
+            echo '  - ' . TypeCoerce::toString($boardId) . "\n";
         }
     }
 
     echo "\n=== STEP 2: Check Package Data ===\n";
-    echo "Packages in database: " . count($result['packages_db']) . "\n";
+    echo 'Packages in database: ' . count($packagesDb) . "\n";
 
-    if (!empty($result['packages_db'])) {
+    if ($packagesDb !== []) {
         echo "\nStored packages:\n";
-        foreach ($result['packages_db'] as $pkg) {
-            echo "  - {$pkg['package_name']}: min EUR{$pkg['min_price']}, " .
-                 "early_booking={$pkg['has_early_booking']}, synced={$pkg['synced_at']}\n";
+        foreach ($packagesDb as $pkg) {
+            echo '  - ' . TypeCoerce::toString($pkg['package_name'] ?? '')
+                . ': min EUR' . TypeCoerce::toString($pkg['min_price'] ?? '')
+                . ', early_booking=' . TypeCoerce::toString($pkg['has_early_booking'] ?? '')
+                . ', synced=' . TypeCoerce::toString($pkg['synced_at'] ?? '') . "\n";
         }
     } else {
         echo "No packages found. Run sync_hotels cron to populate.\n";
@@ -579,7 +605,7 @@ if ($mode === 'test_product') {
  */
 if ($mode === 'cron_export_hotel_features') {
     $expected_key = ConfigProvider::getCronAccessKey();
-    $provided_key = $_REQUEST['access_key'] ?? '';
+    $provided_key = RequestCoerce::string($_REQUEST, 'access_key');
 
     header('Content-Type: text/plain; charset=utf-8');
 
@@ -616,7 +642,7 @@ if ($mode === 'cron_export_hotel_features') {
  */
 if ($mode === 'get_hotel_features_csv') {
     $expected_key = ConfigProvider::getCronAccessKey();
-    $provided_key = $_REQUEST['access_key'] ?? '';
+    $provided_key = RequestCoerce::string($_REQUEST, 'access_key');
 
     if (empty($expected_key) || !hash_equals($expected_key, $provided_key)) {
         header('HTTP/1.1 403 Forbidden');

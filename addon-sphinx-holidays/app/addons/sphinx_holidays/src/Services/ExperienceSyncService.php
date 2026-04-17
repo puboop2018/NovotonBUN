@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays\Services;
@@ -14,8 +15,8 @@ use Tygh\Addons\SphinxHolidays\SphinxApi;
  */
 class ExperienceSyncService extends AbstractSyncService implements ExperienceSyncServiceInterface
 {
-    private const UPSERT_BATCH_SIZE = 100;
-    private const PER_PAGE = 1000;
+    private const int UPSERT_BATCH_SIZE = 100;
+    private const int PER_PAGE = 1000;
 
     public function __construct(SphinxApi $api)
     {
@@ -44,6 +45,7 @@ class ExperienceSyncService extends AbstractSyncService implements ExperienceSyn
      * @param array<string, mixed> $context
      * @return array<string, mixed>
      */
+    #[\Override]
     protected function doSync(bool $fullSync, array $stats, array $context): array
     {
         $allowedDestIds = ConfigProvider::getAllowedDestinationIds();
@@ -152,23 +154,23 @@ class ExperienceSyncService extends AbstractSyncService implements ExperienceSyn
         }
 
         return [
-            'experience_id'      => $id,
-            'name'               => $name,
-            'summary'            => (string) ($raw['summary'] ?? ''),
-            'description'        => (string) ($raw['description'] ?? ''),
-            'duration_hours'     => $durationHours,
-            'duration_days'      => $durationDays,
-            'destination_ids'    => !empty($destIds) ? json_encode($destIds) : null,
-            'destination_names'  => !empty($destNames) ? implode(', ', $destNames) : null,
+            'experience_id' => $id,
+            'name' => $name,
+            'summary' => (string) ($raw['summary'] ?? ''),
+            'description' => (string) ($raw['description'] ?? ''),
+            'duration_hours' => $durationHours,
+            'duration_days' => $durationDays,
+            'destination_ids' => !empty($destIds) ? json_encode($destIds) : null,
+            'destination_names' => !empty($destNames) ? implode(', ', $destNames) : null,
             'pickup_points_json' => !empty($raw['pickup_points']) ? json_encode($raw['pickup_points']) : null,
-            'image_url'          => (string) ($raw['image'] ?? $raw['image_url'] ?? ''),
-            'highlights_json'    => !empty($raw['highlights']) ? json_encode($raw['highlights']) : null,
-            'features_json'      => !empty($raw['features']) ? json_encode($raw['features']) : null,
-            'tags_json'          => !empty($raw['tags']) ? json_encode($raw['tags']) : null,
-            'min_price'          => isset($raw['pricing']['selling_price']) ? (float) $raw['pricing']['selling_price'] : null,
-            'currency'           => (string) ($raw['pricing']['currency'] ?? 'EUR'),
-            'sync_status'        => 'active',
-            'last_synced_at'     => date('Y-m-d H:i:s'),
+            'image_url' => (string) ($raw['image'] ?? $raw['image_url'] ?? ''),
+            'highlights_json' => !empty($raw['highlights']) ? json_encode($raw['highlights']) : null,
+            'features_json' => !empty($raw['features']) ? json_encode($raw['features']) : null,
+            'tags_json' => !empty($raw['tags']) ? json_encode($raw['tags']) : null,
+            'min_price' => isset($raw['pricing']['selling_price']) ? (float) $raw['pricing']['selling_price'] : null,
+            'currency' => (string) ($raw['pricing']['currency'] ?? 'EUR'),
+            'sync_status' => 'active',
+            'last_synced_at' => date('Y-m-d H:i:s'),
         ];
     }
 

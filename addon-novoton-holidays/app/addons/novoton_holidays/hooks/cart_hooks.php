@@ -19,6 +19,7 @@ declare(strict_types=1);
 
 use Tygh\Registry;
 use Tygh\Addons\NovotonHolidays\Services\Container;
+use Tygh\Addons\NovotonHolidays\Services\PriceInfoFormatter;
 use Tygh\Addons\NovotonHolidays\Helpers\JsonDecoder;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
@@ -58,7 +59,7 @@ function fn_novoton_holidays_calculate_cart_items(&$cart, &$cart_products, $auth
     $product_ids = array_column($cart_products, 'product_id');
 
     $repo = Container::getInstance()->bookingRepository();
-    $auth_user_id = !empty($auth['user_id']) ? (int) $auth['user_id'] : 0;
+    $auth_user_id = PriceInfoFormatter::toInt($auth['user_id'] ?? 0);
     $current_session_id = session_id() ?: '';
     $default_statuses = [TravelConstants::STATUS_PENDING, TravelConstants::STATUS_CONFIRMED];
     $all_bookings = $repo->findByProductIds($product_ids, $default_statuses, $current_session_id, $auth_user_id);
@@ -70,19 +71,28 @@ function fn_novoton_holidays_calculate_cart_items(&$cart, &$cart_products, $auth
     // Group by product_id
     $bookings_by_product = [];
     foreach ($all_bookings as $booking) {
-        $bookings_by_product[$booking['product_id']][] = $booking;
+        if (!is_array($booking)) {
+            continue;
+        }
+        $bProdId = PriceInfoFormatter::toScalar($booking['product_id'] ?? '');
+        $bookings_by_product[$bProdId][] = $booking;
     }
 
     // Assign bookings to cart items (first-come, first-served)
     $used_booking_ids = [];
 
     foreach ($cart_products as $cart_id => &$product) {
-        $product_id = $product['product_id'];
+        if (!is_array($product)) {
+            continue;
+        }
+        $product_id = PriceInfoFormatter::toScalar($product['product_id'] ?? '');
+        /** @var array<string, mixed> $pExtra */
+        $pExtra = is_array($product['extra'] ?? null) ? $product['extra'] : [];
 
         // Already has booking data with ID — keep it
-        if (!empty($product['extra']['novoton_booking']) && !empty($product['extra']['novoton_booking_id'])) {
+        if (!empty($pExtra['novoton_booking']) && !empty($pExtra['novoton_booking_id'])) {
             fn_novoton_holidays_add_booking_display_data($product, $cart);
-            $used_booking_ids[] = $product['extra']['novoton_booking_id'];
+            $used_booking_ids[] = $pExtra['novoton_booking_id'];
             continue;
         }
 
@@ -92,7 +102,10 @@ function fn_novoton_holidays_calculate_cart_items(&$cart, &$cart_products, $auth
         }
 
         foreach ($bookings_by_product[$product_id] as $booking) {
-            if (in_array($booking['booking_id'], $used_booking_ids)) {
+            if (!is_array($booking)) {
+                continue;
+            }
+            if (in_array($booking['booking_id'] ?? null, $used_booking_ids)) {
                 continue;
             }
 
@@ -227,28 +240,30 @@ function _nvt_inject_booking_into_cart_product(
     array &$cart,
     string $cart_id
 ): void {
+    $bRoomId  = PriceInfoFormatter::toScalar($booking['room_id'] ?? '');
+    $bBoardId = PriceInfoFormatter::toScalar($booking['board_id'] ?? '');
     $product['extra']['travel_booking']     = true;
     $product['extra']['novoton_booking']    = true;
-    $product['extra']['novoton_booking_id'] = $booking['booking_id'];
-    $product['extra']['hotel_id']           = $booking['hotel_id'];
-    $product['extra']['room_id']            = $booking['room_id'];
-    $product['extra']['room_name']          = fn_novoton_holidays_format_room_type($booking['room_id'], $booking['room_type'] ?? '');
-    $product['extra']['board_id']           = $booking['board_id'];
-    $product['extra']['board_name']         = fn_novoton_holidays_format_board_name($booking['board_id']);
-    $product['extra']['check_in']           = $booking['check_in'];
-    $product['extra']['check_out']          = $booking['check_out'];
-    $product['extra']['nights']             = $booking['nights'];
-    $product['extra']['adults']             = $booking['adults'];
-    $product['extra']['children']           = $booking['children'];
-    $product['extra']['children_ages']      = $booking['children_ages'] ?? '';
-    $product['extra']['holder_name']        = $booking['holder_name'] ?? '';
-    $product['extra']['guest_names']        = $booking['guest_name'] ?? '';
+    $product['extra']['novoton_booking_id'] = $booking['booking_id'] ?? 0;
+    $product['extra']['hotel_id']           = PriceInfoFormatter::toScalar($booking['hotel_id'] ?? '');
+    $product['extra']['room_id']            = $bRoomId;
+    $product['extra']['room_name']          = fn_novoton_holidays_format_room_type($bRoomId, PriceInfoFormatter::toScalar($booking['room_type'] ?? ''));
+    $product['extra']['board_id']           = $bBoardId;
+    $product['extra']['board_name']         = fn_novoton_holidays_format_board_name($bBoardId);
+    $product['extra']['check_in']           = PriceInfoFormatter::toScalar($booking['check_in'] ?? '');
+    $product['extra']['check_out']          = PriceInfoFormatter::toScalar($booking['check_out'] ?? '');
+    $product['extra']['nights']             = PriceInfoFormatter::toInt($booking['nights'] ?? 0);
+    $product['extra']['adults']             = PriceInfoFormatter::toInt($booking['adults'] ?? 2);
+    $product['extra']['children']           = PriceInfoFormatter::toInt($booking['children'] ?? 0);
+    $product['extra']['children_ages']      = PriceInfoFormatter::toScalar($booking['children_ages'] ?? '');
+    $product['extra']['holder_name']        = PriceInfoFormatter::toScalar($booking['holder_name'] ?? '');
+    $product['extra']['guest_names']        = PriceInfoFormatter::toScalar($booking['guest_name'] ?? '');
     $product['extra']['guests_data']        = class_exists(\Tygh\Addons\TravelCore\Services\GuestDataNormalizer::class)
         ? (new \Tygh\Addons\TravelCore\Services\GuestDataNormalizer())->toJson($booking['guests_data'] ?? '')
-        : ($booking['guests_data'] ?? '');
-    $product['extra']['total_price']        = $booking['total_price'];
-    $product['extra']['package_name']       = $booking['package_name'] ?? '';
-    $product['extra']['num_rooms']          = (int)($booking['num_rooms'] ?? 1);
+        : PriceInfoFormatter::toScalar($booking['guests_data'] ?? '');
+    $product['extra']['total_price']        = PriceInfoFormatter::toFloat($booking['total_price'] ?? 0);
+    $product['extra']['package_name']       = PriceInfoFormatter::toScalar($booking['package_name'] ?? '');
+    $product['extra']['num_rooms']          = PriceInfoFormatter::toInt($booking['num_rooms'] ?? 1);
 
     if (!empty($booking['rooms_data'])) {
         $rooms = json_decode($booking['rooms_data'], true);
@@ -275,14 +290,16 @@ function _nvt_inject_booking_into_cart_product(
 function fn_novoton_holidays_add_booking_display_data(array &$product, ?array $cart = null): void
 {
     // Pre-set board/room display names using Novoton formatters
-    $board_id = $product['extra']['board_id'] ?? '';
+    /** @var array<string, mixed> $bdExtra */
+    $bdExtra = is_array($product['extra'] ?? null) ? $product['extra'] : [];
+    $board_id = PriceInfoFormatter::toScalar($bdExtra['board_id'] ?? '');
     $product['extra']['board_name'] = fn_novoton_holidays_format_board_name($board_id);
 
-    $room_id   = $product['extra']['room_id']   ?? '';
-    $room_type = $product['extra']['room_type'] ?? '';
+    $room_id   = PriceInfoFormatter::toScalar($bdExtra['room_id']   ?? '');
+    $room_type = PriceInfoFormatter::toScalar($bdExtra['room_type'] ?? '');
     $product['extra']['room_type_display'] = fn_novoton_holidays_format_room_type($room_id, $room_type);
-    $product['extra']['room_name'] = $product['extra']['room_name']
-        ?? str_replace(['%2b', '%2B'], '+', $room_id);
+    $product['extra']['room_name'] = PriceInfoFormatter::toScalar($bdExtra['room_name'] ?? '')
+        ?: str_replace(['%2b', '%2B'], '+', $room_id);
 
     if (class_exists(\Tygh\Addons\TravelCore\Services\BookingDisplayService::class)) {
         \Tygh\Addons\TravelCore\Services\BookingDisplayService::addBookingDisplayData($product, $cart, [
@@ -290,9 +307,9 @@ function fn_novoton_holidays_add_booking_display_data(array &$product, ?array $c
             'json_decoder'         => [JsonDecoder::class, 'decode'],
             'board_name_formatter' => 'fn_novoton_holidays_format_board_name',
             'room_name_formatter'  => function (array $room) {
-                $name = $room['room_name'] ?? '';
+                $name = PriceInfoFormatter::toScalar($room['room_name'] ?? '');
                 if (empty($name)) {
-                    $name = str_replace(['%2b', '%2B'], '+', $room['room_id'] ?? '');
+                    $name = str_replace(['%2b', '%2B'], '+', PriceInfoFormatter::toScalar($room['room_id'] ?? ''));
                 }
                 return $name;
             },

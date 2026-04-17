@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays\Repository;
@@ -13,8 +14,8 @@ class ExperienceRepository
     public function exists(int $experienceId): bool
     {
         return (bool) db_get_field(
-            "SELECT experience_id FROM ?:sphinx_experiences WHERE experience_id = ?i",
-            $experienceId
+            'SELECT experience_id FROM ?:sphinx_experiences WHERE experience_id = ?i',
+            $experienceId,
         );
     }
 
@@ -23,7 +24,7 @@ class ExperienceRepository
      */
     public function update(int $experienceId, array $data): void
     {
-        db_query("UPDATE ?:sphinx_experiences SET ?u WHERE experience_id = ?i", $data, $experienceId);
+        db_query('UPDATE ?:sphinx_experiences SET ?u WHERE experience_id = ?i', $data, $experienceId);
     }
 
     /**
@@ -31,7 +32,7 @@ class ExperienceRepository
      */
     public function insert(array $data): void
     {
-        db_query("INSERT INTO ?:sphinx_experiences ?e", $data);
+        db_query('INSERT INTO ?:sphinx_experiences ?e', $data);
     }
 
     /**

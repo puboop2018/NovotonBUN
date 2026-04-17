@@ -1,11 +1,13 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays\Cron\Commands;
 
-use Tygh\Registry;
 use Tygh\Addons\SphinxHolidays\Services\Container;
+use Tygh\Addons\TravelCore\Helpers\ValidationHelpers;
 use Tygh\Addons\TravelCore\Services\FeatureMapper;
+use Tygh\Registry;
 
 /**
  * Cron command: assign discovered board/meal types as CS-Cart product features.
@@ -35,22 +37,22 @@ class AssignBoardsCommand extends AbstractSyncCommand
     use StatefulCommandTrait;
 
     /** State file name stored in DIR_CACHE */
-    private const STATE_FILE_NAME = 'sphinx_assign_boards_state.json';
+    private const string STATE_FILE_NAME = 'sphinx_assign_boards_state.json';
 
     /** Batch configuration */
-    private const DEFAULT_BATCH_SIZE = 100;         // hotels per DB query batch
-    private const DEFAULT_MAX_TIME = 300;            // 5 minutes
-    private const STALE_HOURS = 6;                   // clear abandoned state after 6h
+    private const int DEFAULT_BATCH_SIZE = 100;         // hotels per DB query batch
+    private const int DEFAULT_MAX_TIME = 300;            // 5 minutes
+    private const int STALE_HOURS = 6;                   // clear abandoned state after 6h
 
     /** Default state structure */
-    private const DEFAULT_STATE = [
-        'status'     => 'idle',
+    private const array DEFAULT_STATE = [
+        'status' => 'idle',
         'started_at' => null,
         'last_run_at' => null,
-        'total'      => 0,
-        'processed'  => 0,
-        'assigned'   => 0,
-        'errors'     => 0,
+        'total' => 0,
+        'processed' => 0,
+        'assigned' => 0,
+        'errors' => 0,
         'country_code' => '',
     ];
 
@@ -80,7 +82,7 @@ class AssignBoardsCommand extends AbstractSyncCommand
         }
 
         // Check that feature_id_meals is configured in travel_core
-        $featureId = (int) Registry::get('addons.travel_core.feature_id_meals');
+        $featureId = ValidationHelpers::toInt(Registry::get('addons.travel_core.feature_id_meals'));
         if ($featureId <= 0) {
             $this->output('ERROR: travel_core setting "feature_id_meals" is not configured (value: 0).');
             $this->output('Please set the Meals/Board feature ID in Admin > Add-ons > Travel Core settings.');
@@ -93,21 +95,23 @@ class AssignBoardsCommand extends AbstractSyncCommand
         $state = $this->loadState();
 
         // Check for in-progress state
-        if ($state['status'] === 'in_progress') {
+        if (ValidationHelpers::toString($state['status'] ?? 'idle') === 'in_progress') {
             if ($this->isStale($state)) {
-                $this->output("Stale state detected (no activity since {$state['last_run_at']}). Clearing and starting fresh.");
+                $this->output('Stale state detected (no activity since ' . ValidationHelpers::toString($state['last_run_at'] ?? '') . '). Clearing and starting fresh.');
                 $this->clearState();
                 $state = self::DEFAULT_STATE;
             } else {
                 // Resume
-                $pct = $state['total'] > 0 ? round($state['processed'] / $state['total'] * 100, 1) : 0;
-                $this->output("Resuming board assignment: {$state['processed']}/{$state['total']} ({$pct}%) done");
+                $sTotal = ValidationHelpers::toInt($state['total'] ?? 0);
+                $sProcessed = ValidationHelpers::toInt($state['processed'] ?? 0);
+                $pct = $sTotal > 0 ? round($sProcessed / $sTotal * 100, 1) : 0;
+                $this->output("Resuming board assignment: {$sProcessed}/{$sTotal} ({$pct}%) done");
                 return $this->processBatch($state, $params);
             }
         }
 
         // Fresh start
-        $countryCode = $params['country'] ?? '';
+        $countryCode = ValidationHelpers::toString($params['country'] ?? '');
         $hotelRepo = Container::getHotelRepository();
         $total = $hotelRepo->countWithBoardsAndProduct($countryCode);
 
@@ -120,13 +124,13 @@ class AssignBoardsCommand extends AbstractSyncCommand
 
         // Create initial state
         $state = [
-            'status'       => 'in_progress',
-            'started_at'   => date('Y-m-d H:i:s'),
-            'last_run_at'  => date('Y-m-d H:i:s'),
-            'total'        => $total,
-            'processed'    => 0,
-            'assigned'     => 0,
-            'errors'       => 0,
+            'status' => 'in_progress',
+            'started_at' => date('Y-m-d H:i:s'),
+            'last_run_at' => date('Y-m-d H:i:s'),
+            'total' => $total,
+            'processed' => 0,
+            'assigned' => 0,
+            'errors' => 0,
             'country_code' => $countryCode,
         ];
 
@@ -144,15 +148,15 @@ class AssignBoardsCommand extends AbstractSyncCommand
      */
     private function processBatch(array $state, array $params): array
     {
-        $maxTime = max(60, (int) ($params['max_time'] ?? self::DEFAULT_MAX_TIME));
+        $maxTime = max(60, ValidationHelpers::toInt($params['max_time'] ?? self::DEFAULT_MAX_TIME));
         $unlimited = !empty($params['unlimited']);
         $startTime = time();
 
         $hotelRepo = Container::getHotelRepository();
         $featureAssigner = Container::getFeatureAssigner();
 
-        $offset = $state['processed'];
-        $total = $state['total'];
+        $offset = ValidationHelpers::toInt($state['processed'] ?? 0);
+        $total = ValidationHelpers::toInt($state['total'] ?? 0);
         $processedThisRun = 0;
 
         while ($offset < $total) {
@@ -165,9 +169,9 @@ class AssignBoardsCommand extends AbstractSyncCommand
 
             // Fetch next batch from DB
             $hotels = $hotelRepo->findWithBoardsAndProduct(
-                $state['country_code'],
+                ValidationHelpers::toString($state['country_code'] ?? ''),
                 self::DEFAULT_BATCH_SIZE,
-                $offset
+                $offset,
             );
 
             if (empty($hotels)) {
@@ -182,15 +186,17 @@ class AssignBoardsCommand extends AbstractSyncCommand
                     break 2;
                 }
 
-                $productId = (int) $hotel['product_id'];
+                $productId = ValidationHelpers::toInt($hotel['product_id'] ?? 0);
 
                 try {
                     $featureAssigner->assignAll($productId, $hotel);
-                    $state['assigned']++;
+                    $state['assigned'] = ValidationHelpers::toInt($state['assigned'] ?? 0) + 1;
                 } catch (\Throwable $e) {
-                    $state['errors']++;
-                    if ($state['errors'] <= 10) {
-                        $this->output("  [ERROR] Hotel {$hotel['hotel_id']}: " . $e->getMessage());
+                    $state['errors'] = ValidationHelpers::toInt($state['errors'] ?? 0) + 1;
+                    $sErrors = ValidationHelpers::toInt($state['errors'] ?? 0);
+                    if ($sErrors <= 10) {
+                        $hotelIdStr = ValidationHelpers::toString($hotel['hotel_id'] ?? '');
+                        $this->output("  [ERROR] Hotel {$hotelIdStr}: " . $e->getMessage());
                     }
                 }
 
@@ -227,14 +233,14 @@ class AssignBoardsCommand extends AbstractSyncCommand
         $this->output("Run again to continue ({$remaining} hotels remaining).");
 
         return [
-            'success'            => true,
-            'status'             => 'in_progress',
-            'total'              => $total,
-            'processed'          => $offset,
-            'remaining'          => $remaining,
+            'success' => true,
+            'status' => 'in_progress',
+            'total' => $total,
+            'processed' => $offset,
+            'remaining' => $remaining,
             'processed_this_run' => $processedThisRun,
-            'assigned'           => $state['assigned'],
-            'errors'             => $state['errors'],
+            'assigned' => $state['assigned'],
+            'errors' => $state['errors'],
         ];
     }
 
@@ -260,7 +266,7 @@ class AssignBoardsCommand extends AbstractSyncCommand
             $state['assigned'],
             $state['errors'],
             $durationSeconds * 1000,
-            $state['started_at']
+            $state['started_at'],
         );
 
         $this->output('');
@@ -274,11 +280,11 @@ class AssignBoardsCommand extends AbstractSyncCommand
 
         return [
             'success' => true,
-            'status'  => 'completed',
-            'stats'   => [
-                'processed'        => $state['processed'],
-                'assigned'         => $state['assigned'],
-                'errors'           => $state['errors'],
+            'status' => 'completed',
+            'stats' => [
+                'processed' => $state['processed'],
+                'assigned' => $state['assigned'],
+                'errors' => $state['errors'],
                 'duration_seconds' => $durationSeconds,
             ],
         ];
@@ -296,7 +302,7 @@ class AssignBoardsCommand extends AbstractSyncCommand
             $this->output('Board Assignment Status: idle (no assignment in progress)');
 
             $lastRun = db_get_row(
-                "SELECT * FROM ?:sphinx_sync_log WHERE sync_type = 'assign_boards' ORDER BY started_at DESC LIMIT 1"
+                "SELECT * FROM ?:sphinx_sync_log WHERE sync_type = 'assign_boards' ORDER BY started_at DESC LIMIT 1",
             );
             if (!empty($lastRun)) {
                 $this->output("  Last run: {$lastRun['started_at']} — {$lastRun['items_synced']} features assigned");
@@ -323,5 +329,4 @@ class AssignBoardsCommand extends AbstractSyncCommand
 
         return ['success' => true, 'status' => $state['status'], 'processed' => $state['processed'], 'total' => $state['total']];
     }
-
 }

@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays\Repository;
@@ -13,8 +14,8 @@ class CircuitRepository
     public function exists(int $circuitId): bool
     {
         return (bool) db_get_field(
-            "SELECT circuit_id FROM ?:sphinx_circuits WHERE circuit_id = ?i",
-            $circuitId
+            'SELECT circuit_id FROM ?:sphinx_circuits WHERE circuit_id = ?i',
+            $circuitId,
         );
     }
 
@@ -23,7 +24,7 @@ class CircuitRepository
      */
     public function update(int $circuitId, array $data): void
     {
-        db_query("UPDATE ?:sphinx_circuits SET ?u WHERE circuit_id = ?i", $data, $circuitId);
+        db_query('UPDATE ?:sphinx_circuits SET ?u WHERE circuit_id = ?i', $data, $circuitId);
     }
 
     /**
@@ -31,7 +32,7 @@ class CircuitRepository
      */
     public function insert(array $data): void
     {
-        db_query("INSERT INTO ?:sphinx_circuits ?e", $data);
+        db_query('INSERT INTO ?:sphinx_circuits ?e', $data);
     }
 
     /**

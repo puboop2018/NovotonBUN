@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Cron;
@@ -47,7 +48,7 @@ abstract class AbstractCronCommand extends BaseCommand
         // line + completion marker) renders correctly in CLI/web contexts.
         if ($this->logger !== null) {
             $this->setOutputCallback(
-                fn(string $msg, bool $addNewline = true) => $this->logger->output($msg, $addNewline)
+                fn (string $msg, bool $addNewline = true) => $this->logger->output($msg, $addNewline),
             );
         }
     }
@@ -74,10 +75,10 @@ abstract class AbstractCronCommand extends BaseCommand
     {
         $syncRepo = Container::getInstance()->syncLogRepository();
         $syncRepo->create($type, [
-            'updated'  => $updated,
-            'failed'   => $failed,
+            'updated' => $updated,
+            'failed' => $failed,
             'duration' => (int) $this->getDuration(),
-            'status'   => 'completed',
+            'status' => 'completed',
         ]);
     }
 

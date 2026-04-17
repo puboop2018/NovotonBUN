@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 /**
  * Shared output callback pattern for sync classes.
  *
@@ -46,7 +48,7 @@ trait OutputWriterTrait
      */
     protected function output(string $message, bool $newline = true): void
     {
-        $formatted = $message . ($newline ? "\n" : "");
+        $formatted = $message . ($newline ? "\n" : '');
 
         if ($this->output_callback) {
             call_user_func($this->output_callback, $formatted);

@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Tygh\Addons\TravelCore\Cron;
@@ -90,9 +91,9 @@ abstract class AbstractCronCommand
      *
      * Catches all Throwable, logs consistently. Returns true on success.
      *
-     * @param callable $work    The operation to execute
-     * @param string   $context Human-readable context for error messages
-     * @param array<int, string>    &$errors Array to collect error messages
+     * @param callable $work The operation to execute
+     * @param string $context Human-readable context for error messages
+     * @param array<int, string> &$errors Array to collect error messages
      */
     protected function trySyncItem(callable $work, string $context, array &$errors): bool
     {
@@ -115,7 +116,7 @@ abstract class AbstractCronCommand
     {
         return [
             'success' => $stats['success'] ?? true,
-            'stats'   => $stats,
+            'stats' => $stats,
         ];
     }
 }

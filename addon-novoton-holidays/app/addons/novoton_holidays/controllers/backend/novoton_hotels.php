@@ -23,6 +23,7 @@ use Tygh\Tygh;
 use Tygh\Addons\NovotonHolidays\NovotonApi;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Services\Container;
+use Tygh\Addons\NovotonHolidays\Services\PriceInfoFormatter;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
@@ -51,16 +52,17 @@ if ($mode === 'add_hotels_as_products') {
         fn_novoton_holidays_stream_page_open('Adding Hotels as Products');
         echo '<div class="log">';
         
-        $country = (string) preg_replace('/[^A-Z\s]/', '', strtoupper($_REQUEST['country'] ?? 'BULGARIA'));
-        $category_id = (int)($_REQUEST['category_id'] ?? 0);
-        $import_mode = in_array($_REQUEST['import_mode'] ?? '', ['new_only', 'update']) ? $_REQUEST['import_mode'] : 'new_only';
-        $limit = max(0, min(5000, (int)($_REQUEST['limit'] ?? 0)));
+        $country = (string) preg_replace('/[^A-Z\s]/', '', strtoupper(PriceInfoFormatter::toScalar($_REQUEST['country'] ?? 'BULGARIA')));
+        $category_id = PriceInfoFormatter::toInt($_REQUEST['category_id'] ?? 0);
+        $import_mode_raw = PriceInfoFormatter::toScalar($_REQUEST['import_mode'] ?? '');
+        $import_mode = in_array($import_mode_raw, ['new_only', 'update']) ? $import_mode_raw : 'new_only';
+        $limit = max(0, min(5000, PriceInfoFormatter::toInt($_REQUEST['limit'] ?? 0)));
         $selected_resorts = is_array($_REQUEST['resorts'] ?? null) ? array_values(array_filter(array_map(function($r) {
-            return preg_replace('/[^\p{L}\s\-\.]/u', '', mb_substr($r, 0, 100));
+            return preg_replace('/[^\p{L}\s\-\.]/u', '', mb_substr(is_string($r) ? $r : '', 0, 100));
         }, $_REQUEST['resorts']), fn($v) => is_string($v))) : [];
         // Whitelist language codes to 2-3 char lowercase alpha codes
         $selected_languages = is_array($_REQUEST['languages'] ?? null) ? array_filter(array_map(function($l) {
-            $l = strtolower(trim($l));
+            $l = strtolower(trim(is_string($l) ? $l : ''));
             return preg_match('/^[a-z]{2,3}$/', $l) ? $l : null;
         }, $_REQUEST['languages'])) : ['en', 'ro'];
         
@@ -78,8 +80,13 @@ if ($mode === 'add_hotels_as_products') {
         $hotelRepo = Container::getInstance()->hotelRepository();
         
         foreach ($hotels as $hotel) {
-            $hotel_id = $hotel['hotel_id'];
-            $hotel_name = htmlspecialchars($hotel['hotel_name']);
+            if (!is_array($hotel)) {
+                continue;
+            }
+            $hotel_id = PriceInfoFormatter::toScalar($hotel['hotel_id'] ?? '');
+            $hotel_name_raw = PriceInfoFormatter::toScalar($hotel['hotel_name'] ?? '');
+            $hotel_name = htmlspecialchars($hotel_name_raw);
+            $hotel_city = PriceInfoFormatter::toScalar($hotel['city'] ?? '');
 
             // Skip if already has product and mode is new_only
             if ($import_mode === 'new_only' && !empty($hotel['product_id'])) {
@@ -87,28 +94,28 @@ if ($mode === 'add_hotels_as_products') {
                 $skipped++;
                 continue;
             }
-            
+
             try {
                 // Detect property type and format display name
                 $propertyDetector = _nvt_property_type_detector();
                 $hotelData = fn_novoton_holidays_get_hotel_data($hotel_id);
+                /** @var array<string, mixed> $hotelData */
+                $hotelData = is_array($hotelData) ? $hotelData : [];
                 $packageNames = [];
                 $roomNames = [];
-                if (!empty($hotelData['packages'])) {
-                    foreach ($hotelData['packages'] as $pkg) {
-                        $packageNames[] = is_array($pkg) ? ($pkg['PackageName'] ?? '') : (string) $pkg;
-                    }
+                $pkgs = is_array($hotelData['packages'] ?? null) ? $hotelData['packages'] : [];
+                foreach ($pkgs as $pkg) {
+                    $packageNames[] = is_array($pkg) ? PriceInfoFormatter::toScalar($pkg['PackageName'] ?? '') : PriceInfoFormatter::toScalar($pkg);
                 }
-                if (!empty($hotelData['rooms'])) {
-                    foreach ($hotelData['rooms'] as $rm) {
-                        $roomNames[] = is_array($rm) ? ($rm['Type'] ?? $rm['IdRoom'] ?? '') : (string) $rm;
-                    }
+                $rms = is_array($hotelData['rooms'] ?? null) ? $hotelData['rooms'] : [];
+                foreach ($rms as $rm) {
+                    $roomNames[] = is_array($rm) ? PriceInfoFormatter::toScalar($rm['Type'] ?? $rm['IdRoom'] ?? '') : PriceInfoFormatter::toScalar($rm);
                 }
-                $detectedType = $propertyDetector->detect($hotel['hotel_name'], $packageNames, $roomNames);
-                $display_name = fn_novoton_holidays_format_hotel_display_name($hotel['hotel_name'], $detectedType);
+                $detectedType = $propertyDetector->detect($hotel_name_raw, $packageNames, $roomNames);
+                $display_name = fn_novoton_holidays_format_hotel_display_name($hotel_name_raw, $detectedType);
 
                 // Build product title
-                $title = fn_novoton_holidays_build_hotel_title($display_name, $hotel['city'], $country, date('Y'));
+                $title = fn_novoton_holidays_build_hotel_title($display_name, $hotel_city, $country, date('Y'));
 
                 // Create product
                 $product_data = [
@@ -122,32 +129,34 @@ if ($mode === 'add_hotels_as_products') {
                 
                 // Add descriptions for selected languages
                 foreach ($selected_languages as $lang_code) {
-                    $desc_field = 'description_' . strtolower($lang_code);
-                    $desc = !empty($hotel[$desc_field]) ? $hotel[$desc_field] : ($hotel['description_en'] ?? '');
-                    
-                    $product_data['description'][$lang_code] = $desc;
-                    $product_data['product'][$lang_code] = $title;
+                    $lang_code_str = is_string($lang_code) ? $lang_code : '';
+                    $desc_field = 'description_' . strtolower($lang_code_str);
+                    $desc = !empty($hotel[$desc_field]) ? PriceInfoFormatter::toScalar($hotel[$desc_field]) : PriceInfoFormatter::toScalar($hotel['description_en'] ?? '');
+
+                    $product_data['description'][$lang_code_str] = $desc;
+                    $product_data['product'][$lang_code_str] = $title;
                 }
-                
+
+                $firstLang = is_string($selected_languages[0] ?? null) ? $selected_languages[0] : 'en';
                 if (!empty($hotel['product_id']) && $import_mode === 'update') {
                     // Update existing
-                    fn_update_product($product_data, $hotel['product_id'], $selected_languages[0] ?? 'en');
+                    fn_update_product($product_data, PriceInfoFormatter::toInt($hotel['product_id']), $firstLang);
                     $updated++;
                     echo "<span class='success'>✓ Updated: {$hotel_name}</span><br>\n";
                 } else {
                     // Create new
-                    $product_id = fn_update_product($product_data, 0, $selected_languages[0] ?? 'en');
-                    
+                    $product_id = fn_update_product($product_data, 0, $firstLang);
+
                     if ($product_id) {
                         // Link hotel to product
                         $hotelRepo->update($hotel_id, ['product_id' => $product_id]);
-                        
+
                         // Set star rating feature
-                        $star_rating = (int)($hotel['hotel_type'] ?? '');
+                        $star_rating = PriceInfoFormatter::toInt($hotel['hotel_type'] ?? 0);
                         if ($star_rating > 0) {
-                            fn_novoton_holidays_assign_property_rating_feature($product_id, $star_rating);
+                            fn_novoton_holidays_assign_property_rating_feature(PriceInfoFormatter::toInt($product_id), $star_rating);
                         }
-                        
+
                         $added++;
                         echo "<span class='success'>✓ Added: {$hotel_name} (#{$product_id})</span><br>\n";
                     } else {
@@ -155,7 +164,7 @@ if ($mode === 'add_hotels_as_products') {
                         echo "<span class='error'>✗ Failed: {$hotel_name}</span><br>\n";
                     }
                 }
-                
+
             } catch (Exception $e) {
                 $errors++;
                 echo "<span class='error'>✗ Error: {$hotel_name} - " . htmlspecialchars($e->getMessage()) . "</span><br>\n";

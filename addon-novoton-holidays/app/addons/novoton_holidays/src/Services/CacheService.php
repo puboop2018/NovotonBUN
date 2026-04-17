@@ -1,23 +1,25 @@
 <?php
+
 declare(strict_types=1);
+
 /**
  * Novoton Cache Service
- * 
+ *
  * Provides caching layer for API responses and computed data.
  * Supports file-based and database caching with TTL.
- * 
+ *
  * @package NovotonHolidays
  * @since 2.7.0
  */
 
 namespace Tygh\Addons\NovotonHolidays\Services;
 
-use Tygh\Addons\NovotonHolidays\Repository\CacheRepositoryInterface;
 use Tygh\Addons\NovotonHolidays\Repository\CacheRepository;
+use Tygh\Addons\NovotonHolidays\Repository\CacheRepositoryInterface;
 
 class CacheService implements CacheServiceInterface
 {
-    private const MEMORY_CACHE_MAX_SIZE = 500;
+    private const int MEMORY_CACHE_MAX_SIZE = 500;
 
     private string $storage = 'file';
     private string $cache_dir;
@@ -38,18 +40,18 @@ class CacheService implements CacheServiceInterface
         $this->cache_dir = DIR_ROOT . '/var/cache/novoton/';
         $this->debug = ConfigProvider::isDebugLogging();
         $this->cacheRepo = $cacheRepo ?? new CacheRepository();
-        
+
         // Ensure cache directory exists
         if ($this->storage === 'file' && !is_dir($this->cache_dir)) {
-            if (!mkdir($this->cache_dir, 0755, true) && !is_dir($this->cache_dir)) {
+            if (!mkdir($this->cache_dir, 0o755, true) && !is_dir($this->cache_dir)) {
                 fn_log_event('general', 'warning', ['message' => 'Novoton CacheService: Failed to create cache directory', 'dir' => $this->cache_dir]);
             }
         }
     }
-    
+
     /**
      * Get cached value
-     * 
+     *
      * @param string $key Cache key
      * @return mixed|null Cached value or null if not found/expired
      */
@@ -63,7 +65,7 @@ class CacheService implements CacheServiceInterface
             }
             unset(self::$memory_cache[$key]);
         }
-        
+
         // Check persistent cache
         if ($this->storage === 'file') {
             return $this->getFromFile($key);
@@ -71,10 +73,10 @@ class CacheService implements CacheServiceInterface
             return $this->getFromDatabase($key);
         }
     }
-    
+
     /**
      * Set cached value
-     * 
+     *
      * @param string $key Cache key
      * @param mixed $value Value to cache
      * @param int|null $ttl Time to live in seconds
@@ -82,9 +84,9 @@ class CacheService implements CacheServiceInterface
      */
     public function set(string $key, mixed $value, ?int $ttl = null): bool
     {
-        $ttl = $ttl ?? $this->default_ttl;
+        $ttl ??= $this->default_ttl;
         $expires = time() + $ttl;
-        
+
         // Evict oldest entries if memory cache is at capacity (FIFO eviction)
         if (count(self::$memory_cache) >= self::MEMORY_CACHE_MAX_SIZE && !isset(self::$memory_cache[$key])) {
             reset(self::$memory_cache);
@@ -94,7 +96,7 @@ class CacheService implements CacheServiceInterface
         // Store in memory cache
         self::$memory_cache[$key] = [
             'data' => $value,
-            'expires' => $expires
+            'expires' => $expires,
         ];
 
         // Store in persistent cache
@@ -104,34 +106,34 @@ class CacheService implements CacheServiceInterface
             return $this->setToDatabase($key, $value, $expires);
         }
     }
-    
+
     /**
      * Delete cached value
-     * 
+     *
      * @param string $key Cache key
      * @return bool Success
      */
     public function delete(string $key): bool
     {
         unset(self::$memory_cache[$key]);
-        
+
         if ($this->storage === 'file') {
             return $this->deleteFromFile($key);
         } else {
             return $this->deleteFromDatabase($key);
         }
     }
-    
+
     /**
      * Clear all cache or by prefix
-     * 
+     *
      * @param string|null $prefix Key prefix to clear (null for all)
      * @return int Number of items cleared
      */
     public function clear(?string $prefix = null): int
     {
         $count = 0;
-        
+
         // Clear memory cache
         if ($prefix === null) {
             $count += count(self::$memory_cache);
@@ -144,20 +146,20 @@ class CacheService implements CacheServiceInterface
                 }
             }
         }
-        
+
         // Clear persistent cache
         if ($this->storage === 'file') {
             $count += $this->clearFileCache($prefix);
         } else {
             $count += $this->clearDatabaseCache($prefix);
         }
-        
+
         return $count;
     }
-    
+
     /**
      * Get or set cached value (convenience method)
-     * 
+     *
      * @param string $key Cache key
      * @param callable $callback Function to generate value if not cached
      * @param int|null $ttl Time to live in seconds
@@ -184,23 +186,23 @@ class CacheService implements CacheServiceInterface
 
         return $value;
     }
-    
+
     // ========== File Storage Methods ==========
-    
+
     /**
      * Get value from file cache
-     * 
+     *
      * @param string $key Cache key
      * @return mixed|null
      */
     private function getFromFile(string $key): mixed
     {
         $file = $this->getCacheFilePath($key);
-        
+
         if (!file_exists($file)) {
             return null;
         }
-        
+
         $content = file_get_contents($file);
         if ($content === false) {
             return null;
@@ -218,16 +220,16 @@ class CacheService implements CacheServiceInterface
             unlink($file);
             return null;
         }
-        
+
         // Store in memory for future requests
         self::$memory_cache[$key] = $data;
-        
+
         return $data['data'];
     }
-    
+
     /**
      * Set value to file cache
-     * 
+     *
      * @param string $key Cache key
      * @param mixed $value Value to cache
      * @param int $expires Expiration timestamp
@@ -236,14 +238,14 @@ class CacheService implements CacheServiceInterface
     private function setToFile(string $key, $value, int $expires): bool
     {
         $file = $this->getCacheFilePath($key);
-        
+
         // Convert SimpleXMLElement to array to allow serialization
         $value = $this->convertToSerializable($value);
-        
+
         $data = json_encode([
             'data' => $value,
             'expires' => $expires,
-            'created' => time()
+            'created' => time(),
         ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
         if ($data === false) {
@@ -252,7 +254,7 @@ class CacheService implements CacheServiceInterface
 
         return file_put_contents($file, $data, LOCK_EX) !== false;
     }
-    
+
     /**
      * Convert SimpleXMLElement and other non-serializable types to arrays
      *
@@ -340,27 +342,27 @@ class CacheService implements CacheServiceInterface
 
         return $result;
     }
-    
+
     /**
      * Delete value from file cache
-     * 
+     *
      * @param string $key Cache key
      * @return bool Success
      */
     private function deleteFromFile(string $key): bool
     {
         $file = $this->getCacheFilePath($key);
-        
+
         if (file_exists($file)) {
             return unlink($file);
         }
-        
+
         return true;
     }
-    
+
     /**
      * Clear file cache
-     * 
+     *
      * @param string|null $prefix Key prefix
      * @return int Number cleared
      */
@@ -386,31 +388,31 @@ class CacheService implements CacheServiceInterface
 
         return $count;
     }
-    
+
     /**
      * Get file path for cache key
-     * 
+     *
      * @param string $key Cache key
      * @return string File path
      */
     private function getCacheFilePath(string $key): string
     {
         // Sanitize key for filename
-        $safe_key = preg_replace('/[^a-zA-Z0-9_-]/', '_', $key);
+        $safe_key = (string) preg_replace('/[^a-zA-Z0-9_-]/', '_', $key);
         // Shard into subdirectories using first 2 chars to avoid flat directory degradation
         $shard = substr($safe_key, 0, 2) ?: '__';
         $dir = $this->cache_dir . $shard . '/';
         if (!is_dir($dir)) {
-            mkdir($dir, 0755, true);
+            mkdir($dir, 0o755, true);
         }
         return $dir . $safe_key . '.cache';
     }
-    
+
     // ========== Database Storage Methods ==========
-    
+
     /**
      * Get value from database cache
-     * 
+     *
      * @param string $key Cache key
      * @return mixed|null
      */
@@ -438,15 +440,15 @@ class CacheService implements CacheServiceInterface
         // Store in memory
         self::$memory_cache[$key] = [
             'data' => $data,
-            'expires' => (int) $row['expires_at']
+            'expires' => (int) $row['expires_at'],
         ];
 
         return $data;
     }
-    
+
     /**
      * Set value to database cache
-     * 
+     *
      * @param string $key Cache key
      * @param mixed $value Value to cache
      * @param int $expires Expiration timestamp
@@ -458,10 +460,10 @@ class CacheService implements CacheServiceInterface
         $this->cacheRepo->upsert($key, $encoded ?: '', $expires);
         return true;
     }
-    
+
     /**
      * Delete value from database cache
-     * 
+     *
      * @param string $key Cache key
      * @return bool Success
      */
@@ -470,31 +472,31 @@ class CacheService implements CacheServiceInterface
         $this->cacheRepo->deleteByKey($key);
         return true;
     }
-    
+
     /**
      * Clear database cache
-     * 
+     *
      * @param string|null $prefix Key prefix
      * @return int Number cleared
      */
     private function clearDatabaseCache(?string $prefix = null): int
     {
         $result = $this->cacheRepo->deleteAll($prefix);
-        
+
         return $result;
     }
-    
+
     // ========== Maintenance Methods ==========
-    
+
     /**
      * Clean up expired cache entries
-     * 
+     *
      * @return int Number of entries cleaned
      */
     public function cleanup(): int
     {
         $count = 0;
-        
+
         if ($this->storage === 'file') {
             $files = glob($this->cache_dir . '*/*.cache') ?: [];
             $now = time();
@@ -532,15 +534,15 @@ class CacheService implements CacheServiceInterface
             $count = $this->cacheRepo->deleteExpired(
             );
         }
-        
+
         $this->log('Cache cleanup', ['removed' => $count]);
-        
+
         return $count;
     }
-    
+
     /**
      * Get cache statistics
-     * 
+     *
      * @return array<string, mixed> Statistics
      */
     public function getStats(): array
@@ -549,7 +551,7 @@ class CacheService implements CacheServiceInterface
             'memory_items' => count(self::$memory_cache),
             'storage' => $this->storage,
         ];
-        
+
         if ($this->storage === 'file') {
             $files = glob($this->cache_dir . '*/*.cache') ?: [];
             $stats['persistent_items'] = count($files);
@@ -558,13 +560,13 @@ class CacheService implements CacheServiceInterface
             $stats['persistent_items'] = $this->cacheRepo->countAll();
             $stats['expired_items'] = $this->cacheRepo->countExpired();
         }
-        
+
         return $stats;
     }
-    
+
     /**
      * Log debug message
-     * 
+     *
      * @param string $message Message
      * @param array<string, mixed> $context Context
      */
@@ -573,7 +575,7 @@ class CacheService implements CacheServiceInterface
         if ($this->debug) {
             fn_log_event('general', 'runtime', array_merge(
                 ['message' => 'NovotonCache: ' . $message],
-                $context
+                $context,
             ));
         }
     }

@@ -8,12 +8,14 @@ declare(strict_types=1);
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
 use Tygh\Tygh;
+use Tygh\Addons\NovotonHolidays\Services\PriceInfoFormatter;
 use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
 
     $security = _nvt_get_security_service();
+    /** @var array<string, mixed> $bookingData */
     $bookingData = $_REQUEST;
-    $booking_id = (int)($bookingData['booking_id'] ?? 0);
-    $cart_id = $bookingData['cart_id'] ?? '';
+    $booking_id = PriceInfoFormatter::toInt($bookingData['booking_id'] ?? 0);
+    $cart_id = PriceInfoFormatter::toScalar($bookingData['cart_id'] ?? '');
 
     if (empty($booking_id)) {
         fn_set_notification('E', __('error'), __('novoton_holidays.invalid_booking_data'));
@@ -21,8 +23,9 @@ use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
     }
 
     // Verify booking ownership before allowing update
-    $auth = Tygh::$app['session']['auth'] ?? [];
-    $current_user_id = !empty($auth['user_id']) ? (int)($auth['user_id']) : 0;
+    /** @var array<string, mixed> $auth */
+    $auth = is_array(Tygh::$app['session']['auth'] ?? null) ? Tygh::$app['session']['auth'] : [];
+    $current_user_id = PriceInfoFormatter::toInt($auth['user_id'] ?? 0);
     $current_session_id = Tygh::$app['session']->getID();
 
     $bookingRepo = _nvt_booking_repo();
@@ -39,14 +42,15 @@ use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
 
     // Process guest information — sanitize via SecurityService
     $guests = is_array($bookingData['guests'] ?? null) ? $security->sanitizeGuestData($bookingData['guests']) : [];
-    $raw_contact = $bookingData['contact'] ?? [];
+    $raw_contact = is_array($bookingData['contact'] ?? null) ? $bookingData['contact'] : [];
     $contact = [
-        'email' => filter_var(trim($raw_contact['email'] ?? ''), FILTER_SANITIZE_EMAIL),
-        'phone' => preg_replace('/[^\d\s\+\-\(\)]/', '', trim($raw_contact['phone'] ?? '')),
+        'email' => filter_var(trim(PriceInfoFormatter::toScalar($raw_contact['email'] ?? '')), FILTER_SANITIZE_EMAIL),
+        'phone' => preg_replace('/[^\d\s\+\-\(\)]/', '', trim(PriceInfoFormatter::toScalar($raw_contact['phone'] ?? ''))),
     ];
     // Get check-in date for age validation
+    /** @var array<string, mixed>|null $existing_for_checkin */
     $existing_for_checkin = _nvt_booking_repo()->findById($booking_id);
-    $check_in_for_validation = $existing_for_checkin['check_in'] ?? '';
+    $check_in_for_validation = is_array($existing_for_checkin) ? PriceInfoFormatter::toScalar($existing_for_checkin['check_in'] ?? '') : '';
     
     // Parse and validate guests (returns false if validation fails)
     $parsed_guests = \Tygh\Addons\TravelCore\Services\GuestDataService::parseAndValidateGuests($guests, $check_in_for_validation, 'novoton');
@@ -62,11 +66,12 @@ use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
     
     // Update booking record
     // First get existing booking data to rebuild api_request - use cached value if same booking
-    $existing_booking = ($existing_for_checkin && $existing_for_checkin['booking_id'] == $booking_id)
+    /** @var array<string, mixed>|null $existing_booking */
+    $existing_booking = (is_array($existing_for_checkin) && PriceInfoFormatter::toInt($existing_for_checkin['booking_id'] ?? 0) === $booking_id)
         ? $existing_for_checkin
         : _nvt_booking_repo()->findById($booking_id);
 
-    if (empty($existing_booking)) {
+    if (empty($existing_booking) || !is_array($existing_booking)) {
         fn_set_notification('E', __('error'), __('novoton_holidays.invalid_booking_data'));
         return [CONTROLLER_STATUS_REDIRECT, 'checkout.cart'];
     }
@@ -74,46 +79,52 @@ use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
     // Build api_request with updated guest names - use api_name for Novoton XML
     $api_guests = [];
     foreach ($guests_data as $key => $guest) {
+        if (!is_array($guest)) {
+            continue;
+        }
         $api_guests[] = [
-            'name' => $guest['api_name'] ?? $guest['name'],  // Use api_name (First Last) for API
-            'birthday' => $guest['birthday'] ?? '',
-            'age' => $guest['age'],
-            'type' => $guest['type'],
-            'room' => $guest['room']
+            'name' => PriceInfoFormatter::toScalar($guest['api_name'] ?? $guest['name'] ?? ''),  // Use api_name (First Last) for API
+            'birthday' => PriceInfoFormatter::toScalar($guest['birthday'] ?? ''),
+            'age' => PriceInfoFormatter::toInt($guest['age'] ?? 0),
+            'type' => PriceInfoFormatter::toScalar($guest['type'] ?? ''),
+            'room' => PriceInfoFormatter::toInt($guest['room'] ?? 1)
         ];
     }
-    
+
     // Rebuild api_request with updated guests
     $api_request = [
-        'hotel_id' => $existing_booking['hotel_id'],
-        'package_name' => $existing_booking['package_name'],
-        'check_in' => $existing_booking['check_in'],
-        'check_out' => $existing_booking['check_out'],
-        'room_id' => $existing_booking['room_id'],
-        'board_id' => $existing_booking['board_id'],
+        'hotel_id' => PriceInfoFormatter::toScalar($existing_booking['hotel_id'] ?? ''),
+        'package_name' => PriceInfoFormatter::toScalar($existing_booking['package_name'] ?? ''),
+        'check_in' => PriceInfoFormatter::toScalar($existing_booking['check_in'] ?? ''),
+        'check_out' => PriceInfoFormatter::toScalar($existing_booking['check_out'] ?? ''),
+        'room_id' => PriceInfoFormatter::toScalar($existing_booking['room_id'] ?? ''),
+        'board_id' => PriceInfoFormatter::toScalar($existing_booking['board_id'] ?? ''),
         'holder' => $holder_name,
         'guests' => $api_guests,
-        'order_num' => $existing_booking['order_id'] ?: '',
+        'order_num' => PriceInfoFormatter::toScalar($existing_booking['order_id'] ?? ''),
         'remark' => '',
         'comment' => ''
     ];
     
     // If multi-room, parse rooms_data and add rooms to api_request
     if (!empty($existing_booking['rooms_data'])) {
-        $rooms_data = json_decode($existing_booking['rooms_data'], true);
-        if ($rooms_data && count($rooms_data) > 1) {
+        $rooms_data = json_decode(PriceInfoFormatter::toScalar($existing_booking['rooms_data']), true);
+        if (is_array($rooms_data) && count($rooms_data) > 1) {
             $api_rooms = [];
             foreach ($rooms_data as $room_idx => $room) {
-                $room_num = $room_idx + 1;
+                if (!is_array($room)) {
+                    continue;
+                }
+                $room_num = (is_int($room_idx) ? $room_idx : 0) + 1;
                 $room_guests = [];
                 foreach ($api_guests as $guest) {
-                    if (isset($guest['room']) && $guest['room'] == $room_num) {
+                    if (isset($guest['room']) && $guest['room'] === $room_num) {
                         $room_guests[] = $guest;
                     }
                 }
                 $api_rooms[] = [
-                    'room_id' => $room['room_id'] ?? '',
-                    'board_id' => $room['board_id'] ?? '',
+                    'room_id' => PriceInfoFormatter::toScalar($room['room_id'] ?? ''),
+                    'board_id' => PriceInfoFormatter::toScalar($room['board_id'] ?? ''),
                     'guests' => $room_guests
                 ];
             }
@@ -154,8 +165,13 @@ use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
             $target_cart_id = $cart_id;
         } else {
             // Fallback: find cart item by novoton_booking_id
-            foreach ($cart['products'] ?? [] as $cid => $item) {
-                if (!empty($item['extra']['novoton_booking_id']) && (int)$item['extra']['novoton_booking_id'] === $booking_id) {
+            $cartProducts = is_array($cart['products'] ?? null) ? $cart['products'] : [];
+            foreach ($cartProducts as $cid => $item) {
+                if (!is_array($item)) {
+                    continue;
+                }
+                $itemExtra = is_array($item['extra'] ?? null) ? $item['extra'] : [];
+                if (!empty($itemExtra['novoton_booking_id']) && PriceInfoFormatter::toInt($itemExtra['novoton_booking_id']) === $booking_id) {
                     $target_cart_id = $cid;
                     break;
                 }
@@ -173,11 +189,13 @@ use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
             // reloads product data from the stored cart, which would overwrite the
             // extras we just set if they haven't been saved first.
             $auth = &Tygh::$app['session']['auth'];
-            fn_save_cart_content($cart, $auth['user_id'] ?? 0);
+            $authArr = is_array($auth) ? $auth : [];
+            $authUserId = PriceInfoFormatter::toInt($authArr['user_id'] ?? 0);
+            fn_save_cart_content($cart, $authUserId);
 
             // Now recalculate (reloads extras from DB — our saved values survive)
             fn_calculate_cart_content($cart, $auth, 'S', true, 'F', true);
-            fn_save_cart_content($cart, $auth['user_id'] ?? 0);
+            fn_save_cart_content($cart, $authUserId);
         }
     }
     

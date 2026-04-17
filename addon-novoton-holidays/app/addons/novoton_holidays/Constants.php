@@ -39,10 +39,10 @@ final class Constants
     //   ST  – cancelled / rejected
     //   RQ  – alternatives pending (retrieve via alternative_RS)
 
-    public const NOVOTON_STATUS_CONFIRMED  = 'Good';
+    public const string NOVOTON_STATUS_CONFIRMED  = 'Good';
     public const string NOVOTON_STATUS_ON_REQUEST = 'ASK';
-    public const NOVOTON_STATUS_CANCELLED  = 'ST';
-    public const NOVOTON_STATUS_WAITLIST   = 'WT';
+    public const string NOVOTON_STATUS_CANCELLED  = 'ST';
+    public const string NOVOTON_STATUS_WAITLIST   = 'WT';
     public const string NOVOTON_STATUS_ALTERNATIVES_PENDING = 'RQ';
 
     // ========== API Wire Format → Internal Status ==========
@@ -55,7 +55,7 @@ final class Constants
     // ========== Reservation Status Mapping ==========
     // Maps internal status codes (after wire normalization) to internal statuses.
 
-    public const string NOVOTON_STATUS_TO_INTERNAL = [
+    public const array NOVOTON_STATUS_TO_INTERNAL = [
         'OK'                                       => TravelConstants::STATUS_CONFIRMED,  // API wire format (legacy/direct)
         self::NOVOTON_STATUS_CONFIRMED             => TravelConstants::STATUS_CONFIRMED,  // Good -> confirmed
         self::NOVOTON_STATUS_ON_REQUEST            => TravelConstants::STATUS_ASK,        // ASK  -> ask (poll via resinfo)
@@ -90,7 +90,7 @@ final class Constants
     
     public const string ACC_REGULAR = 'REGULAR';
     public const string ACC_SINGLE = 'SINGLE';
-    public const ACC_EXTRA_BED = 'EXTRA_BED';
+    public const string ACC_EXTRA_BED = 'EXTRA_BED';
     
     // ========== Currency ==========
     // Shared currency constants are in TravelConstants (CURRENCY_EUR, CURRENCY_USD, etc.)
@@ -117,52 +117,52 @@ final class Constants
     // See Novoton API docs: each constant = the <function> value sent in the URL.
 
     // --- Catalog & Hotel Data ---
-    public const API_FUNCTION_HOTEL_LIST        = 'hotel_list';         //  1. List hotel names
-    public const API_FUNCTION_HOTEL_INFO        = 'hotelinfo';          //  2. Hotel services/rooms/packages
+    public const string API_FUNCTION_HOTEL_LIST        = 'hotel_list';         //  1. List hotel names
+    public const string API_FUNCTION_HOTEL_INFO        = 'hotelinfo';          //  2. Hotel services/rooms/packages
     public const string API_FUNCTION_HOTEL_DESCRIPTION = 'hotel_description';  //  5. Hotel description text
-    public const API_FUNCTION_HOTEL_IMAGES      = 'hotel_images';       //  6. Hotel pictures
+    public const string API_FUNCTION_HOTEL_IMAGES      = 'hotel_images';       //  6. Hotel pictures
 
     // --- Pricing & Availability ---
-    public const API_FUNCTION_ROOM_PRICE        = 'room_price';         //  3. Real-time accommodation prices
-    public const API_FUNCTION_HOTEL_QUOTA       = 'hotel_quota';        //  4. Free allotments (availability)
-    public const API_FUNCTION_HOTEL_QUOTA_ADD   = 'hotel_quota_add';    // 21. Additional allotments
-    public const API_FUNCTION_PRICE_INFO        = 'priceinfo';          // 13. Season prices
-    public const API_FUNCTION_SPECIAL_OFFERS    = 'spo';                // 10. Early booking & discounts
-    public const API_FUNCTION_OFFERS_UPDATE     = 'offers_update';      // 25. Updated/new offers (delta)
+    public const string API_FUNCTION_ROOM_PRICE        = 'room_price';         //  3. Real-time accommodation prices
+    public const string API_FUNCTION_HOTEL_QUOTA       = 'hotel_quota';        //  4. Free allotments (availability)
+    public const string API_FUNCTION_HOTEL_QUOTA_ADD   = 'hotel_quota_add';    // 21. Additional allotments
+    public const string API_FUNCTION_PRICE_INFO        = 'priceinfo';          // 13. Season prices
+    public const string API_FUNCTION_SPECIAL_OFFERS    = 'spo';                // 10. Early booking & discounts
+    public const string API_FUNCTION_OFFERS_UPDATE     = 'offers_update';      // 25. Updated/new offers (delta)
 
     // --- Reservations ---
-    public const API_FUNCTION_RESERVATION       = 'hotel_res_RQ';       //  7. Submit reservation request
-    public const API_FUNCTION_RES_INFO          = 'resinfo';            // 15. Reservation status check
-    public const API_FUNCTION_CANCEL            = 'cancel_reservation'; //     Cancel reservation
-    public const API_FUNCTION_INVOICE_HTML      = 'hotel_acc_RQ_html';  //  8. Invoice (HTML)
-    public const API_FUNCTION_INVOICE_XML       = 'hotel_acc_RQ';       //  9. Invoice (XML)
-    public const API_FUNCTION_LIST_INVOICES     = 'list_invoices';      // 14. List invoices
+    public const string API_FUNCTION_RESERVATION       = 'hotel_res_RQ';       //  7. Submit reservation request
+    public const string API_FUNCTION_RES_INFO          = 'resinfo';            // 15. Reservation status check
+    public const string API_FUNCTION_CANCEL            = 'cancel_reservation'; //     Cancel reservation
+    public const string API_FUNCTION_INVOICE_HTML      = 'hotel_acc_RQ_html';  //  8. Invoice (HTML)
+    public const string API_FUNCTION_INVOICE_XML       = 'hotel_acc_RQ';       //  9. Invoice (XML)
+    public const string API_FUNCTION_LIST_INVOICES     = 'list_invoices';      // 14. List invoices
 
     // --- Alternatives ---
-    public const API_FUNCTION_HOTEL_REQUEST     = 'hotel_request';      // 22. Request alternatives
-    public const API_FUNCTION_ALTERNATIVE_RS    = 'alternative_RS';     // 23. Check alternative offers
+    public const string API_FUNCTION_HOTEL_REQUEST     = 'hotel_request';      // 22. Request alternatives
+    public const string API_FUNCTION_ALTERNATIVE_RS    = 'alternative_RS';     // 23. Check alternative offers
 
     // --- Search & Destinations ---
-    public const API_FUNCTION_SEARCH            = 'frmsearch';          //     Availability search
-    public const API_FUNCTION_RESORT_LIST       = 'resort_list';        // 16. Destinations/resort names
+    public const string API_FUNCTION_SEARCH            = 'frmsearch';          //     Availability search
+    public const string API_FUNCTION_RESORT_LIST       = 'resort_list';        // 16. Destinations/resort names
 
     // --- Facilities ---
-    public const API_FUNCTION_LIST_FACILITIES   = 'list_facilities';    // 26. All facilities catalog
-    public const API_FUNCTION_HOTEL_FACILITIES  = 'hotel_facilities';   // 27. Facilities for a hotel
+    public const string API_FUNCTION_LIST_FACILITIES   = 'list_facilities';    // 26. All facilities catalog
+    public const string API_FUNCTION_HOTEL_FACILITIES  = 'hotel_facilities';   // 27. Facilities for a hotel
 
     // --- Commission ---
-    public const API_FUNCTION_KICKBACK          = 'kickback_RS';        // 24. Commission/kickback info
+    public const string API_FUNCTION_KICKBACK          = 'kickback_RS';        // 24. Commission/kickback info
     
     // ========== Database Tables (V3 Architecture) ==========
 
-    public const TABLE_HOTELS           = 'novoton_hotels';
-    public const TABLE_HOTEL_PACKAGES   = 'novoton_hotel_packages';   // Packages from hotelinfo API with priceinfo
-    public const TABLE_BOOKINGS         = 'novoton_bookings';
+    public const string TABLE_HOTELS           = 'novoton_hotels';
+    public const string TABLE_HOTEL_PACKAGES   = 'novoton_hotel_packages';   // Packages from hotelinfo API with priceinfo
+    public const string TABLE_BOOKINGS         = 'novoton_bookings';
     public const string TABLE_HOTEL_FACILITIES = 'novoton_hotel_facilities'; // Junction: hotel ↔ facility
-    public const TABLE_FACILITIES       = 'novoton_facilities';       // Facility catalog
-    public const TABLE_RESORTS          = 'novoton_resorts';          // Resort names by country
-    public const TABLE_SYNC_LOG         = 'novoton_sync_log';
-    public const TABLE_CACHE            = 'novoton_cache';
+    public const string TABLE_FACILITIES       = 'novoton_facilities';       // Facility catalog
+    public const string TABLE_RESORTS          = 'novoton_resorts';          // Resort names by country
+    public const string TABLE_SYNC_LOG         = 'novoton_sync_log';
+    public const string TABLE_CACHE            = 'novoton_cache';
     public const string TABLE_ALTERNATIVE_REQUESTS = 'novoton_alternative_requests';
     public const string TABLE_FEATURE_MAPPINGS = 'hotel_feature_mappings';   // Provider → CS-Cart feature mapping hub
     
@@ -170,13 +170,13 @@ final class Constants
     // Used as `feature_type` column in hotel_feature_mappings table.
 
     public const string FEATURE_TYPE_PROPERTY_RATING = 'property_rating';
-    public const FEATURE_TYPE_MEALS           = 'meals';
-    public const FEATURE_TYPE_HOTEL_FACILITY  = 'hotel_facility';
-    public const FEATURE_TYPE_ROOM_FACILITY   = 'room_facility';
-    public const FEATURE_TYPE_RESORT          = 'resort';
-    public const FEATURE_TYPE_PROPERTY_TYPE   = 'property_type';
-    public const FEATURE_TYPE_TRAVEL_GROUP    = 'travel_group';
-    public const FEATURE_TYPE_BEACH_ACCESS    = 'beach_access';
+    public const string FEATURE_TYPE_MEALS           = 'meals';
+    public const string FEATURE_TYPE_HOTEL_FACILITY  = 'hotel_facility';
+    public const string FEATURE_TYPE_ROOM_FACILITY   = 'room_facility';
+    public const string FEATURE_TYPE_RESORT          = 'resort';
+    public const string FEATURE_TYPE_PROPERTY_TYPE   = 'property_type';
+    public const string FEATURE_TYPE_TRAVEL_GROUP    = 'travel_group';
+    public const string FEATURE_TYPE_BEACH_ACCESS    = 'beach_access';
 
     /** All valid feature types for input validation */
     public const array VALID_FEATURE_TYPES = [
@@ -315,13 +315,13 @@ final class Constants
     // All values in microseconds (1 second = 1_000_000).
 
     /** Light delay between fast operations (product creation, price checks) */
-    public const API_DELAY_LIGHT   =  50_000;   //  50ms
+    public const int API_DELAY_LIGHT   =  50_000;   //  50ms
     /** Standard delay between API polling calls */
-    public const API_DELAY_NORMAL  = 100_000;   // 100ms
+    public const int API_DELAY_NORMAL  = 100_000;   // 100ms
     /** Moderate delay for heavier API operations (alternatives, status checks) */
     public const int API_DELAY_MODERATE = 200_000;  // 200ms
     /** Heavy delay for expensive API calls (hotel info sync) */
-    public const API_DELAY_HEAVY   = 300_000;   // 300ms
+    public const int API_DELAY_HEAVY   = 300_000;   // 300ms
     /** Backoff delay for retry after transient failures */
     public const int API_DELAY_BACKOFF = 500_000;   // 500ms
 

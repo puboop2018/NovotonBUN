@@ -13,6 +13,8 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
 use Tygh\Addons\SphinxHolidays\Services\CartService;
 use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 
     $cartService = new CartService();
 
@@ -20,9 +22,9 @@ use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
         return $rateLimited;
     }
 
-    $bookingData = $_REQUEST;
-    $offer_id = trim($bookingData['offer_id'] ?? '');
-    $experience_id = (int) ($bookingData['experience_id'] ?? 0);
+    $bookingData = TypeCoerce::toStringMap($_REQUEST);
+    $offer_id = RequestCoerce::string($_REQUEST, 'offer_id');
+    $experience_id = RequestCoerce::int($_REQUEST, 'experience_id');
 
     if (empty($offer_id) || empty($experience_id)) {
         fn_set_notification('E', __('error'),
@@ -35,9 +37,9 @@ use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
     }
 
     // Pricing
-    $total_price = (float) ($bookingData['total_price'] ?? 0);
-    $basePrice   = (float) ($bookingData['base_price'] ?? $total_price);
-    $currency    = trim($bookingData['currency'] ?? ConfigProvider::getDefaultCurrency());
+    $total_price = TypeCoerce::toFloat($bookingData['total_price'] ?? 0);
+    $basePrice   = TypeCoerce::toFloat($bookingData['base_price'] ?? $total_price);
+    $currency    = RequestCoerce::string($_REQUEST, 'currency', ConfigProvider::getDefaultCurrency());
     $total_price = $cartService->applyCommission($total_price);
 
     if ($total_price <= 0) {
@@ -47,7 +49,7 @@ use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
     }
 
     // Resolve product
-    $product_id = $cartService->resolveProductId((string) $experience_id, (int) ($bookingData['product_id'] ?? 0));
+    $product_id = $cartService->resolveProductId((string) $experience_id, RequestCoerce::int($_REQUEST, 'product_id'));
     if (empty($product_id)) {
         fn_set_notification('E', __('error'),
             __('sphinx_holidays.product_not_found', ['[default]' => 'Experience product not found.']));
@@ -55,8 +57,8 @@ use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
     }
 
     // Guest validation
-    $departure_date = trim($bookingData['departure_date'] ?? '');
-    $parsed_guests = $cartService->parseGuests($bookingData['guests'] ?? [], $departure_date);
+    $departure_date = RequestCoerce::string($_REQUEST, 'departure_date');
+    $parsed_guests = $cartService->parseGuests(RequestCoerce::stringMap($_REQUEST, 'guests'), $departure_date);
     if ($parsed_guests === false) {
         return [CONTROLLER_STATUS_REDIRECT, 'sphinx_booking.experience_booking_form?' . http_build_query([
             'experience_id' => $experience_id, 'departure_date' => $departure_date,
@@ -64,12 +66,12 @@ use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
     }
 
     // Extract type-specific
-    $contact        = $bookingData['contact'] ?? [];
-    $title          = trim($bookingData['title'] ?? '');
-    $duration_days  = (int) ($bookingData['duration_days'] ?? 0);
-    $adults         = (int) ($bookingData['adults'] ?? 1);
-    $children       = (int) ($bookingData['children'] ?? 0);
-    $children_ages  = trim($bookingData['children_ages'] ?? '');
+    $contact        = RequestCoerce::stringMap($_REQUEST, 'contact');
+    $title          = RequestCoerce::string($_REQUEST, 'title');
+    $duration_days  = RequestCoerce::int($_REQUEST, 'duration_days');
+    $adults         = RequestCoerce::int($_REQUEST, 'adults', 1);
+    $children       = RequestCoerce::int($_REQUEST, 'children');
+    $children_ages  = RequestCoerce::string($_REQUEST, 'children_ages');
 
     $check_out = !empty($departure_date) && $duration_days > 0
         ? date('Y-m-d', (int) strtotime($departure_date . " + {$duration_days} days"))
@@ -96,7 +98,7 @@ use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
     ];
 
     $booking_id = $cartService->upsertBooking(
-        $booking_record, (string) $experience_id, $departure_date, '', $parsed_guests['holder_name']
+        $booking_record, (string) $experience_id, $departure_date, '', TypeCoerce::toString($parsed_guests['holder_name'])
     );
 
     $product_extra = [
@@ -108,11 +110,11 @@ use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
         'adults' => $adults, 'children' => $children, 'children_ages' => $children_ages,
         'guest_names' => $parsed_guests['guest_list'], 'holder_name' => $parsed_guests['holder_name'],
         'guests_data' => json_encode($parsed_guests['guests_data'], JSON_UNESCAPED_UNICODE),
-        'contact_email' => $contact['email'] ?? '', 'contact_phone' => $contact['phone'] ?? '',
+        'contact_email' => TypeCoerce::toString($contact['email'] ?? ''), 'contact_phone' => TypeCoerce::toString($contact['phone'] ?? ''),
         'total_price' => $total_price, 'currency' => $currency,
     ];
 
     return $cartService->addToCartAndRedirect(
         $product_id, $total_price, $currency, $product_extra,
-        __('sphinx_holidays.experience_added_to_cart', ['[default]' => 'Experience booking added to cart.'])
+        TypeCoerce::toString(__('sphinx_holidays.experience_added_to_cart', ['[default]' => 'Experience booking added to cart.']))
     );

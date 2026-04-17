@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays\Cron\Commands;
@@ -35,7 +36,7 @@ class FullSyncCommand
      * update_products syncs changed hotel data to existing CS-Cart products.
      * sync_images downloads and attaches hotel images to CS-Cart products.
      */
-    private const SYNC_SEQUENCE = [
+    private const array SYNC_SEQUENCE = [
         'destinations',
         'hotels',
         'assign_boards',
@@ -115,12 +116,12 @@ class FullSyncCommand
             count(self::SYNC_SEQUENCE),
             $totalSuccess,
             $totalFailed,
-            $durationMs
+            $durationMs,
         );
 
         return [
             'success' => $totalFailed === 0,
-            'stats'   => [
+            'stats' => [
                 'total' => count(self::SYNC_SEQUENCE),
                 'synced' => $totalSuccess,
                 'failed' => $totalFailed,

@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays\Cron\Commands;
@@ -18,22 +19,26 @@ class AuditFacilitiesCommand extends AbstractSyncCommand
     #[\Override]
     public function execute(array $params = []): array
     {
-        $this->output("Scanning sphinx_hotels.facilities_json for all facility IDs...");
+        $this->output('Scanning sphinx_hotels.facilities_json for all facility IDs...');
 
         // Step 1: Extract all unique facility IDs and names from the database
         $hotels = db_get_array(
-            "SELECT hotel_id, facilities_json FROM ?:sphinx_hotels WHERE facilities_json IS NOT NULL AND facilities_json != '[]' AND sync_status = 'active' LIMIT 5000"
+            "SELECT hotel_id, facilities_json FROM ?:sphinx_hotels WHERE facilities_json IS NOT NULL AND facilities_json != '[]' AND sync_status = 'active' LIMIT 5000",
         );
 
         $allFacilities = []; // id => name
         $facilityHotelCount = []; // id => count of hotels that have it
         foreach ($hotels as $hotel) {
             $facilities = json_decode($hotel['facilities_json'], true);
-            if (!is_array($facilities)) continue;
+            if (!is_array($facilities)) {
+                continue;
+            }
             foreach ($facilities as $f) {
                 $fid = (string) ($f['id'] ?? '');
                 $fname = (string) ($f['name'] ?? '');
-                if ($fid === '') continue;
+                if ($fid === '') {
+                    continue;
+                }
                 if (!isset($allFacilities[$fid])) {
                     $allFacilities[$fid] = $fname;
                     $facilityHotelCount[$fid] = 0;
@@ -42,7 +47,7 @@ class AuditFacilitiesCommand extends AbstractSyncCommand
             }
         }
 
-        $this->output("Found " . count($allFacilities) . " unique facility IDs across " . count($hotels) . " hotels.");
+        $this->output('Found ' . count($allFacilities) . ' unique facility IDs across ' . count($hotels) . ' hotels.');
 
         // Step 2: Check which ones have aliases in travel_api_alias
         $mapped = [];
@@ -55,7 +60,7 @@ class AuditFacilitiesCommand extends AbstractSyncCommand
                  FROM ?:travel_api_alias a
                  JOIN ?:travel_feature_map m ON m.map_id = a.map_id
                  WHERE a.api_source = 'sphinx' AND m.feature_type IN ('hotel_facility', 'room_facility', 'beach_access') AND a.api_value = ?s",
-                $fid
+                $fid,
             );
 
             if (empty($alias)) {
@@ -68,16 +73,16 @@ class AuditFacilitiesCommand extends AbstractSyncCommand
         }
 
         // Step 3: Report
-        $this->output("");
-        $this->output("=== FACILITY MAPPING AUDIT ===");
-        $this->output("Mapped (fully working): " . count($mapped));
-        $this->output("Incomplete (alias exists, no CS-Cart variant): " . count($incomplete));
-        $this->output("Unmapped (no alias at all): " . count($unmapped));
-        $this->output("");
+        $this->output('');
+        $this->output('=== FACILITY MAPPING AUDIT ===');
+        $this->output('Mapped (fully working): ' . count($mapped));
+        $this->output('Incomplete (alias exists, no CS-Cart variant): ' . count($incomplete));
+        $this->output('Unmapped (no alias at all): ' . count($unmapped));
+        $this->output('');
 
         if (!empty($unmapped)) {
             arsort($facilityHotelCount);
-            $this->output("--- UNMAPPED FACILITIES (sorted by hotel count) ---");
+            $this->output('--- UNMAPPED FACILITIES (sorted by hotel count) ---');
             // Sort unmapped by hotel count descending
             $sortedUnmapped = [];
             foreach ($unmapped as $fid => $fname) {
@@ -87,15 +92,15 @@ class AuditFacilitiesCommand extends AbstractSyncCommand
             foreach ($sortedUnmapped as $fid => $count) {
                 $this->output("  ID={$fid} \"{$unmapped[$fid]}\" ({$count} hotels)");
             }
-            $this->output("");
+            $this->output('');
         }
 
         if (!empty($incomplete)) {
-            $this->output("--- INCOMPLETE MAPPINGS (need CS-Cart variant) ---");
+            $this->output('--- INCOMPLETE MAPPINGS (need CS-Cart variant) ---');
             foreach ($incomplete as $fid => $info) {
                 $this->output("  ID={$fid} \"{$info['name']}\" canonical={$info['canonical']} feature_id={$info['feature_id']}");
             }
-            $this->output("");
+            $this->output('');
         }
 
         return [
@@ -109,5 +114,4 @@ class AuditFacilitiesCommand extends AbstractSyncCommand
             ],
         ];
     }
-
 }

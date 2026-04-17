@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 /**
  * Occupancy Value Object
  *
@@ -11,8 +13,8 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\TravelCore\ValueObjects;
 
-use Tygh\Addons\TravelCore\TravelConstants;
 use Tygh\Addons\TravelCore\Exceptions\InvalidArgumentException;
+use Tygh\Addons\TravelCore\TravelConstants;
 
 final class Occupancy
 {
@@ -26,8 +28,8 @@ final class Occupancy
      */
     private function __construct(int $adults, int $children, array $childrenAges)
     {
-        $this->adults       = $adults;
-        $this->children     = $children;
+        $this->adults = $adults;
+        $this->children = $children;
         $this->childrenAges = $childrenAges;
     }
 
@@ -38,12 +40,12 @@ final class Occupancy
     {
         if ($adults < 1 || $adults > TravelConstants::MAX_ADULTS) {
             throw new InvalidArgumentException(
-                "Adults must be between 1 and " . TravelConstants::MAX_ADULTS . ", got: {$adults}"
+                'Adults must be between 1 and ' . TravelConstants::MAX_ADULTS . ", got: {$adults}",
             );
         }
         if ($children < 0 || $children > TravelConstants::MAX_CHILDREN) {
             throw new InvalidArgumentException(
-                "Children must be between 0 and " . TravelConstants::MAX_CHILDREN . ", got: {$children}"
+                'Children must be between 0 and ' . TravelConstants::MAX_CHILDREN . ", got: {$children}",
             );
         }
 
@@ -64,12 +66,27 @@ final class Occupancy
         return new self(TravelConstants::DEFAULT_ADULTS, TravelConstants::DEFAULT_CHILDREN, []);
     }
 
-    public function adults(): int        { return $this->adults; }
-    public function children(): int      { return $this->children; }
+    public function adults(): int
+    {
+        return $this->adults;
+    }
+    public function children(): int
+    {
+        return $this->children;
+    }
     /** @return list<int> */
-    public function childrenAges(): array { return $this->childrenAges; }
-    public function totalGuests(): int   { return $this->adults + $this->children; }
-    public function hasChildren(): bool  { return $this->children > 0; }
+    public function childrenAges(): array
+    {
+        return $this->childrenAges;
+    }
+    public function totalGuests(): int
+    {
+        return $this->adults + $this->children;
+    }
+    public function hasChildren(): bool
+    {
+        return $this->children > 0;
+    }
 
     /**
      * Build <Age> XML elements from an ages array.

@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 /**
  * Database Helper Interface
  *
@@ -16,7 +18,7 @@ interface DatabaseHelperInterface
     /**
      * Batch update hotels has_room_price flag after room_price API checks.
      *
-     * @param list<string> $withPrices    Hotel IDs that have prices
+     * @param list<string> $withPrices Hotel IDs that have prices
      * @param list<string> $withoutPrices Hotel IDs that don't have prices
      * @return int Number of rows affected
      */
@@ -49,7 +51,6 @@ interface DatabaseHelperInterface
     /**
      * Upsert hotel packages (batch).
      *
-     * @param string $hotelId
      * @param list<array<string, mixed>> $packages
      * @return int Number of packages upserted
      */
@@ -67,7 +68,6 @@ interface DatabaseHelperInterface
      * Get hotels for sync with optimized field selection.
      *
      * @param array<string, mixed> $conditions
-     * @param int   $limit
      * @param list<string> $fields
      * @return list<array<string, mixed>>
      */
@@ -75,18 +75,12 @@ interface DatabaseHelperInterface
 
     /**
      * Get last sync date for a specific sync type.
-     *
-     * @param string      $syncType
-     * @param string|null $subType
-     * @return string|null
      */
     public function getLastSyncDate(string $syncType, ?string $subType = null): ?string;
 
     /**
      * Get sync statistics from sync_log.
      *
-     * @param string $syncType
-     * @param int    $days
      * @return array<string, mixed>
      */
     public function getSyncStats(string $syncType, int $days = 30): array;
@@ -94,24 +88,17 @@ interface DatabaseHelperInterface
     /**
      * Cleanup old sync logs.
      *
-     * @param int $days
      * @return int Number of deleted records
      */
     public function cleanupOldLogs(int $days = 90): int;
 
     /**
      * Get product code for hotel ID.
-     *
-     * @param string $hotelId
-     * @return string
      */
     public function getProductCode(string $hotelId): string;
 
     /**
      * Extract hotel ID from product code.
-     *
-     * @param string $productCode
-     * @return string|null
      */
     public function extractHotelId(string $productCode): ?string;
 }

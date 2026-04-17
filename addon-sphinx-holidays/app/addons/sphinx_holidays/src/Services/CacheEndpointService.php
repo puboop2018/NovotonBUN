@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays\Services;
@@ -17,7 +18,7 @@ use Tygh\Addons\TravelCore\Services\CommissionCalculator;
 class CacheEndpointService implements CacheEndpointServiceInterface
 {
     /** Cache TTL for deals in seconds (default 4 hours) */
-    private const DEALS_CACHE_TTL = 14400;
+    private const int DEALS_CACHE_TTL = 14400;
 
     public function __construct(
         private readonly SphinxApi $api,
@@ -134,7 +135,9 @@ class CacheEndpointService implements CacheEndpointServiceInterface
         $deals = [];
         foreach ($items as $item) {
             $price = (float)($item['price'] ?? 0);
-            if ($price <= 0) continue;
+            if ($price <= 0) {
+                continue;
+            }
 
             $deal = [
                 'hotel_id' => $item['hotel_id'] ?? '',

@@ -1,9 +1,11 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays\Cron\Commands;
 
 use Tygh\Addons\SphinxHolidays\Services\Container;
+use Tygh\Addons\TravelCore\Helpers\ValidationHelpers;
 
 /**
  * Cron command: sync destinations from Sphinx API.
@@ -23,20 +25,20 @@ class DestinationSyncCommand extends AbstractSyncCommand
 {
     use StatefulCommandTrait;
 
-    private const STATE_FILE_NAME = 'sphinx_destination_sync_state.json';
-    private const STALE_HOURS = 0.5; // 30 minutes — full sync takes ~7 min
-    private const DEFAULT_STATE = [
-        'status'       => 'idle',
-        'started_at'   => null,
-        'last_run_at'  => null,
-        'sync_mode'    => 'full',
-        'next_page'    => 1,
-        'total'        => 0,
-        'synced'       => 0,
-        'skipped'      => 0,
-        'failed'       => 0,
-        'error'        => '',
-        'full_sync'    => true,
+    private const string STATE_FILE_NAME = 'sphinx_destination_sync_state.json';
+    private const float STALE_HOURS = 0.5; // 30 minutes — full sync takes ~7 min
+    private const array DEFAULT_STATE = [
+        'status' => 'idle',
+        'started_at' => null,
+        'last_run_at' => null,
+        'sync_mode' => 'full',
+        'next_page' => 1,
+        'total' => 0,
+        'synced' => 0,
+        'skipped' => 0,
+        'failed' => 0,
+        'error' => '',
+        'full_sync' => true,
         'updated_since' => null,
     ];
 
@@ -50,9 +52,9 @@ class DestinationSyncCommand extends AbstractSyncCommand
      * Execute the destination sync.
      *
      * @param array<string, mixed> $params CLI parameters:
-     *   'full'   => 1  Force full re-sync
-     *   'status' => 1  Show progress without running
-     *   'reset'  => 1  Clear state, start fresh
+     *                                     'full'   => 1  Force full re-sync
+     *                                     'status' => 1  Show progress without running
+     *                                     'reset'  => 1  Clear state, start fresh
      * @return array{success: bool, stats: array<string, mixed>}
      */
     #[\Override]
@@ -73,14 +75,14 @@ class DestinationSyncCommand extends AbstractSyncCommand
         // Load existing state
         $state = $this->loadState();
 
-        if ($state['status'] === 'in_progress') {
+        if (ValidationHelpers::toString($state['status'] ?? 'idle') === 'in_progress') {
             if ($this->isStale($state)) {
-                $this->output("Stale state detected (no activity since {$state['last_run_at']}). Clearing and starting fresh.");
+                $this->output('Stale state detected (no activity since ' . ValidationHelpers::toString($state['last_run_at'] ?? '') . '). Clearing and starting fresh.');
                 $this->clearState();
                 $state = self::DEFAULT_STATE;
             } else {
                 // Resume from where we left off
-                $this->output("Resuming destination sync from page {$state['next_page']} ({$state['synced']} synced so far)...");
+                $this->output('Resuming destination sync from page ' . ValidationHelpers::toInt($state['next_page'] ?? 1) . ' (' . ValidationHelpers::toInt($state['synced'] ?? 0) . ' synced so far)...');
                 return $this->runWithState($state, $params);
             }
         }
@@ -107,7 +109,7 @@ class DestinationSyncCommand extends AbstractSyncCommand
         $this->saveState($state);
 
         if ($state['updated_since'] !== null) {
-            $this->output("Starting incremental destination sync (since {$state['updated_since']})...");
+            $this->output('Starting incremental destination sync (since ' . ValidationHelpers::toString($state['updated_since']) . ')...');
         } else {
             $this->output('Starting full destination sync...');
         }
@@ -129,8 +131,8 @@ class DestinationSyncCommand extends AbstractSyncCommand
 
         $perPage = 1000;
         $upsertBatchSize = 100;
-        $page = $state['next_page'];
-        $updatedSince = $state['updated_since'];
+        $page = ValidationHelpers::toInt($state['next_page'] ?? 1);
+        $updatedSince = is_string($state['updated_since'] ?? null) ? $state['updated_since'] : null;
         $pagesThisRun = 0;
 
         while (true) {
@@ -160,27 +162,32 @@ class DestinationSyncCommand extends AbstractSyncCommand
             // Normalize and upsert
             $pageBatch = [];
             foreach ($items as $item) {
+                if (!is_array($item)) {
+                    continue;
+                }
                 $normalized = $this->normalizeDestination($item);
                 if ($normalized !== null) {
                     $pageBatch[] = $normalized;
-                    $state['total']++;
+                    $state['total'] = ValidationHelpers::toInt($state['total'] ?? 0) + 1;
 
                     if (count($pageBatch) >= $upsertBatchSize) {
-                        $state['synced'] += $repository->upsertBatch($pageBatch);
+                        $state['synced'] = ValidationHelpers::toInt($state['synced'] ?? 0) + $repository->upsertBatch($pageBatch);
                         $pageBatch = [];
                     }
                 } else {
-                    $state['skipped']++;
+                    $state['skipped'] = ValidationHelpers::toInt($state['skipped'] ?? 0) + 1;
                 }
             }
 
             if (!empty($pageBatch)) {
-                $state['synced'] += $repository->upsertBatch($pageBatch);
+                $state['synced'] = ValidationHelpers::toInt($state['synced'] ?? 0) + $repository->upsertBatch($pageBatch);
             }
 
-            $this->output("  Page {$page}: " . count($items) . " items, {$state['total']} total accepted, {$state['synced']} synced");
+            $stateTotal = ValidationHelpers::toInt($state['total'] ?? 0);
+            $stateSynced = ValidationHelpers::toInt($state['synced'] ?? 0);
+            $this->output("  Page {$page}: " . count($items) . " items, {$stateTotal} total accepted, {$stateSynced} synced");
 
-            $hasMore = $this->hasMorePages($response, $page, $perPage, $state['total']);
+            $hasMore = $this->hasMorePages($response, $page, $perPage, $stateTotal);
 
             $page++;
             $pagesThisRun++;
@@ -196,23 +203,26 @@ class DestinationSyncCommand extends AbstractSyncCommand
         }
 
         // If no error occurred, all pages were fetched — sync is complete
-        if ($state['error'] === '') {
+        if (ValidationHelpers::toString($state['error'] ?? '') === '') {
             return $this->completeSync($state, $repository);
         }
 
         // Error occurred — save state for resume
-        $this->output("Destination sync interrupted. Run again to resume from page {$state['next_page']}.");
-        $this->output("Progress: {$state['synced']}/{$state['total']} synced.");
+        $sNextPage = ValidationHelpers::toInt($state['next_page'] ?? 1);
+        $sSynced = ValidationHelpers::toInt($state['synced'] ?? 0);
+        $sTotal = ValidationHelpers::toInt($state['total'] ?? 0);
+        $this->output("Destination sync interrupted. Run again to resume from page {$sNextPage}.");
+        $this->output("Progress: {$sSynced}/{$sTotal} synced.");
 
         return [
             'success' => false,
             'stats' => [
-                'status'   => 'in_progress',
-                'total'    => $state['total'],
-                'synced'   => $state['synced'],
-                'skipped'  => $state['skipped'],
-                'error'    => $state['error'],
-                'next_page' => $state['next_page'],
+                'status' => 'in_progress',
+                'total' => $sTotal,
+                'synced' => $sSynced,
+                'skipped' => ValidationHelpers::toInt($state['skipped'] ?? 0),
+                'error' => ValidationHelpers::toString($state['error'] ?? ''),
+                'next_page' => $sNextPage,
             ],
         ];
     }
@@ -225,10 +235,18 @@ class DestinationSyncCommand extends AbstractSyncCommand
      */
     private function completeSync(array $state, $repository): array
     {
-        if ($state['total'] === 0 && $state['updated_since'] !== null) {
+        $sTotal = ValidationHelpers::toInt($state['total'] ?? 0);
+        $sSynced = ValidationHelpers::toInt($state['synced'] ?? 0);
+        $sSkipped = ValidationHelpers::toInt($state['skipped'] ?? 0);
+        $sStartedAt = ValidationHelpers::toString($state['started_at'] ?? '');
+        $sSyncMode = ValidationHelpers::toString($state['sync_mode'] ?? 'full');
+
+        if ($sTotal === 0 && $state['updated_since'] !== null) {
             $this->output('No destinations updated since last sync. Everything is up to date.');
+            $sFailed = 0;
         } else {
-            $state['failed'] = $state['total'] - $state['synced'];
+            $sFailed = $sTotal - $sSynced;
+            $state['failed'] = $sFailed;
 
             // Build full_path breadcrumbs
             $this->output('Building destination breadcrumb paths...');
@@ -236,21 +254,21 @@ class DestinationSyncCommand extends AbstractSyncCommand
             $this->output("Updated {$pathsUpdated} full_path breadcrumbs.");
         }
 
-        $this->output("Sync complete: {$state['synced']}/{$state['total']} destinations synced ({$state['sync_mode']}).");
+        $this->output("Sync complete: {$sSynced}/{$sTotal} destinations synced ({$sSyncMode}).");
 
         // Clear state file — sync is done
         $this->clearState();
 
         $stats = [
-            'success'     => true,
-            'total'       => $state['total'],
-            'synced'      => $state['synced'],
-            'skipped'     => $state['skipped'],
-            'failed'      => $state['failed'],
-            'error'       => '',
-            'sync_mode'   => $state['sync_mode'],
-            'duration_ms' => !empty($state['started_at'])
-                ? (int) ((microtime(true) * 1000) - (strtotime($state['started_at']) * 1000))
+            'success' => true,
+            'total' => $sTotal,
+            'synced' => $sSynced,
+            'skipped' => $sSkipped,
+            'failed' => $sFailed,
+            'error' => '',
+            'sync_mode' => $sSyncMode,
+            'duration_ms' => !empty($sStartedAt)
+                ? (int) ((microtime(true) * 1000) - ((int) strtotime($sStartedAt) * 1000))
                 : 0,
         ];
 
@@ -272,7 +290,7 @@ class DestinationSyncCommand extends AbstractSyncCommand
             $this->output('Destination Sync Status: idle (no sync in progress)');
 
             $lastRun = db_get_row(
-                "SELECT * FROM ?:sphinx_sync_log WHERE sync_type = 'destinations' ORDER BY started_at DESC LIMIT 1"
+                "SELECT * FROM ?:sphinx_sync_log WHERE sync_type = 'destinations' ORDER BY started_at DESC LIMIT 1",
             );
             if (!empty($lastRun)) {
                 $this->output("  Last completed: {$lastRun['started_at']} — {$lastRun['items_synced']}/{$lastRun['items_total']} synced");
@@ -341,25 +359,25 @@ class DestinationSyncCommand extends AbstractSyncCommand
         $type = strtolower((string) ($raw['type'] ?? $raw['destination_type'] ?? 'destination'));
         $typeMap = [
             'continent' => 'continent',
-            'country'   => 'country',
-            'region'    => 'region',
-            'city'      => 'city',
-            'resort'    => 'destination',
-            'area'      => 'region',
-            'zone'      => 'region',
+            'country' => 'country',
+            'region' => 'region',
+            'city' => 'city',
+            'resort' => 'destination',
+            'area' => 'region',
+            'zone' => 'region',
         ];
         $type = $typeMap[$type] ?? $type;
 
         return [
             'destination_id' => $id,
-            'name'           => trim($name),
-            'type'           => $type,
-            'parent_id'      => (int) ($raw['parent_id'] ?? $raw['parent'] ?? 0),
-            'country_code'   => (string) ($raw['country_code'] ?? $raw['iso'] ?? $raw['iso_code'] ?? ''),
-            'geoname_id'     => (int) ($raw['geoname_id'] ?? $raw['geonames_id'] ?? 0),
-            'latitude'       => (float) ($raw['latitude'] ?? $raw['lat'] ?? 0),
-            'longitude'      => (float) ($raw['longitude'] ?? $raw['lng'] ?? $raw['lon'] ?? 0),
-            'hotel_count'    => (int) ($raw['hotel_count'] ?? $raw['hotels_count'] ?? 0),
+            'name' => trim($name),
+            'type' => $type,
+            'parent_id' => (int) ($raw['parent_id'] ?? $raw['parent'] ?? 0),
+            'country_code' => (string) ($raw['country_code'] ?? $raw['iso'] ?? $raw['iso_code'] ?? ''),
+            'geoname_id' => (int) ($raw['geoname_id'] ?? $raw['geonames_id'] ?? 0),
+            'latitude' => (float) ($raw['latitude'] ?? $raw['lat'] ?? 0),
+            'longitude' => (float) ($raw['longitude'] ?? $raw['lng'] ?? $raw['lon'] ?? 0),
+            'hotel_count' => (int) ($raw['hotel_count'] ?? $raw['hotels_count'] ?? 0),
         ];
     }
 

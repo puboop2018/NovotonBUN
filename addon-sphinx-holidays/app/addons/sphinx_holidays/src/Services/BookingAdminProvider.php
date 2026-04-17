@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays\Services;
@@ -75,9 +76,9 @@ class BookingAdminProvider implements BookingAdminProviderInterface
         $status = $booking['status'] ?? '';
         $statusLabels = [
             TravelConstants::STATUS_CONFIRMED => '<span class="label label-success">Confirmed</span>',
-            TravelConstants::STATUS_PENDING   => '<span class="label label-warning">Pending</span>',
+            TravelConstants::STATUS_PENDING => '<span class="label label-warning">Pending</span>',
             TravelConstants::STATUS_CANCELLED => '<span class="label label-danger">Cancelled</span>',
-            TravelConstants::STATUS_FAILED    => '<span class="label label-danger">Failed</span>',
+            TravelConstants::STATUS_FAILED => '<span class="label label-danger">Failed</span>',
         ];
         $display['status_label'] = $statusLabels[$status] ?? '<span class="label">' . htmlspecialchars($status) . '</span>';
 
@@ -115,7 +116,6 @@ class BookingAdminProvider implements BookingAdminProviderInterface
     public function getAvailableActions(array $booking): array
     {
         $actions = [];
-        $providerBookingId = $booking['provider_booking_id'] ?? '';
         $status = $booking['status'] ?? '';
 
         // Retry action for failed bookings

@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Tygh\Addons\TravelCore\Contracts;
@@ -133,7 +134,7 @@ interface FeatureMapRepositoryInterface
      * Get active mappings that need variant resolution.
      * (No variant, has feature_id, not manually locked.)
      *
-     * @return array<int, array<string, mixed>>
+     * @return list<array<string, mixed>>
      */
     public function getUnresolvedMappings(): array;
 
@@ -161,7 +162,7 @@ interface FeatureMapRepositoryInterface
     /**
      * Get paginated mappings with alias counts.
      *
-     * @return array{items: array<int, array<string, mixed>>, total: int}
+     * @return array{items: list<array<string, mixed>>, total: int}
      */
     public function getPaginatedMappings(string $condition, int $offset, int $limit): array;
 
@@ -175,7 +176,7 @@ interface FeatureMapRepositoryInterface
     /**
      * Get paginated unmapped values.
      *
-     * @return array{items: array<int, array<string, mixed>>, total: int}
+     * @return array{items: list<array<string, mixed>>, total: int}
      */
     public function getPaginatedUnmapped(string $condition, int $offset, int $limit): array;
 
@@ -189,7 +190,7 @@ interface FeatureMapRepositoryInterface
     /**
      * Get aliases for a mapping.
      *
-     * @return array<int, array<string, mixed>>
+     * @return list<array<string, mixed>>
      */
     public function getAliasesForMapping(int $mapId): array;
 
@@ -198,7 +199,7 @@ interface FeatureMapRepositoryInterface
     /**
      * Get all active CS-Cart language codes.
      *
-     * @return string[]
+     * @return list<string>
      */
     public function getActiveLanguageCodes(): array;
 
@@ -226,21 +227,21 @@ interface FeatureMapRepositoryInterface
     /**
      * Fetch a page of hotels with non-empty JSON facilities from a provider-specific table.
      *
-     * @return array<int, array<string, mixed>>
+     * @return list<array<string, mixed>>
      */
     public function findHotelsBatchForScan(string $table, string $idCol, string $jsonCol, int $offset, int $limit): array;
 
     /**
      * Get all CS-Cart product features with localized description.
      *
-     * @return array<int, array<string, mixed>>
+     * @return list<array<string, mixed>>
      */
     public function findAllCsCartFeatures(string $langCode): array;
 
     /**
      * Get variants for a CS-Cart feature with localized name.
      *
-     * @return array<int, array{variant_id: int|string, name: string|null}>
+     * @return list<array{variant_id: int|string, name: string|null}>
      */
     public function findVariantsForFeature(int $featureId, string $langCode): array;
 }

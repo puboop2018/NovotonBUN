@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Tygh\Addons\TravelCore\Contracts;
@@ -14,9 +15,9 @@ interface FeatureMapperInterface
     /**
      * Resolve an API value to a canonical mapping.
      *
-     * @param string $apiSource   Provider name ('novoton', 'sphinx')
+     * @param string $apiSource Provider name ('novoton', 'sphinx')
      * @param string $featureType Feature type ('board', 'room_type', 'stars', 'hotel_facility', etc.)
-     * @param string $apiValue    Raw value from the API
+     * @param string $apiValue Raw value from the API
      * @return array<string, mixed>|null Mapping row or null if unresolved
      */
     public static function resolve(string $apiSource, string $featureType, string $apiValue): ?array;
