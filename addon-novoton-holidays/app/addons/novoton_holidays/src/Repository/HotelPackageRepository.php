@@ -115,10 +115,10 @@ class HotelPackageRepository implements HotelPackageRepositoryInterface
 
     public function deleteByHotelId(string $hotelId): int
     {
-        return (int) db_query(
+        return TypeCoerce::toInt(db_query(
             'DELETE FROM ?:novoton_hotel_packages WHERE hotel_id = ?s',
             $hotelId,
-        );
+        ));
     }
 
     /**

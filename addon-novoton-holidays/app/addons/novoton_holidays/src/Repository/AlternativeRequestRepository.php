@@ -132,13 +132,13 @@ class AlternativeRequestRepository implements AlternativeRequestRepositoryInterf
      */
     public function expireOlderThan(int $days = 30): int
     {
-        return (int) db_query(
+        return TypeCoerce::toInt(db_query(
             "UPDATE ?:novoton_alternative_requests
              SET status = 'expired', updated_at = NOW()
              WHERE status IN ('pending', 'pending_manual')
              AND created_at < DATE_SUB(NOW(), INTERVAL ?i DAY)",
             $days,
-        );
+        ));
     }
 
     /**

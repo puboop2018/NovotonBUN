@@ -55,14 +55,14 @@ class CacheRepository implements CacheRepositoryInterface
     public function deleteAll(?string $prefix = null): int
     {
         if ($prefix === null) {
-            return (int) db_query('DELETE FROM ?:novoton_cache');
+            return TypeCoerce::toInt(db_query('DELETE FROM ?:novoton_cache'));
         }
-        return (int) db_query('DELETE FROM ?:novoton_cache WHERE cache_key LIKE ?l', $prefix . '%');
+        return TypeCoerce::toInt(db_query('DELETE FROM ?:novoton_cache WHERE cache_key LIKE ?l', $prefix . '%'));
     }
 
     public function deleteExpired(): int
     {
-        return (int) db_query('DELETE FROM ?:novoton_cache WHERE expires_at < ?i', time());
+        return TypeCoerce::toInt(db_query('DELETE FROM ?:novoton_cache WHERE expires_at < ?i', time()));
     }
 
     public function countAll(): int

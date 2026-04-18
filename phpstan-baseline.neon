@@ -4021,12 +4021,6 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/PriceInfoSync.php
 
 		-
-			message: '#^Cannot cast mixed to int\.$#'
-			identifier: cast.int
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/AlternativeRequestRepository.php
-
-		-
 			message: '#^Argument of an invalid type mixed supplied for foreach, only iterables are supported\.$#'
 			identifier: foreach.nonIterable
 			count: 1
@@ -4067,18 +4061,6 @@ parameters:
 			identifier: offsetAccess.invalidOffset
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepository.php
-
-		-
-			message: '#^Cannot cast mixed to int\.$#'
-			identifier: cast.int
-			count: 3
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/CacheRepository.php
-
-		-
-			message: '#^Cannot cast mixed to int\.$#'
-			identifier: cast.int
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelPackageRepository.php
 
 		-
 			message: '#^Cannot cast mixed to int\.$#'
@@ -4847,12 +4829,6 @@ parameters:
 			identifier: argument.type
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/DiagnosticsService.php
-
-		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\DirectoryManager\:\:ensureReportsDir\(\) should return bool but returns mixed\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/DirectoryManager.php
 
 		-
 			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\ErrorHandler\:\:getMessage\(\) should return string but returns mixed\.$#'
@@ -9545,12 +9521,6 @@ parameters:
 			identifier: assign.propertyType
 			count: 1
 			path: addon-travel-core/app/addons/travel_core/src/Services/VariantResolver.php
-
-		-
-			message: '#^Cannot cast mixed to int\.$#'
-			identifier: cast.int
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/ValueObjects/Occupancy.php
 
 		-
 			message: '#^Parameter \#1 \$lastRequest of class Tygh\\Addons\\TravelCore\\ValueObjects\\RequestDebugInfo constructor expects string, mixed given\.$#'
