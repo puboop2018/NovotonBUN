@@ -83,6 +83,24 @@ function fn_novoton_holidays_is_debug(): bool
  * 
  * @return NovotonApi|null
  */
+/**
+ * Broadcast the search / listing page title + blank meta description/keywords
+ * into CS-Cart's dynamic navigation state.
+ *
+ * Consolidates the four Registry::set() writes that used to live in
+ * SearchResultFormatter::assignMeta(). Living here lets that service class
+ * stay free of global-state access (Wave 2 PR 3 of the structured-shape
+ * plan) — services receive page-title via method args and delegate the
+ * broadcast to this helper at the functions/ boundary.
+ */
+function fn_novoton_holidays_set_dynamic_page_meta(string $pageTitle): void
+{
+    Registry::set('navigation.dynamic.page_title', $pageTitle);
+    Registry::set('navigation.dynamic.meta_description', '');
+    Registry::set('navigation.dynamic.meta_keywords', '');
+    Registry::set('runtime.page_title', $pageTitle);
+}
+
 function fn_novoton_holidays_get_api(): ?NovotonApi
 {
     static $api = null;
