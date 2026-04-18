@@ -79,14 +79,12 @@ class CurrencyService implements CurrencyServiceInterface
             return $apiPrice;
         }
 
-        $currencies = \Tygh\Registry::get('currencies');
+        $currencies = TravelCoreConfig::getCurrencies();
+        if (empty($currencies) && function_exists('fn_get_currencies')) {
+            $currencies = fn_get_currencies();
+        }
         if (empty($currencies)) {
-            if (function_exists('fn_get_currencies')) {
-                $currencies = fn_get_currencies();
-            }
-            if (empty($currencies)) {
-                return $apiPrice;
-            }
+            return $apiPrice;
         }
 
         $sourceCoefficient = 1.0;

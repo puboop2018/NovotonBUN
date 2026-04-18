@@ -399,7 +399,8 @@ class FeatureMapper implements FeatureMapperInterface
     {
         $settingKey = self::FEATURE_SETTING_KEYS[$featureType]
                       ?? ('feature_id_' . $featureType);
-        return (int) \Tygh\Registry::get('addons.travel_core.' . $settingKey);
+        $value = TravelCoreConfig::getSetting($settingKey);
+        return is_numeric($value) ? (int) $value : 0;
     }
 
     /**

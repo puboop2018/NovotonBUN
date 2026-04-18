@@ -82,6 +82,13 @@ class ConfigProvider implements ConfigProviderInterface
         return (int) self::getSetting('hotels_category_id', 0);
     }
 
+    /** CS-Cart runtime company context — 1 in single-store mode. */
+    public static function getCompanyId(): int
+    {
+        $value = Registry::get('runtime.company_id');
+        return is_numeric($value) && (int) $value > 0 ? (int) $value : 1;
+    }
+
     public static function getPackagesCategoryId(): int
     {
         return (int) self::getSetting('packages_category_id', 0);
