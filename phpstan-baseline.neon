@@ -4231,18 +4231,6 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingService.php
 
 		-
-			message: '#^Parameter \#1 \$hotel_id of method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepositoryInterface\:\:findExisting\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingService.php
-
-		-
-			message: '#^Parameter \#1 \$hotel_id of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepositoryInterface\:\:findById\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingService.php
-
-		-
 			message: '#^Parameter \#2 \$check_in of method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepositoryInterface\:\:findExisting\(\) expects string, mixed given\.$#'
 			identifier: argument.type
 			count: 1

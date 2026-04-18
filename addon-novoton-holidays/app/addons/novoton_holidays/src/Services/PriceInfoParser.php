@@ -117,17 +117,8 @@ class PriceInfoParser
      */
     public function loadHotelInfo(string $hotelId): ?array
     {
-        $hotel = $this->hotelRepo->findById($hotelId);
-        $json = $hotel['hotel_data'] ?? null;
-
-        if (empty($json)) {
-            return null;
-        }
-
-        $json = PriceInfoFormatter::toScalar($json);
-        $decoded = json_decode($json, true);
-        /** @var array<string, mixed>|null $decoded */
-        $this->hotelinfo = is_array($decoded) ? $decoded : null;
+        $hotel = $this->hotelRepo->findByIdAsDto($hotelId);
+        $this->hotelinfo = $hotel?->rawHotelData;
         return $this->hotelinfo;
     }
 
