@@ -1783,12 +1783,6 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/AddProductsCommand.php
 
 		-
-			message: '#^Binary operation "\." between non\-falsy\-string and mixed results in an error\.$#'
-			identifier: binaryOp.invalid
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/AddProductsCommand.php
-
-		-
 			message: '#^Call to function is_array\(\) with array\<string, mixed\> will always evaluate to true\.$#'
 			identifier: function.alreadyNarrowedType
 			count: 1
@@ -1804,12 +1798,6 @@ parameters:
 			message: '#^Call to static method toScalar\(\) on an unknown class Tygh\\Addons\\NovotonHolidays\\Cron\\Commands\\PriceInfoFormatter\.$#'
 			identifier: class.notFound
 			count: 9
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/AddProductsCommand.php
-
-		-
-			message: '#^Calling Tygh\\Registry\:\:get\(\) is forbidden, Inject the value via the constructor; Registry\:\:get\(\) is forbidden inside src/ class bodies\. Use src/Helpers/RegistryCoerce\.php at the controller/hook boundary instead\.$#'
-			identifier: disallowed.method
-			count: 2
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/AddProductsCommand.php
 
 		-
@@ -1963,12 +1951,6 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/AddProductsCommand.php
 
 		-
-			message: '#^Cannot call method send\(\) on mixed\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/AlternativesCommand.php
-
-		-
 			message: '#^Cannot cast mixed to int\.$#'
 			identifier: cast.int
 			count: 2
@@ -2026,12 +2008,6 @@ parameters:
 			message: '#^Part \$request\[''request_id''\] \(mixed\) of encapsed string cannot be cast to string\.$#'
 			identifier: encapsedStringPart.nonString
 			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/AlternativesCommand.php
-
-		-
-			message: '#^Using Tygh\\Tygh\:\:\$app is forbidden, Tygh\:\:\$app\[\.\.\.\] is a service\-locator; inject the dependency \(session, view, mailer, storage\.\.\.\) through the constructor instead\. Permitted only at the CS\-Cart boundary \(controllers, hooks, functions\) and via src/Helpers/SessionAccessor\.php for session state\.$#'
-			identifier: disallowed.property
-			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/AlternativesCommand.php
 
 		-
@@ -2465,12 +2441,6 @@ parameters:
 			identifier: encapsedStringPart.nonString
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/HotelSyncCommand.php
-
-		-
-			message: '#^Calling Tygh\\Registry\:\:get\(\) is forbidden, Inject the value via the constructor; Registry\:\:get\(\) is forbidden inside src/ class bodies\. Use src/Helpers/RegistryCoerce\.php at the controller/hook boundary instead\.$#'
-			identifier: disallowed.method
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/OffersUpdateCommand.php
 
 		-
 			message: '#^Cannot access property \$Hotel on mixed\.$#'
@@ -3763,12 +3733,6 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/AdminCronService.php
 
 		-
-			message: '#^Calling Tygh\\Registry\:\:get\(\) is forbidden, Inject the value via the constructor; Registry\:\:get\(\) is forbidden inside src/ class bodies\. Use src/Helpers/RegistryCoerce\.php at the controller/hook boundary instead\.$#'
-			identifier: disallowed.method
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/AdminCronService.php
-
-		-
 			message: '#^Cannot access property \$Facility on mixed\.$#'
 			identifier: property.nonObject
 			count: 1
@@ -3853,12 +3817,6 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/AlternativeDateSearcher.php
 
 		-
-			message: '#^Cannot call method send\(\) on mixed\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/AlternativeRequestService.php
-
-		-
 			message: '#^Cannot cast mixed to int\.$#'
 			identifier: cast.int
 			count: 4
@@ -3922,12 +3880,6 @@ parameters:
 			message: '#^Parameter \#4 \$checkOut of method Tygh\\Addons\\NovotonHolidays\\Services\\AlternativeRequestService\:\:buildRequestRecord\(\) expects string, mixed given\.$#'
 			identifier: argument.type
 			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/AlternativeRequestService.php
-
-		-
-			message: '#^Using Tygh\\Tygh\:\:\$app is forbidden, Tygh\:\:\$app\[\.\.\.\] is a service\-locator; inject the dependency \(session, view, mailer, storage\.\.\.\) through the constructor instead\. Permitted only at the CS\-Cart boundary \(controllers, hooks, functions\) and via src/Helpers/SessionAccessor\.php for session state\.$#'
-			identifier: disallowed.property
-			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/AlternativeRequestService.php
 
 		-
@@ -4465,12 +4417,6 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/DiagnosticsService.php
 
 		-
-			message: '#^Calling Tygh\\Registry\:\:get\(\) is forbidden, Inject the value via the constructor; Registry\:\:get\(\) is forbidden inside src/ class bodies\. Use src/Helpers/RegistryCoerce\.php at the controller/hook boundary instead\.$#'
-			identifier: disallowed.method
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/ErrorHandler.php
-
-		-
 			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\ErrorHandler\:\:getMessage\(\) should return string but returns mixed\.$#'
 			identifier: return.type
 			count: 2
@@ -4573,27 +4519,9 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PathResolver.php
 
 		-
-			message: '#^Binary operation "\." between mixed and ''novoton/'' results in an error\.$#'
-			identifier: binaryOp.invalid
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PathResolver.php
-
-		-
-			message: '#^Binary operation "\." between mixed and ''novoton_holidays'' results in an error\.$#'
-			identifier: binaryOp.invalid
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PathResolver.php
-
-		-
 			message: '#^Binary operation "\." between mixed and ''novoton_reports/'' results in an error\.$#'
 			identifier: binaryOp.invalid
 			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PathResolver.php
-
-		-
-			message: '#^Calling Tygh\\Registry\:\:get\(\) is forbidden, Inject the value via the constructor; Registry\:\:get\(\) is forbidden inside src/ class bodies\. Use src/Helpers/RegistryCoerce\.php at the controller/hook boundary instead\.$#'
-			identifier: disallowed.method
-			count: 2
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PathResolver.php
 
 		-
@@ -4601,12 +4529,6 @@ parameters:
 			identifier: return.type
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PathResolver.php
-
-		-
-			message: '#^Cannot access offset ''novoton_price_cache'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PreOrderPriceVerifier.php
 
 		-
 			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\PreOrderPriceVerifier\:\:getCachedPrice\(\) should return array\<string, mixed\>\|null but returns array\<mixed\>\.$#'
@@ -4629,12 +4551,6 @@ parameters:
 		-
 			message: '#^Parameter \#1 \$callback of function array_map expects \(callable\(mixed\)\: mixed\)\|null, ''intval'' given\.$#'
 			identifier: argument.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PreOrderPriceVerifier.php
-
-		-
-			message: '#^Using Tygh\\Tygh\:\:\$app is forbidden, Tygh\:\:\$app\[\.\.\.\] is a service\-locator; inject the dependency \(session, view, mailer, storage\.\.\.\) through the constructor instead\. Permitted only at the CS\-Cart boundary \(controllers, hooks, functions\) and via src/Helpers/SessionAccessor\.php for session state\.$#'
-			identifier: disallowed.property
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PreOrderPriceVerifier.php
 
@@ -4801,12 +4717,6 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/RoomPriceService.php
 
 		-
-			message: '#^Calling Tygh\\Registry\:\:get\(\) is forbidden, Inject the value via the constructor; Registry\:\:get\(\) is forbidden inside src/ class bodies\. Use src/Helpers/RegistryCoerce\.php at the controller/hook boundary instead\.$#'
-			identifier: disallowed.method
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/RoomPriceService.php
-
-		-
 			message: '#^Cannot access offset ''after'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 2
@@ -4838,12 +4748,6 @@ parameters:
 
 		-
 			message: '#^Cannot access offset ''thousands_separator'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/RoomPriceService.php
-
-		-
-			message: '#^Cannot access offset string on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 2
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/RoomPriceService.php
@@ -5059,12 +4963,6 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SearchResultFormatter.php
 
 		-
-			message: '#^Using Tygh\\Tygh\:\:\$app is forbidden, Tygh\:\:\$app\[\.\.\.\] is a service\-locator; inject the dependency \(session, view, mailer, storage\.\.\.\) through the constructor instead\. Permitted only at the CS\-Cart boundary \(controllers, hooks, functions\) and via src/Helpers/SessionAccessor\.php for session state\.$#'
-			identifier: disallowed.property
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SearchResultFormatter.php
-
-		-
 			message: '#^Argument of an invalid type mixed supplied for foreach, only iterables are supported\.$#'
 			identifier: foreach.nonIterable
 			count: 2
@@ -5221,12 +5119,6 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SecurityService.php
 
 		-
-			message: '#^Calling Tygh\\Registry\:\:get\(\) is forbidden, Inject the value via the constructor; Registry\:\:get\(\) is forbidden inside src/ class bodies\. Use src/Helpers/RegistryCoerce\.php at the controller/hook boundary instead\.$#'
-			identifier: disallowed.method
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SecurityService.php
-
-		-
 			message: '#^Cannot use \+\+ on mixed\.$#'
 			identifier: postInc.type
 			count: 1
@@ -5281,12 +5173,6 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SecurityService.php
 
 		-
-			message: '#^Parameter \#2 \$data of function hash expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SecurityService.php
-
-		-
 			message: '#^Parameter \#2 \$string of function explode expects string, mixed given\.$#'
 			identifier: argument.type
 			count: 1
@@ -5301,12 +5187,6 @@ parameters:
 		-
 			message: '#^Binary operation "\." between mixed and '' \+1 day'' results in an error\.$#'
 			identifier: binaryOp.invalid
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/TermsFormatter.php
-
-		-
-			message: '#^Calling Tygh\\Registry\:\:get\(\) is forbidden, Inject the value via the constructor; Registry\:\:get\(\) is forbidden inside src/ class bodies\. Use src/Helpers/RegistryCoerce\.php at the controller/hook boundary instead\.$#'
-			identifier: disallowed.method
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/TermsFormatter.php
 
@@ -5344,12 +5224,6 @@ parameters:
 			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, list\<mixed\> given\.$#'
 			identifier: argument.type
 			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/TermsFormatter.php
-
-		-
-			message: '#^Parameter \#3 \$subject of function str_replace expects array\<string\>\|string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/TermsFormatter.php
 
 		-

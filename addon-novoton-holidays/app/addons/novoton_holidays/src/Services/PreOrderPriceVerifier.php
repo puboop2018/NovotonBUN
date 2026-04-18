@@ -27,10 +27,17 @@ declare(strict_types=1);
 namespace Tygh\Addons\NovotonHolidays\Services;
 
 use Tygh\Addons\TravelCore\Contracts\PreOrderPriceVerifierInterface;
-use Tygh\Tygh;
+use Tygh\Addons\TravelCore\Helpers\SessionAccessor;
 
 class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
 {
+    private readonly SessionAccessor $session;
+
+    public function __construct(?SessionAccessor $session = null)
+    {
+        $this->session = $session ?? new SessionAccessor();
+    }
+
     /**
      * Verify all Novoton booking products in the cart against live API prices.
      *
@@ -177,8 +184,8 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
      */
     private function getCachedPrice(array $extra, array $childrenAges, int $ttl): ?array
     {
-        $sessionCache = Tygh::$app['session']['novoton_price_cache'] ?? [];
-        if (empty($sessionCache)) {
+        $sessionCache = $this->session->get('novoton_price_cache');
+        if (!is_array($sessionCache) || $sessionCache === []) {
             return null;
         }
 
@@ -194,7 +201,7 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
             $agesStr,
         ]));
 
-        if (!is_array($sessionCache) || !isset($sessionCache[$cacheKey])) {
+        if (!isset($sessionCache[$cacheKey])) {
             return null;
         }
 

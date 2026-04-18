@@ -25,7 +25,6 @@ use Tygh\Addons\NovotonHolidays\NovotonApi;
 use Tygh\Addons\NovotonHolidays\Repository\AlternativeRequestRepository;
 use Tygh\Addons\NovotonHolidays\Repository\AlternativeRequestRepositoryInterface;
 use Tygh\Addons\TravelCore\TravelConstants;
-use Tygh\Tygh;
 
 class AlternativeRequestService implements AlternativeRequestServiceInterface
 {
@@ -306,8 +305,7 @@ class AlternativeRequestService implements AlternativeRequestServiceInterface
     private function sendConfirmationEmail(string $email, array $mailData): void
     {
         try {
-            $mailer = Tygh::$app['mailer'];
-            $mailer->send([
+            fn_novoton_holidays_send_mail([
                 'to' => $email,
                 'from' => 'default_company_orders_department',
                 'data' => $mailData,

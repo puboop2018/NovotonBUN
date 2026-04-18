@@ -18,7 +18,6 @@ use Tygh\Addons\NovotonHolidays\Repository\CacheRepository;
 use Tygh\Addons\NovotonHolidays\Repository\CacheRepositoryInterface;
 use Tygh\Addons\TravelCore\Helpers\ValidationHelpers;
 use Tygh\Addons\TravelCore\TravelConstants;
-use Tygh\Registry;
 
 class SecurityService implements SecurityServiceInterface
 {
@@ -527,7 +526,7 @@ class SecurityService implements SecurityServiceInterface
     private function getEncryptionKey(): string
     {
         // Use CS-Cart's crypt key first
-        $key = Registry::get('config.crypt_key');
+        $key = ConfigProvider::getCryptKey();
 
         if (empty($key)) {
             $key = ConfigProvider::getApiKey();

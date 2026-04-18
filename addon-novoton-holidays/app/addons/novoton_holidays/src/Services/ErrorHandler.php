@@ -15,7 +15,6 @@ declare(strict_types=1);
 namespace Tygh\Addons\NovotonHolidays\Services;
 
 use Tygh\Addons\NovotonHolidays\Constants;
-use Tygh\Registry;
 
 class ErrorHandler
 {
@@ -68,7 +67,7 @@ class ErrorHandler
     private static function ensureInitialized(): void
     {
         if (!self::$initialized) {
-            self::$debug = (Registry::get(Constants::SETTING_DEBUG_LOGGING) ?? 'N') === 'Y';
+            self::$debug = ConfigProvider::isDebugLogging();
             self::$initialized = true;
         }
     }

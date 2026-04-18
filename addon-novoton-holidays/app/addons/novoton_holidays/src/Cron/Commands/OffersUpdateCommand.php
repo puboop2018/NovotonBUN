@@ -8,7 +8,6 @@ use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\Cron\AbstractCronCommand;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Services\Container;
-use Tygh\Registry;
 
 class OffersUpdateCommand extends AbstractCronCommand
 {
@@ -159,7 +158,7 @@ class OffersUpdateCommand extends AbstractCronCommand
                 'price' => 0,
                 'amount' => ConfigProvider::getDefaultProductQuantity(),
                 'status' => 'D',
-                'company_id' => Registry::get('runtime.company_id') ?: 1,
+                'company_id' => ConfigProvider::getCompanyId(),
                 'main_category' => $category_id,
                 'category_ids' => [$category_id],
                 'full_description' => $full_description,

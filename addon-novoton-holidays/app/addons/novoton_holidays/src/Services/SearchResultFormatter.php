@@ -16,7 +16,6 @@ declare(strict_types=1);
 namespace Tygh\Addons\NovotonHolidays\Services;
 
 use Tygh\Addons\TravelCore\Services\CurrencyService;
-use Tygh\Tygh;
 
 class SearchResultFormatter implements SearchResultFormatterInterface
 {
@@ -39,8 +38,7 @@ class SearchResultFormatter implements SearchResultFormatterInterface
         array $searchParams,
         array $debugLog,
     ): void {
-        /** @var \Smarty $view */
-        $view = Tygh::$app['view'];
+        $view = fn_novoton_holidays_get_view();
 
         // ── Core results ─────────────────────────────────────────────
         $view->assign('novoton_results', $results);
@@ -108,8 +106,7 @@ class SearchResultFormatter implements SearchResultFormatterInterface
     #[\Override]
     public function assignDefaults(?string $warningLangKey = null): void
     {
-        /** @var \Smarty $view */
-        $view = Tygh::$app['view'];
+        $view = fn_novoton_holidays_get_view();
         $translated = __('novoton_holidays.search_results');
         $pageTitle = is_string($translated) && $translated !== '' ? $translated : 'Search Results';
 

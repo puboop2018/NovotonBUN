@@ -212,7 +212,7 @@ class RoomPriceService implements RoomPriceServiceInterface
         $currency_code = $currency ?? $this->currency;
 
         // Try to use CS-Cart's currency settings
-        $currencies = \Tygh\Registry::get('currencies');
+        $currencies = ConfigProvider::getCurrencies();
 
         if (!empty($currencies[$currency_code])) {
             $curr = $currencies[$currency_code];
@@ -259,7 +259,7 @@ class RoomPriceService implements RoomPriceServiceInterface
         $currency_code = $currency ?? $this->currency;
 
         // Try to use CS-Cart's currency settings
-        $currencies = \Tygh\Registry::get('currencies');
+        $currencies = ConfigProvider::getCurrencies();
 
         if (!empty($currencies[$currency_code])) {
             $curr = $currencies[$currency_code];
