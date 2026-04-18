@@ -261,6 +261,7 @@ function fn_novoton_holidays_get_order_info(&$order, $additional_data): void
         if (!is_array($product)) {
             continue;
         }
+        /** @var array<string, mixed> $product */
         /** @var array<string, mixed> $extra */
         $extra = is_array($product['extra'] ?? null) ? $product['extra'] : [];
         if ($debugMode && defined('AREA') && AREA === 'A') {
@@ -279,29 +280,33 @@ function fn_novoton_holidays_get_order_info(&$order, $additional_data): void
         // [1] Hotel location
         if (!empty($hotel_id) && empty($extra['city']) && isset($hotels_cache[$hotel_id])) {
             $loc = is_array($hotels_cache[$hotel_id]) ? $hotels_cache[$hotel_id] : [];
-            $product['extra']['city']    = PriceInfoFormatter::toScalar($loc['city']    ?? '');
-            $product['extra']['region']  = PriceInfoFormatter::toScalar($loc['region']  ?? '');
-            $product['extra']['country'] = PriceInfoFormatter::toScalar($loc['country'] ?? '');
+            $extra['city']    = PriceInfoFormatter::toScalar($loc['city']    ?? '');
+            $extra['region']  = PriceInfoFormatter::toScalar($loc['region']  ?? '');
+            $extra['country'] = PriceInfoFormatter::toScalar($loc['country'] ?? '');
         }
 
         // [2] Formatted dates
         $ci_ts = !empty($check_in)  ? strtotime($check_in)  : false;
         $co_ts = !empty($check_out) ? strtotime($check_out) : false;
         if ($ci_ts !== false) {
-            $product['extra']['check_in_formatted']  = fn_date_format($ci_ts, $date_format);
+            $extra['check_in_formatted']  = fn_date_format($ci_ts, $date_format);
         }
         if ($co_ts !== false) {
-            $product['extra']['check_out_formatted'] = fn_date_format($co_ts, $date_format);
+            $extra['check_out_formatted'] = fn_date_format($co_ts, $date_format);
         }
-
-        // [3] Payment & cancellation terms
-        _nvt_enrich_order_product_terms($product, $hotel_id, $check_in, $check_out, $total_price, $currency_code);
 
         // [4] Board display name
         $board_id = PriceInfoFormatter::toScalar($extra['board_id'] ?? $extra['board'] ?? '');
         if (!empty($board_id)) {
-            $product['extra']['board_display'] = fn_novoton_holidays_format_board_name($board_id);
+            $extra['board_display'] = fn_novoton_holidays_format_board_name($board_id);
         }
+
+        // Write back local extra mutations before delegating to helpers
+        // (helpers also mutate $product['extra'] but via their own narrowed vars).
+        $product['extra'] = $extra;
+
+        // [3] Payment & cancellation terms
+        _nvt_enrich_order_product_terms($product, $hotel_id, $check_in, $check_out, $total_price, $currency_code);
 
         // [5] Guests data formatting
         _nvt_format_order_guests($product);
@@ -387,22 +392,24 @@ function _nvt_enrich_order_product_terms(
 
     // Format payment terms
     if (!empty($payment_raw) && $total_price > 0) {
-        $product['extra']['terms_of_payment_with_amounts'] = fn_novoton_holidays_format_payment_terms_with_amounts(
+        $pExtra['terms_of_payment_with_amounts'] = fn_novoton_holidays_format_payment_terms_with_amounts(
             $payment_raw, $total_price, $currency_code
         );
-        $product['extra']['terms_of_payment_formatted'] = fn_novoton_holidays_format_payment_terms($payment_raw);
+        $pExtra['terms_of_payment_formatted'] = fn_novoton_holidays_format_payment_terms($payment_raw);
     } elseif (!empty($payment_raw)) {
-        $product['extra']['terms_of_payment_formatted'] = fn_novoton_holidays_format_payment_terms($payment_raw);
+        $pExtra['terms_of_payment_formatted'] = fn_novoton_holidays_format_payment_terms($payment_raw);
     } elseif (!empty($payment_text)) {
-        $product['extra']['terms_of_payment_formatted'] = $payment_text;
+        $pExtra['terms_of_payment_formatted'] = $payment_text;
     }
 
     // Format cancellation terms
     if (!empty($cancel_raw)) {
-        $product['extra']['terms_of_cancellation_formatted'] = fn_novoton_holidays_format_cancellation_terms($cancel_raw, $check_in);
+        $pExtra['terms_of_cancellation_formatted'] = fn_novoton_holidays_format_cancellation_terms($cancel_raw, $check_in);
     } elseif (!empty($cancel_text)) {
-        $product['extra']['terms_of_cancellation_formatted'] = $cancel_text;
+        $pExtra['terms_of_cancellation_formatted'] = $cancel_text;
     }
+
+    $product['extra'] = $pExtra;
 }
 
 /**
@@ -429,6 +436,7 @@ function _nvt_format_order_guests(array &$product): void
     $holder_name = PriceInfoFormatter::toScalar($fExtra['holder_name'] ?? '');
     $formatted = \Tygh\Addons\TravelCore\Services\GuestDataService::formatGuestsForOrderDisplay($guests_data, $holder_name);
     if (!empty($formatted)) {
-        $product['extra']['guests_data'] = $formatted;
+        $fExtra['guests_data'] = $formatted;
+        $product['extra'] = $fExtra;
     }
 }
