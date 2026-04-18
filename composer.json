@@ -11,6 +11,7 @@
         "phpmd/phpmd": "^2.15",
         "phpro/grumphp": "^2.7",
         "phpstan/phpstan": "^2.0",
+        "rector/rector": "^2.0",
         "squizlabs/php_codesniffer": "^3.10",
         "vimeo/psalm": "^6.0"
     },
@@ -43,6 +44,9 @@
         "fix": "php-cs-fixer fix",
         "fix:dry": "php-cs-fixer fix --dry-run --diff",
 
+        "rector:dry": "rector process --dry-run --no-progress-bar",
+        "rector:fix": "rector process --no-progress-bar",
+
         "md": "phpmd addon-novoton-holidays/app/addons/novoton_holidays/src,addon-travel-core/app/addons/travel_core/src,addon-sphinx-holidays/app/addons/sphinx_holidays/src text phpmd.xml",
 
         "test": "cd addon-novoton-holidays/app/addons/novoton_holidays && vendor/bin/phpunit --no-coverage",
@@ -52,6 +56,7 @@
             "@psalm",
             "@cs",
             "@fix:dry",
+            "@rector:dry",
             "@test"
         ],
 
@@ -60,6 +65,7 @@
             "@psalm",
             "@cs",
             "@fix:dry",
+            "@rector:dry",
             "@md",
             "@test"
         ]
@@ -74,6 +80,8 @@
         "cs:fix":        "PHPCBF — auto-fix PHPCS violations",
         "fix":           "PHP CS Fixer — auto-format code",
         "fix:dry":       "PHP CS Fixer — show what would change (dry run)",
+        "rector:dry":    "Rector — show what would change (dry run, fails on drift)",
+        "rector:fix":    "Rector — apply refactoring rules (see rector.php)",
         "md":            "PHPMD — report code quality issues",
         "test":          "PHPUnit tests for novoton addon",
         "check":         "Run PHPStan + Psalm + PHPCS + CS Fixer dry-run + PHPUnit",

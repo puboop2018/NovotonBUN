@@ -83,6 +83,25 @@ jobs:
       - name: Run PHP CS Fixer
         run: vendor/bin/php-cs-fixer fix --dry-run --diff --using-cache=no
 
+  # ── Rector (dry-run; fails if any configured rule would change a file) ──
+  rector:
+    name: Rector (dry-run)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          tools: composer:v2
+
+      - name: Install root dev dependencies
+        run: composer install --no-progress --no-interaction
+
+      - name: Run Rector
+        run: vendor/bin/rector process --dry-run --no-progress-bar
+
   # ── PHPMD (mess detection; warnings-only, won't fail CI) ──
   phpmd:
     name: PHPMD
