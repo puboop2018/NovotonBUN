@@ -85,6 +85,7 @@ function fn_novoton_holidays_calculate_cart_items(&$cart, &$cart_products, $auth
         if (!is_array($product)) {
             continue;
         }
+        /** @var array<string, mixed> $product */
         $product_id = PriceInfoFormatter::toScalar($product['product_id'] ?? '');
         /** @var array<string, mixed> $pExtra */
         $pExtra = is_array($product['extra'] ?? null) ? $product['extra'] : [];
@@ -92,7 +93,7 @@ function fn_novoton_holidays_calculate_cart_items(&$cart, &$cart_products, $auth
         // Already has booking data with ID — keep it
         if (!empty($pExtra['novoton_booking']) && !empty($pExtra['novoton_booking_id'])) {
             fn_novoton_holidays_add_booking_display_data($product, $cart);
-            $used_booking_ids[] = $pExtra['novoton_booking_id'];
+            $used_booking_ids[] = PriceInfoFormatter::toInt($pExtra['novoton_booking_id']);
             continue;
         }
 
@@ -105,11 +106,13 @@ function fn_novoton_holidays_calculate_cart_items(&$cart, &$cart_products, $auth
             if (!is_array($booking)) {
                 continue;
             }
-            if (in_array($booking['booking_id'] ?? null, $used_booking_ids)) {
+            /** @var array<string, mixed> $booking */
+            $bookingId = PriceInfoFormatter::toInt($booking['booking_id'] ?? 0);
+            if (in_array($bookingId, $used_booking_ids, true)) {
                 continue;
             }
 
-            $used_booking_ids[] = $booking['booking_id'];
+            $used_booking_ids[] = $bookingId;
             _nvt_inject_booking_into_cart_product($product, $booking, $cart, (string) $cart_id);
             fn_novoton_holidays_add_booking_display_data($product, $cart);
             break;
@@ -242,39 +245,45 @@ function _nvt_inject_booking_into_cart_product(
 ): void {
     $bRoomId  = PriceInfoFormatter::toScalar($booking['room_id'] ?? '');
     $bBoardId = PriceInfoFormatter::toScalar($booking['board_id'] ?? '');
-    $product['extra']['travel_booking']     = true;
-    $product['extra']['novoton_booking']    = true;
-    $product['extra']['novoton_booking_id'] = $booking['booking_id'] ?? 0;
-    $product['extra']['hotel_id']           = PriceInfoFormatter::toScalar($booking['hotel_id'] ?? '');
-    $product['extra']['room_id']            = $bRoomId;
-    $product['extra']['room_name']          = fn_novoton_holidays_format_room_type($bRoomId, PriceInfoFormatter::toScalar($booking['room_type'] ?? ''));
-    $product['extra']['board_id']           = $bBoardId;
-    $product['extra']['board_name']         = fn_novoton_holidays_format_board_name($bBoardId);
-    $product['extra']['check_in']           = PriceInfoFormatter::toScalar($booking['check_in'] ?? '');
-    $product['extra']['check_out']          = PriceInfoFormatter::toScalar($booking['check_out'] ?? '');
-    $product['extra']['nights']             = PriceInfoFormatter::toInt($booking['nights'] ?? 0);
-    $product['extra']['adults']             = PriceInfoFormatter::toInt($booking['adults'] ?? 2);
-    $product['extra']['children']           = PriceInfoFormatter::toInt($booking['children'] ?? 0);
-    $product['extra']['children_ages']      = PriceInfoFormatter::toScalar($booking['children_ages'] ?? '');
-    $product['extra']['holder_name']        = PriceInfoFormatter::toScalar($booking['holder_name'] ?? '');
-    $product['extra']['guest_names']        = PriceInfoFormatter::toScalar($booking['guest_name'] ?? '');
-    $product['extra']['guests_data']        = class_exists(\Tygh\Addons\TravelCore\Services\GuestDataNormalizer::class)
+
+    /** @var array<string, mixed> $extra */
+    $extra = is_array($product['extra'] ?? null) ? $product['extra'] : [];
+
+    $extra['travel_booking']     = true;
+    $extra['novoton_booking']    = true;
+    $extra['novoton_booking_id'] = $booking['booking_id'] ?? 0;
+    $extra['hotel_id']           = PriceInfoFormatter::toScalar($booking['hotel_id'] ?? '');
+    $extra['room_id']            = $bRoomId;
+    $extra['room_name']          = fn_novoton_holidays_format_room_type($bRoomId, PriceInfoFormatter::toScalar($booking['room_type'] ?? ''));
+    $extra['board_id']           = $bBoardId;
+    $extra['board_name']         = fn_novoton_holidays_format_board_name($bBoardId);
+    $extra['check_in']           = PriceInfoFormatter::toScalar($booking['check_in'] ?? '');
+    $extra['check_out']          = PriceInfoFormatter::toScalar($booking['check_out'] ?? '');
+    $extra['nights']             = PriceInfoFormatter::toInt($booking['nights'] ?? 0);
+    $extra['adults']             = PriceInfoFormatter::toInt($booking['adults'] ?? 2);
+    $extra['children']           = PriceInfoFormatter::toInt($booking['children'] ?? 0);
+    $extra['children_ages']      = PriceInfoFormatter::toScalar($booking['children_ages'] ?? '');
+    $extra['holder_name']        = PriceInfoFormatter::toScalar($booking['holder_name'] ?? '');
+    $extra['guest_names']        = PriceInfoFormatter::toScalar($booking['guest_name'] ?? '');
+    $extra['guests_data']        = class_exists(\Tygh\Addons\TravelCore\Services\GuestDataNormalizer::class)
         ? (new \Tygh\Addons\TravelCore\Services\GuestDataNormalizer())->toJson($booking['guests_data'] ?? '')
         : PriceInfoFormatter::toScalar($booking['guests_data'] ?? '');
-    $product['extra']['total_price']        = PriceInfoFormatter::toFloat($booking['total_price'] ?? 0);
-    $product['extra']['package_name']       = PriceInfoFormatter::toScalar($booking['package_name'] ?? '');
-    $product['extra']['num_rooms']          = PriceInfoFormatter::toInt($booking['num_rooms'] ?? 1);
+    $extra['total_price']        = PriceInfoFormatter::toFloat($booking['total_price'] ?? 0);
+    $extra['package_name']       = PriceInfoFormatter::toScalar($booking['package_name'] ?? '');
+    $extra['num_rooms']          = PriceInfoFormatter::toInt($booking['num_rooms'] ?? 1);
 
     if (!empty($booking['rooms_data'])) {
-        $rooms = json_decode($booking['rooms_data'], true);
+        $rooms = json_decode(PriceInfoFormatter::toScalar($booking['rooms_data']), true);
         if (is_array($rooms)) {
-            $product['extra']['rooms_data'] = $rooms;
+            $extra['rooms_data'] = $rooms;
         }
     }
 
+    $product['extra'] = $extra;
+
     // Sync back to cart session
-    if (isset($cart['products'][$cart_id])) {
-        $cart['products'][$cart_id]['extra'] = $product['extra'];
+    if (isset($cart['products'][$cart_id]) && is_array($cart['products'][$cart_id])) {
+        $cart['products'][$cart_id]['extra'] = $extra;
     }
 }
 
