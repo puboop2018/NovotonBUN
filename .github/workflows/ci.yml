@@ -125,7 +125,7 @@ jobs:
             addon-novoton-holidays/app/addons/novoton_holidays/src,addon-travel-core/app/addons/travel_core/src,addon-sphinx-holidays/app/addons/sphinx_holidays/src \
             text phpmd.xml
 
-  # ── PHPUnit (novoton suite) ──
+  # ── PHPUnit (novoton suite, with coverage) ──
   phpunit:
     name: PHPUnit (novoton)
     runs-on: ubuntu-latest
@@ -140,13 +140,39 @@ jobs:
         with:
           php-version: '8.3'
           extensions: simplexml, curl, mbstring
+          coverage: pcov
           tools: composer:v2
 
       - name: Install addon dependencies
         run: composer install --no-progress --no-interaction
 
-      - name: Run PHPUnit
-        run: vendor/bin/phpunit --colors=always
+      - name: Run PHPUnit (with coverage)
+        run: vendor/bin/phpunit --colors=always --coverage-text=coverage.txt --coverage-clover=coverage.xml
+
+      - name: Append coverage summary to job summary
+        if: always()
+        run: |
+          if [ -f coverage.txt ]; then
+            {
+              echo '## Coverage summary'
+              echo ''
+              echo '```'
+              # Trim ANSI + print from "Code Coverage Report" onward
+              awk '/Code Coverage Report/,0' coverage.txt | sed 's/\x1b\[[0-9;]*m//g' | head -80
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload coverage artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: |
+            addon-novoton-holidays/app/addons/novoton_holidays/coverage.txt
+            addon-novoton-holidays/app/addons/novoton_holidays/coverage.xml
+          retention-days: 14
+          if-no-files-found: ignore
 
   # ── php -l syntax check on all PHP files ──
   lint:
