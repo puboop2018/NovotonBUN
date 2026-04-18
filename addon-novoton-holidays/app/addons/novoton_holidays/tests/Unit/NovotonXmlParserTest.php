@@ -3,13 +3,12 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Tests\Unit;
 
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Tygh\Addons\NovotonHolidays\NovotonXmlParser;
 use Tygh\Addons\NovotonHolidays\Exceptions\XmlParsingException;
 
-/**
- * @covers \Tygh\Addons\NovotonHolidays\NovotonXmlParser
- */
+#[CoversClass(NovotonXmlParser::class)]
 class NovotonXmlParserTest extends TestCase
 {
     private NovotonXmlParser $parser;

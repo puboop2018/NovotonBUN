@@ -3,12 +3,11 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Tests\Unit;
 
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Tygh\Addons\TravelCore\Services\CommissionCalculator;
 
-/**
- * @covers \Tygh\Addons\NovotonHolidays\CommissionCalculator
- */
+#[CoversClass(CommissionCalculator::class)]
 class CommissionCalculatorTest extends TestCase
 {
     public function testApplyWithZeroCommission(): void

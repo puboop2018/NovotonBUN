@@ -3,12 +3,11 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Tests\Unit;
 
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Tygh\Addons\NovotonHolidays\Services\SecurityService;
 
-/**
- * @covers \Tygh\Addons\NovotonHolidays\Services\SecurityService
- */
+#[CoversClass(SecurityService::class)]
 class SecurityServiceTest extends TestCase
 {
     private SecurityService $sut;

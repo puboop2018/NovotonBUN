@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Tests\Integration;
 
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 use Tygh\Addons\NovotonHolidays\Services\SearchParameterNormalizer;
 use Tygh\Addons\TravelCore\Services\CommissionCalculator;
@@ -11,9 +12,8 @@ use Tygh\Addons\NovotonHolidays\NovotonXmlParser;
 /**
  * Integration test: verifies the search → normalize → price → commission flow
  * using mocked API responses (no live API calls).
- *
- * @group integration
  */
+#[Group('integration')]
 class BookingFlowTest extends TestCase
 {
     private SearchParameterNormalizer $normalizer;
