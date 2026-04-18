@@ -15,8 +15,24 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Services;
 
+use Tygh\Addons\TravelCore\Dto\Search\SearchQuery;
+
 class SearchParameterNormalizer
 {
+    /**
+     * Typed view of {@see self::normalize()}.
+     *
+     * Returns the same shape as a {@see SearchQuery} DTO. New code paths
+     * should prefer this over normalize(); existing array callers keep
+     * working unchanged.
+     *
+     * @param array<string, mixed> $searchParams Already-sanitized request params (from SecurityService)
+     */
+    public function normalizeAsDto(array $searchParams): SearchQuery
+    {
+        return SearchQuery::fromNormalized($this->normalize($searchParams), $searchParams);
+    }
+
     /**
      * Normalize raw search parameters from the HTTP request.
      *
