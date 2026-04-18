@@ -69,7 +69,7 @@ class Container
     public static function getHttpClient(): SphinxHttpClient
     {
         /** @var SphinxHttpClient */
-        return self::resolve('httpClient', static fn () => new SphinxHttpClient(
+        return self::resolve('httpClient', static fn (): \Tygh\Addons\SphinxHolidays\Api\SphinxHttpClient => new SphinxHttpClient(
             ConfigProvider::getApiBaseUrl(),
             ConfigProvider::getApiKey(),
             ConfigProvider::getMaxRetries(),
@@ -84,25 +84,25 @@ class Container
     public static function getApi(): SphinxApi
     {
         /** @var SphinxApi */
-        return self::resolve('api', static fn () => new SphinxApi(self::getHttpClient()));
+        return self::resolve('api', static fn (): \Tygh\Addons\SphinxHolidays\SphinxApi => new SphinxApi(self::getHttpClient()));
     }
 
     public static function getNormalizer(): SphinxNormalizer
     {
         /** @var SphinxNormalizer */
-        return self::resolve('normalizer', static fn () => new SphinxNormalizer());
+        return self::resolve('normalizer', static fn (): \Tygh\Addons\SphinxHolidays\Api\SphinxNormalizer => new SphinxNormalizer());
     }
 
     public static function getFeatureAssigner(): SphinxFeatureAssigner
     {
         /** @var SphinxFeatureAssigner */
-        return self::resolve('featureAssigner', static fn () => new SphinxFeatureAssigner(self::getNormalizer()));
+        return self::resolve('featureAssigner', static fn (): \Tygh\Addons\SphinxHolidays\Services\SphinxFeatureAssigner => new SphinxFeatureAssigner(self::getNormalizer()));
     }
 
     public static function getCartService(): CartService
     {
         /** @var CartService */
-        return self::resolve('cartService', static fn () => new CartService());
+        return self::resolve('cartService', static fn (): \Tygh\Addons\SphinxHolidays\Services\CartService => new CartService());
     }
 
     // ═══════════════════════════════════════════════════════════════════
@@ -112,31 +112,31 @@ class Container
     public static function getDestinationRepository(): DestinationRepository
     {
         /** @var DestinationRepository */
-        return self::resolve('destinationRepository', static fn () => new DestinationRepository());
+        return self::resolve('destinationRepository', static fn (): \Tygh\Addons\SphinxHolidays\Repository\DestinationRepository => new DestinationRepository());
     }
 
     public static function getHotelRepository(): HotelRepository
     {
         /** @var HotelRepository */
-        return self::resolve('hotelRepository', static fn () => new HotelRepository());
+        return self::resolve('hotelRepository', static fn (): \Tygh\Addons\SphinxHolidays\Repository\HotelRepository => new HotelRepository());
     }
 
     public static function getBookingRepository(): SphinxBookingRepository
     {
         /** @var SphinxBookingRepository */
-        return self::resolve('bookingRepository', static fn () => new SphinxBookingRepository());
+        return self::resolve('bookingRepository', static fn (): \Tygh\Addons\SphinxHolidays\Repository\SphinxBookingRepository => new SphinxBookingRepository());
     }
 
     public static function getDestinationWhitelistRepository(): DestinationWhitelistRepository
     {
         /** @var DestinationWhitelistRepository */
-        return self::resolve('destinationWhitelistRepository', static fn () => new DestinationWhitelistRepository());
+        return self::resolve('destinationWhitelistRepository', static fn (): \Tygh\Addons\SphinxHolidays\Repository\DestinationWhitelistRepository => new DestinationWhitelistRepository());
     }
 
     public static function getSyncLogRepository(): SyncLogRepository
     {
         /** @var SyncLogRepository */
-        return self::resolve('syncLogRepository', static fn () => new SyncLogRepository());
+        return self::resolve('syncLogRepository', static fn (): \Tygh\Addons\SphinxHolidays\Repository\SyncLogRepository => new SyncLogRepository());
     }
 
     // ═══════════════════════════════════════════════════════════════════
@@ -146,7 +146,7 @@ class Container
     public static function getProductFactory(): SphinxProductFactoryInterface
     {
         /** @var SphinxProductFactoryInterface */
-        return self::resolve('productFactory', static fn () => new SphinxProductFactory(
+        return self::resolve('productFactory', static fn (): \Tygh\Addons\SphinxHolidays\Helpers\SphinxProductFactory => new SphinxProductFactory(
             self::getHotelRepository(),
             self::getFeatureAssigner(),
         ));
@@ -155,13 +155,13 @@ class Container
     public static function getSecurityService(): SecurityService
     {
         /** @var SecurityService */
-        return self::resolve('securityService', static fn () => new SecurityService());
+        return self::resolve('securityService', static fn (): \Tygh\Addons\SphinxHolidays\Services\SecurityService => new SecurityService());
     }
 
     public static function getPreOrderPriceVerifier(): PreOrderPriceVerifier
     {
         /** @var PreOrderPriceVerifier */
-        return self::resolve('preOrderPriceVerifier', static fn () => new PreOrderPriceVerifier());
+        return self::resolve('preOrderPriceVerifier', static fn (): \Tygh\Addons\SphinxHolidays\Services\PreOrderPriceVerifier => new PreOrderPriceVerifier());
     }
 
     // ═══════════════════════════════════════════════════════════════════

@@ -94,7 +94,7 @@ class HotelPackageRepository implements HotelPackageRepositoryInterface
         $data['hotel_id'] = $hotelId;
         $data['package_id'] = $packageId;
         // PHP 8.1+: filter null values to prevent real_escape_string deprecation
-        $data = array_filter($data, static fn ($v) => $v !== null);
+        $data = array_filter($data, static fn ($v): bool => $v !== null);
 
         $existingId = TypeCoerce::toInt(db_get_field(
             'SELECT id FROM ?:novoton_hotel_packages WHERE hotel_id = ?s AND package_id = ?s',

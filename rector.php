@@ -37,6 +37,26 @@ return RectorConfig::configure()
         '*/var/*',
         '*/node_modules/*',
         '*/tests/*',
+
+        // Repository/ — CS-Cart DB helpers return mixed / array|false.
+        // Rector's return-type inference would over-narrow to `array`
+        // and hide the false path. Add specific repositories back
+        // case-by-case after hand-typing.
+        Rector\TypeDeclaration\Rector\ClassMethod\ReturnTypeFromStrictTypedPropertyRector::class => [
+            '*/Repository/*',
+        ],
+        Rector\TypeDeclaration\Rector\ClassMethod\ParamTypeByMethodCallTypeRector::class => [
+            '*/Repository/*',
+        ],
+        Rector\TypeDeclaration\Rector\ClassMethod\ReturnTypeFromReturnNewRector::class => [
+            '*/Repository/*',
+        ],
+        Rector\TypeDeclaration\Rector\ClassMethod\ReturnTypeFromReturnDirectArrayRector::class => [
+            '*/Repository/*',
+        ],
+        Rector\TypeDeclaration\Rector\ClassMethod\ReturnTypeFromStrictNewArrayRector::class => [
+            '*/Repository/*',
+        ],
     ])
     ->withRules([
         // Wave 3 PR 7 — narrow, safe type-declaration rules:
@@ -52,6 +72,23 @@ return RectorConfig::configure()
         //     instead of silent dead code).
         Rector\TypeDeclaration\Rector\Property\TypedPropertyFromAssignsRector::class,
         Rector\Php83\Rector\ClassMethod\AddOverrideAttributeToOverriddenMethodsRector::class,
+
+        // Wave 3 PR 8 — return / param type inference + small safe
+        // batch of related type-declaration rules. Every rule here is
+        // pure inference: if Rector can prove a narrower type from
+        // existing structure, it writes it in; otherwise it leaves
+        // the method alone.
+        //
+        // Repository/ excluded from this wave (see withSkip): CS-Cart
+        // DB helpers return mixed / array|false and inference would
+        // over-narrow to `array`, hiding the `false` path.
+        Rector\TypeDeclaration\Rector\ClassMethod\ReturnTypeFromStrictTypedPropertyRector::class,
+        Rector\TypeDeclaration\Rector\ClassMethod\ParamTypeByMethodCallTypeRector::class,
+        Rector\TypeDeclaration\Rector\ClassMethod\ReturnTypeFromReturnNewRector::class,
+        Rector\TypeDeclaration\Rector\ClassMethod\ReturnTypeFromReturnDirectArrayRector::class,
+        Rector\TypeDeclaration\Rector\ClassMethod\ReturnTypeFromStrictNewArrayRector::class,
+        Rector\TypeDeclaration\Rector\Function_\AddFunctionVoidReturnTypeWhereNoReturnRector::class,
+        Rector\TypeDeclaration\Rector\ArrowFunction\AddArrowFunctionReturnTypeRector::class,
     ])
     ->withImportNames(
         importNames: false,

@@ -468,7 +468,7 @@ class SearchService implements SearchServiceInterface
         }
 
         // Sort by discount DESC, limit to 10
-        usort($discounts, fn ($a, $b) => $b['discount'] <=> $a['discount']);
+        usort($discounts, fn ($a, $b): int => $b['discount'] <=> $a['discount']);
         return array_slice($discounts, 0, 10);
     }
 

@@ -64,7 +64,7 @@ class DatabaseHelper implements DatabaseHelperInterface
             return [];
         }
 
-        $productCodes = array_map(fn ($id) => Constants::PRODUCT_CODE_PREFIX . $id, $hotelIds);
+        $productCodes = array_map(fn ($id): string => Constants::PRODUCT_CODE_PREFIX . $id, $hotelIds);
 
         $results = \db_get_hash_array(
             'SELECT product_code, product_id

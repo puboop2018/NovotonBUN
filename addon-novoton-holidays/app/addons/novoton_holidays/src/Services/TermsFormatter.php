@@ -269,7 +269,7 @@ class TermsFormatter
                     $terms[] = $term;
                 }
 
-                usort($terms, fn ($a, $b) => strcmp($a['till_date'], $b['till_date']));
+                usort($terms, fn ($a, $b): int => strcmp($a['till_date'], $b['till_date']));
             } else {
                 $cancelRules = $xml->xpath('//CancelRule') ?: $xml->xpath('//cancelRule') ?: [];
 
@@ -293,7 +293,7 @@ class TermsFormatter
                     }
                 }
 
-                usort($terms, fn ($a, $b) => $b['days_before'] - $a['days_before']);
+                usort($terms, fn ($a, $b): int => $b['days_before'] - $a['days_before']);
             }
         } catch (\Exception $e) {
             fn_log_event('general', 'runtime', ['message' => 'Novoton: cancellation terms parse error: ' . $e->getMessage()]);

@@ -356,7 +356,7 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
             $childrenAges = [];
             if (!empty($bookingData['children_ages'])) {
                 $childrenAges = is_string($bookingData['children_ages'])
-                    ? array_map('intval', array_filter(explode(',', $bookingData['children_ages']), fn ($v) => $v !== ''))
+                    ? array_map('intval', array_filter(explode(',', $bookingData['children_ages']), fn ($v): bool => $v !== ''))
                     : (array) $bookingData['children_ages'];
             }
 
