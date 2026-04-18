@@ -18,6 +18,9 @@
     <rule ref="rulesets/unusedcode.xml">
         <!-- CS-Cart hooks have fixed signatures; unused params are mandatory -->
         <exclude name="UnusedFormalParameter"/>
+        <!-- Cannot detect methods called via string callbacks
+             (e.g. CURLOPT_HEADERFUNCTION, PSR-7 middleware). Low-signal noise. -->
+        <exclude name="UnusedPrivateMethod"/>
     </rule>
 
     <!-- ── Design smells ─────────────────────────────────────────────── -->
@@ -29,12 +32,6 @@
         <!-- Cron entry points legitimately exit(); see CronRunner.
              Low-signal for this codebase overall — skip globally. -->
         <exclude name="ExitExpression"/>
-    </rule>
-
-    <!-- UnusedPrivateMethod cannot detect methods called via callbacks
-         (e.g. CURLOPT_HEADERFUNCTION, PSR-7 middleware). Low-signal noise. -->
-    <rule ref="rulesets/unusedcode.xml/UnusedPrivateMethod">
-        <priority>5</priority>
     </rule>
 
     <!-- ── Naming (basics only) ──────────────────────────────────────── -->
