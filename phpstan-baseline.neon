@@ -697,73 +697,13 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/search.php
 
 		-
-			message: '#^Parameter \#1 \$hotelId of method Tygh\\Addons\\NovotonHolidays\\Services\\AlternativeDateSearcher\:\:search\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/search.php
-
-		-
-			message: '#^Parameter \#1 \$hotelId of method Tygh\\Addons\\NovotonHolidays\\Services\\HotelAvailabilitySearcher\:\:getBoardTypes\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/search.php
-
-		-
-			message: '#^Parameter \#1 \$hotelId of method Tygh\\Addons\\NovotonHolidays\\Services\\HotelAvailabilitySearcher\:\:getRooms\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/search.php
-
-		-
 			message: '#^Parameter \#1 \$params of method Tygh\\Addons\\TravelCore\\Contracts\\SecurityServiceInterface\:\:validateSearchParams\(\) expects array\<string, mixed\>, array\<mixed\> given\.$#'
 			identifier: argument.type
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/search.php
 
 		-
-			message: '#^Parameter \#2 \$checkIn of method Tygh\\Addons\\NovotonHolidays\\Services\\AlternativeDateSearcher\:\:search\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/search.php
-
-		-
-			message: '#^Parameter \#2 \$mealPlan of method Tygh\\Addons\\NovotonHolidays\\Services\\HotelAvailabilitySearcher\:\:getBoardTypes\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/search.php
-
-		-
-			message: '#^Parameter \#2 \$novotonParams of method Tygh\\Addons\\NovotonHolidays\\Services\\SearchResultFormatter\:\:assignToView\(\) expects array\<string, mixed\>, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/search.php
-
-		-
-			message: '#^Parameter \#3 \$nights of method Tygh\\Addons\\NovotonHolidays\\Services\\AlternativeDateSearcher\:\:search\(\) expects int, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/search.php
-
-		-
-			message: '#^Parameter \#4 \$adults of method Tygh\\Addons\\NovotonHolidays\\Services\\AlternativeDateSearcher\:\:search\(\) expects int, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/search.php
-
-		-
-			message: '#^Parameter \#5 \$children of method Tygh\\Addons\\NovotonHolidays\\Services\\AlternativeDateSearcher\:\:search\(\) expects array\<string, mixed\>, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/search.php
-
-		-
 			message: '#^Parameter \#6 \$debugLog of method Tygh\\Addons\\NovotonHolidays\\Services\\SearchResultFormatter\:\:assignToView\(\) expects array\<string, mixed\>, array\<string\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/search.php
-
-		-
-			message: '#^Parameter \#6 \$flexDays of method Tygh\\Addons\\NovotonHolidays\\Services\\AlternativeDateSearcher\:\:search\(\) expects int, mixed given\.$#'
 			identifier: argument.type
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/search.php

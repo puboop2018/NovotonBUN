@@ -14,12 +14,9 @@ declare(strict_types=1);
  */
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
-use Tygh\Addons\NovotonHolidays\Helpers\DebugLogger;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
-use Tygh\Addons\NovotonHolidays\Services\SearchParameterNormalizer;
 use Tygh\Addons\NovotonHolidays\Services\HotelAvailabilitySearcher;
 use Tygh\Addons\NovotonHolidays\Services\AlternativeDateSearcher;
-use Tygh\Addons\NovotonHolidays\Services\SearchResultFormatter;
 use Tygh\Addons\NovotonHolidays\Services\Container;
 
 try {
@@ -32,10 +29,11 @@ try {
     $searchParams = $security->validateSearchParams($_REQUEST);
 
     $normalizer = $container->searchParameterNormalizer();
-    $params     = $normalizer->normalize($searchParams);
+    $query      = $normalizer->normalizeAsDto($searchParams);
+    $novotonParams = $query->toNovotonParamsArray();
 
     // ── 2. Early return: no check-in date ────────────────────────────
-    if (empty($params['check_in'])) {
+    if ($query->checkIn === '') {
         $formatter->assignDefaults('novoton_holidays.please_fill_required_fields');
         return;
     }
@@ -44,11 +42,11 @@ try {
     $debug = ConfigProvider::isDebugMode();
 
     // ── 4. Hotel-specific search ─────────────────────────────────────
-    if (!empty($params['hotel_id'])) {
+    if ($query->isHotelScoped()) {
 
         $searchSvc    = $container->searchService();
         $searcher     = new HotelAvailabilitySearcher($searchSvc, $debug);
-        $searchResult = $searcher->search($params);
+        $searchResult = $searcher->search($novotonParams);
         $debugLog     = $searcher->getDebugLog();
 
         $results      = $searchResult['results'];
@@ -56,17 +54,17 @@ try {
 
         // ── 5. Alternative dates if no availability ──────────────────
         if ($searchResult['no_availability']) {
-            $rooms      = $searcher->getRooms($params['hotel_id']);
-            $boardTypes = $searcher->getBoardTypes($params['hotel_id'], $params['meal_plan']);
+            $rooms      = $searcher->getRooms($query->hotelId);
+            $boardTypes = $searcher->getBoardTypes($query->hotelId, $query->mealPlan);
 
             $altSearcher = new AlternativeDateSearcher($debug);
             $altResult   = $altSearcher->search(
-                $params['hotel_id'],
-                $params['check_in'],
-                $params['nights'],
-                $params['adults'],
-                $params['children'],
-                $params['flex_days'],
+                $query->hotelId,
+                $query->checkIn,
+                $query->nights,
+                $query->totalAdults,
+                $query->childrenAges,
+                $query->flexDays,
                 $rooms,
                 $boardTypes
             );
@@ -83,13 +81,13 @@ try {
             'provider'        => 'novoton',
             'search_dispatch' => 'novoton_booking.search',
             'mode'            => 'search',
-            'search_params'   => $params['novoton_params'],
+            'search_params'   => $novotonParams,
         ]));
 
         // ── 6. Assign everything to the template ─────────────────────
         $formatter->assignToView(
             $results,
-            $params['novoton_params'],
+            $novotonParams,
             $searchResult,
             $altResult,
             $searchParams,
@@ -103,9 +101,9 @@ try {
 
         $redirect_params = [
             'q'                 => $searchQuery ?: $destination,
-            'novoton_check_in'  => $params['check_in'],
-            'novoton_check_out' => $params['check_out'],
-            'novoton_adults'    => $params['adults'],
+            'novoton_check_in'  => $query->checkIn,
+            'novoton_check_out' => $query->checkOut,
+            'novoton_adults'    => $query->totalAdults,
         ];
 
         return [CONTROLLER_STATUS_REDIRECT, 'products.search?' . http_build_query($redirect_params)];
