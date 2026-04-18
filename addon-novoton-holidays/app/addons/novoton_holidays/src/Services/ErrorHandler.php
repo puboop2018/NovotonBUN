@@ -19,16 +19,16 @@ use Tygh\Addons\NovotonHolidays\Constants;
 class ErrorHandler
 {
     /** @var list<array<string, mixed>> Collected errors */
-    private static $errors = [];
+    private static array $errors = [];
 
     /** @var bool Debug mode */
-    private static $debug = false;
+    private static bool $debug = false;
 
     /** @var bool Whether debug has been auto-initialized from settings */
-    private static $initialized = false;
+    private static bool $initialized = false;
 
     /** @var array<string, mixed> Error messages (translatable) */
-    private static $messages = [
+    private static array $messages = [
         Constants::ERROR_INVALID_DATA => 'Invalid data provided',
         Constants::ERROR_API_FAILURE => 'API communication error',
         Constants::ERROR_NOT_AVAILABLE => 'Room not available for selected dates',
@@ -39,7 +39,7 @@ class ErrorHandler
     ];
 
     /** @var array<string, mixed> Romanian error messages */
-    private static $messagesRo = [
+    private static array $messagesRo = [
         Constants::ERROR_INVALID_DATA => 'Date invalide furnizate',
         Constants::ERROR_API_FAILURE => 'Eroare de comunicare cu serverul',
         Constants::ERROR_NOT_AVAILABLE => 'Camera nu este disponibilă pentru datele selectate',

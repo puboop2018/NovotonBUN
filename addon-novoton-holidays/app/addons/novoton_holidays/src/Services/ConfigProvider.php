@@ -42,7 +42,7 @@ class ConfigProvider
     private static $settings;
 
     /** @var string|null Cached addon version, loaded once per request. */
-    private static $version;
+    private static ?string $version = null;
 
     /** @var array<string, mixed>|null Instance-level settings (for injected/test instances). */
     private ?array $instanceSettings;

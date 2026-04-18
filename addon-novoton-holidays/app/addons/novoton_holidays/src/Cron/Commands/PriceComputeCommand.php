@@ -41,6 +41,7 @@ class PriceComputeCommand extends AbstractCronCommand
     /**
      * @return list<string>
      */
+    #[\Override]
     public static function getModes(): array
     {
         return ['compute_prices'];

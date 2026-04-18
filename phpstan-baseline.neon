@@ -25,10 +25,52 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_admin.php
 
 		-
+			message: '#^Only booleans are allowed in &&, SimpleXMLElement given on the left side\.$#'
+			identifier: booleanAnd.leftNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_admin.php
+
+		-
+			message: '#^Only booleans are allowed in &&, int\|false given on the right side\.$#'
+			identifier: booleanAnd.rightNotBoolean
+			count: 2
+			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_admin.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, array\<string, mixed\>\|null given\.$#'
+			identifier: if.condNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_admin.php
+
+		-
 			message: '#^Parameter \#2 \$array of function implode expects array, mixed given\.$#'
 			identifier: argument.type
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_admin.php
+
+		-
+			message: '#^Only booleans are allowed in &&, SimpleXMLElement given on the left side\.$#'
+			identifier: booleanAnd.leftNotBoolean
+			count: 2
+			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_alternatives.php
+
+		-
+			message: '#^Only booleans are allowed in &&, array\<string, mixed\>\|null given on the left side\.$#'
+			identifier: booleanAnd.leftNotBoolean
+			count: 2
+			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_alternatives.php
+
+		-
+			message: '#^Only booleans are allowed in a ternary operator condition, array\<string, mixed\>\|null given\.$#'
+			identifier: ternary.condNotBoolean
+			count: 3
+			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_alternatives.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, array\<string, mixed\>\|null given\.$#'
+			identifier: if.condNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_alternatives.php
 
 		-
 			message: '#^Cannot call method assign\(\) on mixed\.$#'
@@ -97,6 +139,18 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_diagnostic.php
 
 		-
+			message: '#^Only booleans are allowed in an if condition, array\<string, mixed\>\|null given\.$#'
+			identifier: if.condNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_diagnostic.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, mixed given\.$#'
+			identifier: if.condNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_diagnostic.php
+
+		-
 			message: '#^Parameter \#1 \$datetime of function strtotime expects string, mixed given\.$#'
 			identifier: argument.type
 			count: 1
@@ -117,6 +171,12 @@ parameters:
 		-
 			message: '#^Call to an undefined static method Tygh\\Registry\:\:del\(\)\.$#'
 			identifier: staticMethod.notFound
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_holidays.php
+
+		-
+			message: '#^Only booleans are allowed in a negated boolean, array\<string, mixed\>\|null given\.$#'
+			identifier: booleanNot.exprNotBoolean
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_holidays.php
 
@@ -159,6 +219,24 @@ parameters:
 		-
 			message: '#^Cannot cast mixed to string\.$#'
 			identifier: cast.string
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_hotels.php
+
+		-
+			message: '#^Only booleans are allowed in &&, SimpleXMLElement given on the left side\.$#'
+			identifier: booleanAnd.leftNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_hotels.php
+
+		-
+			message: '#^Only booleans are allowed in a ternary operator condition, int\|false given\.$#'
+			identifier: ternary.condNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_hotels.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, mixed given\.$#'
+			identifier: if.condNotBoolean
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_hotels.php
 
@@ -229,8 +307,50 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_price_compare.php
 
 		-
+			message: '#^Loose comparison via "\=\=" is not allowed\.$#'
+			identifier: equal.notAllowed
+			count: 10
+			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_price_compare.php
+
+		-
+			message: '#^Only booleans are allowed in &&, SimpleXMLElement\|false given on the right side\.$#'
+			identifier: booleanAnd.rightNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_price_compare.php
+
+		-
+			message: '#^Only booleans are allowed in a ternary operator condition, mixed given\.$#'
+			identifier: ternary.condNotBoolean
+			count: 2
+			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_price_compare.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, SimpleXMLElement\|false given\.$#'
+			identifier: if.condNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_price_compare.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, mixed given\.$#'
+			identifier: if.condNotBoolean
+			count: 2
+			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_price_compare.php
+
+		-
 			message: '#^Cannot cast mixed to string\.$#'
 			identifier: cast.string
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_prices.php
+
+		-
+			message: '#^Loose comparison via "\=\=" is not allowed\.$#'
+			identifier: equal.notAllowed
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_prices.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, SimpleXMLElement given\.$#'
+			identifier: if.condNotBoolean
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_prices.php
 
@@ -361,6 +481,12 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_tools.php
 
 		-
+			message: '#^Only booleans are allowed in an if condition, mixed given\.$#'
+			identifier: if.condNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_tools.php
+
+		-
 			message: '#^Parameter \#1 \$num of function number_format expects float, mixed given\.$#'
 			identifier: argument.type
 			count: 1
@@ -393,6 +519,18 @@ parameters:
 		-
 			message: '#^Function _nvt_get_cached_hotel_info\(\) should return SimpleXMLElement\|null but returns mixed\.$#'
 			identifier: return.type
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking.php
+
+		-
+			message: '#^Loose comparison via "\=\=" is not allowed\.$#'
+			identifier: equal.notAllowed
+			count: 8
+			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking.php
+
+		-
+			message: '#^Only booleans are allowed in a negated boolean, Tygh\\Addons\\NovotonHolidays\\NovotonApi\|null given\.$#'
+			identifier: booleanNot.exprNotBoolean
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking.php
 
@@ -457,6 +595,36 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/add_to_cart.php
 
 		-
+			message: '#^Only booleans are allowed in a negated boolean, SimpleXMLElement\|false\|null given\.$#'
+			identifier: booleanNot.exprNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/add_to_cart.php
+
+		-
+			message: '#^Only booleans are allowed in a ternary operator condition, Tygh\\Addons\\NovotonHolidays\\NovotonApi\|null given\.$#'
+			identifier: ternary.condNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/add_to_cart.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, SimpleXMLElement given\.$#'
+			identifier: if.condNotBoolean
+			count: 2
+			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/add_to_cart.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, Tygh\\Addons\\NovotonHolidays\\NovotonApi\|null given\.$#'
+			identifier: if.condNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/add_to_cart.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, mixed given\.$#'
+			identifier: if.condNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/add_to_cart.php
+
+		-
 			message: '#^Parameter \#1 \$identifier of method Tygh\\Addons\\TravelCore\\Contracts\\SecurityServiceInterface\:\:checkBookingRateLimit\(\) expects string, mixed given\.$#'
 			identifier: argument.type
 			count: 1
@@ -499,6 +667,36 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/ajax_recalculate_price.php
 
 		-
+			message: '#^Only booleans are allowed in &&, SimpleXMLElement\|false given on the left side\.$#'
+			identifier: booleanAnd.leftNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/ajax_recalculate_price.php
+
+		-
+			message: '#^Only booleans are allowed in &&, string given on the left side\.$#'
+			identifier: booleanAnd.leftNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/ajax_recalculate_price.php
+
+		-
+			message: '#^Only booleans are allowed in a negated boolean, SimpleXMLElement\|false given\.$#'
+			identifier: booleanNot.exprNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/ajax_recalculate_price.php
+
+		-
+			message: '#^Only booleans are allowed in a negated boolean, Tygh\\Addons\\NovotonHolidays\\NovotonApi\|null given\.$#'
+			identifier: booleanNot.exprNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/ajax_recalculate_price.php
+
+		-
+			message: '#^Only booleans are allowed in a negated boolean, int\|false given\.$#'
+			identifier: booleanNot.exprNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/ajax_recalculate_price.php
+
+		-
 			message: '#^Parameter \#1 \$callback of function array_map expects \(callable\(mixed\)\: mixed\)\|null, ''intval'' given\.$#'
 			identifier: argument.type
 			count: 1
@@ -523,6 +721,30 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/booking_form.php
 
 		-
+			message: '#^Only booleans are allowed in &&, SimpleXMLElement given on the left side\.$#'
+			identifier: booleanAnd.leftNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/booking_form.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, Tygh\\Addons\\NovotonHolidays\\NovotonApi\|null given\.$#'
+			identifier: if.condNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/booking_form.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, int\|false given\.$#'
+			identifier: if.condNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/booking_form.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, string given\.$#'
+			identifier: if.condNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/booking_form.php
+
+		-
 			message: '#^Cannot access offset ''auth'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 2
@@ -543,6 +765,12 @@ parameters:
 		-
 			message: '#^Cannot call method getID\(\) on mixed\.$#'
 			identifier: method.nonObject
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/edit_booking.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, int\|false given\.$#'
+			identifier: if.condNotBoolean
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/edit_booking.php
 
@@ -775,6 +1003,18 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_export.php
 
 		-
+			message: '#^Loose comparison via "\=\=" is not allowed\.$#'
+			identifier: equal.notAllowed
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_export.php
+
+		-
+			message: '#^Only booleans are allowed in a negated boolean, mixed given\.$#'
+			identifier: booleanNot.exprNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_export.php
+
+		-
 			message: '#^Parameter \#1 \$filename of function file_exists expects string, mixed given\.$#'
 			identifier: argument.type
 			count: 1
@@ -832,6 +1072,12 @@ parameters:
 			message: '#^Cannot access offset ''product_id'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_holidays.php
+
+		-
+			message: '#^Loose comparison via "\=\=" is not allowed\.$#'
+			identifier: equal.notAllowed
+			count: 3
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_holidays.php
 
 		-
@@ -907,6 +1153,18 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/bookings.php
 
 		-
+			message: '#^Only booleans are allowed in a negated boolean, Tygh\\Addons\\NovotonHolidays\\NovotonApi\|null given\.$#'
+			identifier: booleanNot.exprNotBoolean
+			count: 2
+			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/bookings.php
+
+		-
+			message: '#^Only booleans are allowed in a ternary operator condition, array\<string, mixed\>\|null given\.$#'
+			identifier: ternary.condNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/bookings.php
+
+		-
 			message: '#^Parameter \#1 \$idNum of method Tygh\\Addons\\NovotonHolidays\\Api\\ReservationApiClient\:\:getReservationInfo\(\) expects string, mixed given\.$#'
 			identifier: argument.type
 			count: 1
@@ -943,6 +1201,30 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/email.php
 
 		-
+			message: '#^Only booleans are allowed in &&, int\|false given on the right side\.$#'
+			identifier: booleanAnd.rightNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/email.php
+
+		-
+			message: '#^Only booleans are allowed in a ternary operator condition, Tygh\\Addons\\NovotonHolidays\\Services\\FeatureMapper\|null given\.$#'
+			identifier: ternary.condNotBoolean
+			count: 4
+			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/email.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, int\<0, max\>\|false given\.$#'
+			identifier: if.condNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/email.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, int\|false given\.$#'
+			identifier: if.condNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/email.php
+
+		-
 			message: '#^Cannot access offset ''coefficient'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
@@ -970,6 +1252,30 @@ parameters:
 			message: '#^Function fn_novoton_holidays_get_free_cancellation_date\(\) should return string\|null but returns mixed\.$#'
 			identifier: return.type
 			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/formatting.php
+
+		-
+			message: '#^Loose comparison via "\=\=" is not allowed\.$#'
+			identifier: equal.notAllowed
+			count: 2
+			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/formatting.php
+
+		-
+			message: '#^Only booleans are allowed in &&, int\|false given on the right side\.$#'
+			identifier: booleanAnd.rightNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/formatting.php
+
+		-
+			message: '#^Only booleans are allowed in a negated boolean, int\|false given\.$#'
+			identifier: booleanNot.exprNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/formatting.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, int\|false given\.$#'
+			identifier: if.condNotBoolean
+			count: 3
 			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/formatting.php
 
 		-
@@ -1059,6 +1365,12 @@ parameters:
 		-
 			message: '#^Function fn_novoton_holidays_get_api\(\) should return Tygh\\Addons\\NovotonHolidays\\NovotonApi\|null but returns mixed\.$#'
 			identifier: return.type
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/helpers.php
+
+		-
+			message: '#^Only booleans are allowed in a negated boolean, Tygh\\Addons\\NovotonHolidays\\NovotonApi\|null given\.$#'
+			identifier: booleanNot.exprNotBoolean
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/helpers.php
 
@@ -1192,6 +1504,24 @@ parameters:
 			message: '#^Function fn_novoton_holidays_get_resorts_for_settings\(\) should return array\<string, mixed\> but returns array\<list\>\.$#'
 			identifier: return.type
 			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/hotels.php
+
+		-
+			message: '#^Loose comparison via "\=\=" is not allowed\.$#'
+			identifier: equal.notAllowed
+			count: 2
+			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/hotels.php
+
+		-
+			message: '#^Only booleans are allowed in &&, int\|false given on the right side\.$#'
+			identifier: booleanAnd.rightNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/hotels.php
+
+		-
+			message: '#^Only booleans are allowed in a negated boolean, Tygh\\Addons\\NovotonHolidays\\NovotonApi\|null given\.$#'
+			identifier: booleanNot.exprNotBoolean
+			count: 3
 			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/hotels.php
 
 		-
@@ -1519,6 +1849,12 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/product_hooks.php
 
 		-
+			message: '#^Only booleans are allowed in an if condition, int\|false given\.$#'
+			identifier: if.condNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Api/AdultOnlyDetector.php
+
+		-
 			message: '#^Binary operation "\." between mixed and ''_'' results in an error\.$#'
 			identifier: binaryOp.invalid
 			count: 1
@@ -1528,6 +1864,12 @@ parameters:
 			message: '#^Cannot cast mixed to int\.$#'
 			identifier: cast.int
 			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Api/ApiClientBase.php
+
+		-
+			message: '#^Only booleans are allowed in a negated boolean, Tygh\\Addons\\NovotonHolidays\\Services\\CacheServiceInterface\|null given\.$#'
+			identifier: booleanNot.exprNotBoolean
+			count: 2
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Api/ApiClientBase.php
 
 		-
@@ -1557,6 +1899,24 @@ parameters:
 		-
 			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Api\\AvailabilityApiClient\:\:getHotelQuotaAll\(\) should return array\<string, mixed\> but returns mixed\.$#'
 			identifier: return.type
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Api/AvailabilityApiClient.php
+
+		-
+			message: '#^Only booleans are allowed in &&, SimpleXMLElement given on the right side\.$#'
+			identifier: booleanAnd.rightNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Api/AvailabilityApiClient.php
+
+		-
+			message: '#^Only booleans are allowed in a negated boolean, SimpleXMLElement\|null given\.$#'
+			identifier: booleanNot.exprNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Api/AvailabilityApiClient.php
+
+		-
+			message: '#^Only booleans are allowed in a ternary operator condition, string given\.$#'
+			identifier: ternary.condNotBoolean
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Api/AvailabilityApiClient.php
 
@@ -1591,6 +1951,18 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Api/AvailabilityApiClient.php
 
 		-
+			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Api\\AvailabilityApiClient\:\:getHotelQuotaAll\(\) should be covariant with return type \(array\<string, string\>\) of method Tygh\\Addons\\NovotonHolidays\\Api\\Contracts\\AvailabilityApiClientInterface\:\:getHotelQuotaAll\(\)$#'
+			identifier: method.childReturnType
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Api/AvailabilityApiClient.php
+
+		-
+			message: '#^Parameter \#1 \$hotelIds \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Api\\HotelApiClient\:\:getHotelInfoBatch\(\) should be contravariant with parameter \$hotelIds \(array\<string\>\) of method Tygh\\Addons\\NovotonHolidays\\Api\\Contracts\\HotelApiClientInterface\:\:getHotelInfoBatch\(\)$#'
+			identifier: method.childParameterType
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Api/HotelApiClient.php
+
+		-
 			message: '#^Parameter \#1 \$rawString of method Tygh\\Addons\\NovotonHolidays\\NovotonXmlParser\:\:cleanAndParse\(\) expects string\|false\|null, mixed given\.$#'
 			identifier: argument.type
 			count: 1
@@ -1615,6 +1987,12 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Api/HotelApiClient.php
 
 		-
+			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Api\\HotelApiClient\:\:getHotelInfoBatch\(\) should be covariant with return type \(array\<string, SimpleXMLElement\|false\>\) of method Tygh\\Addons\\NovotonHolidays\\Api\\Contracts\\HotelApiClientInterface\:\:getHotelInfoBatch\(\)$#'
+			identifier: method.childReturnType
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Api/HotelApiClient.php
+
+		-
 			message: '#^Cannot cast mixed to int\.$#'
 			identifier: cast.int
 			count: 1
@@ -1627,6 +2005,12 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Api/NovotonNormalizer.php
 
 		-
+			message: '#^Only booleans are allowed in an if condition, int\|false given\.$#'
+			identifier: if.condNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Api/NovotonNormalizer.php
+
+		-
 			message: '#^Binary operation "\." between non\-falsy\-string and mixed results in an error\.$#'
 			identifier: binaryOp.invalid
 			count: 2
@@ -1636,6 +2020,12 @@ parameters:
 			message: '#^Cannot cast mixed to int\.$#'
 			identifier: cast.int
 			count: 4
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Api/PricingApiClient.php
+
+		-
+			message: '#^Only booleans are allowed in a ternary operator condition, string given\.$#'
+			identifier: ternary.condNotBoolean
+			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Api/PricingApiClient.php
 
 		-
@@ -1661,6 +2051,12 @@ parameters:
 			identifier: argument.type
 			count: 3
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Api/PricingApiClient.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, int\|false given\.$#'
+			identifier: if.condNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Api/PropertyTypeDetector.php
 
 		-
 			message: '#^Argument of an invalid type mixed supplied for foreach, only iterables are supported\.$#'
@@ -1747,6 +2143,12 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Api/ReservationApiClient.php
 
 		-
+			message: '#^Only booleans are allowed in a ternary operator condition, string given\.$#'
+			identifier: ternary.condNotBoolean
+			count: 3
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Api/ReservationApiClient.php
+
+		-
 			message: '#^Parameter \#1 \$guests of method Tygh\\Addons\\NovotonHolidays\\Api\\ReservationApiClient\:\:buildGuestsXml\(\) expects array\<string, mixed\>, mixed given\.$#'
 			identifier: argument.type
 			count: 2
@@ -1816,6 +2218,24 @@ parameters:
 			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Cron\\Commands\\AddProductsCommand\:\:getExcludedResorts\(\) should return list\<string\> but returns list\<mixed\>\.$#'
 			identifier: return.type
 			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/AddProductsCommand.php
+
+		-
+			message: '#^Only booleans are allowed in &&, SimpleXMLElement given on the left side\.$#'
+			identifier: booleanAnd.leftNotBoolean
+			count: 2
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/AddProductsCommand.php
+
+		-
+			message: '#^Only booleans are allowed in &&, array\<string, mixed\>\|null given on the left side\.$#'
+			identifier: booleanAnd.leftNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/AddProductsCommand.php
+
+		-
+			message: '#^Only booleans are allowed in a negated boolean, int given\.$#'
+			identifier: booleanNot.exprNotBoolean
+			count: 2
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/AddProductsCommand.php
 
 		-
@@ -1954,6 +2374,12 @@ parameters:
 			message: '#^Cannot cast mixed to int\.$#'
 			identifier: cast.int
 			count: 2
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/AlternativesCommand.php
+
+		-
+			message: '#^Only booleans are allowed in a negated boolean, SimpleXMLElement given\.$#'
+			identifier: booleanNot.exprNotBoolean
+			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/AlternativesCommand.php
 
 		-
@@ -2371,6 +2797,12 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/FullSyncCommand.php
 
 		-
+			message: '#^Only booleans are allowed in an if condition, int\|false given\.$#'
+			identifier: if.condNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/HotelListSyncCommand.php
+
+		-
 			message: '#^Binary operation "\." between ''Duration\: '' and mixed results in an error\.$#'
 			identifier: binaryOp.invalid
 			count: 1
@@ -2470,6 +2902,36 @@ parameters:
 			message: '#^Cannot cast mixed to string\.$#'
 			identifier: cast.string
 			count: 2
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/OffersUpdateCommand.php
+
+		-
+			message: '#^Only booleans are allowed in &&, SimpleXMLElement given on the left side\.$#'
+			identifier: booleanAnd.leftNotBoolean
+			count: 2
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/OffersUpdateCommand.php
+
+		-
+			message: '#^Only booleans are allowed in a negated boolean, SimpleXMLElement given\.$#'
+			identifier: booleanNot.exprNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/OffersUpdateCommand.php
+
+		-
+			message: '#^Only booleans are allowed in a negated boolean, int given\.$#'
+			identifier: booleanNot.exprNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/OffersUpdateCommand.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, SimpleXMLElement given\.$#'
+			identifier: if.condNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/OffersUpdateCommand.php
+
+		-
+			message: '#^PHPDoc tag @var with type mixed is not subtype of type SimpleXMLElement\.$#'
+			identifier: varTag.type
+			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/OffersUpdateCommand.php
 
 		-
@@ -2587,6 +3049,12 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/ResInfoCommand.php
 
 		-
+			message: '#^Only booleans are allowed in a negated boolean, SimpleXMLElement given\.$#'
+			identifier: booleanNot.exprNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/ResInfoCommand.php
+
+		-
 			message: '#^Parameter \#1 \$idNum of method Tygh\\Addons\\NovotonHolidays\\Api\\Contracts\\ReservationApiClientInterface\:\:getReservationInfo\(\) expects string, mixed given\.$#'
 			identifier: argument.type
 			count: 1
@@ -2614,6 +3082,18 @@ parameters:
 			message: '#^Cannot cast mixed to int\.$#'
 			identifier: cast.int
 			count: 2
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/RoomPriceCheckCommand.php
+
+		-
+			message: '#^Only booleans are allowed in a ternary operator condition, string given\.$#'
+			identifier: ternary.condNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/RoomPriceCheckCommand.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, string given\.$#'
+			identifier: if.condNotBoolean
+			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/RoomPriceCheckCommand.php
 
 		-
@@ -2651,6 +3131,12 @@ parameters:
 			identifier: encapsedStringPart.nonString
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/RoomPriceCheckCommand.php
+
+		-
+			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Cron\\CronDispatcher\:\:dispatch\(\) should be covariant with return type \(array\{success\: bool, error\?\: string, message\?\: string\}\) of method Tygh\\Addons\\TravelCore\\Contracts\\CronDispatcherInterface\:\:dispatch\(\)$#'
+			identifier: method.childReturnType
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/CronDispatcher.php
 
 		-
 			message: '#^Binary operation "\+" between mixed and int\<0, max\> results in an error\.$#'
@@ -2691,6 +3177,18 @@ parameters:
 		-
 			message: '#^Cannot use \+\+ on mixed\.$#'
 			identifier: postInc.type
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/AbstractBatchedSync.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, array\<string, mixed\>\|null given\.$#'
+			identifier: if.condNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/AbstractBatchedSync.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, mixed given\.$#'
+			identifier: if.condNotBoolean
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/AbstractBatchedSync.php
 
@@ -2809,6 +3307,18 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/BatchedHotelFacilitiesSyncV2.php
 
 		-
+			message: '#^Only booleans are allowed in &&, array\<string, mixed\>\|null given on the left side\.$#'
+			identifier: booleanAnd.leftNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/BatchedHotelFacilitiesSyncV2.php
+
+		-
+			message: '#^Parameter \#1 \$batch \(array\<int, int\|string\>\) of method Tygh\\Addons\\NovotonHolidays\\Helpers\\BatchedHotelFacilitiesSyncV2\:\:preBatch\(\) should be contravariant with parameter \$batch \(array\<int\|string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Helpers\\AbstractBatchedSync\:\:preBatch\(\)$#'
+			identifier: method.childParameterType
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/BatchedHotelFacilitiesSyncV2.php
+
+		-
 			message: '#^Parameter \#1 \$datetime of function strtotime expects string, mixed given\.$#'
 			identifier: argument.type
 			count: 1
@@ -2901,6 +3411,30 @@ parameters:
 		-
 			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\BatchedHotelInfoSyncV2\:\:getItemsToSync\(\) should return array\<string, mixed\> but returns mixed\.$#'
 			identifier: return.type
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/BatchedHotelInfoSyncV2.php
+
+		-
+			message: '#^Only booleans are allowed in &&, SimpleXMLElement given on the left side\.$#'
+			identifier: booleanAnd.leftNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/BatchedHotelInfoSyncV2.php
+
+		-
+			message: '#^Only booleans are allowed in a negated boolean, mixed given\.$#'
+			identifier: booleanNot.exprNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/BatchedHotelInfoSyncV2.php
+
+		-
+			message: '#^PHPDoc tag @var with type mixed is not subtype of type SimpleXMLElement\.$#'
+			identifier: varTag.type
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/BatchedHotelInfoSyncV2.php
+
+		-
+			message: '#^Parameter \#1 \$batch \(array\<int, int\|string\>\) of method Tygh\\Addons\\NovotonHolidays\\Helpers\\BatchedHotelInfoSyncV2\:\:preBatch\(\) should be contravariant with parameter \$batch \(array\<int\|string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Helpers\\AbstractBatchedSync\:\:preBatch\(\)$#'
+			identifier: method.childParameterType
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/BatchedHotelInfoSyncV2.php
 
@@ -3025,6 +3559,18 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/BatchedPriceInfoSyncV2.php
 
 		-
+			message: '#^Only booleans are allowed in a negated boolean, SimpleXMLElement given\.$#'
+			identifier: booleanNot.exprNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/BatchedPriceInfoSyncV2.php
+
+		-
+			message: '#^Parameter \#1 \$batch \(array\<int, int\|string\>\) of method Tygh\\Addons\\NovotonHolidays\\Helpers\\BatchedPriceInfoSyncV2\:\:preBatch\(\) should be contravariant with parameter \$batch \(array\<int\|string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Helpers\\AbstractBatchedSync\:\:preBatch\(\)$#'
+			identifier: method.childParameterType
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/BatchedPriceInfoSyncV2.php
+
+		-
 			message: '#^Parameter \#1 \$callback of function array_map expects \(callable\(mixed\)\: mixed\)\|null, Closure\(array\)\: non\-falsy\-string given\.$#'
 			identifier: argument.type
 			count: 1
@@ -3139,6 +3685,12 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/DatabaseHelper.php
 
 		-
+			message: '#^Return type \(array\<string\>\) of method Tygh\\Addons\\NovotonHolidays\\Helpers\\DatabaseHelper\:\:getExistingHotelIds\(\) should be covariant with return type \(list\<string\>\) of method Tygh\\Addons\\NovotonHolidays\\Helpers\\DatabaseHelperInterface\:\:getExistingHotelIds\(\)$#'
+			identifier: method.childReturnType
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/DatabaseHelper.php
+
+		-
 			message: '#^Argument of an invalid type mixed supplied for foreach, only iterables are supported\.$#'
 			identifier: foreach.nonIterable
 			count: 5
@@ -3175,6 +3727,12 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/JsonDecoder.php
 
 		-
+			message: '#^Only booleans are allowed in a ternary operator condition, string given\.$#'
+			identifier: ternary.condNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/JsonDecoder.php
+
+		-
 			message: '#^Cannot cast mixed to int\.$#'
 			identifier: cast.int
 			count: 1
@@ -3189,6 +3747,18 @@ parameters:
 		-
 			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\ProductFactory\:\:createFromHotel\(\) should return int\|null but returns mixed\.$#'
 			identifier: return.type
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/ProductFactory.php
+
+		-
+			message: '#^Only booleans are allowed in &&, SimpleXMLElement given on the left side\.$#'
+			identifier: booleanAnd.leftNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/ProductFactory.php
+
+		-
+			message: '#^Only booleans are allowed in a negated boolean, SimpleXMLElement given\.$#'
+			identifier: booleanNot.exprNotBoolean
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/ProductFactory.php
 
@@ -3289,6 +3859,18 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/StateManager.php
 
 		-
+			message: '#^Only booleans are allowed in a negated boolean, resource\|null given\.$#'
+			identifier: booleanNot.exprNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/StateManager.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, resource\|null given\.$#'
+			identifier: if.condNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/StateManager.php
+
+		-
 			message: '#^Parameter \#1 \$array of function array_slice expects array, mixed given\.$#'
 			identifier: argument.type
 			count: 1
@@ -3345,6 +3927,18 @@ parameters:
 		-
 			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Helpers\\SyncLogger\:\:logToDatabase\(\) should return int\|false but returns mixed\.$#'
 			identifier: return.type
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/SyncLogger.php
+
+		-
+			message: '#^Only booleans are allowed in a ternary operator condition, string given\.$#'
+			identifier: ternary.condNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/SyncLogger.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, \(callable\)\|null given\.$#'
+			identifier: if.condNotBoolean
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Helpers/SyncLogger.php
 
@@ -3439,6 +4033,36 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/HotelSync.php
 
 		-
+			message: '#^Only booleans are allowed in a negated boolean, SimpleXMLElement given\.$#'
+			identifier: booleanNot.exprNotBoolean
+			count: 3
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/HotelSync.php
+
+		-
+			message: '#^Only booleans are allowed in a ternary operator condition, string\|null given\.$#'
+			identifier: ternary.condNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/HotelSync.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, \(callable\)\|null given\.$#'
+			identifier: if.condNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/HotelSync.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, SimpleXMLElement given\.$#'
+			identifier: if.condNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/HotelSync.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, int\|false given\.$#'
+			identifier: if.condNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/HotelSync.php
+
+		-
 			message: '#^Parameter \#1 \$hotelId of method Tygh\\Addons\\NovotonHolidays\\Api\\Contracts\\HotelApiClientInterface\:\:getHotelInfo\(\) expects string, mixed given\.$#'
 			identifier: argument.type
 			count: 1
@@ -3505,6 +4129,42 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/HotelSync.php
 
 		-
+			message: '#^Access to an undefined property object\:\:\$lastError\.$#'
+			identifier: property.notFound
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/NovotonApi.php
+
+		-
+			message: '#^Access to an undefined property object\:\:\$lastHttpCode\.$#'
+			identifier: property.notFound
+			count: 2
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/NovotonApi.php
+
+		-
+			message: '#^Access to an undefined property object\:\:\$lastRequest\.$#'
+			identifier: property.notFound
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/NovotonApi.php
+
+		-
+			message: '#^Access to an undefined property object\:\:\$lastRequestFormatted\.$#'
+			identifier: property.notFound
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/NovotonApi.php
+
+		-
+			message: '#^Access to an undefined property object\:\:\$lastResponse\.$#'
+			identifier: property.notFound
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/NovotonApi.php
+
+		-
+			message: '#^Access to an undefined property object\:\:\$lastResponseRaw\.$#'
+			identifier: property.notFound
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/NovotonApi.php
+
+		-
 			message: '#^Cannot cast mixed to int\.$#'
 			identifier: cast.int
 			count: 2
@@ -3519,6 +4179,18 @@ parameters:
 		-
 			message: '#^Method Tygh\\Addons\\NovotonHolidays\\NovotonApi\:\:getLastRequestFormatted\(\) should return array\<string, mixed\> but returns array\.$#'
 			identifier: return.type
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/NovotonApi.php
+
+		-
+			message: '#^Only booleans are allowed in a negated boolean, Tygh\\Addons\\NovotonHolidays\\Services\\CacheServiceInterface\|null given\.$#'
+			identifier: booleanNot.exprNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/NovotonApi.php
+
+		-
+			message: '#^Only booleans are allowed in a ternary operator condition, string\|null given\.$#'
+			identifier: ternary.condNotBoolean
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/NovotonApi.php
 
@@ -3550,6 +4222,24 @@ parameters:
 			message: '#^Cannot cast mixed to int\.$#'
 			identifier: cast.int
 			count: 5
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/NovotonHttpClient.php
+
+		-
+			message: '#^Only booleans are allowed in a negated boolean, string given\.$#'
+			identifier: booleanNot.exprNotBoolean
+			count: 2
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/NovotonHttpClient.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, int\|false given\.$#'
+			identifier: if.condNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/NovotonHttpClient.php
+
+		-
+			message: '#^Only booleans are allowed in \|\|, string given on the left side\.$#'
+			identifier: booleanOr.leftNotBoolean
+			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/NovotonHttpClient.php
 
 		-
@@ -3585,6 +4275,18 @@ parameters:
 		-
 			message: '#^Property Tygh\\Addons\\NovotonHolidays\\NovotonHttpClient\:\:\$apiUser \(string\) does not accept mixed\.$#'
 			identifier: assign.propertyType
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/NovotonHttpClient.php
+
+		-
+			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\NovotonHttpClient\:\:getCircuitStatus\(\) should be covariant with return type \(array\{is_open\: bool, failure_count\: int, threshold\: int, last_failure\: string\|null, timeout_seconds\: int, seconds_until_retry\: int\}\) of method Tygh\\Addons\\NovotonHolidays\\HttpClientInterface\:\:getCircuitStatus\(\)$#'
+			identifier: method.childReturnType
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/NovotonHttpClient.php
+
+		-
+			message: '#^Variable \$attempt might not be defined\.$#'
+			identifier: variable.undefined
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/NovotonHttpClient.php
 
@@ -3627,6 +4329,24 @@ parameters:
 		-
 			message: '#^Method Tygh\\Addons\\NovotonHolidays\\PriceInfoSync\:\:getProductsToSync\(\) should return array\<string, mixed\> but returns mixed\.$#'
 			identifier: return.type
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/PriceInfoSync.php
+
+		-
+			message: '#^Only booleans are allowed in &&, SimpleXMLElement given on the left side\.$#'
+			identifier: booleanAnd.leftNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/PriceInfoSync.php
+
+		-
+			message: '#^Only booleans are allowed in a negated boolean, SimpleXMLElement given\.$#'
+			identifier: booleanNot.exprNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/PriceInfoSync.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, Tygh\\Addons\\NovotonHolidays\\NovotonApi\|null given\.$#'
+			identifier: if.condNotBoolean
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/PriceInfoSync.php
 
@@ -3689,6 +4409,18 @@ parameters:
 			identifier: offsetAccess.invalidOffset
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepository.php
+
+		-
+			message: '#^Return type \(list\<array\<string, mixed\>\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelReportingRepository\:\:getCountriesWithPriceCounts\(\) should be covariant with return type \(array\<int, array\{country\: string, cnt\: int\}\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelReportingRepositoryInterface\:\:getCountriesWithPriceCounts\(\)$#'
+			identifier: method.childReturnType
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelReportingRepository.php
+
+		-
+			message: '#^Return type \(list\<array\<string, mixed\>\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelReportingRepository\:\:getResortStatsByCountry\(\) should be covariant with return type \(array\<int, array\{city\: string, hotel_count\: int, with_prices\: int\}\>\) of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelReportingRepositoryInterface\:\:getResortStatsByCountry\(\)$#'
+			identifier: method.childReturnType
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelReportingRepository.php
 
 		-
 			message: '#^Cannot cast mixed to int\.$#'
@@ -3757,6 +4489,36 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/AdminCronService.php
 
 		-
+			message: '#^Only booleans are allowed in &&, SimpleXMLElement\|false given on the left side\.$#'
+			identifier: booleanAnd.leftNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/AdminCronService.php
+
+		-
+			message: '#^Only booleans are allowed in a negated boolean, SimpleXMLElement given\.$#'
+			identifier: booleanNot.exprNotBoolean
+			count: 2
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/AdminCronService.php
+
+		-
+			message: '#^Only booleans are allowed in a negated boolean, int given\.$#'
+			identifier: booleanNot.exprNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/AdminCronService.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, \(callable\)\|null given\.$#'
+			identifier: if.condNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/AdminCronService.php
+
+		-
+			message: '#^PHPDoc tag @var with type mixed is not subtype of type SimpleXMLElement\.$#'
+			identifier: varTag.type
+			count: 2
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/AdminCronService.php
+
+		-
 			message: '#^Parameter \#1 \$hotel_id of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepositoryInterface\:\:linkToProduct\(\) expects string, mixed given\.$#'
 			identifier: argument.type
 			count: 2
@@ -3805,6 +4567,18 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/AdminCronService.php
 
 		-
+			message: '#^Only booleans are allowed in &&, SimpleXMLElement\|false given on the left side\.$#'
+			identifier: booleanAnd.leftNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/AlternativeDateSearcher.php
+
+		-
+			message: '#^Only booleans are allowed in a negated boolean, Tygh\\Addons\\NovotonHolidays\\NovotonApi\|null given\.$#'
+			identifier: booleanNot.exprNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/AlternativeDateSearcher.php
+
+		-
 			message: '#^Parameter \#1 \$boardCode of static method Tygh\\Addons\\TravelCore\\ValueObjects\\BoardType\:\:toDisplayName\(\) expects string, mixed given\.$#'
 			identifier: argument.type
 			count: 1
@@ -3825,6 +4599,24 @@ parameters:
 		-
 			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\AlternativeRequestService\:\:submitAlternativeBookingRequest\(\) should return array\{success\: bool, request_id\: int, novoton_id\: string, message\: string, error\: string\} but returns array\{success\: true, request_id\: int, novoton_id\: mixed, message\: ''alternatives…'', error\: ''''\}\.$#'
 			identifier: return.type
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/AlternativeRequestService.php
+
+		-
+			message: '#^Only booleans are allowed in a negated boolean, int\|false given\.$#'
+			identifier: booleanNot.exprNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/AlternativeRequestService.php
+
+		-
+			message: '#^Only booleans are allowed in a negated boolean, string\|false given\.$#'
+			identifier: booleanNot.exprNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/AlternativeRequestService.php
+
+		-
+			message: '#^Only booleans are allowed in a ternary operator condition, string given\.$#'
+			identifier: ternary.condNotBoolean
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/AlternativeRequestService.php
 
@@ -3937,6 +4729,18 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingAdminProvider.php
 
 		-
+			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Services\\BookingAdminProvider\:\:checkStatus\(\) should be covariant with return type \(array\{changed\: bool, old_status\: string, new_status\: string, error\: string\|null\}\) of method Tygh\\Addons\\TravelCore\\Contracts\\BookingAdminProviderInterface\:\:checkStatus\(\)$#'
+			identifier: method.childReturnType
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingAdminProvider.php
+
+		-
+			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Services\\BookingAdminProvider\:\:handleAction\(\) should be covariant with return type \(array\{redirect\: string, notification\?\: array\{type\: string, title\: string, message\: string\}\}\) of method Tygh\\Addons\\TravelCore\\Contracts\\BookingAdminProviderInterface\:\:handleAction\(\)$#'
+			identifier: method.childReturnType
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingAdminProvider.php
+
+		-
 			message: '#^Cannot access offset ''board_name'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
@@ -4039,6 +4843,12 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingQueryService.php
 
 		-
+			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Services\\BookingQueryService\:\:getStats\(\) should be covariant with return type \(array\{total\: int, pending\: int, confirmed\: int, cancelled\: int, with_orders\: int, orphans\: int\}\) of method Tygh\\Addons\\NovotonHolidays\\Services\\BookingQueryServiceInterface\:\:getStats\(\)$#'
+			identifier: method.childReturnType
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingQueryService.php
+
+		-
 			message: '#^Cannot access offset ''email'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
@@ -4060,6 +4870,24 @@ parameters:
 			message: '#^Cannot cast mixed to int\.$#'
 			identifier: cast.int
 			count: 4
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingService.php
+
+		-
+			message: '#^Only booleans are allowed in a negated boolean, array\<string, mixed\>\|null given\.$#'
+			identifier: booleanNot.exprNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingService.php
+
+		-
+			message: '#^Only booleans are allowed in a ternary operator condition, array\<string, mixed\>\|null given\.$#'
+			identifier: ternary.condNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingService.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, int\|null given\.$#'
+			identifier: if.condNotBoolean
+			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingService.php
 
 		-
@@ -4107,6 +4935,18 @@ parameters:
 		-
 			message: '#^Offset ''products'' on non\-empty\-array\<string, mixed\> on left side of \?\? always exists and is not nullable\.$#'
 			identifier: nullCoalesce.offset
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingSubmissionService.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, SimpleXMLElement given\.$#'
+			identifier: if.condNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingSubmissionService.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, int\|null given\.$#'
+			identifier: if.condNotBoolean
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingSubmissionService.php
 
@@ -4171,9 +5011,21 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/CacheService.php
 
 		-
+			message: '#^Only booleans are allowed in a negated boolean, array\<string, int\|string\>\|null given\.$#'
+			identifier: booleanNot.exprNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/CacheService.php
+
+		-
 			message: '#^Binary operation "\." between non\-falsy\-string and mixed results in an error\.$#'
 			identifier: binaryOp.invalid
 			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/CartAssemblyService.php
+
+		-
+			message: '#^Only booleans are allowed in a negated boolean, int\|false given\.$#'
+			identifier: booleanNot.exprNotBoolean
+			count: 2
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/CartAssemblyService.php
 
 		-
@@ -4258,6 +5110,18 @@ parameters:
 			message: '#^Cannot cast mixed to int\.$#'
 			identifier: cast.int
 			count: 5
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/CronService.php
+
+		-
+			message: '#^Only booleans are allowed in &&, SimpleXMLElement given on the left side\.$#'
+			identifier: booleanAnd.leftNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/CronService.php
+
+		-
+			message: '#^Only booleans are allowed in a negated boolean, SimpleXMLElement given\.$#'
+			identifier: booleanNot.exprNotBoolean
+			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/CronService.php
 
 		-
@@ -4405,6 +5269,24 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/DiagnosticsService.php
 
 		-
+			message: '#^Only booleans are allowed in &&, SimpleXMLElement\|false given on the left side\.$#'
+			identifier: booleanAnd.leftNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/DiagnosticsService.php
+
+		-
+			message: '#^Only booleans are allowed in a negated boolean, SimpleXMLElement given\.$#'
+			identifier: booleanNot.exprNotBoolean
+			count: 2
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/DiagnosticsService.php
+
+		-
+			message: '#^Only booleans are allowed in a negated boolean, array\<string, string\>\|null given\.$#'
+			identifier: booleanNot.exprNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/DiagnosticsService.php
+
+		-
 			message: '#^Parameter \#1 \$array of function array_slice expects array, mixed given\.$#'
 			identifier: argument.type
 			count: 2
@@ -4415,6 +5297,12 @@ parameters:
 			identifier: argument.type
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/DiagnosticsService.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, Closure\|null given\.$#'
+			identifier: if.condNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/DiscountCalculator.php
 
 		-
 			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\ErrorHandler\:\:getMessage\(\) should return string but returns mixed\.$#'
@@ -4459,6 +5347,12 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/FeatureMapper.php
 
 		-
+			message: '#^Only booleans are allowed in a negated boolean, array\<string, mixed\>\|null given\.$#'
+			identifier: booleanNot.exprNotBoolean
+			count: 3
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/FeatureMapper.php
+
+		-
 			message: '#^Parameter \#1 \$callback of function array_map expects \(callable\(mixed\)\: mixed\)\|null, ''intval'' given\.$#'
 			identifier: argument.type
 			count: 1
@@ -4489,6 +5383,12 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/FeeCalculator.php
 
 		-
+			message: '#^Only booleans are allowed in an if condition, Closure\|null given\.$#'
+			identifier: if.condNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/FeeCalculator.php
+
+		-
 			message: '#^Parameter \#1 \$callback of function array_map expects \(callable\(mixed\)\: mixed\)\|null, ''trim'' given\.$#'
 			identifier: argument.type
 			count: 1
@@ -4511,6 +5411,72 @@ parameters:
 			identifier: argument.type
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/FeeCalculator.php
+
+		-
+			message: '#^Return type \(array\<string\>\) of method Tygh\\Addons\\NovotonHolidays\\Services\\FeeCalculator\:\:collectSeasonPriceAgeTypes\(\) should be covariant with return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Services\\FeeCalculatorInterface\:\:collectSeasonPriceAgeTypes\(\)$#'
+			identifier: method.childReturnType
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/FeeCalculator.php
+
+		-
+			message: '#^Only booleans are allowed in &&, SimpleXMLElement\|false given on the left side\.$#'
+			identifier: booleanAnd.leftNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/HotelAvailabilitySearcher.php
+
+		-
+			message: '#^Only booleans are allowed in a negated boolean, SimpleXMLElement\|null given\.$#'
+			identifier: booleanNot.exprNotBoolean
+			count: 3
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/HotelAvailabilitySearcher.php
+
+		-
+			message: '#^Only booleans are allowed in a negated boolean, Tygh\\Addons\\NovotonHolidays\\NovotonApi\|null given\.$#'
+			identifier: booleanNot.exprNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/HotelAvailabilitySearcher.php
+
+		-
+			message: '#^Only booleans are allowed in a negated boolean, array\<string, int\|string\>\|null given\.$#'
+			identifier: booleanNot.exprNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/HotelAvailabilitySearcher.php
+
+		-
+			message: '#^Only booleans are allowed in a ternary operator condition, mixed given\.$#'
+			identifier: ternary.condNotBoolean
+			count: 2
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/HotelAvailabilitySearcher.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, SimpleXMLElement\|false given\.$#'
+			identifier: if.condNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/HotelAvailabilitySearcher.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, SimpleXMLElement\|null given\.$#'
+			identifier: if.condNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/HotelAvailabilitySearcher.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, Tygh\\Addons\\NovotonHolidays\\NovotonApi\|null given\.$#'
+			identifier: if.condNotBoolean
+			count: 2
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/HotelAvailabilitySearcher.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, int\|false given\.$#'
+			identifier: if.condNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/HotelAvailabilitySearcher.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, mixed given\.$#'
+			identifier: if.condNotBoolean
+			count: 3
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/HotelAvailabilitySearcher.php
 
 		-
 			message: '#^Binary operation "\." between mixed and ''/var/cache/'' results in an error\.$#'
@@ -4549,6 +5515,30 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PreOrderPriceVerifier.php
 
 		-
+			message: '#^Only booleans are allowed in &&, mixed given on the left side\.$#'
+			identifier: booleanAnd.leftNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PreOrderPriceVerifier.php
+
+		-
+			message: '#^Only booleans are allowed in a negated boolean, SimpleXMLElement\|false given\.$#'
+			identifier: booleanNot.exprNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PreOrderPriceVerifier.php
+
+		-
+			message: '#^Only booleans are allowed in a negated boolean, Tygh\\Addons\\NovotonHolidays\\NovotonApi\|null given\.$#'
+			identifier: booleanNot.exprNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PreOrderPriceVerifier.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, mixed given\.$#'
+			identifier: if.condNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PreOrderPriceVerifier.php
+
+		-
 			message: '#^Parameter \#1 \$callback of function array_map expects \(callable\(mixed\)\: mixed\)\|null, ''intval'' given\.$#'
 			identifier: argument.type
 			count: 1
@@ -4563,6 +5553,12 @@ parameters:
 		-
 			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\PriceInfoCalculation\:\:collectSeasonPriceAgeTypes\(\) should return array\<string, mixed\> but returns array\<string\>\.$#'
 			identifier: return.type
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoCalculation.php
+
+		-
+			message: '#^Only booleans are allowed in a negated boolean, mixed given\.$#'
+			identifier: booleanNot.exprNotBoolean
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoCalculation.php
 
@@ -4603,6 +5599,24 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoCalculator.php
 
 		-
+			message: '#^Only booleans are allowed in a negated boolean, array\<string, mixed\>\|null given\.$#'
+			identifier: booleanNot.exprNotBoolean
+			count: 2
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoCalculator.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, Closure\|null given\.$#'
+			identifier: if.condNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoCalculator.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, array\<string, mixed\>\|null given\.$#'
+			identifier: if.condNotBoolean
+			count: 2
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoCalculator.php
+
+		-
 			message: '#^Parameter \#1 \$candidates of method Tygh\\Addons\\NovotonHolidays\\Services\\PriceInfoCalculator\:\:findBestBaseRow\(\) expects list\<array\<string, mixed\>\>, mixed given\.$#'
 			identifier: argument.type
 			count: 1
@@ -4627,9 +5641,39 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoFormatter.php
 
 		-
+			message: '#^Only booleans are allowed in an elseif condition, int\|false given\.$#'
+			identifier: elseif.condNotBoolean
+			count: 2
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoFormatter.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, int\|false given\.$#'
+			identifier: if.condNotBoolean
+			count: 2
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoFormatter.php
+
+		-
 			message: '#^Cannot access offset string on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 2
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoParser.php
+
+		-
+			message: '#^Only booleans are allowed in &&, int\|false given on the left side\.$#'
+			identifier: booleanAnd.leftNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoParser.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, Closure\|null given\.$#'
+			identifier: if.condNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoParser.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, int\|false given\.$#'
+			identifier: if.condNotBoolean
+			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoParser.php
 
 		-
@@ -4681,6 +5725,12 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoService.php
 
 		-
+			message: '#^Only booleans are allowed in a negated boolean, SimpleXMLElement given\.$#'
+			identifier: booleanNot.exprNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoService.php
+
+		-
 			message: '#^Parameter \#1 \$json of function json_decode expects string, mixed given\.$#'
 			identifier: argument.type
 			count: 1
@@ -4701,6 +5751,12 @@ parameters:
 		-
 			message: '#^Cannot cast mixed to int\.$#'
 			identifier: cast.int
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceVerificationService.php
+
+		-
+			message: '#^Only booleans are allowed in a negated boolean, SimpleXMLElement\|false given\.$#'
+			identifier: booleanNot.exprNotBoolean
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceVerificationService.php
 
@@ -4767,6 +5823,12 @@ parameters:
 		-
 			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\RoomPriceService\:\:getRoomPrice\(\) should return array\<string, mixed\>\|null but returns mixed\.$#'
 			identifier: return.type
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/RoomPriceService.php
+
+		-
+			message: '#^Only booleans are allowed in a negated boolean, SimpleXMLElement\|false given\.$#'
+			identifier: booleanNot.exprNotBoolean
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/RoomPriceService.php
 
@@ -4951,6 +6013,24 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SearchResultFormatter.php
 
 		-
+			message: '#^Only booleans are allowed in an if condition, array\<string, mixed\>\|null given\.$#'
+			identifier: if.condNotBoolean
+			count: 2
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SearchResultFormatter.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, mixed given\.$#'
+			identifier: if.condNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SearchResultFormatter.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, string\|null given\.$#'
+			identifier: if.condNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SearchResultFormatter.php
+
+		-
 			message: '#^Parameter \#3 \$lang of function fn_novoton_holidays_get_hotel_facilities_by_type expects string, mixed given\.$#'
 			identifier: argument.type
 			count: 1
@@ -5065,8 +6145,20 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SearchService.php
 
 		-
+			message: '#^Only booleans are allowed in a negated boolean, Tygh\\Addons\\NovotonHolidays\\NovotonApi\|null given\.$#'
+			identifier: booleanNot.exprNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SearchService.php
+
+		-
 			message: '#^Parameter \#1 \$array of function array_unique expects an array of values castable to string, list\<mixed\> given\.$#'
 			identifier: argument.type
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SearchService.php
+
+		-
+			message: '#^Parameter \#1 \$discounts \(list\<array\<string, mixed\>\>\) of method Tygh\\Addons\\NovotonHolidays\\Services\\SearchService\:\:getDiscountRange\(\) should be compatible with parameter \$discounts \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Services\\SearchServiceInterface\:\:getDiscountRange\(\)$#'
+			identifier: method.childParameterType
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SearchService.php
 
@@ -5080,6 +6172,12 @@ parameters:
 			message: '#^Parameter \#1 \$quotaValue of static method Tygh\\Addons\\NovotonHolidays\\Services\\SearchService\:\:parseQuotaValue\(\) expects string\|null, mixed given\.$#'
 			identifier: argument.type
 			count: 2
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SearchService.php
+
+		-
+			message: '#^Parameter \#1 \$results \(list\<array\<string, mixed\>\>\) of method Tygh\\Addons\\NovotonHolidays\\Services\\SearchService\:\:deduplicateResults\(\) should be compatible with parameter \$results \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Services\\SearchServiceInterface\:\:deduplicateResults\(\)$#'
+			identifier: method.childParameterType
+			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SearchService.php
 
 		-
@@ -5098,6 +6196,18 @@ parameters:
 			message: '#^Parameter \#2 \$roomType of static method Tygh\\Addons\\TravelCore\\ValueObjects\\RoomType\:\:formatRoomLabel\(\) expects string, mixed given\.$#'
 			identifier: argument.type
 			count: 2
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SearchService.php
+
+		-
+			message: '#^Return type \(list\<array\<string, mixed\>\>\) of method Tygh\\Addons\\NovotonHolidays\\Services\\SearchService\:\:deduplicateResults\(\) should be compatible with return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Services\\SearchServiceInterface\:\:deduplicateResults\(\)$#'
+			identifier: method.childReturnType
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SearchService.php
+
+		-
+			message: '#^Return type \(list\<array\<string, mixed\>\>\) of method Tygh\\Addons\\NovotonHolidays\\Services\\SearchService\:\:getEarlyBookingDiscounts\(\) should be compatible with return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Services\\SearchServiceInterface\:\:getEarlyBookingDiscounts\(\)$#'
+			identifier: method.childReturnType
+			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SearchService.php
 
 		-
@@ -5155,6 +6265,30 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SecurityService.php
 
 		-
+			message: '#^Only booleans are allowed in &&, array\<string, int\|string\>\|null given on the left side\.$#'
+			identifier: booleanAnd.leftNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SecurityService.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, string\|false given\.$#'
+			identifier: if.condNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SecurityService.php
+
+		-
+			message: '#^Only booleans are allowed in \|\|, int\|false given on the left side\.$#'
+			identifier: booleanOr.leftNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SecurityService.php
+
+		-
+			message: '#^Only booleans are allowed in \|\|, int\|false given on the right side\.$#'
+			identifier: booleanOr.rightNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SecurityService.php
+
+		-
 			message: '#^Parameter \#1 \$date of method Tygh\\Addons\\NovotonHolidays\\Services\\SecurityService\:\:isValidDate\(\) expects string, mixed given\.$#'
 			identifier: argument.type
 			count: 1
@@ -5185,6 +6319,18 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SecurityService.php
 
 		-
+			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Services\\SecurityService\:\:checkRateLimit\(\) should be covariant with return type \(array\{allowed\: bool, remaining\: int, reset\: int\}\) of method Tygh\\Addons\\NovotonHolidays\\Services\\SecurityServiceInterface\:\:checkRateLimit\(\)$#'
+			identifier: method.childReturnType
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SecurityService.php
+
+		-
+			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\NovotonHolidays\\Services\\SecurityService\:\:validateBookingData\(\) should be covariant with return type \(array\{valid\: bool, errors\: array\<int, string\>\}\) of method Tygh\\Addons\\TravelCore\\Contracts\\SecurityServiceInterface\:\:validateBookingData\(\)$#'
+			identifier: method.childReturnType
+			count: 2
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SecurityService.php
+
+		-
 			message: '#^Binary operation "\." between mixed and '' \+1 day'' results in an error\.$#'
 			identifier: binaryOp.invalid
 			count: 1
@@ -5200,6 +6346,30 @@ parameters:
 			message: '#^Cannot cast mixed to int\.$#'
 			identifier: cast.int
 			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/TermsFormatter.php
+
+		-
+			message: '#^Loose comparison via "\=\=" is not allowed\.$#'
+			identifier: equal.notAllowed
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/TermsFormatter.php
+
+		-
+			message: '#^Only booleans are allowed in &&, int\|false given on the right side\.$#'
+			identifier: booleanAnd.rightNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/TermsFormatter.php
+
+		-
+			message: '#^Only booleans are allowed in a negated boolean, int\|false given\.$#'
+			identifier: booleanNot.exprNotBoolean
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/TermsFormatter.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, int\|false given\.$#'
+			identifier: if.condNotBoolean
+			count: 3
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/TermsFormatter.php
 
 		-
@@ -5443,16 +6613,82 @@ parameters:
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/backend/sphinx_seo_templates.php
 
 		-
+			message: '#^Loose comparison via "\=\=" is not allowed\.$#'
+			identifier: equal.notAllowed
+			count: 4
+			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/frontend/sphinx_booking.php
+
+		-
 			message: '#^Parameter \#1 \$callback of function array_map expects \(callable\(mixed\)\: mixed\)\|null, ''intval'' given\.$#'
 			identifier: argument.type
 			count: 1
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/frontend/sphinx_booking.php
 
 		-
+			message: '#^Only booleans are allowed in a negated boolean, mixed given\.$#'
+			identifier: booleanNot.exprNotBoolean
+			count: 1
+			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/frontend/sphinx_booking/add_to_cart.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, array\<int, mixed\>\|null given\.$#'
+			identifier: if.condNotBoolean
+			count: 1
+			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/frontend/sphinx_booking/add_to_cart.php
+
+		-
 			message: '#^Binary operation "\." between non\-falsy\-string and mixed results in an error\.$#'
 			identifier: binaryOp.invalid
 			count: 1
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/frontend/sphinx_booking/ajax_recalculate_price.php
+
+		-
+			message: '#^Only booleans are allowed in a negated boolean, mixed given\.$#'
+			identifier: booleanNot.exprNotBoolean
+			count: 1
+			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/frontend/sphinx_booking/ajax_recalculate_price.php
+
+		-
+			message: '#^Only booleans are allowed in a ternary operator condition, string\|false given\.$#'
+			identifier: ternary.condNotBoolean
+			count: 1
+			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/frontend/sphinx_booking/ajax_recalculate_price.php
+
+		-
+			message: '#^Only booleans are allowed in a negated boolean, mixed given\.$#'
+			identifier: booleanNot.exprNotBoolean
+			count: 1
+			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/frontend/sphinx_booking/booking_form.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, array\<int, mixed\>\|null given\.$#'
+			identifier: if.condNotBoolean
+			count: 2
+			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/frontend/sphinx_booking/circuit_add_to_cart.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, array\<int, mixed\>\|null given\.$#'
+			identifier: if.condNotBoolean
+			count: 2
+			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/frontend/sphinx_booking/experience_add_to_cart.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, array\<int, mixed\>\|null given\.$#'
+			identifier: if.condNotBoolean
+			count: 2
+			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/frontend/sphinx_booking/package_add_to_cart.php
+
+		-
+			message: '#^Only booleans are allowed in &&, int\|false given on the left side\.$#'
+			identifier: booleanAnd.leftNotBoolean
+			count: 1
+			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/frontend/sphinx_booking/search.php
+
+		-
+			message: '#^Only booleans are allowed in &&, int\|false given on the right side\.$#'
+			identifier: booleanAnd.rightNotBoolean
+			count: 1
+			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/frontend/sphinx_booking/search.php
 
 		-
 			message: '#^Cannot access offset non\-falsy\-string on mixed\.$#'
@@ -5517,6 +6753,18 @@ parameters:
 		-
 			message: '#^Cannot access offset ''total'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/frontend/sphinx_cron.php
+
+		-
+			message: '#^Only booleans are allowed in a ternary operator condition, mixed given\.$#'
+			identifier: ternary.condNotBoolean
+			count: 1
+			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/frontend/sphinx_cron.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, mixed given\.$#'
+			identifier: if.condNotBoolean
 			count: 1
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/frontend/sphinx_cron.php
 
@@ -5661,6 +6909,12 @@ parameters:
 		-
 			message: '#^Offset ''status'' on array\{status\: string, product_id\: int, reason\: string\} on left side of \?\? always exists and is not nullable\.$#'
 			identifier: nullCoalesce.offset
+			count: 1
+			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/AddProductsCommand.php
+
+		-
+			message: '#^Only booleans are allowed in a ternary operator condition, string given\.$#'
+			identifier: ternary.condNotBoolean
 			count: 1
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/AddProductsCommand.php
 
@@ -6355,6 +7609,18 @@ parameters:
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/FullSyncCommand.php
 
 		-
+			message: '#^Only booleans are allowed in an elseif condition, mixed given\.$#'
+			identifier: elseif.condNotBoolean
+			count: 1
+			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/FullSyncCommand.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, mixed given\.$#'
+			identifier: if.condNotBoolean
+			count: 1
+			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/FullSyncCommand.php
+
+		-
 			message: '#^Part \$error \(mixed\) of encapsed string cannot be cast to string\.$#'
 			identifier: encapsedStringPart.nonString
 			count: 1
@@ -6541,8 +7807,26 @@ parameters:
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/CronDispatcher.php
 
 		-
+			message: '#^Only booleans are allowed in a negated boolean, resource\|false given\.$#'
+			identifier: booleanNot.exprNotBoolean
+			count: 2
+			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/CronDispatcher.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, resource\|null given\.$#'
+			identifier: if.condNotBoolean
+			count: 1
+			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/CronDispatcher.php
+
+		-
 			message: '#^Parameter \#1 \$string of function rtrim expects string, mixed given\.$#'
 			identifier: argument.type
+			count: 1
+			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/CronDispatcher.php
+
+		-
+			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\SphinxHolidays\\Cron\\CronDispatcher\:\:dispatch\(\) should be covariant with return type \(array\{success\: bool, error\?\: string, message\?\: string\}\) of method Tygh\\Addons\\TravelCore\\Contracts\\CronDispatcherInterface\:\:dispatch\(\)$#'
+			identifier: method.childReturnType
 			count: 1
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/CronDispatcher.php
 
@@ -6580,6 +7864,12 @@ parameters:
 			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Helpers\\SphinxProductFactory\:\:resolveCountryName\(\) should return string but returns mixed\.$#'
 			identifier: return.type
 			count: 1
+			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Helpers/SphinxProductFactory.php
+
+		-
+			message: '#^Only booleans are allowed in a negated boolean, int given\.$#'
+			identifier: booleanNot.exprNotBoolean
+			count: 2
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Helpers/SphinxProductFactory.php
 
 		-
@@ -6633,6 +7923,12 @@ parameters:
 		-
 			message: '#^Property Tygh\\Addons\\SphinxHolidays\\Helpers\\SphinxProductFactory\:\:\$validCountryCodes \(array\<string, string\>\) does not accept mixed\.$#'
 			identifier: assign.propertyType
+			count: 1
+			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Helpers/SphinxProductFactory.php
+
+		-
+			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\SphinxHolidays\\Helpers\\SphinxProductFactory\:\:createFromHotel\(\) should be covariant with return type \(array\{status\: string, product_id\: int, reason\: string\}\) of method Tygh\\Addons\\SphinxHolidays\\Helpers\\SphinxProductFactoryInterface\:\:createFromHotel\(\)$#'
+			identifier: method.childReturnType
 			count: 1
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Helpers/SphinxProductFactory.php
 
@@ -6757,6 +8053,12 @@ parameters:
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/AbstractSyncService.php
 
 		-
+			message: '#^Only booleans are allowed in a ternary operator condition, mixed given\.$#'
+			identifier: ternary.condNotBoolean
+			count: 1
+			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/AbstractSyncService.php
+
+		-
 			message: '#^Parameter \#1 \$json of function json_decode expects string, mixed given\.$#'
 			identifier: argument.type
 			count: 2
@@ -6771,6 +8073,18 @@ parameters:
 		-
 			message: '#^Possibly invalid array key type mixed\.$#'
 			identifier: offsetAccess.invalidOffset
+			count: 1
+			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/BookingAdminProvider.php
+
+		-
+			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\SphinxHolidays\\Services\\BookingAdminProvider\:\:checkStatus\(\) should be covariant with return type \(array\{changed\: bool, old_status\: string, new_status\: string, error\: string\|null\}\) of method Tygh\\Addons\\TravelCore\\Contracts\\BookingAdminProviderInterface\:\:checkStatus\(\)$#'
+			identifier: method.childReturnType
+			count: 1
+			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/BookingAdminProvider.php
+
+		-
+			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\SphinxHolidays\\Services\\BookingAdminProvider\:\:handleAction\(\) should be covariant with return type \(array\{redirect\: string, notification\?\: array\{type\: string, title\: string, message\: string\}\}\) of method Tygh\\Addons\\TravelCore\\Contracts\\BookingAdminProviderInterface\:\:handleAction\(\)$#'
+			identifier: method.childReturnType
 			count: 1
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/BookingAdminProvider.php
 
@@ -6796,6 +8110,12 @@ parameters:
 			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Services\\BookingRetryService\:\:retry\(\) should return array\{success\: bool, message\: string, booking_ref\: string\|null\} but returns array\{success\: true, message\: ''Booking retry…'', booking_ref\: mixed\}\.$#'
 			identifier: return.type
 			count: 1
+			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/BookingRetryService.php
+
+		-
+			message: '#^Only booleans are allowed in a negated boolean, mixed given\.$#'
+			identifier: booleanNot.exprNotBoolean
+			count: 2
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/BookingRetryService.php
 
 		-
@@ -6955,9 +8275,21 @@ parameters:
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/CacheEndpointService.php
 
 		-
+			message: '#^Only booleans are allowed in a ternary operator condition, Tygh\\Addons\\TravelCore\\Services\\CommissionCalculator\|null given\.$#'
+			identifier: ternary.condNotBoolean
+			count: 1
+			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/CacheEndpointService.php
+
+		-
 			message: '#^Parameter \#1 \$items of method Tygh\\Addons\\SphinxHolidays\\Services\\CacheEndpointService\:\:normalizeDeals\(\) expects array\<string, mixed\>, mixed given\.$#'
 			identifier: argument.type
 			count: 2
+			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/CacheEndpointService.php
+
+		-
+			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\SphinxHolidays\\Services\\CacheEndpointService\:\:refreshAll\(\) should be covariant with return type \(array\{hotels_count\: int, packages_count\: int, errors\: int\}\) of method Tygh\\Addons\\SphinxHolidays\\Contracts\\CacheEndpointServiceInterface\:\:refreshAll\(\)$#'
+			identifier: method.childReturnType
+			count: 1
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/CacheEndpointService.php
 
 		-
@@ -6967,8 +8299,20 @@ parameters:
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/CacheService.php
 
 		-
+			message: '#^Only booleans are allowed in a negated boolean, array\<string, mixed\>\|null given\.$#'
+			identifier: booleanNot.exprNotBoolean
+			count: 1
+			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/CacheService.php
+
+		-
 			message: '#^Parameter \#1 \$json of function json_decode expects string, mixed given\.$#'
 			identifier: argument.type
+			count: 1
+			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/CacheService.php
+
+		-
+			message: '#^Return type \(array\<int\|string, mixed\>\|null\) of method Tygh\\Addons\\SphinxHolidays\\Services\\CacheService\:\:get\(\) should be covariant with return type \(array\<string, mixed\>\|null\) of method Tygh\\Addons\\SphinxHolidays\\Contracts\\CacheServiceInterface\:\:get\(\)$#'
+			identifier: method.childReturnType
 			count: 1
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/CacheService.php
 
@@ -6987,6 +8331,18 @@ parameters:
 		-
 			message: '#^Parameter \#2 \$targetCurrency of method Tygh\\Addons\\TravelCore\\Services\\CurrencyService\:\:convertFromApiCurrency\(\) expects string\|null, mixed given\.$#'
 			identifier: argument.type
+			count: 1
+			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/CartService.php
+
+		-
+			message: '#^Return type \(array\<int, mixed\>\|null\) of method Tygh\\Addons\\SphinxHolidays\\Services\\CartService\:\:checkDuplicate\(\) should be covariant with return type \(array\<string, mixed\>\|null\) of method Tygh\\Addons\\SphinxHolidays\\Contracts\\CartServiceInterface\:\:checkDuplicate\(\)$#'
+			identifier: method.childReturnType
+			count: 1
+			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/CartService.php
+
+		-
+			message: '#^Return type \(array\<int, mixed\>\|null\) of method Tygh\\Addons\\SphinxHolidays\\Services\\CartService\:\:checkRateLimit\(\) should be covariant with return type \(array\<string, mixed\>\|null\) of method Tygh\\Addons\\SphinxHolidays\\Contracts\\CartServiceInterface\:\:checkRateLimit\(\)$#'
+			identifier: method.childReturnType
 			count: 1
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/CartService.php
 
@@ -7135,8 +8491,32 @@ parameters:
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/ConfigProvider.php
 
 		-
+			message: '#^Only booleans are allowed in a negated boolean, int\|false given\.$#'
+			identifier: booleanNot.exprNotBoolean
+			count: 1
+			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/ConfigProvider.php
+
+		-
+			message: '#^Only booleans are allowed in a negated boolean, string\|false given\.$#'
+			identifier: booleanNot.exprNotBoolean
+			count: 1
+			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/ConfigProvider.php
+
+		-
 			message: '#^Parameter \#1 \$callback of function array_map expects \(callable\(mixed\)\: mixed\)\|null, ''trim'' given\.$#'
 			identifier: argument.type
+			count: 1
+			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/ConfigProvider.php
+
+		-
+			message: '#^Return type \(array\<int\>\) of method Tygh\\Addons\\SphinxHolidays\\Services\\ConfigProvider\:\:getAllowedDestinationIds\(\) should be covariant with return type \(list\<int\>\) of method Tygh\\Addons\\SphinxHolidays\\Contracts\\ConfigProviderInterface\:\:getAllowedDestinationIds\(\)$#'
+			identifier: method.childReturnType
+			count: 1
+			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/ConfigProvider.php
+
+		-
+			message: '#^Return type \(array\<string\>\) of method Tygh\\Addons\\SphinxHolidays\\Services\\ConfigProvider\:\:getSelectedCountryCodes\(\) should be covariant with return type \(list\<string\>\) of method Tygh\\Addons\\SphinxHolidays\\Contracts\\ConfigProviderInterface\:\:getSelectedCountryCodes\(\)$#'
+			identifier: method.childReturnType
 			count: 1
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/ConfigProvider.php
 
@@ -7401,6 +8781,30 @@ parameters:
 		-
 			message: '#^Offset string on non\-empty\-array\<string, array\<int\>\> on left side of \?\? always exists and is not nullable\.$#'
 			identifier: nullCoalesce.offset
+			count: 1
+			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/HotelSyncService.php
+
+		-
+			message: '#^Only booleans are allowed in &&, array\<string, mixed\>\|null given on the left side\.$#'
+			identifier: booleanAnd.leftNotBoolean
+			count: 1
+			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/HotelSyncService.php
+
+		-
+			message: '#^Only booleans are allowed in a ternary operator condition, int\|false given\.$#'
+			identifier: ternary.condNotBoolean
+			count: 1
+			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/HotelSyncService.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, \(callable\)\|null given\.$#'
+			identifier: if.condNotBoolean
+			count: 1
+			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/HotelSyncService.php
+
+		-
+			message: '#^PHPDoc tag @var with type array\<string, mixed\> is not subtype of type array\<int\>\.$#'
+			identifier: varTag.type
 			count: 1
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/HotelSyncService.php
 
@@ -7717,6 +9121,12 @@ parameters:
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/PreOrderPriceVerifier.php
 
 		-
+			message: '#^Only booleans are allowed in a negated boolean, mixed given\.$#'
+			identifier: booleanNot.exprNotBoolean
+			count: 1
+			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/PreOrderPriceVerifier.php
+
+		-
 			message: '#^Parameter \#1 \$offerId of method Tygh\\Addons\\SphinxHolidays\\SphinxApi\:\:verifyHotelOffer\(\) expects string, mixed given\.$#'
 			identifier: argument.type
 			count: 1
@@ -7726,6 +9136,12 @@ parameters:
 			message: '#^Possibly invalid array key type mixed\.$#'
 			identifier: offsetAccess.invalidOffset
 			count: 2
+			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/PreOrderPriceVerifier.php
+
+		-
+			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\SphinxHolidays\\Services\\PreOrderPriceVerifier\:\:verify\(\) should be covariant with return type \(array\{allow\: bool, corrections\: array\<string, mixed\>, notifications\: array\<int, array\<string, mixed\>\>\}\) of method Tygh\\Addons\\TravelCore\\Contracts\\PreOrderPriceVerifierInterface\:\:verify\(\)$#'
+			identifier: method.childReturnType
+			count: 1
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/PreOrderPriceVerifier.php
 
 		-
@@ -7749,6 +9165,18 @@ parameters:
 		-
 			message: '#^Cannot use \+\+ on mixed\.$#'
 			identifier: postInc.type
+			count: 1
+			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/SecurityService.php
+
+		-
+			message: '#^Only booleans are allowed in &&, array\<string, mixed\>\|null given on the left side\.$#'
+			identifier: booleanAnd.leftNotBoolean
+			count: 1
+			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/SecurityService.php
+
+		-
+			message: '#^Only booleans are allowed in a ternary operator condition, mixed given\.$#'
+			identifier: ternary.condNotBoolean
 			count: 1
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/SecurityService.php
 
@@ -7785,6 +9213,12 @@ parameters:
 		-
 			message: '#^Parameter \#1 \$string of function substr expects string, mixed given\.$#'
 			identifier: argument.type
+			count: 1
+			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/SecurityService.php
+
+		-
+			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\SphinxHolidays\\Services\\SecurityService\:\:validateBookingData\(\) should be covariant with return type \(array\{valid\: bool, errors\: array\<int, string\>\}\) of method Tygh\\Addons\\TravelCore\\Contracts\\SecurityServiceInterface\:\:validateBookingData\(\)$#'
+			identifier: method.childReturnType
 			count: 1
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/SecurityService.php
 
@@ -7827,6 +9261,30 @@ parameters:
 		-
 			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Services\\SphinxFeatureAssigner\:\:resolveHotelFacilities\(\) should return array\<int, array\{id\: string, name\: string, mapping\: array\<string, mixed\>\|null\}\> but returns list\<array\{id\: string, name\: string, mapping\: mixed\}\>\.$#'
 			identifier: return.type
+			count: 1
+			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/SphinxFeatureAssigner.php
+
+		-
+			message: '#^Only booleans are allowed in &&, array\<string, mixed\>\|null given on the left side\.$#'
+			identifier: booleanAnd.leftNotBoolean
+			count: 1
+			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/SphinxFeatureAssigner.php
+
+		-
+			message: '#^Only booleans are allowed in &&, array\<string, mixed\>\|null given on the right side\.$#'
+			identifier: booleanAnd.rightNotBoolean
+			count: 1
+			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/SphinxFeatureAssigner.php
+
+		-
+			message: '#^Only booleans are allowed in a negated boolean, array\<string, mixed\>\|null given\.$#'
+			identifier: booleanNot.exprNotBoolean
+			count: 3
+			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/SphinxFeatureAssigner.php
+
+		-
+			message: '#^Only booleans are allowed in a ternary operator condition, array\<string, mixed\>\|null given\.$#'
+			identifier: ternary.condNotBoolean
 			count: 1
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/SphinxFeatureAssigner.php
 
@@ -7903,6 +9361,12 @@ parameters:
 			path: addon-travel-core/app/addons/travel_core/controllers/backend/travel_booking_styles.php
 
 		-
+			message: '#^Only booleans are allowed in a negated boolean, int\|false given\.$#'
+			identifier: booleanNot.exprNotBoolean
+			count: 1
+			path: addon-travel-core/app/addons/travel_core/controllers/backend/travel_booking_styles.php
+
+		-
 			message: '#^Binary operation "\.\=" between '''' and mixed results in an error\.$#'
 			identifier: assignOp.invalid
 			count: 1
@@ -7912,6 +9376,24 @@ parameters:
 			message: '#^Binary operation "\.\=" between string and mixed results in an error\.$#'
 			identifier: assignOp.invalid
 			count: 5
+			path: addon-travel-core/app/addons/travel_core/controllers/backend/travel_bookings.php
+
+		-
+			message: '#^Only booleans are allowed in &&, array\<string, array\<string, string\>\|\(callable\)\|string\|Tygh\\Addons\\TravelCore\\Contracts\\BookingAdminProviderInterface\|Tygh\\Addons\\TravelCore\\Contracts\\ProviderNormalizerInterface\>\|null given on the left side\.$#'
+			identifier: booleanAnd.leftNotBoolean
+			count: 2
+			path: addon-travel-core/app/addons/travel_core/controllers/backend/travel_bookings.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, Tygh\\Addons\\TravelCore\\Contracts\\BookingAdminProviderInterface\|null given\.$#'
+			identifier: if.condNotBoolean
+			count: 1
+			path: addon-travel-core/app/addons/travel_core/controllers/backend/travel_bookings.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, array\<string, mixed\>\|null given\.$#'
+			identifier: if.condNotBoolean
+			count: 1
 			path: addon-travel-core/app/addons/travel_core/controllers/backend/travel_bookings.php
 
 		-
@@ -7948,6 +9430,36 @@ parameters:
 			message: '#^Offset ''cscart_variant_id'' on non\-empty\-array\<string, mixed\> on left side of \?\? always exists and is not nullable\.$#'
 			identifier: nullCoalesce.offset
 			count: 1
+			path: addon-travel-core/app/addons/travel_core/controllers/backend/travel_feature_mappings.php
+
+		-
+			message: '#^Only booleans are allowed in a negated boolean, array\<string, mixed\>\|null given\.$#'
+			identifier: booleanNot.exprNotBoolean
+			count: 2
+			path: addon-travel-core/app/addons/travel_core/controllers/backend/travel_feature_mappings.php
+
+		-
+			message: '#^Only booleans are allowed in a negated boolean, int\|null given\.$#'
+			identifier: booleanNot.exprNotBoolean
+			count: 2
+			path: addon-travel-core/app/addons/travel_core/controllers/backend/travel_feature_mappings.php
+
+		-
+			message: '#^Only booleans are allowed in a negated boolean, string given\.$#'
+			identifier: booleanNot.exprNotBoolean
+			count: 1
+			path: addon-travel-core/app/addons/travel_core/controllers/backend/travel_feature_mappings.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, array\<string, mixed\>\|null given\.$#'
+			identifier: if.condNotBoolean
+			count: 1
+			path: addon-travel-core/app/addons/travel_core/controllers/backend/travel_feature_mappings.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, int\|null given\.$#'
+			identifier: if.condNotBoolean
+			count: 2
 			path: addon-travel-core/app/addons/travel_core/controllers/backend/travel_feature_mappings.php
 
 		-
@@ -8068,6 +9580,18 @@ parameters:
 			message: '#^Cannot cast mixed to string\.$#'
 			identifier: cast.string
 			count: 2
+			path: addon-travel-core/app/addons/travel_core/controllers/frontend/travel_booking.php
+
+		-
+			message: '#^Only booleans are allowed in &&, string given on the left side\.$#'
+			identifier: booleanAnd.leftNotBoolean
+			count: 2
+			path: addon-travel-core/app/addons/travel_core/controllers/frontend/travel_booking.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, string given\.$#'
+			identifier: if.condNotBoolean
+			count: 1
 			path: addon-travel-core/app/addons/travel_core/controllers/frontend/travel_booking.php
 
 		-
@@ -8203,6 +9727,24 @@ parameters:
 			path: addon-travel-core/app/addons/travel_core/functions/exchange_rates.php
 
 		-
+			message: '#^Only booleans are allowed in a ternary operator condition, mixed given\.$#'
+			identifier: ternary.condNotBoolean
+			count: 1
+			path: addon-travel-core/app/addons/travel_core/functions/exchange_rates.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, mixed given\.$#'
+			identifier: if.condNotBoolean
+			count: 1
+			path: addon-travel-core/app/addons/travel_core/functions/exchange_rates.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, string given\.$#'
+			identifier: if.condNotBoolean
+			count: 1
+			path: addon-travel-core/app/addons/travel_core/functions/exchange_rates.php
+
+		-
 			message: '#^Parameter \#1 \$bnr_rates of function fn_travel_core_calculate_currency_coefficients expects array\<string, mixed\>, mixed given\.$#'
 			identifier: argument.type
 			count: 1
@@ -8313,6 +9855,18 @@ parameters:
 		-
 			message: '#^Function fn_travel_core_run_long_task\(\) should return array\{string, string\} but returns array\{mixed, string\}\.$#'
 			identifier: return.type
+			count: 1
+			path: addon-travel-core/app/addons/travel_core/functions/hotels.php
+
+		-
+			message: '#^Only booleans are allowed in a negated boolean, array\<int\|string, int\|string\>\|false given\.$#'
+			identifier: booleanNot.exprNotBoolean
+			count: 1
+			path: addon-travel-core/app/addons/travel_core/functions/hotels.php
+
+		-
+			message: '#^Only booleans are allowed in a ternary operator condition, array\<string, mixed\> given\.$#'
+			identifier: ternary.condNotBoolean
 			count: 1
 			path: addon-travel-core/app/addons/travel_core/functions/hotels.php
 
@@ -8581,6 +10135,18 @@ parameters:
 			path: addon-travel-core/app/addons/travel_core/src/Cron/CronRunner.php
 
 		-
+			message: '#^Only booleans are allowed in a negated boolean, int\|false given\.$#'
+			identifier: booleanNot.exprNotBoolean
+			count: 2
+			path: addon-travel-core/app/addons/travel_core/src/Dto/Booking/StayDates.php
+
+		-
+			message: '#^Only booleans are allowed in a negated boolean, int\|false given\.$#'
+			identifier: booleanNot.exprNotBoolean
+			count: 1
+			path: addon-travel-core/app/addons/travel_core/src/Helpers/ValidationHelpers.php
+
+		-
 			message: '#^Cannot cast mixed to int\.$#'
 			identifier: cast.int
 			count: 3
@@ -8647,9 +10213,27 @@ parameters:
 			path: addon-travel-core/app/addons/travel_core/src/Services/CurrencyService.php
 
 		-
+			message: '#^Only booleans are allowed in an if condition, int\|false given\.$#'
+			identifier: if.condNotBoolean
+			count: 2
+			path: addon-travel-core/app/addons/travel_core/src/Services/DateHelper.php
+
+		-
 			message: '#^Cannot cast mixed to int\.$#'
 			identifier: cast.int
 			count: 2
+			path: addon-travel-core/app/addons/travel_core/src/Services/FeatureMapper.php
+
+		-
+			message: '#^Only booleans are allowed in a negated boolean, array\<string, mixed\>\|null given\.$#'
+			identifier: booleanNot.exprNotBoolean
+			count: 1
+			path: addon-travel-core/app/addons/travel_core/src/Services/FeatureMapper.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, array\<string, mixed\>\|null given\.$#'
+			identifier: if.condNotBoolean
+			count: 3
 			path: addon-travel-core/app/addons/travel_core/src/Services/FeatureMapper.php
 
 		-
@@ -8662,6 +10246,36 @@ parameters:
 			message: '#^Method Tygh\\Addons\\TravelCore\\Services\\GuestDataNormalizer\:\:decode\(\) should return array\<string, mixed\> but returns array\<mixed\>\.$#'
 			identifier: return.type
 			count: 1
+			path: addon-travel-core/app/addons/travel_core/src/Services/GuestDataNormalizer.php
+
+		-
+			message: '#^Only booleans are allowed in &&, string given on the left side\.$#'
+			identifier: booleanAnd.leftNotBoolean
+			count: 1
+			path: addon-travel-core/app/addons/travel_core/src/Services/GuestDataNormalizer.php
+
+		-
+			message: '#^Only booleans are allowed in &&, string given on the right side\.$#'
+			identifier: booleanAnd.rightNotBoolean
+			count: 1
+			path: addon-travel-core/app/addons/travel_core/src/Services/GuestDataNormalizer.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, int\|false given\.$#'
+			identifier: if.condNotBoolean
+			count: 1
+			path: addon-travel-core/app/addons/travel_core/src/Services/GuestDataNormalizer.php
+
+		-
+			message: '#^Only booleans are allowed in \|\|, string given on the left side\.$#'
+			identifier: booleanOr.leftNotBoolean
+			count: 2
+			path: addon-travel-core/app/addons/travel_core/src/Services/GuestDataNormalizer.php
+
+		-
+			message: '#^Only booleans are allowed in \|\|, string given on the right side\.$#'
+			identifier: booleanOr.rightNotBoolean
+			count: 2
 			path: addon-travel-core/app/addons/travel_core/src/Services/GuestDataNormalizer.php
 
 		-
@@ -8773,6 +10387,30 @@ parameters:
 			path: addon-travel-core/app/addons/travel_core/src/Services/GuestDataService.php
 
 		-
+			message: '#^Only booleans are allowed in &&, int\|false given on the left side\.$#'
+			identifier: booleanAnd.leftNotBoolean
+			count: 2
+			path: addon-travel-core/app/addons/travel_core/src/Services/GuestDataService.php
+
+		-
+			message: '#^Only booleans are allowed in &&, string given on the left side\.$#'
+			identifier: booleanAnd.leftNotBoolean
+			count: 1
+			path: addon-travel-core/app/addons/travel_core/src/Services/GuestDataService.php
+
+		-
+			message: '#^Only booleans are allowed in &&, string given on the right side\.$#'
+			identifier: booleanAnd.rightNotBoolean
+			count: 1
+			path: addon-travel-core/app/addons/travel_core/src/Services/GuestDataService.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, int\|false given\.$#'
+			identifier: if.condNotBoolean
+			count: 4
+			path: addon-travel-core/app/addons/travel_core/src/Services/GuestDataService.php
+
+		-
 			message: '#^Parameter \#1 \$guest of static method Tygh\\Addons\\TravelCore\\Services\\GuestDataService\:\:parseDob\(\) expects array\<string, mixed\>, mixed given\.$#'
 			identifier: argument.type
 			count: 1
@@ -8813,6 +10451,18 @@ parameters:
 			identifier: offsetAccess.invalidOffset
 			count: 3
 			path: addon-travel-core/app/addons/travel_core/src/Services/GuestDataService.php
+
+		-
+			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\TravelCore\\Services\\GuestDataService\:\:validate\(\) should be covariant with return type \(array\{valid\: bool, errors\: array\<string\>, adults\: int, children\: int\}\) of method Tygh\\Addons\\TravelCore\\Contracts\\GuestValidatorInterface\:\:validate\(\)$#'
+			identifier: method.childReturnType
+			count: 2
+			path: addon-travel-core/app/addons/travel_core/src/Services/GuestDataService.php
+
+		-
+			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\TravelCore\\Services\\PriceChangeDetector\:\:analyse\(\) should be covariant with return type \(array\{significant\: bool, direction\: string, old_price\: float, new_price\: float, difference\: float, percent\: float, currency\: string, badge_type\: string, \.\.\.\}\) of method Tygh\\Addons\\TravelCore\\Contracts\\PriceChangeDetectorInterface\:\:analyse\(\)$#'
+			identifier: method.childReturnType
+			count: 1
+			path: addon-travel-core/app/addons/travel_core/src/Services/PriceChangeDetector.php
 
 		-
 			message: '#^Argument of an invalid type mixed supplied for foreach, only iterables are supported\.$#'
@@ -8881,6 +10531,48 @@ parameters:
 			path: addon-travel-core/app/addons/travel_core/src/Services/VariantResolver.php
 
 		-
+			message: '#^Access to an undefined property object\:\:\$lastError\.$#'
+			identifier: property.notFound
+			count: 1
+			path: addon-travel-core/app/addons/travel_core/src/ValueObjects/RequestDebugInfo.php
+
+		-
+			message: '#^Access to an undefined property object\:\:\$lastHttpCode\.$#'
+			identifier: property.notFound
+			count: 1
+			path: addon-travel-core/app/addons/travel_core/src/ValueObjects/RequestDebugInfo.php
+
+		-
+			message: '#^Access to an undefined property object\:\:\$lastRequest\.$#'
+			identifier: property.notFound
+			count: 1
+			path: addon-travel-core/app/addons/travel_core/src/ValueObjects/RequestDebugInfo.php
+
+		-
+			message: '#^Access to an undefined property object\:\:\$lastRequestFormatted\.$#'
+			identifier: property.notFound
+			count: 1
+			path: addon-travel-core/app/addons/travel_core/src/ValueObjects/RequestDebugInfo.php
+
+		-
+			message: '#^Access to an undefined property object\:\:\$lastResponse\.$#'
+			identifier: property.notFound
+			count: 1
+			path: addon-travel-core/app/addons/travel_core/src/ValueObjects/RequestDebugInfo.php
+
+		-
+			message: '#^Access to an undefined property object\:\:\$lastResponseRaw\.$#'
+			identifier: property.notFound
+			count: 1
+			path: addon-travel-core/app/addons/travel_core/src/ValueObjects/RequestDebugInfo.php
+
+		-
+			message: '#^Only booleans are allowed in &&, int given on the left side\.$#'
+			identifier: booleanAnd.leftNotBoolean
+			count: 1
+			path: addon-travel-core/app/addons/travel_core/src/ValueObjects/RequestDebugInfo.php
+
+		-
 			message: '#^Parameter \#1 \$lastRequest of class Tygh\\Addons\\TravelCore\\ValueObjects\\RequestDebugInfo constructor expects string, mixed given\.$#'
 			identifier: argument.type
 			count: 1
@@ -8915,3 +10607,15 @@ parameters:
 			identifier: argument.type
 			count: 1
 			path: addon-travel-core/app/addons/travel_core/src/ValueObjects/RequestDebugInfo.php
+
+		-
+			message: '#^Only booleans are allowed in &&, int\|false given on the right side\.$#'
+			identifier: booleanAnd.rightNotBoolean
+			count: 1
+			path: addon-travel-core/app/addons/travel_core/src/ValueObjects/RoomType.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, int\|false given\.$#'
+			identifier: if.condNotBoolean
+			count: 2
+			path: addon-travel-core/app/addons/travel_core/src/ValueObjects/RoomType.php

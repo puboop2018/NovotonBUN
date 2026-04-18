@@ -13,6 +13,7 @@ class AlternativesCommand extends AbstractCronCommand
     /**
      * @return list<string>
      */
+    #[\Override]
     public static function getModes(): array
     {
         return ['alternative_rs', 'alternative_rs_bookings', 'notify_alternatives', 'expire_requests'];

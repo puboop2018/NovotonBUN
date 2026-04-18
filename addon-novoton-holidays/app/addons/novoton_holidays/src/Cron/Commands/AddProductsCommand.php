@@ -16,6 +16,7 @@ class AddProductsCommand extends AbstractCronCommand
     /**
      * @return list<string>
      */
+    #[\Override]
     public static function getModes(): array
     {
         return ['add_hotels_as_products'];

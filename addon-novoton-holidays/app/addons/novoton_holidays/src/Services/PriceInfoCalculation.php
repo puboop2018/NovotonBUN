@@ -53,25 +53,21 @@ use Tygh\Addons\NovotonHolidays\Constants;
 class PriceInfoCalculation implements PriceInfoCalculationInterface
 {
     /** @var float Commission percentage */
-    private $commission;
+    private float $commission;
 
     /** @var bool Debug mode */
-    private $debug = false;
+    private bool $debug = false;
 
     /** @var list<array{time: string, message: string, data?: mixed}|string> Debug log */
-    private $debugLog = [];
+    private array $debugLog = [];
 
-    /** @var PriceInfoParser */
-    private $parser;
+    private \Tygh\Addons\NovotonHolidays\Services\PriceInfoParser $parser;
 
-    /** @var PriceInfoCalculator */
-    private $calculator;
+    private \Tygh\Addons\NovotonHolidays\Services\PriceInfoCalculator $calculator;
 
-    /** @var FeeCalculator */
-    private $feeCalculator;
+    private \Tygh\Addons\NovotonHolidays\Services\FeeCalculator $feeCalculator;
 
-    /** @var DiscountCalculator */
-    private $discountCalculator;
+    private \Tygh\Addons\NovotonHolidays\Services\DiscountCalculator $discountCalculator;
 
     /**
      * Constructor

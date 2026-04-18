@@ -7,9 +7,20 @@
 includes:
     - phpstan-baseline.neon
     - vendor/spaze/phpstan-disallowed-calls/extension.neon
+    - vendor/phpstan/phpstan-strict-rules/rules.neon
     - phpstan-disallowed-calls.neon
 
 parameters:
+    # ── phpstan-strict-rules: safe subset (rest disabled) ───────────────
+    # Full `strictRules.allRules: true` is too noisy on CS-Cart's
+    # procedural style. We enable only the four rules whose cost/benefit
+    # ratio is unambiguous on this codebase.
+    strictRules:
+        allRules: false
+        booleansInConditions: true
+        noVariableVariables: true
+        disallowedLooseComparison: true
+        overwriteVariablesWithLoop: true
     # History:
     #   Level 5: installed 2026-04-12, baseline driven 214 -> 94
     #   Level 6: upgraded 2026-04-12, baseline 1668 (new code is clean-slate)

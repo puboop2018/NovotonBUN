@@ -514,6 +514,7 @@ class AddProductsCommand extends AbstractSyncCommand
         return $result;
     }
 
+    #[\Override]
     protected function output(string $message, bool $addNewline = true): void
     {
         if ($this->outputCallback !== null) {
