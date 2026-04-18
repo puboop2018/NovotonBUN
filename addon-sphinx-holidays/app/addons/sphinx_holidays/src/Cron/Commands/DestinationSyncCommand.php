@@ -421,6 +421,7 @@ class DestinationSyncCommand extends AbstractSyncCommand
         return true;
     }
 
+    #[\Override]
     protected function output(string $message, bool $addNewline = true): void
     {
         if ($this->outputCallback !== null) {

@@ -32,12 +32,6 @@ return RectorConfig::configure()
         __DIR__ . '/addon-sphinx-holidays/app/addons/sphinx_holidays/src',
     ])
     ->withSkip([
-        // Already clean-slate — these are the DTOs + VOs just shipped.
-        '*/Dto/*',
-        '*/ValueObjects/*',
-        '*/Enums/*',
-        '*/Contracts/*',
-
         // Vendor + caches
         '*/vendor/*',
         '*/var/*',
@@ -45,7 +39,19 @@ return RectorConfig::configure()
         '*/tests/*',
     ])
     ->withRules([
-        // Empty by design — Wave 3 adds rules one-at-a-time.
+        // Wave 3 PR 7 — narrow, safe type-declaration rules:
+        //
+        //   - TypedPropertyFromAssignsRector adds declared types to
+        //     untyped class properties based on how they're initialised /
+        //     assigned. Idempotent on already-typed props.
+        //
+        //   - AddOverrideAttributeToOverriddenMethodsRector appends the
+        //     PHP 8.3 #[\Override] attribute to methods that override a
+        //     parent/interface method. Catches future rename-drift
+        //     (removing a parent method becomes a fatal at compile time
+        //     instead of silent dead code).
+        Rector\TypeDeclaration\Rector\Property\TypedPropertyFromAssignsRector::class,
+        Rector\Php83\Rector\ClassMethod\AddOverrideAttributeToOverriddenMethodsRector::class,
     ])
     ->withImportNames(
         importNames: false,

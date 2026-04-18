@@ -12,6 +12,7 @@ class HotelSyncCommand extends AbstractCronCommand
     /**
      * @return list<string>
      */
+    #[\Override]
     public static function getModes(): array
     {
         return ['sync_hotels', 'sync_hotellist', 'sync_hotelinfo', 'sync_priceinfo'];

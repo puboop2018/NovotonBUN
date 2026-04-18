@@ -17,7 +17,7 @@ namespace Tygh\Addons\NovotonHolidays\Services;
 class PathResolver
 {
     /** @var array<string, mixed>|null Cached paths array. */
-    private static $paths;
+    private static ?array $paths = null;
 
     /**
      * Get all addon paths (cached).

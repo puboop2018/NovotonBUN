@@ -12,6 +12,7 @@ class BatchedSyncCommand extends AbstractCronCommand
     /**
      * @return list<string>
      */
+    #[\Override]
     public static function getModes(): array
     {
         return ['hotel_info_batched', 'sync_priceinfo_batched'];

@@ -17,21 +17,21 @@ namespace Tygh\Addons\TravelCore\Services;
 class DateHelper
 {
     /** @var array<int, string> Romanian month names */
-    private static $roMonths = [
+    private static array $roMonths = [
         1 => 'ianuarie', 2 => 'februarie', 3 => 'martie', 4 => 'aprilie',
         5 => 'mai', 6 => 'iunie', 7 => 'iulie', 8 => 'august',
         9 => 'septembrie', 10 => 'octombrie', 11 => 'noiembrie', 12 => 'decembrie',
     ];
 
     /** @var array<int, string> Romanian short month names */
-    private static $roMonthsShort = [
+    private static array $roMonthsShort = [
         1 => 'ian', 2 => 'feb', 3 => 'mar', 4 => 'apr',
         5 => 'mai', 6 => 'iun', 7 => 'iul', 8 => 'aug',
         9 => 'sep', 10 => 'oct', 11 => 'noi', 12 => 'dec',
     ];
 
     /** @var array<int, string> Romanian day names */
-    private static $roDays = [
+    private static array $roDays = [
         0 => 'duminică', 1 => 'luni', 2 => 'marți', 3 => 'miercuri',
         4 => 'joi', 5 => 'vineri', 6 => 'sâmbătă',
     ];
