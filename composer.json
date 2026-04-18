@@ -17,18 +17,12 @@
     "config": {
         "sort-packages": true,
         "allow-plugins": {
-            "phpro/grumphp": true
+            "phpro/grumphp": false
         }
     },
     "scripts": {
-        "post-install-cmd": [
-            "@php -r \"is_dir('var') || mkdir('var', 0755, true);\"",
-            "@hooks:install"
-        ],
-        "post-update-cmd": [
-            "@php -r \"is_dir('var') || mkdir('var', 0755, true);\"",
-            "@hooks:install"
-        ],
+        "post-install-cmd": "@php -r \"is_dir('var') || mkdir('var', 0755, true);\"",
+        "post-update-cmd":  "@php -r \"is_dir('var') || mkdir('var', 0755, true);\"",
 
         "hooks:install":   "grumphp git:init",
         "hooks:uninstall": "grumphp git:deinit",

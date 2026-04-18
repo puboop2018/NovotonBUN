@@ -27,9 +27,10 @@ composer install
 # Install addon test deps (only if running PHPUnit)
 cd addon-novoton-holidays/app/addons/novoton_holidays && composer install
 
-# GrumPHP pre-commit hook is installed automatically after `composer install`.
-# Verify with:
-ls .git/hooks/pre-commit
+# Install the GrumPHP pre-commit hook (one-time, safe to re-run).
+# Separate step so CI skips it (CI has nothing to commit).
+composer hooks:install
+ls .git/hooks/pre-commit   # verify
 ```
 
 ## Common commands
