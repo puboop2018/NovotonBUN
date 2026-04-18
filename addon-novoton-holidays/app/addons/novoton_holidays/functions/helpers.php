@@ -84,6 +84,38 @@ function fn_novoton_holidays_is_debug(): bool
  * @return NovotonApi|null
  */
 /**
+ * Add a pre-built cart-product row to the current session's cart.
+ *
+ * Thin wrapper around CS-Cart's procedural trio
+ * (fn_add_product_to_cart / fn_save_cart_content / fn_calculate_cart_content)
+ * that absorbs the reference-based `$cart` + `$auth` handling required by
+ * those APIs. Living in `functions/` (the allowlisted boundary) keeps the
+ * `\Tygh::$app` access out of service classes like BookingService.
+ *
+ * @param array<string, mixed> $product
+ */
+function fn_novoton_holidays_add_to_session_cart(array $product): void
+{
+    // Narrow the session array once so the reference binds below see a
+    // typed array shape (CS-Cart's reference-based cart flow needs live
+    // refs into \Tygh::\$app['session'] for `fn_add_product_to_cart` and
+    // friends to persist their mutations).
+    /** @var array<string, mixed> $session */
+    $session = is_array(\Tygh\Tygh::$app['session'] ?? null) ? \Tygh\Tygh::$app['session'] : [];
+    $session['cart'] = is_array($session['cart'] ?? null) ? $session['cart'] : [];
+    $session['auth'] = is_array($session['auth'] ?? null) ? $session['auth'] : [];
+    \Tygh\Tygh::$app['session'] = $session;
+
+    $cart = &\Tygh\Tygh::$app['session']['cart'];
+    $auth = &\Tygh\Tygh::$app['session']['auth'];
+
+    fn_add_product_to_cart($product, $cart, $auth);
+    $userId = is_numeric($auth['user_id'] ?? null) ? (int) $auth['user_id'] : 0;
+    fn_save_cart_content($cart, $userId);
+    fn_calculate_cart_content($cart, $auth, 'S', true, 'F', true);
+}
+
+/**
  * Broadcast the search / listing page title + blank meta description/keywords
  * into CS-Cart's dynamic navigation state.
  *

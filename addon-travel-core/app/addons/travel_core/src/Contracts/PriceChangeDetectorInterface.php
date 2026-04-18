@@ -57,14 +57,14 @@ interface PriceChangeDetectorInterface
     /**
      * Retrieve and clear all pending price change alerts from the session.
      *
-     * @return array<int, array<string, mixed>>
+     * @return array<int|string, array<string, mixed>>
      */
     public function consumeAlerts(): array;
 
     /**
      * Retrieve pending alerts without clearing them.
      *
-     * @return array<int, array<string, mixed>>
+     * @return array<int|string, array<string, mixed>>
      */
     public function peekAlerts(): array;
 }

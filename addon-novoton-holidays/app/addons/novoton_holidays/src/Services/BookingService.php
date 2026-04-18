@@ -17,9 +17,9 @@ namespace Tygh\Addons\NovotonHolidays\Services;
 use Tygh\Addons\NovotonHolidays\Api\Contracts\PricingApiClientInterface;
 use Tygh\Addons\NovotonHolidays\Repository\BookingRepositoryInterface;
 use Tygh\Addons\NovotonHolidays\Repository\HotelRepositoryInterface;
+use Tygh\Addons\TravelCore\Helpers\SessionAccessor;
 use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
 use Tygh\Addons\TravelCore\TravelConstants;
-use Tygh\Tygh;
 
 class BookingService implements BookingServiceInterface
 {
@@ -36,6 +36,8 @@ class BookingService implements BookingServiceInterface
     private RoomsDataParser $roomsParser;
 
     private PriceVerificationService $priceVerifier;
+
+    private readonly SessionAccessor $session;
 
     private bool $debug = false;
 
@@ -57,6 +59,7 @@ class BookingService implements BookingServiceInterface
         ?GuestDataNormalizer $guestDataNormalizer = null,
         ?CartAssemblyService $cartAssembly = null,
         ?RoomsDataParser $roomsParser = null,
+        ?SessionAccessor $session = null,
     ) {
         $this->guestService = $guestService;
         $this->bookingRepo = $bookingRepo;
@@ -65,6 +68,7 @@ class BookingService implements BookingServiceInterface
         $this->cartAssembly = $cartAssembly ?? new CartAssemblyService();
         $this->roomsParser = $roomsParser ?? new RoomsDataParser();
         $this->priceVerifier = new PriceVerificationService($pricing);
+        $this->session = $session ?? new SessionAccessor();
         $this->debug = ConfigProvider::isDebugLogging();
     }
 
@@ -78,7 +82,7 @@ class BookingService implements BookingServiceInterface
     public function createBooking(array $bookingData, int $product_id): int
     {
         // Get current user/session
-        $auth = Tygh::$app['session']['auth'] ?? [];
+        $auth = $this->session->auth();
         $user_id = !empty($auth['user_id']) ? (int) $auth['user_id'] : 0;
         $session_id = session_id();
 
@@ -242,15 +246,10 @@ class BookingService implements BookingServiceInterface
             'extra' => $this->cartAssembly->buildCartExtra($booking, $bookingData),
         ];
 
-        // Add to cart
-        $cart = &Tygh::$app['session']['cart'];
-        $auth = &Tygh::$app['session']['auth'];
-
-        fn_add_product_to_cart($product, $cart, $auth);
-        fn_save_cart_content($cart, $auth['user_id'] ?? 0);
-
-        // Calculate cart
-        fn_calculate_cart_content($cart, $auth, 'S', true, 'F', true);
+        // Add to cart — reference-based CS-Cart procedural flow lives in
+        // functions/helpers.php (allowlisted boundary). Keeps Tygh::\$app
+        // out of this service class.
+        fn_novoton_holidays_add_to_session_cart($product);
 
         $this->log('Added to cart', [
             'booking_id' => $booking_id,
