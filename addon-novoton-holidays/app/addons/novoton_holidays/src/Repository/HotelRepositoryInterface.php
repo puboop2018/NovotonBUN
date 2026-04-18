@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Repository;
 
+use Tygh\Addons\TravelCore\Dto\Hotel\Hotel;
+
 /**
  * @phpstan-type HotelRow = array<string, mixed>
  * @phpstan-type PackageRow = array<string, mixed>
@@ -12,6 +14,14 @@ interface HotelRepositoryInterface
 {
     /** @return HotelRow|null */
     public function findById(string $hotel_id): ?array;
+    /**
+     * Typed view of {@see self::findById()}.
+     *
+     * Returns the same row shape as a {@see Hotel} DTO; returns null when
+     * no row matches. New code paths should prefer this over findById();
+     * existing array callers keep working unchanged.
+     */
+    public function findByIdAsDto(string $hotel_id): ?Hotel;
     /** @return HotelRow|null */
     public function findBasicById(string $hotel_id): ?array;
     /** @return HotelRow|null */

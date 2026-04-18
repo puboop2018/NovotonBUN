@@ -24,6 +24,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Repository;
 
+use Tygh\Addons\TravelCore\Dto\Hotel\Hotel;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Repository\RowNarrowingTrait;
 
@@ -73,6 +74,13 @@ class HotelRepository implements HotelRepositoryInterface
     {
         $hotel = self::asRow(db_get_row('SELECT * FROM ?:novoton_hotels WHERE hotel_id = ?s', $hotel_id));
         return $hotel === [] ? null : $hotel;
+    }
+
+    #[\Override]
+    public function findByIdAsDto(string $hotel_id): ?Hotel
+    {
+        $row = $this->findById($hotel_id);
+        return $row === null ? null : Hotel::fromDbRow($row);
     }
 
     /**
