@@ -5629,12 +5629,6 @@ parameters:
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/AddProductsCommand.php
 
 		-
-			message: '#^Calling Tygh\\Registry\:\:get\(\) is forbidden, Inject the value via the constructor; Registry\:\:get\(\) is forbidden inside src/ class bodies\. Use src/Helpers/RegistryCoerce\.php at the controller/hook boundary instead\.$#'
-			identifier: disallowed.method
-			count: 2
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/AddProductsCommand.php
-
-		-
 			message: '#^Cannot cast mixed to int\.$#'
 			identifier: cast.int
 			count: 1
@@ -5733,12 +5727,6 @@ parameters:
 		-
 			message: '#^Binary operation "/" between mixed and mixed results in an error\.$#'
 			identifier: binaryOp.invalid
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/AssignBoardsCommand.php
-
-		-
-			message: '#^Calling Tygh\\Registry\:\:get\(\) is forbidden, Inject the value via the constructor; Registry\:\:get\(\) is forbidden inside src/ class bodies\. Use src/Helpers/RegistryCoerce\.php at the controller/hook boundary instead\.$#'
-			identifier: disallowed.method
 			count: 1
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/AssignBoardsCommand.php
 
@@ -6561,12 +6549,6 @@ parameters:
 		-
 			message: '#^Binary operation "\." between string and mixed results in an error\.$#'
 			identifier: binaryOp.invalid
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Helpers/SphinxProductFactory.php
-
-		-
-			message: '#^Calling Tygh\\Registry\:\:get\(\) is forbidden, Inject the value via the constructor; Registry\:\:get\(\) is forbidden inside src/ class bodies\. Use src/Helpers/RegistryCoerce\.php at the controller/hook boundary instead\.$#'
-			identifier: disallowed.method
 			count: 1
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Helpers/SphinxProductFactory.php
 
@@ -8617,12 +8599,6 @@ parameters:
 			path: addon-travel-core/app/addons/travel_core/src/Services/BookingDisplayService.php
 
 		-
-			message: '#^Calling Tygh\\Registry\:\:get\(\) is forbidden, Inject the value via the constructor; Registry\:\:get\(\) is forbidden inside src/ class bodies\. Use src/Helpers/RegistryCoerce\.php at the controller/hook boundary instead\.$#'
-			identifier: disallowed.method
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Services/BookingDisplayService.php
-
-		-
 			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, list given\.$#'
 			identifier: argument.type
 			count: 1
@@ -8633,12 +8609,6 @@ parameters:
 			identifier: argument.type
 			count: 1
 			path: addon-travel-core/app/addons/travel_core/src/Services/BookingDisplayService.php
-
-		-
-			message: '#^Calling Tygh\\Registry\:\:get\(\) is forbidden, Inject the value via the constructor; Registry\:\:get\(\) is forbidden inside src/ class bodies\. Use src/Helpers/RegistryCoerce\.php at the controller/hook boundary instead\.$#'
-			identifier: disallowed.method
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Services/CurrencyService.php
 
 		-
 			message: '#^Cannot access offset ''coefficient'' on mixed\.$#'
@@ -8677,15 +8647,9 @@ parameters:
 			path: addon-travel-core/app/addons/travel_core/src/Services/CurrencyService.php
 
 		-
-			message: '#^Calling Tygh\\Registry\:\:get\(\) is forbidden, Inject the value via the constructor; Registry\:\:get\(\) is forbidden inside src/ class bodies\. Use src/Helpers/RegistryCoerce\.php at the controller/hook boundary instead\.$#'
-			identifier: disallowed.method
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Services/FeatureMapper.php
-
-		-
 			message: '#^Cannot cast mixed to int\.$#'
 			identifier: cast.int
-			count: 3
+			count: 2
 			path: addon-travel-core/app/addons/travel_core/src/Services/FeatureMapper.php
 
 		-

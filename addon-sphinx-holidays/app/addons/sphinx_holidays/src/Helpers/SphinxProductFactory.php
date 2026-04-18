@@ -7,7 +7,6 @@ namespace Tygh\Addons\SphinxHolidays\Helpers;
 use Tygh\Addons\SphinxHolidays\Repository\HotelRepository;
 use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
 use Tygh\Addons\SphinxHolidays\Services\SphinxFeatureAssigner;
-use Tygh\Registry;
 
 /**
  * Creates CS-Cart products from Sphinx hotel data.
@@ -197,7 +196,7 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
             'price' => 0,
             'amount' => ConfigProvider::getDefaultProductQuantity(),
             'status' => 'A',
-            'company_id' => Registry::get('runtime.company_id') ?: 1,
+            'company_id' => ConfigProvider::getCompanyId(),
             'main_category' => $categoryId,
             'category_ids' => [$categoryId],
             'short_description' => $hotel['short_description'] ?? '',

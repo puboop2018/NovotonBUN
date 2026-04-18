@@ -9,6 +9,7 @@ use Tygh\Addons\SphinxHolidays\Services\Container;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Helpers\ValidationHelpers;
 use Tygh\Addons\TravelCore\Services\FeatureMapper;
+use Tygh\Addons\TravelCore\Services\TravelCoreConfig;
 
 /**
  * Create CS-Cart products from unlinked Sphinx hotels.
@@ -315,8 +316,8 @@ class AddProductsCommand extends AbstractSyncCommand
 
         // 4. Show feature IDs for region/city
         $this->output('--- Feature IDs (from travel_core settings) ---');
-        $regionFeatureId = ValidationHelpers::toInt(\Tygh\Registry::get('addons.travel_core.feature_id_region'));
-        $cityFeatureId = ValidationHelpers::toInt(\Tygh\Registry::get('addons.travel_core.feature_id_city'));
+        $regionFeatureId = TravelCoreConfig::getFeatureId('region');
+        $cityFeatureId = TravelCoreConfig::getFeatureId('city');
         $this->output("  feature_id_region = {$regionFeatureId}" . ($regionFeatureId > 0 ? ' (OK)' : ' (NOT CONFIGURED)'));
         $this->output("  feature_id_city = {$cityFeatureId}" . ($cityFeatureId > 0 ? ' (OK)' : ' (NOT CONFIGURED)'));
         $this->output('');

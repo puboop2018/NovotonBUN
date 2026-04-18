@@ -42,7 +42,7 @@ class BookingDisplayService implements BookingDisplayServiceInterface
         $roomFormatter = ($config['room_name_formatter'] ?? null);
 
         // Format dates
-        $date_format = \Tygh\Registry::get('settings.Appearance.date_format') ?: '%d.%m.%Y';
+        $date_format = TravelCoreConfig::getDateFormat();
         $checkInStr = is_string($extra['check_in'] ?? null) ? $extra['check_in'] : '';
         $checkOutStr = is_string($extra['check_out'] ?? null) ? $extra['check_out'] : '';
         $check_in_ts = !empty($checkInStr) ? strtotime($checkInStr) : false;

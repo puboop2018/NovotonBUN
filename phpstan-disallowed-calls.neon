@@ -38,6 +38,9 @@ parameters:
                 # and would just recreate the same boundary under a new name.
                 # Settings wrappers are allowlisted; non-settings services aren't.
                 - '*/src/Services/ConfigProvider.php'
+                # travel_core's settings-reader boundary (same role as
+                # ConfigProvider, but shared across the travel addons).
+                - '*/addon-travel-core/*/src/Services/TravelCoreConfig.php'
         -
             method: 'Tygh\Registry::set()'
             message: 'Do not mutate the global Registry from inside a src/ service class. Pass a configured object through the constructor, or mutate from the calling controller/hook.'
@@ -57,6 +60,9 @@ parameters:
                 # and would just recreate the same boundary under a new name.
                 # Settings wrappers are allowlisted; non-settings services aren't.
                 - '*/src/Services/ConfigProvider.php'
+                # travel_core's settings-reader boundary (same role as
+                # ConfigProvider, but shared across the travel addons).
+                - '*/addon-travel-core/*/src/Services/TravelCoreConfig.php'
 
     disallowedProperties:
         -
@@ -78,6 +84,9 @@ parameters:
                 # and would just recreate the same boundary under a new name.
                 # Settings wrappers are allowlisted; non-settings services aren't.
                 - '*/src/Services/ConfigProvider.php'
+                # travel_core's settings-reader boundary (same role as
+                # ConfigProvider, but shared across the travel addons).
+                - '*/addon-travel-core/*/src/Services/TravelCoreConfig.php'
                 # SessionAccessor is the single designated boundary for
                 # CS-Cart session read/write. All services should receive
                 # it via constructor injection; allowlisted so the internal

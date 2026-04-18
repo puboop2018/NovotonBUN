@@ -7,7 +7,7 @@ namespace Tygh\Addons\SphinxHolidays\Cron\Commands;
 use Tygh\Addons\SphinxHolidays\Services\Container;
 use Tygh\Addons\TravelCore\Helpers\ValidationHelpers;
 use Tygh\Addons\TravelCore\Services\FeatureMapper;
-use Tygh\Registry;
+use Tygh\Addons\TravelCore\Services\TravelCoreConfig;
 
 /**
  * Cron command: assign discovered board/meal types as CS-Cart product features.
@@ -82,7 +82,7 @@ class AssignBoardsCommand extends AbstractSyncCommand
         }
 
         // Check that feature_id_meals is configured in travel_core
-        $featureId = ValidationHelpers::toInt(Registry::get('addons.travel_core.feature_id_meals'));
+        $featureId = TravelCoreConfig::getFeatureId('meals');
         if ($featureId <= 0) {
             $this->output('ERROR: travel_core setting "feature_id_meals" is not configured (value: 0).');
             $this->output('Please set the Meals/Board feature ID in Admin > Add-ons > Travel Core settings.');
