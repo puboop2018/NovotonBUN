@@ -61,7 +61,7 @@ parameters:
     disallowedProperties:
         -
             property: 'Tygh\Tygh::$app'
-            message: 'Tygh::$app[...] is a service-locator; inject the dependency (session, view, mailer, storage...) through the constructor instead. Permitted only at the CS-Cart boundary (controllers, hooks, functions).'
+            message: 'Tygh::$app[...] is a service-locator; inject the dependency (session, view, mailer, storage...) through the constructor instead. Permitted only at the CS-Cart boundary (controllers, hooks, functions) and via src/Helpers/SessionAccessor.php for session state.'
             allowIn:
                 - '*/controllers/*'
                 - '*/hooks/*'
@@ -78,3 +78,8 @@ parameters:
                 # and would just recreate the same boundary under a new name.
                 # Settings wrappers are allowlisted; non-settings services aren't.
                 - '*/src/Services/ConfigProvider.php'
+                # SessionAccessor is the single designated boundary for
+                # CS-Cart session read/write. All services should receive
+                # it via constructor injection; allowlisted so the internal
+                # Tygh::$app['session'] access is legal.
+                - '*/src/Helpers/SessionAccessor.php'

@@ -15,7 +15,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\TravelCore\Services;
 
 use Tygh\Addons\TravelCore\Contracts\PriceChangeDetectorInterface;
-use Tygh\Tygh;
+use Tygh\Addons\TravelCore\Helpers\SessionAccessor;
 
 class PriceChangeDetector implements PriceChangeDetectorInterface
 {
@@ -28,9 +28,13 @@ class PriceChangeDetector implements PriceChangeDetectorInterface
     /** Session key for storing price change alerts. */
     private const string SESSION_KEY = 'travel_price_change_alerts';
 
+    private readonly SessionAccessor $session;
+
     public function __construct(
         private readonly float $tolerancePercent = 0.0,
+        ?SessionAccessor $session = null,
     ) {
+        $this->session = $session ?? new SessionAccessor();
     }
 
     /**
@@ -103,34 +107,53 @@ class PriceChangeDetector implements PriceChangeDetectorInterface
     #[\Override]
     public function storeAlert(array $alertData, string $cartId = ''): void
     {
-        $alerts = Tygh::$app['session'][self::SESSION_KEY] ?? [];
+        $alerts = $this->readAlerts();
         $key = $cartId ?: 'global_' . count($alerts);
         $alerts[$key] = $alertData;
-        Tygh::$app['session'][self::SESSION_KEY] = $alerts;
+        $this->session->set(self::SESSION_KEY, $alerts);
     }
 
     /**
      * Retrieve and clear all pending price change alerts from the session.
      *
-     * @return array<int, array<string, mixed>>
+     * @return array<int|string, array<string, mixed>>
      */
     #[\Override]
     public function consumeAlerts(): array
     {
-        $alerts = Tygh::$app['session'][self::SESSION_KEY] ?? [];
-        unset(Tygh::$app['session'][self::SESSION_KEY]);
+        $alerts = $this->readAlerts();
+        $this->session->unset(self::SESSION_KEY);
         return $alerts;
     }
 
     /**
      * Retrieve pending alerts without clearing them.
      *
-     * @return array<int, array<string, mixed>>
+     * @return array<int|string, array<string, mixed>>
      */
     #[\Override]
     public function peekAlerts(): array
     {
-        return Tygh::$app['session'][self::SESSION_KEY] ?? [];
+        return $this->readAlerts();
+    }
+
+    /**
+     * @return array<int|string, array<string, mixed>>
+     */
+    private function readAlerts(): array
+    {
+        $alerts = $this->session->get(self::SESSION_KEY);
+        if (!is_array($alerts)) {
+            return [];
+        }
+        $out = [];
+        foreach ($alerts as $key => $entry) {
+            if (is_array($entry)) {
+                /** @var array<string, mixed> $entry */
+                $out[$key] = $entry;
+            }
+        }
+        return $out;
     }
 
     private function getTolerancePercent(): float

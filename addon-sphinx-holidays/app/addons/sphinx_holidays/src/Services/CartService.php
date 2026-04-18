@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace Tygh\Addons\SphinxHolidays\Services;
 
 use Tygh\Addons\SphinxHolidays\Contracts\CartServiceInterface;
+use Tygh\Addons\TravelCore\Helpers\SessionAccessor;
 use Tygh\Addons\TravelCore\Services\CommissionCalculator;
 use Tygh\Addons\TravelCore\Services\CurrencyService;
 use Tygh\Addons\TravelCore\Services\GuestDataService;
 use Tygh\Addons\TravelCore\TravelConstants;
-use Tygh\Tygh;
 
 /**
  * Unified cart service for Sphinx Holidays bookings.
@@ -24,6 +24,12 @@ use Tygh\Tygh;
  */
 final class CartService implements CartServiceInterface
 {
+    private readonly SessionAccessor $session;
+
+    public function __construct(?SessionAccessor $session = null)
+    {
+        $this->session = $session ?? new SessionAccessor();
+    }
     /**
      * @return array<int, mixed>|null
      */
@@ -31,7 +37,7 @@ final class CartService implements CartServiceInterface
     public function checkRateLimit(string $errorRedirect = 'index.index'): ?array
     {
         $security = Container::getSecurityService();
-        $auth = Tygh::$app['session']['auth'] ?? [];
+        $auth = $this->session->auth();
         $rateLimitId = !empty($auth['user_id']) ? (string) $auth['user_id'] : (string) session_id();
 
         if (!$security->checkBookingRateLimit($rateLimitId)) {
@@ -168,20 +174,15 @@ final class CartService implements CartServiceInterface
         string $successMessage,
         string $redirectUrl = 'checkout.cart',
     ): array {
-        $cart = &Tygh::$app['session']['cart'];
-        $auth = &Tygh::$app['session']['auth'];
-
-        if (empty($cart)) {
-            fn_clear_cart($cart);
-        }
-
-        $cartId = fn_generate_cart_id($productId, $productExtra);
-
         $primaryCurrency = defined('CART_PRIMARY_CURRENCY') ? CART_PRIMARY_CURRENCY : 'EUR';
         $currencyService = new CurrencyService($apiCurrency);
         $cartPrice = $currencyService->convertFromApiCurrency($totalPrice, $primaryCurrency);
 
-        $cart['products'][$cartId] = [
+        $cartId = fn_generate_cart_id($productId, $productExtra);
+
+        // Write the assembled row into the session cart via the allowlisted
+        // functions/ boundary — keeps Tygh::\$app out of this service class.
+        fn_sphinx_holidays_write_cart_row($cartId, [
             'product_id' => $productId,
             'amount' => 1,
             'price' => $cartPrice,
@@ -189,10 +190,7 @@ final class CartService implements CartServiceInterface
             'original_price' => $cartPrice,
             'extra' => $productExtra,
             'stored_price' => 'Y',
-        ];
-
-        fn_calculate_cart_content($cart, $auth, 'S', true, 'F', true);
-        fn_save_cart_content($cart, $auth['user_id'] ?? 0);
+        ]);
 
         fn_set_notification('N', __('notice'), $successMessage);
 
@@ -221,7 +219,7 @@ final class CartService implements CartServiceInterface
         string $currency,
         array $apiResponse,
     ): array {
-        $auth = Tygh::$app['session']['auth'] ?? [];
+        $auth = $this->session->auth();
 
         return [
             'order_id' => 0,

@@ -941,3 +941,29 @@ function fn_sphinx_holidays_get_hotels(array $params = []): array
 
     return [$hotels, $params];
 }
+
+/**
+ * Write a single pre-assembled cart-product row into the current session cart,
+ * then trigger CS-Cart's calculate + save trio.
+ *
+ * Thin wrapper that absorbs the reference-based `$cart`/`$auth` handling
+ * required by CS-Cart's procedural cart API. Living at the func.php boundary
+ * keeps `\Tygh::\$app` out of `src/Services/CartService`.
+ *
+ * @param array<string, mixed> $row Pre-assembled cart-product entry (shape:
+ *                                  product_id, amount, price, extra, …).
+ */
+function fn_sphinx_holidays_write_cart_row(string $cartId, array $row): void
+{
+    $cart = &\Tygh\Tygh::$app['session']['cart'];
+    $auth = &\Tygh\Tygh::$app['session']['auth'];
+
+    if (empty($cart)) {
+        fn_clear_cart($cart);
+    }
+
+    $cart['products'][$cartId] = $row;
+
+    fn_calculate_cart_content($cart, $auth, 'S', true, 'F', true);
+    fn_save_cart_content($cart, $auth['user_id'] ?? 0);
+}
