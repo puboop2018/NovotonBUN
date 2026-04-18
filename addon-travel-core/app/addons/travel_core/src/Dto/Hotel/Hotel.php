@@ -97,10 +97,35 @@ final readonly class Hotel
      * Datetime fields are serialised as 'Y-m-d H:i:s' (CS-Cart convention);
      * JSON blobs are re-encoded; Y/N booleans are re-emitted as 'Y'/'N'.
      *
-     * @return array<string, mixed>
+     * @return array{
+     *   hotel_id: string,
+     *   product_id: int|null,
+     *   hotel_name: string|null,
+     *   city: string|null,
+     *   region: string|null,
+     *   country: string|null,
+     *   hotel_type: string,
+     *   star_rating: int|null,
+     *   property_type: string,
+     *   is_adults_only: 'Y'|'N',
+     *   latitude: float|null,
+     *   longitude: float|null,
+     *   hotel_data: string|null,
+     *   has_room_price: 'Y'|'N',
+     *   packages_count: int,
+     *   hotelinfo_synced_at: string|null,
+     *   hotel_list_synced_at: string|null,
+     *   last_price_check: string|null,
+     *   calendar_prices_raw: string|null,
+     *   created_at: string|null,
+     *   updated_at: string|null
+     * }
      */
     public function toArray(): array
     {
+        $hotelDataJson = $this->rawHotelData === null ? null : (json_encode($this->rawHotelData) ?: null);
+        $calendarPricesJson = $this->rawCalendarPrices === null ? null : (json_encode($this->rawCalendarPrices) ?: null);
+
         return [
             'hotel_id' => $this->hotelId,
             'product_id' => $this->productId,
@@ -114,13 +139,13 @@ final readonly class Hotel
             'is_adults_only' => $this->isAdultsOnly ? 'Y' : 'N',
             'latitude' => $this->coords?->latitude,
             'longitude' => $this->coords?->longitude,
-            'hotel_data' => $this->rawHotelData === null ? null : json_encode($this->rawHotelData),
+            'hotel_data' => $hotelDataJson,
             'has_room_price' => $this->hasRoomPrice ? 'Y' : 'N',
             'packages_count' => $this->packagesCount,
             'hotelinfo_synced_at' => $this->hotelinfoSyncedAt?->format('Y-m-d H:i:s'),
             'hotel_list_synced_at' => $this->hotelListSyncedAt?->format('Y-m-d H:i:s'),
             'last_price_check' => $this->lastPriceCheck?->format('Y-m-d H:i:s'),
-            'calendar_prices_raw' => $this->rawCalendarPrices === null ? null : json_encode($this->rawCalendarPrices),
+            'calendar_prices_raw' => $calendarPricesJson,
             'created_at' => $this->createdAt?->format('Y-m-d H:i:s'),
             'updated_at' => $this->updatedAt?->format('Y-m-d H:i:s'),
         ];

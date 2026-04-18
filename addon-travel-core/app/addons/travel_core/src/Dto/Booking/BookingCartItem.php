@@ -87,7 +87,43 @@ final readonly class BookingCartItem
     /**
      * Re-emit in the `extra` shape CS-Cart's cart system expects.
      *
-     * @return array<string, mixed>
+     * @return array{
+     *   travel_booking: bool,
+     *   novoton_booking: bool,
+     *   novoton_booking_id: int,
+     *   hotel_id: string,
+     *   hotel_name: string,
+     *   hotel_city: string,
+     *   hotel_region: string,
+     *   hotel_country: string,
+     *   package_name: string,
+     *   room_id: string,
+     *   room_name: string,
+     *   room_type_display: string,
+     *   board_id: string,
+     *   board_name: string,
+     *   check_in: string,
+     *   check_out: string,
+     *   nights: int,
+     *   adults: int,
+     *   children: int,
+     *   children_ages: string,
+     *   num_rooms: int,
+     *   rooms_data: list<array<string, mixed>>,
+     *   guest_names: string,
+     *   holder_name: string,
+     *   guests_data: string,
+     *   contact_email: string,
+     *   contact_phone: string,
+     *   terms_of_payment: string,
+     *   terms_of_cancellation: string,
+     *   terms_of_payment_raw: string,
+     *   terms_of_cancellation_raw: string,
+     *   remark: string,
+     *   important: string,
+     *   total_price: float,
+     *   currency: string
+     * }
      */
     public function toCartExtra(): array
     {
@@ -135,7 +171,15 @@ final readonly class BookingCartItem
      * `product_id`, `amount`, `price`, `extra`, …). Mirrors what
      * CartAssemblyService::assembleCartProduct() used to return.
      *
-     * @return array<string, mixed>
+     * @return array{
+     *   product_id: int,
+     *   amount: int,
+     *   price: float,
+     *   base_price: float,
+     *   original_price: float,
+     *   stored_price: string,
+     *   extra: array<string, mixed>
+     * }
      */
     public function toCartProductRow(): array
     {

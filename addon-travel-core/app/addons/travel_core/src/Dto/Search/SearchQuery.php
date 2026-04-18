@@ -107,7 +107,21 @@ final readonly class SearchQuery
      * (it duplicates the same data and callers that need it can build it from
      * the DTO via toNovotonParamsArray()).
      *
-     * @return array<string, mixed>
+     * @return array{
+     *   check_in: string,
+     *   check_out: string,
+     *   nights: int,
+     *   adults: int,
+     *   children: list<int>,
+     *   children_count: int,
+     *   children_ages_str: string,
+     *   num_rooms: int,
+     *   rooms_data: list<array{adults: int, children: int, childrenAges: list<int>}>,
+     *   flex_days: int,
+     *   meal_plan: string,
+     *   hotel_id: string,
+     *   product_id: int
+     * }
      */
     public function toArray(): array
     {
@@ -134,7 +148,24 @@ final readonly class SearchQuery
      * Emit the template-ready sub-array historically assigned as
      * `novoton_params` (used by SearchResultFormatter).
      *
-     * @return array<string, mixed>
+     * @return array{
+     *   check_in: string,
+     *   check_out: string,
+     *   nights: int,
+     *   adults: int,
+     *   children: list<int>,
+     *   children_count: int,
+     *   children_ages: string,
+     *   children_ages_str: string,
+     *   children_ages_array: list<int>,
+     *   meal_plan: string,
+     *   hotel_id: string,
+     *   product_id: int,
+     *   num_rooms: int,
+     *   rooms_data: list<array{adults: int, children: int, childrenAges: list<int>}>,
+     *   rooms_data_json: string,
+     *   flex_days: int
+     * }
      */
     public function toNovotonParamsArray(): array
     {
@@ -156,7 +187,7 @@ final readonly class SearchQuery
             'product_id' => $this->productId,
             'num_rooms' => $this->numRooms(),
             'rooms_data' => $roomsData,
-            'rooms_data_json' => json_encode($roomsData),
+            'rooms_data_json' => json_encode($roomsData) ?: '[]',
             'flex_days' => $this->flexDays,
         ];
     }
