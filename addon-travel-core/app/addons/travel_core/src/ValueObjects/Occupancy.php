@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\TravelCore\ValueObjects;
 
 use Tygh\Addons\TravelCore\Exceptions\InvalidArgumentException;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\TravelConstants;
 
 final class Occupancy
@@ -51,7 +52,7 @@ final class Occupancy
 
         $ages = [];
         for ($i = 0; $i < $children; $i++) {
-            $age = isset($childrenAges[$i]) ? (int)($childrenAges[$i]) : 0;
+            $age = isset($childrenAges[$i]) ? TypeCoerce::toInt($childrenAges[$i]) : 0;
             if ($age < TravelConstants::MIN_CHILD_AGE || $age > TravelConstants::MAX_CHILD_AGE) {
                 $age = max(TravelConstants::MIN_CHILD_AGE, min(TravelConstants::MAX_CHILD_AGE, $age));
             }

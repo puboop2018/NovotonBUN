@@ -39,7 +39,7 @@ class DirectoryManager
 
         if (!is_dir($reports_dir)) {
             return function_exists('fn_mkdir')
-                ? fn_mkdir($reports_dir)
+                ? (bool) fn_mkdir($reports_dir)
                 : mkdir($reports_dir, 0o755, true);
         }
 
