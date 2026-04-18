@@ -16,8 +16,6 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Services;
 
-use Tygh\Registry;
-
 class TermsFormatter
 {
     /**
@@ -140,8 +138,10 @@ class TermsFormatter
             return (string) $date;
         }
 
-        $dateFormat = Registry::get('settings.Appearance.date_format');
-        if (empty($dateFormat)) {
+        $dateFormat = ConfigProvider::getDateFormat();
+        // ConfigProvider default is '%d %b %Y'; for terms display we prefer
+        // the numeric form when the admin setting is empty.
+        if ($dateFormat === '%d %b %Y') {
             $dateFormat = '%d.%m.%Y';
         }
 

@@ -448,6 +448,45 @@ class ConfigProvider
         return (int) (Registry::get('runtime.company_id') ?: 1);
     }
 
+    /**
+     * Absolute filesystem path to the CS-Cart `app/addons/` directory.
+     */
+    public static function getAddonsDir(): string
+    {
+        $dir = Registry::get('config.dir.addons');
+        return is_string($dir) ? $dir : '';
+    }
+
+    /**
+     * Absolute filesystem path to CS-Cart's misc-cache directory
+     * (runtime cache storage for addons).
+     */
+    public static function getCacheMiscDir(): string
+    {
+        $dir = Registry::get('config.dir.cache_misc');
+        return is_string($dir) ? $dir : '';
+    }
+
+    /**
+     * CS-Cart's global encryption key (`config.crypt_key`), used for
+     * reversible tokenisation of addon secrets.
+     */
+    public static function getCryptKey(): string
+    {
+        $key = Registry::get('config.crypt_key');
+        return is_string($key) ? $key : '';
+    }
+
+    /**
+     * CS-Cart's admin-configured display date format
+     * (e.g. '%d %b %Y'). Falls back to a sensible default when missing.
+     */
+    public static function getDateFormat(): string
+    {
+        $fmt = Registry::get('settings.Appearance.date_format');
+        return is_string($fmt) && $fmt !== '' ? $fmt : '%d %b %Y';
+    }
+
     // ── SEO Templates ──
 
     public static function getSeoProductName(): string

@@ -10,7 +10,6 @@ use Tygh\Addons\NovotonHolidays\Cron\AbstractCronCommand;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Services\Container;
 use Tygh\Addons\TravelCore\Services\TravelGroupResolver;
-use Tygh\Registry;
 
 class AddProductsCommand extends AbstractCronCommand
 {
@@ -152,7 +151,7 @@ class AddProductsCommand extends AbstractCronCommand
                     'price' => 0,
                     'amount' => ConfigProvider::getDefaultProductQuantity(),
                     'status' => 'D',
-                    'company_id' => Registry::get('runtime.company_id') ?: 1,
+                    'company_id' => ConfigProvider::getCompanyId(),
                     'main_category' => $category_id,
                     'category_ids' => [$category_id],
                 ], $seoFields);
@@ -194,7 +193,7 @@ class AddProductsCommand extends AbstractCronCommand
                     $added++;
                     $this->output("ADDED (ID: {$product_id})");
                 } else {
-                    $this->output("FAILED (category_id={$category_id}, company_id=" . (Registry::get('runtime.company_id') ?: 1) . ')');
+                    $this->output("FAILED (category_id={$category_id}, company_id=" . ConfigProvider::getCompanyId() . ')');
                 }
 
                 usleep(Constants::API_DELAY_NORMAL);

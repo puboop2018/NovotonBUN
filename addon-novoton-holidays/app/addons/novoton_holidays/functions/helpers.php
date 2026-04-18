@@ -116,6 +116,45 @@ function fn_novoton_holidays_add_to_session_cart(array $product): void
 }
 
 /**
+ * Get the global Smarty view instance.
+ *
+ * Thin boundary over `\Tygh\Tygh::$app['view']`. Lives at the functions/
+ * (allowlisted) layer so src/ services don't reach into the service-locator
+ * themselves.
+ */
+function fn_novoton_holidays_get_view(): \Smarty
+{
+    /** @var \Smarty $view */
+    $view = \Tygh\Tygh::$app['view'];
+    return $view;
+}
+
+/**
+ * Send a templated email via CS-Cart's native mailer service.
+ *
+ * Wraps `\Tygh\Tygh::$app['mailer']->send(...)` so src/ services don't
+ * touch the global service locator. Swallows per-call exceptions; callers
+ * inspect the returned bool to know whether the send succeeded.
+ *
+ * @param array<string, mixed> $params Mailer send() params: to, from, data,
+ *                                     template_code, tpl (+ any other keys
+ *                                     CS-Cart's mailer accepts).
+ * @param string $area                 'A' for admin, 'C' for customer.
+ */
+function fn_novoton_holidays_send_mail(array $params, string $area = 'A'): bool
+{
+    try {
+        $mailer = \Tygh\Tygh::$app['mailer'];
+        if (!is_object($mailer) || !method_exists($mailer, 'send')) {
+            return false;
+        }
+        return (bool) $mailer->send($params, $area);
+    } catch (\Throwable) {
+        return false;
+    }
+}
+
+/**
  * Broadcast the search / listing page title + blank meta description/keywords
  * into CS-Cart's dynamic navigation state.
  *

@@ -244,8 +244,7 @@ class AlternativesCommand extends AbstractCronCommand
                 'request' => $request,
             ];
 
-            $mailer = \Tygh\Tygh::$app['mailer'];
-            return (bool)$mailer->send([
+            return fn_novoton_holidays_send_mail([
                 'to' => $request['contact_email'],
                 'from' => 'default_company_orders_department',
                 'data' => $mail_data,

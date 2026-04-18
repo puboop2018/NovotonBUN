@@ -21,7 +21,6 @@ use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\Helpers\OutputWriterTrait;
 use Tygh\Addons\NovotonHolidays\Repository\CacheRepository;
 use Tygh\Addons\TravelCore\TravelConstants;
-use Tygh\Registry;
 
 class AdminCronService implements AdminCronServiceInterface
 {
@@ -214,7 +213,7 @@ class AdminCronService implements AdminCronServiceInterface
                     'price' => 0,
                     'amount' => ConfigProvider::getDefaultProductQuantity(),
                     'status' => 'D',
-                    'company_id' => Registry::get('runtime.company_id') ?: 1,
+                    'company_id' => ConfigProvider::getCompanyId(),
                     'main_category' => $category_id,
                     'category_ids' => [$category_id],
                 ];
