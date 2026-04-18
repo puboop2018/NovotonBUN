@@ -5,6 +5,16 @@ declare(strict_types=1);
 namespace Tygh\Addons\NovotonHolidays\Services;
 
 use Tygh\Addons\NovotonHolidays\Constants;
+use Tygh\Addons\TravelCore\Dto\Booking\BoardSelection;
+use Tygh\Addons\TravelCore\Dto\Booking\BookingCartItem;
+use Tygh\Addons\TravelCore\Dto\Booking\BookingCartItemBuilder;
+use Tygh\Addons\TravelCore\Dto\Booking\BookingPricing;
+use Tygh\Addons\TravelCore\Dto\Booking\BookingTerms;
+use Tygh\Addons\TravelCore\Dto\Booking\ContactInfo;
+use Tygh\Addons\TravelCore\Dto\Booking\GuestList;
+use Tygh\Addons\TravelCore\Dto\Booking\HotelSummary;
+use Tygh\Addons\TravelCore\Dto\Booking\RoomSelection;
+use Tygh\Addons\TravelCore\Dto\Booking\StayDates;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\ValueObjects\BoardType;
 use Tygh\Addons\TravelCore\ValueObjects\RoomType;
@@ -24,13 +34,16 @@ class CartAssemblyService implements CartAssemblyServiceInterface
     /**
      * Assemble the full cart product array for a Novoton booking.
      *
+     * Internally builds a {@see BookingCartItem} and emits the legacy
+     * array shape via `toCartProductRow()` for unchanged consumers.
+     *
      * @param int $productId CS-Cart product ID
      * @param int $bookingId Novoton booking ID
      * @param array<string, mixed> $bookingData Raw form data
      * @param array<string, mixed> $hotelInfo Hotel data from repository
-     * @param array<string, mixed> $guestsData Parsed guest data
+     * @param array<string, mixed> $guestsData Parsed guest data (list shape)
      * @param array<string, mixed> $priceResult Result from verifyPrice()
-     * @param array<string, mixed> $roomsData Parsed rooms data
+     * @param array<string, mixed> $roomsData Parsed rooms data (list shape)
      * @return array<string, mixed> Cart product entry with 'extra' containing all booking metadata
      */
     #[\Override]
@@ -43,80 +56,108 @@ class CartAssemblyService implements CartAssemblyServiceInterface
         array $priceResult,
         array $roomsData,
     ): array {
+        /** @var list<array<string, mixed>> $guestsList */
+        $guestsList = array_values(array_filter($guestsData, 'is_array'));
+        /** @var list<array<string, mixed>> $roomsList */
+        $roomsList = array_values(array_filter($roomsData, 'is_array'));
+
+        return $this->buildCartItem(
+            $productId,
+            $bookingId,
+            $bookingData,
+            $hotelInfo,
+            $guestsList,
+            $priceResult,
+            $roomsList,
+        )->toCartProductRow();
+    }
+
+    /**
+     * Typed-DTO view of {@see self::assembleCartProduct()}. Preferred by
+     * new callers; existing array consumers keep working via the legacy
+     * method above.
+     *
+     * @param array<string, mixed> $bookingData
+     * @param array<string, mixed> $hotelInfo
+     * @param list<array<string, mixed>> $guestsData
+     * @param array<string, mixed> $priceResult
+     * @param list<array<string, mixed>> $roomsData
+     */
+    public function buildCartItem(
+        int $productId,
+        int $bookingId,
+        array $bookingData,
+        array $hotelInfo,
+        array $guestsData,
+        array $priceResult,
+        array $roomsData,
+    ): BookingCartItem {
         $boardId = TypeCoerce::toString($bookingData['board_id'] ?? 'BB');
-        $nights = self::calculateNights(
-            TypeCoerce::toString($bookingData['check_in'] ?? ''),
-            TypeCoerce::toString($bookingData['check_out'] ?? ''),
+        $roomIdRaw = TypeCoerce::toString($bookingData['room_id'] ?? '');
+        $checkIn = TypeCoerce::toString($bookingData['check_in'] ?? '');
+        $checkOut = TypeCoerce::toString($bookingData['check_out'] ?? '');
+        $adults = TypeCoerce::toInt($bookingData['adults'] ?? 2);
+        $children = TypeCoerce::toInt($bookingData['children'] ?? 0);
+        $fallbackAgesCsv = TypeCoerce::toString($bookingData['children_ages'] ?? '');
+        $totalPrice = TypeCoerce::toFloat($priceResult['total_price'] ?? 0);
+
+        $hotel = new HotelSummary(
+            hotelId: TypeCoerce::toString($bookingData['hotel_id'] ?? ''),
+            name: TypeCoerce::toString($hotelInfo['hotel_name'] ?? ''),
+            city: TypeCoerce::toString($hotelInfo['city'] ?? ''),
+            region: TypeCoerce::toString($hotelInfo['region'] ?? ''),
+            country: TypeCoerce::toString($hotelInfo['country'] ?? Constants::DEFAULT_COUNTRY),
         );
 
-        $guestNames = [];
-        foreach ($guestsData as $g) {
-            $guestRow = TypeCoerce::toStringMap($g);
-            if (!empty($guestRow['name'])) {
-                $guestNames[] = TypeCoerce::toString($guestRow['name']);
-            }
-        }
-        $holderName = $guestNames[0] ?? '';
-        $guestList = implode(', ', $guestNames);
+        $room = new RoomSelection(
+            roomId: $roomIdRaw,
+            roomName: str_replace(['%2b', '%2B'], '+', $roomIdRaw),
+            typeDisplay: RoomType::formatRoomLabel($roomIdRaw),
+        );
 
-        $childAges = [];
-        foreach ($guestsData as $g) {
-            $guestRow = TypeCoerce::toStringMap($g);
-            if (isset($guestRow['type']) && $guestRow['type'] === 'child' && isset($guestRow['age'])) {
-                $childAges[] = TypeCoerce::toInt($guestRow['age']);
-            }
-        }
+        $board = new BoardSelection(
+            boardId: $boardId,
+            boardName: BoardType::toDisplayName($boardId),
+        );
 
-        $totalPrice = $priceResult['total_price'] ?? 0;
+        $stay = StayDates::fromDates($checkIn, $checkOut);
 
-        return [
-            'product_id' => $productId,
-            'amount' => 1,
-            'price' => $totalPrice,
-            'base_price' => $totalPrice,
-            'original_price' => $totalPrice,
-            'stored_price' => 'Y',
-            'extra' => [
-                'travel_booking' => true,
-                'novoton_booking' => true,
-                'novoton_booking_id' => $bookingId,
-                'hotel_id' => $bookingData['hotel_id'],
-                'hotel_name' => $hotelInfo['hotel_name'] ?? '',
-                'hotel_city' => $hotelInfo['city'] ?? '',
-                'hotel_region' => $hotelInfo['region'] ?? '',
-                'hotel_country' => $hotelInfo['country'] ?? Constants::DEFAULT_COUNTRY,
-                'package_name' => $bookingData['package_name'] ?? '',
-                'room_id' => $bookingData['room_id'],
-                'room_name' => str_replace(['%2b', '%2B'], '+', TypeCoerce::toString($bookingData['room_id'] ?? '')),
-                'room_type_display' => RoomType::formatRoomLabel(TypeCoerce::toString($bookingData['room_id'] ?? '')),
-                'board_id' => $boardId,
-                'board_name' => BoardType::toDisplayName($boardId),
-                'check_in' => $bookingData['check_in'],
-                'check_out' => $bookingData['check_out'],
-                'nights' => $nights,
-                'adults' => TypeCoerce::toInt($bookingData['adults'] ?? 2),
-                'children' => TypeCoerce::toInt($bookingData['children'] ?? 0),
-                'children_ages' => !empty($childAges) ? implode(',', $childAges) : ($bookingData['children_ages'] ?? ''),
-                'num_rooms' => TypeCoerce::toInt($bookingData['num_rooms'] ?? 1),
-                'rooms_data' => $roomsData,
-                'guest_names' => $guestList,
-                'holder_name' => $holderName,
-                'guests_data' => json_encode($guestsData),
-                'contact_email' => TypeCoerce::toStringMap($bookingData['contact'] ?? [])['email'] ?? '',
-                'contact_phone' => TypeCoerce::toStringMap($bookingData['contact'] ?? [])['phone'] ?? '',
-                'terms_of_payment' => TermsFormatter::formatPaymentTerms(TypeCoerce::toString($priceResult['terms_of_payment'] ?? '')),
-                'terms_of_cancellation' => TermsFormatter::formatCancellationTerms(
-                    TypeCoerce::toString($priceResult['terms_of_cancellation'] ?? ''),
-                    TypeCoerce::toString($bookingData['check_in'] ?? ''),
-                ),
-                'terms_of_payment_raw' => $priceResult['terms_of_payment'] ?? '',
-                'terms_of_cancellation_raw' => $priceResult['terms_of_cancellation'] ?? '',
-                'remark' => $priceResult['remark'] ?? '',
-                'important' => $priceResult['important'] ?? '',
-                'total_price' => $totalPrice,
-                'currency' => ConfigProvider::getApiCurrency(),
-            ],
-        ];
+        $guests = GuestList::fromGuestsData($guestsData, $adults, $children, $fallbackAgesCsv);
+
+        $contact = ContactInfo::fromBookingData($bookingData);
+
+        $terms = new BookingTerms(
+            payment: TermsFormatter::formatPaymentTerms(TypeCoerce::toString($priceResult['terms_of_payment'] ?? '')),
+            paymentRaw: TypeCoerce::toString($priceResult['terms_of_payment'] ?? ''),
+            cancellation: TermsFormatter::formatCancellationTerms(
+                TypeCoerce::toString($priceResult['terms_of_cancellation'] ?? ''),
+                $checkIn,
+            ),
+            cancellationRaw: TypeCoerce::toString($priceResult['terms_of_cancellation'] ?? ''),
+        );
+
+        $pricing = new BookingPricing(
+            totalPrice: $totalPrice,
+            currency: ConfigProvider::getApiCurrency(),
+            remark: TypeCoerce::toString($priceResult['remark'] ?? ''),
+            important: TypeCoerce::toString($priceResult['important'] ?? ''),
+        );
+
+        return (new BookingCartItemBuilder())
+            ->productId($productId)
+            ->bookingId($bookingId)
+            ->packageName(TypeCoerce::toString($bookingData['package_name'] ?? ''))
+            ->numRooms(TypeCoerce::toInt($bookingData['num_rooms'] ?? 1))
+            ->roomsData($roomsData)
+            ->hotel($hotel)
+            ->room($room)
+            ->board($board)
+            ->stay($stay)
+            ->guests($guests)
+            ->contact($contact)
+            ->terms($terms)
+            ->pricing($pricing)
+            ->build();
     }
 
     /**
