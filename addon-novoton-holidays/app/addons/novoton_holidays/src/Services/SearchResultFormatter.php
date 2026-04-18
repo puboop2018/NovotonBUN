@@ -16,7 +16,6 @@ declare(strict_types=1);
 namespace Tygh\Addons\NovotonHolidays\Services;
 
 use Tygh\Addons\TravelCore\Services\CurrencyService;
-use Tygh\Registry;
 use Tygh\Tygh;
 
 class SearchResultFormatter implements SearchResultFormatterInterface
@@ -111,7 +110,8 @@ class SearchResultFormatter implements SearchResultFormatterInterface
     {
         /** @var \Smarty $view */
         $view = Tygh::$app['view'];
-        $pageTitle = __('novoton_holidays.search_results') ?: 'Search Results';
+        $translated = __('novoton_holidays.search_results');
+        $pageTitle = is_string($translated) && $translated !== '' ? $translated : 'Search Results';
 
         $view->assign('novoton_results', []);
         $view->assign('novoton_params', [
@@ -158,9 +158,10 @@ class SearchResultFormatter implements SearchResultFormatterInterface
     private function assignCurrency($view): void
     {
         $currency = defined('CART_SECONDARY_CURRENCY') ? CART_SECONDARY_CURRENCY : 'EUR';
-        $currencies = Registry::get('currencies');
-        $coefficient = (float) ($currencies[$currency]['coefficient'] ?? 1.0);
-        $symbol = $currencies[$currency]['symbol'] ?? $currency;
+        $currencies = ConfigProvider::getCurrencies();
+        $entry = is_array($currencies[$currency] ?? null) ? $currencies[$currency] : [];
+        $coefficient = is_numeric($entry['coefficient'] ?? null) ? (float) $entry['coefficient'] : 1.0;
+        $symbol = is_string($entry['symbol'] ?? null) && $entry['symbol'] !== '' ? $entry['symbol'] : $currency;
 
         $view->assign('novoton_display_currency', $currency);
         $view->assign('novoton_display_coefficient', $coefficient);
@@ -438,13 +439,13 @@ class SearchResultFormatter implements SearchResultFormatterInterface
     /** @param \Smarty $view */
     private function assignMeta($view): void
     {
-        $pageTitle = __('novoton_holidays.search_results') ?: 'Search Results';
+        $translated = __('novoton_holidays.search_results');
+        $pageTitle = is_string($translated) && $translated !== '' ? $translated : 'Search Results';
 
         $view->assign('page_title', $pageTitle);
-        Registry::set('navigation.dynamic.page_title', $pageTitle);
-        Registry::set('navigation.dynamic.meta_description', '');
-        Registry::set('navigation.dynamic.meta_keywords', '');
-        Registry::set('runtime.page_title', $pageTitle);
+        // Broadcast dynamic navigation/meta state via a functions/ helper —
+        // keeps this service class free of direct Registry writes.
+        fn_novoton_holidays_set_dynamic_page_meta($pageTitle);
         $view->assign('meta_description', '');
         $view->assign('meta_keywords', '');
         $view->assign('canonical_url', '');

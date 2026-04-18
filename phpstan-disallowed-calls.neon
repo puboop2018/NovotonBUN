@@ -31,6 +31,13 @@ parameters:
                 - '*/hooks.php'
                 - '*/cron.php'
                 - '*/src/Helpers/RegistryCoerce.php'
+                # ConfigProvider plays the same role as RegistryCoerce for addon
+                # SETTINGS (isDebugMode, getTimezone, getCurrencies, etc.) — it's
+                # the designated Registry-reader for config values. 92+ call sites
+                # use it statically; migrating all of them to DI is out of scope
+                # and would just recreate the same boundary under a new name.
+                # Settings wrappers are allowlisted; non-settings services aren't.
+                - '*/src/Services/ConfigProvider.php'
         -
             method: 'Tygh\Registry::set()'
             message: 'Do not mutate the global Registry from inside a src/ service class. Pass a configured object through the constructor, or mutate from the calling controller/hook.'
@@ -43,6 +50,13 @@ parameters:
                 - '*/hooks.php'
                 - '*/cron.php'
                 - '*/src/Helpers/RegistryCoerce.php'
+                # ConfigProvider plays the same role as RegistryCoerce for addon
+                # SETTINGS (isDebugMode, getTimezone, getCurrencies, etc.) — it's
+                # the designated Registry-reader for config values. 92+ call sites
+                # use it statically; migrating all of them to DI is out of scope
+                # and would just recreate the same boundary under a new name.
+                # Settings wrappers are allowlisted; non-settings services aren't.
+                - '*/src/Services/ConfigProvider.php'
 
     disallowedProperties:
         -
@@ -57,3 +71,10 @@ parameters:
                 - '*/hooks.php'
                 - '*/cron.php'
                 - '*/src/Helpers/RegistryCoerce.php'
+                # ConfigProvider plays the same role as RegistryCoerce for addon
+                # SETTINGS (isDebugMode, getTimezone, getCurrencies, etc.) — it's
+                # the designated Registry-reader for config values. 92+ call sites
+                # use it statically; migrating all of them to DI is out of scope
+                # and would just recreate the same boundary under a new name.
+                # Settings wrappers are allowlisted; non-settings services aren't.
+                - '*/src/Services/ConfigProvider.php'

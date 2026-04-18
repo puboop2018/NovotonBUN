@@ -406,6 +406,21 @@ class ConfigProvider
 
     // ── Environment ──
 
+    /**
+     * CS-Cart currency catalogue: code => per-currency metadata.
+     *
+     * Entries come from CS-Cart's `?:currencies` table and conventionally
+     * carry at least `coefficient` (float) and `symbol` (string), but the
+     * underlying registry value is typed `mixed` by PHPStan — downstream
+     * callers should coerce per-field.
+     *
+     * @return array<string, mixed>
+     */
+    public static function getCurrencies(): array
+    {
+        return \Tygh\Addons\TravelCore\Helpers\TypeCoerce::toStringMap(Registry::get('currencies'));
+    }
+
     public static function getTimezone(): string
     {
         return Registry::get('settings.Appearance.timezone') ?: 'Europe/Bucharest';
