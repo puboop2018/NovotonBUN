@@ -25,34 +25,10 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_admin.php
 
 		-
-			message: '#^Cannot access offset ''view'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 3
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_admin.php
-
-		-
 			message: '#^Parameter \#2 \$array of function implode expects array, mixed given\.$#'
 			identifier: argument.type
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_admin.php
-
-		-
-			message: '#^Cannot access offset ''mailer'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_alternatives.php
-
-		-
-			message: '#^Cannot access offset ''view'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_alternatives.php
-
-		-
-			message: '#^Cannot access offset ''view'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_bookings.php
 
 		-
 			message: '#^Cannot call method assign\(\) on mixed\.$#'
@@ -139,8 +115,8 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_diagnostic.php
 
 		-
-			message: '#^Cannot access offset ''view'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
+			message: '#^Call to an undefined static method Tygh\\Registry\:\:del\(\)\.$#'
+			identifier: staticMethod.notFound
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_holidays.php
 
@@ -247,34 +223,16 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_hotels.php
 
 		-
-			message: '#^Cannot access offset ''view'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_price_compare.php
-
-		-
 			message: '#^Cannot call method assign\(\) on mixed\.$#'
 			identifier: method.nonObject
 			count: 2
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_price_compare.php
 
 		-
-			message: '#^Cannot access offset ''view'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_prices.php
-
-		-
 			message: '#^Cannot cast mixed to string\.$#'
 			identifier: cast.string
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_prices.php
-
-		-
-			message: '#^Cannot access offset ''view'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_seo_templates.php
 
 		-
 			message: '#^Cannot access offset non\-falsy\-string on mixed\.$#'
@@ -385,12 +343,6 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_tools.php
 
 		-
-			message: '#^Cannot access offset ''view'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_tools.php
-
-		-
 			message: '#^Cannot cast mixed to string\.$#'
 			identifier: cast.string
 			count: 1
@@ -478,12 +430,6 @@ parameters:
 			message: '#^Cannot access offset ''products'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/add_to_cart.php
-
-		-
-			message: '#^Cannot access offset ''session'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 7
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/add_to_cart.php
 
 		-
@@ -577,18 +523,6 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/booking_form.php
 
 		-
-			message: '#^Cannot access offset ''session'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/booking_form.php
-
-		-
-			message: '#^Cannot access offset ''view'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/booking_form.php
-
-		-
 			message: '#^Cannot access offset ''auth'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 2
@@ -596,18 +530,6 @@ parameters:
 
 		-
 			message: '#^Cannot access offset ''cart'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/edit_booking.php
-
-		-
-			message: '#^Cannot access offset ''session'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 4
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/edit_booking.php
-
-		-
-			message: '#^Cannot access offset ''view'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/edit_booking.php
@@ -628,12 +550,6 @@ parameters:
 			message: '#^Cannot access offset ''auth'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/request_alternatives.php
-
-		-
-			message: '#^Cannot access offset ''session'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 2
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/request_alternatives.php
 
 		-
@@ -683,12 +599,6 @@ parameters:
 			identifier: argument.type
 			count: 4
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/request_alternatives.php
-
-		-
-			message: '#^Cannot access offset ''view'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/search.php
 
 		-
 			message: '#^Cannot call method assign\(\) on mixed\.$#'
@@ -784,12 +694,6 @@ parameters:
 			message: '#^Cannot access offset ''products'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 3
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/update_booking.php
-
-		-
-			message: '#^Cannot access offset ''session'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 5
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/update_booking.php
 
 		-
@@ -1033,12 +937,6 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/email.php
 
 		-
-			message: '#^Cannot access offset ''mailer'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 3
-			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/email.php
-
-		-
 			message: '#^Function fn_novoton_holidays_send_import_report_email\(\) should return bool but returns mixed\.$#'
 			identifier: return.type
 			count: 1
@@ -1142,12 +1040,6 @@ parameters:
 
 		-
 			message: '#^Cannot access offset ''product_code'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/helpers.php
-
-		-
-			message: '#^Cannot access offset ''session'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/functions/helpers.php
@@ -1486,12 +1378,6 @@ parameters:
 			message: '#^Cannot access offset ''room_type_display'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/cart_hooks.php
-
-		-
-			message: '#^Cannot access offset ''view'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 5
 			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/cart_hooks.php
 
 		-
@@ -1921,6 +1807,12 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/AddProductsCommand.php
 
 		-
+			message: '#^Calling Tygh\\Registry\:\:get\(\) is forbidden, Inject the value via the constructor; Registry\:\:get\(\) is forbidden inside src/ class bodies\. Use src/Helpers/RegistryCoerce\.php at the controller/hook boundary instead\.$#'
+			identifier: disallowed.method
+			count: 2
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/AddProductsCommand.php
+
+		-
 			message: '#^Cannot cast mixed to int\.$#'
 			identifier: cast.int
 			count: 1
@@ -2071,12 +1963,6 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/AddProductsCommand.php
 
 		-
-			message: '#^Cannot access offset ''mailer'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/AlternativesCommand.php
-
-		-
 			message: '#^Cannot call method send\(\) on mixed\.$#'
 			identifier: method.nonObject
 			count: 1
@@ -2140,6 +2026,12 @@ parameters:
 			message: '#^Part \$request\[''request_id''\] \(mixed\) of encapsed string cannot be cast to string\.$#'
 			identifier: encapsedStringPart.nonString
 			count: 2
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/AlternativesCommand.php
+
+		-
+			message: '#^Using Tygh\\Tygh\:\:\$app is forbidden, Tygh\:\:\$app\[\.\.\.\] is a service\-locator; inject the dependency \(session, view, mailer, storage\.\.\.\) through the constructor instead\. Permitted only at the CS\-Cart boundary \(controllers, hooks, functions\)\.$#'
+			identifier: disallowed.property
+			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/AlternativesCommand.php
 
 		-
@@ -2573,6 +2465,12 @@ parameters:
 			identifier: encapsedStringPart.nonString
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/HotelSyncCommand.php
+
+		-
+			message: '#^Calling Tygh\\Registry\:\:get\(\) is forbidden, Inject the value via the constructor; Registry\:\:get\(\) is forbidden inside src/ class bodies\. Use src/Helpers/RegistryCoerce\.php at the controller/hook boundary instead\.$#'
+			identifier: disallowed.method
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/OffersUpdateCommand.php
 
 		-
 			message: '#^Cannot access property \$Hotel on mixed\.$#'
@@ -3865,6 +3763,12 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/AdminCronService.php
 
 		-
+			message: '#^Calling Tygh\\Registry\:\:get\(\) is forbidden, Inject the value via the constructor; Registry\:\:get\(\) is forbidden inside src/ class bodies\. Use src/Helpers/RegistryCoerce\.php at the controller/hook boundary instead\.$#'
+			identifier: disallowed.method
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/AdminCronService.php
+
+		-
 			message: '#^Cannot access property \$Facility on mixed\.$#'
 			identifier: property.nonObject
 			count: 1
@@ -3949,12 +3853,6 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/AlternativeDateSearcher.php
 
 		-
-			message: '#^Cannot access offset ''mailer'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/AlternativeRequestService.php
-
-		-
 			message: '#^Cannot call method send\(\) on mixed\.$#'
 			identifier: method.nonObject
 			count: 1
@@ -4024,6 +3922,12 @@ parameters:
 			message: '#^Parameter \#4 \$checkOut of method Tygh\\Addons\\NovotonHolidays\\Services\\AlternativeRequestService\:\:buildRequestRecord\(\) expects string, mixed given\.$#'
 			identifier: argument.type
 			count: 2
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/AlternativeRequestService.php
+
+		-
+			message: '#^Using Tygh\\Tygh\:\:\$app is forbidden, Tygh\:\:\$app\[\.\.\.\] is a service\-locator; inject the dependency \(session, view, mailer, storage\.\.\.\) through the constructor instead\. Permitted only at the CS\-Cart boundary \(controllers, hooks, functions\)\.$#'
+			identifier: disallowed.property
+			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/AlternativeRequestService.php
 
 		-
@@ -4201,12 +4105,6 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingService.php
 
 		-
-			message: '#^Cannot access offset ''session'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 3
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingService.php
-
-		-
 			message: '#^Cannot access offset ''user_id'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 3
@@ -4246,6 +4144,12 @@ parameters:
 			message: '#^Parameter \#3 \$check_out of method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepositoryInterface\:\:findExisting\(\) expects string, mixed given\.$#'
 			identifier: argument.type
 			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingService.php
+
+		-
+			message: '#^Using Tygh\\Tygh\:\:\$app is forbidden, Tygh\:\:\$app\[\.\.\.\] is a service\-locator; inject the dependency \(session, view, mailer, storage\.\.\.\) through the constructor instead\. Permitted only at the CS\-Cart boundary \(controllers, hooks, functions\)\.$#'
+			identifier: disallowed.property
+			count: 3
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingService.php
 
 		-
@@ -4337,6 +4241,12 @@ parameters:
 			identifier: binaryOp.invalid
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/CartAssemblyService.php
+
+		-
+			message: '#^Calling Tygh\\Registry\:\:get\(\) is forbidden, Inject the value via the constructor; Registry\:\:get\(\) is forbidden inside src/ class bodies\. Use src/Helpers/RegistryCoerce\.php at the controller/hook boundary instead\.$#'
+			identifier: disallowed.method
+			count: 6
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/ConfigProvider.php
 
 		-
 			message: '#^Cannot cast mixed to float\.$#'
@@ -4579,6 +4489,12 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/DiagnosticsService.php
 
 		-
+			message: '#^Calling Tygh\\Registry\:\:get\(\) is forbidden, Inject the value via the constructor; Registry\:\:get\(\) is forbidden inside src/ class bodies\. Use src/Helpers/RegistryCoerce\.php at the controller/hook boundary instead\.$#'
+			identifier: disallowed.method
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/ErrorHandler.php
+
+		-
 			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\ErrorHandler\:\:getMessage\(\) should return string but returns mixed\.$#'
 			identifier: return.type
 			count: 2
@@ -4699,6 +4615,12 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PathResolver.php
 
 		-
+			message: '#^Calling Tygh\\Registry\:\:get\(\) is forbidden, Inject the value via the constructor; Registry\:\:get\(\) is forbidden inside src/ class bodies\. Use src/Helpers/RegistryCoerce\.php at the controller/hook boundary instead\.$#'
+			identifier: disallowed.method
+			count: 2
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PathResolver.php
+
+		-
 			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\PathResolver\:\:getPaths\(\) should return array\<string, string\> but returns array\<string, mixed\>\.$#'
 			identifier: return.type
 			count: 1
@@ -4706,12 +4628,6 @@ parameters:
 
 		-
 			message: '#^Cannot access offset ''novoton_price_cache'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PreOrderPriceVerifier.php
-
-		-
-			message: '#^Cannot access offset ''session'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PreOrderPriceVerifier.php
@@ -4737,6 +4653,12 @@ parameters:
 		-
 			message: '#^Parameter \#1 \$callback of function array_map expects \(callable\(mixed\)\: mixed\)\|null, ''intval'' given\.$#'
 			identifier: argument.type
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PreOrderPriceVerifier.php
+
+		-
+			message: '#^Using Tygh\\Tygh\:\:\$app is forbidden, Tygh\:\:\$app\[\.\.\.\] is a service\-locator; inject the dependency \(session, view, mailer, storage\.\.\.\) through the constructor instead\. Permitted only at the CS\-Cart boundary \(controllers, hooks, functions\)\.$#'
+			identifier: disallowed.property
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PreOrderPriceVerifier.php
 
@@ -4899,6 +4821,12 @@ parameters:
 		-
 			message: '#^Binary operation "\." between non\-falsy\-string and mixed results in an error\.$#'
 			identifier: binaryOp.invalid
+			count: 2
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/RoomPriceService.php
+
+		-
+			message: '#^Calling Tygh\\Registry\:\:get\(\) is forbidden, Inject the value via the constructor; Registry\:\:get\(\) is forbidden inside src/ class bodies\. Use src/Helpers/RegistryCoerce\.php at the controller/hook boundary instead\.$#'
+			identifier: disallowed.method
 			count: 2
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/RoomPriceService.php
 
@@ -5137,6 +5065,18 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SearchParameterNormalizer.php
 
 		-
+			message: '#^Calling Tygh\\Registry\:\:get\(\) is forbidden, Inject the value via the constructor; Registry\:\:get\(\) is forbidden inside src/ class bodies\. Use src/Helpers/RegistryCoerce\.php at the controller/hook boundary instead\.$#'
+			identifier: disallowed.method
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SearchResultFormatter.php
+
+		-
+			message: '#^Calling Tygh\\Registry\:\:set\(\) is forbidden, Do not mutate the global Registry from inside a src/ service class\. Pass a configured object through the constructor, or mutate from the calling controller/hook\.$#'
+			identifier: disallowed.method
+			count: 4
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SearchResultFormatter.php
+
+		-
 			message: '#^Cannot access offset ''coefficient'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
@@ -5146,12 +5086,6 @@ parameters:
 			message: '#^Cannot access offset ''symbol'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SearchResultFormatter.php
-
-		-
-			message: '#^Cannot access offset ''view'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 2
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SearchResultFormatter.php
 
 		-
@@ -5176,6 +5110,12 @@ parameters:
 			message: '#^Parameter \#3 \$lang of function fn_novoton_holidays_get_hotel_facilities_by_type expects string, mixed given\.$#'
 			identifier: argument.type
 			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SearchResultFormatter.php
+
+		-
+			message: '#^Using Tygh\\Tygh\:\:\$app is forbidden, Tygh\:\:\$app\[\.\.\.\] is a service\-locator; inject the dependency \(session, view, mailer, storage\.\.\.\) through the constructor instead\. Permitted only at the CS\-Cart boundary \(controllers, hooks, functions\)\.$#'
+			identifier: disallowed.property
+			count: 2
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SearchResultFormatter.php
 
 		-
@@ -5335,6 +5275,12 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SecurityService.php
 
 		-
+			message: '#^Calling Tygh\\Registry\:\:get\(\) is forbidden, Inject the value via the constructor; Registry\:\:get\(\) is forbidden inside src/ class bodies\. Use src/Helpers/RegistryCoerce\.php at the controller/hook boundary instead\.$#'
+			identifier: disallowed.method
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/SecurityService.php
+
+		-
 			message: '#^Cannot use \+\+ on mixed\.$#'
 			identifier: postInc.type
 			count: 1
@@ -5409,6 +5355,12 @@ parameters:
 		-
 			message: '#^Binary operation "\." between mixed and '' \+1 day'' results in an error\.$#'
 			identifier: binaryOp.invalid
+			count: 1
+			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/TermsFormatter.php
+
+		-
+			message: '#^Calling Tygh\\Registry\:\:get\(\) is forbidden, Inject the value via the constructor; Registry\:\:get\(\) is forbidden inside src/ class bodies\. Use src/Helpers/RegistryCoerce\.php at the controller/hook boundary instead\.$#'
+			identifier: disallowed.method
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/TermsFormatter.php
 
@@ -5510,12 +5462,6 @@ parameters:
 
 		-
 			message: '#^Cannot access offset ''total_items'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/backend/sphinx_holidays.php
-
-		-
-			message: '#^Cannot access offset ''view'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/backend/sphinx_holidays.php
@@ -5623,12 +5569,6 @@ parameters:
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/backend/sphinx_holidays.php
 
 		-
-			message: '#^Cannot access offset ''view'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/backend/sphinx_seo_templates.php
-
-		-
 			message: '#^Cannot access offset non\-falsy\-string on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
@@ -5693,66 +5633,6 @@ parameters:
 			identifier: binaryOp.invalid
 			count: 1
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/frontend/sphinx_booking/ajax_recalculate_price.php
-
-		-
-			message: '#^Cannot access offset ''view'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/frontend/sphinx_booking/booking_form.php
-
-		-
-			message: '#^Cannot access offset ''view'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/frontend/sphinx_booking/circuit_booking_form.php
-
-		-
-			message: '#^Cannot access offset ''view'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 2
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/frontend/sphinx_booking/circuit_search.php
-
-		-
-			message: '#^Cannot access offset ''view'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/frontend/sphinx_booking/experience_booking_form.php
-
-		-
-			message: '#^Cannot access offset ''view'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 2
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/frontend/sphinx_booking/experience_search.php
-
-		-
-			message: '#^Cannot access offset ''view'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/frontend/sphinx_booking/package_booking_form.php
-
-		-
-			message: '#^Cannot access offset ''view'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 2
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/frontend/sphinx_booking/package_search.php
-
-		-
-			message: '#^Cannot access offset ''session'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/frontend/sphinx_booking/search.php
-
-		-
-			message: '#^Cannot access offset ''view'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 2
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/frontend/sphinx_booking/search.php
-
-		-
-			message: '#^Cannot access offset ''session'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 6
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/frontend/sphinx_booking/search_poll.php
 
 		-
 			message: '#^Cannot access offset non\-falsy\-string on mixed\.$#'
@@ -5917,8 +5797,20 @@ parameters:
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/AddProductsCommand.php
 
 		-
+			message: '#^Call to an undefined static method Tygh\\Registry\:\:del\(\)\.$#'
+			identifier: staticMethod.notFound
+			count: 2
+			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/AddProductsCommand.php
+
+		-
 			message: '#^Call to function is_array\(\) with array\{\}\|array\{city\: string, region\: string, region_id\: int, country\: string, country_code\: string\} will always evaluate to true\.$#'
 			identifier: function.alreadyNarrowedType
+			count: 2
+			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/AddProductsCommand.php
+
+		-
+			message: '#^Calling Tygh\\Registry\:\:get\(\) is forbidden, Inject the value via the constructor; Registry\:\:get\(\) is forbidden inside src/ class bodies\. Use src/Helpers/RegistryCoerce\.php at the controller/hook boundary instead\.$#'
+			identifier: disallowed.method
 			count: 2
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/AddProductsCommand.php
 
@@ -6021,6 +5913,12 @@ parameters:
 		-
 			message: '#^Binary operation "/" between mixed and mixed results in an error\.$#'
 			identifier: binaryOp.invalid
+			count: 1
+			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/AssignBoardsCommand.php
+
+		-
+			message: '#^Calling Tygh\\Registry\:\:get\(\) is forbidden, Inject the value via the constructor; Registry\:\:get\(\) is forbidden inside src/ class bodies\. Use src/Helpers/RegistryCoerce\.php at the controller/hook boundary instead\.$#'
+			identifier: disallowed.method
 			count: 1
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/AssignBoardsCommand.php
 
@@ -6847,6 +6745,12 @@ parameters:
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Helpers/SphinxProductFactory.php
 
 		-
+			message: '#^Calling Tygh\\Registry\:\:get\(\) is forbidden, Inject the value via the constructor; Registry\:\:get\(\) is forbidden inside src/ class bodies\. Use src/Helpers/RegistryCoerce\.php at the controller/hook boundary instead\.$#'
+			identifier: disallowed.method
+			count: 1
+			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Helpers/SphinxProductFactory.php
+
+		-
 			message: '#^Cannot cast mixed to float\.$#'
 			identifier: cast.double
 			count: 2
@@ -7285,12 +7189,6 @@ parameters:
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/CartService.php
 
 		-
-			message: '#^Cannot access offset ''session'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 4
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/CartService.php
-
-		-
 			message: '#^Cannot access offset ''user_id'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 3
@@ -7318,6 +7216,12 @@ parameters:
 			message: '#^Parameter \#2 \$targetCurrency of method Tygh\\Addons\\TravelCore\\Services\\CurrencyService\:\:convertFromApiCurrency\(\) expects string\|null, mixed given\.$#'
 			identifier: argument.type
 			count: 1
+			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/CartService.php
+
+		-
+			message: '#^Using Tygh\\Tygh\:\:\$app is forbidden, Tygh\:\:\$app\[\.\.\.\] is a service\-locator; inject the dependency \(session, view, mailer, storage\.\.\.\) through the constructor instead\. Permitted only at the CS\-Cart boundary \(controllers, hooks, functions\)\.$#'
+			identifier: disallowed.property
+			count: 4
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/CartService.php
 
 		-
@@ -7439,6 +7343,12 @@ parameters:
 			identifier: encapsedStringPart.nonString
 			count: 2
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/CircuitSyncService.php
+
+		-
+			message: '#^Calling Tygh\\Registry\:\:get\(\) is forbidden, Inject the value via the constructor; Registry\:\:get\(\) is forbidden inside src/ class bodies\. Use src/Helpers/RegistryCoerce\.php at the controller/hook boundary instead\.$#'
+			identifier: disallowed.method
+			count: 2
+			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/ConfigProvider.php
 
 		-
 			message: '#^Cannot cast mixed to float\.$#'
@@ -8209,12 +8119,6 @@ parameters:
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/SphinxFeatureAssigner.php
 
 		-
-			message: '#^Cannot access offset ''view'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/controllers/backend/travel_booking_styles.php
-
-		-
 			message: '#^Cannot access offset string on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 2
@@ -8251,12 +8155,6 @@ parameters:
 			path: addon-travel-core/app/addons/travel_core/controllers/backend/travel_bookings.php
 
 		-
-			message: '#^Cannot access offset ''view'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 3
-			path: addon-travel-core/app/addons/travel_core/controllers/backend/travel_bookings.php
-
-		-
 			message: '#^Binary operation "\.\=" between '''' and mixed results in an error\.$#'
 			identifier: assignOp.invalid
 			count: 1
@@ -8271,18 +8169,6 @@ parameters:
 		-
 			message: '#^Binary operation "\.\=" between string and mixed results in an error\.$#'
 			identifier: assignOp.invalid
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/controllers/backend/travel_feature_mappings.php
-
-		-
-			message: '#^Cannot access offset ''ajax'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/controllers/backend/travel_feature_mappings.php
-
-		-
-			message: '#^Cannot access offset ''view'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
 			path: addon-travel-core/app/addons/travel_core/controllers/backend/travel_feature_mappings.php
 
@@ -8500,6 +8386,12 @@ parameters:
 			message: '#^Binary operation "/" between mixed and mixed results in an error\.$#'
 			identifier: binaryOp.invalid
 			count: 2
+			path: addon-travel-core/app/addons/travel_core/functions/exchange_rates.php
+
+		-
+			message: '#^Call to an undefined static method Tygh\\Registry\:\:del\(\)\.$#'
+			identifier: staticMethod.notFound
+			count: 1
 			path: addon-travel-core/app/addons/travel_core/functions/exchange_rates.php
 
 		-
@@ -8779,12 +8671,6 @@ parameters:
 			path: addon-travel-core/app/addons/travel_core/hooks/cart_hooks.php
 
 		-
-			message: '#^Cannot access offset ''view'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 4
-			path: addon-travel-core/app/addons/travel_core/hooks/cart_hooks.php
-
-		-
 			message: '#^Cannot access offset string on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
@@ -8953,6 +8839,12 @@ parameters:
 			path: addon-travel-core/app/addons/travel_core/src/Services/BookingDisplayService.php
 
 		-
+			message: '#^Calling Tygh\\Registry\:\:get\(\) is forbidden, Inject the value via the constructor; Registry\:\:get\(\) is forbidden inside src/ class bodies\. Use src/Helpers/RegistryCoerce\.php at the controller/hook boundary instead\.$#'
+			identifier: disallowed.method
+			count: 1
+			path: addon-travel-core/app/addons/travel_core/src/Services/BookingDisplayService.php
+
+		-
 			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, list given\.$#'
 			identifier: argument.type
 			count: 1
@@ -8963,6 +8855,12 @@ parameters:
 			identifier: argument.type
 			count: 1
 			path: addon-travel-core/app/addons/travel_core/src/Services/BookingDisplayService.php
+
+		-
+			message: '#^Calling Tygh\\Registry\:\:get\(\) is forbidden, Inject the value via the constructor; Registry\:\:get\(\) is forbidden inside src/ class bodies\. Use src/Helpers/RegistryCoerce\.php at the controller/hook boundary instead\.$#'
+			identifier: disallowed.method
+			count: 1
+			path: addon-travel-core/app/addons/travel_core/src/Services/CurrencyService.php
 
 		-
 			message: '#^Cannot access offset ''coefficient'' on mixed\.$#'
@@ -8999,6 +8897,12 @@ parameters:
 			identifier: return.type
 			count: 2
 			path: addon-travel-core/app/addons/travel_core/src/Services/CurrencyService.php
+
+		-
+			message: '#^Calling Tygh\\Registry\:\:get\(\) is forbidden, Inject the value via the constructor; Registry\:\:get\(\) is forbidden inside src/ class bodies\. Use src/Helpers/RegistryCoerce\.php at the controller/hook boundary instead\.$#'
+			identifier: disallowed.method
+			count: 1
+			path: addon-travel-core/app/addons/travel_core/src/Services/FeatureMapper.php
 
 		-
 			message: '#^Cannot cast mixed to int\.$#'
@@ -9169,12 +9073,6 @@ parameters:
 			path: addon-travel-core/app/addons/travel_core/src/Services/GuestDataService.php
 
 		-
-			message: '#^Cannot access offset ''session'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 5
-			path: addon-travel-core/app/addons/travel_core/src/Services/PriceChangeDetector.php
-
-		-
 			message: '#^Cannot access offset ''travel_price_change_alerts'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 5
@@ -9202,6 +9100,12 @@ parameters:
 			message: '#^Parameter \#1 \$value of function count expects array\|Countable, mixed given\.$#'
 			identifier: argument.type
 			count: 1
+			path: addon-travel-core/app/addons/travel_core/src/Services/PriceChangeDetector.php
+
+		-
+			message: '#^Using Tygh\\Tygh\:\:\$app is forbidden, Tygh\:\:\$app\[\.\.\.\] is a service\-locator; inject the dependency \(session, view, mailer, storage\.\.\.\) through the constructor instead\. Permitted only at the CS\-Cart boundary \(controllers, hooks, functions\)\.$#'
+			identifier: disallowed.property
+			count: 5
 			path: addon-travel-core/app/addons/travel_core/src/Services/PriceChangeDetector.php
 
 		-

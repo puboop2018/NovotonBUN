@@ -1,0 +1,59 @@
+# ──────────────────────────────────────────────────────────────────────────
+# Disallowed-calls enforcement — structured-shape plan, Wave 1 PR 2/10.
+#
+# Bans direct service-locator access (Registry::get/set, Tygh::$app[...])
+# inside src/ class bodies. Dependencies must arrive via the constructor.
+#
+# Allowlist paths cover the legitimate framework boundary:
+#   - controllers/, hooks/, functions/ — CS-Cart's procedural entry points
+#   - func.php, init.php, hooks.php, cron.php — root-level plumbing
+#   - src/Helpers/RegistryCoerce.php — the single designated Registry reader
+#
+# Existing offenders (41 Registry + 17 Tygh::$app) land in the PHPStan
+# baseline on install (Wave 1 PR 2 regenerates phpstan-baseline.neon).
+# Waves 2 PRs 3–6 delete those entries as services migrate to constructor
+# injection. Any NEW violation in src/ fails CI with the configured message.
+#
+# Package docs: https://github.com/spaze/phpstan-disallowed-calls
+# ──────────────────────────────────────────────────────────────────────────
+
+parameters:
+    disallowedStaticCalls:
+        -
+            method: 'Tygh\Registry::get()'
+            message: 'Inject the value via the constructor; Registry::get() is forbidden inside src/ class bodies. Use src/Helpers/RegistryCoerce.php at the controller/hook boundary instead.'
+            allowIn:
+                - '*/controllers/*'
+                - '*/hooks/*'
+                - '*/functions/*'
+                - '*/func.php'
+                - '*/init.php'
+                - '*/hooks.php'
+                - '*/cron.php'
+                - '*/src/Helpers/RegistryCoerce.php'
+        -
+            method: 'Tygh\Registry::set()'
+            message: 'Do not mutate the global Registry from inside a src/ service class. Pass a configured object through the constructor, or mutate from the calling controller/hook.'
+            allowIn:
+                - '*/controllers/*'
+                - '*/hooks/*'
+                - '*/functions/*'
+                - '*/func.php'
+                - '*/init.php'
+                - '*/hooks.php'
+                - '*/cron.php'
+                - '*/src/Helpers/RegistryCoerce.php'
+
+    disallowedProperties:
+        -
+            property: 'Tygh\Tygh::$app'
+            message: 'Tygh::$app[...] is a service-locator; inject the dependency (session, view, mailer, storage...) through the constructor instead. Permitted only at the CS-Cart boundary (controllers, hooks, functions).'
+            allowIn:
+                - '*/controllers/*'
+                - '*/hooks/*'
+                - '*/functions/*'
+                - '*/func.php'
+                - '*/init.php'
+                - '*/hooks.php'
+                - '*/cron.php'
+                - '*/src/Helpers/RegistryCoerce.php'

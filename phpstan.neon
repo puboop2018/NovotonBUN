@@ -6,6 +6,8 @@
 #   vendor/bin/phpstan analyse --generate-baseline
 includes:
     - phpstan-baseline.neon
+    - vendor/spaze/phpstan-disallowed-calls/extension.neon
+    - phpstan-disallowed-calls.neon
 
 parameters:
     # History:
@@ -36,6 +38,7 @@ parameters:
     # in its composer.json) so PHPStan needs to index it explicitly.
     scanFiles:
         - stubs/Smarty.php
+        - stubs/Tygh.php
         - addon-novoton-holidays/app/addons/novoton_holidays/Constants.php
     scanDirectories:
         - addon-novoton-holidays/app/addons/novoton_holidays/src
