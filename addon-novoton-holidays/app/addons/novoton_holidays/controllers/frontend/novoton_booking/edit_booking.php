@@ -45,14 +45,15 @@ use Tygh\Addons\NovotonHolidays\Helpers\JsonDecoder;
         $cart_item = $cart['products'][$cart_id];
     }
 
-    // Get hotel info
+    // Get hotel info (typed DTO + legacy array view for downstream template vars)
     $hotelRepo = _nvt_hotel_repo();
     $brHotelId = PriceInfoFormatter::toScalar($booking_record['hotel_id'] ?? '');
+    $hotel = $hotelRepo->findByIdAsDto($brHotelId);
     /** @var array<string, mixed>|null $hotel_info */
-    $hotel_info = $hotelRepo->findById($brHotelId);
+    $hotel_info = $hotel?->toArray();
 
     // Get hotel name - try multiple sources
-    $hotel_name = is_array($hotel_info) ? PriceInfoFormatter::toScalar($hotel_info['hotel_name'] ?? '') : '';
+    $hotel_name = $hotel !== null ? $hotel->name ?? '' : '';
     if (empty($hotel_name)) {
         // Try from booking record
         $hotel_name = PriceInfoFormatter::toScalar($booking_record['hotel_name'] ?? '');

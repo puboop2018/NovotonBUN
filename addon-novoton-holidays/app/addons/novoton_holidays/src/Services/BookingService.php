@@ -92,8 +92,9 @@ class BookingService implements BookingServiceInterface
         // Calculate totals
         $totals = $this->roomsParser->calculateTotals($rooms_data);
 
-        // Get hotel info
-        $hotel_info = $this->hotelRepo->findById($bookingData['hotel_id']);
+        // Get hotel info (typed DTO)
+        $hotelId = \Tygh\Addons\TravelCore\Helpers\TypeCoerce::toString($bookingData['hotel_id'] ?? '');
+        $hotel = $this->hotelRepo->findByIdAsDto($hotelId);
 
         // Build booking record
         $booking_record = [
@@ -101,8 +102,8 @@ class BookingService implements BookingServiceInterface
             'user_id' => $user_id,
             'session_id' => $session_id,
             'product_id' => $product_id,
-            'hotel_id' => $bookingData['hotel_id'],
-            'hotel_name' => $hotel_info['hotel_name'] ?? '',
+            'hotel_id' => $hotelId,
+            'hotel_name' => $hotel !== null ? $hotel->name ?? '' : '',
             'package_name' => $bookingData['package_name'] ?? '',
             'room_id' => $room_info['room_id'],
             'room_type' => $room_info['room_type'],

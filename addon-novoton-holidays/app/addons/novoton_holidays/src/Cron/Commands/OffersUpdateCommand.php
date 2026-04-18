@@ -76,9 +76,11 @@ class OffersUpdateCommand extends AbstractCronCommand
 
             $this->output("[{$hotel_id}] {$hotel_name} ... ", false);
 
-            $existing = $hotelRepo->findById($hotel_id);
+            $existingDto = $hotelRepo->findByIdAsDto($hotel_id);
+            /** @var array<string, mixed> $existing for legacy downstream array access */
+            $existing = $existingDto !== null ? $existingDto->toArray() : [];
 
-            if (!$existing) {
+            if ($existingDto === null) {
                 $this->output('NEW HOTEL - ', false);
                 $hotel_info = $this->api->hotels()->getHotelInfo($hotel_id);
                 if ($hotel_info) {
@@ -95,17 +97,18 @@ class OffersUpdateCommand extends AbstractCronCommand
                     $hotelRepo->upsert($hotel_data);
                     $new_hotels++;
                     $existing = $hotel_data;
+                    $existingDto = \Tygh\Addons\TravelCore\Dto\Hotel\Hotel::fromDbRow($hotel_data);
                     $this->output('synced - ', false);
                 }
             }
 
-            if (!$existing) {
+            if ($existingDto === null) {
                 $this->output('skip');
                 continue;
             }
 
             // Check if should add to CS-Cart
-            if (($existing['has_room_price'] ?? '') != 'Y') {
+            if (!$existingDto->hasRoomPrice) {
                 $this->output('no prices');
                 continue;
             }
