@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Tests\Unit;
 
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Tygh\Addons\TravelCore\Repository\RowNarrowingTrait;
 
@@ -20,9 +21,7 @@ class RowNarrowingHarness
     }
 }
 
-/**
- * @covers \Tygh\Addons\TravelCore\Repository\RowNarrowingTrait
- */
+#[CoversClass(RowNarrowingTrait::class)]
 class RowNarrowingTraitTest extends TestCase
 {
     public function testAsRowListWithValidRows(): void

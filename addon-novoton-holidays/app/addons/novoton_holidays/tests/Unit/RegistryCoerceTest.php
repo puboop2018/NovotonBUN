@@ -4,13 +4,12 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Tests\Unit;
 
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Tygh\Addons\TravelCore\Helpers\RegistryCoerce;
 use Tygh\Registry;
 
-/**
- * @covers \Tygh\Addons\TravelCore\Helpers\RegistryCoerce
- */
+#[CoversClass(RegistryCoerce::class)]
 class RegistryCoerceTest extends TestCase
 {
     protected function setUp(): void

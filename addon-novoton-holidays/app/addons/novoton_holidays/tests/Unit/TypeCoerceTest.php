@@ -4,12 +4,11 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Tests\Unit;
 
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
-/**
- * @covers \Tygh\Addons\TravelCore\Helpers\TypeCoerce
- */
+#[CoversClass(TypeCoerce::class)]
 class TypeCoerceTest extends TestCase
 {
     // ── toString ────────────────────────────────────────────────────────────

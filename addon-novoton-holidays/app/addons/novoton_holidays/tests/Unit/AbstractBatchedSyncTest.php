@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Tests\Unit;
 
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Tygh\Addons\NovotonHolidays\Helpers\AbstractBatchedSync;
 use Tygh\Addons\NovotonHolidays\Helpers\StateManagerInterface;
@@ -23,9 +24,8 @@ use Tygh\Addons\NovotonHolidays\Helpers\SyncLoggerInterface;
  *     constructor (PR #6 testability refactor),
  *   - no-ops sleepBetweenItems() so the test doesn't wait real 100 ms per item,
  *   - exposes an items list and a deterministic processItem() outcome map.
- *
- * @covers \Tygh\Addons\NovotonHolidays\Helpers\AbstractBatchedSync
  */
+#[CoversClass(AbstractBatchedSync::class)]
 final class AbstractBatchedSyncTest extends TestCase
 {
     /**

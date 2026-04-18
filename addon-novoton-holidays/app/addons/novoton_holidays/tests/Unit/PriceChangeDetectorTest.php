@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Tests\Unit;
 
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Tygh\Addons\TravelCore\Services\PriceChangeDetector;
 use Tygh\Tygh;
@@ -17,9 +18,8 @@ use Tygh\Tygh;
  *   - Boundary conditions (exactly at threshold, zero price, etc.)
  *   - Session alert storage lifecycle (store → peek → consume)
  *   - Custom tolerance configuration
- *
- * @covers \Tygh\Addons\TravelCore\Services\PriceChangeDetector
  */
+#[CoversClass(PriceChangeDetector::class)]
 class PriceChangeDetectorTest extends TestCase
 {
     private PriceChangeDetector $sut;

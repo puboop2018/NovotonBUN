@@ -3,14 +3,13 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Tests\Unit;
 
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Tygh\Addons\NovotonHolidays\Services\DiscountCalculator;
 use Tygh\Addons\NovotonHolidays\Services\PriceInfoCalculator;
 use Tygh\Addons\NovotonHolidays\Services\PriceInfoParser;
 
-/**
- * @covers \Tygh\Addons\NovotonHolidays\Services\PriceInfoCalculator
- */
+#[CoversClass(PriceInfoCalculator::class)]
 class PriceInfoCalculatorTest extends TestCase
 {
     // ── applyCommission ─────────────────────────────────────────────────

@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Tests\Unit;
 
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Tygh\Addons\NovotonHolidays\Services\SearchParameterNormalizer;
 
@@ -14,9 +15,7 @@ if (!function_exists('__')) {
     }
 }
 
-/**
- * @covers \Tygh\Addons\NovotonHolidays\Services\SearchParameterNormalizer
- */
+#[CoversClass(SearchParameterNormalizer::class)]
 class SearchParameterNormalizerTest extends TestCase
 {
     private SearchParameterNormalizer $normalizer;
