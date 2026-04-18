@@ -120,7 +120,7 @@ class Container
 
     public function hotelRepository(): HotelRepositoryInterface
     {
-        return $this->resolve('hotelRepository', fn () => new HotelRepository(
+        return $this->resolve('hotelRepository', fn (): \Tygh\Addons\NovotonHolidays\Repository\HotelRepository => new HotelRepository(
             $this->hotelSearchRepository(),
             $this->hotelReportingRepository(),
             $this->hotelCacheRepository(),
@@ -130,42 +130,42 @@ class Container
 
     public function hotelSearchRepository(): HotelSearchRepositoryInterface
     {
-        return $this->resolve('hotelSearchRepository', fn () => new HotelSearchRepository());
+        return $this->resolve('hotelSearchRepository', fn (): \Tygh\Addons\NovotonHolidays\Repository\HotelSearchRepository => new HotelSearchRepository());
     }
 
     public function hotelReportingRepository(): HotelReportingRepositoryInterface
     {
-        return $this->resolve('hotelReportingRepository', fn () => new HotelReportingRepository());
+        return $this->resolve('hotelReportingRepository', fn (): \Tygh\Addons\NovotonHolidays\Repository\HotelReportingRepository => new HotelReportingRepository());
     }
 
     public function hotelCacheRepository(): HotelCacheRepositoryInterface
     {
-        return $this->resolve('hotelCacheRepository', fn () => new HotelCacheRepository());
+        return $this->resolve('hotelCacheRepository', fn (): \Tygh\Addons\NovotonHolidays\Repository\HotelCacheRepository => new HotelCacheRepository());
     }
 
     public function bookingRepository(): BookingRepositoryInterface
     {
-        return $this->resolve('bookingRepository', fn () => new BookingRepository());
+        return $this->resolve('bookingRepository', fn (): \Tygh\Addons\NovotonHolidays\Repository\BookingRepository => new BookingRepository());
     }
 
     public function facilityRepository(): FacilityRepositoryInterface
     {
-        return $this->resolve('facilityRepository', fn () => new FacilityRepository());
+        return $this->resolve('facilityRepository', fn (): \Tygh\Addons\NovotonHolidays\Repository\FacilityRepository => new FacilityRepository());
     }
 
     public function syncLogRepository(): SyncLogRepositoryInterface
     {
-        return $this->resolve('syncLogRepository', fn () => new SyncLogRepository());
+        return $this->resolve('syncLogRepository', fn (): \Tygh\Addons\NovotonHolidays\Repository\SyncLogRepository => new SyncLogRepository());
     }
 
     public function alternativeRequestRepository(): AlternativeRequestRepositoryInterface
     {
-        return $this->resolve('alternativeRequestRepository', fn () => new AlternativeRequestRepository());
+        return $this->resolve('alternativeRequestRepository', fn (): \Tygh\Addons\NovotonHolidays\Repository\AlternativeRequestRepository => new AlternativeRequestRepository());
     }
 
     public function hotelPackageRepository(): HotelPackageRepositoryInterface
     {
-        return $this->resolve('hotelPackageRepository', fn () => new HotelPackageRepository());
+        return $this->resolve('hotelPackageRepository', fn (): \Tygh\Addons\NovotonHolidays\Repository\HotelPackageRepository => new HotelPackageRepository());
     }
 
     // ═══════════════════════════════════════════════════════════════════
@@ -174,7 +174,7 @@ class Container
 
     public function bookingService(): BookingServiceInterface
     {
-        return $this->resolve('bookingService', fn () => new BookingService(
+        return $this->resolve('bookingService', fn (): \Tygh\Addons\NovotonHolidays\Services\BookingService => new BookingService(
             $this->guestDataService(),
             $this->bookingRepository(),
             $this->novotonApi()->pricing(),
@@ -184,71 +184,71 @@ class Container
 
     public function guestDataService(): \Tygh\Addons\TravelCore\Contracts\GuestDataServiceInterface
     {
-        return $this->resolve('guestDataService', fn () => new \Tygh\Addons\TravelCore\Services\GuestDataService());
+        return $this->resolve('guestDataService', fn (): \Tygh\Addons\TravelCore\Services\GuestDataService => new \Tygh\Addons\TravelCore\Services\GuestDataService());
     }
 
     public function searchService(): SearchServiceInterface
     {
-        return $this->resolve('searchService', fn () => new SearchService());
+        return $this->resolve('searchService', fn (): \Tygh\Addons\NovotonHolidays\Services\SearchService => new SearchService());
     }
 
     public function roomPriceService(): RoomPriceServiceInterface
     {
-        return $this->resolve('roomPriceService', fn () => new RoomPriceService(
+        return $this->resolve('roomPriceService', fn (): \Tygh\Addons\NovotonHolidays\Services\RoomPriceService => new RoomPriceService(
             pricing: $this->novotonApi()->pricing(),
         ));
     }
 
     public function securityService(): SecurityServiceInterface
     {
-        return $this->resolve('securityService', fn () => new SecurityService());
+        return $this->resolve('securityService', fn (): \Tygh\Addons\NovotonHolidays\Services\SecurityService => new SecurityService());
     }
 
     public function cacheService(): CacheServiceInterface
     {
-        return $this->resolve('cacheService', fn () => new CacheService());
+        return $this->resolve('cacheService', fn (): \Tygh\Addons\NovotonHolidays\Services\CacheService => new CacheService());
     }
 
     public function priceInfoService(): PriceInfoServiceInterface
     {
-        return $this->resolve('priceInfoService', fn () => new PriceInfoService());
+        return $this->resolve('priceInfoService', fn (): \Tygh\Addons\NovotonHolidays\Services\PriceInfoService => new PriceInfoService());
     }
 
     public function dateHelper(): \Tygh\Addons\TravelCore\Services\DateHelper
     {
-        return $this->resolve('dateHelper', fn () => new \Tygh\Addons\TravelCore\Services\DateHelper());
+        return $this->resolve('dateHelper', fn (): \Tygh\Addons\TravelCore\Services\DateHelper => new \Tygh\Addons\TravelCore\Services\DateHelper());
     }
 
     public function configProvider(): ConfigProvider
     {
-        return $this->resolve('configProvider', fn () => ConfigProvider::instance());
+        return $this->resolve('configProvider', fn (): \Tygh\Addons\NovotonHolidays\Services\ConfigProvider => ConfigProvider::instance());
     }
 
     public function cronService(): CronServiceInterface
     {
-        return $this->resolve('cronService', fn () => new CronService(
+        return $this->resolve('cronService', fn (): \Tygh\Addons\NovotonHolidays\Services\CronService => new CronService(
             reservations: $this->novotonApi()->reservations(),
         ));
     }
 
     public function searchParameterNormalizer(): SearchParameterNormalizer
     {
-        return $this->resolve('searchParameterNormalizer', fn () => new SearchParameterNormalizer());
+        return $this->resolve('searchParameterNormalizer', fn (): \Tygh\Addons\NovotonHolidays\Services\SearchParameterNormalizer => new SearchParameterNormalizer());
     }
 
     public function searchResultFormatter(): SearchResultFormatter
     {
-        return $this->resolve('searchResultFormatter', fn () => new SearchResultFormatter());
+        return $this->resolve('searchResultFormatter', fn (): \Tygh\Addons\NovotonHolidays\Services\SearchResultFormatter => new SearchResultFormatter());
     }
 
     public function diagnosticsService(): DiagnosticsServiceInterface
     {
-        return $this->resolve('diagnosticsService', fn () => new DiagnosticsService());
+        return $this->resolve('diagnosticsService', fn (): \Tygh\Addons\NovotonHolidays\Services\DiagnosticsService => new DiagnosticsService());
     }
 
     public function alternativeRequestService(): AlternativeRequestServiceInterface
     {
-        return $this->resolve('alternativeRequestService', fn () => new AlternativeRequestService(
+        return $this->resolve('alternativeRequestService', fn (): \Tygh\Addons\NovotonHolidays\Services\AlternativeRequestService => new AlternativeRequestService(
             $this->securityService(),
             $this->novotonApi()->reservations(),
         ));
@@ -256,7 +256,7 @@ class Container
 
     public function bookingSubmissionService(): BookingSubmissionServiceInterface
     {
-        return $this->resolve('bookingSubmissionService', fn () => new BookingSubmissionService(
+        return $this->resolve('bookingSubmissionService', fn (): \Tygh\Addons\NovotonHolidays\Services\BookingSubmissionService => new BookingSubmissionService(
             $this->bookingRepository(),
             $this->novotonApi()->reservations(),
         ));
@@ -264,48 +264,48 @@ class Container
 
     public function currencyService(): \Tygh\Addons\TravelCore\Services\CurrencyService
     {
-        return $this->resolve('currencyService', fn () => new \Tygh\Addons\TravelCore\Services\CurrencyService(
+        return $this->resolve('currencyService', fn (): \Tygh\Addons\TravelCore\Services\CurrencyService => new \Tygh\Addons\TravelCore\Services\CurrencyService(
             ConfigProvider::getApiCurrency(),
         ));
     }
 
     public function preOrderPriceVerifier(): \Tygh\Addons\TravelCore\Contracts\PreOrderPriceVerifierInterface
     {
-        return $this->resolve('preOrderPriceVerifier', fn () => new PreOrderPriceVerifier());
+        return $this->resolve('preOrderPriceVerifier', fn (): \Tygh\Addons\NovotonHolidays\Services\PreOrderPriceVerifier => new PreOrderPriceVerifier());
     }
 
     public function priceChangeDetector(): \Tygh\Addons\TravelCore\Services\PriceChangeDetector
     {
-        return $this->resolve('priceChangeDetector', fn () => new \Tygh\Addons\TravelCore\Services\PriceChangeDetector(
+        return $this->resolve('priceChangeDetector', fn (): \Tygh\Addons\TravelCore\Services\PriceChangeDetector => new \Tygh\Addons\TravelCore\Services\PriceChangeDetector(
             (float) ConfigProvider::get('price_change_tolerance_percent', 1.0),
         ));
     }
 
     public function featureMapper(): FeatureMapper
     {
-        return $this->resolve('featureMapper', fn () => new FeatureMapper());
+        return $this->resolve('featureMapper', fn (): \Tygh\Addons\NovotonHolidays\Services\FeatureMapper => new FeatureMapper());
     }
 
     public function novotonNormalizer(): ProviderNormalizerInterface
     {
-        return $this->resolve('novotonNormalizer', fn () => new NovotonNormalizer());
+        return $this->resolve('novotonNormalizer', fn (): \Tygh\Addons\NovotonHolidays\Api\NovotonNormalizer => new NovotonNormalizer());
     }
 
     public function novotonApi(): NovotonApi
     {
-        return $this->resolve('novotonApi', fn () => new NovotonApi());
+        return $this->resolve('novotonApi', fn (): \Tygh\Addons\NovotonHolidays\NovotonApi => new NovotonApi());
     }
 
     public function adminCronService(): AdminCronService
     {
-        return $this->resolve('adminCronService', fn () => new AdminCronService(
+        return $this->resolve('adminCronService', fn (): \Tygh\Addons\NovotonHolidays\Services\AdminCronService => new AdminCronService(
             $this->novotonApi(),
         ));
     }
 
     public function propertyTypeDetector(): PropertyTypeDetector
     {
-        return $this->resolve('propertyTypeDetector', fn () => new PropertyTypeDetector());
+        return $this->resolve('propertyTypeDetector', fn (): \Tygh\Addons\NovotonHolidays\Api\PropertyTypeDetector => new PropertyTypeDetector());
     }
 
     // ═══════════════════════════════════════════════════════════════════
@@ -314,17 +314,17 @@ class Container
 
     public function databaseHelper(): DatabaseHelperInterface
     {
-        return $this->resolve('databaseHelper', fn () => new DatabaseHelper());
+        return $this->resolve('databaseHelper', fn (): \Tygh\Addons\NovotonHolidays\Helpers\DatabaseHelper => new DatabaseHelper());
     }
 
     public function databaseIterator(): DatabaseIteratorInterface
     {
-        return $this->resolve('databaseIterator', fn () => new DatabaseIterator());
+        return $this->resolve('databaseIterator', fn (): \Tygh\Addons\NovotonHolidays\Helpers\DatabaseIterator => new DatabaseIterator());
     }
 
     public function productFactory(): ProductFactoryInterface
     {
-        return $this->resolve('productFactory', fn () => new ProductFactory(
+        return $this->resolve('productFactory', fn (): \Tygh\Addons\NovotonHolidays\Helpers\ProductFactory => new ProductFactory(
             $this->databaseHelper(),
         ));
     }

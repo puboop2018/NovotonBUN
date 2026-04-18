@@ -202,7 +202,7 @@ class PriceInfoParser
             ];
         }
 
-        usort($this->childAgeBands, fn ($a, $b) => $a['from'] <=> $b['from']);
+        usort($this->childAgeBands, fn ($a, $b): int => $a['from'] <=> $b['from']);
 
         $this->log('Parsed hotel child age bands', $this->childAgeBands);
     }

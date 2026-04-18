@@ -194,7 +194,7 @@ class CartAssemblyService implements CartAssemblyServiceInterface
 
             // Build display string for children ages
             if (!empty($room['childrenAges']) && is_array($room['childrenAges'])) {
-                $validAges = array_filter($room['childrenAges'], fn ($age) => $age !== null && $age !== '');
+                $validAges = array_filter($room['childrenAges'], fn ($age): bool => $age !== null && $age !== '');
                 $validAgesStrList = array_map(static fn ($age): string => TypeCoerce::toString($age), $validAges);
                 $room['children_ages_str'] = !empty($validAgesStrList)
                     ? implode(', ', $validAgesStrList) . ' ' . __('novoton_holidays.years_old')

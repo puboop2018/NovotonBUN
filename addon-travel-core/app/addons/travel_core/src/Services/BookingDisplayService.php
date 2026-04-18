@@ -80,15 +80,15 @@ class BookingDisplayService implements BookingDisplayServiceInterface
                 $ages_raw = $extra['children_ages'];
                 if (is_array($ages_raw)) {
                     /** @var array<string> $agesStrArr */
-                    $agesStrArr = array_map(fn ($a) => ValidationHelpers::toString($a), $ages_raw);
+                    $agesStrArr = array_map(fn ($a): string => ValidationHelpers::toString($a), $ages_raw);
                     $ages_str = implode(', ', $agesStrArr);
                 } else {
                     $ages_str = ValidationHelpers::toString($ages_raw);
                 }
                 $ages_arr = array_map('trim', explode(',', $ages_str));
-                $ages_arr = array_filter($ages_arr, fn ($a) => $a !== '' && $a !== 'age_needed');
+                $ages_arr = array_filter($ages_arr, fn ($a): bool => $a !== '' && $a !== 'age_needed');
                 if (!empty($ages_arr)) {
-                    $guests_str .= ' (' . implode(' and ', array_map(fn ($a) => $a . ' y/o', $ages_arr)) . ')';
+                    $guests_str .= ' (' . implode(' and ', array_map(fn ($a): string => $a . ' y/o', $ages_arr)) . ')';
                 }
             }
         }
@@ -151,8 +151,8 @@ class BookingDisplayService implements BookingDisplayServiceInterface
                     $room_guests .= ', ' . $roomChildren . ' children';
                     if (!empty($room['childrenAges']) && is_array($room['childrenAges'])) {
                         /** @var array<string> $agesStr */
-                        $agesStr = array_map(fn ($a) => ValidationHelpers::toString($a), $room['childrenAges']);
-                        $ages = array_filter($agesStr, fn ($a) => $a !== '');
+                        $agesStr = array_map(fn ($a): string => ValidationHelpers::toString($a), $room['childrenAges']);
+                        $ages = array_filter($agesStr, fn ($a): bool => $a !== '');
                         if (!empty($ages)) {
                             $room_guests .= ' (' . implode(', ', $ages) . ' y/o)';
                         }

@@ -323,7 +323,7 @@ class PriceInfoCalculator
             return null;
         }
 
-        usort($candidates, fn ($a, $b) => $b['fromDays'] <=> $a['fromDays']);
+        usort($candidates, fn ($a, $b): int => $b['fromDays'] <=> $a['fromDays']);
 
         /** @var array<string, mixed> */
         return is_array($candidates[0]['row'] ?? null) ? $candidates[0]['row'] : [];

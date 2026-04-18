@@ -405,7 +405,7 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
         } elseif (is_string($raw) && $raw !== '') {
             $ages = array_map('intval', array_filter(
                 explode(',', $raw),
-                fn ($v) => $v !== '',
+                fn ($v): bool => $v !== '',
             ));
         }
 

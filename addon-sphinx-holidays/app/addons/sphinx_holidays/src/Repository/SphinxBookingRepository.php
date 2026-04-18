@@ -366,6 +366,6 @@ class SphinxBookingRepository
      */
     private static function filterNullValues(array $data): array
     {
-        return array_filter($data, static fn ($v) => $v !== null);
+        return array_filter($data, static fn ($v): bool => $v !== null);
     }
 }

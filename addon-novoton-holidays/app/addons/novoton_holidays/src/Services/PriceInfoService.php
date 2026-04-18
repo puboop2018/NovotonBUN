@@ -257,7 +257,7 @@ class PriceInfoService implements PriceInfoServiceInterface
         }
 
         // Sort by reduction DESC
-        usort($result, fn ($a, $b) => $b['reduction'] <=> $a['reduction']);
+        usort($result, fn ($a, $b): int => $b['reduction'] <=> $a['reduction']);
 
         return $result;
     }

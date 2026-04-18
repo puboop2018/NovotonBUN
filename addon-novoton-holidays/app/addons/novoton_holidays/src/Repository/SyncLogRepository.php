@@ -102,7 +102,7 @@ class SyncLogRepository implements SyncLogRepositoryInterface
             'notes' => isset($data['details']) ? (is_array($data['details']) ? json_encode($data['details']) : $data['details']) : '',
         ];
 
-        $log_data = array_filter($log_data, static fn ($v) => $v !== null);
+        $log_data = array_filter($log_data, static fn ($v): bool => $v !== null);
         return TypeCoerce::toInt(db_query('INSERT INTO ?:novoton_sync_log ?e', $log_data));
     }
 
