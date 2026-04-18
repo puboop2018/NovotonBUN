@@ -77,8 +77,11 @@ class OffersUpdateCommand extends AbstractCronCommand
             $this->output("[{$hotel_id}] {$hotel_name} ... ", false);
 
             $existingDto = $hotelRepo->findByIdAsDto($hotel_id);
-            /** @var array<string, mixed> $existing for legacy downstream array access */
-            $existing = $existingDto !== null ? $existingDto->toArray() : [];
+            // Legacy array view for downstream `array_merge` + string-key access.
+            // Hotel::toArray() returns a typed `array{...}` shape; widen to
+            // array<string, mixed> here so the mutations that add/override
+            // keys (hotel_data_for_seo below, etc.) don't fight the shape.
+            $existing = $existingDto !== null ? (array) $existingDto->toArray() : [];
 
             if ($existingDto === null) {
                 $this->output('NEW HOTEL - ', false);
