@@ -51,7 +51,14 @@
 
         "md": "phpmd addon-novoton-holidays/app/addons/novoton_holidays/src,addon-travel-core/app/addons/travel_core/src,addon-sphinx-holidays/app/addons/sphinx_holidays/src text phpmd.xml",
 
-        "test": "cd addon-novoton-holidays/app/addons/novoton_holidays && vendor/bin/phpunit --no-coverage",
+        "test:novoton":     "cd addon-novoton-holidays/app/addons/novoton_holidays && vendor/bin/phpunit --no-coverage",
+        "test:travel-core": "cd addon-travel-core/app/addons/travel_core && vendor/bin/phpunit --no-coverage",
+        "test:sphinx":      "cd addon-sphinx-holidays/app/addons/sphinx_holidays && vendor/bin/phpunit --no-coverage",
+        "test": [
+            "@test:novoton",
+            "@test:travel-core",
+            "@test:sphinx"
+        ],
 
         "check": [
             "@stan",
@@ -85,7 +92,10 @@
         "rector:dry":    "Rector — show what would change (dry run, fails on drift)",
         "rector:fix":    "Rector — apply refactoring rules (see rector.php)",
         "md":            "PHPMD — report code quality issues",
-        "test":          "PHPUnit tests for novoton addon",
+        "test:novoton":     "PHPUnit tests for the novoton_holidays addon",
+        "test:travel-core": "PHPUnit tests for the travel_core addon",
+        "test:sphinx":      "PHPUnit tests for the sphinx_holidays addon",
+        "test":             "Run PHPUnit across all three addon suites",
         "check":         "Run PHPStan + Psalm + PHPCS + CS Fixer dry-run + PHPUnit",
         "check:all":     "Run all quality checks including PHPMD"
     }
