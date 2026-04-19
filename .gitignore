@@ -36,6 +36,8 @@ node_modules/
 var/
 phpcs.cache
 .phpunit.result.cache
+.phpunit.cache/
+.phpunit.cache.integration/
 .php-cs-fixer.cache
 
 # Legacy pre-split monolithic addon (archived — use addon-* directories instead)
