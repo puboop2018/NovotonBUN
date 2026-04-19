@@ -43,6 +43,10 @@ if (!defined('DIR_ROOT')) {
     }
 }
 
+if (!defined('CART_LANGUAGE')) {
+    define('CART_LANGUAGE', 'en');
+}
+
 // ── CS-Cart function stubs ──────────────────────────────────────────────────
 // Only define stubs for functions that are referenced at class-load time
 // or in the specific methods under test.
