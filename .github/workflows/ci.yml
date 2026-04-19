@@ -197,6 +197,29 @@ jobs:
       - name: Run PHPUnit
         run: vendor/bin/phpunit --colors=always --no-coverage
 
+  # ── PHPUnit (sphinx_holidays suite) ──
+  phpunit-sphinx:
+    name: PHPUnit (sphinx_holidays)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: addon-sphinx-holidays/app/addons/sphinx_holidays
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: simplexml, curl, mbstring
+          tools: composer:v2
+
+      - name: Install addon dependencies
+        run: composer install --no-progress --no-interaction
+
+      - name: Run PHPUnit
+        run: vendor/bin/phpunit --colors=always --no-coverage
+
   # ── php -l syntax check on all PHP files ──
   lint:
     name: PHP Lint

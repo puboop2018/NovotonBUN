@@ -1,0 +1,15 @@
+{
+    "autoload": {
+        "psr-4": {
+            "Tygh\\Addons\\SphinxHolidays\\": ["src/", ""]
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tygh\\Addons\\SphinxHolidays\\Tests\\": "tests/"
+        }
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^11.0"
+    }
+}
