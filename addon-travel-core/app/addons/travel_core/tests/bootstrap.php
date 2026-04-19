@@ -67,17 +67,39 @@ if (!function_exists('fn_csrf_validate_request')) {
     }
 }
 
+// ── db_* helpers route through DbStub when a closure is configured ────────
+// Default return values (null / 0 / []) match the bare stubs so tests that
+// don't touch the DB continue to work unchanged.
+
 if (!function_exists('db_get_field')) {
     function db_get_field(string $query, ...$params)
     {
-        return null;
+        $fn = \Tygh\Addons\TravelCore\Tests\Support\DbStub::$getField;
+        return $fn !== null ? $fn($query, ...$params) : null;
     }
 }
 
 if (!function_exists('db_query')) {
     function db_query(string $query, ...$params)
     {
-        return 0;
+        $fn = \Tygh\Addons\TravelCore\Tests\Support\DbStub::$query;
+        return $fn !== null ? $fn($query, ...$params) : 0;
+    }
+}
+
+if (!function_exists('db_get_array')) {
+    function db_get_array(string $query, ...$params)
+    {
+        $fn = \Tygh\Addons\TravelCore\Tests\Support\DbStub::$getArray;
+        return $fn !== null ? $fn($query, ...$params) : [];
+    }
+}
+
+if (!function_exists('db_get_fields')) {
+    function db_get_fields(string $query, ...$params)
+    {
+        $fn = \Tygh\Addons\TravelCore\Tests\Support\DbStub::$getFields;
+        return $fn !== null ? $fn($query, ...$params) : [];
     }
 }
 
