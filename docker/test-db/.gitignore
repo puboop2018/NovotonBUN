@@ -3,3 +3,8 @@
 # source by build.sh and consumed by docker build, then deleted.
 seed.sql
 seed.sql.gz
+
+# Maintainer-local config for build.sh. Contains absolute paths and the
+# CS-Cart license key — must never leave the maintainer's machine. The
+# repo-checked build.env.example documents the expected format.
+build.env
