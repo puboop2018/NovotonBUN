@@ -60,6 +60,8 @@
             "@test:sphinx"
         ],
 
+        "test:integration:novoton": "cd addon-novoton-holidays/app/addons/novoton_holidays && vendor/bin/phpunit -c phpunit-integration.xml --no-coverage",
+
         "check": [
             "@stan",
             "@psalm",
@@ -96,6 +98,7 @@
         "test:travel-core": "PHPUnit tests for the travel_core addon",
         "test:sphinx":      "PHPUnit tests for the sphinx_holidays addon",
         "test":             "Run PHPUnit across all three addon suites",
+        "test:integration:novoton": "Run novoton DB-backed integration tests (requires docker-compose.test.yml up)",
         "check":         "Run PHPStan + Psalm + PHPCS + CS Fixer dry-run + PHPUnit",
         "check:all":     "Run all quality checks including PHPMD"
     }

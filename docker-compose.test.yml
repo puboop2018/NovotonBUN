@@ -1,0 +1,32 @@
+# Local dev + CI integration-test database.
+#
+# Spins up the pre-baked CS-Cart 4.20.1 test-DB image from GHCR. See
+# docker/test-db/README.md for how the image is built.
+#
+# Usage (local):
+#   docker compose -f docker-compose.test.yml up -d db
+#   cd addon-novoton-holidays/app/addons/novoton_holidays
+#   DB_DSN='mysql:host=127.0.0.1;port=3307;dbname=cscart' \
+#   DB_USER=cscart DB_PASS=cscart \
+#   vendor/bin/phpunit --testsuite=integration
+#
+# The CI workflow does the equivalent via GitHub Actions' `services:` block.
+
+services:
+  db:
+    # Pin to the schema-hash tag in CI to prevent silent drift. `latest` is
+    # convenient locally but MUST be replaced with a hash tag when bumping.
+    image: ghcr.io/puboop2018/novotonbun-test-db:latest
+    environment:
+      MYSQL_DATABASE: cscart
+      MYSQL_USER: cscart
+      MYSQL_PASSWORD: cscart
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "3307:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-proot"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 30s

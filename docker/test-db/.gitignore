@@ -1,0 +1,5 @@
+# Never commit the dump — it contains a fully installed CS-Cart database
+# (including addon tables with any licensed metadata). It's rebuilt from
+# source by build.sh and consumed by docker build, then deleted.
+seed.sql
+seed.sql.gz
