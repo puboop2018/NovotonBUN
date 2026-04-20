@@ -32,6 +32,26 @@ license key is absent before pushing.
 3. Local copy of `cscart_v4.20.1.zip`.
 4. A valid CS-Cart 4.20.1 license key.
 
+## One-time repo setup (before CI can run integration tests)
+
+Until these three steps are done, the `phpunit-integration-novoton` CI job
+is **deliberately skipped** via the `if: vars.INTEGRATION_TESTDB_READY == 'true'`
+gate in `.github/workflows/ci.yml`. That keeps pushes green while the
+infrastructure is being stood up.
+
+1. Build and push the image (see "Rebuild procedure" below).
+2. In GitHub → **Settings → Secrets and variables → Actions**:
+   - Under **Secrets**, add `GHCR_READ_TOKEN` — a Personal Access Token
+     with the `read:packages` scope. Used by the workflow's service
+     container credentials to pull the private image.
+   - Under **Variables**, add `INTEGRATION_TESTDB_READY` with value `true`.
+3. Trigger a new workflow run (push a trivial commit or re-run the last
+   workflow). The integration job now runs and must pass.
+
+To temporarily disable the integration job (e.g. while rebuilding the
+image), flip `INTEGRATION_TESTDB_READY` to any value other than `true` —
+the job skips on the next push without requiring a workflow edit.
+
 ## Rebuild procedure
 
 ```bash

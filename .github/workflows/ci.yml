@@ -181,11 +181,22 @@ jobs:
   # service container and runs the Integration testsuite against it. Each
   # test is wrapped in a DB transaction that is rolled back on tearDown.
   #
+  # Gating: this job only runs when the repository variable
+  # INTEGRATION_TESTDB_READY is set to "true". That variable should be
+  # flipped on (Settings → Secrets and variables → Actions → Variables)
+  # AFTER the maintainer has:
+  #   1. Run docker/test-db/build.sh locally with CSCART_ZIP_PATH +
+  #      CSCART_LICENSE_KEY set.
+  #   2. Pushed the resulting image to ghcr.io/puboop2018/novotonbun-test-db.
+  #   3. Added secrets.GHCR_READ_TOKEN (a PAT with read:packages scope).
+  # Until then the job is skipped — its absence does not block merges.
+  #
   # See docker/test-db/README.md for how the image is built. The tag here
   # must match what docker-compose.test.yml pins.
   phpunit-integration-novoton:
     name: PHPUnit Integration (novoton)
     runs-on: ubuntu-latest
+    if: vars.INTEGRATION_TESTDB_READY == 'true'
     defaults:
       run:
         working-directory: addon-novoton-holidays/app/addons/novoton_holidays
