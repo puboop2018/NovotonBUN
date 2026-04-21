@@ -54,11 +54,43 @@ the job skips on the next push without requiring a workflow edit.
 
 ## Rebuild procedure
 
+### Option A (recommended): persistent local config
+
+Set up once, then re-run `build.sh` with no env-var juggling:
+
 ```bash
-export CSCART_ZIP_PATH=/absolute/path/to/cscart_v4.20.1.zip
+cp docker/test-db/build.env.example docker/test-db/build.env
+# edit docker/test-db/build.env — set CSCART_SRC + CSCART_LICENSE_KEY
+./docker/test-db/build.sh
+```
+
+`build.env` is gitignored; it never leaves your machine.
+
+### Option B: inline env vars
+
+```bash
+export CSCART_SRC=/absolute/path/to/cscart_v4.20.1.zip   # or an extracted dir
 export CSCART_LICENSE_KEY=XXXX-XXXX-XXXX-XXXX
 ./docker/test-db/build.sh
 ```
+
+`CSCART_SRC` can be either the `.zip` archive or an already-extracted
+CS-Cart directory — `build.sh` auto-detects and unzips only when needed.
+The old `CSCART_ZIP_PATH` name is still honoured for back-compat.
+
+### Path format notes (Windows maintainers)
+
+`build.sh` runs in bash (Git Bash / WSL / Cygwin), so Windows drive
+letters need translating:
+
+| Shell      | Example                                          |
+|------------|--------------------------------------------------|
+| Git Bash   | `/c/GitRepoNovotonSphinx/cscart_v4.20.1`         |
+| WSL        | `/mnt/c/GitRepoNovotonSphinx/cscart_v4.20.1`     |
+| Cygwin     | `/cygdrive/c/GitRepoNovotonSphinx/cscart_v4.20.1`|
+
+If `build.sh` reports `CSCART_SRC does not exist`, you probably wrote a
+path with `C:\…` backslashes — use one of the forms above.
 
 `build.sh`:
 

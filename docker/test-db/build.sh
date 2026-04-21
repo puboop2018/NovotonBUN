@@ -12,7 +12,10 @@
 #   - A new addon is added or removed
 #
 # Inputs (required env vars):
-#   CSCART_ZIP_PATH      Absolute path to cscart_v4.20.1.zip
+#   CSCART_SRC           Absolute path to either:
+#                          - cscart_v4.20.1.zip  (will be unzipped), or
+#                          - an already-extracted CS-Cart 4.20.1 directory.
+#                        Back-compat alias: CSCART_ZIP_PATH.
 #   CSCART_LICENSE_KEY   Valid CS-Cart license key
 #
 # Optional env vars:
@@ -20,26 +23,79 @@
 #   CSCART_VERSION       Default: 4.20.1
 #   SKIP_PUSH            Set to 1 to build only, skip docker push
 #
+# Local config:
+#   If docker/test-db/build.env exists it is sourced before env-var checks.
+#   That file is gitignored — put your machine-specific paths there so you
+#   don't have to `export` every time. See build.env.example.
+#
 set -euo pipefail
 
-: "${CSCART_ZIP_PATH:?CSCART_ZIP_PATH must point at cscart_v4.20.1.zip}"
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$HERE/../.." && pwd)"
+
+# Load maintainer-local config if present (gitignored).
+if [ -f "$HERE/build.env" ]; then
+    # shellcheck disable=SC1091
+    . "$HERE/build.env"
+fi
+
+# Back-compat: old variable name.
+CSCART_SRC="${CSCART_SRC:-${CSCART_ZIP_PATH:-}}"
+
+: "${CSCART_SRC:?CSCART_SRC (or CSCART_ZIP_PATH) must point at the cscart zip or extracted dir}"
 : "${CSCART_LICENSE_KEY:?CSCART_LICENSE_KEY must be set (never commit)}"
+
+if [ ! -e "$CSCART_SRC" ]; then
+    echo "[build.sh] FATAL: CSCART_SRC=$CSCART_SRC does not exist." >&2
+    echo "[build.sh] On Git Bash the path uses forward slashes with /c/... prefix," >&2
+    echo "[build.sh] e.g. /c/GitRepoNovotonSphinx/cscart_v4.20.1" >&2
+    echo "[build.sh] On WSL use /mnt/c/..." >&2
+    exit 2
+fi
 
 IMAGE_BASE="${IMAGE_BASE:-ghcr.io/puboop2018/novotonbun-test-db}"
 CSCART_VERSION="${CSCART_VERSION:-4.20.1}"
 SKIP_PUSH="${SKIP_PUSH:-0}"
 
-HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(cd "$HERE/../.." && pwd)"
 WORK="$(mktemp -d -t novoton-testdb-XXXXXX)"
 trap 'rm -rf "$WORK"' EXIT
 
 echo "[build.sh] Workdir:   $WORK"
 echo "[build.sh] Repo root: $REPO_ROOT"
+echo "[build.sh] CS-Cart:   $CSCART_SRC"
 
-# ── 1. Unzip CS-Cart into workdir ────────────────────────────────────────────
-echo "[build.sh] Unzipping CS-Cart..."
-unzip -q "$CSCART_ZIP_PATH" -d "$WORK/cscart"
+# ── 1. Materialise CS-Cart into workdir ─────────────────────────────────────
+# Support either a .zip archive or a pre-extracted directory.
+case "$CSCART_SRC" in
+    *.zip)
+        echo "[build.sh] Unzipping $CSCART_SRC ..."
+        unzip -q "$CSCART_SRC" -d "$WORK/cscart"
+        ;;
+    *)
+        if [ -d "$CSCART_SRC" ]; then
+            echo "[build.sh] Copying extracted CS-Cart dir ..."
+            # Avoid dereferencing symlinks; preserve file modes.
+            cp -a "$CSCART_SRC" "$WORK/cscart"
+        else
+            echo "[build.sh] FATAL: CSCART_SRC is neither a .zip nor a directory: $CSCART_SRC" >&2
+            exit 2
+        fi
+        ;;
+esac
+
+# Normalize: CS-Cart zips often extract to a single top-level folder. If
+# $WORK/cscart doesn't contain install/index.php at its root, look one level
+# deeper and hoist.
+if [ ! -f "$WORK/cscart/install/index.php" ]; then
+    inner=$(find "$WORK/cscart" -maxdepth 2 -type f -name 'index.php' -path '*/install/*' -printf '%h\n' | head -n1)
+    if [ -n "$inner" ]; then
+        parent=$(dirname "$inner")
+        echo "[build.sh] Hoisting CS-Cart from $parent to workdir root..."
+        mv "$parent" "$WORK/cscart.tmp"
+        rm -rf "$WORK/cscart"
+        mv "$WORK/cscart.tmp" "$WORK/cscart"
+    fi
+fi
 
 # ── 2. Drop the three addons into app/addons/ ────────────────────────────────
 for addon in novoton_holidays travel_core sphinx_holidays; do
