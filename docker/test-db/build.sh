@@ -30,6 +30,28 @@
 #
 set -euo pipefail
 
+# ── Git Bash / MSYS path-conversion guard ───────────────────────────────────
+# On Windows under Git Bash or MSYS2, bash auto-translates any argument that
+# looks like a Unix path into a Windows path before passing it to child
+# processes — so `docker run -w /var/www/html` becomes
+# `docker run -w C:/Program Files/Git/var/www/html`, which the Docker daemon
+# rejects as "invalid working directory". Disable the conversion globally
+# and convert HOST bind-mount paths ourselves via a portable `to_host_path`
+# helper.
+export MSYS_NO_PATHCONV=1
+export MSYS2_ARG_CONV_EXCL='*'
+
+# Convert a bash-side absolute path to whatever form `docker` expects on the
+# current host. On Git Bash/Cygwin this is the Windows form (C:\...); on
+# native Linux/macOS it's a no-op.
+to_host_path() {
+    if command -v cygpath >/dev/null 2>&1; then
+        cygpath -aw "$1"
+    else
+        echo "$1"
+    fi
+}
+
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$HERE/../.." && pwd)"
 
@@ -128,9 +150,11 @@ for i in $(seq 1 60); do
     sleep 1
 done
 
+CSCART_HOST_PATH="$(to_host_path "$WORK/cscart")"
+
 echo "[build.sh] Running CS-Cart CLI installer..."
 docker run --rm --network "$NET" \
-    -v "$WORK/cscart:/var/www/html" \
+    -v "${CSCART_HOST_PATH}:/var/www/html" \
     -e LICENSE_KEY="$CSCART_LICENSE_KEY" \
     -w /var/www/html \
     php:8.3-cli bash -c '
@@ -152,7 +176,7 @@ docker run --rm --network "$NET" \
 echo "[build.sh] Enabling addons..."
 for addon in novoton_holidays travel_core sphinx_holidays; do
     docker run --rm --network "$NET" \
-        -v "$WORK/cscart:/var/www/html" \
+        -v "${CSCART_HOST_PATH}:/var/www/html" \
         -w /var/www/html \
         php:8.3-cli php admin.php --dispatch=addons.update addon="$addon" status=A \
         || echo "[build.sh] Warning: could not enable $addon via CLI; may need manual SQL" >&2
