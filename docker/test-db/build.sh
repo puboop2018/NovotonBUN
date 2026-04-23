@@ -228,7 +228,7 @@ IMAGE="${IMAGE_BASE}:${TAG}"
 
 # ── 5. Build the image ───────────────────────────────────────────────────────
 echo "[build.sh] Building $IMAGE..."
-docker build -t "$IMAGE" -t "${IMAGE_BASE}:latest" "$HERE"
+docker build -t "$IMAGE" -t "${IMAGE_BASE}:latest" "$(to_host_path "$HERE")"
 
 # ── 6. Paranoia: verify the license key is NOT in the image layers ───────────
 echo "[build.sh] Auditing image for license-key leakage..."
