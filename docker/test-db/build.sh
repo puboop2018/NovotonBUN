@@ -195,15 +195,22 @@ return array(
 PHP_EOF
 
 # ── 3b. Run the console installer. Per CS-Cart docs the command is
-#        `php index.php` from inside install/. We only need the mysqli
-#        extension (database_backend=mysqli above); compile it once.
+#        `php index.php` from inside install/. CS-Cart 4.20.1 checks for
+#        a specific set of PHP extensions during install; `php:8.3-cli`
+#        ships almost nothing enabled, so pull in the extension
+#        installer (mlocati/docker-php-extension-installer — handles all
+#        the apt-get libfoo-dev dance for us) and compile the lot in one
+#        layer.
 echo "[build.sh] Running CS-Cart console installer (php install/index.php)..."
 docker run --rm --network "$NET" \
     -v "${CSCART_HOST_PATH}:/var/www/html" \
     -w /var/www/html/install \
     php:8.3-cli bash -c '
         set -e
-        docker-php-ext-install mysqli >/dev/null 2>&1
+        curl -sSLf https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions \
+            -o /usr/local/bin/install-php-extensions
+        chmod +x /usr/local/bin/install-php-extensions
+        install-php-extensions mysqli curl sockets gd exif soap zip intl opcache
         php index.php
     '
 
