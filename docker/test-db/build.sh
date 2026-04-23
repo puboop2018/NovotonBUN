@@ -152,35 +152,67 @@ done
 
 CSCART_HOST_PATH="$(to_host_path "$WORK/cscart")"
 
-echo "[build.sh] Running CS-Cart CLI installer..."
+# ── 3a. Write the install/config.php that CS-Cart 4.20.1's console
+#        installer reads. Per docs.cs-cart.com/latest/install/install_via_console.html
+#        the console installer does NOT accept CLI flags — all values come
+#        from this file. The three addons are listed in 'addons' so they
+#        are installed and enabled by the installer itself (no follow-up
+#        `admin.php --dispatch=addons.update` call needed). 'demo_catalog'
+#        is false so the seed dump doesn't carry demo products.
+echo "[build.sh] Writing install/config.php..."
+cat > "$WORK/cscart/install/config.php" <<PHP_EOF
+<?php
+return array(
+    'addons' => array('novoton_holidays', 'travel_core', 'sphinx_holidays'),
+    'cart_settings' => array(
+        'email' => 'admin@example.com',
+        'password' => 'admin',
+        'secret_key' => 'novotonbun-test-db-static-secret',
+        'languages' => array('en', 'ro'),
+        'main_language' => 'en',
+        'demo_catalog' => false,
+        'theme_name' => 'basic',
+        'license_number' => '${CSCART_LICENSE_KEY}',
+    ),
+    'database_settings' => array(
+        'host' => 'db',
+        'name' => 'cscart',
+        'user' => 'cscart',
+        'password' => 'cscart',
+        'table_prefix' => 'cscart_',
+        'database_backend' => 'mysqli',
+        'notify' => false,
+        'allow_override' => 'Y',
+    ),
+    'server_settings' => array(
+        'http_host' => 'localhost',
+        'http_path' => '',
+        'https_host' => 'localhost',
+        'https_path' => '',
+        'correct_permissions' => true,
+    ),
+);
+PHP_EOF
+
+# ── 3b. Run the console installer. Per CS-Cart docs the command is
+#        `php index.php` from inside install/. CS-Cart 4.20.1 checks for
+#        a specific set of PHP extensions during install; `php:8.3-cli`
+#        ships almost nothing enabled, so pull in the extension
+#        installer (mlocati/docker-php-extension-installer — handles all
+#        the apt-get libfoo-dev dance for us) and compile the lot in one
+#        layer.
+echo "[build.sh] Running CS-Cart console installer (php install/index.php)..."
 docker run --rm --network "$NET" \
     -v "${CSCART_HOST_PATH}:/var/www/html" \
-    -e LICENSE_KEY="$CSCART_LICENSE_KEY" \
-    -w /var/www/html \
+    -w /var/www/html/install \
     php:8.3-cli bash -c '
         set -e
-        docker-php-ext-install pdo_mysql mysqli >/dev/null 2>&1 || true
-        php install/index.php \
-            --db_host=db \
-            --db_name=cscart \
-            --db_user=cscart \
-            --db_password=cscart \
-            --admin_username=admin \
-            --admin_password=admin \
-            --admin_email=admin@example.com \
-            --license_number="$LICENSE_KEY" \
-            --non-interactive \
-            || { echo "Installer failed — adapt flags to match your CS-Cart 4.20.1 CLI"; exit 1; }
+        curl -sSLf https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions \
+            -o /usr/local/bin/install-php-extensions
+        chmod +x /usr/local/bin/install-php-extensions
+        install-php-extensions mysqli curl sockets gd exif soap zip intl opcache
+        php index.php
     '
-
-echo "[build.sh] Enabling addons..."
-for addon in novoton_holidays travel_core sphinx_holidays; do
-    docker run --rm --network "$NET" \
-        -v "${CSCART_HOST_PATH}:/var/www/html" \
-        -w /var/www/html \
-        php:8.3-cli php admin.php --dispatch=addons.update addon="$addon" status=A \
-        || echo "[build.sh] Warning: could not enable $addon via CLI; may need manual SQL" >&2
-done
 
 # ── 4. Dump and compress ─────────────────────────────────────────────────────
 echo "[build.sh] Dumping cscart schema + data..."
