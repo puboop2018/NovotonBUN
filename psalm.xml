@@ -23,11 +23,13 @@
         <directory name="addon-novoton-holidays/app/addons/novoton_holidays/src" />
         <directory name="addon-travel-core/app/addons/travel_core/src" />
         <directory name="addon-sphinx-holidays/app/addons/sphinx_holidays/src" />
+        <directory name="addon-fgo-invoicing/app/addons/fgo_invoicing/src" />
 
         <ignoreFiles>
             <directory name="vendor" />
             <directory name="var" />
             <directory name="addon-novoton-holidays/app/addons/novoton_holidays/tests" />
+            <directory name="addon-fgo-invoicing/app/addons/fgo_invoicing/tests" />
         </ignoreFiles>
     </projectFiles>
 

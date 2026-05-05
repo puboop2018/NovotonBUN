@@ -43,6 +43,10 @@ parameters:
         - addon-travel-core/app/addons/travel_core/hooks
         - addon-sphinx-holidays/app/addons/sphinx_holidays/src
         - addon-sphinx-holidays/app/addons/sphinx_holidays/controllers
+        - addon-fgo-invoicing/app/addons/fgo_invoicing/src
+        - addon-fgo-invoicing/app/addons/fgo_invoicing/controllers
+        - addon-fgo-invoicing/app/addons/fgo_invoicing/functions
+        - addon-fgo-invoicing/app/addons/fgo_invoicing/hooks
 
     # Scan additional files/directories for symbol discovery without analysing
     # them. Novoton's Constants.php sits at the addon root (PSR-4 mapped to ""
@@ -55,6 +59,7 @@ parameters:
         - addon-novoton-holidays/app/addons/novoton_holidays/src
         - addon-travel-core/app/addons/travel_core/src
         - addon-sphinx-holidays/app/addons/sphinx_holidays/src
+        - addon-fgo-invoicing/app/addons/fgo_invoicing/src
 
     excludePaths:
         - '*/vendor/*'
