@@ -1,0 +1,300 @@
+msgid ""
+msgstr "Project-Id-Version: cs-cart-latest\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language-Team: English\n"
+"Language: en_US\n"
+
+msgctxt "Addons::name::fgo_invoicing"
+msgid "FGO Invoicing"
+msgstr "FGO Invoicing"
+
+msgctxt "Addons::description::fgo_invoicing"
+msgid "Issues fiscal invoices through the FGO Romanian e-invoicing API on order events."
+msgstr "Issues fiscal invoices through the FGO Romanian e-invoicing API on order events."
+
+msgctxt "SettingsSections::fgo_invoicing::general"
+msgid "General Settings"
+msgstr "General Settings"
+
+msgctxt "SettingsOptions::fgo_invoicing::credentials_header"
+msgid "API Credentials"
+msgstr "API Credentials"
+
+msgctxt "SettingsOptions::fgo_invoicing::client_code"
+msgid "Client code (CodUnic / CIF)"
+msgstr "Client code (CodUnic / CIF)"
+
+msgctxt "SettingsOptions::fgo_invoicing::private_key"
+msgid "FGO private API key"
+msgstr "FGO private API key"
+
+msgctxt "SettingsOptions::fgo_invoicing::sandbox"
+msgid "Use sandbox (api-testuat.fgo.ro)"
+msgstr "Use sandbox (api-testuat.fgo.ro)"
+
+msgctxt "SettingsOptions::fgo_invoicing::behaviour_header"
+msgid "Trigger & Behaviour"
+msgstr "Trigger & Behaviour"
+
+msgctxt "SettingsOptions::fgo_invoicing::api_call"
+msgid "Issue invoice on"
+msgstr "Issue invoice on"
+
+msgctxt "SettingsVariants::fgo_invoicing::api_call::onOrder"
+msgid "Place order"
+msgstr "Place order"
+
+msgctxt "SettingsVariants::fgo_invoicing::api_call::onPayment"
+msgid "Payment confirmed"
+msgstr "Payment confirmed"
+
+msgctxt "SettingsVariants::fgo_invoicing::api_call::onCompleted"
+msgid "Order completed"
+msgstr "Order completed"
+
+msgctxt "SettingsVariants::fgo_invoicing::api_call::manual"
+msgid "Manual only"
+msgstr "Manual only"
+
+msgctxt "SettingsOptions::fgo_invoicing::invoice_type"
+msgid "Document type"
+msgstr "Document type"
+
+msgctxt "SettingsOptions::fgo_invoicing::invoice_series"
+msgid "Invoice series"
+msgstr "Invoice series"
+
+msgctxt "SettingsOptions::fgo_invoicing::verify_duplicate"
+msgid "Ask FGO to deduplicate (VerificareDuplicat)"
+msgstr "Ask FGO to deduplicate (VerificareDuplicat)"
+
+msgctxt "SettingsOptions::fgo_invoicing::auto_email_pdf"
+msgid "Email the PDF link to the customer after issuance"
+msgstr "Email the PDF link to the customer after issuance"
+
+msgctxt "SettingsOptions::fgo_invoicing::min_call_interval_ms"
+msgid "Minimum interval between FGO calls (ms)"
+msgstr "Minimum interval between FGO calls (ms)"
+
+msgctxt "SettingsOptions::fgo_invoicing::customer_header"
+msgid "Customer / VAT"
+msgstr "Customer / VAT"
+
+msgctxt "SettingsOptions::fgo_invoicing::sanitize_vat"
+msgid "Validate Romanian CIF (ValideazaCodUnicRo)"
+msgstr "Validate Romanian CIF (ValideazaCodUnicRo)"
+
+msgctxt "SettingsOptions::fgo_invoicing::client_vat_required"
+msgid "Require CIF for company customers at checkout"
+msgstr "Require CIF for company customers at checkout"
+
+msgctxt "SettingsOptions::fgo_invoicing::client_cnp_required"
+msgid "Require CNP for individuals at checkout"
+msgstr "Require CNP for individuals at checkout"
+
+msgctxt "SettingsOptions::fgo_invoicing::lines_header"
+msgid "Invoice Lines & Codes"
+msgstr "Invoice Lines & Codes"
+
+msgctxt "SettingsOptions::fgo_invoicing::article_id_field"
+msgid "Article identifier (CodArticol)"
+msgstr "Article identifier (CodArticol)"
+
+msgctxt "SettingsOptions::fgo_invoicing::product_description"
+msgid "Append SKU to line description"
+msgstr "Append SKU to line description"
+
+msgctxt "SettingsOptions::fgo_invoicing::additional_info"
+msgid "Add CS-Cart order # to invoice notes"
+msgstr "Add CS-Cart order # to invoice notes"
+
+msgctxt "SettingsOptions::fgo_invoicing::shipping_tax_vat"
+msgid "Shipping VAT handling"
+msgstr "Shipping VAT handling"
+
+msgctxt "SettingsVariants::fgo_invoicing::shipping_tax_vat::vat_included"
+msgid "Tax-inclusive (PretTotal)"
+msgstr "Tax-inclusive (PretTotal)"
+
+msgctxt "SettingsVariants::fgo_invoicing::shipping_tax_vat::vat_not_included"
+msgid "Net unit price (PretUnitar)"
+msgstr "Net unit price (PretUnitar)"
+
+msgctxt "SettingsVariants::fgo_invoicing::shipping_tax_vat::vat_zero"
+msgid "Zero VAT"
+msgstr "Zero VAT"
+
+msgctxt "SettingsOptions::fgo_invoicing::shipping_code"
+msgid "Shipping article code"
+msgstr "Shipping article code"
+
+msgctxt "SettingsOptions::fgo_invoicing::discount_code"
+msgid "Discount article code"
+msgstr "Discount article code"
+
+msgctxt "SettingsOptions::fgo_invoicing::administration_code"
+msgid "Warehouse code (CodGestiune)"
+msgstr "Warehouse code (CodGestiune)"
+
+msgctxt "SettingsOptions::fgo_invoicing::resilience_header"
+msgid "Resilience & Diagnostics"
+msgstr "Resilience & Diagnostics"
+
+msgctxt "SettingsOptions::fgo_invoicing::api_max_retries"
+msgid "HTTP retry attempts"
+msgstr "HTTP retry attempts"
+
+msgctxt "SettingsOptions::fgo_invoicing::api_retry_delay_ms"
+msgid "Initial retry delay (ms)"
+msgstr "Initial retry delay (ms)"
+
+msgctxt "SettingsOptions::fgo_invoicing::api_cb_threshold"
+msgid "Circuit breaker open threshold"
+msgstr "Circuit breaker open threshold"
+
+msgctxt "SettingsOptions::fgo_invoicing::api_cb_timeout"
+msgid "Circuit breaker open timeout (s)"
+msgstr "Circuit breaker open timeout (s)"
+
+msgctxt "SettingsOptions::fgo_invoicing::debug_logging"
+msgid "Debug logging"
+msgstr "Debug logging"
+
+# ── Admin pages ────────────────────────────────────────────────────────
+
+msgid "fgo_invoicing.manage_title"
+msgstr "FGO Invoices"
+
+msgid "fgo_invoicing.banner_sandbox"
+msgstr "Sandbox mode is active. Invoices issued here are not fiscal."
+
+msgid "fgo_invoicing.banner_production"
+msgstr "Production mode is active. Invoices are real and fiscal."
+
+msgid "fgo_invoicing.no_invoices"
+msgstr "No FGO invoices yet."
+
+msgid "fgo_invoicing.invoice_series"
+msgstr "Series"
+
+msgid "fgo_invoicing.invoice_number"
+msgstr "Number"
+
+msgid "fgo_invoicing.pdf_link"
+msgstr "PDF link"
+
+msgid "fgo_invoicing.payment_link"
+msgstr "Payment link"
+
+msgid "fgo_invoicing.last_error"
+msgstr "Last error"
+
+msgid "fgo_invoicing.message"
+msgstr "Message"
+
+msgid "fgo_invoicing.retry_count"
+msgstr "Retries"
+
+msgid "fgo_invoicing.summary"
+msgstr "Summary"
+
+msgid "fgo_invoicing.actions"
+msgstr "Actions"
+
+msgid "fgo_invoicing.awb"
+msgstr "AWB"
+
+msgid "fgo_invoicing.btn_issue"
+msgstr "Issue invoice"
+
+msgid "fgo_invoicing.btn_cancel"
+msgstr "Cancel invoice"
+
+msgid "fgo_invoicing.btn_storno"
+msgstr "Storno invoice"
+
+msgid "fgo_invoicing.btn_delete"
+msgstr "Delete invoice"
+
+msgid "fgo_invoicing.btn_attach_awb"
+msgstr "Attach AWB"
+
+msgid "fgo_invoicing.btn_view_panel"
+msgstr "Open invoice"
+
+msgid "fgo_invoicing.confirm_issue"
+msgstr "Issue (or re-issue) the FGO invoice for this order?"
+
+msgid "fgo_invoicing.confirm_cancel"
+msgstr "Cancel the FGO invoice for this order?"
+
+msgid "fgo_invoicing.confirm_storno"
+msgstr "Issue a storno (reversal) for this invoice?"
+
+msgid "fgo_invoicing.confirm_delete"
+msgstr "Delete this invoice on FGO? This cannot be undone."
+
+msgid "fgo_invoicing.invoice_for_order"
+msgstr "FGO invoice for order"
+
+msgid "fgo_invoicing.invoice"
+msgstr "FGO Invoice"
+
+msgid "fgo_invoicing.no_invoice_yet"
+msgstr "No FGO invoice has been issued for this order yet."
+
+msgid "fgo_invoicing.no_invoice_for_order"
+msgstr "No FGO invoice exists for that order."
+
+msgid "fgo_invoicing.invoice_issued"
+msgstr "FGO invoice issued."
+
+msgid "fgo_invoicing.invoice_failed"
+msgstr "FGO issue failed"
+
+msgid "fgo_invoicing.action_succeeded"
+msgstr "FGO action completed."
+
+msgid "fgo_invoicing.connection_ok"
+msgstr "Connection OK"
+
+msgid "fgo_invoicing.connection_failed"
+msgstr "Connection failed"
+
+msgid "fgo_invoicing.missing_order_id"
+msgstr "Missing order id."
+
+msgid "fgo_invoicing.awb_attached"
+msgstr "AWB attached."
+
+msgid "fgo_invoicing.open_pdf"
+msgstr "Open PDF"
+
+msgid "fgo_invoicing.open_payment"
+msgstr "Open payment page"
+
+msgid "fgo_invoicing.request_payload"
+msgstr "Request payload"
+
+msgid "fgo_invoicing.response_payload"
+msgstr "Response payload"
+
+# ── Customer email ─────────────────────────────────────────────────────
+
+msgid "fgo_invoicing.email_subject"
+msgstr "Your invoice"
+
+msgid "fgo_invoicing.email_greeting"
+msgstr "Hello"
+
+msgid "fgo_invoicing.email_body_intro"
+msgstr "Your fiscal invoice has been issued for order"
+
+msgid "fgo_invoicing.email_pdf_button"
+msgstr "View PDF invoice"
+
+msgid "fgo_invoicing.email_payment_link"
+msgstr "Pay this invoice online"
+
+msgid "fgo_invoicing.email_signoff"
+msgstr "Thank you for your order!"

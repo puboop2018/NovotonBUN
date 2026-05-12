@@ -1,0 +1,264 @@
+<?xml version="1.0"?>
+<addon scheme="3.0">
+    <id>fgo_invoicing</id>
+    <version>0.1.0</version>
+    <priority>120</priority>
+    <position>10</position>
+    <status>active</status>
+    <has_icon>N</has_icon>
+    <supplier>VacanteLitoral.ro</supplier>
+    <supplier_link>https://vacantelitoral.ro</supplier_link>
+    <default_language>en</default_language>
+    <!-- FGO Invoicing: Romanian e-invoicing via api.fgo.ro. Requires PHP 8.3+. -->
+
+    <authors>
+        <author>
+            <name>VacanteLitoral.ro</name>
+            <email>office@VacanteLitoral.ro</email>
+            <url>https://vacantelitoral.ro</url>
+        </author>
+    </authors>
+
+    <compatibility>
+        <core_version>
+            <min>4.9.3</min>
+            <max>4.20.1</max>
+        </core_version>
+        <core_edition>ULTIMATE</core_edition>
+        <php_version>
+            <min>8.3.0</min>
+            <max>8.4.99</max>
+        </php_version>
+        <php_extensions>
+            <curl>
+                <supported>Y</supported>
+            </curl>
+            <json>
+                <supported>Y</supported>
+            </json>
+        </php_extensions>
+    </compatibility>
+
+    <settings layout="separate">
+        <sections>
+            <section id="general">
+                <items>
+                    <!-- API credentials -->
+                    <item id="credentials_header">
+                        <type>header</type>
+                        <variants/>
+                    </item>
+                    <item id="client_code">
+                        <type>input</type>
+                        <default_value></default_value>
+                        <variants/>
+                    </item>
+                    <item id="private_key">
+                        <type>password</type>
+                        <default_value></default_value>
+                        <variants/>
+                    </item>
+                    <item id="sandbox">
+                        <type>checkbox</type>
+                        <default_value>Y</default_value>
+                        <variants/>
+                    </item>
+
+                    <!-- Trigger / Behaviour -->
+                    <item id="behaviour_header">
+                        <type>header</type>
+                        <variants/>
+                    </item>
+                    <item id="api_call">
+                        <type>selectbox</type>
+                        <default_value>onPayment</default_value>
+                        <variants>
+                            <item id="onOrder"></item>
+                            <item id="onPayment"></item>
+                            <item id="onCompleted"></item>
+                            <item id="manual"></item>
+                        </variants>
+                    </item>
+                    <item id="invoice_type">
+                        <type>selectbox</type>
+                        <default_value>Factura</default_value>
+                        <variants>
+                            <item id="Factura"></item>
+                            <item id="Proforma"></item>
+                            <item id="Aviz"></item>
+                            <item id="T"></item>
+                            <item id="S"></item>
+                            <item id="U"></item>
+                            <item id="H"></item>
+                            <item id="n"></item>
+                            <item id="X"></item>
+                            <item id="M"></item>
+                            <item id="Y"></item>
+                            <item id="D"></item>
+                            <item id="d"></item>
+                            <item id="L"></item>
+                        </variants>
+                    </item>
+                    <item id="invoice_series">
+                        <type>input</type>
+                        <default_value></default_value>
+                        <variants/>
+                    </item>
+                    <item id="verify_duplicate">
+                        <type>checkbox</type>
+                        <default_value>Y</default_value>
+                        <variants/>
+                    </item>
+                    <item id="auto_email_pdf">
+                        <type>checkbox</type>
+                        <default_value>Y</default_value>
+                        <variants/>
+                    </item>
+                    <item id="min_call_interval_ms">
+                        <type>input</type>
+                        <default_value>1000</default_value>
+                        <variants/>
+                    </item>
+
+                    <!-- Customer / VAT -->
+                    <item id="customer_header">
+                        <type>header</type>
+                        <variants/>
+                    </item>
+                    <item id="sanitize_vat">
+                        <type>checkbox</type>
+                        <default_value>N</default_value>
+                        <variants/>
+                    </item>
+                    <item id="client_vat_required">
+                        <type>checkbox</type>
+                        <default_value>N</default_value>
+                        <variants/>
+                    </item>
+                    <item id="client_cnp_required">
+                        <type>checkbox</type>
+                        <default_value>N</default_value>
+                        <variants/>
+                    </item>
+
+                    <!-- Lines / Codes -->
+                    <item id="lines_header">
+                        <type>header</type>
+                        <variants/>
+                    </item>
+                    <item id="article_id_field">
+                        <type>selectbox</type>
+                        <default_value>sku</default_value>
+                        <variants>
+                            <item id="none"></item>
+                            <item id="sku"></item>
+                            <item id="ean13"></item>
+                            <item id="isbn"></item>
+                            <item id="upc"></item>
+                        </variants>
+                    </item>
+                    <item id="product_description">
+                        <type>checkbox</type>
+                        <default_value>N</default_value>
+                        <variants/>
+                    </item>
+                    <item id="additional_info">
+                        <type>checkbox</type>
+                        <default_value>Y</default_value>
+                        <variants/>
+                    </item>
+                    <item id="shipping_tax_vat">
+                        <type>selectbox</type>
+                        <default_value>vat_not_included</default_value>
+                        <variants>
+                            <item id="vat_included"></item>
+                            <item id="vat_not_included"></item>
+                            <item id="vat_zero"></item>
+                        </variants>
+                    </item>
+                    <item id="shipping_code">
+                        <type>input</type>
+                        <default_value>SHIPPING</default_value>
+                        <variants/>
+                    </item>
+                    <item id="discount_code">
+                        <type>input</type>
+                        <default_value>DISCOUNT</default_value>
+                        <variants/>
+                    </item>
+                    <item id="administration_code">
+                        <type>input</type>
+                        <default_value></default_value>
+                        <variants/>
+                    </item>
+
+                    <!-- Resilience / Diagnostics -->
+                    <item id="resilience_header">
+                        <type>header</type>
+                        <variants/>
+                    </item>
+                    <item id="api_max_retries">
+                        <type>input</type>
+                        <default_value>2</default_value>
+                        <variants/>
+                    </item>
+                    <item id="api_retry_delay_ms">
+                        <type>input</type>
+                        <default_value>500</default_value>
+                        <variants/>
+                    </item>
+                    <item id="api_cb_threshold">
+                        <type>input</type>
+                        <default_value>5</default_value>
+                        <variants/>
+                    </item>
+                    <item id="api_cb_timeout">
+                        <type>input</type>
+                        <default_value>60</default_value>
+                        <variants/>
+                    </item>
+                    <item id="debug_logging">
+                        <type>checkbox</type>
+                        <default_value>Y</default_value>
+                        <variants/>
+                    </item>
+                </items>
+            </section>
+        </sections>
+    </settings>
+
+    <queries>
+        <item for="install">
+            CREATE TABLE IF NOT EXISTS `?:fgo_invoices` (
+                `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+                `order_id` int(11) unsigned NOT NULL,
+                `cart_id` int(11) unsigned DEFAULT NULL,
+                `request_payload` LONGTEXT NULL COMMENT 'JSON-encoded form fields sent to FGO',
+                `payload` LONGTEXT NULL COMMENT 'Raw JSON response from FGO',
+                `success` TINYINT(1) NULL,
+                `message` VARCHAR(255) NULL,
+                `invoice_number` VARCHAR(64) NULL COMMENT 'Factura.Numar',
+                `invoice_series` VARCHAR(32) NULL COMMENT 'Factura.Serie',
+                `pdf_link` VARCHAR(2048) NULL COMMENT 'Factura.Link signed PDF URL',
+                `payment_link` VARCHAR(2048) NULL COMMENT 'Factura.LinkPlata',
+                `awb` VARCHAR(64) NULL,
+                `status` ENUM('pending','issued','failed','canceled','reversed','deleted') NOT NULL DEFAULT 'pending',
+                `last_error` TEXT NULL,
+                `retry_count` INT NOT NULL DEFAULT 0,
+                `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+                `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                PRIMARY KEY (`id`),
+                UNIQUE KEY `idx_order_id` (`order_id`),
+                KEY `idx_status` (`status`),
+                KEY `idx_invoice_number` (`invoice_number`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='FGO issued invoices, one row per CS-Cart order'
+        </item>
+        <item for="uninstall">DROP TABLE IF EXISTS `?:fgo_invoices`</item>
+        <item for="uninstall">DELETE FROM ?:language_values WHERE name LIKE 'fgo_invoicing.%'</item>
+    </queries>
+
+    <functions>
+        <item for="install">fn_fgo_invoicing_post_install</item>
+        <item for="uninstall">fn_fgo_invoicing_uninstall</item>
+    </functions>
+</addon>
