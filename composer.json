@@ -49,15 +49,17 @@
         "rector:dry": "rector process --dry-run --no-progress-bar",
         "rector:fix": "rector process --no-progress-bar",
 
-        "md": "phpmd addon-novoton-holidays/app/addons/novoton_holidays/src,addon-travel-core/app/addons/travel_core/src,addon-sphinx-holidays/app/addons/sphinx_holidays/src text phpmd.xml",
+        "md": "phpmd addon-novoton-holidays/app/addons/novoton_holidays/src,addon-travel-core/app/addons/travel_core/src,addon-sphinx-holidays/app/addons/sphinx_holidays/src,addon-fgo-invoicing/app/addons/fgo_invoicing/src text phpmd.xml",
 
         "test:novoton":     "cd addon-novoton-holidays/app/addons/novoton_holidays && vendor/bin/phpunit --no-coverage",
         "test:travel-core": "cd addon-travel-core/app/addons/travel_core && vendor/bin/phpunit --no-coverage",
         "test:sphinx":      "cd addon-sphinx-holidays/app/addons/sphinx_holidays && vendor/bin/phpunit --no-coverage",
+        "test:fgo":         "cd addon-fgo-invoicing/app/addons/fgo_invoicing && vendor/bin/phpunit --no-coverage",
         "test": [
             "@test:novoton",
             "@test:travel-core",
-            "@test:sphinx"
+            "@test:sphinx",
+            "@test:fgo"
         ],
 
         "test:integration:novoton": "cd addon-novoton-holidays/app/addons/novoton_holidays && vendor/bin/phpunit -c phpunit-integration.xml --no-coverage",
@@ -97,7 +99,8 @@
         "test:novoton":     "PHPUnit tests for the novoton_holidays addon",
         "test:travel-core": "PHPUnit tests for the travel_core addon",
         "test:sphinx":      "PHPUnit tests for the sphinx_holidays addon",
-        "test":             "Run PHPUnit across all three addon suites",
+        "test:fgo":         "PHPUnit tests for the fgo_invoicing addon",
+        "test":             "Run PHPUnit across all addon suites",
         "test:integration:novoton": "Run novoton DB-backed integration tests (requires docker-compose.test.yml up)",
         "check":         "Run PHPStan + Psalm + PHPCS + CS Fixer dry-run + PHPUnit",
         "check:all":     "Run all quality checks including PHPMD"
