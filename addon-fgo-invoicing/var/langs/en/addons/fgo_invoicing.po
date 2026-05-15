@@ -162,139 +162,185 @@ msgstr "Debug logging"
 
 # ── Admin pages ────────────────────────────────────────────────────────
 
+msgctxt "Languages::fgo_invoicing.manage_title"
 msgid "fgo_invoicing.manage_title"
 msgstr "FGO Invoices"
 
+msgctxt "Languages::fgo_invoicing.banner_sandbox"
 msgid "fgo_invoicing.banner_sandbox"
 msgstr "Sandbox mode is active. Invoices issued here are not fiscal."
 
+msgctxt "Languages::fgo_invoicing.banner_production"
 msgid "fgo_invoicing.banner_production"
 msgstr "Production mode is active. Invoices are real and fiscal."
 
+msgctxt "Languages::fgo_invoicing.no_invoices"
 msgid "fgo_invoicing.no_invoices"
 msgstr "No FGO invoices yet."
 
+msgctxt "Languages::fgo_invoicing.invoice_series"
 msgid "fgo_invoicing.invoice_series"
 msgstr "Series"
 
+msgctxt "Languages::fgo_invoicing.invoice_number"
 msgid "fgo_invoicing.invoice_number"
 msgstr "Number"
 
+msgctxt "Languages::fgo_invoicing.pdf_link"
 msgid "fgo_invoicing.pdf_link"
 msgstr "PDF link"
 
+msgctxt "Languages::fgo_invoicing.payment_link"
 msgid "fgo_invoicing.payment_link"
 msgstr "Payment link"
 
+msgctxt "Languages::fgo_invoicing.last_error"
 msgid "fgo_invoicing.last_error"
 msgstr "Last error"
 
+msgctxt "Languages::fgo_invoicing.message"
 msgid "fgo_invoicing.message"
 msgstr "Message"
 
+msgctxt "Languages::fgo_invoicing.retry_count"
 msgid "fgo_invoicing.retry_count"
 msgstr "Retries"
 
+msgctxt "Languages::fgo_invoicing.summary"
 msgid "fgo_invoicing.summary"
 msgstr "Summary"
 
+msgctxt "Languages::fgo_invoicing.actions"
 msgid "fgo_invoicing.actions"
 msgstr "Actions"
 
+msgctxt "Languages::fgo_invoicing.awb"
 msgid "fgo_invoicing.awb"
 msgstr "AWB"
 
+msgctxt "Languages::fgo_invoicing.btn_issue"
 msgid "fgo_invoicing.btn_issue"
 msgstr "Issue invoice"
 
+msgctxt "Languages::fgo_invoicing.btn_cancel"
 msgid "fgo_invoicing.btn_cancel"
 msgstr "Cancel invoice"
 
+msgctxt "Languages::fgo_invoicing.btn_storno"
 msgid "fgo_invoicing.btn_storno"
 msgstr "Storno invoice"
 
+msgctxt "Languages::fgo_invoicing.btn_delete"
 msgid "fgo_invoicing.btn_delete"
 msgstr "Delete invoice"
 
+msgctxt "Languages::fgo_invoicing.btn_attach_awb"
 msgid "fgo_invoicing.btn_attach_awb"
 msgstr "Attach AWB"
 
+msgctxt "Languages::fgo_invoicing.btn_view_panel"
 msgid "fgo_invoicing.btn_view_panel"
 msgstr "Open invoice"
 
+msgctxt "Languages::fgo_invoicing.confirm_issue"
 msgid "fgo_invoicing.confirm_issue"
 msgstr "Issue (or re-issue) the FGO invoice for this order?"
 
+msgctxt "Languages::fgo_invoicing.confirm_cancel"
 msgid "fgo_invoicing.confirm_cancel"
 msgstr "Cancel the FGO invoice for this order?"
 
+msgctxt "Languages::fgo_invoicing.confirm_storno"
 msgid "fgo_invoicing.confirm_storno"
 msgstr "Issue a storno (reversal) for this invoice?"
 
+msgctxt "Languages::fgo_invoicing.confirm_delete"
 msgid "fgo_invoicing.confirm_delete"
 msgstr "Delete this invoice on FGO? This cannot be undone."
 
+msgctxt "Languages::fgo_invoicing.invoice_for_order"
 msgid "fgo_invoicing.invoice_for_order"
 msgstr "FGO invoice for order"
 
+msgctxt "Languages::fgo_invoicing.invoice"
 msgid "fgo_invoicing.invoice"
 msgstr "FGO Invoice"
 
+msgctxt "Languages::fgo_invoicing.no_invoice_yet"
 msgid "fgo_invoicing.no_invoice_yet"
 msgstr "No FGO invoice has been issued for this order yet."
 
+msgctxt "Languages::fgo_invoicing.no_invoice_for_order"
 msgid "fgo_invoicing.no_invoice_for_order"
 msgstr "No FGO invoice exists for that order."
 
+msgctxt "Languages::fgo_invoicing.invoice_issued"
 msgid "fgo_invoicing.invoice_issued"
 msgstr "FGO invoice issued."
 
+msgctxt "Languages::fgo_invoicing.invoice_failed"
 msgid "fgo_invoicing.invoice_failed"
 msgstr "FGO issue failed"
 
+msgctxt "Languages::fgo_invoicing.action_succeeded"
 msgid "fgo_invoicing.action_succeeded"
 msgstr "FGO action completed."
 
+msgctxt "Languages::fgo_invoicing.connection_ok"
 msgid "fgo_invoicing.connection_ok"
 msgstr "Connection OK"
 
+msgctxt "Languages::fgo_invoicing.connection_failed"
 msgid "fgo_invoicing.connection_failed"
 msgstr "Connection failed"
 
+msgctxt "Languages::fgo_invoicing.missing_order_id"
 msgid "fgo_invoicing.missing_order_id"
 msgstr "Missing order id."
 
+msgctxt "Languages::fgo_invoicing.awb_attached"
 msgid "fgo_invoicing.awb_attached"
 msgstr "AWB attached."
 
+msgctxt "Languages::fgo_invoicing.open_pdf"
 msgid "fgo_invoicing.open_pdf"
 msgstr "Open PDF"
 
+msgctxt "Languages::fgo_invoicing.open_payment"
 msgid "fgo_invoicing.open_payment"
 msgstr "Open payment page"
 
+msgctxt "Languages::fgo_invoicing.request_payload"
 msgid "fgo_invoicing.request_payload"
 msgstr "Request payload"
 
+msgctxt "Languages::fgo_invoicing.response_payload"
 msgid "fgo_invoicing.response_payload"
 msgstr "Response payload"
 
 # ── Customer email ─────────────────────────────────────────────────────
 
+msgctxt "Languages::fgo_invoicing.email_subject"
 msgid "fgo_invoicing.email_subject"
 msgstr "Your invoice"
 
+msgctxt "Languages::fgo_invoicing.email_greeting"
 msgid "fgo_invoicing.email_greeting"
 msgstr "Hello"
 
+msgctxt "Languages::fgo_invoicing.email_body_intro"
 msgid "fgo_invoicing.email_body_intro"
 msgstr "Your fiscal invoice has been issued for order"
 
+msgctxt "Languages::fgo_invoicing.email_pdf_button"
 msgid "fgo_invoicing.email_pdf_button"
 msgstr "View PDF invoice"
 
+msgctxt "Languages::fgo_invoicing.email_payment_link"
 msgid "fgo_invoicing.email_payment_link"
 msgstr "Pay this invoice online"
 
+msgctxt "Languages::fgo_invoicing.email_signoff"
 msgid "fgo_invoicing.email_signoff"
 msgstr "Thank you for your order!"
+
