@@ -116,23 +116,23 @@
                         <variants/>
                     </item>
                     <item id="hotels_category_id">
-                        <type>template</type>
-                        <default_value>hotels_category_id.tpl</default_value>
+                        <type>selectbox</type>
+                        <default_value>0</default_value>
                         <variants/>
                     </item>
                     <item id="packages_category_id">
-                        <type>template</type>
-                        <default_value>packages_category_id.tpl</default_value>
+                        <type>selectbox</type>
+                        <default_value>0</default_value>
                         <variants/>
                     </item>
                     <item id="circuits_category_id">
-                        <type>template</type>
-                        <default_value>circuits_category_id.tpl</default_value>
+                        <type>selectbox</type>
+                        <default_value>0</default_value>
                         <variants/>
                     </item>
                     <item id="experiences_category_id">
-                        <type>template</type>
-                        <default_value>experiences_category_id.tpl</default_value>
+                        <type>selectbox</type>
+                        <default_value>0</default_value>
                         <variants/>
                     </item>
                     <item id="product_languages">
@@ -564,8 +564,20 @@
         <item lang="ro" id="sphinx_holidays.product_header"><![CDATA[Creare & Mapare Produse]]></item>
         <item lang="en" id="sphinx_holidays.hotels_category_id"><![CDATA[CS-Cart category ID for Sphinx hotels]]></item>
         <item lang="ro" id="sphinx_holidays.hotels_category_id"><![CDATA[ID categorie CS-Cart pentru hoteluri Sphinx]]></item>
+        <item lang="en" id="sphinx_holidays.hotels_category_id.tooltip"><![CDATA[Root category under which hotel products are created. Country sub-categories are generated automatically.]]></item>
+        <item lang="ro" id="sphinx_holidays.hotels_category_id.tooltip"><![CDATA[Categorie rădăcină în care se creează produsele hoteliere. Sub-categoriile pe țări se generează automat.]]></item>
         <item lang="en" id="sphinx_holidays.packages_category_id"><![CDATA[CS-Cart category ID for Sphinx packages]]></item>
         <item lang="ro" id="sphinx_holidays.packages_category_id"><![CDATA[ID categorie CS-Cart pentru pachete Sphinx]]></item>
+        <item lang="en" id="sphinx_holidays.packages_category_id.tooltip"><![CDATA[Root category under which package products are created. Country sub-categories are generated automatically.]]></item>
+        <item lang="ro" id="sphinx_holidays.packages_category_id.tooltip"><![CDATA[Categorie rădăcină pentru produse pachete. Sub-categoriile pe țări se generează automat.]]></item>
+        <item lang="en" id="sphinx_holidays.circuits_category_id"><![CDATA[CS-Cart category ID for circuits]]></item>
+        <item lang="ro" id="sphinx_holidays.circuits_category_id"><![CDATA[ID categorie CS-Cart pentru circuite]]></item>
+        <item lang="en" id="sphinx_holidays.circuits_category_id.tooltip"><![CDATA[Root category under which circuit products are created. Country sub-categories are generated automatically.]]></item>
+        <item lang="ro" id="sphinx_holidays.circuits_category_id.tooltip"><![CDATA[Categorie rădăcină pentru produse circuite. Sub-categoriile pe țări se generează automat.]]></item>
+        <item lang="en" id="sphinx_holidays.experiences_category_id"><![CDATA[CS-Cart category ID for experiences]]></item>
+        <item lang="ro" id="sphinx_holidays.experiences_category_id"><![CDATA[ID categorie CS-Cart pentru experiențe]]></item>
+        <item lang="en" id="sphinx_holidays.experiences_category_id.tooltip"><![CDATA[Root category under which experience products are created. Country sub-categories are generated automatically.]]></item>
+        <item lang="ro" id="sphinx_holidays.experiences_category_id.tooltip"><![CDATA[Categorie rădăcină pentru produse experiențe. Sub-categoriile pe țări se generează automat.]]></item>
         <item lang="en" id="sphinx_holidays.resilience_header"><![CDATA[API Resilience]]></item>
         <item lang="ro" id="sphinx_holidays.resilience_header"><![CDATA[Reziliență API]]></item>
         <item lang="en" id="sphinx_holidays.api_max_retries"><![CDATA[Maximum retries on failure]]></item>
