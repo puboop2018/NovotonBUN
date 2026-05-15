@@ -47,6 +47,106 @@ function fn_settings_variants_addons_sphinx_holidays_product_languages(): array
 }
 
 /**
+ * Builds a flat associative array of all CS-Cart categories for use in selectbox
+ * settings. Option labels show the full category path (e.g. "Hotels / Albania / Durres").
+ * The tree order is preserved by sorting on id_path.
+ *
+ * @return array<int, string>  [category_id => "Parent / Child / …"]  with 0 => "None" first.
+ */
+function fn_sphinx_holidays_build_category_options(): array
+{
+    $lang = defined('DESCR_SL') ? DESCR_SL : 'en';
+
+    $categories = db_get_array(
+        "SELECT c.category_id, c.id_path
+         FROM ?:categories c
+         ORDER BY c.id_path ASC"
+    );
+
+    if (empty($categories)) {
+        return [0 => __('none')];
+    }
+
+    // Name lookup for the current backend language; fall back to EN.
+    $names = db_get_hash_single_array(
+        "SELECT category_id, category FROM ?:category_descriptions WHERE lang_code = ?s",
+        ['category_id', 'category'],
+        $lang
+    );
+
+    if (empty($names)) {
+        $names = db_get_hash_single_array(
+            "SELECT category_id, category FROM ?:category_descriptions WHERE lang_code = 'en'",
+            ['category_id', 'category']
+        );
+    }
+
+    $options = [0 => __('none')];
+
+    foreach ($categories as $cat) {
+        $cat_id   = (int) $cat['category_id'];
+        $parts    = array_filter(explode('/', trim((string) $cat['id_path'], '/')));
+        $path_labels = [];
+
+        foreach ($parts as $part_id) {
+            $pid = (int) $part_id;
+            if (isset($names[$pid])) {
+                $path_labels[] = $names[$pid];
+            }
+        }
+
+        if (!empty($path_labels)) {
+            $options[$cat_id] = implode(' / ', $path_labels);
+        } elseif (isset($names[$cat_id])) {
+            $options[$cat_id] = $names[$cat_id];
+        }
+    }
+
+    return $options;
+}
+
+/**
+ * Variants for the "hotels_category_id" selectbox setting.
+ * Returns all CS-Cart categories as [id => "Full / Path"] options.
+ *
+ * @return array<int, string>
+ */
+function fn_settings_variants_addons_sphinx_holidays_hotels_category_id(): array
+{
+    return fn_sphinx_holidays_build_category_options();
+}
+
+/**
+ * Variants for the "packages_category_id" selectbox setting.
+ *
+ * @return array<int, string>
+ */
+function fn_settings_variants_addons_sphinx_holidays_packages_category_id(): array
+{
+    return fn_sphinx_holidays_build_category_options();
+}
+
+/**
+ * Variants for the "circuits_category_id" selectbox setting.
+ *
+ * @return array<int, string>
+ */
+function fn_settings_variants_addons_sphinx_holidays_circuits_category_id(): array
+{
+    return fn_sphinx_holidays_build_category_options();
+}
+
+/**
+ * Variants for the "experiences_category_id" selectbox setting.
+ *
+ * @return array<int, string>
+ */
+function fn_settings_variants_addons_sphinx_holidays_experiences_category_id(): array
+{
+    return fn_sphinx_holidays_build_category_options();
+}
+
+/**
  * Addon uninstall function.
  * Drops Sphinx-specific tables and cleans up.
  */

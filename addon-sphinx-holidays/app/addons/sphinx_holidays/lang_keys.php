@@ -8,9 +8,17 @@ return [
         'en' => 'CS-Cart category ID for circuits',
         'ro' => 'ID categorie CS-Cart pentru circuite',
     ],
+    'sphinx_holidays.circuits_category_id.tooltip' => [
+        'en' => 'Root category under which circuit products are created. Country sub-categories are generated automatically.',
+        'ro' => 'Categorie rădăcină pentru produse circuite. Sub-categoriile pe țări se generează automat.',
+    ],
     'sphinx_holidays.experiences_category_id' => [
         'en' => 'CS-Cart category ID for experiences',
         'ro' => 'ID categorie CS-Cart pentru experiențe',
+    ],
+    'sphinx_holidays.experiences_category_id.tooltip' => [
+        'en' => 'Root category under which experience products are created. Country sub-categories are generated automatically.',
+        'ro' => 'Categorie rădăcină pentru produse experiențe. Sub-categoriile pe țări se generează automat.',
     ],
     'sphinx_holidays.product_languages' => [
         'en' => 'Product languages',
