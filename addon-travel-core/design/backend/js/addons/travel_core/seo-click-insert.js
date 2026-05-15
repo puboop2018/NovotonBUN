@@ -76,7 +76,11 @@
 
     function insertAtCursor(text) {
         if (!lastField) {
-            lastField = document.querySelector('input[type="text"], input:not([type]), textarea');
+            // Scope fallback to the containing form so we don't accidentally
+            // target the admin search box or other unrelated inputs.
+            var wrapper = document.querySelector('[data-seo-wrapper]');
+            var scope   = (wrapper && wrapper.closest('form')) || document;
+            lastField   = scope.querySelector('input[type="text"], input:not([type]), textarea');
             if (!lastField) return;
             lastField.selectionStart = lastField.selectionEnd = lastField.value.length;
         }

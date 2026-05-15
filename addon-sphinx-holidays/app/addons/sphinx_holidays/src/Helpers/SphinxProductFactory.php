@@ -205,8 +205,23 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
         $configuredLanguages = ConfigProvider::getProductLanguages();
         $primaryLang = !empty($configuredLanguages) ? reset($configuredLanguages) : CART_LANGUAGE;
 
+        // Ensure product name is never empty — fn_update_product rejects it.
+        // This guards against un-saved or blank SEO templates.
+        if (empty(trim((string) ($productData['product'] ?? '')))) {
+            $productData['product'] = $hotel['name'];
+        }
+
         $productId = (int) fn_update_product($productData, 0, $primaryLang);
         if (!$productId) {
+            fn_log_event('general', 'runtime', [
+                'message'      => 'Sphinx: fn_update_product() returned 0 — product not created',
+                'hotel_id'     => $hotelId,
+                'product_code' => $productData['product_code'],
+                'product_name' => $productData['product'],
+                'category_id'  => $categoryId,
+                'company_id'   => $productData['company_id'],
+                'lang'         => $primaryLang,
+            ]);
             $this->hotelRepo->markSkipped($hotelId, 'product_creation_failed');
             return ['status' => 'failed', 'product_id' => 0, 'reason' => 'product creation'];
         }

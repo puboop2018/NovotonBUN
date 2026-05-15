@@ -528,6 +528,8 @@
         <item lang="ro" id="travel_core.seo_templates_hint"><![CDATA[Folosiți token-uri {{placeholder}} pentru câmpuri SEO dinamice. Adăugați |modificator după nume pentru transformări de text (ex. {{name|upper}}). Placeholder-urile nefolosite sunt eliminate automat.]]></item>
         <item lang="en" id="travel_core.seo_templates_saved"><![CDATA[SEO templates saved successfully]]></item>
         <item lang="ro" id="travel_core.seo_templates_saved"><![CDATA[Șabloanele SEO au fost salvate cu succes]]></item>
+        <item lang="en" id="travel_core.seo_preview_label"><![CDATA[Preview]]></item>
+        <item lang="ro" id="travel_core.seo_preview_label"><![CDATA[Previzualizare]]></item>
         <item lang="en" id="travel_core.seo_overwrite_mode"><![CDATA[Overwrite filled fields]]></item>
         <item lang="ro" id="travel_core.seo_overwrite_mode"><![CDATA[Suprascrie câmpurile completate]]></item>
         <item lang="en" id="travel_core.seo_overwrite_mode_desc"><![CDATA[Controls behavior when templates are applied to existing products during sync or bulk apply.]]></item>
