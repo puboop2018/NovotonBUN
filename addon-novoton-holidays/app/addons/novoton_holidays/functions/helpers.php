@@ -121,8 +121,14 @@ function fn_novoton_holidays_add_to_session_cart(array $product): void
  * Thin boundary over `\Tygh\Tygh::$app['view']`. Lives at the functions/
  * (allowlisted) layer so src/ services don't reach into the service-locator
  * themselves.
+ *
+ * No strict return type: CS-Cart returns `\Tygh\SmartyEngine\Core`, which
+ * implements the Smarty API but is NOT a subclass of `\Smarty` — declaring
+ * `: \Smarty` triggers a TypeError at runtime.
+ *
+ * @return \Smarty Behaves as a Smarty instance (assign/fetch/display).
  */
-function fn_novoton_holidays_get_view(): \Smarty
+function fn_novoton_holidays_get_view()
 {
     /** @var \Smarty $view */
     $view = \Tygh\Tygh::$app['view'];
