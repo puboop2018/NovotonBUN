@@ -257,6 +257,97 @@
         <item for="uninstall">DELETE FROM ?:language_values WHERE name LIKE 'fgo_invoicing.%'</item>
     </queries>
 
+    <language_variables>
+        <!-- Addon name + description -->
+        <item lang="en" id="fgo_invoicing"><![CDATA[FGO Invoicing]]></item>
+        <item lang="ro" id="fgo_invoicing"><![CDATA[Facturare FGO]]></item>
+        <item lang="en" id="fgo_invoicing_description"><![CDATA[Issues fiscal invoices through the FGO Romanian e-invoicing API on order events.]]></item>
+        <item lang="ro" id="fgo_invoicing_description"><![CDATA[Emite facturi fiscale prin API-ul de e-facturare FGO la evenimentele comenzii.]]></item>
+
+        <!-- Section -->
+        <item lang="en" id="fgo_invoicing.general"><![CDATA[General Settings]]></item>
+        <item lang="ro" id="fgo_invoicing.general"><![CDATA[Setări generale]]></item>
+
+        <!-- Headers -->
+        <item lang="en" id="fgo_invoicing.credentials_header"><![CDATA[API Credentials]]></item>
+        <item lang="ro" id="fgo_invoicing.credentials_header"><![CDATA[Credențiale API]]></item>
+        <item lang="en" id="fgo_invoicing.behaviour_header"><![CDATA[Trigger & Behaviour]]></item>
+        <item lang="ro" id="fgo_invoicing.behaviour_header"><![CDATA[Declanșare & Comportament]]></item>
+        <item lang="en" id="fgo_invoicing.customer_header"><![CDATA[Customer / VAT]]></item>
+        <item lang="ro" id="fgo_invoicing.customer_header"><![CDATA[Client / TVA]]></item>
+        <item lang="en" id="fgo_invoicing.lines_header"><![CDATA[Invoice Lines & Codes]]></item>
+        <item lang="ro" id="fgo_invoicing.lines_header"><![CDATA[Linii factură & Coduri]]></item>
+        <item lang="en" id="fgo_invoicing.resilience_header"><![CDATA[Resilience & Diagnostics]]></item>
+        <item lang="ro" id="fgo_invoicing.resilience_header"><![CDATA[Rezistență & Diagnostic]]></item>
+
+        <!-- Credentials -->
+        <item lang="en" id="fgo_invoicing.client_code"><![CDATA[Client code (CodUnic / CIF)]]></item>
+        <item lang="ro" id="fgo_invoicing.client_code"><![CDATA[Cod client (CodUnic / CIF)]]></item>
+        <item lang="en" id="fgo_invoicing.private_key"><![CDATA[FGO private API key]]></item>
+        <item lang="ro" id="fgo_invoicing.private_key"><![CDATA[Cheie privată API FGO]]></item>
+        <item lang="en" id="fgo_invoicing.sandbox"><![CDATA[Use sandbox (api-testuat.fgo.ro)]]></item>
+        <item lang="ro" id="fgo_invoicing.sandbox"><![CDATA[Folosește sandbox (api-testuat.fgo.ro)]]></item>
+
+        <!-- Trigger -->
+        <item lang="en" id="fgo_invoicing.api_call"><![CDATA[Issue invoice on]]></item>
+        <item lang="ro" id="fgo_invoicing.api_call"><![CDATA[Emite factura la]]></item>
+        <!-- Variant labels (Place order / Payment confirmed / etc.) live in the .po
+             file under SettingsVariants::fgo_invoicing::api_call::<id>. They are
+             intentionally NOT in <language_variables>: CS-Cart's getLanguageValues
+             explodes dotted ids into a nested array, and putting
+             `fgo_invoicing.api_call.onOrder` here while `fgo_invoicing.api_call`
+             already exists as a string crashes uninstall with
+             array_merge(string, array). -->
+        <item lang="en" id="fgo_invoicing.invoice_type"><![CDATA[Document type]]></item>
+        <item lang="ro" id="fgo_invoicing.invoice_type"><![CDATA[Tip document]]></item>
+        <item lang="en" id="fgo_invoicing.invoice_series"><![CDATA[Invoice series]]></item>
+        <item lang="ro" id="fgo_invoicing.invoice_series"><![CDATA[Serie factură]]></item>
+        <item lang="en" id="fgo_invoicing.verify_duplicate"><![CDATA[Ask FGO to deduplicate (VerificareDuplicat)]]></item>
+        <item lang="ro" id="fgo_invoicing.verify_duplicate"><![CDATA[Cere FGO să dedublice (VerificareDuplicat)]]></item>
+        <item lang="en" id="fgo_invoicing.auto_email_pdf"><![CDATA[Email the PDF link to the customer after issuance]]></item>
+        <item lang="ro" id="fgo_invoicing.auto_email_pdf"><![CDATA[Trimite link-ul PDF clientului după emitere]]></item>
+        <item lang="en" id="fgo_invoicing.min_call_interval_ms"><![CDATA[Minimum interval between FGO calls (ms)]]></item>
+        <item lang="ro" id="fgo_invoicing.min_call_interval_ms"><![CDATA[Interval minim între apeluri FGO (ms)]]></item>
+
+        <!-- Customer / VAT -->
+        <item lang="en" id="fgo_invoicing.sanitize_vat"><![CDATA[Validate Romanian CIF (ValideazaCodUnicRo)]]></item>
+        <item lang="ro" id="fgo_invoicing.sanitize_vat"><![CDATA[Validează CIF românesc (ValideazaCodUnicRo)]]></item>
+        <item lang="en" id="fgo_invoicing.client_vat_required"><![CDATA[Require CIF for company customers at checkout]]></item>
+        <item lang="ro" id="fgo_invoicing.client_vat_required"><![CDATA[Solicită CIF la finalizare pentru persoane juridice]]></item>
+        <item lang="en" id="fgo_invoicing.client_cnp_required"><![CDATA[Require CNP for individuals at checkout]]></item>
+        <item lang="ro" id="fgo_invoicing.client_cnp_required"><![CDATA[Solicită CNP la finalizare pentru persoane fizice]]></item>
+
+        <!-- Lines -->
+        <item lang="en" id="fgo_invoicing.article_id_field"><![CDATA[Article identifier (CodArticol)]]></item>
+        <item lang="ro" id="fgo_invoicing.article_id_field"><![CDATA[Identificator articol (CodArticol)]]></item>
+        <item lang="en" id="fgo_invoicing.product_description"><![CDATA[Append SKU to line description]]></item>
+        <item lang="ro" id="fgo_invoicing.product_description"><![CDATA[Adaugă SKU la descrierea liniei]]></item>
+        <item lang="en" id="fgo_invoicing.additional_info"><![CDATA[Add CS-Cart order # to invoice notes]]></item>
+        <item lang="ro" id="fgo_invoicing.additional_info"><![CDATA[Adaugă numărul comenzii CS-Cart la observații]]></item>
+        <item lang="en" id="fgo_invoicing.shipping_tax_vat"><![CDATA[Shipping VAT handling]]></item>
+        <item lang="ro" id="fgo_invoicing.shipping_tax_vat"><![CDATA[Tratare TVA transport]]></item>
+        <!-- shipping_tax_vat variant labels (Tax-inclusive / Net unit price / Zero VAT)
+             live only in the .po; see comment above for why nested dotted ids crash. -->
+        <item lang="en" id="fgo_invoicing.shipping_code"><![CDATA[Shipping article code]]></item>
+        <item lang="ro" id="fgo_invoicing.shipping_code"><![CDATA[Cod articol transport]]></item>
+        <item lang="en" id="fgo_invoicing.discount_code"><![CDATA[Discount article code]]></item>
+        <item lang="ro" id="fgo_invoicing.discount_code"><![CDATA[Cod articol reducere]]></item>
+        <item lang="en" id="fgo_invoicing.administration_code"><![CDATA[Warehouse code (CodGestiune)]]></item>
+        <item lang="ro" id="fgo_invoicing.administration_code"><![CDATA[Cod gestiune (CodGestiune)]]></item>
+
+        <!-- Resilience -->
+        <item lang="en" id="fgo_invoicing.api_max_retries"><![CDATA[HTTP retry attempts]]></item>
+        <item lang="ro" id="fgo_invoicing.api_max_retries"><![CDATA[Număr reîncercări HTTP]]></item>
+        <item lang="en" id="fgo_invoicing.api_retry_delay_ms"><![CDATA[Initial retry delay (ms)]]></item>
+        <item lang="ro" id="fgo_invoicing.api_retry_delay_ms"><![CDATA[Întârziere inițială reîncercare (ms)]]></item>
+        <item lang="en" id="fgo_invoicing.api_cb_threshold"><![CDATA[Circuit breaker open threshold]]></item>
+        <item lang="ro" id="fgo_invoicing.api_cb_threshold"><![CDATA[Prag deschidere circuit breaker]]></item>
+        <item lang="en" id="fgo_invoicing.api_cb_timeout"><![CDATA[Circuit breaker open timeout (s)]]></item>
+        <item lang="ro" id="fgo_invoicing.api_cb_timeout"><![CDATA[Timeout circuit breaker (s)]]></item>
+        <item lang="en" id="fgo_invoicing.debug_logging"><![CDATA[Debug logging]]></item>
+        <item lang="ro" id="fgo_invoicing.debug_logging"><![CDATA[Logare diagnostic]]></item>
+    </language_variables>
+
     <functions>
         <item for="install">fn_fgo_invoicing_post_install</item>
         <item for="uninstall">fn_fgo_invoicing_uninstall</item>
