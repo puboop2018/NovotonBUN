@@ -291,14 +291,13 @@
         <!-- Trigger -->
         <item lang="en" id="fgo_invoicing.api_call"><![CDATA[Issue invoice on]]></item>
         <item lang="ro" id="fgo_invoicing.api_call"><![CDATA[Emite factura la]]></item>
-        <item lang="en" id="fgo_invoicing.api_call.onOrder"><![CDATA[Place order]]></item>
-        <item lang="ro" id="fgo_invoicing.api_call.onOrder"><![CDATA[Plasare comandă]]></item>
-        <item lang="en" id="fgo_invoicing.api_call.onPayment"><![CDATA[Payment confirmed]]></item>
-        <item lang="ro" id="fgo_invoicing.api_call.onPayment"><![CDATA[Plată confirmată]]></item>
-        <item lang="en" id="fgo_invoicing.api_call.onCompleted"><![CDATA[Order completed]]></item>
-        <item lang="ro" id="fgo_invoicing.api_call.onCompleted"><![CDATA[Comandă finalizată]]></item>
-        <item lang="en" id="fgo_invoicing.api_call.manual"><![CDATA[Manual only]]></item>
-        <item lang="ro" id="fgo_invoicing.api_call.manual"><![CDATA[Doar manual]]></item>
+        <!-- Variant labels (Place order / Payment confirmed / etc.) live in the .po
+             file under SettingsVariants::fgo_invoicing::api_call::<id>. They are
+             intentionally NOT in <language_variables>: CS-Cart's getLanguageValues
+             explodes dotted ids into a nested array, and putting
+             `fgo_invoicing.api_call.onOrder` here while `fgo_invoicing.api_call`
+             already exists as a string crashes uninstall with
+             array_merge(string, array). -->
         <item lang="en" id="fgo_invoicing.invoice_type"><![CDATA[Document type]]></item>
         <item lang="ro" id="fgo_invoicing.invoice_type"><![CDATA[Tip document]]></item>
         <item lang="en" id="fgo_invoicing.invoice_series"><![CDATA[Invoice series]]></item>
@@ -327,12 +326,8 @@
         <item lang="ro" id="fgo_invoicing.additional_info"><![CDATA[Adaugă numărul comenzii CS-Cart la observații]]></item>
         <item lang="en" id="fgo_invoicing.shipping_tax_vat"><![CDATA[Shipping VAT handling]]></item>
         <item lang="ro" id="fgo_invoicing.shipping_tax_vat"><![CDATA[Tratare TVA transport]]></item>
-        <item lang="en" id="fgo_invoicing.shipping_tax_vat.vat_included"><![CDATA[Tax-inclusive (PretTotal)]]></item>
-        <item lang="ro" id="fgo_invoicing.shipping_tax_vat.vat_included"><![CDATA[Cu TVA inclus (PretTotal)]]></item>
-        <item lang="en" id="fgo_invoicing.shipping_tax_vat.vat_not_included"><![CDATA[Net unit price (PretUnitar)]]></item>
-        <item lang="ro" id="fgo_invoicing.shipping_tax_vat.vat_not_included"><![CDATA[Preț unitar fără TVA (PretUnitar)]]></item>
-        <item lang="en" id="fgo_invoicing.shipping_tax_vat.vat_zero"><![CDATA[Zero VAT]]></item>
-        <item lang="ro" id="fgo_invoicing.shipping_tax_vat.vat_zero"><![CDATA[TVA zero]]></item>
+        <!-- shipping_tax_vat variant labels (Tax-inclusive / Net unit price / Zero VAT)
+             live only in the .po; see comment above for why nested dotted ids crash. -->
         <item lang="en" id="fgo_invoicing.shipping_code"><![CDATA[Shipping article code]]></item>
         <item lang="ro" id="fgo_invoicing.shipping_code"><![CDATA[Cod articol transport]]></item>
         <item lang="en" id="fgo_invoicing.discount_code"><![CDATA[Discount article code]]></item>
