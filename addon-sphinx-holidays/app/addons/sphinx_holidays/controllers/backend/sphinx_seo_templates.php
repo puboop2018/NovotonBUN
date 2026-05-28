@@ -29,26 +29,27 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
 /**
  * Canonical list of SEO setting keys + their defaults.
- * Single source of truth for both read and save paths.
+ * Delegates to fn_sphinx_holidays_seed_seo_defaults() in func.php for the map,
+ * keeping a single source of truth.
  *
  * @return array<string, string>
  */
 function _sphinx_seo_setting_defaults(): array
 {
     return [
-        'seo_overwrite_mode'          => 'override_all',
-        'seo_product_name'            => '{{name}}',
-        'seo_page_title'              => '{{name}} {{classification}}* - {{city}}, {{country}}',
-        'seo_meta_description'        => 'Book {{name}} in {{city}}, {{country}}. {{classification}}-star {{property_type}} with {{facilities}}.',
-        'seo_meta_keywords'           => '{{name}}, {{city}}, {{country}}, {{property_type}}, {{classification}} star',
-        'seo_name_slug'               => '{{name}}-{{city}}-{{country}}',
-        'seo_full_description'        => '',
-        'seo_field_product_name'      => 'Y',
-        'seo_field_page_title'        => 'Y',
-        'seo_field_meta_description'  => 'Y',
-        'seo_field_meta_keywords'     => 'Y',
-        'seo_field_name_slug'         => 'Y',
-        'seo_field_full_description'  => 'Y',
+        'seo_overwrite_mode'         => 'override_all',
+        'seo_product_name'           => '{{name}}',
+        'seo_page_title'             => '{{name}} {{classification}}* - {{city}}, {{country}}',
+        'seo_meta_description'       => 'Book {{name}} in {{city}}, {{country}}. {{classification}}-star {{property_type}} with {{facilities}}.',
+        'seo_meta_keywords'          => '{{name}}, {{city}}, {{country}}, {{property_type}}, {{classification}} star',
+        'seo_name_slug'              => '{{name}}-{{city}}-{{country}}',
+        'seo_full_description'       => '',
+        'seo_field_product_name'     => 'Y',
+        'seo_field_page_title'       => 'Y',
+        'seo_field_meta_description' => 'Y',
+        'seo_field_meta_keywords'    => 'Y',
+        'seo_field_name_slug'        => 'Y',
+        'seo_field_full_description' => 'Y',
     ];
 }
 

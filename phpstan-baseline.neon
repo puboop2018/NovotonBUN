@@ -7639,75 +7639,15 @@ parameters:
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/SyncImagesCommand.php
 
 		-
-			message: '#^Cannot access offset ''hotel_id'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
+			message: '#^Binary operation "\.\=" between mixed and mixed results in an error\.$#'
+			identifier: assignOp.invalid
 			count: 1
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/SyncImagesCommand.php
 
 		-
-			message: '#^Cannot access offset ''images_json'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
+			message: '#^Call to function is_array\(\) with array\<string, mixed\> will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
 			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/SyncImagesCommand.php
-
-		-
-			message: '#^Cannot access offset ''name'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 2
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/SyncImagesCommand.php
-
-		-
-			message: '#^Cannot access offset ''product_id'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/SyncImagesCommand.php
-
-		-
-			message: '#^Cannot cast mixed to int\.$#'
-			identifier: cast.int
-			count: 3
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/SyncImagesCommand.php
-
-		-
-			message: '#^Cannot cast mixed to string\.$#'
-			identifier: cast.string
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/SyncImagesCommand.php
-
-		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Cron\\Commands\\SyncImagesCommand\:\:findHotels\(\) should return array\<string, mixed\> but returns mixed\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/SyncImagesCommand.php
-
-		-
-			message: '#^Parameter \#1 \$countryCodes of method Tygh\\Addons\\SphinxHolidays\\Cron\\Commands\\SyncImagesCommand\:\:findHotels\(\) expects array\<string\>, array\<mixed\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/SyncImagesCommand.php
-
-		-
-			message: '#^Parameter \#1 \$json of function json_decode expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/SyncImagesCommand.php
-
-		-
-			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, array\<mixed\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/SyncImagesCommand.php
-
-		-
-			message: '#^Part \$hotelId \(mixed\) of encapsed string cannot be cast to string\.$#'
-			identifier: encapsedStringPart.nonString
-			count: 3
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/SyncImagesCommand.php
-
-		-
-			message: '#^Part \$hotel\[''name''\] \(mixed\) of encapsed string cannot be cast to string\.$#'
-			identifier: encapsedStringPart.nonString
-			count: 2
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/SyncImagesCommand.php
 
 		-

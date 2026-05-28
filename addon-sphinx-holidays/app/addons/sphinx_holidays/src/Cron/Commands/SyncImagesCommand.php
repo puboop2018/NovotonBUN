@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Tygh\Addons\SphinxHolidays\Cron\Commands;
 
 use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
+use Tygh\Addons\SphinxHolidays\Services\Container;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 /**
  * Cron command: download and attach images from Sphinx API to CS-Cart products.
@@ -13,6 +15,9 @@ use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
  * - Are linked to a CS-Cart product (product_id > 0)
  * - Are in whitelisted countries
  * - Have no images yet (unless &force=Y is passed)
+ *
+ * When a hotel's images_json in the DB is empty, the command falls back to the
+ * Sphinx API per-hotel detail endpoint to fetch fresh images before giving up.
  *
  * Usage:
  *   sync_images                — sync missing images for whitelisted countries
@@ -38,10 +43,10 @@ class SyncImagesCommand extends AbstractSyncCommand
     {
         $startMs = (int)(microtime(true) * 1000);
 
-        $countryCode = $params['country'] ?? '';
-        $limit = (int) ($params['limit'] ?? 0);
-        $batchSize = (int) ($params['batch_size'] ?? self::BATCH_SIZE);
-        $force = ($params['force'] ?? '') === 'Y';
+        $countryCode = TypeCoerce::toString($params['country'] ?? '');
+        $limit = TypeCoerce::toInt($params['limit'] ?? 0);
+        $batchSize = TypeCoerce::toInt($params['batch_size'] ?? self::BATCH_SIZE);
+        $force = TypeCoerce::toString($params['force'] ?? '') === 'Y';
 
         // Resolve country filter: explicit param > whitelist
         $countryCodes = [];
@@ -69,6 +74,7 @@ class SyncImagesCommand extends AbstractSyncCommand
 
         $processed = 0;
         $effectiveBatch = ($limit > 0 && $limit < $batchSize) ? $limit : $batchSize;
+        $afterHotelId = null;
 
         $this->output('Syncing images for countries: ' . implode(', ', $countryCodes)
             . ($force ? ' (FORCE: re-syncing all, including products with existing images)' : ' (skipping products with existing images)'));
@@ -79,7 +85,7 @@ class SyncImagesCommand extends AbstractSyncCommand
                 break;
             }
 
-            $hotels = $this->findHotels($countryCodes, min($remaining, $effectiveBatch), !$force);
+            $hotels = $this->findHotels($countryCodes, min($remaining, $effectiveBatch), !$force, $afterHotelId);
             if (empty($hotels)) {
                 break;
             }
@@ -87,12 +93,47 @@ class SyncImagesCommand extends AbstractSyncCommand
             $stats['total'] += count($hotels);
 
             foreach ($hotels as $hotel) {
-                $hotelId = $hotel['hotel_id'];
-                $productId = (int) $hotel['product_id'];
-                $imagesJson = $hotel['images_json'] ?? '[]';
+                if (!is_array($hotel)) {
+                    continue;
+                }
+                $hotelId = TypeCoerce::toString($hotel['hotel_id'] ?? '');
+                $productId = TypeCoerce::toInt($hotel['product_id'] ?? 0);
+                $imagesJson = TypeCoerce::toString($hotel['images_json'] ?? '');
 
-                $images = json_decode($imagesJson, true);
-                if (empty($images) || !is_array($images)) {
+                /** @var mixed $decoded */
+                $decoded = json_decode($imagesJson, true);
+                $images = is_array($decoded) ? $decoded : [];
+
+                // If DB has no images, try fetching from the per-hotel detail endpoint.
+                // The static hotels-list endpoint (/api/v1/static/hotels) often omits
+                // the images array; the detail endpoint (/api/v1/static/hotels/{id}) always has it.
+                if (empty($images)) {
+                    $api = Container::getApi();
+                    $fresh = $api->getHotel($hotelId);
+
+                    if ($fresh !== null && !empty($fresh['images']) && is_array($fresh['images'])) {
+                        /** @var array<mixed> $images */
+                        $images = $fresh['images'];
+                        $freshJson = (string) json_encode($images);
+                        $firstUrl = '';
+                        foreach ($images as $img) {
+                            if (is_array($img)) {
+                                $u = TypeCoerce::toString($img['url'] ?? '');
+                            } elseif (is_string($img)) {
+                                $u = $img;
+                            } else {
+                                $u = '';
+                            }
+                            if ($u !== '') {
+                                $firstUrl = $u;
+                                break;
+                            }
+                        }
+                        Container::getHotelRepository()->updateImages($hotelId, $firstUrl, $freshJson);
+                    }
+                }
+
+                if (empty($images)) {
                     $this->output("[{$hotelId}] No images in API data ... SKIPPED");
                     $stats['hotels_skipped']++;
                     continue;
@@ -101,14 +142,12 @@ class SyncImagesCommand extends AbstractSyncCommand
                 $imgCount = 0;
                 $firstError = '';
                 foreach ($images as $img) {
-                    $url = '';
                     if (is_array($img)) {
-                        $rawUrl = $img['url'] ?? '';
-                        if (is_string($rawUrl)) {
-                            $url = $rawUrl;
-                        }
+                        $url = TypeCoerce::toString($img['url'] ?? '');
                     } elseif (is_string($img)) {
                         $url = $img;
+                    } else {
+                        $url = '';
                     }
                     if ($url === '') {
                         continue;
@@ -128,18 +167,27 @@ class SyncImagesCommand extends AbstractSyncCommand
                     }
                 }
 
+                $hotelName = TypeCoerce::toString($hotel['name'] ?? '');
                 if ($imgCount > 0) {
-                    $this->output("[{$hotelId}] {$hotel['name']} ... {$imgCount} images added");
+                    $this->output("[{$hotelId}] {$hotelName} ... {$imgCount} images added");
                     $stats['images_added'] += $imgCount;
                     $stats['hotels_processed']++;
                 } else {
                     $detail = $firstError !== '' ? " [{$firstError}]" : '';
-                    $this->output("[{$hotelId}] {$hotel['name']} ... FAILED (no images downloaded){$detail}");
+                    $this->output("[{$hotelId}] {$hotelName} ... FAILED (no images downloaded){$detail}");
                     $stats['errors']++;
                 }
             }
 
             $processed += count($hotels);
+
+            // Advance cursor to last hotel_id in this batch to prevent re-fetching the same rows.
+            // $hotels is non-empty here (empty check above), so end() returns array<string,mixed>.
+            $lastHotel = end($hotels);
+            $afterHotelId = TypeCoerce::toString($lastHotel['hotel_id'] ?? '');
+            if ($afterHotelId === '') {
+                $afterHotelId = null;
+            }
         }
 
         $durationMs = (int)(microtime(true) * 1000) - $startMs;
@@ -165,9 +213,10 @@ class SyncImagesCommand extends AbstractSyncCommand
      * @param string[] $countryCodes Whitelist country codes
      * @param int $limit Max rows to return
      * @param bool $skipExisting If true, LEFT JOINs images_links to skip products with images
-     * @return array<string, mixed>
+     * @param string|null $afterHotelId Cursor: only return rows with hotel_id > this value
+     * @return array<string, mixed>[]
      */
-    private function findHotels(array $countryCodes, int $limit, bool $skipExisting): array
+    private function findHotels(array $countryCodes, int $limit, bool $skipExisting, ?string $afterHotelId = null): array
     {
         $join = '';
         $condition = db_quote(' AND h.country_code IN (?a)', $countryCodes);
@@ -177,19 +226,26 @@ class SyncImagesCommand extends AbstractSyncCommand
             $condition .= ' AND il.pair_id IS NULL';
         }
 
+        if ($afterHotelId !== null && $afterHotelId !== '') {
+            $condition .= db_quote(' AND h.hotel_id > ?s', $afterHotelId);
+        }
+
         $limitClause = $limit > 0 ? db_quote(' LIMIT ?i', $limit) : '';
 
-        return db_get_array(
+        $rows = db_get_array(
             "SELECT h.hotel_id, h.product_id, h.name, h.images_json
              FROM ?:sphinx_hotels h
              {$join}
              WHERE h.sync_status = 'active'
                AND h.product_id IS NOT NULL AND h.product_id > 0
-               AND h.images_json IS NOT NULL AND h.images_json != '[]'
                ?p
-             ORDER BY h.country_code ASC, h.hotel_id ASC ?p",
+             ORDER BY h.hotel_id ASC ?p",
             $condition,
             $limitClause,
         );
+
+        /** @var array<string, mixed>[] $result */
+        $result = is_array($rows) ? $rows : [];
+        return $result;
     }
 }
