@@ -98,22 +98,30 @@ class SyncImagesCommand extends AbstractSyncCommand
                     continue;
                 }
 
-                $imgCount   = 0;
+                $imgCount = 0;
                 $firstError = '';
                 foreach ($images as $img) {
-                    $url = is_array($img) ? ($img['url'] ?? '') : (string) $img;
-                    if (empty($url)) {
+                    $url = '';
+                    if (is_array($img)) {
+                        $rawUrl = $img['url'] ?? '';
+                        if (is_string($rawUrl)) {
+                            $url = $rawUrl;
+                        }
+                    } elseif (is_string($img)) {
+                        $url = $img;
+                    }
+                    if ($url === '') {
                         continue;
                     }
 
-                    $isMain   = ($imgCount === 0);
-                    $imgError = '';
-                    $ok = fn_sphinx_holidays_add_product_image($productId, $url, $isMain, $imgError);
+                    $isMain = ($imgCount === 0);
+                    $ok = fn_sphinx_holidays_add_product_image($productId, $url, $isMain);
 
                     if ($ok) {
                         $imgCount++;
                     } else {
                         $stats['errors']++;
+                        $imgError = \Tygh\Addons\SphinxHolidays\Api\ImageHelper::$lastDownloadError;
                         if ($firstError === '' && $imgError !== '') {
                             $firstError = $imgError . ' — ' . substr($url, 0, 100);
                         }

@@ -15,6 +15,13 @@ use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
 class ImageHelper
 {
     /**
+     * Last download error message, populated by fn_sphinx_holidays_add_product_image()
+     * so cron callers can surface the HTTP code in console output without inspecting
+     * the CS-Cart event log. Reset to '' at the start of every download attempt.
+     */
+    public static string $lastDownloadError = '';
+
+    /**
      * Build an image URL with watermark disabled.
      *
      * The resulting URL still requires the X-Copyright-Authorization header
@@ -38,8 +45,8 @@ class ImageHelper
      */
     public static function matchesApiHost(string $imageUrl, string $apiBaseUrl): bool
     {
-        $apiHost   = (string) parse_url($apiBaseUrl, PHP_URL_HOST);
-        $imageHost = (string) parse_url($imageUrl,   PHP_URL_HOST);
+        $apiHost = (string) parse_url($apiBaseUrl, PHP_URL_HOST);
+        $imageHost = (string) parse_url($imageUrl, PHP_URL_HOST);
         if ($apiHost === '' || $imageHost === '') {
             return false;
         }
@@ -47,7 +54,7 @@ class ImageHelper
             return true;
         }
         // Compare base domain after stripping the first subdomain component.
-        $apiBase   = implode('.', array_slice(explode('.', $apiHost),   1));
+        $apiBase = implode('.', array_slice(explode('.', $apiHost), 1));
         $imageBase = implode('.', array_slice(explode('.', $imageHost), 1));
         return $apiBase !== '' && $apiBase === $imageBase;
     }
@@ -64,7 +71,7 @@ class ImageHelper
             return [];
         }
         return [
-            'Authorization'             => 'Bearer ' . $apiKey,
+            'Authorization' => 'Bearer ' . $apiKey,
             'X-Copyright-Authorization' => 'Bearer ' . $apiKey,
         ];
     }

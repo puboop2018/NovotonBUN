@@ -860,23 +860,25 @@ function fn_sphinx_holidays_travel_core_exchange_rates_updated(array &$result): 
  * Uses CS-Cart's fn_update_image_pairs() to properly generate thumbnails
  * and store the image in the standard product gallery.
  *
+ * On failure, the short reason is exposed via ImageHelper::$lastDownloadError
+ * so cron callers can echo it without inspecting the CS-Cart event log.
+ *
  * @param int    $product_id CS-Cart product ID
  * @param string $image_url  External image URL to download
  * @param bool   $is_main    True for main product image, false for additional
- * @param string $error      Populated with a short failure reason when false is returned
  * @return bool True on success
  */
-function fn_sphinx_holidays_add_product_image(int $product_id, string $image_url, bool $is_main = false, string &$error = ''): bool
+function fn_sphinx_holidays_add_product_image(int $product_id, string $image_url, bool $is_main = false): bool
 {
-    $error = '';
+    \Tygh\Addons\SphinxHolidays\Api\ImageHelper::$lastDownloadError = '';
     if (empty($product_id) || empty($image_url)) {
-        $error = 'empty args';
+        \Tygh\Addons\SphinxHolidays\Api\ImageHelper::$lastDownloadError = 'empty args';
         return false;
     }
 
     $temp_file = fn_create_temp_file();
     if (!$temp_file) {
-        $error = 'temp file failed';
+        \Tygh\Addons\SphinxHolidays\Api\ImageHelper::$lastDownloadError = 'temp file failed';
         fn_log_event('general', 'runtime', ['message' => "Sphinx: fn_create_temp_file() returned empty for product #{$product_id}"]);
         return false;
     }
@@ -896,7 +898,7 @@ function fn_sphinx_holidays_add_product_image(int $product_id, string $image_url
     // Use direct cURL — CS-Cart's Http::get ignores custom headers.
     $fp = fopen($temp_file, 'wb');
     if (!$fp) {
-        $error = 'fopen failed';
+        \Tygh\Addons\SphinxHolidays\Api\ImageHelper::$lastDownloadError = 'fopen failed';
         fn_log_event('general', 'runtime', ['message' => "Sphinx: fopen() failed for temp file '{$temp_file}' product #{$product_id}"]);
         if (file_exists($temp_file)) { unlink($temp_file); }
         return false;
@@ -921,7 +923,7 @@ function fn_sphinx_holidays_add_product_image(int $product_id, string $image_url
     fclose($fp);
 
     if ($httpCode !== 200 || !file_exists($temp_file) || filesize($temp_file) < 1000) {
-        $error = "HTTP {$httpCode}" . ($curlError ? " ({$curlError})" : '');
+        \Tygh\Addons\SphinxHolidays\Api\ImageHelper::$lastDownloadError = "HTTP {$httpCode}" . ($curlError ? " ({$curlError})" : '');
         fn_log_event('general', 'runtime', ['message' => "Sphinx: image download failed for product #{$product_id}: HTTP {$httpCode}, size=" . (file_exists($temp_file) ? filesize($temp_file) : 'N/A') . ", url={$download_url}" . ($curlError ? " ({$curlError})" : '')]);
         if (file_exists($temp_file)) { unlink($temp_file); }
         return false;
