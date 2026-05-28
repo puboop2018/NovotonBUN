@@ -205,8 +205,6 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
         $configuredLanguages = ConfigProvider::getProductLanguages();
         $primaryLang = !empty($configuredLanguages) ? reset($configuredLanguages) : CART_LANGUAGE;
 
-        // Ensure product name is never empty — fn_update_product rejects it.
-        // This guards against un-saved or blank SEO templates.
         $productName = $productData['product'] ?? '';
         if (!is_string($productName) || trim($productName) === '') {
             $productData['product'] = $hotel['name'];
@@ -230,6 +228,9 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
         // Replicate descriptions to other configured languages
         $otherLanguages = array_diff($configuredLanguages, [$primaryLang]);
         $fullDescription = $productData['full_description'] ?? '';
+        $pageTitle = $productData['page_title'] ?? '';
+        $metaDesc = $productData['meta_description'] ?? '';
+        $metaKeywords = $productData['meta_keywords'] ?? '';
         foreach ($otherLanguages as $lc) {
             db_query(
                 'INSERT INTO ?:product_descriptions (product_id, lang_code, product, full_description, short_description, page_title, meta_description, meta_keywords)
@@ -240,15 +241,15 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
                 $productData['product'],
                 $fullDescription,
                 $hotel['short_description'] ?? '',
-                $productData['page_title'],
-                $productData['meta_description'],
-                $productData['meta_keywords'],
+                $pageTitle,
+                $metaDesc,
+                $metaKeywords,
                 $productData['product'],
                 $fullDescription,
                 $hotel['short_description'] ?? '',
-                $productData['page_title'],
-                $productData['meta_description'],
-                $productData['meta_keywords'],
+                $pageTitle,
+                $metaDesc,
+                $metaKeywords,
             );
         }
 

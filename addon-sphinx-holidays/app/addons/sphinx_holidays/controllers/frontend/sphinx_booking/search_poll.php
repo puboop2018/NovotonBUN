@@ -45,6 +45,17 @@ try {
     $status = TypeCoerce::toString($pollResponse['status'] ?? 'completed');
     $nextCursor = isset($pollResponse['next_cursor']) ? TypeCoerce::toString($pollResponse['next_cursor']) : null;
 
+    // Diagnostic: log when the poll completes with zero results, so the
+    // CS-Cart event log shows whether the API genuinely has no availability
+    // or returned an unexpected shape we failed to parse.
+    if ($status === 'completed' && empty($results) && $cursor === '') {
+        fn_log_event('general', 'runtime', [
+            'message' => 'Sphinx search_poll completed with zero results',
+            'search_id' => $searchId,
+            'api_response' => json_encode($pollResponse),
+        ]);
+    }
+
     // Apply commission to each result
     $cartService = Container::getCartService();
     foreach ($results as &$result) {

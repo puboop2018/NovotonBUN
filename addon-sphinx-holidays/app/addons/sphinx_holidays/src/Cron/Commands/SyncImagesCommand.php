@@ -99,9 +99,18 @@ class SyncImagesCommand extends AbstractSyncCommand
                 }
 
                 $imgCount = 0;
+                $firstError = '';
                 foreach ($images as $img) {
-                    $url = is_array($img) ? ($img['url'] ?? '') : (string) $img;
-                    if (empty($url)) {
+                    $url = '';
+                    if (is_array($img)) {
+                        $rawUrl = $img['url'] ?? '';
+                        if (is_string($rawUrl)) {
+                            $url = $rawUrl;
+                        }
+                    } elseif (is_string($img)) {
+                        $url = $img;
+                    }
+                    if ($url === '') {
                         continue;
                     }
 
@@ -112,6 +121,10 @@ class SyncImagesCommand extends AbstractSyncCommand
                         $imgCount++;
                     } else {
                         $stats['errors']++;
+                        $imgError = \Tygh\Addons\SphinxHolidays\Api\ImageHelper::$lastDownloadError;
+                        if ($firstError === '' && $imgError !== '') {
+                            $firstError = $imgError . ' — ' . substr($url, 0, 100);
+                        }
                     }
                 }
 
@@ -120,7 +133,8 @@ class SyncImagesCommand extends AbstractSyncCommand
                     $stats['images_added'] += $imgCount;
                     $stats['hotels_processed']++;
                 } else {
-                    $this->output("[{$hotelId}] {$hotel['name']} ... FAILED (no images downloaded)");
+                    $detail = $firstError !== '' ? " [{$firstError}]" : '';
+                    $this->output("[{$hotelId}] {$hotel['name']} ... FAILED (no images downloaded){$detail}");
                     $stats['errors']++;
                 }
             }

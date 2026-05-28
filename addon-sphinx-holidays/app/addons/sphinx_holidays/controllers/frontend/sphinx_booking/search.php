@@ -134,8 +134,45 @@ try {
         return;
     }
 
-    // Store search params in session so search_poll can cache completed results
     $searchIdStr = TypeCoerce::toString($searchResponse['search_id']);
+    $initialStatus = TypeCoerce::toString($searchResponse['status'] ?? 'pending');
+    $initialResults = TypeCoerce::toRowList($searchResponse['results'] ?? []);
+
+    // If the API returns final results synchronously, render inline and skip polling.
+    if ($initialStatus === 'completed' && !empty($initialResults)) {
+        $cartService = Container::getCartService();
+        foreach ($initialResults as &$result) {
+            if (isset($result['price'])) {
+                $result['original_price'] = $result['price'];
+                $result['price'] = $cartService->applyCommission(TypeCoerce::toFloat($result['price']));
+            }
+        }
+        unset($result);
+
+        if ($cacheEnabled && $cacheTtl > 0) {
+            CacheService::set(CacheService::buildSearchKey($searchParams), [
+                'results' => $initialResults,
+                'search_id' => $searchIdStr,
+            ], $cacheTtl);
+        }
+
+        $view->assign('sphinx_search_results', $initialResults);
+        $view->assign('sphinx_search_id', $searchIdStr);
+        $view->assign('sphinx_search_status', 'completed');
+        return;
+    }
+
+    // Diagnostic: log when the API immediately reports no availability
+    // (helps differentiate "API has no offers" from "polling lost results").
+    if ($initialStatus === 'completed' && empty($initialResults)) {
+        fn_log_event('general', 'runtime', [
+            'message' => 'Sphinx search returned completed with zero results',
+            'search_params' => $searchParams,
+            'api_response' => json_encode($searchResponse),
+        ]);
+    }
+
+    // Store search params in session so search_poll can cache completed results
     /** @var array<string, mixed> $session */
     $session = &Tygh::$app['session'];
     $session['sphinx_search_' . $searchIdStr] = [
