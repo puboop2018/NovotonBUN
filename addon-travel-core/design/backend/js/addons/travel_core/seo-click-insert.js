@@ -47,6 +47,8 @@
     // ════════════════════════════════════════════════════════════════
 
     var lastField = null;
+    var lastSelStart = 0;
+    var lastSelEnd = 0;
 
     function isEditableTarget(el) {
         if (!el || !el.tagName) return false;
@@ -58,13 +60,20 @@
         return false;
     }
 
-    function rememberField(el) {
-        if (isEditableTarget(el)) { lastField = el; }
+    function savePosition(el) {
+        if (isEditableTarget(el)) {
+            lastField    = el;
+            lastSelStart = el.selectionStart || 0;
+            lastSelEnd   = el.selectionEnd   || 0;
+        }
     }
 
-    document.addEventListener('focus', function (e) { rememberField(e.target); }, true);
-    document.addEventListener('click', function (e) { rememberField(e.target); }, true);
-    document.addEventListener('keyup', function (e) { rememberField(e.target); }, true);
+    // Capture selection on every meaningful interaction with editable fields.
+    document.addEventListener('focus',  function (e) { savePosition(e.target); }, true);
+    document.addEventListener('click',  function (e) { savePosition(e.target); }, true);
+    document.addEventListener('keyup',  function (e) { savePosition(e.target); }, true);
+    // blur fires just before the badge click, so capture the cursor here too.
+    document.addEventListener('blur',   function (e) { savePosition(e.target); }, true);
 
     function flashField(field) {
         if (!field) return;
@@ -82,19 +91,26 @@
             var scope   = (wrapper && wrapper.closest('form')) || document;
             lastField   = scope.querySelector('input[type="text"], input:not([type]), textarea');
             if (!lastField) return;
-            lastField.selectionStart = lastField.selectionEnd = lastField.value.length;
+            lastSelStart = lastField.value.length;
+            lastSelEnd   = lastField.value.length;
         }
 
-        lastField.focus();
-        var val = lastField.value;
-        var selStart = lastField.selectionStart || 0;
-        var selEnd = lastField.selectionEnd || 0;
+        // Use the cursor position saved at last blur/focus — NOT selectionStart
+        // after re-focusing, which browsers reset to 0 when focus was lost.
+        var selStart = lastSelStart;
+        var selEnd   = lastSelEnd;
+        var val      = lastField.value;
 
         lastField.value = val.substring(0, selStart) + text + val.substring(selEnd);
 
         var newPos = selStart + text.length;
+        lastField.focus();
         lastField.selectionStart = newPos;
-        lastField.selectionEnd = newPos;
+        lastField.selectionEnd   = newPos;
+
+        // Keep saved position in sync.
+        lastSelStart = newPos;
+        lastSelEnd   = newPos;
 
         // Trigger downstream listeners (live preview, counter, etc.)
         lastField.dispatchEvent(new Event('input', { bubbles: true }));
@@ -105,7 +121,7 @@
         if (!lastField) return;
 
         var val = lastField.value;
-        var pos = lastField.selectionStart || val.length;
+        var pos = lastSelStart || val.length;
         var before = val.substring(0, pos);
 
         var openIdx = before.lastIndexOf('{{');
@@ -117,24 +133,27 @@
         var tokenContent = val.substring(openIdx + 2, closeIdx);
         if (tokenContent.indexOf('|' + modName) !== -1) return; // already applied
 
-        lastField.selectionStart = closeIdx;
-        lastField.selectionEnd = closeIdx;
+        lastSelStart = closeIdx;
+        lastSelEnd   = closeIdx;
         insertAtCursor('|' + modName);
     }
 
-    document.addEventListener('click', function (e) {
-        var badge = e.target.closest && e.target.closest('.seo-ph-badge');
-        if (badge && badge.closest('[data-seo-wrapper]')) {
+    function bindBadgeClick(badge) {
+        badge.addEventListener('click', function (e) {
+            // Stop CS-Cart admin panel jQuery from swallowing the event.
             e.preventDefault();
+            e.stopPropagation();
             insertAtCursor(badge.getAttribute('data-insert') || '');
-            return;
-        }
-        var mod = e.target.closest && e.target.closest('.seo-mod-badge');
-        if (mod && mod.closest('[data-seo-wrapper]')) {
+        });
+    }
+
+    function bindModClick(mod) {
+        mod.addEventListener('click', function (e) {
             e.preventDefault();
+            e.stopPropagation();
             appendModifier(mod.getAttribute('data-modifier') || '');
-        }
-    });
+        });
+    }
 
     // ════════════════════════════════════════════════════════════════
     // 2. Live template preview — render template against mock data
@@ -246,6 +265,11 @@
     // ════════════════════════════════════════════════════════════════
     // Init — wire DOM → behaviours
     // ════════════════════════════════════════════════════════════════
+
+    // Bind badge clicks directly — avoid document delegation which CS-Cart
+    // jQuery can swallow via stopPropagation on admin pages.
+    document.querySelectorAll('[data-seo-wrapper] .seo-ph-badge').forEach(bindBadgeClick);
+    document.querySelectorAll('[data-seo-wrapper] .seo-mod-badge').forEach(bindModClick);
 
     // Live previews + counters
     document.querySelectorAll('.seo-preview[data-seo-preview-for]').forEach(function (preview) {
