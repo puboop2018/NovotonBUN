@@ -606,6 +606,17 @@ function fn_travel_core_seo_bulk_apply(string $addonName, callable $hotelFetcher
     $batchSize = 200;
     $offset = 0;
 
+    // Apply to every installed storefront language so RO and EN (or whatever
+    // is configured) both get the rendered SEO data — not just whatever the
+    // admin happens to have selected in the top-right language dropdown.
+    $languages = [CART_LANGUAGE];
+    if (function_exists('fn_get_translation_languages')) {
+        $allLangs = fn_get_translation_languages();
+        if (is_array($allLangs) && !empty($allLangs)) {
+            $languages = array_keys($allLangs);
+        }
+    }
+
     while (true) {
         $hotels = $hotelFetcher($offset, $batchSize);
 
@@ -623,7 +634,9 @@ function fn_travel_core_seo_bulk_apply(string $addonName, callable $hotelFetcher
             if (empty($seoFields)) {
                 $skipped++;
             } else {
-                fn_update_product($seoFields, $productId, CART_LANGUAGE);
+                foreach ($languages as $lang) {
+                    fn_update_product($seoFields, $productId, $lang);
+                }
                 $updated++;
             }
 
