@@ -36,6 +36,14 @@ return [
         'en' => 'Prefix for CS-Cart product codes created from Sphinx hotels (e.g. SPX). The hotel ID is appended to form the full code (e.g. SPX12345).',
         'ro' => 'Prefix pentru codurile de produs CS-Cart create din hoteluri Sphinx (ex. SPX). ID-ul hotelului se adaugă pentru codul complet (ex. SPX12345).',
     ],
+    'sphinx_holidays.default_product_quantity' => [
+        'en' => 'Default product quantity',
+        'ro' => 'Cantitate implicită produs',
+    ],
+    'sphinx_holidays.default_product_quantity.tooltip' => [
+        'en' => 'Inventory quantity assigned to hotel products on creation. Set high to prevent "zero inventory" errors.',
+        'ro' => 'Cantitatea de inventar atribuită produselor hotel la creare. Setați o valoare mare pentru a preveni erorile de "inventar zero".',
+    ],
     'sphinx_holidays.skip_no_description' => [
         'en' => 'Skip hotels without description',
         'ro' => 'Omite hoteluri fără descriere',
@@ -220,48 +228,48 @@ return [
     'sphinx_holidays.ph_email' => ['en' => 'Email address', 'ro' => 'Adresă email'],
     'sphinx_holidays.ph_website' => ['en' => 'Website URL', 'ro' => 'URL website'],
     'sphinx_holidays.seo_product_name' => [
-        'en' => 'Product name pattern',
-        'ro' => 'Șablon nume produs',
+        'en' => 'Product name',
+        'ro' => 'Nume produs',
     ],
     'sphinx_holidays.seo_product_name.tooltip' => [
         'en' => 'Template for the product name.',
         'ro' => 'Șablon pentru numele produsului.',
     ],
     'sphinx_holidays.seo_page_title' => [
-        'en' => 'Page title pattern',
-        'ro' => 'Șablon titlu pagină',
+        'en' => 'Page title',
+        'ro' => 'Titlu pagină',
     ],
     'sphinx_holidays.seo_page_title.tooltip' => [
-        'en' => 'Template for the HTML page title (SEO).',
-        'ro' => 'Șablon pentru titlul paginii HTML (SEO).',
+        'en' => 'Template for the HTML page title (SEO). Google typically truncates around 60 characters.',
+        'ro' => 'Șablon pentru titlul paginii HTML (SEO). Google trunchiază de obicei la ~60 caractere.',
     ],
     'sphinx_holidays.seo_meta_description' => [
-        'en' => 'Meta description pattern',
-        'ro' => 'Șablon meta descriere',
+        'en' => 'Meta description',
+        'ro' => 'Meta descriere',
     ],
     'sphinx_holidays.seo_meta_description.tooltip' => [
-        'en' => 'Template for the meta description tag.',
-        'ro' => 'Șablon pentru tag-ul meta description.',
+        'en' => 'Template for the meta description tag. Google truncates around 160 characters.',
+        'ro' => 'Șablon pentru tag-ul meta description. Google trunchiază la ~160 caractere.',
     ],
     'sphinx_holidays.seo_meta_keywords' => [
-        'en' => 'Meta keywords pattern',
-        'ro' => 'Șablon meta cuvinte cheie',
+        'en' => 'Meta keywords',
+        'ro' => 'Meta cuvinte cheie',
     ],
     'sphinx_holidays.seo_meta_keywords.tooltip' => [
         'en' => 'Template for the meta keywords tag.',
         'ro' => 'Șablon pentru tag-ul meta keywords.',
     ],
     'sphinx_holidays.seo_name_slug' => [
-        'en' => 'SEO URL slug pattern',
-        'ro' => 'Șablon URL SEO (slug)',
+        'en' => 'SEO URL slug',
+        'ro' => 'URL SEO (slug)',
     ],
     'sphinx_holidays.seo_name_slug.tooltip' => [
         'en' => 'Template for the SEO-friendly URL slug. Result is automatically sanitized.',
         'ro' => 'Șablon pentru slug-ul URL SEO. Rezultatul este sanitizat automat.',
     ],
     'sphinx_holidays.seo_full_description' => [
-        'en' => 'Full description pattern (optional)',
-        'ro' => 'Șablon descriere completă (opțional)',
+        'en' => 'Full description (optional)',
+        'ro' => 'Descriere completă (opțional)',
     ],
     'sphinx_holidays.seo_full_description.tooltip' => [
         'en' => 'Optional template to wrap or replace the API description. Leave empty to use the raw API description as-is.',

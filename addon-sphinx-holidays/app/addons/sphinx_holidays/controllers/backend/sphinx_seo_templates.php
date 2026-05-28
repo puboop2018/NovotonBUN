@@ -60,25 +60,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $submitted = $_REQUEST['seo'] ?? [];
         $defaults  = _sphinx_seo_setting_defaults();
         $settings  = Settings::instance();
-        $saved     = 0;
 
+        // Collect all values first so we can batch-update the Registry.
+        $toSave = [];
         foreach ($defaults as $key => $default) {
             // Checkboxes absent from POST mean unchecked → 'N' for seo_field_* keys
             if (str_starts_with($key, 'seo_field_')) {
-                $value = !empty($submitted[$key]) ? 'Y' : 'N';
+                $toSave[$key] = !empty($submitted[$key]) ? 'Y' : 'N';
             } else {
-                $value = trim((string) ($submitted[$key] ?? ''));
+                $toSave[$key] = trim((string) ($submitted[$key] ?? ''));
             }
-
-            $settings->updateValue($key, $value, 'sphinx_holidays');
-            $saved++;
         }
 
-        if ($saved > 0) {
-            fn_set_notification('N', __('notice'),
-                __('travel_core.seo_templates_saved',
-                    ['[default]' => 'SEO templates saved.']));
+        foreach ($toSave as $key => $value) {
+            // auto_create=true so settings that were never in addon.xml are
+            // inserted on first save rather than silently discarded.
+            $settings->updateValue($key, $value, 'sphinx_holidays', true);
         }
+
+        // Refresh in-request Registry so the same request (e.g. subsequent hooks)
+        // sees the new values. The redirect that follows will reload from DB.
+        $existing = Registry::get('addons.sphinx_holidays');
+        Registry::set('addons.sphinx_holidays', array_merge(is_array($existing) ? $existing : [], $toSave));
+
+        fn_set_notification('N', __('notice'),
+            __('travel_core.seo_templates_saved',
+                ['[default]' => 'SEO templates saved.']));
 
         return [CONTROLLER_STATUS_REDIRECT, 'sphinx_seo_templates.manage'];
     }

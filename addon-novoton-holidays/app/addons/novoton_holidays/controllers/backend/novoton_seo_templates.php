@@ -63,24 +63,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $submitted = $_REQUEST['seo'] ?? [];
         $defaults  = _novoton_seo_setting_defaults();
         $settings  = Settings::instance();
-        $saved     = 0;
 
+        $toSave = [];
         foreach ($defaults as $key => $default) {
             if (str_starts_with($key, 'seo_field_')) {
-                $value = !empty($submitted[$key]) ? 'Y' : 'N';
+                $toSave[$key] = !empty($submitted[$key]) ? 'Y' : 'N';
             } else {
-                $value = trim((string) ($submitted[$key] ?? ''));
+                $toSave[$key] = trim((string) ($submitted[$key] ?? ''));
             }
-
-            $settings->updateValue($key, $value, 'novoton_holidays');
-            $saved++;
         }
 
-        if ($saved > 0) {
-            fn_set_notification('N', __('notice'),
-                __('travel_core.seo_templates_saved',
-                    ['[default]' => 'SEO templates saved.']));
+        foreach ($toSave as $key => $value) {
+            $settings->updateValue($key, $value, 'novoton_holidays', true);
         }
+
+        $existing = \Tygh\Registry::get('addons.novoton_holidays');
+        \Tygh\Registry::set('addons.novoton_holidays', array_merge(is_array($existing) ? $existing : [], $toSave));
+
+        fn_set_notification('N', __('notice'),
+            __('travel_core.seo_templates_saved',
+                ['[default]' => 'SEO templates saved.']));
 
         return [CONTROLLER_STATUS_REDIRECT, 'novoton_seo_templates.manage'];
     }

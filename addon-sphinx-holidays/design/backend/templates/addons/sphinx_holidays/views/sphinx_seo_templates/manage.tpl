@@ -125,7 +125,7 @@ window.__seoMockData = {
                            class="field-toggle"
                            data-seo-toggle="seo_product_name"
                            {if $seo_values.seo_field_product_name != 'N'}checked="checked"{/if} />
-                    {__("sphinx_holidays.seo_product_name")|default:"Product name template"}
+                    {__("sphinx_holidays.seo_product_name")|default:"Product name"}
                 </label>
                 <div class="controls">
                     <input type="text"
@@ -149,7 +149,7 @@ window.__seoMockData = {
                            class="field-toggle"
                            data-seo-toggle="seo_page_title"
                            {if $seo_values.seo_field_page_title != 'N'}checked="checked"{/if} />
-                    {__("sphinx_holidays.seo_page_title")|default:"Page title template"}
+                    {__("sphinx_holidays.seo_page_title")|default:"Page title"}
                 </label>
                 <div class="controls">
                     <input type="text"
@@ -173,7 +173,7 @@ window.__seoMockData = {
                            class="field-toggle"
                            data-seo-toggle="seo_meta_description"
                            {if $seo_values.seo_field_meta_description != 'N'}checked="checked"{/if} />
-                    {__("sphinx_holidays.seo_meta_description")|default:"Meta description template"}
+                    {__("sphinx_holidays.seo_meta_description")|default:"Meta description"}
                 </label>
                 <div class="controls">
                     <textarea id="seo_meta_description"
@@ -196,7 +196,7 @@ window.__seoMockData = {
                            class="field-toggle"
                            data-seo-toggle="seo_meta_keywords"
                            {if $seo_values.seo_field_meta_keywords != 'N'}checked="checked"{/if} />
-                    {__("sphinx_holidays.seo_meta_keywords")|default:"Meta keywords template"}
+                    {__("sphinx_holidays.seo_meta_keywords")|default:"Meta keywords"}
                 </label>
                 <div class="controls">
                     <input type="text"
@@ -220,7 +220,7 @@ window.__seoMockData = {
                            class="field-toggle"
                            data-seo-toggle="seo_name_slug"
                            {if $seo_values.seo_field_name_slug != 'N'}checked="checked"{/if} />
-                    {__("sphinx_holidays.seo_name_slug")|default:"SEO URL slug template"}
+                    {__("sphinx_holidays.seo_name_slug")|default:"SEO URL slug"}
                 </label>
                 <div class="controls">
                     <input type="text"
@@ -244,7 +244,7 @@ window.__seoMockData = {
                            class="field-toggle"
                            data-seo-toggle="seo_full_description"
                            {if $seo_values.seo_field_full_description != 'N'}checked="checked"{/if} />
-                    {__("sphinx_holidays.seo_full_description")|default:"Full description template (optional)"}
+                    {__("sphinx_holidays.seo_full_description")|default:"Full description (optional)"}
                 </label>
                 <div class="controls">
                     <textarea id="seo_full_description"

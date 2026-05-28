@@ -201,16 +201,11 @@ function fn_sphinx_holidays_seed_language_keys(): void
 
     foreach ($keys as $name => $translations) {
         foreach ($translations as $lang_code => $value) {
-            $exists = db_get_field(
-                "SELECT COUNT(*) FROM ?:language_values WHERE name = ?s AND lang_code = ?s",
-                $name, $lang_code
+            db_query(
+                "INSERT INTO ?:language_values (name, lang_code, value) VALUES (?s, ?s, ?s)
+                 ON DUPLICATE KEY UPDATE value = ?s",
+                $name, $lang_code, $value, $value
             );
-            if (!$exists) {
-                db_query(
-                    "INSERT INTO ?:language_values (name, lang_code, value) VALUES (?s, ?s, ?s)",
-                    $name, $lang_code, $value
-                );
-            }
         }
     }
 }
