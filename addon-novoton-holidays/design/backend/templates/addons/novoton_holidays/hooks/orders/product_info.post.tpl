@@ -1,12 +1,7 @@
 {* Novoton Holidays - Admin Order Details (product_info hook) - Simple text display *}
 
 {if $oi.extra.novoton_booking}
-{* Normalize rooms_data: may be JSON string or array depending on serialization path *}
-{if $oi.extra.rooms_data && is_string($oi.extra.rooms_data)}
-    {$_nvt_rooms = $oi.extra.rooms_data|json_decode:true}
-{else}
-    {$_nvt_rooms = $oi.extra.rooms_data|default:[]}
-{/if}
+{$_nvt_rooms = $oi.extra.rooms_data|default:[]}
 <div style="margin:10px 0;font-size:13px;line-height:1.8;">
 
     {if $oi.extra.hotel_name}
@@ -39,14 +34,11 @@
     {/if}
 
     {* Guest Names *}
-    {if $oi.extra.guests_data}
-        {$guests_parsed = $oi.extra.guests_data|json_decode:true}
-        {if $guests_parsed && is_array($guests_parsed)}
-            <strong>Guest Names:</strong><br>
-            {foreach from=$guests_parsed item=guest}
-                &nbsp;&nbsp;{$guest.name|default:'Guest'|escape:'html'} ({$guest.type|default:'adult'}){if $guest.room} — Room {$guest.room}{/if}<br>
-            {/foreach}
-        {/if}
+    {if $oi.extra.guests_data && is_array($oi.extra.guests_data)}
+        <strong>Guest Names:</strong><br>
+        {foreach from=$oi.extra.guests_data item=guest}
+            &nbsp;&nbsp;{$guest.name|default:'Guest'|escape:'html'} ({$guest.type|default:'adult'}){if $guest.room} — Room {$guest.room}{/if}<br>
+        {/foreach}
     {elseif $oi.extra.holder_name}
         <strong>Holder:</strong> {$oi.extra.holder_name|escape:'html'}<br>
     {/if}

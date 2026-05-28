@@ -301,6 +301,21 @@ function fn_novoton_holidays_get_order_info(&$order, $additional_data): void
             $extra['board_display'] = fn_novoton_holidays_format_board_name($board_id);
         }
 
+        // Pre-decode JSON strings so templates can use rooms_data/guests_data as arrays
+        // without calling |json_decode modifier (which throws inside Smarty {capture} blocks)
+        $rooms_data_raw = $extra['rooms_data'] ?? null;
+        if (is_string($rooms_data_raw) && $rooms_data_raw !== '') {
+            $decoded = json_decode($rooms_data_raw, true);
+            $extra['rooms_data'] = is_array($decoded) ? $decoded : [];
+        } elseif (!is_array($rooms_data_raw)) {
+            $extra['rooms_data'] = [];
+        }
+        $guests_data_raw = $extra['guests_data'] ?? null;
+        if (is_string($guests_data_raw) && $guests_data_raw !== '') {
+            $decoded = json_decode($guests_data_raw, true);
+            $extra['guests_data'] = is_array($decoded) ? $decoded : [];
+        }
+
         // Write back local extra mutations before delegating to helpers
         // (helpers also mutate $product['extra'] but via their own narrowed vars).
         $product['extra'] = $extra;
