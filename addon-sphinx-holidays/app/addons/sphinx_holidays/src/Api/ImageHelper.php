@@ -30,9 +30,32 @@ class ImageHelper
     }
 
     /**
+     * Return true if $imageUrl is hosted on the same server (or a sibling subdomain)
+     * as the configured Sphinx API base URL.
+     *
+     * Sibling subdomain matching handles cases where images are served from
+     * e.g. media.sphinx2.example.com while the API is at api.sphinx2.example.com.
+     */
+    public static function matchesApiHost(string $imageUrl, string $apiBaseUrl): bool
+    {
+        $apiHost   = (string) parse_url($apiBaseUrl, PHP_URL_HOST);
+        $imageHost = (string) parse_url($imageUrl,   PHP_URL_HOST);
+        if ($apiHost === '' || $imageHost === '') {
+            return false;
+        }
+        if ($imageHost === $apiHost) {
+            return true;
+        }
+        // Compare base domain after stripping the first subdomain component.
+        $apiBase   = implode('.', array_slice(explode('.', $apiHost),   1));
+        $imageBase = implode('.', array_slice(explode('.', $imageHost), 1));
+        return $apiBase !== '' && $apiBase === $imageBase;
+    }
+
+    /**
      * Get the authentication headers required for watermark-free image access.
      *
-     * @return array<string, mixed> HTTP headers as key => value
+     * @return array<string, string> HTTP headers as key => value
      */
     public static function getAuthHeaders(): array
     {
@@ -41,12 +64,16 @@ class ImageHelper
             return [];
         }
         return [
+            'Authorization'             => 'Bearer ' . $apiKey,
             'X-Copyright-Authorization' => 'Bearer ' . $apiKey,
         ];
     }
 
     /**
-     * Get the cURL-formatted authentication header for watermark-free image access.
+     * Get the cURL-formatted authentication headers for API-hosted image access.
+     *
+     * Sends both the standard Bearer token (required for auth) and the
+     * copyright header (required for watermark-free delivery).
      *
      * @return string[] Headers in "Name: Value" format for cURL
      */
@@ -57,6 +84,7 @@ class ImageHelper
             return [];
         }
         return [
+            'Authorization: Bearer ' . $apiKey,
             'X-Copyright-Authorization: Bearer ' . $apiKey,
         ];
     }

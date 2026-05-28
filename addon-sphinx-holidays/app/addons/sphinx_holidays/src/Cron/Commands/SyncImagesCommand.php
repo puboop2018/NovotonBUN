@@ -98,20 +98,25 @@ class SyncImagesCommand extends AbstractSyncCommand
                     continue;
                 }
 
-                $imgCount = 0;
+                $imgCount   = 0;
+                $firstError = '';
                 foreach ($images as $img) {
                     $url = is_array($img) ? ($img['url'] ?? '') : (string) $img;
                     if (empty($url)) {
                         continue;
                     }
 
-                    $isMain = ($imgCount === 0);
-                    $ok = fn_sphinx_holidays_add_product_image($productId, $url, $isMain);
+                    $isMain   = ($imgCount === 0);
+                    $imgError = '';
+                    $ok = fn_sphinx_holidays_add_product_image($productId, $url, $isMain, $imgError);
 
                     if ($ok) {
                         $imgCount++;
                     } else {
                         $stats['errors']++;
+                        if ($firstError === '' && $imgError !== '') {
+                            $firstError = $imgError . ' — ' . substr($url, 0, 100);
+                        }
                     }
                 }
 
@@ -120,7 +125,8 @@ class SyncImagesCommand extends AbstractSyncCommand
                     $stats['images_added'] += $imgCount;
                     $stats['hotels_processed']++;
                 } else {
-                    $this->output("[{$hotelId}] {$hotel['name']} ... FAILED (no images downloaded)");
+                    $detail = $firstError !== '' ? " [{$firstError}]" : '';
+                    $this->output("[{$hotelId}] {$hotel['name']} ... FAILED (no images downloaded){$detail}");
                     $stats['errors']++;
                 }
             }
