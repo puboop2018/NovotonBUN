@@ -80,8 +80,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // Refresh in-request Registry so the same request (e.g. subsequent hooks)
         // sees the new values. The redirect that follows will reload from DB.
-        $existing = Registry::get('addons.sphinx_holidays') ?: [];
-        Registry::set('addons.sphinx_holidays', array_merge($existing, $toSave));
+        $existing = Registry::get('addons.sphinx_holidays');
+        Registry::set('addons.sphinx_holidays', array_merge(is_array($existing) ? $existing : [], $toSave));
 
         fn_set_notification('N', __('notice'),
             __('travel_core.seo_templates_saved',

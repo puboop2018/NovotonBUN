@@ -77,8 +77,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $settings->updateValue($key, $value, 'novoton_holidays', true);
         }
 
-        $existing = \Tygh\Registry::get('addons.novoton_holidays') ?: [];
-        \Tygh\Registry::set('addons.novoton_holidays', array_merge($existing, $toSave));
+        $existing = \Tygh\Registry::get('addons.novoton_holidays');
+        \Tygh\Registry::set('addons.novoton_holidays', array_merge(is_array($existing) ? $existing : [], $toSave));
 
         fn_set_notification('N', __('notice'),
             __('travel_core.seo_templates_saved',
