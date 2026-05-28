@@ -63,6 +63,21 @@ if (class_exists(\Tygh\Addons\TravelCore\Services\TravelProviderRegistry::class)
     );
 }
 
+// Self-heal language keys when missing. Existing installations don't re-run
+// post_install when new lang keys are added (e.g. default_product_quantity),
+// so labels stay empty until reinstall. Probe a sentinel key and reseed if
+// absent — the seed itself is idempotent (INSERT ... ON DUPLICATE KEY UPDATE).
+if (defined('AREA') && AREA === 'A' && function_exists('fn_sphinx_holidays_seed_language_keys')) {
+    $__sentinel = db_get_field(
+        "SELECT value FROM ?:language_values WHERE name = ?s AND lang_code = ?s LIMIT 1",
+        'sphinx_holidays.default_product_quantity', 'en'
+    );
+    if (empty($__sentinel)) {
+        fn_sphinx_holidays_seed_language_keys();
+    }
+    unset($__sentinel);
+}
+
 // Register addon hooks
 fn_register_hooks(
     'pre_place_order',                         // Re-verify Sphinx offer prices before order

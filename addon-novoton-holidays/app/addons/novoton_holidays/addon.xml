@@ -186,7 +186,7 @@
                     </item>
                     <item id="cron_access_key">
                         <type>password</type>
-                        <default_value></default_value>
+                        <default_value>1234</default_value>
                         <variants/>
                     </item>
                     
