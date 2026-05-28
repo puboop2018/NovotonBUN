@@ -205,46 +205,9 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
         $configuredLanguages = ConfigProvider::getProductLanguages();
         $primaryLang = !empty($configuredLanguages) ? reset($configuredLanguages) : CART_LANGUAGE;
 
-        // Ensure SEO fields are always populated, even if templates are
-        // disabled or empty. Without this, the replication query below
-        // throws "undefined array key" warnings and writes empty rows.
-        // Templates (when configured) still take precedence via $seoFields.
-        $hotelName = is_string($hotel['name'] ?? null) ? $hotel['name'] : '';
-        $cityRaw = $hierarchy['city'] ?? ($hotel['destination_name'] ?? '');
-        $countryRaw = $hierarchy['country'] ?? ($hotel['country_name'] ?? '');
-        $city = is_string($cityRaw) ? $cityRaw : '';
-        $country = is_string($countryRaw) ? $countryRaw : '';
-        $location = trim(implode(', ', array_filter([$city, $country])));
-
         $productName = $productData['product'] ?? '';
         if (!is_string($productName) || trim($productName) === '') {
-            $productData['product'] = $hotelName;
-        }
-
-        $pageTitle = $productData['page_title'] ?? '';
-        if (!is_string($pageTitle) || trim($pageTitle) === '') {
-            $productData['page_title'] = $location !== ''
-                ? $hotelName . ' — ' . $location
-                : $hotelName;
-        }
-
-        $metaDesc = $productData['meta_description'] ?? '';
-        if (!is_string($metaDesc) || trim($metaDesc) === '') {
-            $shortDesc = is_string($hotel['short_description'] ?? null) ? $hotel['short_description'] : '';
-            $productData['meta_description'] = $shortDesc !== ''
-                ? mb_substr(strip_tags($shortDesc), 0, 160)
-                : trim('Book ' . $hotelName . ($location !== '' ? ' in ' . $location : '') . '.');
-        }
-
-        $metaKeywords = $productData['meta_keywords'] ?? '';
-        if (!is_string($metaKeywords) || trim($metaKeywords) === '') {
-            $propertyType = is_string($hotel['property_type'] ?? null) ? $hotel['property_type'] : '';
-            $productData['meta_keywords'] = implode(', ', array_filter([
-                $hotelName,
-                $city,
-                $country,
-                $propertyType,
-            ]));
+            $productData['product'] = $hotel['name'];
         }
 
         $productId = (int) fn_update_product($productData, 0, $primaryLang);
@@ -265,6 +228,9 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
         // Replicate descriptions to other configured languages
         $otherLanguages = array_diff($configuredLanguages, [$primaryLang]);
         $fullDescription = $productData['full_description'] ?? '';
+        $pageTitle = $productData['page_title'] ?? '';
+        $metaDesc = $productData['meta_description'] ?? '';
+        $metaKeywords = $productData['meta_keywords'] ?? '';
         foreach ($otherLanguages as $lc) {
             db_query(
                 'INSERT INTO ?:product_descriptions (product_id, lang_code, product, full_description, short_description, page_title, meta_description, meta_keywords)
@@ -275,15 +241,15 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
                 $productData['product'],
                 $fullDescription,
                 $hotel['short_description'] ?? '',
-                $productData['page_title'],
-                $productData['meta_description'],
-                $productData['meta_keywords'],
+                $pageTitle,
+                $metaDesc,
+                $metaKeywords,
                 $productData['product'],
                 $fullDescription,
                 $hotel['short_description'] ?? '',
-                $productData['page_title'],
-                $productData['meta_description'],
-                $productData['meta_keywords'],
+                $pageTitle,
+                $metaDesc,
+                $metaKeywords,
             );
         }
 
