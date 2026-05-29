@@ -728,24 +728,38 @@ function fn_travel_core_attach_product_image(int $productId, string $tempFile, s
         $productId
     );
 
-    $pairData = [
-        'type'        => $isMain ? 'M' : 'A',
-        'object_id'   => $productId,
-        'object_type' => 'product',
-        'position'    => $existingPairs,
+    // CS-Cart's fn_update_image_pairs() iterates the FIRST argument ($pairs_data),
+    // keyed by image id, to decide which pairs to create/update. New pairs use a
+    // placeholder key (0) with pair_id = 0; the matching $detailed[0] entry carries
+    // the uploaded file. Passing an empty $pairs_data creates nothing — which is the
+    // bug that made every image silently fail to attach.
+    $imageId = 0;
+
+    $pairsData = [
+        $imageId => [
+            'pair_id'     => 0,
+            'type'        => $isMain ? 'M' : 'A',
+            'object_id'   => $productId,
+            'object_type' => 'product',
+            'detailed_id' => 0,
+            'position'    => $existingPairs,
+        ],
     ];
 
     $detailed = [
-        0 => [
+        $imageId => [
             'name'     => $filename,
             'path'     => $tempFile,
             'tmp_name' => $tempFile,
             'size'     => filesize($tempFile),
             'type'     => $imageInfo['mime'],
+            'error'    => 0,
         ],
     ];
 
-    $pairIds = fn_update_image_pairs([], $detailed, $pairData, $productId, 'product');
+    // Signature: fn_update_image_pairs($pairs_data, $icons, $detailed, $object_id, $object_type).
+    // We supply only the detailed (full-size) image; CS-Cart derives the thumbnail.
+    $pairIds = fn_update_image_pairs($pairsData, [], $detailed, $productId, 'product');
 
     unlink($tempFile);
 
