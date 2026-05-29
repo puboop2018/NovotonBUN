@@ -39,9 +39,18 @@
  */
 (function () {
     function init() {
-    if (!document.querySelector('[data-seo-wrapper], [data-seo-preview-for]')) {
+    var marker = document.querySelector('[data-seo-wrapper]')
+        || document.querySelector('[data-seo-preview-for]');
+    if (!marker) {
         return; // Nothing SEO-related on this page.
     }
+    // Guard against double-binding: CS-Cart fires both DOMContentLoaded and
+    // ce.commoninit (the latter on every AJAX content load), so init() can run
+    // more than once against the same DOM. Mark the container once it's wired.
+    if (marker.__seoInit) {
+        return;
+    }
+    marker.__seoInit = true;
 
     // ════════════════════════════════════════════════════════════════
     // 1. Click-to-insert
@@ -337,6 +346,17 @@
         syncFieldEnabled(cb);
     });
     } // end init
+
+    // CS-Cart admin navigates via AJAX: clicking "SEO Templates" in the top nav
+    // injects the page into an already-loaded document, so DOMContentLoaded never
+    // fires again and the external script's IIFE does not re-run. Hook CS-Cart's
+    // ce.commoninit event, which fires after every AJAX content load, so the badges
+    // and live preview wire up regardless of how the page was reached. The
+    // __seoInit guard in init() keeps repeated calls idempotent.
+    var Tygh = window.Tygh;
+    if (Tygh && Tygh.$ && typeof Tygh.$.ceEvent === 'function') {
+        Tygh.$.ceEvent('on', 'ce.commoninit', function () { init(); });
+    }
 
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init);
