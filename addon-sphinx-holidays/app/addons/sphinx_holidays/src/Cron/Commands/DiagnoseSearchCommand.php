@@ -79,7 +79,7 @@ class DiagnoseSearchCommand extends AbstractSyncCommand
         if ($hotel === null) {
             $this->output('');
             $this->output("WARNING: hotel [{$hotelId}] is NOT in the local sphinx_hotels table.");
-            $this->output('  The search API call below will still run, but this hotel was never synced locally.');
+            $this->output('  Will look it up directly from the API below; the search call still runs regardless.');
         } else {
             $this->output('');
             $this->output('--- Hotel record (local DB) ---');
@@ -119,6 +119,30 @@ class DiagnoseSearchCommand extends AbstractSyncCommand
         $api = Container::getApi();
         $client = $api->getHttpClient();
 
+        // ── Identify the hotel directly from the API ───────────────────
+        // GET /api/v1/static/hotels/{id} — authoritative name/location,
+        // works even when the hotel was never synced into the local DB.
+        $this->output('');
+        $this->output("--- Hotel record (API: GET /api/v1/static/hotels/{$hotelId}) ---");
+        $apiHotel = $api->getHotel($hotelId);
+        if ($apiHotel === null) {
+            $this->output('  NOT FOUND — HTTP ' . $client->getLastHttpCode() . ': ' . ($client->getLastError() ?: '(none)'));
+            $this->output('  Raw: ' . $this->trunc($client->getLastResponseRaw() ?? '', 300));
+            if ($client->getLastHttpCode() === 404) {
+                $this->output("  => The API does not know hotel [{$hotelId}] — the ID is wrong or no longer valid.");
+            }
+        } else {
+            /** @var mixed $rawData */
+            $rawData = $apiHotel['data'] ?? $apiHotel;
+            $data = is_array($rawData) ? $rawData : $apiHotel;
+            $this->output('  name        = ' . TypeCoerce::toString($data['name'] ?? '(none)'));
+            $this->output('  city        = ' . TypeCoerce::toString($data['city'] ?? $data['destination_name'] ?? ''));
+            $this->output('  country     = ' . TypeCoerce::toString($data['country'] ?? $data['country_code'] ?? ''));
+            $this->output('  stars       = ' . TypeCoerce::toString($data['classification'] ?? $data['stars'] ?? ''));
+            $this->output('  type        = ' . TypeCoerce::toString($data['property_type'] ?? $data['type'] ?? ''));
+        }
+
+        $this->output('');
         $this->output("=== Diagnosing search for hotel [{$hotelId}] ===");
         $this->output("Dates: {$checkIn} → {$checkOut} | adults={$adults}, rooms={$rooms}");
 
