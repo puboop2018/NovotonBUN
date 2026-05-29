@@ -78,6 +78,16 @@ if (defined('AREA') && AREA === 'A' && function_exists('fn_sphinx_holidays_seed_
     unset($__sentinel);
 }
 
+// Self-heal SEO template defaults. On fresh installs the templates are empty
+// until the admin opens the SEO Templates page and clicks Save. Probe the
+// sentinel key and seed defaults if absent so products created via cron get
+// rendered metadata from the very first add_products run.
+if (defined('AREA') && AREA === 'A' && function_exists('fn_sphinx_holidays_seed_seo_defaults')) {
+    if (\Tygh\Registry::get('addons.sphinx_holidays.seo_page_title') === null) {
+        fn_sphinx_holidays_seed_seo_defaults();
+    }
+}
+
 // Register addon hooks
 fn_register_hooks(
     'pre_place_order',                         // Re-verify Sphinx offer prices before order

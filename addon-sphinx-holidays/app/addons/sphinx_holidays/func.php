@@ -188,6 +188,7 @@ function fn_sphinx_holidays_post_install(): bool
     fn_sphinx_holidays_seed_aliases();
     fn_sphinx_holidays_seed_region_mappings();
     fn_sphinx_holidays_seed_language_keys();
+    fn_sphinx_holidays_seed_seo_defaults();
     return true;
 }
 
@@ -207,6 +208,47 @@ function fn_sphinx_holidays_seed_language_keys(): void
                 $name, $lang_code, $value, $value
             );
         }
+    }
+}
+
+/**
+ * Idempotently seed default SEO template values into the sphinx_holidays settings.
+ * Called from init.php self-heal probe on every admin page-load when the sentinel
+ * key is missing, and from post_install. Existing non-empty values are preserved.
+ */
+function fn_sphinx_holidays_seed_seo_defaults(): void
+{
+    $defaults = [
+        'seo_overwrite_mode'         => 'override_all',
+        'seo_product_name'           => '{{name}}',
+        'seo_page_title'             => '{{name}} {{classification}}* - {{city}}, {{country}}',
+        'seo_meta_description'       => 'Book {{name}} in {{city}}, {{country}}. {{classification}}-star {{property_type}} with {{facilities}}.',
+        'seo_meta_keywords'          => '{{name}}, {{city}}, {{country}}, {{property_type}}, {{classification}} star',
+        'seo_name_slug'              => '{{name}}-{{city}}-{{country}}',
+        'seo_full_description'       => '',
+        'seo_field_product_name'     => 'Y',
+        'seo_field_page_title'       => 'Y',
+        'seo_field_meta_description' => 'Y',
+        'seo_field_meta_keywords'    => 'Y',
+        'seo_field_name_slug'        => 'Y',
+        'seo_field_full_description' => 'Y',
+    ];
+
+    $current  = \Tygh\Registry::get('addons.sphinx_holidays') ?: [];
+    $settings = \Tygh\Settings::instance();
+    $toMerge  = [];
+
+    foreach ($defaults as $key => $value) {
+        $stored = $current[$key] ?? null;
+        // Only write if the key is absent or blank (never overwrite admin edits)
+        if ($stored === null || ($stored === '' && $value !== '')) {
+            $settings->updateValue($key, $value, 'sphinx_holidays', true);
+            $toMerge[$key] = $value;
+        }
+    }
+
+    if (!empty($toMerge)) {
+        \Tygh\Registry::set('addons.sphinx_holidays', array_merge($current, $toMerge));
     }
 }
 

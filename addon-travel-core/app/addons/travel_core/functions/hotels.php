@@ -577,6 +577,11 @@ function fn_travel_core_apply_seo_fields(string $addonName, array $placeholders,
                 $result[$productKey] = (string) ($placeholders['description'] ?? '');
             }
         } else {
+            // Skip empty templates — don't write blank strings that would erase
+            // values an admin or a previous run already populated.
+            if ($template === '') {
+                continue;
+            }
             $result[$productKey] = fn_travel_core_render_seo_template($template, $placeholders);
         }
     }

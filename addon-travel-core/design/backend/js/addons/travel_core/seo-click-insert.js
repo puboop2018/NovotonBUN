@@ -38,6 +38,7 @@
  * with the existing {script src=} includes in both SEO admin pages.
  */
 (function () {
+    function init() {
     if (!document.querySelector('[data-seo-wrapper], [data-seo-preview-for]')) {
         return; // Nothing SEO-related on this page.
     }
@@ -296,4 +297,11 @@
         cb.addEventListener('change', function () { syncFieldEnabled(cb); });
         syncFieldEnabled(cb);
     });
+    } // end init
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
 })();
