@@ -12,6 +12,7 @@ use Tygh\Addons\SphinxHolidays\Cron\Commands\CircuitSyncCommand;
 use Tygh\Addons\SphinxHolidays\Cron\Commands\CleanupCommand;
 use Tygh\Addons\SphinxHolidays\Cron\Commands\DeduplicateCommand;
 use Tygh\Addons\SphinxHolidays\Cron\Commands\DestinationSyncCommand;
+use Tygh\Addons\SphinxHolidays\Cron\Commands\DiagnoseImagesCommand;
 use Tygh\Addons\SphinxHolidays\Cron\Commands\DiscoverBoardsCommand;
 use Tygh\Addons\SphinxHolidays\Cron\Commands\ExperienceSyncCommand;
 use Tygh\Addons\SphinxHolidays\Cron\Commands\FullSyncCommand;
@@ -47,6 +48,7 @@ class CronDispatcher implements CronDispatcherInterface
         'assign_boards' => AssignBoardsCommand::class,
         'update_products' => UpdateProductsCommand::class,
         'sync_images' => SyncImagesCommand::class,
+        'diagnose_images' => DiagnoseImagesCommand::class,
         'cleanup' => CleanupCommand::class,
         'deduplicate' => DeduplicateCommand::class,
         'audit_facilities' => AuditFacilitiesCommand::class,

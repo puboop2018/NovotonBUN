@@ -70,11 +70,30 @@
     }
 
     // Capture selection on every meaningful interaction with editable fields.
-    document.addEventListener('focus',  function (e) { savePosition(e.target); }, true);
-    document.addEventListener('click',  function (e) { savePosition(e.target); }, true);
-    document.addEventListener('keyup',  function (e) { savePosition(e.target); }, true);
-    // blur fires just before the badge click, so capture the cursor here too.
-    document.addEventListener('blur',   function (e) { savePosition(e.target); }, true);
+    // 'select' and 'input' keep the saved caret accurate as the user types or
+    // drags a selection; 'mouseup' covers click-to-reposition inside the field.
+    document.addEventListener('focus',   function (e) { savePosition(e.target); }, true);
+    document.addEventListener('click',   function (e) { savePosition(e.target); }, true);
+    document.addEventListener('keyup',   function (e) { savePosition(e.target); }, true);
+    document.addEventListener('mouseup', function (e) { savePosition(e.target); }, true);
+    document.addEventListener('select',  function (e) { savePosition(e.target); }, true);
+    document.addEventListener('input',   function (e) { savePosition(e.target); }, true);
+
+    /**
+     * Resolve the field a badge click should target.
+     * Prefer the field that still holds focus (when the badge handler ran on
+     * mousedown+preventDefault the field never blurred, so its live caret is
+     * authoritative); otherwise fall back to the last field we tracked.
+     */
+    function resolveTargetField() {
+        var active = document.activeElement;
+        if (isEditableTarget(active)) {
+            lastField    = active;
+            lastSelStart = active.selectionStart || 0;
+            lastSelEnd   = active.selectionEnd   || 0;
+        }
+        return lastField;
+    }
 
     function flashField(field) {
         if (!field) return;
@@ -84,6 +103,10 @@
         setTimeout(function () { field.style.backgroundColor = prevBg; }, 300);
     }
 
+    // Insert `text` at the currently-tracked caret (lastField + lastSel*).
+    // Callers are responsible for resolving the target field/caret first:
+    // placeholder badges call resolveTargetField() (live caret); appendModifier
+    // sets the caret deliberately to the end of the nearest token.
     function insertAtCursor(text) {
         if (!lastField) {
             // Scope fallback to the containing form so we don't accidentally
@@ -119,6 +142,7 @@
     }
 
     function appendModifier(modName) {
+        resolveTargetField();
         if (!lastField) return;
 
         var val = lastField.value;
@@ -139,16 +163,31 @@
         insertAtCursor('|' + modName);
     }
 
+    // Suppress the default mousedown action on a badge so clicking it does NOT
+    // blur (and reset the caret of) the SEO field the admin is editing. This is
+    // what lets the insert land in the field that currently has focus — Meta
+    // description, Meta keywords, etc. — instead of falling back to the first
+    // field after focus is lost.
+    function preserveFocusOnMousedown(el) {
+        el.addEventListener('mousedown', function (e) {
+            e.preventDefault();
+        });
+    }
+
     function bindBadgeClick(badge) {
+        preserveFocusOnMousedown(badge);
         badge.addEventListener('click', function (e) {
             // Stop CS-Cart admin panel jQuery from swallowing the event.
             e.preventDefault();
             e.stopPropagation();
+            // Resolve the focused field + its live caret before inserting.
+            resolveTargetField();
             insertAtCursor(badge.getAttribute('data-insert') || '');
         });
     }
 
     function bindModClick(mod) {
+        preserveFocusOnMousedown(mod);
         mod.addEventListener('click', function (e) {
             e.preventDefault();
             e.stopPropagation();

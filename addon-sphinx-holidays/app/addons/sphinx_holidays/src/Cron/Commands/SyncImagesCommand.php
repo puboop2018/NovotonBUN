@@ -104,32 +104,55 @@ class SyncImagesCommand extends AbstractSyncCommand
                 $decoded = json_decode($imagesJson, true);
                 $images = is_array($decoded) ? $decoded : [];
 
-                // If DB has no images, try fetching from the per-hotel detail endpoint.
-                // The static hotels-list endpoint (/api/v1/static/hotels) often omits
-                // the images array; the detail endpoint (/api/v1/static/hotels/{id}) always has it.
+                // Fallback 1: single image_url stored from list sync (cheap, no API call)
+                if (empty($images)) {
+                    $imageUrl = TypeCoerce::toString($hotel['image_url'] ?? '');
+                    if ($imageUrl !== '') {
+                        $images = [['url' => $imageUrl]];
+                    }
+                }
+
+                // Fallback 2: fetch from per-hotel detail endpoint.
+                // The list endpoint (/api/v1/static/hotels) often omits images[];
+                // the detail endpoint (/api/v1/static/hotels/{id}) always includes it.
+                // The detail endpoint may return {"data": {...}} or the object directly.
                 if (empty($images)) {
                     $api = Container::getApi();
                     $fresh = $api->getHotel($hotelId);
 
-                    if ($fresh !== null && !empty($fresh['images']) && is_array($fresh['images'])) {
-                        /** @var array<mixed> $images */
-                        $images = $fresh['images'];
-                        $freshJson = (string) json_encode($images);
-                        $firstUrl = '';
-                        foreach ($images as $img) {
-                            if (is_array($img)) {
-                                $u = TypeCoerce::toString($img['url'] ?? '');
-                            } elseif (is_string($img)) {
-                                $u = $img;
-                            } else {
-                                $u = '';
+                    if ($fresh === null) {
+                        $httpCode = $api->getHttpClient()->getLastHttpCode();
+                        $apiError = $api->getHttpClient()->getLastError();
+                        $this->output("[{$hotelId}] API detail fetch failed (HTTP {$httpCode}): {$apiError}");
+                    } else {
+                        // Unwrap {"data": {...}} envelope if present
+                        $hotelData = is_array($fresh['data'] ?? null) ? $fresh['data'] : $fresh;
+
+                        /** @var mixed $rawImages */
+                        $rawImages = $hotelData['images'] ?? null;
+                        if (!empty($rawImages) && is_array($rawImages)) {
+                            /** @var array<mixed> $images */
+                            $images = $rawImages;
+                            $freshJson = (string) json_encode($images);
+                            $firstUrl = '';
+                            foreach ($images as $img) {
+                                if (is_array($img)) {
+                                    $u = TypeCoerce::toString($img['url'] ?? '');
+                                } elseif (is_string($img)) {
+                                    $u = $img;
+                                } else {
+                                    $u = '';
+                                }
+                                if ($u !== '') {
+                                    $firstUrl = $u;
+                                    break;
+                                }
                             }
-                            if ($u !== '') {
-                                $firstUrl = $u;
-                                break;
-                            }
+                            Container::getHotelRepository()->updateImages($hotelId, $firstUrl, $freshJson);
+                        } else {
+                            $topKeys = implode(', ', array_keys($fresh));
+                            $this->output("[{$hotelId}] API returned no images (keys: {$topKeys})");
                         }
-                        Container::getHotelRepository()->updateImages($hotelId, $firstUrl, $freshJson);
                     }
                 }
 
@@ -233,7 +256,7 @@ class SyncImagesCommand extends AbstractSyncCommand
         $limitClause = $limit > 0 ? db_quote(' LIMIT ?i', $limit) : '';
 
         $rows = db_get_array(
-            "SELECT h.hotel_id, h.product_id, h.name, h.images_json
+            "SELECT h.hotel_id, h.product_id, h.name, h.images_json, h.image_url
              FROM ?:sphinx_hotels h
              {$join}
              WHERE h.sync_status = 'active'

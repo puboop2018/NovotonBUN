@@ -111,6 +111,17 @@ if (empty($providedKey) || !hash_equals($storedKey, $providedKey)) {
     exit;
 }
 
+// ── Ensure SEO template defaults are available in this (frontend) request ──
+// The init.php self-heal probe only fires in the admin area (AREA 'A'); the
+// cron runs in the storefront area (AREA 'C'), where addons.sphinx_holidays.seo_*
+// keys are absent from the Registry. Without them, product creation renders
+// blank Page title / Meta description / Meta keywords. Seed them here (in-request)
+// so add_products and other modes have the templates. Idempotent — only fills
+// keys that are missing or blank, never overwrites admin-saved values.
+if (function_exists('fn_sphinx_holidays_seed_seo_defaults')) {
+    fn_sphinx_holidays_seed_seo_defaults();
+}
+
 // ── Parse mode ──
 
 $mode = (string) preg_replace('/[^a-z0-9_]/', '', strtolower($_REQUEST['cron_mode'] ?? 'destinations'));
