@@ -124,10 +124,13 @@ try {
     $searchResponse = $api->searchHotels($searchParams);
 
     if (empty($searchResponse['search_id'])) {
+        $httpClient = $api->getHttpClient();
         fn_log_event('general', 'runtime', [
-            'message' => 'Sphinx searchHotels returned no search_id',
+            'message'     => 'Sphinx searchHotels returned no search_id',
+            'http_code'   => $httpClient->getLastHttpCode(),
+            'api_error'   => $httpClient->getLastError(),
+            'raw_response' => substr($httpClient->getLastResponseRaw() ?? '', 0, 500),
             'search_params' => $searchParams,
-            'api_response' => is_array($searchResponse) ? json_encode($searchResponse) : TypeCoerce::toString($searchResponse),
         ]);
         fn_set_notification('E', __('error'),
             __('sphinx_holidays.search_error', ['[default]' => 'Search failed. Please try again.']));
