@@ -54,19 +54,19 @@ class DiagnoseImagesCommand extends AbstractSyncCommand
             return ['success' => false, 'error' => 'hotel not found'];
         }
 
-        $hotelName  = TypeCoerce::toString($hotel['name'] ?? '');
-        $productId  = TypeCoerce::toInt($hotel['product_id'] ?? 0);
-        $imageUrl   = TypeCoerce::toString($hotel['image_url'] ?? '');
+        $hotelName = TypeCoerce::toString($hotel['name'] ?? '');
+        $productId = TypeCoerce::toInt($hotel['product_id'] ?? 0);
+        $imageUrl = TypeCoerce::toString($hotel['image_url'] ?? '');
         $imagesJson = TypeCoerce::toString($hotel['images_json'] ?? '');
 
         $this->output("DB: name={$hotelName}, product_id={$productId}");
-        $this->output("DB: image_url=" . ($imageUrl ?: '(empty)'));
-        $this->output("DB: images_json=" . (strlen($imagesJson) > 200 ? substr($imagesJson, 0, 200) . '…' : ($imagesJson ?: '(empty)')));
+        $this->output('DB: image_url=' . ($imageUrl ?: '(empty)'));
+        $this->output('DB: images_json=' . (strlen($imagesJson) > 200 ? substr($imagesJson, 0, 200) . '…' : ($imagesJson ?: '(empty)')));
 
         // ── 2. Parse DB images ────────────────────────────────────────
         /** @var mixed $decoded */
         $decoded = json_decode($imagesJson, true);
-        $images  = is_array($decoded) ? $decoded : [];
+        $images = is_array($decoded) ? $decoded : [];
         $this->output('DB images count: ' . count($images));
 
         // ── 3. API fallback ───────────────────────────────────────────
@@ -120,7 +120,7 @@ class DiagnoseImagesCommand extends AbstractSyncCommand
         $apiBaseUrl = ConfigProvider::getApiBaseUrl();
         $this->output('');
         $this->output("API base URL (for host matching): {$apiBaseUrl}");
-        $this->output("--- Probing " . count($images) . " image URL(s) ---");
+        $this->output('--- Probing ' . count($images) . ' image URL(s) ---');
 
         $passed = 0;
         $failed = 0;
@@ -141,7 +141,7 @@ class DiagnoseImagesCommand extends AbstractSyncCommand
 
             $isApiHosted = ImageHelper::matchesApiHost($url, $apiBaseUrl);
             $downloadUrl = $isApiHosted ? ImageHelper::withoutWatermark($url) : $url;
-            $headers     = $isApiHosted ? ImageHelper::getCurlAuthHeaders() : [];
+            $headers = $isApiHosted ? ImageHelper::getCurlAuthHeaders() : [];
 
             $this->output('');
             $this->output("[img #{$i}] URL: " . substr($url, 0, 120));
@@ -170,20 +170,20 @@ class DiagnoseImagesCommand extends AbstractSyncCommand
             $ch = curl_init($downloadUrl);
             // array_values() ensures integer keys, satisfying curl's CURLOPT_HTTPHEADER type
             curl_setopt_array($ch, [
-                CURLOPT_FILE           => $fp,
-                CURLOPT_HTTPHEADER     => array_values($headers),
-                CURLOPT_USERAGENT      => 'CS-Cart/SphinxHolidays ImageSync/1.0',
-                CURLOPT_TIMEOUT        => 30,
+                CURLOPT_FILE => $fp,
+                CURLOPT_HTTPHEADER => array_values($headers),
+                CURLOPT_USERAGENT => 'CS-Cart/SphinxHolidays ImageSync/1.0',
+                CURLOPT_TIMEOUT => 30,
                 CURLOPT_CONNECTTIMEOUT => 10,
                 CURLOPT_FOLLOWLOCATION => true,
                 CURLOPT_SSL_VERIFYPEER => true,
-                CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1,
+                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
             ]);
 
             curl_exec($ch);
-            $httpCode    = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $httpCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
             $contentType = TypeCoerce::toString(curl_getinfo($ch, CURLINFO_CONTENT_TYPE));
-            $curlError   = curl_error($ch);
+            $curlError = curl_error($ch);
             curl_close($ch);
             fclose($fp);
 
@@ -220,10 +220,10 @@ class DiagnoseImagesCommand extends AbstractSyncCommand
         $this->output("=== Summary: {$passed} OK, {$failed} failed ===");
 
         return [
-            'success'      => true,
+            'success' => true,
             'images_found' => count($images),
-            'passed'       => $passed,
-            'failed'       => $failed,
+            'passed' => $passed,
+            'failed' => $failed,
         ];
     }
 }
