@@ -9,23 +9,40 @@ use Tygh\Addons\SphinxHolidays\Services\Container;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 /**
- * Cron command: diagnose hotel search for a specific hotel.
+ * Cron command: diagnose hotel search.
  *
- * Makes a real search API call and reports the full request/response so
- * you can see exactly why searches fail or return no results. Safe to
- * run at any time — it does NOT create bookings or modify any data.
+ * Two modes — both make REAL search API calls and report the full
+ * request/response so you can see exactly why searches fail or return
+ * no results. Safe to run at any time: never creates bookings or
+ * modifies any data.
+ *
+ *  1. Single hotel  — &hotel_id=2249
+ *     Detailed step-by-step diagnosis (config, ping, auth, search, poll).
+ *
+ *  2. Scan a country — &country=MT
+ *     Walks the synced hotels for that country, searches each one, and
+ *     reports the FIRST hotel that actually returns availability. Use
+ *     this to find a working hotel to test with. Add &all=Y to list
+ *     every hotel scanned, &limit=N to cap how many to try (default 20).
  *
  * Usage:
  *   cron_mode=diagnose_search&hotel_id=2249
  *   cron_mode=diagnose_search&hotel_id=2249&check_in=2026-07-05&check_out=2026-07-12
- *   cron_mode=diagnose_search&hotel_id=2249&adults=2&rooms=1
+ *   cron_mode=diagnose_search&country=MT
+ *   cron_mode=diagnose_search&country=MT&limit=30&all=Y
  */
 class DiagnoseSearchCommand extends AbstractSyncCommand
 {
+    /** How long to poll a single search for results before giving up (seconds). */
+    private const int POLL_TIMEOUT = 20;
+
+    /** Delay between poll attempts (seconds). */
+    private const int POLL_INTERVAL = 2;
+
     #[\Override]
     public static function getDescription(): string
     {
-        return 'Diagnose hotel search API call for a single hotel — shows raw request/response';
+        return 'Diagnose hotel search — &hotel_id=X for one hotel, or &country=MT to find a hotel with availability';
     }
 
     /**
@@ -36,10 +53,7 @@ class DiagnoseSearchCommand extends AbstractSyncCommand
     public function execute(array $params = []): array
     {
         $hotelId = TypeCoerce::toString($params['hotel_id'] ?? '');
-        if ($hotelId === '') {
-            $this->output('ERROR: &hotel_id=<id> is required. Example: &cron_mode=diagnose_search&hotel_id=2249');
-            return ['success' => false, 'error' => 'hotel_id required'];
-        }
+        $country = strtoupper(TypeCoerce::toString($params['country'] ?? ''));
 
         $checkIn = TypeCoerce::toString($params['check_in'] ?? '');
         $checkOut = TypeCoerce::toString($params['check_out'] ?? '');
@@ -53,13 +67,7 @@ class DiagnoseSearchCommand extends AbstractSyncCommand
             $checkOut = date('Y-m-d', (int) strtotime($checkIn . ' +7 days'));
         }
 
-        $this->output("=== Diagnosing search for hotel [{$hotelId}] ===");
-        $this->output("Dates: {$checkIn} → {$checkOut} | adults={$adults}, rooms={$rooms}");
-
-        // ── 1. Configuration ──────────────────────────────────────────
-        $this->output('');
-        $this->output('--- 1. Configuration ---');
-
+        // ── Configuration (shared by both modes) ──────────────────────
         $apiBaseUrl = ConfigProvider::getApiBaseUrl();
         $apiKey = ConfigProvider::getApiKey();
         $currency = ConfigProvider::getDefaultCurrency();
@@ -67,6 +75,7 @@ class DiagnoseSearchCommand extends AbstractSyncCommand
             ? substr($apiKey, 0, 8) . '…' . substr($apiKey, -4)
             : '(not set)';
 
+        $this->output('--- Configuration ---');
         $this->output("  api_base_url = {$apiBaseUrl}");
         $this->output("  api_key      = {$maskedKey}");
         $this->output("  currency     = {$currency}");
@@ -80,12 +89,158 @@ class DiagnoseSearchCommand extends AbstractSyncCommand
             return ['success' => false, 'error' => 'api_key not configured'];
         }
 
+        if ($hotelId === '' && $country === '') {
+            $this->output('');
+            $this->output('ERROR: provide &hotel_id=<id> (single hotel) or &country=MT (scan for availability).');
+            return ['success' => false, 'error' => 'hotel_id or country required'];
+        }
+
+        if ($hotelId === '') {
+            return $this->scanCountry($country, $checkIn, $checkOut, $adults, $rooms, $currency, $params);
+        }
+
+        return $this->diagnoseSingle($hotelId, $checkIn, $checkOut, $adults, $rooms, $currency);
+    }
+
+    /**
+     * Scan a country's synced hotels and report the first one with availability.
+     *
+     * @param array<string, mixed> $params
+     * @return array<string, mixed>
+     */
+    private function scanCountry(
+        string $country,
+        string $checkIn,
+        string $checkOut,
+        int $adults,
+        int $rooms,
+        string $currency,
+        array $params,
+    ): array {
+        $limit = max(1, TypeCoerce::toInt($params['limit'] ?? 20));
+        $listAll = TypeCoerce::toString($params['all'] ?? '') === 'Y';
+
+        $this->output('');
+        $this->output("=== Scanning country [{$country}] for a hotel with availability ===");
+        $this->output("Dates: {$checkIn} → {$checkOut} | adults={$adults}, rooms={$rooms} | trying up to {$limit} hotels");
+
+        $repo = Container::getHotelRepository();
+        $page = $repo->getFiltered($country, 0, 0, 'synced', '', 1, $limit);
+        $hotels = $page['items'];
+
+        if ($hotels === []) {
+            // Fall back to any sync_status if none are explicitly "synced".
+            $page = $repo->getFiltered($country, 0, 0, '', '', 1, $limit);
+            $hotels = $page['items'];
+        }
+
+        $this->output('  Hotels available in DB for this country: ' . $page['total']);
+
+        if ($hotels === []) {
+            $this->output('');
+            $this->output("=== DIAGNOSIS: no hotels synced for country '{$country}'. Run cron_mode=hotels&country={$country} first. ===");
+            return ['success' => false, 'error' => 'no hotels for country', 'country' => $country];
+        }
+
         $api = Container::getApi();
         $client = $api->getHttpClient();
 
-        // ── 2. Connectivity check ─────────────────────────────────────
+        $tried = 0;
+        $found = [];
+        $occupancy = $this->buildOccupancy($adults, $rooms);
+
+        foreach ($hotels as $hotel) {
+            $hid = TypeCoerce::toString($hotel['hotel_id'] ?? '');
+            $name = TypeCoerce::toString($hotel['name'] ?? '(unnamed)');
+            if ($hid === '') {
+                continue;
+            }
+            $tried++;
+
+            $searchParams = [
+                'check_in' => $checkIn,
+                'check_out' => $checkOut,
+                'occupancy' => $occupancy,
+                'currency' => $currency,
+                'hotel_id' => $hid,
+            ];
+
+            $resp = $api->searchHotels($searchParams);
+            $http = $client->getLastHttpCode();
+
+            if ($resp === null) {
+                $this->output(sprintf('  [%s] %s — search FAILED (HTTP %d: %s)', $hid, $name, $http, $client->getLastError()));
+                continue;
+            }
+
+            $searchId = TypeCoerce::toString($resp['search_id'] ?? '');
+            if ($searchId === '') {
+                $this->output(sprintf('  [%s] %s — no search_id (HTTP %d)', $hid, $name, $http));
+                continue;
+            }
+
+            $poll = $this->pollForResults($searchId, self::POLL_TIMEOUT);
+            $count = count($poll['results']);
+
+            if ($count > 0) {
+                $first = $poll['results'][0];
+                $price = TypeCoerce::toString($first['price'] ?? '(n/a)');
+                $this->output(sprintf(
+                    '  [%s] %s — ✓ AVAILABLE: %d offer(s), from %s %s (search_id=%s)',
+                    $hid,
+                    $name,
+                    $count,
+                    $price,
+                    $currency,
+                    $searchId,
+                ));
+                $found[] = ['hotel_id' => $hid, 'name' => $name, 'offers' => $count, 'search_id' => $searchId];
+                if (!$listAll) {
+                    $this->output('');
+                    $this->output('=== FOUND a hotel with availability — stopping (add &all=Y to keep scanning). ===');
+                    $this->output("    Test the storefront search with: &hotel_id={$hid}");
+                    $this->output("    Or run a detailed diagnosis: &cron_mode=diagnose_search&hotel_id={$hid}");
+                    break;
+                }
+            } else {
+                $this->output(sprintf('  [%s] %s — no availability (status=%s)', $hid, $name, $poll['status']));
+            }
+        }
+
         $this->output('');
-        $this->output('--- 2. Connectivity (GET /api/v1/ping) ---');
+        $this->output("=== Scan complete: tried {$tried} hotel(s), found " . count($found) . ' with availability. ===');
+
+        return [
+            'success' => $found !== [],
+            'country' => $country,
+            'tried' => $tried,
+            'found' => $found,
+        ];
+    }
+
+    /**
+     * Detailed step-by-step diagnosis of a single hotel search.
+     *
+     * @return array<string, mixed>
+     */
+    private function diagnoseSingle(
+        string $hotelId,
+        string $checkIn,
+        string $checkOut,
+        int $adults,
+        int $rooms,
+        string $currency,
+    ): array {
+        $this->output('');
+        $this->output("=== Diagnosing search for hotel [{$hotelId}] ===");
+        $this->output("Dates: {$checkIn} → {$checkOut} | adults={$adults}, rooms={$rooms}");
+
+        $api = Container::getApi();
+        $client = $api->getHttpClient();
+
+        // ── Connectivity check ────────────────────────────────────────
+        $this->output('');
+        $this->output('--- 1. Connectivity (GET /api/v1/ping) ---');
 
         $ping = $api->ping();
         if ($ping === null) {
@@ -95,9 +250,9 @@ class DiagnoseSearchCommand extends AbstractSyncCommand
             $this->output('  OK — keys: ' . implode(', ', array_keys($ping)));
         }
 
-        // ── 3. Auth check ─────────────────────────────────────────────
+        // ── Auth check ────────────────────────────────────────────────
         $this->output('');
-        $this->output('--- 3. Auth check (GET /api/v1/me) ---');
+        $this->output('--- 2. Auth check (GET /api/v1/me) ---');
 
         $me = $api->me();
         if ($me === null) {
@@ -111,19 +266,14 @@ class DiagnoseSearchCommand extends AbstractSyncCommand
             $this->output('  OK — keys: ' . implode(', ', array_keys($me)));
         }
 
-        // ── 4. Search request ─────────────────────────────────────────
+        // ── Search request ────────────────────────────────────────────
         $this->output('');
-        $this->output('--- 4. Search request (POST /api/v1/hotels/search) ---');
-
-        $occupancy = [];
-        for ($r = 0; $r < $rooms; $r++) {
-            $occupancy[] = ['adults' => $adults, 'children_ages' => []];
-        }
+        $this->output('--- 3. Search request (POST /api/v1/hotels/search) ---');
 
         $searchParams = [
             'check_in' => $checkIn,
             'check_out' => $checkOut,
-            'occupancy' => $occupancy,
+            'occupancy' => $this->buildOccupancy($adults, $rooms),
             'currency' => $currency,
             'hotel_id' => $hotelId,
         ];
@@ -138,9 +288,9 @@ class DiagnoseSearchCommand extends AbstractSyncCommand
             400,
         ));
 
-        // ── 5. Search API response ────────────────────────────────────
+        // ── Search API response ───────────────────────────────────────
         $this->output('');
-        $this->output('--- 5. Search API response ---');
+        $this->output('--- 4. Search API response ---');
 
         $searchResponse = $api->searchHotels($searchParams);
         $httpCode = $client->getLastHttpCode();
@@ -180,44 +330,39 @@ class DiagnoseSearchCommand extends AbstractSyncCommand
             return ['success' => false, 'error' => 'no search_id', 'response' => $topKeys];
         }
 
-        // ── 6. Poll for results (single poll) ─────────────────────────
+        // ── Poll for results (loop until completed or timeout) ─────────
         $this->output('');
-        $this->output("--- 6. Polling results (GET /api/v1/hotels/results?search_id={$searchId}) ---");
+        $this->output("--- 5. Polling results (GET /api/v1/hotels/results?search_id={$searchId}) ---");
 
-        $pollResponse = $api->getHotelResults($searchId);
-        if ($pollResponse === null) {
-            $this->output('  POLL FAIL — HTTP ' . $client->getLastHttpCode() . ': ' . $client->getLastError());
-            $this->output('  Raw: ' . $this->trunc($client->getLastResponseRaw() ?? '', 300));
+        $poll = $this->pollForResults($searchId, self::POLL_TIMEOUT, true);
+        $results = $poll['results'];
+        $count = count($results);
+
+        $this->output('  Final status: ' . $poll['status'] . " after {$poll['polls']} poll(s)");
+        $this->output('  Results count: ' . $count);
+
+        if ($count > 0) {
+            $first = $results[0];
+            $this->output('  First result keys: ' . implode(', ', array_keys($first)));
+            $this->output('  First result name : ' . TypeCoerce::toString($first['name'] ?? $first['hotel_name'] ?? '(none)'));
+            $this->output('  First result price: ' . TypeCoerce::toString($first['price'] ?? '(none)') . ' ' . TypeCoerce::toString($first['currency'] ?? ''));
+            $this->output('');
+            $this->output("=== DIAGNOSIS: search works — hotel [{$hotelId}] has {$count} offer(s). ===");
+        } elseif ($poll['status'] === 'pending') {
+            $this->output('');
+            $this->output('=== DIAGNOSIS: still pending after ' . self::POLL_TIMEOUT . 's. The API is slow or stuck; the storefront would keep polling. ===');
         } else {
-            $pollStatus = TypeCoerce::toString($pollResponse['status'] ?? '');
-            $this->output('  Poll status: ' . $pollStatus);
-            $this->output('  Poll keys: ' . implode(', ', array_keys($pollResponse)));
-
-            /** @var mixed $rawResults */
-            $rawResults = $pollResponse['results'] ?? null;
-            $results = is_array($rawResults) ? $rawResults : [];
-            $this->output('  Results count: ' . count($results));
-
-            if (!empty($results)) {
-                $first = is_array($results[0]) ? $results[0] : [];
-                $this->output('  First result keys: ' . implode(', ', array_keys($first)));
-                $this->output('  First result name : ' . TypeCoerce::toString($first['name'] ?? $first['hotel_name'] ?? '(none)'));
-                $this->output('  First result price: ' . TypeCoerce::toString($first['price'] ?? '(none)') . ' ' . TypeCoerce::toString($first['currency'] ?? ''));
-            } elseif ($pollStatus === 'pending') {
-                $this->output('  Results not ready yet (status=pending). In the browser, JS would continue polling every 2s.');
-            } else {
-                $this->output('  No results. Hotel may have no availability for these dates/occupancy.');
-            }
+            $this->output('');
+            $this->output('=== DIAGNOSIS: search works but hotel has NO availability for these dates/occupancy. ===');
+            $this->output('    Try other dates, or use &country=<code> to find a hotel that does have availability.');
         }
 
-        // ── 7. Rate limit state ───────────────────────────────────────
+        // ── Rate limit state ──────────────────────────────────────────
         $rlState = $client->getRateLimitState();
-        // getRateLimitState() returns array<string, mixed>; values are int|null at runtime.
-        // TypeCoerce::toString handles mixed safely without a direct (string) cast.
         $rlLimit = $rlState['limit'];
         if ($rlLimit !== null) {
             $this->output('');
-            $this->output('--- 7. Rate limit ---');
+            $this->output('--- 6. Rate limit ---');
             $this->output(
                 '  limit=' . TypeCoerce::toString($rlLimit)
                 . ', remaining=' . ($rlState['remaining'] !== null ? TypeCoerce::toString($rlState['remaining']) : '?')
@@ -225,16 +370,77 @@ class DiagnoseSearchCommand extends AbstractSyncCommand
             );
         }
 
-        $this->output('');
-        $this->output("=== Done: search_id={$searchId}, status={$status} ===");
-
         return [
             'success' => true,
             'hotel_id' => $hotelId,
             'search_id' => $searchId,
-            'status' => $status,
+            'status' => $poll['status'],
+            'results' => $count,
             'http_code' => $httpCode,
         ];
+    }
+
+    /**
+     * Build the occupancy array for N identical rooms.
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function buildOccupancy(int $adults, int $rooms): array
+    {
+        $occupancy = [];
+        for ($r = 0; $r < $rooms; $r++) {
+            $occupancy[] = ['adults' => $adults, 'children_ages' => []];
+        }
+        return $occupancy;
+    }
+
+    /**
+     * Poll a search until it completes or the timeout elapses, accumulating
+     * results across cursor pages exactly like the storefront JS does.
+     *
+     * @return array{status: string, results: list<array<string, mixed>>, polls: int}
+     */
+    private function pollForResults(string $searchId, int $timeoutSeconds, bool $verbose = false): array
+    {
+        $api = Container::getApi();
+        $deadline = time() + $timeoutSeconds;
+        $cursor = null;
+        $status = 'pending';
+        /** @var list<array<string, mixed>> $all */
+        $all = [];
+        $polls = 0;
+
+        while (time() < $deadline) {
+            $polls++;
+            $resp = $api->getHotelResults($searchId, $cursor);
+            if ($resp === null) {
+                $status = 'error';
+                break;
+            }
+
+            $status = TypeCoerce::toString($resp['status'] ?? 'completed');
+            $batch = TypeCoerce::toRowList($resp['results'] ?? []);
+            if ($batch !== []) {
+                $all = array_merge($all, $batch);
+            }
+
+            $next = isset($resp['next_cursor']) ? TypeCoerce::toString($resp['next_cursor']) : '';
+            $cursor = $next !== '' ? $next : null;
+
+            if ($verbose) {
+                $this->output(sprintf('    poll #%d: status=%s, +%d result(s) (total %d)', $polls, $status, count($batch), count($all)));
+            }
+
+            if ($status === 'completed' && $cursor === null) {
+                break;
+            }
+
+            if (time() < $deadline) {
+                sleep(self::POLL_INTERVAL);
+            }
+        }
+
+        return ['status' => $status, 'results' => $all, 'polls' => $polls];
     }
 
     private function trunc(string $str, int $max): string
