@@ -74,6 +74,24 @@ class DiagnoseSearchCommand extends AbstractSyncCommand
             return ['success' => false, 'error' => 'hotel_id or hotel_name required'];
         }
 
+        // ── Identify the hotel in the local DB ─────────────────────────
+        $hotel = Container::getHotelRepository()->getById($hotelId);
+        if ($hotel === null) {
+            $this->output('');
+            $this->output("WARNING: hotel [{$hotelId}] is NOT in the local sphinx_hotels table.");
+            $this->output('  The search API call below will still run, but this hotel was never synced locally.');
+        } else {
+            $this->output('');
+            $this->output('--- Hotel record (local DB) ---');
+            $this->output('  name             = ' . TypeCoerce::toString($hotel['name'] ?? ''));
+            $this->output('  country_code     = ' . TypeCoerce::toString($hotel['country_code'] ?? ''));
+            $this->output('  destination_name = ' . TypeCoerce::toString($hotel['destination_name'] ?? ''));
+            $this->output('  classification   = ' . TypeCoerce::toString($hotel['classification'] ?? '') . '*');
+            $this->output('  property_type    = ' . TypeCoerce::toString($hotel['property_type'] ?? ''));
+            $this->output('  product_id       = ' . TypeCoerce::toString($hotel['product_id'] ?? '0'));
+            $this->output('  sync_status      = ' . TypeCoerce::toString($hotel['sync_status'] ?? ''));
+        }
+
         // ── Configuration ──────────────────────────────────────────────
         $this->output('');
         $this->output('--- 1. Configuration ---');
