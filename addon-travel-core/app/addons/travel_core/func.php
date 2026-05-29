@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 /***************************************************************************
  *                                                                          *
@@ -8,7 +9,9 @@ declare(strict_types=1);
  *                                                                          *
  ***************************************************************************/
 
-if (!defined('BOOTSTRAP')) { exit('Access denied'); }
+if (!defined('BOOTSTRAP')) {
+    exit('Access denied');
+}
 
 /**
  * Addon uninstall function.
@@ -21,25 +24,28 @@ function fn_travel_core_uninstall(): bool
     $active_providers = [];
     $provider_addons = ['novoton_holidays', 'sphinx_holidays'];
     foreach ($provider_addons as $addon) {
-        $status = db_get_field("SELECT status FROM ?:addons WHERE addon = ?s", $addon);
+        $status = db_get_field('SELECT status FROM ?:addons WHERE addon = ?s', $addon);
         if ($status === 'A') {
             $active_providers[] = $addon;
         }
     }
 
     if (!empty($active_providers)) {
-        fn_set_notification('E', __('error'),
+        fn_set_notification(
+            'E',
+            __('error'),
             'Cannot disable travel_core: the following addons depend on it: '
             . implode(', ', $active_providers)
-            . '. Please disable them first.'
+            . '. Please disable them first.',
         );
         return false;
     }
 
     // Drop shared tables (order matters: aliases reference feature_map)
-    db_query("DROP TABLE IF EXISTS ?:travel_api_alias");
-    db_query("DROP TABLE IF EXISTS ?:travel_bookings");
-    db_query("DROP TABLE IF EXISTS ?:travel_feature_map");
+    db_query('DROP TABLE IF EXISTS ?:travel_api_alias');
+    db_query('DROP TABLE IF EXISTS ?:travel_unmapped_values');
+    db_query('DROP TABLE IF EXISTS ?:travel_bookings');
+    db_query('DROP TABLE IF EXISTS ?:travel_feature_map');
 
     // Remove language variables
     db_query("DELETE FROM ?:language_values WHERE name LIKE 'travel_core.%'");
@@ -64,7 +70,10 @@ function fn_travel_core_post_install(): bool
  */
 function fn_travel_core_ensure_schema(): void
 {
-    $columns = db_get_fields("SHOW COLUMNS FROM ?:travel_feature_map");
+    $columns = db_get_fields('SHOW COLUMNS FROM ?:travel_feature_map');
+    if (!is_array($columns)) {
+        return;
+    }
     $columnSet = array_flip($columns);
 
     if (!isset($columnSet['variant_source'])) {
@@ -79,7 +88,7 @@ function fn_travel_core_ensure_schema(): void
 
     // Ensure travel_unmapped_values table exists
     db_query(
-        "CREATE TABLE IF NOT EXISTS `?:travel_unmapped_values` (
+        'CREATE TABLE IF NOT EXISTS `?:travel_unmapped_values` (
             `unmapped_id`    INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
             `api_source`     VARCHAR(50)  NOT NULL,
             `feature_type`   VARCHAR(50)  NOT NULL,
@@ -89,7 +98,7 @@ function fn_travel_core_ensure_schema(): void
             `first_seen_at`  TIMESTAMP    DEFAULT CURRENT_TIMESTAMP,
             `last_seen_at`   TIMESTAMP    DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             UNIQUE KEY `uq_source_type_value` (`api_source`, `feature_type`, `api_value`)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4',
     );
 }
 
@@ -102,11 +111,11 @@ function fn_travel_core_ensure_schema(): void
 function fn_travel_core_get_feature_variants(): array
 {
     $features = db_get_array(
-        "SELECT f.feature_id, f.feature_type, fd.description
+        'SELECT f.feature_id, f.feature_type, fd.description
          FROM ?:product_features f
          LEFT JOIN ?:product_features_descriptions fd ON f.feature_id = fd.feature_id AND fd.lang_code = ?s
-         ORDER BY fd.description",
-        DESCR_SL
+         ORDER BY fd.description',
+        DESCR_SL,
     );
 
     $result = [0 => '-- ' . __('none') . ' --'];
@@ -127,17 +136,50 @@ function fn_travel_core_get_feature_variants(): array
 }
 
 // CS-Cart auto-discovers these by naming convention for <type>selectbox</type> settings
-function fn_settings_variants_addons_travel_core_feature_id_property_rating(): array { return fn_travel_core_get_feature_variants(); }
-function fn_settings_variants_addons_travel_core_feature_id_meals(): array { return fn_travel_core_get_feature_variants(); }
-function fn_settings_variants_addons_travel_core_feature_id_room_type(): array { return fn_travel_core_get_feature_variants(); }
-function fn_settings_variants_addons_travel_core_feature_id_property_type(): array { return fn_travel_core_get_feature_variants(); }
-function fn_settings_variants_addons_travel_core_feature_id_location(): array { return fn_travel_core_get_feature_variants(); }
-function fn_settings_variants_addons_travel_core_feature_id_region(): array { return fn_travel_core_get_feature_variants(); }
-function fn_settings_variants_addons_travel_core_feature_id_city(): array { return fn_travel_core_get_feature_variants(); }
-function fn_settings_variants_addons_travel_core_feature_id_travel_group(): array { return fn_travel_core_get_feature_variants(); }
-function fn_settings_variants_addons_travel_core_feature_id_hotel_facility(): array { return fn_travel_core_get_feature_variants(); }
-function fn_settings_variants_addons_travel_core_feature_id_room_facility(): array { return fn_travel_core_get_feature_variants(); }
-function fn_settings_variants_addons_travel_core_feature_id_beach_access(): array { return fn_travel_core_get_feature_variants(); }
+function fn_settings_variants_addons_travel_core_feature_id_property_rating(): array
+{
+    return fn_travel_core_get_feature_variants();
+}
+function fn_settings_variants_addons_travel_core_feature_id_meals(): array
+{
+    return fn_travel_core_get_feature_variants();
+}
+function fn_settings_variants_addons_travel_core_feature_id_room_type(): array
+{
+    return fn_travel_core_get_feature_variants();
+}
+function fn_settings_variants_addons_travel_core_feature_id_property_type(): array
+{
+    return fn_travel_core_get_feature_variants();
+}
+function fn_settings_variants_addons_travel_core_feature_id_location(): array
+{
+    return fn_travel_core_get_feature_variants();
+}
+function fn_settings_variants_addons_travel_core_feature_id_region(): array
+{
+    return fn_travel_core_get_feature_variants();
+}
+function fn_settings_variants_addons_travel_core_feature_id_city(): array
+{
+    return fn_travel_core_get_feature_variants();
+}
+function fn_settings_variants_addons_travel_core_feature_id_travel_group(): array
+{
+    return fn_travel_core_get_feature_variants();
+}
+function fn_settings_variants_addons_travel_core_feature_id_hotel_facility(): array
+{
+    return fn_travel_core_get_feature_variants();
+}
+function fn_settings_variants_addons_travel_core_feature_id_room_facility(): array
+{
+    return fn_travel_core_get_feature_variants();
+}
+function fn_settings_variants_addons_travel_core_feature_id_beach_access(): array
+{
+    return fn_travel_core_get_feature_variants();
+}
 
 /**
  * Variants function for the default_currency addon setting.
@@ -357,9 +399,12 @@ function fn_travel_core_seed_feature_map(): void
 
     foreach ($seeds as [$featureType, $canonicalCode, $nameEn, $nameRo]) {
         db_query(
-            "INSERT IGNORE INTO ?:travel_feature_map (feature_type, canonical_code, display_name_en, display_name_ro)
-             VALUES (?s, ?s, ?s, ?s)",
-            $featureType, $canonicalCode, $nameEn, $nameRo
+            'INSERT IGNORE INTO ?:travel_feature_map (feature_type, canonical_code, display_name_en, display_name_ro)
+             VALUES (?s, ?s, ?s, ?s)',
+            $featureType,
+            $canonicalCode,
+            $nameEn,
+            $nameRo,
         );
     }
 }
