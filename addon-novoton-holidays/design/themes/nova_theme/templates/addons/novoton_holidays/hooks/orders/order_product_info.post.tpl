@@ -1,11 +1,8 @@
 {* Novoton Holidays - Admin Order Details - Simple text display *}
 
 {if $oi.extra.novoton_booking}
-{if $oi.extra.rooms_data && is_string($oi.extra.rooms_data)}
-    {$_nvt_rooms = $oi.extra.rooms_data|json_decode:true}
-{else}
-    {$_nvt_rooms = $oi.extra.rooms_data|default:[]}
-{/if}
+{* rooms_data is pre-decoded to an array in fn_novoton_holidays_get_order_info *}
+{$_nvt_rooms = $oi.extra.rooms_data|default:[]}
 <tr>
     <td colspan="7">
         <div style="margin:10px 0;font-size:13px;line-height:1.8;">
@@ -37,9 +34,9 @@
                 <strong>Guests:</strong> {$oi.extra.adults|default:0} adults{if $oi.extra.children}, {$oi.extra.children} children{if $oi.extra.children_ages} ({$oi.extra.children_ages}){/if}{/if}<br>
             {/if}
             
-            {* Guest Names *}
-            {if $oi.extra.guests_data}
-                {$guests_parsed = $oi.extra.guests_data|json_decode:true}
+            {* Guest Names — guests_data is pre-decoded to an array in fn_novoton_holidays_get_order_info *}
+            {if $oi.extra.guests_data && is_array($oi.extra.guests_data)}
+                {$guests_parsed = $oi.extra.guests_data}
                 {if $guests_parsed}
                     {$adult_list = []}
                     {$child_list = []}
@@ -63,27 +60,18 @@
                 <strong>Holder:</strong> {$oi.extra.holder_name|escape:'html'}<br>
             {/if}
             
-            {* Payment Terms with Amounts - use raw XML for consistent date format *}
-            {$payment_terms_raw = $oi.extra.terms_of_payment_raw|default:$oi.extra.terms_of_payment|default:''}
-            {if $payment_terms_raw}
-                {$booking_price = $oi.extra.price|default:$oi.price|default:0}
-                {$currency = $oi.extra.currency|default:$smarty.const.CART_PRIMARY_CURRENCY}
-                {$_payment_terms_formatted = fn_novoton_holidays_format_payment_terms_with_amounts($payment_terms_raw, $booking_price, $currency)}
-                {if $_payment_terms_formatted}
-                    <strong>{__("novoton_holidays.terms_of_payment")|default:"Termeni de plată"}:</strong><br>
-                    &nbsp;&nbsp;{$_payment_terms_formatted|escape:'html'|nl2br nofilter}<br>
-                {/if}
+            {* Payment Terms — pre-formatted in fn_novoton_holidays_get_order_info *}
+            {$_payment_terms_formatted = $oi.extra.terms_of_payment_with_amounts|default:$oi.extra.terms_of_payment_formatted|default:''}
+            {if $_payment_terms_formatted}
+                <strong>{__("novoton_holidays.terms_of_payment")|default:"Termeni de plată"}:</strong><br>
+                &nbsp;&nbsp;{$_payment_terms_formatted|escape:'html'|nl2br nofilter}<br>
             {/if}
 
-            {* Cancellation Terms - use raw XML for consistent date format *}
-            {$cancel_terms_raw = $oi.extra.terms_of_cancellation_raw|default:$oi.extra.terms_of_cancellation|default:''}
-            {if $cancel_terms_raw}
-                {$check_in = $oi.extra.check_in|default:''}
-                {$_cancel_terms_formatted = fn_novoton_holidays_format_cancellation_terms($cancel_terms_raw, $check_in)}
-                {if $_cancel_terms_formatted}
-                    <strong>{__("novoton_holidays.cancellation_terms")|default:"Condiții de anulare"}:</strong><br>
-                    &nbsp;&nbsp;{$_cancel_terms_formatted|escape:'html'|nl2br nofilter}<br>
-                {/if}
+            {* Cancellation Terms — pre-formatted in fn_novoton_holidays_get_order_info *}
+            {$_cancel_terms_formatted = $oi.extra.terms_of_cancellation_formatted|default:''}
+            {if $_cancel_terms_formatted}
+                <strong>{__("novoton_holidays.cancellation_terms")|default:"Condiții de anulare"}:</strong><br>
+                &nbsp;&nbsp;{$_cancel_terms_formatted|escape:'html'|nl2br nofilter}<br>
             {/if}
             
             {if $oi.extra.novoton_reservation_id}
