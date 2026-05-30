@@ -267,6 +267,50 @@
         {/if}
     </div>
 
+    {* ── Diagnostic Commands ── *}
+    <h4>Diagnostic commands <small class="muted">(run on demand, not scheduled)</small></h4>
+    <div class="well">
+        <table class="table table-condensed table-hover" style="table-layout:fixed; width:100%;">
+            <colgroup>
+                <col style="width:160px;" />
+                <col style="width:280px;" />
+                <col />
+                <col style="width:40px;" />
+            </colgroup>
+            <thead>
+                <tr>
+                    <th>Mode</th>
+                    <th>Description</th>
+                    <th>Example URL</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>diagnose_search</strong></td>
+                    <td>Check API connectivity, auth, search request/response and poll results for a specific hotel. Add <code>&amp;hotel_name=kazbek</code> or <code>&amp;hotel_id=X</code>.</td>
+                    <td style="word-break:break-all; font-size:11px;"><code>{$cron_urls.diagnose_search}&amp;hotel_id=89812</code></td>
+                    <td><a href="{$cron_urls.diagnose_search}&amp;hotel_id=89812" target="_blank" class="btn btn-mini">Run</a></td>
+                </tr>
+                <tr>
+                    <td><strong>diagnose_images</strong></td>
+                    <td>Show image URLs for a hotel, test HTTP reachability, and optionally attach them. Add <code>&amp;hotel_id=X</code> or <code>&amp;attach=Y</code>.</td>
+                    <td style="word-break:break-all; font-size:11px;"><code>{$cron_urls.diagnose_images}&amp;hotel_id=89812</code></td>
+                    <td><a href="{$cron_urls.diagnose_images}&amp;hotel_id=89812" target="_blank" class="btn btn-mini">Run</a></td>
+                </tr>
+                <tr>
+                    <td><strong>diagnose_seo</strong></td>
+                    <td>Audit SEO field population — registry state, placeholder values, rendered output vs DB. Add <code>&amp;hotel_id=X</code> or <code>&amp;apply=Y</code> to write.</td>
+                    <td style="word-break:break-all; font-size:11px;"><code>{$cron_urls.diagnose_seo}&amp;hotel_id=89812</code></td>
+                    <td><a href="{$cron_urls.diagnose_seo}&amp;hotel_id=89812" target="_blank" class="btn btn-mini">Run</a></td>
+                </tr>
+            </tbody>
+        </table>
+        <p class="muted" style="font-size:11px; margin-top:4px;">
+            Replace <code>89812</code> with any hotel ID. Use <code>&amp;hotel_name=kazbek+dubrovnik</code> to look up by name instead.
+        </p>
+    </div>
+
     {* ── Recent Sync Logs ── *}
     {if $sync_logs}
         <h4>{__("sphinx_holidays.sync_log")}</h4>

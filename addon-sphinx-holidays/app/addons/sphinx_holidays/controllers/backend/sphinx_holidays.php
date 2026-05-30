@@ -502,6 +502,9 @@ if ($mode === 'manage') {
         'assign_boards'   => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=assign_boards",
         'update_products' => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=update_products",
         'sync_images'     => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=sync_images",
+        'diagnose_search' => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=diagnose_search",
+        'diagnose_images' => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=diagnose_images",
+        'diagnose_seo'    => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=diagnose_seo",
     ];
     $view->assign('cron_urls', $cron_urls);
     $view->assign('cron_key', $cron_key);
