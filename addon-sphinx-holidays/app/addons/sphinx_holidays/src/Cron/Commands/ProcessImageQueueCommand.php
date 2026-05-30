@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays\Cron\Commands;
 
+use Tygh\Addons\SphinxHolidays\Api\ImageHelper;
 use Tygh\Addons\TravelCore\Helpers\DebugLogger;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
-use Tygh\Addons\SphinxHolidays\Api\ImageHelper;
 
 /**
  * Cron command: process pending rows from the image sync queue.
@@ -79,7 +79,7 @@ class ProcessImageQueueCommand extends AbstractSyncCommand
                 break;
             }
 
-            $ids = array_map(static fn (array $r): int => (int) $r['id'], $rows);
+            $ids = array_map(static fn (array $r): int => TypeCoerce::toInt($r['id']), $rows);
 
             // Atomic claim: only rows still 'pending' get marked 'processing'.
             // If two cron instances run concurrently, each gets a distinct set.
@@ -92,7 +92,7 @@ class ProcessImageQueueCommand extends AbstractSyncCommand
             );
 
             foreach ($rows as $row) {
-                $rowId = (int) $row['id'];
+                $rowId = TypeCoerce::toInt($row['id']);
                 $productId = TypeCoerce::toInt($row['product_id'] ?? 0);
                 $imageUrl = TypeCoerce::toString($row['image_url'] ?? '');
                 $isMain = (bool) $row['is_main'];
