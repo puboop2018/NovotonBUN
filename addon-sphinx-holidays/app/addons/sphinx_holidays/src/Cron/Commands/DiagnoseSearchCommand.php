@@ -188,7 +188,7 @@ class DiagnoseSearchCommand extends AbstractSyncCommand
             'check_out' => $checkOut,
             'occupancy' => $occupancy,
             'currency' => $currency,
-            'hotel_id' => $hotelId,
+            'hotel_ids' => [$hotelId],
         ];
 
         $ignoreDomains = ConfigProvider::getIgnoreDomains();
