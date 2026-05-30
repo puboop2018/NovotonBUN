@@ -697,8 +697,24 @@ function fn_travel_core_run_long_task(string $progressLabel, callable $task, str
  */
 function fn_travel_core_attach_product_image(int $productId, string $tempFile, string $prefix, bool $isMain = false): bool
 {
-    if ($productId <= 0 || !file_exists($tempFile) || filesize($tempFile) < 1000) {
+    \Tygh\Addons\TravelCore\Helpers\DebugLogger::$lastImageAttachError = '';
+
+    if ($productId <= 0) {
+        \Tygh\Addons\TravelCore\Helpers\DebugLogger::$lastImageAttachError = 'attach: invalid product_id';
+        fn_log_event('general', 'runtime', ['message' => \Tygh\Addons\TravelCore\Helpers\DebugLogger::$lastImageAttachError]);
         if (file_exists($tempFile)) { unlink($tempFile); }
+        return false;
+    }
+    if (!file_exists($tempFile)) {
+        \Tygh\Addons\TravelCore\Helpers\DebugLogger::$lastImageAttachError = 'attach: temp file missing';
+        fn_log_event('general', 'runtime', ['message' => \Tygh\Addons\TravelCore\Helpers\DebugLogger::$lastImageAttachError]);
+        return false;
+    }
+    $tempSize = (int) filesize($tempFile);
+    if ($tempSize < 1000) {
+        \Tygh\Addons\TravelCore\Helpers\DebugLogger::$lastImageAttachError = "attach: file too small ({$tempSize} bytes)";
+        fn_log_event('general', 'runtime', ['message' => \Tygh\Addons\TravelCore\Helpers\DebugLogger::$lastImageAttachError]);
+        unlink($tempFile);
         return false;
     }
 
@@ -709,6 +725,8 @@ function fn_travel_core_attach_product_image(int $productId, string $tempFile, s
     }
 
     if (!$imageInfo) {
+        \Tygh\Addons\TravelCore\Helpers\DebugLogger::$lastImageAttachError = 'attach: getimagesize failed (not a valid image)';
+        fn_log_event('general', 'runtime', ['message' => \Tygh\Addons\TravelCore\Helpers\DebugLogger::$lastImageAttachError]);
         unlink($tempFile);
         return false;
     }
@@ -721,18 +739,13 @@ function fn_travel_core_attach_product_image(int $productId, string $tempFile, s
     ];
 
     $ext = $mimeToExt[$imageInfo['mime']] ?? 'jpg';
-    $filename = "{$prefix}_hotel_{$productId}_" . time() . '_' . mt_rand(100, 999) . ".{$ext}";
+    $filename = "{$prefix}_hotel_{$productId}_" . time() . '_' . random_int(100, 999) . ".{$ext}";
 
     $existingPairs = (int) db_get_field(
         "SELECT COUNT(*) FROM ?:images_links WHERE object_id = ?i AND object_type = 'product'",
         $productId
     );
 
-    // CS-Cart's fn_update_image_pairs() iterates the FIRST argument ($pairs_data),
-    // keyed by image id, to decide which pairs to create/update. New pairs use a
-    // placeholder key (0) with pair_id = 0; the matching $detailed[0] entry carries
-    // the uploaded file. Passing an empty $pairs_data creates nothing — which is the
-    // bug that made every image silently fail to attach.
     $imageId = 0;
 
     $pairsData = [
@@ -746,22 +759,27 @@ function fn_travel_core_attach_product_image(int $productId, string $tempFile, s
         ],
     ];
 
+    // NOTE: do NOT include 'tmp_name' or 'error' keys. CS-Cart's fn_update_image_pairs()
+    // treats those as HTTP-upload markers and calls is_uploaded_file(), which returns false
+    // for files we created in cron context, causing the image to be silently discarded.
     $detailed = [
         $imageId => [
-            'name'     => $filename,
-            'path'     => $tempFile,
-            'tmp_name' => $tempFile,
-            'size'     => filesize($tempFile),
-            'type'     => $imageInfo['mime'],
-            'error'    => 0,
+            'name' => $filename,
+            'path' => $tempFile,
+            'size' => filesize($tempFile),
+            'type' => $imageInfo['mime'],
         ],
     ];
 
-    // Signature: fn_update_image_pairs($pairs_data, $icons, $detailed, $object_id, $object_type).
-    // We supply only the detailed (full-size) image; CS-Cart derives the thumbnail.
     $pairIds = fn_update_image_pairs($pairsData, [], $detailed, $productId, 'product');
 
     unlink($tempFile);
 
-    return !empty($pairIds);
+    if (empty($pairIds)) {
+        \Tygh\Addons\TravelCore\Helpers\DebugLogger::$lastImageAttachError = "attach: fn_update_image_pairs returned no pair (object_id={$productId}, size={$tempSize}, mime={$imageInfo['mime']})";
+        fn_log_event('general', 'runtime', ['message' => \Tygh\Addons\TravelCore\Helpers\DebugLogger::$lastImageAttachError]);
+        return false;
+    }
+
+    return true;
 }

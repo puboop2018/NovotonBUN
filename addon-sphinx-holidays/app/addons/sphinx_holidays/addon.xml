@@ -529,6 +529,25 @@
                 UNIQUE KEY `uk_destination` (`destination_id`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
         </item>
+        <!-- Async image sync queue — populated by sync_images, consumed by process_image_queue -->
+        <item>
+            CREATE TABLE IF NOT EXISTS `?:sphinx_image_sync_queue` (
+                `id`            INT UNSIGNED NOT NULL AUTO_INCREMENT,
+                `hotel_id`      VARCHAR(32) NOT NULL DEFAULT '',
+                `product_id`    INT UNSIGNED NOT NULL DEFAULT 0,
+                `image_url`     TEXT NOT NULL,
+                `is_main`       TINYINT(1) NOT NULL DEFAULT 0,
+                `status`        ENUM('pending','processing','completed','failed') NOT NULL DEFAULT 'pending',
+                `error_message` TEXT DEFAULT NULL,
+                `attempts`      INT UNSIGNED NOT NULL DEFAULT 0,
+                `created_at`    INT UNSIGNED NOT NULL DEFAULT 0,
+                `updated_at`    INT UNSIGNED NOT NULL DEFAULT 0,
+                PRIMARY KEY (`id`),
+                UNIQUE KEY `uk_hotel_url` (`hotel_id`, `image_url`(255)),
+                KEY `idx_status` (`status`),
+                KEY `idx_hotel_product` (`hotel_id`, `product_id`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        </item>
     </queries>
 
     <language_variables>

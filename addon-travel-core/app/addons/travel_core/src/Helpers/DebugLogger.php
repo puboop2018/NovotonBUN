@@ -22,6 +22,9 @@ class DebugLogger
     /** @var callable|null Custom checker */
     private static $checker = null;
 
+    /** @var string Last error captured while attaching an image to a product. */
+    public static string $lastImageAttachError = '';
+
     /**
      * Set a custom debug-enabled checker.
      *

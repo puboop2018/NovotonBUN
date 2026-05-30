@@ -357,6 +357,28 @@ class HotelRepository
     }
 
     /**
+     * Get hotels that have no images stored (images_json is null/empty/[]).
+     * Used by enrich_hotel_data to backfill from the detail API.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function findMissingImages(string $countryCode = '', int $limit = 100): array
+    {
+        $cond = "(h.images_json IS NULL OR h.images_json = '' OR h.images_json = '[]')";
+        if ($countryCode !== '') {
+            $cond .= db_quote(' AND h.country_code = ?s', $countryCode);
+        }
+        $limitClause = $limit > 0 ? db_quote(' LIMIT ?i', $limit) : '';
+
+        return self::asRowList(db_get_array(
+            "SELECT h.hotel_id, h.name, h.product_id
+             FROM ?:sphinx_hotels h
+             WHERE h.sync_status = 'active' AND {$cond}
+             ORDER BY h.hotel_id ASC {$limitClause}",
+        ));
+    }
+
+    /**
      * Get unlinked hotels (no product_id) with optional country filter.
      *
      * @return list<array<string, mixed>> List of hotel rows without linked products
