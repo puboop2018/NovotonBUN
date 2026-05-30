@@ -7,6 +7,7 @@
  *}
 
 {style src="addons/travel_core/seo-templates.css"}
+{script src="addons/travel_core/seo-click-insert.js"}
 
 <style>
 #sphinx_seo_form input[type="text"],
@@ -321,7 +322,6 @@ window.__seoMockData = {
 
 </form>
 
-{script src="addons/travel_core/seo-click-insert.js"}
 
 {/capture}
 
