@@ -13,16 +13,22 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
  *
  * Only processes hotels that:
  * - Are linked to a CS-Cart product (product_id > 0)
- * - Are in whitelisted countries
+ * - Match the active scope filter (see below)
  * - Have no images yet (unless &force=Y is passed)
  *
  * When a hotel's images_json in the DB is empty, the command falls back to the
  * Sphinx API per-hotel detail endpoint to fetch fresh images before giving up.
  *
- * Usage:
- *   sync_images                — sync missing images for whitelisted countries
- *   sync_images&country=GR    — sync missing images for Greece only
- *   sync_images&force=Y       — re-sync all images (even if product already has images)
+ * Scope filters (mutually exclusive, evaluated in priority order):
+ *   &destination_id=1234   — only hotels with that destination_id
+ *   &region_id=5678        — only hotels with that region_id
+ *   &country=GR            — only hotels with that country_code
+ *   &whitelist=strict      — only hotels whose destination_id is in the whitelist table
+ *   (none)                 — all hotels in whitelisted countries (existing default)
+ *
+ * Other flags:
+ *   &force=Y               — re-sync all images (even if product already has images)
+ *   &limit=N               — cap total hotels processed
  */
 class SyncImagesCommand extends AbstractSyncCommand
 {
@@ -44,24 +50,44 @@ class SyncImagesCommand extends AbstractSyncCommand
         $startMs = (int)(microtime(true) * 1000);
 
         $countryCode = TypeCoerce::toString($params['country'] ?? '');
+        $destinationId = TypeCoerce::toInt($params['destination_id'] ?? 0);
+        $regionId = TypeCoerce::toInt($params['region_id'] ?? 0);
+        $strictWhitelist = TypeCoerce::toString($params['whitelist'] ?? '') === 'strict';
         $limit = TypeCoerce::toInt($params['limit'] ?? 0);
         $batchSize = TypeCoerce::toInt($params['batch_size'] ?? self::BATCH_SIZE);
         $force = TypeCoerce::toString($params['force'] ?? '') === 'Y';
 
-        // Resolve country filter: explicit param > whitelist
+        // Resolve scope filter (priority: destination_id > region_id > country > whitelist=strict > default)
         $countryCodes = [];
-        if ($countryCode !== '') {
+        $whitelistDestIds = [];
+
+        if ($destinationId > 0) {
+            $scope = "destination_id={$destinationId}";
+        } elseif ($regionId > 0) {
+            $scope = "region_id={$regionId}";
+        } elseif ($countryCode !== '') {
             $countryCodes = [$countryCode];
+            $scope = "country={$countryCode}";
+        } elseif ($strictWhitelist) {
+            $entries = Container::getDestinationWhitelistRepository()->findAll();
+            foreach ($entries as $entry) {
+                $id = TypeCoerce::toInt($entry['destination_id'] ?? 0);
+                if ($id > 0) {
+                    $whitelistDestIds[] = $id;
+                }
+            }
+            if (empty($whitelistDestIds)) {
+                $this->output('ERROR: whitelist=strict requested but the destination whitelist is empty.');
+                return ['success' => false, 'stats' => ['error' => 'empty_whitelist']];
+            }
+            $scope = 'whitelist=strict (' . count($whitelistDestIds) . ' destinations)';
         } else {
             $countryCodes = ConfigProvider::getSelectedCountryCodes();
-        }
-
-        if (empty($countryCodes)) {
-            $this->output('ERROR: No whitelisted countries configured. Configure destination whitelist or pass &country=XX.');
-            return [
-                'success' => false,
-                'stats' => ['error' => 'no_whitelisted_countries'],
-            ];
+            if (empty($countryCodes)) {
+                $this->output('ERROR: No whitelisted countries configured. Configure destination whitelist or pass &country=XX.');
+                return ['success' => false, 'stats' => ['error' => 'no_whitelisted_countries']];
+            }
+            $scope = 'whitelisted countries: ' . implode(', ', $countryCodes);
         }
 
         $stats = [
@@ -76,8 +102,8 @@ class SyncImagesCommand extends AbstractSyncCommand
         $effectiveBatch = ($limit > 0 && $limit < $batchSize) ? $limit : $batchSize;
         $afterHotelId = null;
 
-        $this->output('Syncing images for countries: ' . implode(', ', $countryCodes)
-            . ($force ? ' (FORCE: re-syncing all, including products with existing images)' : ' (skipping products with existing images)'));
+        $this->output('Syncing images — scope: ' . $scope
+            . ($force ? ' | FORCE: re-syncing all (including products with existing images)' : ' | skipping products with existing images'));
 
         while (true) {
             $remaining = ($limit > 0) ? ($limit - $processed) : $effectiveBatch;
@@ -85,7 +111,15 @@ class SyncImagesCommand extends AbstractSyncCommand
                 break;
             }
 
-            $hotels = $this->findHotels($countryCodes, min($remaining, $effectiveBatch), !$force, $afterHotelId);
+            $hotels = $this->findHotels(
+                $countryCodes,
+                $destinationId,
+                $regionId,
+                $whitelistDestIds,
+                min($remaining, $effectiveBatch),
+                !$force,
+                $afterHotelId,
+            );
             if (empty($hotels)) {
                 break;
             }
@@ -233,16 +267,42 @@ class SyncImagesCommand extends AbstractSyncCommand
     /**
      * Find hotels with linked products that need image sync.
      *
-     * @param string[] $countryCodes Whitelist country codes
+     * Scope filters are mutually exclusive (priority order):
+     *   1. $destinationId > 0  → filter by destination_id
+     *   2. $regionId > 0       → filter by region_id
+     *   3. $whitelistDestIds   → destination_id IN (whitelisted IDs)
+     *   4. $countryCodes       → country_code IN (codes)
+     *   5. (none)              → all active linked hotels
+     *
+     * @param string[] $countryCodes
+     * @param int[] $whitelistDestIds
      * @param int $limit Max rows to return
      * @param bool $skipExisting If true, LEFT JOINs images_links to skip products with images
      * @param string|null $afterHotelId Cursor: only return rows with hotel_id > this value
      * @return array<string, mixed>[]
      */
-    private function findHotels(array $countryCodes, int $limit, bool $skipExisting, ?string $afterHotelId = null): array
-    {
+    private function findHotels(
+        array $countryCodes,
+        int $destinationId,
+        int $regionId,
+        array $whitelistDestIds,
+        int $limit,
+        bool $skipExisting,
+        ?string $afterHotelId = null,
+    ): array {
         $join = '';
-        $condition = db_quote(' AND h.country_code IN (?a)', $countryCodes);
+        $condition = '';
+
+        if ($destinationId > 0) {
+            $condition = db_quote(' AND h.destination_id = ?i', $destinationId);
+        } elseif ($regionId > 0) {
+            $condition = db_quote(' AND h.region_id = ?i', $regionId);
+        } elseif (!empty($whitelistDestIds)) {
+            $condition = db_quote(' AND h.destination_id IN (?a)', $whitelistDestIds);
+        } elseif (!empty($countryCodes)) {
+            $condition = db_quote(' AND h.country_code IN (?a)', $countryCodes);
+        }
+        // else: no scope restriction — all active linked hotels
 
         if ($skipExisting) {
             $join = " LEFT JOIN ?:images_links il ON il.object_id = h.product_id AND il.object_type = 'product'";
