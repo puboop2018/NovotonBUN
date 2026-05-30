@@ -36,25 +36,10 @@
                 {* Use aggregated price for this hotel *}
                 {$_total_price = $_nv_hotels_prices[$_hotel_id]|default:$product.extra.price|default:$product.price|default:0}
 
-                {* Get payment terms - prefer pre-formatted from hooks.php, otherwise format raw XML *}
-                {$_payment = ""}
-                {if $product.extra.terms_of_payment_formatted}
-                    {$_payment = $product.extra.terms_of_payment_formatted}
-                {elseif $product.extra.terms_of_payment_raw}
-                    {$_payment = fn_novoton_holidays_format_payment_terms_with_amounts($product.extra.terms_of_payment_raw, $_total_price, $_currency)}
-                {elseif $product.extra.terms_of_payment}
-                    {$_payment = fn_novoton_holidays_format_payment_terms_with_amounts($product.extra.terms_of_payment, $_total_price, $_currency)}
-                {/if}
-
-                {* Get cancellation terms - prefer pre-formatted from hooks.php, otherwise format raw XML *}
-                {$_cancel = ""}
-                {if $product.extra.terms_of_cancellation_formatted}
-                    {$_cancel = $product.extra.terms_of_cancellation_formatted}
-                {elseif $product.extra.terms_of_cancellation_raw}
-                    {$_cancel = fn_novoton_holidays_format_cancellation_terms($product.extra.terms_of_cancellation_raw, $_check_in)}
-                {elseif $product.extra.terms_of_cancellation}
-                    {$_cancel = fn_novoton_holidays_format_cancellation_terms($product.extra.terms_of_cancellation, $_check_in)}
-                {/if}
+                {* Terms are pre-formatted in fn_novoton_holidays_get_order_info — never call
+                   fn_*() inside the {capture}, which throws under Smarty 5 and breaks the page. *}
+                {$_payment = $product.extra.terms_of_payment_with_amounts|default:$product.extra.terms_of_payment_formatted|default:""}
+                {$_cancel = $product.extra.terms_of_cancellation_formatted|default:""}
 
                 {* Add if we have terms *}
                 {if $_payment || $_cancel}

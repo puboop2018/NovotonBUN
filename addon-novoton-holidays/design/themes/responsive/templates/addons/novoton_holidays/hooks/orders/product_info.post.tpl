@@ -1,12 +1,8 @@
 {* Novoton Holidays - Customer Order Details - Simple text display *}
 
 {if !empty($product.extra.novoton_booking)}
-{* Normalize rooms_data: may be JSON string or array *}
-{if $product.extra.rooms_data && is_string($product.extra.rooms_data)}
-    {$_nvt_rooms = $product.extra.rooms_data|json_decode:true}
-{else}
-    {$_nvt_rooms = $product.extra.rooms_data|default:[]}
-{/if}
+{* rooms_data is pre-decoded to an array in fn_novoton_holidays_get_order_info *}
+{$_nvt_rooms = $product.extra.rooms_data|default:[]}
 <div style="margin:10px 0;font-size:13px;line-height:1.8;">
 
     {if $product.extra.hotel_name}
@@ -36,9 +32,9 @@
         <strong>{__("novoton_holidays.guests")}:</strong> {__("novoton_holidays.n_adults", [$product.extra.adults|default:0])}{if $product.extra.children}, {__("novoton_holidays.n_children", [$product.extra.children])}{if $product.extra.children_ages} ({$product.extra.children_ages}){/if}{/if}<br>
     {/if}
 
-    {* Guest Names *}
-    {if $product.extra.guests_data}
-        {$guests = $product.extra.guests_data|json_decode:true}
+    {* Guest Names — guests_data is pre-decoded to an array in fn_novoton_holidays_get_order_info *}
+    {if $product.extra.guests_data && is_array($product.extra.guests_data)}
+        {$guests = $product.extra.guests_data}
         {if $guests}
             {$adult_guests = []}
             {$child_guests = []}
@@ -62,11 +58,12 @@
         <strong>{__("novoton_holidays.holder")}:</strong> {$product.extra.holder_name}<br>
     {/if}
 
-    {* Payment and Cancellation Terms Link *}
-    {$payment_terms_raw = $product.extra.terms_of_payment_raw|default:$product.extra.terms_of_payment|default:''}
-    {$cancel_terms_raw = $product.extra.terms_of_cancellation_raw|default:$product.extra.terms_of_cancellation|default:''}
-    {if $payment_terms_raw || $cancel_terms_raw}
-        {$modal_id = "terms-modal-`$product.product_id`-`$product.extra.item_id|default:$smarty.foreach.oi.index|default:0`"}
+    {* Payment and Cancellation Terms Link — values are pre-formatted in
+       fn_novoton_holidays_get_order_info (no fn_*/json_decode calls inside the capture). *}
+    {$_payment_formatted = $product.extra.terms_of_payment_with_amounts|default:$product.extra.terms_of_payment_formatted|default:''}
+    {$_cancel_formatted = $product.extra.terms_of_cancellation_formatted|default:''}
+    {if $_payment_formatted || $_cancel_formatted}
+        {$modal_id = "terms-modal-`$product.product_id`-`$product.extra.item_id|default:0`"}
         <div style="margin-top: 8px;">
             <a href="#" onclick="document.getElementById('{$modal_id}').style.display='flex'; return false;"
                style="color: #0071c2; text-decoration: none; border-bottom: 1px dashed #0071c2; font-size: 13px;">
@@ -83,31 +80,23 @@
                 </div>
                 <div style="padding: 20px; font-size: 14px; line-height: 1.6; color: #333;">
                     {* Payment Terms *}
-                    {if $payment_terms_raw}
-                        {$booking_price = $product.extra.price|default:$product.price|default:0}
-                        {$_payment_formatted = fn_novoton_holidays_format_payment_terms_with_amounts($payment_terms_raw, $booking_price, $smarty.const.CART_PRIMARY_CURRENCY)}
-                        {if $_payment_formatted}
-                            <div style="margin-bottom: 20px;">
-                                <strong style="display: block; margin-bottom: 8px; color: #003580; font-size: 15px;">{__("novoton_holidays.terms_of_payment")|default:"Termeni de plată"}</strong>
-                                <div style="background: #f8f9fa; padding: 12px; border-radius: 6px; border-left: 3px solid #0071c2;">
-                                    {$_payment_formatted|escape:'html'|nl2br nofilter}
-                                </div>
+                    {if $_payment_formatted}
+                        <div style="margin-bottom: 20px;">
+                            <strong style="display: block; margin-bottom: 8px; color: #003580; font-size: 15px;">{__("novoton_holidays.terms_of_payment")|default:"Termeni de plată"}</strong>
+                            <div style="background: #f8f9fa; padding: 12px; border-radius: 6px; border-left: 3px solid #0071c2;">
+                                {$_payment_formatted|escape:'html'|nl2br nofilter}
                             </div>
-                        {/if}
+                        </div>
                     {/if}
 
                     {* Cancellation Terms *}
-                    {if $cancel_terms_raw}
-                        {$check_in = $product.extra.check_in|default:''}
-                        {$_cancel_formatted = fn_novoton_holidays_format_cancellation_terms($cancel_terms_raw, $check_in)}
-                        {if $_cancel_formatted}
-                            <div>
-                                <strong style="display: block; margin-bottom: 8px; color: #003580; font-size: 15px;">{__("novoton_holidays.cancellation_terms")|default:"Condiții de anulare"}</strong>
-                                <div style="background: #f8f9fa; padding: 12px; border-radius: 6px; border-left: 3px solid #28a745;">
-                                    {$_cancel_formatted|escape:'html'|nl2br nofilter}
-                                </div>
+                    {if $_cancel_formatted}
+                        <div>
+                            <strong style="display: block; margin-bottom: 8px; color: #003580; font-size: 15px;">{__("novoton_holidays.cancellation_terms")|default:"Condiții de anulare"}</strong>
+                            <div style="background: #f8f9fa; padding: 12px; border-radius: 6px; border-left: 3px solid #28a745;">
+                                {$_cancel_formatted|escape:'html'|nl2br nofilter}
                             </div>
-                        {/if}
+                        </div>
                     {/if}
                 </div>
             </div>

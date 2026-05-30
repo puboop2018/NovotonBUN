@@ -9,15 +9,10 @@ use Tygh\Addons\SphinxHolidays\Services\Container;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 /**
- * Cron command: download and attach images from Sphinx API to CS-Cart products.
+ * Cron command: populate the image sync queue from hotel DB records.
  *
- * Only processes hotels that:
- * - Are linked to a CS-Cart product (product_id > 0)
- * - Match the active scope filter (see below)
- * - Have no images yet (unless &force=Y is passed)
- *
- * When a hotel's images_json in the DB is empty, the command falls back to the
- * Sphinx API per-hotel detail endpoint to fetch fresh images before giving up.
+ * Reads images_json from the DB (single level — no API calls, no fallbacks).
+ * Hotels with empty images_json are logged and skipped; run enrich_hotel_data first.
  *
  * Scope filters (mutually exclusive, evaluated in priority order):
  *   &destination_id=1234   — only hotels with that destination_id
@@ -27,7 +22,7 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
  *   (none)                 — all hotels in whitelisted countries (existing default)
  *
  * Other flags:
- *   &force=Y               — re-sync all images (even if product already has images)
+ *   &force=Y               — re-queue all (including products with existing images)
  *   &limit=N               — cap total hotels processed
  */
 class SyncImagesCommand extends AbstractSyncCommand
@@ -37,7 +32,7 @@ class SyncImagesCommand extends AbstractSyncCommand
     #[\Override]
     public static function getDescription(): string
     {
-        return 'Download and attach hotel images to CS-Cart products';
+        return 'Populate image sync queue from hotel DB records (run process_image_queue to download)';
     }
 
     /**
@@ -92,9 +87,8 @@ class SyncImagesCommand extends AbstractSyncCommand
 
         $stats = [
             'hotels_processed' => 0,
-            'images_added' => 0,
+            'images_queued' => 0,
             'hotels_skipped' => 0,
-            'errors' => 0,
             'total' => 0,
         ];
 
@@ -102,8 +96,8 @@ class SyncImagesCommand extends AbstractSyncCommand
         $effectiveBatch = ($limit > 0 && $limit < $batchSize) ? $limit : $batchSize;
         $afterHotelId = null;
 
-        $this->output('Syncing images — scope: ' . $scope
-            . ($force ? ' | FORCE: re-syncing all (including products with existing images)' : ' | skipping products with existing images'));
+        $this->output('Populating image queue — scope: ' . $scope
+            . ($force ? ' | FORCE: re-queuing all (including products with existing images)' : ' | skipping products with existing images'));
 
         while (true) {
             $remaining = ($limit > 0) ? ($limit - $processed) : $effectiveBatch;
@@ -138,67 +132,14 @@ class SyncImagesCommand extends AbstractSyncCommand
                 $decoded = json_decode($imagesJson, true);
                 $images = is_array($decoded) ? $decoded : [];
 
-                // Fallback 1: single image_url stored from list sync (cheap, no API call)
                 if (empty($images)) {
-                    $imageUrl = TypeCoerce::toString($hotel['image_url'] ?? '');
-                    if ($imageUrl !== '') {
-                        $images = [['url' => $imageUrl]];
-                    }
-                }
-
-                // Fallback 2: fetch from per-hotel detail endpoint.
-                // The list endpoint (/api/v1/static/hotels) often omits images[];
-                // the detail endpoint (/api/v1/static/hotels/{id}) always includes it.
-                // The detail endpoint may return {"data": {...}} or the object directly.
-                if (empty($images)) {
-                    $api = Container::getApi();
-                    $fresh = $api->getHotel($hotelId);
-
-                    if ($fresh === null) {
-                        $httpCode = $api->getHttpClient()->getLastHttpCode();
-                        $apiError = $api->getHttpClient()->getLastError();
-                        $this->output("[{$hotelId}] API detail fetch failed (HTTP {$httpCode}): {$apiError}");
-                    } else {
-                        // Unwrap {"data": {...}} envelope if present
-                        $hotelData = is_array($fresh['data'] ?? null) ? $fresh['data'] : $fresh;
-
-                        /** @var mixed $rawImages */
-                        $rawImages = $hotelData['images'] ?? null;
-                        if (!empty($rawImages) && is_array($rawImages)) {
-                            /** @var array<mixed> $images */
-                            $images = $rawImages;
-                            $freshJson = (string) json_encode($images);
-                            $firstUrl = '';
-                            foreach ($images as $img) {
-                                if (is_array($img)) {
-                                    $u = TypeCoerce::toString($img['url'] ?? '');
-                                } elseif (is_string($img)) {
-                                    $u = $img;
-                                } else {
-                                    $u = '';
-                                }
-                                if ($u !== '') {
-                                    $firstUrl = $u;
-                                    break;
-                                }
-                            }
-                            Container::getHotelRepository()->updateImages($hotelId, $firstUrl, $freshJson);
-                        } else {
-                            $topKeys = implode(', ', array_keys($fresh));
-                            $this->output("[{$hotelId}] API returned no images (keys: {$topKeys})");
-                        }
-                    }
-                }
-
-                if (empty($images)) {
-                    $this->output("[{$hotelId}] No images in API data ... SKIPPED");
+                    $this->output("[{$hotelId}] no images in DB — run enrich_hotel_data first. SKIPPED");
                     $stats['hotels_skipped']++;
                     continue;
                 }
 
-                $imgCount = 0;
-                $firstError = '';
-                foreach ($images as $img) {
+                $queued = 0;
+                foreach ($images as $imgIdx => $img) {
                     if (is_array($img)) {
                         $url = TypeCoerce::toString($img['url'] ?? '');
                     } elseif (is_string($img)) {
@@ -210,36 +151,29 @@ class SyncImagesCommand extends AbstractSyncCommand
                         continue;
                     }
 
-                    $isMain = ($imgCount === 0);
-                    $ok = fn_sphinx_holidays_add_product_image($productId, $url, $isMain);
-
-                    if ($ok) {
-                        $imgCount++;
-                    } else {
-                        $stats['errors']++;
-                        $imgError = \Tygh\Addons\SphinxHolidays\Api\ImageHelper::$lastDownloadError;
-                        if ($firstError === '' && $imgError !== '') {
-                            $firstError = $imgError . ' — ' . substr($url, 0, 100);
-                        }
-                    }
+                    $isMain = ($imgIdx === 0) ? 1 : 0;
+                    db_query(
+                        "INSERT IGNORE INTO ?:sphinx_image_sync_queue
+                         (hotel_id, product_id, image_url, is_main, status, created_at, updated_at)
+                         VALUES (?s, ?i, ?s, ?i, 'pending', ?i, ?i)",
+                        $hotelId,
+                        $productId,
+                        $url,
+                        $isMain,
+                        time(),
+                        time(),
+                    );
+                    $queued++;
                 }
 
                 $hotelName = TypeCoerce::toString($hotel['name'] ?? '');
-                if ($imgCount > 0) {
-                    $this->output("[{$hotelId}] {$hotelName} ... {$imgCount} images added");
-                    $stats['images_added'] += $imgCount;
-                    $stats['hotels_processed']++;
-                } else {
-                    $detail = $firstError !== '' ? " [{$firstError}]" : '';
-                    $this->output("[{$hotelId}] {$hotelName} ... FAILED (no images downloaded){$detail}");
-                    $stats['errors']++;
-                }
+                $this->output("[{$hotelId}] {$hotelName} ... {$queued} image(s) queued");
+                $stats['images_queued'] += $queued;
+                $stats['hotels_processed']++;
             }
 
             $processed += count($hotels);
 
-            // Advance cursor to last hotel_id in this batch to prevent re-fetching the same rows.
-            // $hotels is non-empty here (empty check above), so end() returns array<string,mixed>.
             $lastHotel = end($hotels);
             $afterHotelId = TypeCoerce::toString($lastHotel['hotel_id'] ?? '');
             if ($afterHotelId === '') {
@@ -249,16 +183,15 @@ class SyncImagesCommand extends AbstractSyncCommand
 
         $durationMs = (int)(microtime(true) * 1000) - $startMs;
 
-        $this->output("Done: {$stats['hotels_processed']} hotels, {$stats['images_added']} images added, {$stats['hotels_skipped']} skipped, {$stats['errors']} errors (" . round($durationMs / 1000, 1) . 's)');
+        $this->output("Done: {$stats['hotels_processed']} hotels, {$stats['images_queued']} images queued, {$stats['hotels_skipped']} skipped (" . round($durationMs / 1000, 1) . 's)');
 
         return [
             'success' => true,
             'stats' => [
                 'total' => $stats['total'],
-                'synced' => $stats['hotels_processed'],
-                'added' => $stats['images_added'],
+                'processed' => $stats['hotels_processed'],
+                'queued' => $stats['images_queued'],
                 'skipped' => $stats['hotels_skipped'],
-                'failed' => $stats['errors'],
                 'duration_ms' => $durationMs,
             ],
         ];

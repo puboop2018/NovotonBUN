@@ -16,11 +16,13 @@ use Tygh\Addons\SphinxHolidays\Cron\Commands\DiagnoseImagesCommand;
 use Tygh\Addons\SphinxHolidays\Cron\Commands\DiagnoseSearchCommand;
 use Tygh\Addons\SphinxHolidays\Cron\Commands\DiagnoseSeoCommand;
 use Tygh\Addons\SphinxHolidays\Cron\Commands\DiscoverBoardsCommand;
+use Tygh\Addons\SphinxHolidays\Cron\Commands\EnrichHotelDataCommand;
 use Tygh\Addons\SphinxHolidays\Cron\Commands\ExperienceSyncCommand;
 use Tygh\Addons\SphinxHolidays\Cron\Commands\FullSyncCommand;
 use Tygh\Addons\SphinxHolidays\Cron\Commands\HotelSyncCommand;
 use Tygh\Addons\SphinxHolidays\Cron\Commands\OrderStatusSyncCommand;
 use Tygh\Addons\SphinxHolidays\Cron\Commands\PackageRouteSyncCommand;
+use Tygh\Addons\SphinxHolidays\Cron\Commands\ProcessImageQueueCommand;
 use Tygh\Addons\SphinxHolidays\Cron\Commands\SyncImagesCommand;
 use Tygh\Addons\SphinxHolidays\Cron\Commands\UpdateProductsCommand;
 use Tygh\Addons\TravelCore\Contracts\CronDispatcherInterface;
@@ -49,7 +51,9 @@ class CronDispatcher implements CronDispatcherInterface
         'discover_boards' => DiscoverBoardsCommand::class,
         'assign_boards' => AssignBoardsCommand::class,
         'update_products' => UpdateProductsCommand::class,
+        'enrich_hotel_data' => EnrichHotelDataCommand::class,
         'sync_images' => SyncImagesCommand::class,
+        'process_image_queue' => ProcessImageQueueCommand::class,
         'diagnose_images' => DiagnoseImagesCommand::class,
         'diagnose_search' => DiagnoseSearchCommand::class,
         'diagnose_seo' => DiagnoseSeoCommand::class,

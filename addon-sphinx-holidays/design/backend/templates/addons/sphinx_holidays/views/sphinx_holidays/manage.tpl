@@ -250,11 +250,25 @@
                     <td><a href="{$cron_urls.update_products}" target="_blank" class="btn btn-mini">Run</a></td>
                 </tr>
                 <tr>
+                    <td><strong>enrich_hotel_data</strong></td>
+                    <td>Back-fill <code>images_json</code> for hotels missing image data (calls detail API). Run until backlog is 0.</td>
+                    <td><code>*/5 * * * *</code> (every 5 min, until drained)</td>
+                    <td style="max-width:350px; word-break:break-all; font-size:11px;"><code>{$cron_urls.enrich_hotel_data}</code></td>
+                    <td><a href="{$cron_urls.enrich_hotel_data}" target="_blank" class="btn btn-mini">Run</a></td>
+                </tr>
+                <tr>
                     <td><strong>sync_images</strong></td>
-                    <td>Download and attach hotel images to CS-Cart products</td>
+                    <td>Populate image queue from <code>images_json</code> in DB (no API calls). Run after enrich_hotel_data.</td>
                     <td><code>0 4 * * *</code> (daily, after add_products)</td>
                     <td style="max-width:350px; word-break:break-all; font-size:11px;"><code>{$cron_urls.sync_images}</code></td>
                     <td><a href="{$cron_urls.sync_images}" target="_blank" class="btn btn-mini">Run</a></td>
+                </tr>
+                <tr>
+                    <td><strong>process_image_queue</strong></td>
+                    <td>Download &amp; attach queued images (50 per run). Run frequently after sync_images populates the queue.</td>
+                    <td><code>*/2 * * * *</code> (every 2 min)</td>
+                    <td style="max-width:350px; word-break:break-all; font-size:11px;"><code>{$cron_urls.process_image_queue}</code></td>
+                    <td><a href="{$cron_urls.process_image_queue}" target="_blank" class="btn btn-mini">Run</a></td>
                 </tr>
             </tbody>
         </table>
@@ -312,36 +326,41 @@
                 </tr>
                 <tr>
                     <td><strong>(default)</strong></td>
-                    <td>All hotels in all whitelisted countries. This is the daily scheduled cron; only skips hotels that already have images.</td>
+                    <td>All hotels in all whitelisted countries. This is the daily scheduled cron; only queues hotels that already have images in DB.</td>
                     <td style="word-break:break-all; font-size:11px;"><code>{$cron_urls.sync_images}</code></td>
                     <td><a href="{$cron_urls.sync_images}" target="_blank" class="btn btn-mini">Run</a></td>
+                </tr>
+                <tr class="info">
+                    <td><strong>process_image_queue</strong></td>
+                    <td>Process next 50 pending queue rows (download + attach). Add <code>&amp;reset_failed=Y</code> to retry all failed rows.</td>
+                    <td style="word-break:break-all; font-size:11px;"><code>{$cron_urls.process_image_queue}</code></td>
+                    <td><a href="{$cron_urls.process_image_queue}" target="_blank" class="btn btn-mini btn-primary">Run</a></td>
+                </tr>
+                <tr class="warning">
+                    <td><strong>enrich_hotel_data</strong></td>
+                    <td>Back-fill <code>images_json</code> for hotels missing images. Run repeatedly until output shows 0 scanned.</td>
+                    <td style="word-break:break-all; font-size:11px;"><code>{$cron_urls.enrich_hotel_data}</code></td>
+                    <td><a href="{$cron_urls.enrich_hotel_data}" target="_blank" class="btn btn-mini btn-warning">Run</a></td>
                 </tr>
             </tbody>
         </table>
         <p class="muted" style="font-size:11px; margin-top:4px;">
-            Add <code>&amp;force=Y</code> to re-download images for hotels that already have them. Add <code>&amp;limit=N</code> to cap the number of hotels processed. Filters are mutually exclusive: destination_id &gt; region_id &gt; country &gt; whitelist=strict &gt; default.
+            Add <code>&amp;force=Y</code> to re-queue images for hotels that already have them. Add <code>&amp;limit=N</code> to cap the number of hotels processed. Filters are mutually exclusive: destination_id &gt; region_id &gt; country &gt; whitelist=strict &gt; default.
+            For <code>process_image_queue</code>: add <code>&amp;reset_failed=Y</code> to reset failed rows back to pending for retry.
         </p>
 
         {* ── Image Sync Architecture ── *}
         <details style="margin-top:12px;">
             <summary style="cursor:pointer; font-weight:bold; color:#555;">Image sync architecture (click to expand)</summary>
             <div style="margin-top:10px; font-size:12px; line-height:1.6;">
-                <p><strong>How it works end-to-end:</strong></p>
+                <p><strong>Three-step async flow:</strong></p>
                 <ol>
-                    <li><strong>Hotel selection</strong> — <code>sync_images</code> queries <code>sphinx_hotels</code> for hotels where <code>sync_status='active'</code> and <code>product_id &gt; 0</code>, filtered by the active scope (see table above). Unless <code>&amp;force=Y</code> is set, it LEFT JOINs <code>images_links</code> and skips hotels whose product already has at least one image pair.</li>
-                    <li><strong>Image source (3-level fallback)</strong>
-                        <ol type="a">
-                            <li><strong>DB JSON</strong> — reads <code>sphinx_hotels.images_json</code> (stored during hotel sync as a JSON array of <code>{ldelim}url, ...{rdelim}</code> objects).</li>
-                            <li><strong>Single URL fallback</strong> — if <code>images_json</code> is empty, falls back to <code>sphinx_hotels.image_url</code> (the primary thumbnail stored during list sync).</li>
-                            <li><strong>API detail call</strong> — if both are empty, calls <code>GET /api/v1/static/hotels/{ldelim}id{rdelim}</code>, unwraps the <code>data</code> envelope, extracts <code>images[]</code>, and saves the result back to <code>sphinx_hotels.images_json</code> for future use.</li>
-                        </ol>
-                    </li>
-                    <li><strong>Download &amp; attach</strong> — for each image URL, calls <code>fn_sphinx_holidays_add_product_image($productId, $url, $isMain)</code>. The first image becomes the main (<code>type=M</code>); subsequent images are additional (<code>type=A</code>). Under the hood this downloads to a temp file via cURL, validates HTTP 200 + ≥ 1000 bytes, then calls CS-Cart <code>fn_update_image_pairs()</code> to create the DB pair and move the file.</li>
-                    <li><strong>Cursor pagination</strong> — processes hotels in batches of 50 (configurable via <code>&amp;batch_size=N</code>), using the last <code>hotel_id</code> as a cursor to avoid re-fetching rows. Safe to restart after interruption — already-processed hotels are skipped.</li>
-                    <li><strong>API-hosted images</strong> — images served from the Sphinx API host are downloaded with Bearer auth headers. CDN-hosted images are downloaded without auth. Both are validated identically before attaching.</li>
+                    <li><strong>Step 0 — enrich_hotel_data</strong> — finds hotels with empty <code>images_json</code> and calls <code>GET /api/v1/static/hotels/{ldelim}id{rdelim}</code> for each. Writes the result back to <code>sphinx_hotels.images_json</code>. Run this until no more hotels are missing images. Safe to run repeatedly — it only processes hotels that still have empty data.</li>
+                    <li><strong>Step 1 — sync_images</strong> — reads <code>images_json</code> from DB (single level, no API calls). For each image URL inserts a row into <code>sphinx_image_sync_queue</code> with <code>status=pending</code>. Hotels with empty <code>images_json</code> are logged and skipped. Deduplicates by <code>(hotel_id, image_url)</code> so safe to re-run.</li>
+                    <li><strong>Step 2 — process_image_queue</strong> — fetches <code>N</code> pending rows, atomically marks them <code>processing</code>, downloads each image to a temp file, and attaches via CS-Cart <code>fn_update_image_pairs()</code>. Marks each row <code>completed</code> or <code>failed</code>. Designed to run every 1–2 minutes — no timeout risk, concurrent-safe.</li>
                 </ol>
-                <p><strong>Key tables:</strong> <code>sphinx_hotels</code> (source: hotel_id, product_id, image_url, images_json) → <code>images</code> (downloaded file) → <code>images_links</code> (pair linking product to image).</p>
-                <p><strong>To diagnose a specific hotel:</strong> use <code>cron_mode=diagnose_images&amp;hotel_id=X</code> to see exactly which image URLs are found, whether they download successfully, and what would be attached. Add <code>&amp;attach=Y</code> to actually attach them.</p>
+                <p><strong>Key tables:</strong> <code>sphinx_hotels</code> (images_json) → <code>sphinx_image_sync_queue</code> (pending/processing/completed/failed) → <code>images</code> + <code>images_links</code> (CS-Cart image store).</p>
+                <p><strong>To diagnose a specific hotel:</strong> use <code>cron_mode=diagnose_images&amp;hotel_id=X</code>. Add <code>&amp;attach=Y</code> to also attach and see any attach error.</p>
             </div>
         </details>
     </div>

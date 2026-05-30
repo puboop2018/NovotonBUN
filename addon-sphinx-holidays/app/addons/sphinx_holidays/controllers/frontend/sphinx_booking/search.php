@@ -94,7 +94,7 @@ try {
     ];
 
     if (!empty($hotel_id)) {
-        $searchParams['hotel_id'] = $hotel_id;
+        $searchParams['hotel_ids'] = [$hotel_id];
     } elseif ($destination_id > 0) {
         $searchParams['destination_id'] = $destination_id;
     }

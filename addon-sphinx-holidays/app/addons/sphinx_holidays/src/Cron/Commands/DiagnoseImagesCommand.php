@@ -7,6 +7,7 @@ namespace Tygh\Addons\SphinxHolidays\Cron\Commands;
 use Tygh\Addons\SphinxHolidays\Api\ImageHelper;
 use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
 use Tygh\Addons\SphinxHolidays\Services\Container;
+use Tygh\Addons\TravelCore\Helpers\DebugLogger;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 /**
@@ -196,10 +197,10 @@ class DiagnoseImagesCommand extends AbstractSyncCommand
             $this->output("[img #{$i}] Download: " . ($ok ? 'OK' : 'FAIL (need HTTP 200 + size >= 1000 bytes)'));
 
             if ($ok && $doAttach && $productId > 0) {
-                // fn_travel_core_attach_product_image expects the temp file path
                 $isMain = ($i === 0);
                 $attached = fn_travel_core_attach_product_image($productId, $tempFile, 'sphinx', $isMain);
-                $this->output("[img #{$i}] Attach to product #{$productId}: " . ($attached ? 'OK' : 'FAILED'));
+                $attachNote = $attached ? 'OK' : 'FAILED — ' . DebugLogger::$lastImageAttachError;
+                $this->output("[img #{$i}] Attach to product #{$productId}: {$attachNote}");
                 if ($attached) {
                     $passed++;
                 } else {
@@ -214,6 +215,11 @@ class DiagnoseImagesCommand extends AbstractSyncCommand
             if (file_exists($tempFile)) {
                 unlink($tempFile);
             }
+        }
+
+        if (!$doAttach) {
+            $this->output('');
+            $this->output('NOTE: attach step was NOT tested. Re-run with &attach=Y to confirm images can actually be saved to CS-Cart.');
         }
 
         $this->output('');

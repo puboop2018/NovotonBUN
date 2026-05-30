@@ -14,33 +14,43 @@
  * @see /home/user/NovotonBUN/phpstan-disallowed-calls.neon
  */
 
-namespace Tygh;
+// phpcs:disable PSR1.Files.SideEffects
 
-class Registry
-{
-    /** @return mixed */
-    public static function get(string $key)
+namespace {
+    // CS-Cart global DB helper — formats a parameterised query fragment and returns the result as a string.
+    function db_quote(string $pattern, mixed ...$args): string
     {
-        return null;
-    }
-
-    public static function set(string $key, mixed $value, bool $overwrite = true): void
-    {
-    }
-
-    /** @return array<string, mixed> */
-    public static function getAll(): array
-    {
-        return [];
-    }
-
-    public static function cleanup(?string $key = null): void
-    {
+        return '';
     }
 }
 
-class Tygh
-{
-    /** @var array<string, mixed> */
-    public static array $app = [];
+namespace Tygh {
+    class Registry
+    {
+        /** @return mixed */
+        public static function get(string $key)
+        {
+            return null;
+        }
+
+        public static function set(string $key, mixed $value, bool $overwrite = true): void
+        {
+        }
+
+        /** @return array<string, mixed> */
+        public static function getAll(): array
+        {
+            return [];
+        }
+
+        public static function cleanup(?string $key = null): void
+        {
+        }
+    }
+
+    class Tygh
+    {
+        /** @var array<string, mixed> */
+        public static array $app = [];
+    }
 }
