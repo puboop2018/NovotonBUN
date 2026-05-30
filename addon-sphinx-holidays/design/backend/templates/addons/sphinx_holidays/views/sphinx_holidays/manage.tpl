@@ -267,6 +267,85 @@
         {/if}
     </div>
 
+    {* ── Image Sync — Scoped Options ── *}
+    <h4>Image sync — scoped options <small class="muted">(run on demand or schedule; safe to combine with &amp;force=Y or &amp;limit=N)</small></h4>
+    <div class="well">
+        <table class="table table-condensed table-hover" style="table-layout:fixed; width:100%;">
+            <colgroup>
+                <col style="width:200px;" />
+                <col style="width:280px;" />
+                <col />
+                <col style="width:40px;" />
+            </colgroup>
+            <thead>
+                <tr>
+                    <th>Scope</th>
+                    <th>What it syncs</th>
+                    <th>URL</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="success">
+                    <td><strong>whitelist=strict</strong></td>
+                    <td>Only hotels whose <code>destination_id</code> is in the whitelist table — ignores all other hotels in the same country. Use this to sync exactly the destinations you selected.</td>
+                    <td style="word-break:break-all; font-size:11px;"><code>{$cron_urls.sync_images}&amp;whitelist=strict</code></td>
+                    <td><a href="{$cron_urls.sync_images}&amp;whitelist=strict" target="_blank" class="btn btn-mini btn-success">Run</a></td>
+                </tr>
+                <tr>
+                    <td><strong>country=XX</strong></td>
+                    <td>All hotels with a product in one country (e.g. HR, MT, IT). Useful when you've whitelisted an entire country.</td>
+                    <td style="word-break:break-all; font-size:11px;"><code>{$cron_urls.sync_images}&amp;country=HR</code></td>
+                    <td><a href="{$cron_urls.sync_images}&amp;country=HR" target="_blank" class="btn btn-mini">Run</a></td>
+                </tr>
+                <tr>
+                    <td><strong>destination_id=X</strong></td>
+                    <td>Hotels in one specific destination. Replace the ID with a value from the whitelist admin. Useful for re-syncing after an API image update.</td>
+                    <td style="word-break:break-all; font-size:11px;"><code>{$cron_urls.sync_images}&amp;destination_id=1234</code></td>
+                    <td><a href="{$cron_urls.sync_images}&amp;destination_id=1234" target="_blank" class="btn btn-mini">Run</a></td>
+                </tr>
+                <tr>
+                    <td><strong>region_id=X</strong></td>
+                    <td>Hotels in one specific region. Narrower than destination; useful for targeting a single resort area.</td>
+                    <td style="word-break:break-all; font-size:11px;"><code>{$cron_urls.sync_images}&amp;region_id=5678</code></td>
+                    <td><a href="{$cron_urls.sync_images}&amp;region_id=5678" target="_blank" class="btn btn-mini">Run</a></td>
+                </tr>
+                <tr>
+                    <td><strong>(default)</strong></td>
+                    <td>All hotels in all whitelisted countries. This is the daily scheduled cron; only skips hotels that already have images.</td>
+                    <td style="word-break:break-all; font-size:11px;"><code>{$cron_urls.sync_images}</code></td>
+                    <td><a href="{$cron_urls.sync_images}" target="_blank" class="btn btn-mini">Run</a></td>
+                </tr>
+            </tbody>
+        </table>
+        <p class="muted" style="font-size:11px; margin-top:4px;">
+            Add <code>&amp;force=Y</code> to re-download images for hotels that already have them. Add <code>&amp;limit=N</code> to cap the number of hotels processed. Filters are mutually exclusive: destination_id &gt; region_id &gt; country &gt; whitelist=strict &gt; default.
+        </p>
+
+        {* ── Image Sync Architecture ── *}
+        <details style="margin-top:12px;">
+            <summary style="cursor:pointer; font-weight:bold; color:#555;">Image sync architecture (click to expand)</summary>
+            <div style="margin-top:10px; font-size:12px; line-height:1.6;">
+                <p><strong>How it works end-to-end:</strong></p>
+                <ol>
+                    <li><strong>Hotel selection</strong> — <code>sync_images</code> queries <code>sphinx_hotels</code> for hotels where <code>sync_status='active'</code> and <code>product_id &gt; 0</code>, filtered by the active scope (see table above). Unless <code>&amp;force=Y</code> is set, it LEFT JOINs <code>images_links</code> and skips hotels whose product already has at least one image pair.</li>
+                    <li><strong>Image source (3-level fallback)</strong>
+                        <ol type="a">
+                            <li><strong>DB JSON</strong> — reads <code>sphinx_hotels.images_json</code> (stored during hotel sync as a JSON array of <code>{ldelim}url, ...{rdelim}</code> objects).</li>
+                            <li><strong>Single URL fallback</strong> — if <code>images_json</code> is empty, falls back to <code>sphinx_hotels.image_url</code> (the primary thumbnail stored during list sync).</li>
+                            <li><strong>API detail call</strong> — if both are empty, calls <code>GET /api/v1/static/hotels/{ldelim}id{rdelim}</code>, unwraps the <code>data</code> envelope, extracts <code>images[]</code>, and saves the result back to <code>sphinx_hotels.images_json</code> for future use.</li>
+                        </ol>
+                    </li>
+                    <li><strong>Download &amp; attach</strong> — for each image URL, calls <code>fn_sphinx_holidays_add_product_image($productId, $url, $isMain)</code>. The first image becomes the main (<code>type=M</code>); subsequent images are additional (<code>type=A</code>). Under the hood this downloads to a temp file via cURL, validates HTTP 200 + ≥ 1000 bytes, then calls CS-Cart <code>fn_update_image_pairs()</code> to create the DB pair and move the file.</li>
+                    <li><strong>Cursor pagination</strong> — processes hotels in batches of 50 (configurable via <code>&amp;batch_size=N</code>), using the last <code>hotel_id</code> as a cursor to avoid re-fetching rows. Safe to restart after interruption — already-processed hotels are skipped.</li>
+                    <li><strong>API-hosted images</strong> — images served from the Sphinx API host are downloaded with Bearer auth headers. CDN-hosted images are downloaded without auth. Both are validated identically before attaching.</li>
+                </ol>
+                <p><strong>Key tables:</strong> <code>sphinx_hotels</code> (source: hotel_id, product_id, image_url, images_json) → <code>images</code> (downloaded file) → <code>images_links</code> (pair linking product to image).</p>
+                <p><strong>To diagnose a specific hotel:</strong> use <code>cron_mode=diagnose_images&amp;hotel_id=X</code> to see exactly which image URLs are found, whether they download successfully, and what would be attached. Add <code>&amp;attach=Y</code> to actually attach them.</p>
+            </div>
+        </details>
+    </div>
+
     {* ── Diagnostic Commands ── *}
     <h4>Diagnostic commands <small class="muted">(run on demand, not scheduled)</small></h4>
     <div class="well">
