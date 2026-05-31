@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 /**
  * Novoton Holidays - Cart Hook Functions
@@ -17,12 +18,14 @@ declare(strict_types=1);
  * @since   3.0.0
  */
 
-use Tygh\Registry;
+use Tygh\Addons\NovotonHolidays\Helpers\JsonDecoder;
 use Tygh\Addons\NovotonHolidays\Services\Container;
 use Tygh\Addons\NovotonHolidays\Services\PriceInfoFormatter;
-use Tygh\Addons\NovotonHolidays\Helpers\JsonDecoder;
+use Tygh\Registry;
 
-if (!defined('BOOTSTRAP')) { exit('Access denied'); }
+if (!defined('BOOTSTRAP')) {
+    exit('Access denied');
+}
 
 use Tygh\Addons\TravelCore\TravelConstants;
 
@@ -133,7 +136,7 @@ function fn_novoton_holidays_calculate_cart_items_post(&$cart, &$cart_products, 
     // (novoton products now set travel_booking = true alongside novoton_booking)
     if (fn_novoton_holidays_is_debug()) {
         fn_log_event('general', 'runtime', [
-            'message'             => 'Novoton calculate_cart_items_post',
+            'message' => 'Novoton calculate_cart_items_post',
             'cart_products_count' => count($cart_products),
         ]);
     }
@@ -181,8 +184,11 @@ function fn_novoton_holidays_dispatch_before_display(): void
 
     $dispatch = $_REQUEST['dispatch'] ?? '';
 
-    // Meta variable null-safety for our addon controllers
-    if (str_starts_with($dispatch, 'novoton_')) {
+    // Meta variable null-safety for our frontend controllers only.
+    // Admin pages do not render meta.tpl and must not receive array-typed
+    // Smarty variables (e.g. hreflang_links) that CS-Cart head templates
+    // output as a plain string, which produces literal "Array" in the page.
+    if (str_starts_with($dispatch, 'novoton_') && defined('AREA') && AREA === 'C') {
         _nvt_ensure_meta_variables();
     }
 
@@ -241,36 +247,36 @@ function _nvt_inject_booking_into_cart_product(
     array &$product,
     array  $booking,
     array &$cart,
-    string $cart_id
+    string $cart_id,
 ): void {
-    $bRoomId  = PriceInfoFormatter::toScalar($booking['room_id'] ?? '');
+    $bRoomId = PriceInfoFormatter::toScalar($booking['room_id'] ?? '');
     $bBoardId = PriceInfoFormatter::toScalar($booking['board_id'] ?? '');
 
     /** @var array<string, mixed> $extra */
     $extra = is_array($product['extra'] ?? null) ? $product['extra'] : [];
 
-    $extra['travel_booking']     = true;
-    $extra['novoton_booking']    = true;
+    $extra['travel_booking'] = true;
+    $extra['novoton_booking'] = true;
     $extra['novoton_booking_id'] = $booking['booking_id'] ?? 0;
-    $extra['hotel_id']           = PriceInfoFormatter::toScalar($booking['hotel_id'] ?? '');
-    $extra['room_id']            = $bRoomId;
-    $extra['room_name']          = fn_novoton_holidays_format_room_type($bRoomId, PriceInfoFormatter::toScalar($booking['room_type'] ?? ''));
-    $extra['board_id']           = $bBoardId;
-    $extra['board_name']         = fn_novoton_holidays_format_board_name($bBoardId);
-    $extra['check_in']           = PriceInfoFormatter::toScalar($booking['check_in'] ?? '');
-    $extra['check_out']          = PriceInfoFormatter::toScalar($booking['check_out'] ?? '');
-    $extra['nights']             = PriceInfoFormatter::toInt($booking['nights'] ?? 0);
-    $extra['adults']             = PriceInfoFormatter::toInt($booking['adults'] ?? 2);
-    $extra['children']           = PriceInfoFormatter::toInt($booking['children'] ?? 0);
-    $extra['children_ages']      = PriceInfoFormatter::toScalar($booking['children_ages'] ?? '');
-    $extra['holder_name']        = PriceInfoFormatter::toScalar($booking['holder_name'] ?? '');
-    $extra['guest_names']        = PriceInfoFormatter::toScalar($booking['guest_name'] ?? '');
-    $extra['guests_data']        = class_exists(\Tygh\Addons\TravelCore\Services\GuestDataNormalizer::class)
+    $extra['hotel_id'] = PriceInfoFormatter::toScalar($booking['hotel_id'] ?? '');
+    $extra['room_id'] = $bRoomId;
+    $extra['room_name'] = fn_novoton_holidays_format_room_type($bRoomId, PriceInfoFormatter::toScalar($booking['room_type'] ?? ''));
+    $extra['board_id'] = $bBoardId;
+    $extra['board_name'] = fn_novoton_holidays_format_board_name($bBoardId);
+    $extra['check_in'] = PriceInfoFormatter::toScalar($booking['check_in'] ?? '');
+    $extra['check_out'] = PriceInfoFormatter::toScalar($booking['check_out'] ?? '');
+    $extra['nights'] = PriceInfoFormatter::toInt($booking['nights'] ?? 0);
+    $extra['adults'] = PriceInfoFormatter::toInt($booking['adults'] ?? 2);
+    $extra['children'] = PriceInfoFormatter::toInt($booking['children'] ?? 0);
+    $extra['children_ages'] = PriceInfoFormatter::toScalar($booking['children_ages'] ?? '');
+    $extra['holder_name'] = PriceInfoFormatter::toScalar($booking['holder_name'] ?? '');
+    $extra['guest_names'] = PriceInfoFormatter::toScalar($booking['guest_name'] ?? '');
+    $extra['guests_data'] = class_exists(\Tygh\Addons\TravelCore\Services\GuestDataNormalizer::class)
         ? (new \Tygh\Addons\TravelCore\Services\GuestDataNormalizer())->toJson($booking['guests_data'] ?? '')
         : PriceInfoFormatter::toScalar($booking['guests_data'] ?? '');
-    $extra['total_price']        = PriceInfoFormatter::toFloat($booking['total_price'] ?? 0);
-    $extra['package_name']       = PriceInfoFormatter::toScalar($booking['package_name'] ?? '');
-    $extra['num_rooms']          = PriceInfoFormatter::toInt($booking['num_rooms'] ?? 1);
+    $extra['total_price'] = PriceInfoFormatter::toFloat($booking['total_price'] ?? 0);
+    $extra['package_name'] = PriceInfoFormatter::toScalar($booking['package_name'] ?? '');
+    $extra['num_rooms'] = PriceInfoFormatter::toInt($booking['num_rooms'] ?? 1);
 
     if (!empty($booking['rooms_data'])) {
         $rooms = json_decode(PriceInfoFormatter::toScalar($booking['rooms_data']), true);
@@ -304,7 +310,7 @@ function fn_novoton_holidays_add_booking_display_data(array &$product, ?array $c
     $board_id = PriceInfoFormatter::toScalar($bdExtra['board_id'] ?? '');
     $product['extra']['board_name'] = fn_novoton_holidays_format_board_name($board_id);
 
-    $room_id   = PriceInfoFormatter::toScalar($bdExtra['room_id']   ?? '');
+    $room_id = PriceInfoFormatter::toScalar($bdExtra['room_id'] ?? '');
     $room_type = PriceInfoFormatter::toScalar($bdExtra['room_type'] ?? '');
     $product['extra']['room_type_display'] = fn_novoton_holidays_format_room_type($room_id, $room_type);
     $product['extra']['room_name'] = PriceInfoFormatter::toScalar($bdExtra['room_name'] ?? '')
@@ -312,10 +318,10 @@ function fn_novoton_holidays_add_booking_display_data(array &$product, ?array $c
 
     if (class_exists(\Tygh\Addons\TravelCore\Services\BookingDisplayService::class)) {
         \Tygh\Addons\TravelCore\Services\BookingDisplayService::addBookingDisplayData($product, $cart, [
-            'lang_prefix'          => 'novoton_holidays',
-            'json_decoder'         => [JsonDecoder::class, 'decode'],
+            'lang_prefix' => 'novoton_holidays',
+            'json_decoder' => [JsonDecoder::class, 'decode'],
             'board_name_formatter' => 'fn_novoton_holidays_format_board_name',
-            'room_name_formatter'  => function (array $room) {
+            'room_name_formatter' => function (array $room) {
                 $name = PriceInfoFormatter::toScalar($room['room_name'] ?? '');
                 if (empty($name)) {
                     $name = str_replace(['%2b', '%2B'], '+', PriceInfoFormatter::toScalar($room['room_id'] ?? ''));
@@ -336,28 +342,28 @@ function _nvt_ensure_meta_variables(): void
     $default_title = __('novoton_holidays.search_results') ?: 'Search Results';
 
     $meta_vars = [
-        'meta_description'  => '',
-        'meta_keywords'     => '',
-        'page_title'        => $default_title,
-        'canonical_url'     => '',
-        'og_image'          => '',
-        'og_title'          => $default_title,
-        'og_description'    => '',
-        'og_type'           => 'website',
-        'og_url'            => '',
-        'og_site_name'      => '',
-        'twitter_card'      => '',
-        'twitter_title'     => '',
+        'meta_description' => '',
+        'meta_keywords' => '',
+        'page_title' => $default_title,
+        'canonical_url' => '',
+        'og_image' => '',
+        'og_title' => $default_title,
+        'og_description' => '',
+        'og_type' => 'website',
+        'og_url' => '',
+        'og_site_name' => '',
+        'twitter_card' => '',
+        'twitter_title' => '',
         'twitter_description' => '',
-        'twitter_image'     => '',
-        'robots'            => '',
-        'hreflang_links'    => [],
-        'schema_org'        => '',
-        'extra_meta'        => '',
-        'page_description'  => '',
-        'company_name'      => '',
-        'site_name'         => '',
-        'absolute_uri'      => '',
+        'twitter_image' => '',
+        'robots' => '',
+        'hreflang_links' => [],
+        'schema_org' => '',
+        'extra_meta' => '',
+        'page_description' => '',
+        'company_name' => '',
+        'site_name' => '',
+        'absolute_uri' => '',
     ];
 
     foreach ($meta_vars as $var => $default) {
@@ -368,9 +374,9 @@ function _nvt_ensure_meta_variables(): void
 
     $registry_vars = [
         'navigation.dynamic.meta_description' => '',
-        'navigation.dynamic.meta_keywords'    => '',
-        'navigation.dynamic.page_title'       => $default_title,
-        'runtime.page_title'                  => $default_title,
+        'navigation.dynamic.meta_keywords' => '',
+        'navigation.dynamic.page_title' => $default_title,
+        'runtime.page_title' => $default_title,
     ];
 
     foreach ($registry_vars as $key => $default) {
