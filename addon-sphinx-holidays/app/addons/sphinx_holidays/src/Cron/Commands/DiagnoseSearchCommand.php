@@ -6,6 +6,7 @@ namespace Tygh\Addons\SphinxHolidays\Cron\Commands;
 
 use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
 use Tygh\Addons\SphinxHolidays\Services\Container;
+use Tygh\Addons\SphinxHolidays\SphinxApi;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 /**
@@ -228,27 +229,37 @@ class DiagnoseSearchCommand extends AbstractSyncCommand
         }
 
         $searchId = TypeCoerce::toString($searchResponse['search_id'] ?? '');
+
+        // The API now returns the search_id wrapped inside a `cursor` JWT instead
+        // of a top-level field; the cursor is the opaque token used for polling.
+        $cursorToken = TypeCoerce::toString($searchResponse['cursor'] ?? '');
+        if ($searchId === '' && $cursorToken !== '') {
+            $searchId = SphinxApi::extractSearchIdFromCursor($cursorToken);
+        }
+
         $status = TypeCoerce::toString($searchResponse['status'] ?? '');
         $topKeys = implode(', ', array_keys($searchResponse));
 
         $this->output("  Parsed OK — keys: {$topKeys}");
-        $this->output('  search_id = ' . ($searchId ?: '(empty — this is why the search page shows an error)'));
+        $this->output('  search_id = ' . ($searchId ?: '(not in response — extracted from cursor)'));
         $this->output("  status    = {$status}");
 
-        if ($searchId === '') {
+        if ($searchId === '' && $cursorToken === '') {
             $this->output('');
-            $this->output('=== DIAGNOSIS: API returned HTTP 200 but no search_id in the response. ===');
-            $this->output('    The search controller requires search_id to proceed with polling.');
+            $this->output('=== DIAGNOSIS: API returned HTTP 200 but no cursor/search_id in the response. ===');
+            $this->output('    The search controller requires a cursor (or search_id) to proceed with polling.');
             $this->output('    Check the full raw response above for an error message from the Sphinx API.');
-            return ['success' => false, 'error' => 'no search_id', 'response' => $topKeys];
+            return ['success' => false, 'error' => 'no cursor/search_id', 'response' => $topKeys];
         }
 
         // ── Poll for results (loop until completed or timeout) ─────────
         $this->output('');
-        $this->output("--- 6. Polling results (GET /api/v1/hotels/results?search_id={$searchId}) ---");
+        $this->output('--- 6. Polling results (GET /api/v1/hotels/results) ---');
 
         $deadline = time() + self::POLL_TIMEOUT;
-        $cursor = null;
+        // Poll by cursor (mirrors the storefront flow): start from the cursor
+        // token, then follow the cursor the API returns on each page.
+        $cursor = $cursorToken !== '' ? $cursorToken : $searchId;
         $pollStatus = 'pending';
         /** @var list<array<string, mixed>> $allResults */
         $allResults = [];
@@ -256,7 +267,7 @@ class DiagnoseSearchCommand extends AbstractSyncCommand
 
         while (time() < $deadline) {
             $polls++;
-            $pollResponse = $api->getHotelResults($searchId, $cursor);
+            $pollResponse = $api->getHotelResults('', $cursor);
             if ($pollResponse === null) {
                 $this->output('  POLL FAIL — HTTP ' . $client->getLastHttpCode() . ': ' . $client->getLastError());
                 $this->output('  Raw: ' . $this->trunc($client->getLastResponseRaw() ?? '', 300));
@@ -265,12 +276,12 @@ class DiagnoseSearchCommand extends AbstractSyncCommand
             }
 
             $pollStatus = TypeCoerce::toString($pollResponse['status'] ?? 'completed');
-            $batch = TypeCoerce::toRowList($pollResponse['results'] ?? []);
+            $batch = TypeCoerce::toRowList($pollResponse['results'] ?? $pollResponse['data'] ?? []);
             if ($batch !== []) {
                 $allResults = array_merge($allResults, $batch);
             }
 
-            $nextCursor = isset($pollResponse['next_cursor']) ? TypeCoerce::toString($pollResponse['next_cursor']) : '';
+            $nextCursor = TypeCoerce::toString($pollResponse['cursor'] ?? $pollResponse['next_cursor'] ?? '');
             $cursor = $nextCursor !== '' ? $nextCursor : null;
 
             $this->output(sprintf(
