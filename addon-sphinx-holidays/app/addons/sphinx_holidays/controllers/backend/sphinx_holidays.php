@@ -491,8 +491,8 @@ if ($mode === 'manage') {
     $view->assign('skipped_hotels', $skippedCount);
     $view->assign('selected_countries', $selectedCountries);
     $view->assign('is_configured', $isConfigured);
-    // Orphaned SPX products: exist in CS-Cart but not linked in sphinx_hotels
-    $orphanedSpxCount = $hotelRepo->countOrphanedProducts(ConfigProvider::getProductCodePrefix());
+    // Hotels with a dead product_id (product deleted from CS-Cart without clearing the link)
+    $orphanedSpxCount = $hotelRepo->countOrphanedProducts();
     $view->assign('orphaned_spx_products', $orphanedSpxCount);
 
     $view->assign('sync_logs', $syncLogs);

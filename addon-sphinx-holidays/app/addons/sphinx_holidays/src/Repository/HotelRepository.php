@@ -682,20 +682,17 @@ class HotelRepository
     }
 
     /**
-     * Count orphaned SPX products (exist in CS-Cart but not linked in sphinx_hotels).
+     * Count sphinx_hotels rows whose linked product_id no longer exists in CS-Cart.
      *
-     * These are products with the sphinx product code prefix that have no
-     * corresponding hotel row linking back to them.
-     *
-     * @param string $productCodePrefix The product code prefix (e.g. 'SPX')
+     * These are hotels that believe they have a product but the product was deleted
+     * from CS-Cart without clearing the sphinx_hotels link.
      */
-    public function countOrphanedProducts(string $productCodePrefix): int
+    public function countOrphanedProducts(): int
     {
         return (int) db_get_field(
-            'SELECT COUNT(*) FROM ?:products p
-             LEFT JOIN ?:sphinx_hotels h ON h.product_id = p.product_id
-             WHERE p.product_code LIKE ?l AND h.hotel_id IS NULL',
-            $productCodePrefix . '%',
+            'SELECT COUNT(*) FROM ?:sphinx_hotels h
+             WHERE h.product_id > 0
+             AND NOT EXISTS (SELECT 1 FROM ?:products p WHERE p.product_id = h.product_id)',
         );
     }
 

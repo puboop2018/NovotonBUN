@@ -64,8 +64,8 @@ try {
 
     if (empty($product_id) && !empty($hotel_id)) {
         $product_id = TypeCoerce::toInt(db_get_field(
-            "SELECT product_id FROM ?:products WHERE product_code = ?s",
-            \Tygh\Addons\SphinxHolidays\Services\ConfigProvider::getProductCodePrefix() . $hotel_id
+            "SELECT product_id FROM ?:sphinx_hotels WHERE hotel_id = ?s",
+            $hotel_id
         ));
     }
 

@@ -7765,7 +7765,7 @@ parameters:
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/CronDispatcher.php
 
 		-
-			message: '#^Binary operation "\." between string and mixed results in an error\.$#'
+			message: '#^Binary operation "\." between non\-empty\-string and mixed results in an error\.$#'
 			identifier: binaryOp.invalid
 			count: 1
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Helpers/SphinxProductFactory.php
@@ -9507,19 +9507,19 @@ parameters:
 		-
 			message: '#^Cannot cast mixed to int\.$#'
 			identifier: cast.int
-			count: 3
+			count: 4
 			path: addon-travel-core/app/addons/travel_core/controllers/frontend/travel_booking.php
 
 		-
 			message: '#^Cannot cast mixed to string\.$#'
 			identifier: cast.string
-			count: 2
+			count: 3
 			path: addon-travel-core/app/addons/travel_core/controllers/frontend/travel_booking.php
 
 		-
 			message: '#^Only booleans are allowed in &&, string given on the left side\.$#'
 			identifier: booleanAnd.leftNotBoolean
-			count: 2
+			count: 1
 			path: addon-travel-core/app/addons/travel_core/controllers/frontend/travel_booking.php
 
 		-
@@ -9851,6 +9851,12 @@ parameters:
 			identifier: encapsedStringPart.nonString
 			count: 1
 			path: addon-travel-core/app/addons/travel_core/functions/hotels.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 2
+			path: addon-travel-core/app/addons/travel_core/hooks/cart_hooks.php
 
 		-
 			message: '#^Binary operation "\." between mixed and ''/js/addons/travel…'' results in an error\.$#'
