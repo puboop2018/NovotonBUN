@@ -11,7 +11,8 @@ use Tygh\Addons\SphinxHolidays\Cron\CronDispatcher;
  *
  * Executes the complete sync pipeline:
  *   destinations → hotels → assign_boards → package_routes → circuits →
- *   experiences → order_status → add_products → cache_refresh → cleanup
+ *   experiences → order_status → add_products → update_products →
+ *   sync_images → process_image_queue → cache_refresh → cleanup
  *
  * Note: discover_boards is excluded — it uses live API search per destination
  * and should run on its own cron schedule (mode=discover_boards).
@@ -34,7 +35,9 @@ class FullSyncCommand
      * CS-Cart product features. add_products runs before cache_refresh so
      * newly created products are included in cache rebuilds.
      * update_products syncs changed hotel data to existing CS-Cart products.
-     * sync_images downloads and attaches hotel images to CS-Cart products.
+     * sync_images populates the image queue from hotel DB records; the very
+     * next step, process_image_queue, downloads and attaches those images so a
+     * full run leaves products with complete galleries.
      */
     private const array SYNC_SEQUENCE = [
         'destinations',
@@ -47,6 +50,7 @@ class FullSyncCommand
         'add_products',
         'update_products',
         'sync_images',
+        'process_image_queue',
         'cache_refresh',
         'cleanup',
     ];

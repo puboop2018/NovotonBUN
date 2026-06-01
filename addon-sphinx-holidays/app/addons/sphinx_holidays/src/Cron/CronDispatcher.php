@@ -24,6 +24,7 @@ use Tygh\Addons\SphinxHolidays\Cron\Commands\HotelSyncCommand;
 use Tygh\Addons\SphinxHolidays\Cron\Commands\OrderStatusSyncCommand;
 use Tygh\Addons\SphinxHolidays\Cron\Commands\PackageRouteSyncCommand;
 use Tygh\Addons\SphinxHolidays\Cron\Commands\ProcessImageQueueCommand;
+use Tygh\Addons\SphinxHolidays\Cron\Commands\SyncAndUploadImagesCommand;
 use Tygh\Addons\SphinxHolidays\Cron\Commands\SyncImagesCommand;
 use Tygh\Addons\SphinxHolidays\Cron\Commands\UpdateProductsCommand;
 use Tygh\Addons\TravelCore\Contracts\CronDispatcherInterface;
@@ -55,6 +56,7 @@ class CronDispatcher implements CronDispatcherInterface
         'enrich_hotel_data' => EnrichHotelDataCommand::class,
         'sync_images' => SyncImagesCommand::class,
         'process_image_queue' => ProcessImageQueueCommand::class,
+        'sync_and_upload_images' => SyncAndUploadImagesCommand::class,
         'diagnose_images' => DiagnoseImagesCommand::class,
         'diagnose_product_features' => DiagnoseProductFeaturesCommand::class,
         'diagnose_search' => DiagnoseSearchCommand::class,
