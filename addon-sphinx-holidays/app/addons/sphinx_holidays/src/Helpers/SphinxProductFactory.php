@@ -7,6 +7,7 @@ namespace Tygh\Addons\SphinxHolidays\Helpers;
 use Tygh\Addons\SphinxHolidays\Repository\HotelRepository;
 use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
 use Tygh\Addons\SphinxHolidays\Services\SphinxFeatureAssigner;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 /**
  * Creates CS-Cart products from Sphinx hotel data.
@@ -57,7 +58,7 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
     #[\Override]
     public function createFromHotel(array $hotel, array $hierarchy): array
     {
-        $hotelId = $hotel['hotel_id'];
+        $hotelId = TypeCoerce::toString($hotel['hotel_id'] ?? '');
         $cc = is_string($hotel['country_code']) ? strtoupper($hotel['country_code']) : '';
 
         // Country code validation
@@ -69,11 +70,9 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
             return ['status' => 'skipped', 'product_id' => 0, 'reason' => "invalid country: {$cc}"];
         }
 
-        // Product code: country-code prefix (e.g. HR59843). Falls back to SPX only if
-        // country_code is absent (should not happen after hotel sync).
-        if ($cc === '') {
-            $cc = 'SPX';
-        }
+        // Product code: country-code prefix + hotel id (e.g. HR59843). In practice
+        // every synced hotel has a country_code; in the rare case it's missing the
+        // code is just the bare hotel id (no prefix).
         $productCode = $cc . $hotelId;
 
         // Check if product already exists (re-run after partial failure)
