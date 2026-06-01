@@ -185,6 +185,10 @@ class SyncImagesCommand extends AbstractSyncCommand
 
         $this->output("Done: {$stats['hotels_processed']} hotels, {$stats['images_queued']} images queued, {$stats['hotels_skipped']} skipped (" . round($durationMs / 1000, 1) . 's)');
 
+        if ($stats['images_queued'] > 0) {
+            $this->output('Next: run cron_mode=process_image_queue to download and attach these images to products.');
+        }
+
         return [
             'success' => true,
             'stats' => [
