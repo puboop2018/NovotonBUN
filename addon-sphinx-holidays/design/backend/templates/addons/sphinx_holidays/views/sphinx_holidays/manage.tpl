@@ -249,29 +249,14 @@
                     <td style="max-width:350px; word-break:break-all; font-size:11px;"><code>{$cron_urls.update_products}</code></td>
                     <td><a href="{$cron_urls.update_products}" target="_blank" class="btn btn-mini">Run</a></td>
                 </tr>
-                <tr>
-                    <td><strong>enrich_hotel_data</strong></td>
-                    <td>Back-fill <code>images_json</code> for hotels missing image data (calls detail API). Run until backlog is 0.</td>
-                    <td><code>*/5 * * * *</code> (every 5 min, until drained)</td>
-                    <td style="max-width:350px; word-break:break-all; font-size:11px;"><code>{$cron_urls.enrich_hotel_data}</code></td>
-                    <td><a href="{$cron_urls.enrich_hotel_data}" target="_blank" class="btn btn-mini">Run</a></td>
-                </tr>
-                <tr>
-                    <td><strong>sync_images</strong></td>
-                    <td>Populate image queue from <code>images_json</code> in DB (no API calls). Run after enrich_hotel_data.</td>
-                    <td><code>0 4 * * *</code> (daily, after add_products)</td>
-                    <td style="max-width:350px; word-break:break-all; font-size:11px;"><code>{$cron_urls.sync_images}</code></td>
-                    <td><a href="{$cron_urls.sync_images}" target="_blank" class="btn btn-mini">Run</a></td>
-                </tr>
-                <tr>
-                    <td><strong>process_image_queue</strong></td>
-                    <td>Download &amp; attach queued images (50 per run). Run frequently after sync_images populates the queue.</td>
-                    <td><code>*/2 * * * *</code> (every 2 min)</td>
-                    <td style="max-width:350px; word-break:break-all; font-size:11px;"><code>{$cron_urls.process_image_queue}</code></td>
-                    <td><a href="{$cron_urls.process_image_queue}" target="_blank" class="btn btn-mini">Run</a></td>
-                </tr>
             </tbody>
         </table>
+
+        <p class="muted" style="font-size:11px; margin-top:4px;">
+            Image sync crons (<code>enrich_hotel_data</code>, <code>sync_images</code>,
+            <code>process_image_queue</code>) are listed with their schedules and scoped
+            options in the <strong>Image sync</strong> section below.
+        </p>
 
         {if !$cron_key}
             <div class="alert alert-warning">
@@ -325,20 +310,20 @@
                     <td><a href="{$cron_urls.sync_images}&amp;region_id=5678" target="_blank" class="btn btn-mini">Run</a></td>
                 </tr>
                 <tr>
-                    <td><strong>(default)</strong></td>
-                    <td>All hotels in all whitelisted countries. This is the daily scheduled cron; only queues hotels that already have images in DB.</td>
+                    <td><strong>sync_images</strong> (default)</td>
+                    <td>All hotels in all whitelisted countries. Schedule <code>0 4 * * *</code> (daily, after add_products). Populates the queue from <code>images_json</code> in DB (no API calls); only queues hotels that already have images.</td>
                     <td style="word-break:break-all; font-size:11px;"><code>{$cron_urls.sync_images}</code></td>
                     <td><a href="{$cron_urls.sync_images}" target="_blank" class="btn btn-mini">Run</a></td>
                 </tr>
                 <tr class="info">
                     <td><strong>process_image_queue</strong></td>
-                    <td>Process next 50 pending queue rows (download + attach). Add <code>&amp;reset_failed=Y</code> to retry all failed rows.</td>
+                    <td>Schedule <code>*/2 * * * *</code> (every 2 min). Process next 50 pending queue rows (download + attach). Add <code>&amp;reset_failed=Y</code> to retry all failed rows.</td>
                     <td style="word-break:break-all; font-size:11px;"><code>{$cron_urls.process_image_queue}</code></td>
                     <td><a href="{$cron_urls.process_image_queue}" target="_blank" class="btn btn-mini btn-primary">Run</a></td>
                 </tr>
                 <tr class="warning">
                     <td><strong>enrich_hotel_data</strong></td>
-                    <td>Back-fill <code>images_json</code> for hotels missing images. Run repeatedly until output shows 0 scanned.</td>
+                    <td>Schedule <code>*/5 * * * *</code> (every 5 min, until drained). Back-fill <code>images_json</code> for hotels missing images (calls detail API). Run repeatedly until output shows 0 scanned.</td>
                     <td style="word-break:break-all; font-size:11px;"><code>{$cron_urls.enrich_hotel_data}</code></td>
                     <td><a href="{$cron_urls.enrich_hotel_data}" target="_blank" class="btn btn-mini btn-warning">Run</a></td>
                 </tr>
