@@ -34,6 +34,8 @@ class UpdateProductsCommand extends AbstractSyncCommand
     #[\Override]
     public function execute(array $params = []): array
     {
+        $this->seedFeatureMappings();
+
         $featureAssigner = Container::getFeatureAssigner();
         $countryCode = $params['country'] ?? '';
         $limit = (int) ($params['limit'] ?? 0);
