@@ -90,8 +90,13 @@ class DiagnoseSearchCommand extends AbstractSyncCommand
             $this->output('  classification   = ' . TypeCoerce::toString($hotel['classification'] ?? '') . '*');
             $this->output('  property_type    = ' . TypeCoerce::toString($hotel['property_type'] ?? ''));
             $this->output('  product_id       = ' . TypeCoerce::toString($hotel['product_id'] ?? '0'));
+            $this->output('  destination_id   = ' . TypeCoerce::toString($hotel['destination_id'] ?? '0'));
             $this->output('  sync_status      = ' . TypeCoerce::toString($hotel['sync_status'] ?? ''));
         }
+
+        // Destination drives the live availability search (the storefront PDP
+        // only knows hotel_id; section 8 compares hotel_ids vs destination_id).
+        $destinationId = $hotel !== null ? TypeCoerce::toInt($hotel['destination_id'] ?? 0) : 0;
 
         // ── Configuration ──────────────────────────────────────────────
         $this->output('');
@@ -141,6 +146,10 @@ class DiagnoseSearchCommand extends AbstractSyncCommand
             $this->output('  country     = ' . TypeCoerce::toString($data['country'] ?? $data['country_code'] ?? ''));
             $this->output('  stars       = ' . TypeCoerce::toString($data['classification'] ?? $data['stars'] ?? ''));
             $this->output('  type        = ' . TypeCoerce::toString($data['property_type'] ?? $data['type'] ?? ''));
+
+            if ($destinationId <= 0) {
+                $destinationId = TypeCoerce::toInt($data['destination_id'] ?? 0);
+            }
         }
 
         $this->output('');
@@ -256,51 +265,10 @@ class DiagnoseSearchCommand extends AbstractSyncCommand
         $this->output('');
         $this->output('--- 6. Polling results (GET /api/v1/hotels/results) ---');
 
-        $deadline = time() + self::POLL_TIMEOUT;
-        // Poll by cursor (mirrors the storefront flow): start from the cursor
-        // token, then follow the cursor the API returns on each page.
-        $cursor = $cursorToken !== '' ? $cursorToken : $searchId;
-        $pollStatus = 'pending';
-        /** @var list<array<string, mixed>> $allResults */
-        $allResults = [];
-        $polls = 0;
-
-        while (time() < $deadline) {
-            $polls++;
-            $pollResponse = $api->getHotelResults('', $cursor);
-            if ($pollResponse === null) {
-                $this->output('  POLL FAIL — HTTP ' . $client->getLastHttpCode() . ': ' . $client->getLastError());
-                $this->output('  Raw: ' . $this->trunc($client->getLastResponseRaw() ?? '', 300));
-                $pollStatus = 'error';
-                break;
-            }
-
-            $pollStatus = TypeCoerce::toString($pollResponse['status'] ?? 'completed');
-            $batch = TypeCoerce::toRowList($pollResponse['results'] ?? $pollResponse['data'] ?? []);
-            if ($batch !== []) {
-                $allResults = array_merge($allResults, $batch);
-            }
-
-            $nextCursor = TypeCoerce::toString($pollResponse['cursor'] ?? $pollResponse['next_cursor'] ?? '');
-            $cursor = $nextCursor !== '' ? $nextCursor : null;
-
-            $this->output(sprintf(
-                '    poll #%d: status=%s, +%d result(s) (total %d)',
-                $polls,
-                $pollStatus,
-                count($batch),
-                count($allResults),
-            ));
-
-            if ($pollStatus === 'completed' && $cursor === null) {
-                break;
-            }
-
-            if (time() < $deadline) {
-                sleep(self::POLL_INTERVAL);
-            }
-        }
-
+        $poll = $this->pollAll($api, $cursorToken, $searchId, true);
+        $pollStatus = $poll['status'];
+        $allResults = $poll['results'];
+        $polls = $poll['polls'];
         $count = count($allResults);
         $this->output('  Final status: ' . $pollStatus . " after {$polls} poll(s)");
         $this->output('  Results count: ' . $count);
@@ -322,12 +290,43 @@ class DiagnoseSearchCommand extends AbstractSyncCommand
             $this->output('    The API works but this hotel has no offers. Try different dates or a different hotel.');
         }
 
+        // ── 7. Search strategy comparison ──────────────────────────────
+        // The storefront PDP search sends hotel_ids only (section 4 above).
+        // The Sphinx API appears to require a destination_id to run a live
+        // availability search, so compare the three strategies side by side.
+        $this->output('');
+        $this->output('--- 7. Search strategy comparison ---');
+
+        if ($destinationId <= 0) {
+            $this->output('  SKIP — no destination_id known for this hotel (not in local DB and not returned by the API).');
+        } else {
+            $this->output("  Using destination_id={$destinationId}.");
+
+            $baseParams = [
+                'check_in' => $checkIn,
+                'check_out' => $checkOut,
+                'occupancy' => $occupancy,
+                'currency' => $currency,
+            ];
+            if ($ignoreDomains !== '') {
+                $baseParams['ignore_domains'] = $ignoreDomains;
+            }
+
+            $this->output("  (a) hotel_ids only → see sections 4-6 above (total {$count}).");
+            $this->runVariant($api, 'b: destination_id only', $baseParams + ['destination_id' => $destinationId], $hotelId);
+            $this->runVariant($api, 'c: destination_id + hotel_ids', $baseParams + ['destination_id' => $destinationId, 'hotel_ids' => [$hotelId]], $hotelId);
+
+            $this->output('');
+            $this->output('  => If (b)/(c) return offers for this hotel but (a) returns 0, the storefront');
+            $this->output('     must send destination_id — search.php resolves it from the hotel record.');
+        }
+
         // ── Rate limit state ───────────────────────────────────────────
         $rlState = $client->getRateLimitState();
         $rlLimit = $rlState['limit'];
         if ($rlLimit !== null) {
             $this->output('');
-            $this->output('--- 7. Rate limit ---');
+            $this->output('--- 8. Rate limit ---');
             $this->output(
                 '  limit=' . TypeCoerce::toString($rlLimit)
                 . ', remaining=' . ($rlState['remaining'] !== null ? TypeCoerce::toString($rlState['remaining']) : '?')
@@ -346,6 +345,117 @@ class DiagnoseSearchCommand extends AbstractSyncCommand
             'results' => $count,
             'http_code' => $httpCode,
         ];
+    }
+
+    /**
+     * Poll /api/v1/hotels/results until the search completes or the poll
+     * timeout is reached, accumulating every result page.
+     *
+     * @return array{status: string, results: list<array<string, mixed>>, polls: int}
+     */
+    private function pollAll(SphinxApi $api, string $cursorToken, string $searchId, bool $verbose): array
+    {
+        $client = $api->getHttpClient();
+        $deadline = time() + self::POLL_TIMEOUT;
+        // Poll by cursor (mirrors the storefront flow): start from the cursor
+        // token, then follow the cursor the API returns on each page.
+        $cursor = $cursorToken !== '' ? $cursorToken : $searchId;
+        $pollStatus = 'pending';
+        /** @var list<array<string, mixed>> $allResults */
+        $allResults = [];
+        $polls = 0;
+
+        while (time() < $deadline) {
+            $polls++;
+            $pollResponse = $api->getHotelResults('', $cursor);
+            if ($pollResponse === null) {
+                if ($verbose) {
+                    $this->output('  POLL FAIL — HTTP ' . $client->getLastHttpCode() . ': ' . $client->getLastError());
+                    $this->output('  Raw: ' . $this->trunc($client->getLastResponseRaw() ?? '', 300));
+                }
+                $pollStatus = 'error';
+                break;
+            }
+
+            $pollStatus = TypeCoerce::toString($pollResponse['status'] ?? 'completed');
+            $batch = TypeCoerce::toRowList($pollResponse['results'] ?? $pollResponse['data'] ?? []);
+            if ($batch !== []) {
+                $allResults = array_merge($allResults, $batch);
+            }
+
+            $nextCursor = TypeCoerce::toString($pollResponse['cursor'] ?? $pollResponse['next_cursor'] ?? '');
+            $cursor = $nextCursor !== '' ? $nextCursor : null;
+
+            if ($verbose) {
+                $this->output(sprintf(
+                    '    poll #%d: status=%s, +%d result(s) (total %d)',
+                    $polls,
+                    $pollStatus,
+                    count($batch),
+                    count($allResults),
+                ));
+            }
+
+            if ($pollStatus === 'completed' && $cursor === null) {
+                break;
+            }
+
+            if (time() < $deadline) {
+                sleep(self::POLL_INTERVAL);
+            }
+        }
+
+        return ['status' => $pollStatus, 'results' => $allResults, 'polls' => $polls];
+    }
+
+    /**
+     * Run one search variant end-to-end (search + poll) and print a concise
+     * one-line summary including how many offers came back for the target hotel.
+     *
+     * @param array<string, mixed> $searchParams
+     */
+    private function runVariant(SphinxApi $api, string $label, array $searchParams, string $targetHotelId): void
+    {
+        $client = $api->getHttpClient();
+        $this->output('');
+        $this->output("  [{$label}] body: " . $this->trunc((string) json_encode($searchParams, JSON_UNESCAPED_UNICODE), 300));
+
+        $resp = $api->searchHotels($searchParams);
+        $httpCode = $client->getLastHttpCode();
+        if ($resp === null) {
+            $this->output("  [{$label}] search FAILED — HTTP {$httpCode}: " . ($client->getLastError() ?: '(none)'));
+            return;
+        }
+
+        $cursorToken = TypeCoerce::toString($resp['cursor'] ?? '');
+        $searchId = TypeCoerce::toString($resp['search_id'] ?? '');
+        if ($searchId === '' && $cursorToken !== '') {
+            $searchId = SphinxApi::extractSearchIdFromCursor($cursorToken);
+        }
+        if ($cursorToken === '' && $searchId === '') {
+            $this->output("  [{$label}] no cursor/search_id in response — cannot poll.");
+            return;
+        }
+
+        $poll = $this->pollAll($api, $cursorToken, $searchId, false);
+        $results = $poll['results'];
+
+        $targetCount = 0;
+        foreach ($results as $r) {
+            if (TypeCoerce::toString($r['hotel_id'] ?? '') === $targetHotelId) {
+                $targetCount++;
+            }
+        }
+
+        $this->output(sprintf(
+            '  [%s] status=%s, %d poll(s), %d total result(s), %d for hotel [%s]',
+            $label,
+            $poll['status'],
+            $poll['polls'],
+            count($results),
+            $targetCount,
+            $targetHotelId,
+        ));
     }
 
     /**
