@@ -152,10 +152,21 @@ class SyncImagesCommand extends AbstractSyncCommand
                     }
 
                     $isMain = ($imgIdx === 0) ? 1 : 0;
+                    // Re-queue on conflict: a row left over from a prior run
+                    // (e.g. 'failed', or 'processing' from a crashed worker) is
+                    // reset back to 'pending' so it gets retried. Rows already
+                    // 'completed' are left untouched. Plain INSERT IGNORE would
+                    // silently skip these, stranding failed images forever.
                     db_query(
-                        "INSERT IGNORE INTO ?:sphinx_image_sync_queue
+                        "INSERT INTO ?:sphinx_image_sync_queue
                          (hotel_id, product_id, image_url, is_main, status, created_at, updated_at)
-                         VALUES (?s, ?i, ?s, ?i, 'pending', ?i, ?i)",
+                         VALUES (?s, ?i, ?s, ?i, 'pending', ?i, ?i)
+                         ON DUPLICATE KEY UPDATE
+                            product_id = VALUES(product_id),
+                            is_main = VALUES(is_main),
+                            status = IF(status = 'completed', 'completed', 'pending'),
+                            error_message = IF(status = 'completed', error_message, NULL),
+                            updated_at = VALUES(updated_at)",
                         $hotelId,
                         $productId,
                         $url,
