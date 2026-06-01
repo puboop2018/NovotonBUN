@@ -746,32 +746,22 @@ function fn_travel_core_attach_product_image(int $productId, string $tempFile, s
         $productId
     );
 
-    $imageId = 0;
-
-    $pairsData = [
-        $imageId => [
-            'pair_id'     => 0,
-            'type'        => $isMain ? 'M' : 'A',
-            'object_id'   => $productId,
-            'object_type' => 'product',
-            'detailed_id' => 0,
-            'position'    => $existingPairs,
+    // Do NOT include 'tmp_name' or 'error': fn_update_image_pairs() calls
+    // is_uploaded_file() for those keys, which always returns false in cron context.
+    // Pass as arg 2 ($detailed — full-size image slot); arg 1 ($icon) is empty so
+    // CS-Cart auto-generates thumbnails; arg 3 ($pair_id) is empty for a new pair.
+    $imageData = [
+        0 => [
+            'pair_id'  => 0,
+            'type'     => $isMain ? 'M' : 'A',
+            'position' => $existingPairs,
+            'name'     => $filename,
+            'path'     => $tempFile,
+            'size'     => $tempSize,
         ],
     ];
 
-    // NOTE: do NOT include 'tmp_name' or 'error' keys. CS-Cart's fn_update_image_pairs()
-    // treats those as HTTP-upload markers and calls is_uploaded_file(), which returns false
-    // for files we created in cron context, causing the image to be silently discarded.
-    $detailed = [
-        $imageId => [
-            'name' => $filename,
-            'path' => $tempFile,
-            'size' => filesize($tempFile),
-            'type' => $imageInfo['mime'],
-        ],
-    ];
-
-    $pairIds = fn_update_image_pairs($pairsData, [], $detailed, $productId, 'product');
+    $pairIds = fn_update_image_pairs([], $imageData, [], $productId, 'product');
 
     unlink($tempFile);
 

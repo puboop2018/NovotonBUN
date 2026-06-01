@@ -213,12 +213,56 @@ class SphinxApi
     /**
      * Initiate a hotel search.
      *
+     * The API returns an opaque polling token under the `cursor` key (a JWT
+     * whose payload embeds the search_id). Older API versions returned a
+     * top-level `search_id`; callers should accept either.
+     *
      * @param array<string, mixed> $params {destination_id, check_in, check_out, occupancy, currency, ...}
-     * @return array<string, mixed>|null {search_id, ...}
+     * @return array<string, mixed>|null {cursor, ...} (legacy: {search_id, ...})
      */
     public function searchHotels(array $params): ?array
     {
         return $this->client->post('/api/v1/hotels/search', $params);
+    }
+
+    /**
+     * Extract the search_id embedded in a `cursor` JWT returned by the search API.
+     *
+     * The cursor is a JWT whose payload (the middle, base64url-encoded segment)
+     * is a JSON object carrying the search_id, e.g.
+     * {"search_id":"<uuid>","cursor":123.45,"iat":...,"limit":...}.
+     * Returns '' when the cursor is malformed or carries no search_id.
+     */
+    public static function extractSearchIdFromCursor(string $cursor): string
+    {
+        if ($cursor === '') {
+            return '';
+        }
+
+        $parts = explode('.', $cursor);
+        if (count($parts) < 2) {
+            return '';
+        }
+
+        $payload = strtr($parts[1], '-_', '+/');
+        $remainder = strlen($payload) % 4;
+        if ($remainder > 0) {
+            $payload .= str_repeat('=', 4 - $remainder);
+        }
+
+        $json = base64_decode($payload, true);
+        if ($json === false) {
+            return '';
+        }
+
+        $claims = json_decode($json, true);
+        if (!is_array($claims)) {
+            return '';
+        }
+
+        $searchId = $claims['search_id'] ?? '';
+
+        return is_string($searchId) ? $searchId : '';
     }
 
     /**
@@ -230,8 +274,11 @@ class SphinxApi
      */
     public function getHotelResults(string $searchId, ?string $cursor = null): ?array
     {
-        $query = ['search_id' => $searchId];
-        if ($cursor !== null) {
+        $query = [];
+        if ($searchId !== '') {
+            $query['search_id'] = $searchId;
+        }
+        if ($cursor !== null && $cursor !== '') {
             $query['cursor'] = $cursor;
         }
         return $this->client->get('/api/v1/hotels/results', $query);
@@ -282,8 +329,11 @@ class SphinxApi
      */
     public function getPackageResults(string $searchId, ?string $cursor = null): ?array
     {
-        $query = ['search_id' => $searchId];
-        if ($cursor !== null) {
+        $query = [];
+        if ($searchId !== '') {
+            $query['search_id'] = $searchId;
+        }
+        if ($cursor !== null && $cursor !== '') {
             $query['cursor'] = $cursor;
         }
         return $this->client->get('/api/v1/packages/results', $query);

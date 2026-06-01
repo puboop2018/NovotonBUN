@@ -34,16 +34,26 @@ try {
     }
 
     $api = Container::getApi();
-    $pollResponse = $api->getHotelResults($searchId, $cursor !== '' ? $cursor : null);
+    // $searchId carries the opaque polling token from search.php (a `cursor` JWT
+    // under the current API). Poll by cursor — use the evolving cursor the client
+    // sends on follow-up polls, otherwise the initial token. Mirrors the proven
+    // board-discovery poll loop (DiscoverBoardsCommand::pollResults).
+    $pollResponse = $api->getHotelResults('', $cursor !== '' ? $cursor : $searchId);
 
     if ($pollResponse === null) {
         echo json_encode(['status' => 'error', 'error' => 'API returned null']);
         exit;
     }
 
-    $results = TypeCoerce::toRowList($pollResponse['results'] ?? []);
+    $results = TypeCoerce::toRowList($pollResponse['results'] ?? $pollResponse['data'] ?? []);
     $status = TypeCoerce::toString($pollResponse['status'] ?? 'completed');
-    $nextCursor = isset($pollResponse['next_cursor']) ? TypeCoerce::toString($pollResponse['next_cursor']) : null;
+    // The API paginates via a `cursor` token (older builds used `next_cursor`).
+    $nextCursor = null;
+    if (isset($pollResponse['next_cursor'])) {
+        $nextCursor = TypeCoerce::toString($pollResponse['next_cursor']);
+    } elseif (isset($pollResponse['cursor'])) {
+        $nextCursor = TypeCoerce::toString($pollResponse['cursor']);
+    }
 
     // Diagnostic: log when the poll completes with zero results, so the
     // CS-Cart event log shows whether the API genuinely has no availability

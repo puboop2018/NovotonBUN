@@ -145,6 +145,17 @@ class AddProductsCommand extends AbstractSyncCommand
             ]];
         }
 
+        // Ensure the shared feature map and Sphinx provider aliases are present
+        // before any product features are assigned. Seeding is idempotent
+        // (INSERT IGNORE / addAlias upsert) and self-heals installs where the
+        // canonical map or Sphinx aliases were incomplete when the addon was
+        // installed (or where new feature types/codes were added afterwards).
+        // Without this, FeatureMapper::resolve('sphinx', ...) returns null and
+        // SphinxFeatureAssigner silently skips the feature, so products end up
+        // with only the few features that happened to resolve (e.g. region,
+        // property type). Mirrors the Novoton add_hotels_as_products seeding.
+        $this->seedFeatureMappings();
+
         $factory->loadValidCountryCodes();
 
         if (!$destRepo->loadParentLookup()) {
@@ -268,6 +279,31 @@ class AddProductsCommand extends AbstractSyncCommand
             'invalid_country' => $finalInvalidCountry,
             'total' => $finalTotal,
         ]];
+    }
+
+    /**
+     * Idempotently (re)seed the shared travel_core feature map and the Sphinx
+     * provider aliases, then drop the FeatureMapper cache so the freshly seeded
+     * rows are visible during this run.
+     *
+     * Seeding is cheap (a few dozen INSERT IGNORE / alias-upsert queries) and
+     * runs once per invocation, mirroring the Novoton add_hotels_as_products
+     * flow. It guarantees that stars, board, property type and region all have
+     * resolvable mappings before SphinxFeatureAssigner runs.
+     */
+    private function seedFeatureMappings(): void
+    {
+        if (function_exists('fn_travel_core_seed_feature_map')) {
+            fn_travel_core_seed_feature_map();
+        }
+        if (function_exists('fn_sphinx_holidays_seed_aliases')) {
+            fn_sphinx_holidays_seed_aliases();
+        }
+        if (function_exists('fn_sphinx_holidays_seed_region_mappings')) {
+            fn_sphinx_holidays_seed_region_mappings();
+        }
+
+        FeatureMapper::clearCache();
     }
 
     /**

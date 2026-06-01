@@ -146,11 +146,13 @@
 </div>
 
 <script>
+{literal}
 function toggleAllResorts(checked) {
     document.querySelectorAll('input[name="resorts[]"]').forEach(function(cb) {
         cb.checked = checked;
     });
 }
+{/literal}
 </script>
 
 {/capture}

@@ -13,6 +13,7 @@ use Tygh\Addons\SphinxHolidays\Cron\Commands\CleanupCommand;
 use Tygh\Addons\SphinxHolidays\Cron\Commands\DeduplicateCommand;
 use Tygh\Addons\SphinxHolidays\Cron\Commands\DestinationSyncCommand;
 use Tygh\Addons\SphinxHolidays\Cron\Commands\DiagnoseImagesCommand;
+use Tygh\Addons\SphinxHolidays\Cron\Commands\DiagnoseProductFeaturesCommand;
 use Tygh\Addons\SphinxHolidays\Cron\Commands\DiagnoseSearchCommand;
 use Tygh\Addons\SphinxHolidays\Cron\Commands\DiagnoseSeoCommand;
 use Tygh\Addons\SphinxHolidays\Cron\Commands\DiscoverBoardsCommand;
@@ -55,6 +56,7 @@ class CronDispatcher implements CronDispatcherInterface
         'sync_images' => SyncImagesCommand::class,
         'process_image_queue' => ProcessImageQueueCommand::class,
         'diagnose_images' => DiagnoseImagesCommand::class,
+        'diagnose_product_features' => DiagnoseProductFeaturesCommand::class,
         'diagnose_search' => DiagnoseSearchCommand::class,
         'diagnose_seo' => DiagnoseSeoCommand::class,
         'cleanup' => CleanupCommand::class,

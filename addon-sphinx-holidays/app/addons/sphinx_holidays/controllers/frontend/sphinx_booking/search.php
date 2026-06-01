@@ -123,10 +123,18 @@ try {
     // No cache — initiate async search, JS will poll for results
     $searchResponse = $api->searchHotels($searchParams);
 
-    if (empty($searchResponse['search_id'])) {
+    // The search API returns an opaque polling token. Historically this was a
+    // top-level `search_id`; the API now returns a `cursor` JWT instead (the
+    // search_id is embedded inside it). Either value works as the token the JS
+    // poller echoes back to sphinx_booking.search_poll.
+    $searchToken = is_array($searchResponse)
+        ? TypeCoerce::toString($searchResponse['cursor'] ?? $searchResponse['search_id'] ?? '')
+        : '';
+
+    if ($searchToken === '') {
         $httpClient = $api->getHttpClient();
         fn_log_event('general', 'runtime', [
-            'message'     => 'Sphinx searchHotels returned no search_id',
+            'message'     => 'Sphinx searchHotels returned no search token (cursor/search_id)',
             'http_code'   => $httpClient->getLastHttpCode(),
             'api_error'   => $httpClient->getLastError(),
             'raw_response' => substr($httpClient->getLastResponseRaw() ?? '', 0, 500),
@@ -137,7 +145,7 @@ try {
         return;
     }
 
-    $searchIdStr = TypeCoerce::toString($searchResponse['search_id']);
+    $searchIdStr = $searchToken;
     $initialStatus = TypeCoerce::toString($searchResponse['status'] ?? 'pending');
     $initialResults = TypeCoerce::toRowList($searchResponse['results'] ?? []);
 
