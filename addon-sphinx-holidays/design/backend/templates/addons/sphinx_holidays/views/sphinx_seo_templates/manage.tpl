@@ -7,7 +7,6 @@
  *}
 
 {style src="addons/travel_core/seo-templates.css"}
-{script src="addons/travel_core/seo-click-insert.js"}
 
 <style>
 #sphinx_seo_form input[type="text"],
@@ -34,10 +33,15 @@
 }
 </style>
 
+{capture name="mainbox"}
+
 {*
  * Mock placeholder data for the live-preview script. Mirrors the
  * fields produced at runtime by SphinxProductFactory::buildPlaceholders()
  * so the admin sees a realistic render before saving + bulk-applying.
+ *
+ * Kept INSIDE the capture so it is delivered with the mainbox content on
+ * AJAX top-nav navigation (out-of-capture output is dropped on AJAX).
  *}
 <script>
 window.__seoMockData = {
@@ -62,8 +66,6 @@ window.__seoMockData = {
     longitude: "28.0173"
 };
 </script>
-
-{capture name="mainbox"}
 
 <form method="post"
       action="{"sphinx_seo_templates.save"|fn_url}"
@@ -322,6 +324,12 @@ window.__seoMockData = {
 
 </form>
 
+{* Load the editor script INSIDE the capture: this page is reached via the
+   admin top-nav (an AJAX navigation), and CS-Cart's AJAX response only
+   returns the captured mainbox content. A {script src=} placed before the
+   capture is dropped on AJAX nav, so click-insert and live preview never
+   wire up. Keeping it here mirrors the working novoton SEO page. *}
+{script src="addons/travel_core/seo-click-insert.js"}
 
 {/capture}
 
