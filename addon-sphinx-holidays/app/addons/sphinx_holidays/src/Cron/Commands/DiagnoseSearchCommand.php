@@ -317,8 +317,12 @@ class DiagnoseSearchCommand extends AbstractSyncCommand
             $this->runVariant($api, 'c: destination_id + hotel_ids', $baseParams + ['destination_id' => $destinationId, 'hotel_ids' => [$hotelId]], $hotelId);
 
             $this->output('');
-            $this->output('  => If (b)/(c) return offers for this hotel but (a) returns 0, the storefront');
-            $this->output('     must send destination_id — search.php resolves it from the hotel record.');
+            $this->output('  => The storefront (search.php) queries by destination_id ONLY and narrows');
+            $this->output('     to this hotel client-side. The API\'s hotel_ids filter returns an empty');
+            $this->output('     set when combined with destination_id, which is why (c) is usually 0.');
+            $this->output('     If (b) lists this hotel id above, availability works on the storefront.');
+            $this->output('     If (b) does NOT list it, either the hotel genuinely has no offers for');
+            $this->output('     these dates/occupancy, or its destination_id mapping is wrong.');
         }
 
         // ── Rate limit state ───────────────────────────────────────────
@@ -440,10 +444,19 @@ class DiagnoseSearchCommand extends AbstractSyncCommand
         $poll = $this->pollAll($api, $cursorToken, $searchId, false);
         $results = $poll['results'];
 
+        // Match on hotel_id OR id — the results endpoint is not consistent
+        // about which key carries the hotel id, and matching only one key can
+        // under-count (and mislead the operator into thinking a hotel that IS
+        // present has no availability). This mirrors the storefront filter.
         $targetCount = 0;
+        $sampleIds = [];
         foreach ($results as $r) {
-            if (TypeCoerce::toString($r['hotel_id'] ?? '') === $targetHotelId) {
+            $rid = TypeCoerce::toString($r['hotel_id'] ?? $r['id'] ?? '');
+            if ($rid === $targetHotelId) {
                 $targetCount++;
+            }
+            if (count($sampleIds) < 15 && $rid !== '' && !in_array($rid, $sampleIds, true)) {
+                $sampleIds[] = $rid;
             }
         }
 
@@ -456,6 +469,19 @@ class DiagnoseSearchCommand extends AbstractSyncCommand
             $targetCount,
             $targetHotelId,
         ));
+
+        if ($results !== []) {
+            $present = in_array($targetHotelId, $sampleIds, true) || $targetCount > 0;
+            $this->output(
+                '    distinct hotel ids in results (first 15): '
+                . ($sampleIds === [] ? '(none — results carry no hotel_id/id field!)' : implode(', ', $sampleIds)),
+            );
+            $this->output(
+                $present
+                    ? "    => hotel [{$targetHotelId}] IS present in this destination's results."
+                    : "    => hotel [{$targetHotelId}] is NOT among this destination's results.",
+            );
+        }
     }
 
     /**

@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+
 /**
  * Sphinx Booking Controller — Search Poll Mode
  *
@@ -14,6 +15,7 @@ declare(strict_types=1);
  * @package SphinxHolidays
  * @since   1.3.0
  */
+
 if (!defined('BOOTSTRAP')) {
     exit('Access denied');
 }
@@ -60,7 +62,10 @@ try {
     if ($filterHotelId !== '' && !empty($results)) {
         $results = array_values(array_filter(
             $results,
-            static fn (array $r): bool => TypeCoerce::toString($r['hotel_id'] ?? '') === $filterHotelId,
+            // Match on hotel_id, falling back to id: the results endpoint is
+            // not always consistent about which key carries the hotel id, and
+            // matching the wrong key drops every offer for the hotel.
+            static fn (array $r): bool => TypeCoerce::toString($r['hotel_id'] ?? $r['id'] ?? '') === $filterHotelId,
         ));
     }
 
@@ -147,7 +152,6 @@ try {
         'next_cursor' => $nextCursor,
     ]);
     exit;
-
 } catch (\Throwable $e) {
     fn_log_event('general', 'runtime', [
         'message' => 'Sphinx search_poll error: ' . $e->getMessage(),

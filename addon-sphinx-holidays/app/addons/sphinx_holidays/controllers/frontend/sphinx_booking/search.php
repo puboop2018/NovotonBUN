@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+
 /**
  * Sphinx Booking Controller — Search Mode
  *
@@ -14,6 +15,7 @@ declare(strict_types=1);
  * @package SphinxHolidays
  * @since   1.0.0
  */
+
 if (!defined('BOOTSTRAP')) {
     exit('Access denied');
 }
@@ -104,8 +106,7 @@ try {
     // The Sphinx /hotels/search endpoint needs a destination_id to run a live
     // availability search — a hotel_ids-only query returns an empty result set.
     // The product page booking engine only knows the hotel_id, so resolve the
-    // hotel's destination_id from the local sphinx_hotels row and send both.
-    // Results are narrowed back to this hotel via filter_hotel_id (search_poll).
+    // hotel's destination_id from the local sphinx_hotels row.
     if ($destination_id <= 0 && $hotel_id !== '') {
         $hotelRow = Container::getHotelRepository()->getById($hotel_id);
         if ($hotelRow !== null) {
@@ -125,6 +126,17 @@ try {
         $searchParams['ignore_domains'] = $ignoreDomains;
     }
 
+    // The Sphinx API's hotel_ids filter returns an EMPTY set when combined with
+    // a destination_id (verified via cron_mode=diagnose_search: destination-only
+    // returns the full destination, destination + hotel_ids returns 0). So when
+    // we have a destination, query by destination alone and narrow back to this
+    // hotel client-side (filter_hotel_id, below + in search_poll). hotel_ids is
+    // kept in $searchParams purely to keep the cache key unique per hotel.
+    $apiSearchParams = $searchParams;
+    if ($destination_id > 0) {
+        unset($apiSearchParams['hotel_ids']);
+    }
+
     // Check cache — if hit, render results inline (no polling needed)
     $cacheEnabled = ConfigProvider::isApiCacheEnabled();
     $cacheTtl = ConfigProvider::getCacheTtlSearch();
@@ -142,7 +154,7 @@ try {
     }
 
     // No cache — initiate async search, JS will poll for results
-    $searchResponse = $api->searchHotels($searchParams);
+    $searchResponse = $api->searchHotels($apiSearchParams);
 
     // The search API returns an opaque polling token. Historically this was a
     // top-level `search_id`; the API now returns a `cursor` JWT instead (the
@@ -178,7 +190,7 @@ try {
     if ($hotel_id !== '' && !empty($initialResults)) {
         $initialResults = array_values(array_filter(
             $initialResults,
-            static fn (array $r): bool => TypeCoerce::toString($r['hotel_id'] ?? '') === $hotel_id,
+            static fn (array $r): bool => TypeCoerce::toString($r['hotel_id'] ?? $r['id'] ?? '') === $hotel_id,
         ));
     }
 
@@ -228,7 +240,6 @@ try {
 
     $view->assign('sphinx_search_id', $searchIdStr);
     $view->assign('sphinx_search_status', 'pending');
-
 } catch (\Throwable $e) {
     fn_log_event('general', 'runtime', [
         'message' => 'Sphinx Search Error: ' . $e->getMessage(),
