@@ -22,7 +22,6 @@
 }
 .seo-ph-badge {
     display: inline-block;
-    cursor: pointer;
     font-family: monospace;
     font-size: 11px;
     padding: 2px 6px;
@@ -31,15 +30,9 @@
     background: #d9edf7;
     color: #31708f;
     border: 1px solid #bce8f1;
-    transition: background 0.15s;
-}
-.seo-ph-badge:hover {
-    background: #31708f;
-    color: #fff;
 }
 .seo-mod-badge {
     display: inline-block;
-    cursor: pointer;
     font-family: monospace;
     font-size: 11px;
     padding: 2px 6px;
@@ -48,11 +41,6 @@
     background: #dff0d8;
     color: #3c763d;
     border: 1px solid #d6e9c6;
-    transition: background 0.15s;
-}
-.seo-mod-badge:hover {
-    background: #3c763d;
-    color: #fff;
 }
 .seo-ph-desc {
     font-size: 11px;
@@ -111,9 +99,9 @@
 
 /* ── Disabled field visual ───────────────────────────────
  * When the per-field enable checkbox is unchecked, fade the
- * input, preview, counter, and help text so the admin can
- * see at a glance which fields won't be applied. The checkbox
- * itself and the label text stay clickable.
+ * input and help text so the admin can see at a glance which
+ * fields won't be applied. The checkbox itself and the label
+ * text stay clickable.
  */
 .seo-field-off .controls > input[type="text"],
 .seo-field-off .controls > textarea,
