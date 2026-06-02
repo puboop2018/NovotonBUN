@@ -97,6 +97,9 @@ function fn_travel_core_ensure_schema(): void
     // overwrite star aliases that share the same numeric api_value (e.g. sphinx
     // facility '4' = water_bottle overwrote star '4' = 4-star). The new key
     // lets both coexist — findByAlias() already filters by feature_type.
+    // Ensure TypeCoerce is available — the PSR-4 autoloader in init.php is not
+    // registered yet when this function is called from post_install.
+    require_once __DIR__ . '/src/Helpers/TypeCoerce.php';
     $tablePrefix = \Tygh\Addons\TravelCore\Helpers\TypeCoerce::toString(\Tygh\Registry::get('config.table_prefix'));
     $aliasTable = $tablePrefix . 'travel_api_alias';
     $tableExists = \Tygh\Addons\TravelCore\Helpers\TypeCoerce::toInt(db_get_field(
