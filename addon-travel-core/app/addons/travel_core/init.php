@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 /***************************************************************************
  *                                                                          *
@@ -10,7 +11,9 @@ declare(strict_types=1);
 
 use Tygh\Registry;
 
-if (!defined('BOOTSTRAP')) { exit('Access denied'); }
+if (!defined('BOOTSTRAP')) {
+    exit('Access denied');
+}
 
 // Addon version constant
 if (!defined('TRAVEL_CORE_VERSION')) {
@@ -25,7 +28,7 @@ if (!defined('TRAVEL_CACHE_VER')) {
 }
 
 // Register PSR-4 autoloader for travel_core namespace.
-spl_autoload_register(function ($class) {
+spl_autoload_register(function ($class): void {
     $prefix = 'Tygh\\Addons\\TravelCore\\';
     if (strncmp($prefix, $class, strlen($prefix)) !== 0) {
         return;
@@ -46,10 +49,17 @@ require_once __DIR__ . '/functions/hotels.php';
 // Load hook functions
 require_once __DIR__ . '/hooks.php';
 
+// Self-heal: ensure travel_api_alias has the composite unique key (api_source,
+// api_value, map_id) so star and facility aliases with colliding numeric values
+// can coexist. The function is idempotent and guards itself with a static flag.
+if (defined('AREA') && AREA === 'A' && function_exists('fn_travel_core_ensure_schema')) {
+    fn_travel_core_ensure_schema();
+}
+
 // Register addon hooks
 fn_register_hooks(
     'get_cart_product_data_post',      // Format cart items for travel bookings
     'calculate_cart_items_post',       // Ensure rooms_data preserved as array
     'dispatch_before_display',         // CSS loading for booking pages
-    'get_order_info'                   // Format booking data in order view
+    'get_order_info',                   // Format booking data in order view
 );
