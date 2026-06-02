@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 /**
  * Sphinx Booking Controller — Search Poll Mode
@@ -13,13 +14,15 @@ declare(strict_types=1);
  * @package SphinxHolidays
  * @since   1.3.0
  */
-if (!defined('BOOTSTRAP')) { exit('Access denied'); }
+if (!defined('BOOTSTRAP')) {
+    exit('Access denied');
+}
 
-use Tygh\Tygh;
-use Tygh\Addons\SphinxHolidays\Services\Container;
 use Tygh\Addons\SphinxHolidays\Services\CacheService;
-use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+use Tygh\Addons\SphinxHolidays\Services\Container;
 use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+use Tygh\Tygh;
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -47,6 +50,20 @@ try {
 
     $results = TypeCoerce::toRowList($pollResponse['results'] ?? $pollResponse['data'] ?? []);
     $status = TypeCoerce::toString($pollResponse['status'] ?? 'completed');
+
+    // Narrow to the requested hotel for product-page searches. search.php stores
+    // the hotel_id in the search session meta; because we search by destination
+    // the API can return the whole destination, so drop other hotels' offers
+    // before commission/slimming. No-op when the API already filtered by hotel.
+    $searchMeta = TypeCoerce::toStringMap(Tygh::$app['session']['sphinx_search_' . $searchId] ?? null);
+    $filterHotelId = TypeCoerce::toString($searchMeta['filter_hotel_id'] ?? '');
+    if ($filterHotelId !== '' && !empty($results)) {
+        $results = array_values(array_filter(
+            $results,
+            static fn (array $r): bool => TypeCoerce::toString($r['hotel_id'] ?? '') === $filterHotelId,
+        ));
+    }
+
     // The API paginates via a `cursor` token (older builds used `next_cursor`).
     $nextCursor = null;
     if (isset($pollResponse['next_cursor'])) {
@@ -107,7 +124,6 @@ try {
 
     // On completion, persist the full result set to cache for future searches
     if (($status === 'completed' || $finalize) && !empty($slimResults)) {
-        $searchMeta = TypeCoerce::toStringMap(Tygh::$app['session']['sphinx_search_' . $searchId] ?? null);
         if (!empty($searchMeta['cache_key']) && !empty($searchMeta['cache_ttl'])) {
             // Accumulate results across multiple poll batches via session
             $cachedBatch = TypeCoerce::toRowList(Tygh::$app['session']['sphinx_results_' . $searchId] ?? null);
@@ -126,8 +142,8 @@ try {
     }
 
     echo json_encode([
-        'status'      => $status,
-        'results'     => $slimResults,
+        'status' => $status,
+        'results' => $slimResults,
         'next_cursor' => $nextCursor,
     ]);
     exit;
@@ -135,7 +151,7 @@ try {
 } catch (\Throwable $e) {
     fn_log_event('general', 'runtime', [
         'message' => 'Sphinx search_poll error: ' . $e->getMessage(),
-        'file'    => $e->getFile() . ':' . $e->getLine(),
+        'file' => $e->getFile() . ':' . $e->getLine(),
     ]);
     echo json_encode(['status' => 'error', 'error' => 'Internal error']);
     exit;

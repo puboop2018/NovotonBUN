@@ -7,6 +7,7 @@ namespace Tygh\Addons\SphinxHolidays\Helpers;
 use Tygh\Addons\SphinxHolidays\Repository\HotelRepository;
 use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
 use Tygh\Addons\SphinxHolidays\Services\SphinxFeatureAssigner;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 /**
  * Creates CS-Cart products from Sphinx hotel data.
@@ -57,18 +58,22 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
     #[\Override]
     public function createFromHotel(array $hotel, array $hierarchy): array
     {
-        $hotelId = $hotel['hotel_id'];
-        $productCode = ConfigProvider::getProductCodePrefix() . $hotelId;
+        $hotelId = TypeCoerce::toString($hotel['hotel_id'] ?? '');
+        $cc = is_string($hotel['country_code']) ? strtoupper($hotel['country_code']) : '';
 
         // Country code validation
-        $cc = $hotel['country_code'] ?? '';
-        if (!empty($cc) && !isset($this->validCountryCodes[$cc])) {
+        if ($cc !== '' && !isset($this->validCountryCodes[$cc])) {
             $this->hotelRepo->markSkipped($hotelId, 'invalid_country');
             fn_log_event('general', 'runtime', [
                 'message' => "Sphinx: country code '{$cc}' not found in CS-Cart countries. Hotel {$hotelId} skipped.",
             ]);
             return ['status' => 'skipped', 'product_id' => 0, 'reason' => "invalid country: {$cc}"];
         }
+
+        // Product code: country-code prefix + hotel id (e.g. HR59843). In practice
+        // every synced hotel has a country_code; in the rare case it's missing the
+        // code is just the bare hotel id (no prefix).
+        $productCode = $cc . $hotelId;
 
         // Check if product already exists (re-run after partial failure)
         $existingProductId = (int) db_get_field(
@@ -135,7 +140,7 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
         $dupeProductId = 0;
 
         // Tier 1: name + property_type + classification + region_id + country_code
-        if ($regionId > 0 && $cc !== '') {
+        if ($regionId > 0) {
             $dupeProductId = (int) db_get_field(
                 'SELECT product_id FROM ?:sphinx_hotels
                  WHERE name = ?s AND property_type = ?s AND classification = ?i

@@ -281,19 +281,4 @@ class DiagnoseProductFeaturesCommand extends AbstractSyncCommand
         $variantStr = $variantId > 0 ? (string) $variantId : 'not yet — will be auto-created';
         $this->output("  resolve     : OK (map_id={$mapId}, canonical={$canonical}, variant_id={$variantStr})");
     }
-
-    private function seedFeatureMappings(): void
-    {
-        if (function_exists('fn_travel_core_seed_feature_map')) {
-            fn_travel_core_seed_feature_map();
-        }
-        if (function_exists('fn_sphinx_holidays_seed_aliases')) {
-            fn_sphinx_holidays_seed_aliases();
-        }
-        if (function_exists('fn_sphinx_holidays_seed_region_mappings')) {
-            fn_sphinx_holidays_seed_region_mappings();
-        }
-
-        FeatureMapper::clearCache();
-    }
 }

@@ -88,6 +88,13 @@ class ProductFactory implements ProductFactoryInterface
             'category_ids' => [$categoryId],
         ], $seoFields);
 
+        // Fall back to the formatted display name when no SEO product-name
+        // template is configured. Without a name, fn_update_product() fails.
+        $productName = $productData['product'] ?? '';
+        if (!is_string($productName) || trim($productName) === '') {
+            $productData['product'] = $displayName;
+        }
+
         $productId = fn_update_product($productData, 0, CART_LANGUAGE);
 
         if (!$productId) {

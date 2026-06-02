@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 /**
  * Sphinx Holidays - Backend Admin Controller
@@ -14,16 +15,18 @@ declare(strict_types=1);
  * @since 1.0.0
  */
 
-use Tygh\Tygh;
+use Tygh\Addons\SphinxHolidays\Cron\Commands\AddProductsCommand;
 use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
 use Tygh\Addons\SphinxHolidays\Services\Container;
 use Tygh\Addons\SphinxHolidays\Services\DestinationSyncService;
 use Tygh\Addons\SphinxHolidays\Services\HotelSyncService;
-use Tygh\Addons\SphinxHolidays\Cron\Commands\AddProductsCommand;
-use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+use Tygh\Tygh;
 
-if (!defined('BOOTSTRAP')) { exit('Access denied'); }
+if (!defined('BOOTSTRAP')) {
+    exit('Access denied');
+}
 
 /** @var \Smarty $view */
 $view = Tygh::$app['view'];
@@ -40,7 +43,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             return [CONTROLLER_STATUS_REDIRECT, 'sphinx_holidays.manage'];
         }
 
-        if (function_exists('set_time_limit')) { set_time_limit(0); }
+        if (function_exists('set_time_limit')) {
+            set_time_limit(0);
+        }
 
         $api = Container::getApi();
         $repository = Container::getDestinationRepository();
@@ -63,7 +68,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             return [CONTROLLER_STATUS_REDIRECT, 'sphinx_holidays.manage'];
         }
 
-        if (function_exists('set_time_limit')) { set_time_limit(0); }
+        if (function_exists('set_time_limit')) {
+            set_time_limit(0);
+        }
 
         $api = Container::getApi();
         $hotelRepo = Container::getHotelRepository();
@@ -92,7 +99,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         $command = new AddProductsCommand();
-        $command->setOutputCallback(function($msg) {}); // silent in web context
+        $command->setOutputCallback(function ($msg): void {
+        }); // silent in web context
         $result = $command->execute();
 
         if (!empty($result['success'])) {
@@ -117,7 +125,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             return [CONTROLLER_STATUS_REDIRECT, 'sphinx_holidays.manage'];
         }
 
-        if (function_exists('set_time_limit')) { set_time_limit(0); }
+        if (function_exists('set_time_limit')) {
+            set_time_limit(0);
+        }
 
         $api = Container::getApi();
         $hotelRepo = Container::getHotelRepository();
@@ -133,21 +143,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($rLinked > 0 || $rSkipped > 0) {
             fn_set_notification('N', __('notice'), __('sphinx_holidays.relink_done', [
-                '[linked]'    => $rLinked,
-                '[skipped]'   => $rSkipped,
+                '[linked]' => $rLinked,
+                '[skipped]' => $rSkipped,
                 '[not_found]' => $rNotFound,
-                '[errors]'    => $rErrors,
-                '[total]'     => $rTotal,
+                '[errors]' => $rErrors,
+                '[total]' => $rTotal,
             ]));
         } elseif ($rTotal === 0) {
             fn_set_notification('W', __('warning'), __('sphinx_holidays.no_spx_products'));
         } else {
             fn_set_notification('W', __('warning'), __('sphinx_holidays.relink_done', [
-                '[linked]'    => 0,
-                '[skipped]'   => $rSkipped,
+                '[linked]' => 0,
+                '[skipped]' => $rSkipped,
                 '[not_found]' => $rNotFound,
-                '[errors]'    => $rErrors,
-                '[total]'     => $rTotal,
+                '[errors]' => $rErrors,
+                '[total]' => $rTotal,
             ]));
         }
 
@@ -233,7 +243,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             return [CONTROLLER_STATUS_REDIRECT, 'sphinx_holidays.hotels'];
         }
 
-        if (function_exists('set_time_limit')) { set_time_limit(0); }
+        if (function_exists('set_time_limit')) {
+            set_time_limit(0);
+        }
 
         $hotelRepo = Container::getHotelRepository();
         $synced = 0;
@@ -291,7 +303,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $hotelRepo->updateImages(
                             TypeCoerce::toString($hotel['hotel_id'] ?? ''),
                             $imageUrls[0],
-                            (string) json_encode($fresh['images'])
+                            (string) json_encode($fresh['images']),
                         );
                     }
                 }
@@ -428,10 +440,10 @@ if ($mode === 'search_hotels') {
     $formatted = [];
     foreach ($results as $r) {
         $formatted[] = [
-            'hotel_id'         => $r['hotel_id'],
-            'name'             => $r['name'],
-            'classification'   => TypeCoerce::toInt($r['classification'] ?? 0),
-            'country_code'     => $r['country_code'] ?? '',
+            'hotel_id' => $r['hotel_id'],
+            'name' => $r['name'],
+            'classification' => TypeCoerce::toInt($r['classification'] ?? 0),
+            'country_code' => $r['country_code'] ?? '',
             'destination_name' => $r['destination_name'] ?? '',
         ];
     }
@@ -479,8 +491,8 @@ if ($mode === 'manage') {
     $view->assign('skipped_hotels', $skippedCount);
     $view->assign('selected_countries', $selectedCountries);
     $view->assign('is_configured', $isConfigured);
-    // Orphaned SPX products: exist in CS-Cart but not linked in sphinx_hotels
-    $orphanedSpxCount = $hotelRepo->countOrphanedProducts(ConfigProvider::getProductCodePrefix());
+    // Hotels with a dead product_id (product deleted from CS-Cart without clearing the link)
+    $orphanedSpxCount = $hotelRepo->countOrphanedProducts();
     $view->assign('orphaned_spx_products', $orphanedSpxCount);
 
     $view->assign('sync_logs', $syncLogs);
@@ -489,24 +501,26 @@ if ($mode === 'manage') {
     $cron_key = ConfigProvider::getCronAccessKey();
     $base_url = TypeCoerce::toString(fn_url('', 'C'));
     $cron_urls = [
-        'destinations'    => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=destinations",
-        'hotels'          => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=hotels",
-        'add_products'    => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=add_products",
-        'package_routes'  => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=package_routes",
-        'circuits'        => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=circuits",
-        'experiences'     => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=experiences",
-        'order_status'    => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=order_status",
-        'cache_refresh'   => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=cache_refresh",
-        'cleanup'         => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=cleanup",
+        'destinations' => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=destinations",
+        'hotels' => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=hotels",
+        'add_products' => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=add_products",
+        'package_routes' => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=package_routes",
+        'circuits' => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=circuits",
+        'experiences' => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=experiences",
+        'order_status' => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=order_status",
+        'cache_refresh' => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=cache_refresh",
+        'cleanup' => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=cleanup",
         'discover_boards' => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=discover_boards",
-        'assign_boards'   => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=assign_boards",
+        'assign_boards' => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=assign_boards",
         'update_products' => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=update_products",
-        'enrich_hotel_data'   => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=enrich_hotel_data",
-        'sync_images'         => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=sync_images",
+        'reassign_features' => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=reassign_features",
+        'enrich_hotel_data' => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=enrich_hotel_data",
+        'sync_images' => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=sync_images",
         'process_image_queue' => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=process_image_queue",
+        'sync_and_upload_images' => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=sync_and_upload_images",
         'diagnose_search' => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=diagnose_search",
         'diagnose_images' => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=diagnose_images",
-        'diagnose_seo'    => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=diagnose_seo",
+        'diagnose_seo' => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=diagnose_seo",
     ];
     $view->assign('cron_urls', $cron_urls);
     $view->assign('cron_key', $cron_key);
@@ -515,10 +529,10 @@ if ($mode === 'manage') {
     $repository = Container::getDestinationRepository();
 
     $params = [
-        'type'      => RequestCoerce::string($_REQUEST, 'type'),
+        'type' => RequestCoerce::string($_REQUEST, 'type'),
         'parent_id' => RequestCoerce::int($_REQUEST, 'parent_id'),
-        'q'         => RequestCoerce::string($_REQUEST, 'q'),
-        'page'      => max(1, RequestCoerce::int($_REQUEST, 'page', 1)),
+        'q' => RequestCoerce::string($_REQUEST, 'q'),
+        'page' => max(1, RequestCoerce::int($_REQUEST, 'page', 1)),
         'items_per_page' => RequestCoerce::int($_REQUEST, 'items_per_page', 50),
     ];
 
@@ -545,16 +559,16 @@ if ($mode === 'manage') {
 
     // Build sort URL base preserving all current filter params (safe URL encoding)
     $sortFilterParams = array_filter([
-        'country_code'   => $search['country_code'],
-        'region_id'      => $search['region_id'] ?: null,
+        'country_code' => $search['country_code'],
+        'region_id' => $search['region_id'] ?: null,
         'destination_id' => $search['destination_id'] ?: null,
-        'sync_status'    => $search['sync_status'],
+        'sync_status' => $search['sync_status'],
         'classification' => $search['classification'],
-        'property_type'  => $search['property_type'],
-        'link_status'    => $search['link_status'],
-        'q'              => $search['q'],
+        'property_type' => $search['property_type'],
+        'link_status' => $search['link_status'],
+        'q' => $search['q'],
         'items_per_page' => $search['items_per_page'],
-    ], static fn($v) => $v !== '' && $v !== null);
+    ], static fn ($v) => $v !== '' && $v !== null);
     $sortUrlBase = 'sphinx_holidays.hotels?' . http_build_query($sortFilterParams);
 
     $view->assign('hotels', $hotels);
@@ -653,10 +667,10 @@ if ($mode === 'manage') {
         }
 
         $whitelistSummary[] = [
-            'name'            => $cd['name'],
-            'full_regions'    => $fullRegions,
+            'name' => $cd['name'],
+            'full_regions' => $fullRegions,
             'partial_regions' => $partialRegions,
-            'total_cities'    => $totalCities,
+            'total_cities' => $totalCities,
         ];
     }
 

@@ -127,10 +127,9 @@ final class CartService implements CartServiceInterface
             return 0;
         }
 
-        $productCode = ConfigProvider::getProductCodePrefix() . $entityId;
         return (int) db_get_field(
-            'SELECT product_id FROM ?:products WHERE product_code = ?s',
-            $productCode,
+            'SELECT product_id FROM ?:sphinx_hotels WHERE hotel_id = ?s',
+            $entityId,
         );
     }
 

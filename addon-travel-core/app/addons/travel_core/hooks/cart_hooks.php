@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 /**
  * Travel Core - Cart Hook Functions
@@ -10,11 +11,13 @@ declare(strict_types=1);
  * @since 1.0.0
  */
 
-use Tygh\Registry;
 use Tygh\Addons\TravelCore\Helpers\ValidationHelpers;
 use Tygh\Addons\TravelCore\Services\BookingDisplayService;
+use Tygh\Registry;
 
-if (!defined('BOOTSTRAP')) { exit('Access denied'); }
+if (!defined('BOOTSTRAP')) {
+    exit('Access denied');
+}
 
 /**
  * Hook: Format cart product info for travel bookings.
@@ -97,11 +100,15 @@ function fn_travel_core_dispatch_before_display(): void
     if ($dispatch === 'products.view' && !empty($_REQUEST['product_id'])) {
         $productId = ValidationHelpers::toInt($_REQUEST['product_id']);
         $productCode = ValidationHelpers::toString(db_get_field(
-            "SELECT product_code FROM ?:products WHERE product_id = ?i",
-            $productId
+            'SELECT product_code FROM ?:products WHERE product_id = ?i',
+            $productId,
         ));
 
-        if ($productCode !== '' && (str_starts_with($productCode, 'NVT') || str_starts_with($productCode, 'SPX'))) {
+        $isSphinxProduct = (bool) db_get_field(
+            'SELECT hotel_id FROM ?:sphinx_hotels WHERE product_id = ?i LIMIT 1',
+            $productId,
+        );
+        if ($productCode !== '' && (str_starts_with($productCode, 'NVT') || $isSphinxProduct)) {
             $view = \Tygh\Tygh::$app['view'];
             $view->assign('travel_booking_product_id', $productId);
             $view->assign('travel_booking_product_code', $productCode);
@@ -132,8 +139,8 @@ function fn_travel_core_dispatch_before_display(): void
 function _travel_core_prepare_hotel_seo_data(int $productId): void
 {
     $productCode = ValidationHelpers::toString(db_get_field(
-        "SELECT product_code FROM ?:products WHERE product_id = ?i",
-        $productId
+        'SELECT product_code FROM ?:products WHERE product_id = ?i',
+        $productId,
     ));
 
     if ($productCode === '') {
@@ -147,22 +154,27 @@ function _travel_core_prepare_hotel_seo_data(int $productId): void
     if (str_starts_with($productCode, 'NVT')) {
         $hotelId = substr($productCode, 3);
         $hotelData = db_get_row(
-            "SELECT hotel_name AS name, star_rating AS classification, hotel_type AS property_type,
+            'SELECT hotel_name AS name, star_rating AS classification, hotel_type AS property_type,
                     city, region, country, latitude, longitude
-             FROM ?:novoton_hotels WHERE hotel_id = ?s",
-            $hotelId
+             FROM ?:novoton_hotels WHERE hotel_id = ?s',
+            $hotelId,
         );
     }
-    // Sphinx hotel (SPX prefix)
-    elseif (str_starts_with($productCode, 'SPX')) {
-        $hotelId = substr($productCode, 3);
-        $hotelData = db_get_row(
-            "SELECT name, classification, property_type,
-                    destination_name AS city, region_name AS region, country_name AS country,
-                    latitude, longitude, image_url, address, phone, email, website
-             FROM ?:sphinx_hotels WHERE hotel_id = ?s",
-            $hotelId
+    // Sphinx hotel (identified via sphinx_hotels table — works for any product code prefix)
+    else {
+        $sphinxHotelId = (string) db_get_field(
+            'SELECT hotel_id FROM ?:sphinx_hotels WHERE product_id = ?i',
+            $productId,
         );
+        if ($sphinxHotelId !== '') {
+            $hotelData = db_get_row(
+                'SELECT name, classification, property_type,
+                        destination_name AS city, region_name AS region, country_name AS country,
+                        latitude, longitude, image_url, address, phone, email, website
+                 FROM ?:sphinx_hotels WHERE hotel_id = ?s',
+                $sphinxHotelId,
+            );
+        }
     }
 
     if (empty($hotelData) || !is_array($hotelData)) {
@@ -172,17 +184,17 @@ function _travel_core_prepare_hotel_seo_data(int $productId): void
     // Load product descriptions for page_title and meta_description
     /** @var array<string, mixed> $productDesc */
     $productDesc = db_get_row(
-        "SELECT page_title, meta_description, full_description FROM ?:product_descriptions WHERE product_id = ?i AND lang_code = ?s",
+        'SELECT page_title, meta_description, full_description FROM ?:product_descriptions WHERE product_id = ?i AND lang_code = ?s',
         $productId,
-        CART_LANGUAGE
+        CART_LANGUAGE,
     );
 
     $productDesc = is_array($productDesc) ? $productDesc : [];
     // Build JSON-LD schema
     $schema = [
-        '@context'   => 'https://schema.org',
-        '@type'      => 'Hotel',
-        'name'       => ValidationHelpers::toString($hotelData['name'] ?? ''),
+        '@context' => 'https://schema.org',
+        '@type' => 'Hotel',
+        'name' => ValidationHelpers::toString($hotelData['name'] ?? ''),
         'description' => fn_travel_core_truncate_seo(strip_tags(ValidationHelpers::toString($productDesc['full_description'] ?? '')), 300),
     ];
 
@@ -192,26 +204,42 @@ function _travel_core_prepare_hotel_seo_data(int $productId): void
     }
 
     $address = [];
-    if (!empty($hotelData['city'])) $address['addressLocality'] = $hotelData['city'];
-    if (!empty($hotelData['region'])) $address['addressRegion'] = $hotelData['region'];
-    if (!empty($hotelData['country'])) $address['addressCountry'] = $hotelData['country'];
-    if (!empty($hotelData['address'])) $address['streetAddress'] = $hotelData['address'];
+    if (!empty($hotelData['city'])) {
+        $address['addressLocality'] = $hotelData['city'];
+    }
+    if (!empty($hotelData['region'])) {
+        $address['addressRegion'] = $hotelData['region'];
+    }
+    if (!empty($hotelData['country'])) {
+        $address['addressCountry'] = $hotelData['country'];
+    }
+    if (!empty($hotelData['address'])) {
+        $address['streetAddress'] = $hotelData['address'];
+    }
     if (!empty($address)) {
         $schema['address'] = array_merge(['@type' => 'PostalAddress'], $address);
     }
 
     if (!empty($hotelData['latitude']) && !empty($hotelData['longitude'])) {
         $schema['geo'] = [
-            '@type'     => 'GeoCoordinates',
-            'latitude'  => ValidationHelpers::toFloat($hotelData['latitude']),
+            '@type' => 'GeoCoordinates',
+            'latitude' => ValidationHelpers::toFloat($hotelData['latitude']),
             'longitude' => ValidationHelpers::toFloat($hotelData['longitude']),
         ];
     }
 
-    if (!empty($hotelData['image_url'])) $schema['image'] = $hotelData['image_url'];
-    if (!empty($hotelData['phone'])) $schema['telephone'] = $hotelData['phone'];
-    if (!empty($hotelData['email'])) $schema['email'] = $hotelData['email'];
-    if (!empty($hotelData['website'])) $schema['url'] = $hotelData['website'];
+    if (!empty($hotelData['image_url'])) {
+        $schema['image'] = $hotelData['image_url'];
+    }
+    if (!empty($hotelData['phone'])) {
+        $schema['telephone'] = $hotelData['phone'];
+    }
+    if (!empty($hotelData['email'])) {
+        $schema['email'] = $hotelData['email'];
+    }
+    if (!empty($hotelData['website'])) {
+        $schema['url'] = $hotelData['website'];
+    }
 
     // Assign to Smarty view — safe here because dispatch_before_display
     // runs BEFORE template rendering starts (unlike gather_additional_product_data_post
@@ -245,29 +273,32 @@ function _travel_core_render_debug(string $dispatch): void
     // ── 2. Addon status ──
     $addons = ['travel_core', 'novoton_holidays', 'sphinx_holidays'];
     foreach ($addons as $addon) {
-        $status = db_get_field("SELECT status FROM ?:addons WHERE addon = ?s", $addon);
+        $status = db_get_field('SELECT status FROM ?:addons WHERE addon = ?s', $addon);
         $debug['addon_status'][$addon] = $status ?: 'NOT INSTALLED';
     }
 
     // ── 3. Product info (if on product page) ──
     if ($dispatch === 'products.view' && !empty($_REQUEST['product_id'])) {
         $pid = ValidationHelpers::toInt($_REQUEST['product_id']);
-        $pcode = ValidationHelpers::toString(db_get_field("SELECT product_code FROM ?:products WHERE product_id = ?i", $pid));
+        $pcode = ValidationHelpers::toString(db_get_field('SELECT product_code FROM ?:products WHERE product_id = ?i', $pid));
+        $sphinxDebugId = (string) db_get_field(
+            'SELECT hotel_id FROM ?:sphinx_hotels WHERE product_id = ?i LIMIT 1',
+            $pid,
+        );
         $debug['product'] = [
             'product_id' => $pid,
             'product_code' => $pcode,
-            'is_hotel' => (str_starts_with($pcode, 'NVT') || str_starts_with($pcode, 'SPX')),
-            'prefix' => substr($pcode, 0, 3),
+            'is_hotel' => (str_starts_with($pcode, 'NVT') || $sphinxDebugId !== ''),
+            'prefix' => substr($pcode, 0, 2),
         ];
 
         // Check if hotel exists in provider DB
         if (str_starts_with($pcode, 'NVT')) {
             $hotelId = substr($pcode, 3);
-            $hotel = db_get_row("SELECT hotel_id, hotel_name FROM ?:novoton_hotels WHERE hotel_id = ?s LIMIT 1", $hotelId);
+            $hotel = db_get_row('SELECT hotel_id, hotel_name FROM ?:novoton_hotels WHERE hotel_id = ?s LIMIT 1', $hotelId);
             $debug['product']['hotel_lookup'] = $hotel ?: 'NOT FOUND in novoton_hotels';
-        } elseif (str_starts_with($pcode, 'SPX')) {
-            $hotelId = substr($pcode, 3);
-            $hotel = db_get_row("SELECT hotel_id, name FROM ?:sphinx_hotels WHERE hotel_id = ?s LIMIT 1", $hotelId);
+        } elseif ($sphinxDebugId !== '') {
+            $hotel = db_get_row('SELECT hotel_id, name FROM ?:sphinx_hotels WHERE hotel_id = ?s LIMIT 1', $sphinxDebugId);
             $debug['product']['hotel_lookup'] = $hotel ?: 'NOT FOUND in sphinx_hotels';
         }
 

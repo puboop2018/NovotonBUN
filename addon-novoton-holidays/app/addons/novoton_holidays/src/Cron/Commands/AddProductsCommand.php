@@ -158,6 +158,13 @@ class AddProductsCommand extends AbstractCronCommand
                     'category_ids' => [$category_id],
                 ], $seoFields);
 
+                // Fall back to the formatted display name when no SEO product-name
+                // template is configured. Without a name, fn_update_product() fails.
+                $productName = $product_data['product'] ?? '';
+                if (!is_string($productName) || trim($productName) === '') {
+                    $product_data['product'] = $display_name;
+                }
+
                 $product_id = fn_update_product($product_data, 0, CART_LANGUAGE);
 
                 if ($product_id) {
@@ -195,6 +202,14 @@ class AddProductsCommand extends AbstractCronCommand
                     $added++;
                     $this->output("ADDED (ID: {$product_id})");
                 } else {
+                    fn_log_event('general', 'runtime', [
+                        'message' => 'Novoton: fn_update_product() returned 0 — product not created',
+                        'hotel_id' => $hotel_id,
+                        'product_code' => $product_code,
+                        'product_name' => $product_data['product'] ?? '',
+                        'category_id' => $category_id,
+                        'company_id' => ConfigProvider::getCompanyId(),
+                    ]);
                     $this->output("FAILED (category_id={$category_id}, company_id=" . ConfigProvider::getCompanyId() . ')');
                 }
 

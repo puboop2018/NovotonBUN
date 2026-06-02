@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\SphinxHolidays\Cron\Commands;
 
 use Tygh\Addons\TravelCore\Cron\AbstractCronCommand as BaseCommand;
+use Tygh\Addons\TravelCore\Services\FeatureMapper;
 
 /**
  * Sphinx-specific cron command base.
@@ -45,6 +46,27 @@ abstract class AbstractSyncCommand extends BaseCommand
             }
             $this->output($msg);
         }
+    }
+
+    /**
+     * Idempotently seed the shared travel_core feature map and Sphinx provider aliases,
+     * then clear the FeatureMapper cache so freshly seeded rows are visible.
+     *
+     * Call once at the top of any command that assigns product features.
+     * Safe to call multiple times — all underlying operations are INSERT IGNORE / upsert.
+     */
+    protected function seedFeatureMappings(): void
+    {
+        if (function_exists('fn_travel_core_seed_feature_map')) {
+            fn_travel_core_seed_feature_map();
+        }
+        if (function_exists('fn_sphinx_holidays_seed_aliases')) {
+            fn_sphinx_holidays_seed_aliases();
+        }
+        if (function_exists('fn_sphinx_holidays_seed_region_mappings')) {
+            fn_sphinx_holidays_seed_region_mappings();
+        }
+        FeatureMapper::clearCache();
     }
 
     private function formatResetTime(int $seconds): string

@@ -282,31 +282,6 @@ class AddProductsCommand extends AbstractSyncCommand
     }
 
     /**
-     * Idempotently (re)seed the shared travel_core feature map and the Sphinx
-     * provider aliases, then drop the FeatureMapper cache so the freshly seeded
-     * rows are visible during this run.
-     *
-     * Seeding is cheap (a few dozen INSERT IGNORE / alias-upsert queries) and
-     * runs once per invocation, mirroring the Novoton add_hotels_as_products
-     * flow. It guarantees that stars, board, property type and region all have
-     * resolvable mappings before SphinxFeatureAssigner runs.
-     */
-    private function seedFeatureMappings(): void
-    {
-        if (function_exists('fn_travel_core_seed_feature_map')) {
-            fn_travel_core_seed_feature_map();
-        }
-        if (function_exists('fn_sphinx_holidays_seed_aliases')) {
-            fn_sphinx_holidays_seed_aliases();
-        }
-        if (function_exists('fn_sphinx_holidays_seed_region_mappings')) {
-            fn_sphinx_holidays_seed_region_mappings();
-        }
-
-        FeatureMapper::clearCache();
-    }
-
-    /**
      * Diagnose category creation: check root category + country sub-category.
      * Does NOT create anything — read-only diagnostic.
      *

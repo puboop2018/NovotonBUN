@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 /**
  * Travel Core - Booking Controller Dispatcher
@@ -19,7 +20,9 @@ declare(strict_types=1);
 
 use Tygh\Addons\TravelCore\Services\TravelProviderRegistry;
 
-if (!defined('BOOTSTRAP')) { exit('Access denied'); }
+if (!defined('BOOTSTRAP')) {
+    exit('Access denied');
+}
 
 // CS-Cart auto-sets $mode from dispatch URL (e.g., dispatch=travel_booking.booking_form → $mode = 'booking_form')
 // Do NOT overwrite $mode from $_REQUEST — that causes routing issues.
@@ -34,7 +37,7 @@ if (!empty($_REQUEST['provider'])) {
 
 // 2. Resolve by product code prefix (NVT* → novoton, SPH* → sphinx)
 if ($provider === null && !empty($product_id)) {
-    $productCode = db_get_field("SELECT product_code FROM ?:products WHERE product_id = ?i", (int) $product_id);
+    $productCode = db_get_field('SELECT product_code FROM ?:products WHERE product_id = ?i', (int) $product_id);
     if ($productCode !== '') {
         if (str_starts_with($productCode, 'NVT')) {
             $provider = TravelProviderRegistry::get('novoton');
@@ -46,7 +49,7 @@ if ($provider === null && !empty($product_id)) {
 
 // 3. Resolve by hotel_id in novoton_hotels table (numeric hotel IDs = Novoton)
 if ($provider === null && !empty($hotel_id) && ctype_digit((string) $hotel_id)) {
-    $exists = db_get_field("SELECT hotel_id FROM ?:novoton_hotels WHERE hotel_id = ?i LIMIT 1", (int) $hotel_id);
+    $exists = db_get_field('SELECT hotel_id FROM ?:novoton_hotels WHERE hotel_id = ?i LIMIT 1', (int) $hotel_id);
     if ($exists) {
         $provider = TravelProviderRegistry::get('novoton');
     }
@@ -73,8 +76,8 @@ if ($mode === 'booking_config') {
 
     if (!empty($product_id)) {
         $productCode = (string) db_get_field(
-            "SELECT product_code FROM ?:products WHERE product_id = ?i",
-            (int) $product_id
+            'SELECT product_code FROM ?:products WHERE product_id = ?i',
+            (int) $product_id,
         );
 
         $providerName = '';
@@ -85,10 +88,17 @@ if ($mode === 'booking_config') {
             $providerName = 'novoton';
             $hotelId = substr($productCode, 3);
             $searchDispatch = 'novoton_booking.search';
-        } elseif ($productCode && str_starts_with($productCode, 'SPX')) {
-            $providerName = 'sphinx';
-            $hotelId = substr($productCode, 3);
-            $searchDispatch = 'sphinx_booking.search';
+        } else {
+            // Sphinx: identify via sphinx_hotels table (works for any product code prefix)
+            $sphinxHotelId = (string) db_get_field(
+                'SELECT hotel_id FROM ?:sphinx_hotels WHERE product_id = ?i',
+                (int) $product_id,
+            );
+            if ($sphinxHotelId !== '') {
+                $providerName = 'sphinx';
+                $hotelId = $sphinxHotelId;
+                $searchDispatch = 'sphinx_booking.search';
+            }
         }
 
         if ($providerName) {
@@ -96,18 +106,18 @@ if ($mode === 'booking_config') {
             $tc = \Tygh\Registry::get('addons.travel_core') ?: [];
             $colors = [];
             $colorMap = [
-                'primary'     => 'color_primary',
-                'accent'      => 'color_accent',
-                'text'        => 'color_text',
-                'textLight'   => 'color_text_light',
-                'bg'          => 'color_bg',
-                'border'      => 'color_border',
-                'btnBg'       => 'color_search_btn_bg',
-                'btnHover'    => 'color_search_btn_hover',
-                'btnText'     => 'color_search_btn_text',
+                'primary' => 'color_primary',
+                'accent' => 'color_accent',
+                'text' => 'color_text',
+                'textLight' => 'color_text_light',
+                'bg' => 'color_bg',
+                'border' => 'color_border',
+                'btnBg' => 'color_search_btn_bg',
+                'btnHover' => 'color_search_btn_hover',
+                'btnText' => 'color_search_btn_text',
                 'calCheapest' => 'color_cal_cheapest',
-                'calPrice'    => 'color_cal_price',
-                'danger'      => 'color_danger',
+                'calPrice' => 'color_cal_price',
+                'danger' => 'color_danger',
             ];
             foreach ($colorMap as $jsKey => $settingKey) {
                 $colors[$jsKey] = $tc[$settingKey] ?? '';
@@ -140,14 +150,14 @@ if ($mode === 'booking_config') {
             }
 
             $config = [
-                'isHotel'        => true,
-                'provider'       => $providerName,
-                'hotelId'        => $hotelId,
-                'productId'      => (int) $product_id,
+                'isHotel' => true,
+                'provider' => $providerName,
+                'hotelId' => $hotelId,
+                'productId' => (int) $product_id,
                 'searchDispatch' => $searchDispatch,
-                'mode'           => 'product',
-                'colors'         => $colors,
-                'translations'   => $translations,
+                'mode' => 'product',
+                'colors' => $colors,
+                'translations' => $translations,
             ];
         }
     }
