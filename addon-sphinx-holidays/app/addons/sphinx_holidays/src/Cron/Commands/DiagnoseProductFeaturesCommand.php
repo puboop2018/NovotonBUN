@@ -281,5 +281,4 @@ class DiagnoseProductFeaturesCommand extends AbstractSyncCommand
         $variantStr = $variantId > 0 ? (string) $variantId : 'not yet — will be auto-created';
         $this->output("  resolve     : OK (map_id={$mapId}, canonical={$canonical}, variant_id={$variantStr})");
     }
-
 }
