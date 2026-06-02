@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Tests\Unit;
@@ -6,7 +7,6 @@ namespace Tygh\Addons\NovotonHolidays\Tests\Unit;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Tygh\Addons\TravelCore\Services\PriceChangeDetector;
-use Tygh\Tygh;
 
 /**
  * Tests for the "No Surprises" PriceChangeDetector service.
@@ -26,11 +26,9 @@ class PriceChangeDetectorTest extends TestCase
 
     protected function setUp(): void
     {
-        // Ensure session is clean
-        if (!isset(Tygh::$app['session'])) {
-            Tygh::$app['session'] = [];
-        }
-        unset(Tygh::$app['session']['travel_price_change_alerts']);
+        // SessionAccessor reads/writes the $_SESSION superglobal (CS-Cart's
+        // authoritative session store). Start each test from a clean slate.
+        $_SESSION = [];
 
         // Default 1% tolerance via constructor
         $this->sut = new PriceChangeDetector(1.0);
@@ -38,7 +36,7 @@ class PriceChangeDetectorTest extends TestCase
 
     protected function tearDown(): void
     {
-        unset(Tygh::$app['session']['travel_price_change_alerts']);
+        unset($_SESSION['travel_price_change_alerts']);
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -295,8 +293,8 @@ class PriceChangeDetectorTest extends TestCase
         // Expected: ~~450 Lei~~ 480 Lei, orange badge
         $result = $this->sut->analyse(450.0, 480.0, 'RON', 'checkout', [
             'hotel_name' => 'Hotel Paradise',
-            'hotel_id'   => 'HP001',
-            'room_id'    => 'DBL 2+1)',
+            'hotel_id' => 'HP001',
+            'room_id' => 'DBL 2+1)',
         ]);
 
         $this->assertTrue($result['significant']);
@@ -326,7 +324,7 @@ class PriceChangeDetectorTest extends TestCase
     {
         $before = time();
         $result = $this->sut->analyse(100.0, 110.0, 'EUR');
-        $after  = time();
+        $after = time();
 
         $this->assertArrayHasKey('timestamp', $result);
         $this->assertGreaterThanOrEqual($before, $result['timestamp']);
