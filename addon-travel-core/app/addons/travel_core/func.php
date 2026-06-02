@@ -70,6 +70,12 @@ function fn_travel_core_post_install(): bool
  */
 function fn_travel_core_ensure_schema(): void
 {
+    static $done = false;
+    if ($done) {
+        return;
+    }
+    $done = true;
+
     $columns = db_get_fields('SHOW COLUMNS FROM ?:travel_feature_map');
     if (!is_array($columns)) {
         return;
@@ -84,6 +90,32 @@ function fn_travel_core_ensure_schema(): void
     }
     if (!isset($columnSet['last_used_at'])) {
         db_query("ALTER TABLE ?:travel_feature_map ADD COLUMN `last_used_at` TIMESTAMP DEFAULT NULL COMMENT 'Last time resolve() matched this row' AFTER `status`");
+    }
+
+    // Migrate travel_api_alias unique key to include map_id.
+    // The old key (api_source, api_value) allowed facility aliases to silently
+    // overwrite star aliases that share the same numeric api_value (e.g. sphinx
+    // facility '4' = water_bottle overwrote star '4' = 4-star). The new key
+    // lets both coexist — findByAlias() already filters by feature_type.
+    $tablePrefix = \Tygh\Addons\TravelCore\Helpers\TypeCoerce::toString(\Tygh\Registry::get('config.table_prefix'));
+    $aliasTable = $tablePrefix . 'travel_api_alias';
+    $tableExists = \Tygh\Addons\TravelCore\Helpers\TypeCoerce::toInt(db_get_field(
+        'SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?s',
+        $aliasTable,
+    ));
+    if ($tableExists > 0) {
+        $hasMapIdInKey = \Tygh\Addons\TravelCore\Helpers\TypeCoerce::toInt(db_get_field(
+            "SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS
+             WHERE TABLE_SCHEMA = DATABASE()
+               AND TABLE_NAME = ?s
+               AND INDEX_NAME = 'uq_source_value'
+               AND COLUMN_NAME = 'map_id'",
+            $aliasTable,
+        ));
+        if ($hasMapIdInKey === 0) {
+            db_query('ALTER TABLE ?:travel_api_alias DROP INDEX `uq_source_value`');
+            db_query('ALTER TABLE ?:travel_api_alias ADD UNIQUE KEY `uq_source_value` (`api_source`, `api_value`, `map_id`)');
+        }
     }
 
     // Ensure travel_unmapped_values table exists

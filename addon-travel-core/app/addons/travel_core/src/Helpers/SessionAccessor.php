@@ -50,18 +50,16 @@ final class SessionAccessor
 
     public function set(string $key, mixed $value): void
     {
-        /** @var array<string, mixed> $session */
-        $session = is_array(\Tygh\Tygh::$app['session'] ?? null) ? \Tygh\Tygh::$app['session'] : [];
-        $session[$key] = $value;
-        \Tygh\Tygh::$app['session'] = $session;
+        // CS-Cart's $app['session'] service is a reference to $_SESSION.
+        // Writing to the container binding directly throws Pimple's
+        // FrozenServiceException, so write to $_SESSION which is the same
+        // underlying storage.
+        $_SESSION[$key] = $value;
     }
 
     public function unset(string $key): void
     {
-        /** @var array<string, mixed> $session */
-        $session = is_array(\Tygh\Tygh::$app['session'] ?? null) ? \Tygh\Tygh::$app['session'] : [];
-        unset($session[$key]);
-        \Tygh\Tygh::$app['session'] = $session;
+        unset($_SESSION[$key]);
     }
 
     /**
@@ -69,6 +67,6 @@ final class SessionAccessor
      */
     private function session(): array
     {
-        return TypeCoerce::toStringMap(\Tygh\Tygh::$app['session'] ?? null);
+        return TypeCoerce::toStringMap(\Tygh\Tygh::$app['session']);
     }
 }

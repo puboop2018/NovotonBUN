@@ -166,12 +166,11 @@ class FeatureMapRepository implements FeatureMapRepositoryInterface
         db_query(
             'INSERT INTO ?:travel_api_alias (map_id, api_source, api_value, match_type)
              VALUES (?i, ?s, ?s, ?s)
-             ON DUPLICATE KEY UPDATE map_id = ?i, match_type = ?s',
+             ON DUPLICATE KEY UPDATE match_type = ?s',
             $mapId,
             $apiSource,
             $apiValue,
             $matchType,
-            $mapId,
             $matchType,
         );
     }

@@ -215,9 +215,19 @@ class SphinxHttpClient
             $this->resetFailures();
             $decoded = json_decode((string) $response, true);
             if (!is_array($decoded)) {
-                $this->lastError = 'JSON decode error: ' . (json_last_error_msg() ?: 'response is not a JSON object/array');
+                // Distinguish a genuine parse failure from a valid-but-scalar
+                // body (e.g. the /ping endpoint replies with the bare string
+                // "pong"). Reporting "JSON decode error: No error" on the
+                // latter is misleading during diagnostics.
+                $this->lastError = json_last_error() !== JSON_ERROR_NONE
+                    ? 'JSON decode error: ' . json_last_error_msg()
+                    : 'Unexpected response shape: expected a JSON object/array';
                 return null;
             }
+
+            // Clear any error left over from a previous request on this client
+            // instance so getLastError() reflects only the call that just ran.
+            $this->lastError = '';
 
             return $decoded;
         }

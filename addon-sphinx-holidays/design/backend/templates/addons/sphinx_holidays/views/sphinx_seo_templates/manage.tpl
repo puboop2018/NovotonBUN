@@ -35,38 +35,6 @@
 
 {capture name="mainbox"}
 
-{*
- * Mock placeholder data for the live-preview script. Mirrors the
- * fields produced at runtime by SphinxProductFactory::buildPlaceholders()
- * so the admin sees a realistic render before saving + bulk-applying.
- *
- * Kept INSIDE the capture so it is delivered with the mainbox content on
- * AJAX top-nav navigation (out-of-capture output is dropped on AJAX).
- *}
-<script>
-window.__seoMockData = {
-    name: "Arena Mar",
-    classification: "4",
-    city: "Golden Sands",
-    country: "Bulgaria",
-    region: "Varna",
-    property_type: "hotel",
-    facilities: ["pool", "spa", "wifi"],
-    boards: ["All inclusive", "Half board"],
-    rating: "8.5",
-    description: "Beachfront 4-star resort on the Black Sea.",
-    address: "Str. Strandului 1",
-    phone: "+359 52 123 456",
-    email: "info@arenamar.bg",
-    website: "https://arenamar.bg",
-    image_url: "https://cdn.example.com/arena-mar.jpg",
-    stars_emoji: "★★★★",
-    year: "{$smarty.now|date_format:'%Y'}",
-    latitude: "43.2828",
-    longitude: "28.0173"
-};
-</script>
-
 <form method="post"
       action="{"sphinx_seo_templates.save"|fn_url}"
       name="sphinx_seo_form"
@@ -137,8 +105,6 @@ window.__seoMockData = {
                            data-seo-ideal="80"
                            data-seo-max="255"
                            value="{$seo_values.seo_product_name|escape:html}" />
-                    <div class="seo-preview" data-seo-preview-for="seo_product_name" data-label="{__('travel_core.seo_preview_label')|default:'Preview'}"></div>
-                    <span class="seo-counter" data-seo-counter-for="seo_product_name"></span>
                     <p class="help-block">{__("sphinx_holidays.seo_product_name.tooltip")|default:"Template for the product name."}</p>
                 </div>
             </div>
@@ -161,8 +127,6 @@ window.__seoMockData = {
                            data-seo-ideal="60"
                            data-seo-max="255"
                            value="{$seo_values.seo_page_title|escape:html}" />
-                    <div class="seo-preview" data-seo-preview-for="seo_page_title" data-label="{__('travel_core.seo_preview_label')|default:'Preview'}"></div>
-                    <span class="seo-counter" data-seo-counter-for="seo_page_title"></span>
                     <p class="help-block">{__("sphinx_holidays.seo_page_title.tooltip")|default:"Template for the HTML page title (SEO). Google typically truncates around 60 characters."}</p>
                 </div>
             </div>
@@ -184,8 +148,6 @@ window.__seoMockData = {
                               data-seo-ideal="160"
                               data-seo-max="500"
                               rows="3">{$seo_values.seo_meta_description|escape:html}</textarea>
-                    <div class="seo-preview" data-seo-preview-for="seo_meta_description" data-label="{__('travel_core.seo_preview_label')|default:'Preview'}"></div>
-                    <span class="seo-counter" data-seo-counter-for="seo_meta_description"></span>
                     <p class="help-block">{__("sphinx_holidays.seo_meta_description.tooltip")|default:"Template for the meta description tag. Google truncates around 160 characters."}</p>
                 </div>
             </div>
@@ -208,8 +170,6 @@ window.__seoMockData = {
                            data-seo-ideal="200"
                            data-seo-max="255"
                            value="{$seo_values.seo_meta_keywords|escape:html}" />
-                    <div class="seo-preview" data-seo-preview-for="seo_meta_keywords" data-label="{__('travel_core.seo_preview_label')|default:'Preview'}"></div>
-                    <span class="seo-counter" data-seo-counter-for="seo_meta_keywords"></span>
                     <p class="help-block">{__("sphinx_holidays.seo_meta_keywords.tooltip")|default:"Template for the meta keywords tag."}</p>
                 </div>
             </div>
@@ -232,8 +192,6 @@ window.__seoMockData = {
                            data-seo-ideal="80"
                            data-seo-max="255"
                            value="{$seo_values.seo_name_slug|escape:html}" />
-                    <div class="seo-preview" data-seo-preview-for="seo_name_slug" data-label="{__('travel_core.seo_preview_label')|default:'Preview'}"></div>
-                    <span class="seo-counter" data-seo-counter-for="seo_name_slug"></span>
                     <p class="help-block">{__("sphinx_holidays.seo_name_slug.tooltip")|default:"Template for the SEO-friendly URL slug. Result is automatically sanitized."}</p>
                 </div>
             </div>
@@ -253,7 +211,6 @@ window.__seoMockData = {
                     <textarea id="seo_full_description"
                               name="seo[seo_full_description]"
                               rows="4">{$seo_values.seo_full_description|escape:html}</textarea>
-                    <div class="seo-preview" data-seo-preview-for="seo_full_description" data-label="{__('travel_core.seo_preview_label')|default:'Preview'}"></div>
                     <p class="help-block">{__("sphinx_holidays.seo_full_description.tooltip")|default:"Optional template to wrap or replace the API description. Leave empty to use the raw API description as-is."}</p>
                 </div>
             </div>

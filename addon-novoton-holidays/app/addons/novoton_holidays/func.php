@@ -65,6 +65,31 @@ function fn_settings_variants_addons_novoton_holidays_api_currency(): array
     return $result;
 }
 
+function fn_novoton_holidays_seed_seo_defaults(): void
+{
+    $defaults = [
+        'seo_overwrite_mode'         => 'override_all',
+        'seo_product_name'           => '{{name}}',
+        'seo_page_title'             => '{{name}} - {{city}}, {{country}} {{year}}',
+        'seo_meta_description'       => 'Book {{name}} in {{city}}, {{country}}. {{star_rating}}-star hotel with {{facilities}}.',
+        'seo_meta_keywords'          => '{{name}}, {{city}}, {{country}}, {{property_type}}, {{star_rating}} star',
+        'seo_name_slug'              => '{{name}}-{{city}}-{{country}}',
+        'seo_full_description'       => '',
+        'seo_field_product_name'     => 'Y',
+        'seo_field_page_title'       => 'Y',
+        'seo_field_meta_description' => 'Y',
+        'seo_field_meta_keywords'    => 'Y',
+        'seo_field_name_slug'        => 'Y',
+        'seo_field_full_description' => 'Y',
+    ];
+    $settings = \Tygh\Settings::instance();
+    foreach ($defaults as $key => $value) {
+        $settings->updateValue($key, $value, 'novoton_holidays', true);
+    }
+    $existing = \Tygh\Registry::get('addons.novoton_holidays');
+    \Tygh\Registry::set('addons.novoton_holidays', array_merge(is_array($existing) ? $existing : [], $defaults));
+}
+
 // ============================================================================
 // FUNCTION LOCATIONS
 // ============================================================================

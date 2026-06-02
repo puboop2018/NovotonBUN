@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+
 /**
  * Sphinx Booking Controller — Search Mode
  *
@@ -14,6 +15,7 @@ declare(strict_types=1);
  * @package SphinxHolidays
  * @since   1.0.0
  */
+
 if (!defined('BOOTSTRAP')) {
     exit('Access denied');
 }
@@ -44,6 +46,28 @@ try {
         $check_out = date('Y-m-d', (int) strtotime($check_in . " + {$nights} days"));
     }
 
+    // Resolve the hotel record once when this is a product-page search
+    // (hotel_id is set). Reused below for the destination_id and here for the
+    // page heading so the results page shows which hotel is being searched
+    // (mirrors the novoton results page).
+    $hotelRow = $hotel_id !== ''
+        ? Container::getHotelRepository()->getById($hotel_id)
+        : null;
+
+    $hotel_name = $hotelRow !== null ? TypeCoerce::toString($hotelRow['name'] ?? '') : '';
+    $hotel_stars = $hotelRow !== null ? TypeCoerce::toString($hotelRow['classification'] ?? '') : '';
+    $hotel_location = '';
+    if ($hotelRow !== null) {
+        $locationParts = array_filter(
+            [
+                TypeCoerce::toString($hotelRow['destination_name'] ?? ''),
+                TypeCoerce::toString($hotelRow['country_name'] ?? ''),
+            ],
+            static fn (string $part): bool => $part !== '',
+        );
+        $hotel_location = implode(', ', $locationParts);
+    }
+
     $templateParams = [
         'hotel_id' => $hotel_id,
         'destination_id' => $destination_id,
@@ -65,6 +89,9 @@ try {
         'search_params' => $templateParams,
     ]));
     $view->assign('sphinx_search_params', $templateParams);
+    $view->assign('sphinx_hotel_name', $hotel_name);
+    $view->assign('sphinx_hotel_stars', $hotel_stars);
+    $view->assign('sphinx_hotel_location', $hotel_location);
     $view->assign('sphinx_search_results', []);
     $view->assign('sphinx_search_id', '');
     $view->assign('sphinx_search_status', 'idle');
@@ -103,14 +130,10 @@ try {
 
     // The Sphinx /hotels/search endpoint needs a destination_id to run a live
     // availability search — a hotel_ids-only query returns an empty result set.
-    // The product page booking engine only knows the hotel_id, so resolve the
-    // hotel's destination_id from the local sphinx_hotels row and send both.
-    // Results are narrowed back to this hotel via filter_hotel_id (search_poll).
-    if ($destination_id <= 0 && $hotel_id !== '') {
-        $hotelRow = Container::getHotelRepository()->getById($hotel_id);
-        if ($hotelRow !== null) {
-            $destination_id = TypeCoerce::toInt($hotelRow['destination_id'] ?? 0);
-        }
+    // The product page booking engine only knows the hotel_id, so take the
+    // destination_id from the hotel row already fetched above.
+    if ($destination_id <= 0 && $hotelRow !== null) {
+        $destination_id = TypeCoerce::toInt($hotelRow['destination_id'] ?? 0);
     }
 
     if ($destination_id > 0) {
@@ -123,6 +146,17 @@ try {
     $ignoreDomains = ConfigProvider::getIgnoreDomains();
     if (!empty($ignoreDomains)) {
         $searchParams['ignore_domains'] = $ignoreDomains;
+    }
+
+    // The Sphinx API's hotel_ids filter returns an EMPTY set when combined with
+    // a destination_id (verified via cron_mode=diagnose_search: destination-only
+    // returns the full destination, destination + hotel_ids returns 0). So when
+    // we have a destination, query by destination alone and narrow back to this
+    // hotel client-side (filter_hotel_id, below + in search_poll). hotel_ids is
+    // kept in $searchParams purely to keep the cache key unique per hotel.
+    $apiSearchParams = $searchParams;
+    if ($destination_id > 0) {
+        unset($apiSearchParams['hotel_ids']);
     }
 
     // Check cache — if hit, render results inline (no polling needed)
@@ -142,7 +176,7 @@ try {
     }
 
     // No cache — initiate async search, JS will poll for results
-    $searchResponse = $api->searchHotels($searchParams);
+    $searchResponse = $api->searchHotels($apiSearchParams);
 
     // The search API returns an opaque polling token. Historically this was a
     // top-level `search_id`; the API now returns a `cursor` JWT instead (the
@@ -178,7 +212,7 @@ try {
     if ($hotel_id !== '' && !empty($initialResults)) {
         $initialResults = array_values(array_filter(
             $initialResults,
-            static fn (array $r): bool => TypeCoerce::toString($r['hotel_id'] ?? '') === $hotel_id,
+            static fn (array $r): bool => TypeCoerce::toString($r['hotel_id'] ?? $r['id'] ?? '') === $hotel_id,
         ));
     }
 
@@ -228,7 +262,6 @@ try {
 
     $view->assign('sphinx_search_id', $searchIdStr);
     $view->assign('sphinx_search_status', 'pending');
-
 } catch (\Throwable $e) {
     fn_log_event('general', 'runtime', [
         'message' => 'Sphinx Search Error: ' . $e->getMessage(),

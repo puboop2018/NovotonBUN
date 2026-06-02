@@ -164,6 +164,13 @@ if (class_exists(\Tygh\Addons\TravelCore\Services\TravelProviderRegistry::class)
     );
 }
 
+// Seed SEO defaults on first admin load (mirrors sphinx pattern)
+if (defined('AREA') && AREA === 'A' && function_exists('fn_novoton_holidays_seed_seo_defaults')) {
+    if (\Tygh\Registry::get('addons.novoton_holidays.seo_page_title') === null) {
+        fn_novoton_holidays_seed_seo_defaults();
+    }
+}
+
 // Register addon hooks
 fn_register_hooks(
     'get_products_post',                       // Batch prefetch hotel data for product listings
