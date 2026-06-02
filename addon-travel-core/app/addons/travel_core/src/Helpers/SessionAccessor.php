@@ -9,8 +9,15 @@ namespace Tygh\Addons\TravelCore\Helpers;
  *
  * Injects into service classes that previously reached into
  * `\Tygh\Tygh::$app['session'][...]` directly. Stops the pattern from
- * spreading further; the static-property access is kept confined to
- * this single class and is allowlisted in `phpstan-disallowed-calls.neon`.
+ * spreading further; the session access is kept confined to this single
+ * class.
+ *
+ * CS-Cart's session data lives in the `$_SESSION` superglobal — that is the
+ * authoritative store (`$_SESSION['auth']`, `$_SESSION['cart']`, …). The
+ * `\Tygh\Tygh::$app['session']` container binding is a frozen Pimple service,
+ * so reassigning it (`$app['session'] = …`) throws a FrozenServiceException.
+ * Reading and writing `$_SESSION` directly is both safe and consistent: one
+ * backing store for every accessor method.
  *
  * For reference-based mutation flows that pass the live `$cart` / `$auth`
  * into CS-Cart's procedural API (e.g. `fn_add_product_to_cart`), see the
@@ -30,7 +37,7 @@ final class SessionAccessor
      */
     public function auth(): array
     {
-        return TypeCoerce::toStringMap($this->session()['auth'] ?? null);
+        return TypeCoerce::toStringMap($_SESSION['auth'] ?? null);
     }
 
     /**
@@ -40,33 +47,21 @@ final class SessionAccessor
      */
     public function cart(): array
     {
-        return TypeCoerce::toStringMap($this->session()['cart'] ?? null);
+        return TypeCoerce::toStringMap($_SESSION['cart'] ?? null);
     }
 
     public function get(string $key): mixed
     {
-        return $this->session()[$key] ?? null;
+        return $_SESSION[$key] ?? null;
     }
 
     public function set(string $key, mixed $value): void
     {
-        // CS-Cart's $app['session'] service is a reference to $_SESSION.
-        // Writing to the container binding directly throws Pimple's
-        // FrozenServiceException, so write to $_SESSION which is the same
-        // underlying storage.
         $_SESSION[$key] = $value;
     }
 
     public function unset(string $key): void
     {
         unset($_SESSION[$key]);
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    private function session(): array
-    {
-        return TypeCoerce::toStringMap(\Tygh\Tygh::$app['session']);
     }
 }
