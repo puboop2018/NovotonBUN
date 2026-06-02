@@ -32,31 +32,6 @@
 }
 </style>
 
-{*
- * Mock placeholder data for the live-preview script. Mirrors the
- * fields produced at runtime by
- * NovotonHolidays\Helpers\ProductFactory::buildNovotonPlaceholders()
- * so the admin sees a realistic render before saving + bulk-applying.
- *}
-<script>
-window.__seoMockData = {
-    name: "Arena Mar",
-    raw_name: "ARENA MAR",
-    city: "Nisipurile de Aur",
-    country: "Bulgaria",
-    region: "Varna",
-    star_rating: "4",
-    stars_emoji: "★★★★",
-    hotel_type: "hotel",
-    property_type: "hotel",
-    year: "{$smarty.now|date_format:'%Y'}",
-    description: "Resort 4 stele pe plaja Mării Negre.",
-    facilities: ["piscină", "spa", "wifi"],
-    latitude: "43.2828",
-    longitude: "28.0173"
-};
-</script>
-
 {capture name="mainbox"}
 
 <form method="post"
@@ -127,8 +102,6 @@ window.__seoMockData = {
                            data-seo-ideal="80"
                            data-seo-max="255"
                            value="{$seo_values.seo_product_name|escape:html}" />
-                    <div class="seo-preview" data-seo-preview-for="seo_product_name" data-label="{__('travel_core.seo_preview_label')|default:'Preview'}"></div>
-                    <span class="seo-counter" data-seo-counter-for="seo_product_name"></span>
                     <p class="help-block">{__("travel_core.seo_product_name_desc")|default:"Template for the product name."}</p>
                 </div>
             </div>
@@ -151,8 +124,6 @@ window.__seoMockData = {
                            data-seo-ideal="60"
                            data-seo-max="255"
                            value="{$seo_values.seo_page_title|escape:html}" />
-                    <div class="seo-preview" data-seo-preview-for="seo_page_title" data-label="{__('travel_core.seo_preview_label')|default:'Preview'}"></div>
-                    <span class="seo-counter" data-seo-counter-for="seo_page_title"></span>
                     <p class="help-block">{__("travel_core.seo_page_title_desc")|default:"Template for the HTML page title. Google typically truncates around 60 characters."}</p>
                 </div>
             </div>
@@ -174,8 +145,6 @@ window.__seoMockData = {
                               data-seo-ideal="160"
                               data-seo-max="500"
                               rows="3">{$seo_values.seo_meta_description|escape:html}</textarea>
-                    <div class="seo-preview" data-seo-preview-for="seo_meta_description" data-label="{__('travel_core.seo_preview_label')|default:'Preview'}"></div>
-                    <span class="seo-counter" data-seo-counter-for="seo_meta_description"></span>
                     <p class="help-block">{__("travel_core.seo_meta_description_desc")|default:"Template for the meta description tag. Google truncates around 160 characters."}</p>
                 </div>
             </div>
@@ -198,8 +167,6 @@ window.__seoMockData = {
                            data-seo-ideal="200"
                            data-seo-max="255"
                            value="{$seo_values.seo_meta_keywords|escape:html}" />
-                    <div class="seo-preview" data-seo-preview-for="seo_meta_keywords" data-label="{__('travel_core.seo_preview_label')|default:'Preview'}"></div>
-                    <span class="seo-counter" data-seo-counter-for="seo_meta_keywords"></span>
                     <p class="help-block">{__("travel_core.seo_meta_keywords_desc")|default:"Template for the meta keywords tag."}</p>
                 </div>
             </div>
@@ -222,8 +189,6 @@ window.__seoMockData = {
                            data-seo-ideal="80"
                            data-seo-max="255"
                            value="{$seo_values.seo_name_slug|escape:html}" />
-                    <div class="seo-preview" data-seo-preview-for="seo_name_slug" data-label="{__('travel_core.seo_preview_label')|default:'Preview'}"></div>
-                    <span class="seo-counter" data-seo-counter-for="seo_name_slug"></span>
                     <p class="help-block">{__("travel_core.seo_name_slug_desc")|default:"Template for the SEO-friendly URL slug."}</p>
                 </div>
             </div>
@@ -243,7 +208,6 @@ window.__seoMockData = {
                     <textarea id="seo_full_description"
                               name="seo[seo_full_description]"
                               rows="4">{$seo_values.seo_full_description|escape:html}</textarea>
-                    <div class="seo-preview" data-seo-preview-for="seo_full_description" data-label="{__('travel_core.seo_preview_label')|default:'Preview'}"></div>
                     <p class="help-block">{__("travel_core.seo_full_description_desc")|default:"Optional template to wrap or replace the API description."}</p>
                 </div>
             </div>
