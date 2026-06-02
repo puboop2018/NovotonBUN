@@ -46,6 +46,28 @@ try {
         $check_out = date('Y-m-d', (int) strtotime($check_in . " + {$nights} days"));
     }
 
+    // Resolve the hotel record once when this is a product-page search
+    // (hotel_id is set). Reused below for the destination_id and here for the
+    // page heading so the results page shows which hotel is being searched
+    // (mirrors the novoton results page).
+    $hotelRow = $hotel_id !== ''
+        ? Container::getHotelRepository()->getById($hotel_id)
+        : null;
+
+    $hotel_name = $hotelRow !== null ? TypeCoerce::toString($hotelRow['name'] ?? '') : '';
+    $hotel_stars = $hotelRow !== null ? TypeCoerce::toString($hotelRow['classification'] ?? '') : '';
+    $hotel_location = '';
+    if ($hotelRow !== null) {
+        $locationParts = array_filter(
+            [
+                TypeCoerce::toString($hotelRow['destination_name'] ?? ''),
+                TypeCoerce::toString($hotelRow['country_name'] ?? ''),
+            ],
+            static fn (string $part): bool => $part !== '',
+        );
+        $hotel_location = implode(', ', $locationParts);
+    }
+
     $templateParams = [
         'hotel_id' => $hotel_id,
         'destination_id' => $destination_id,
@@ -67,6 +89,9 @@ try {
         'search_params' => $templateParams,
     ]));
     $view->assign('sphinx_search_params', $templateParams);
+    $view->assign('sphinx_hotel_name', $hotel_name);
+    $view->assign('sphinx_hotel_stars', $hotel_stars);
+    $view->assign('sphinx_hotel_location', $hotel_location);
     $view->assign('sphinx_search_results', []);
     $view->assign('sphinx_search_id', '');
     $view->assign('sphinx_search_status', 'idle');
@@ -105,13 +130,10 @@ try {
 
     // The Sphinx /hotels/search endpoint needs a destination_id to run a live
     // availability search — a hotel_ids-only query returns an empty result set.
-    // The product page booking engine only knows the hotel_id, so resolve the
-    // hotel's destination_id from the local sphinx_hotels row.
-    if ($destination_id <= 0 && $hotel_id !== '') {
-        $hotelRow = Container::getHotelRepository()->getById($hotel_id);
-        if ($hotelRow !== null) {
-            $destination_id = TypeCoerce::toInt($hotelRow['destination_id'] ?? 0);
-        }
+    // The product page booking engine only knows the hotel_id, so take the
+    // destination_id from the hotel row already fetched above.
+    if ($destination_id <= 0 && $hotelRow !== null) {
+        $destination_id = TypeCoerce::toInt($hotelRow['destination_id'] ?? 0);
     }
 
     if ($destination_id > 0) {

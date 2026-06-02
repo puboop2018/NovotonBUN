@@ -14,6 +14,19 @@
      data-search-id="{$sphinx_search_id|escape:html}"
      data-search-status="{$sphinx_search_status|default:'idle'}">
 
+    {* ===== HOTEL HEADER — which hotel this search is for (mirrors novoton) ===== *}
+    {if $sphinx_hotel_name}
+        <div class="sphinx-hotel-header" style="background: #fff; padding: 18px 20px; border: 1px solid #e0e0e0; border-radius: 8px 8px 0 0; border-bottom: none;">
+            <h1 class="sphinx-hotel-header-name" style="margin: 0; font-size: 22px; font-weight: 600; color: #003580;">
+                {$sphinx_hotel_name|escape:html}
+                {if $sphinx_hotel_stars}<span class="sphinx-stars" style="color: #f5a623;">{"★"|str_repeat:$sphinx_hotel_stars}</span>{/if}
+            </h1>
+            {if $sphinx_hotel_location}
+                <p class="sphinx-hotel-header-location" style="margin: 5px 0 0; font-size: 14px; color: #666;">{$sphinx_hotel_location|escape:html}</p>
+            {/if}
+        </div>
+    {/if}
+
     {* ===== BOOKING FORM — Pre-rendered in controller to prevent OOM ===== *}
     <div class="travel-search-form-wrapper">
         {$booking_engine_html nofilter}
