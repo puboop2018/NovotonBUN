@@ -50,17 +50,23 @@ class RoomPriceCheckCommand extends AbstractCronCommand
         $withoutPricesIds = [];
         $withPricesCount = 0;
         $withoutPricesCount = 0;
+        $invalidCount = 0;
 
         foreach ($hotels as $idx => $hotel) {
+            // Mirror the admin "Check Prices" call (novoton_prices.php): bypass the
+            // price cache so we always hit the live API, and do NOT pass
+            // 'children' => 0 (an int lands in the cache-key params as 0 instead of
+            // [], diverging from the admin's key and reading stale/empty entries).
             $params = [
                 'hotel_id' => $hotel['hotel_id'],
                 'check_in' => $check_in,
                 'check_out' => $check_out,
                 'adults' => 2,
-                'children' => 0,
+                'nocache' => true,
             ];
 
             $best_price = 0;
+            $invalid = false;
             try {
                 $response = $this->api->pricing()->getRoomPrice($params);
 
@@ -74,9 +80,14 @@ class RoomPriceCheckCommand extends AbstractCronCommand
                             }
                         }
                     }
+                } else {
+                    // getRoomPrice() returned false — XML parse/API error, distinct
+                    // from a valid response that simply carries no <Price> nodes.
+                    $invalid = true;
                 }
             } catch (\Exception $e) {
                 // API failure for this hotel — treat as no price
+                $invalid = true;
             }
 
             if ($best_price > 0) {
@@ -84,6 +95,9 @@ class RoomPriceCheckCommand extends AbstractCronCommand
                 $this->output("NVT-{$hotel['hotel_id']} | {$hotel['hotel_name']} - EUR " . number_format($best_price, 2));
             } else {
                 $withoutPricesIds[] = $hotel['hotel_id'];
+                if ($invalid) {
+                    $invalidCount++;
+                }
             }
 
             // Batch update every 25 hotels
@@ -108,9 +122,14 @@ class RoomPriceCheckCommand extends AbstractCronCommand
         $this->output('');
         $this->output("Hotels WITH prices: {$withPricesCount}");
         $this->output("Hotels WITHOUT prices: {$withoutPricesCount}");
+        $this->output("  of which invalid API response: {$invalidCount}");
         $this->output('Total checked: ' . ($withPricesCount + $withoutPricesCount));
 
-        $stats = ['with_prices' => $withPricesCount, 'without_prices' => $withoutPricesCount];
+        $stats = [
+            'with_prices' => $withPricesCount,
+            'without_prices' => $withoutPricesCount,
+            'invalid' => $invalidCount,
+        ];
         $this->logComplete('room_price', $stats);
         return ['success' => true, 'stats' => $stats];
     }

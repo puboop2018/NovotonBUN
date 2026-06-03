@@ -482,9 +482,12 @@ if ($mode === 'manage' || empty($mode)) {
         'hotel_facilities_batched' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=hotel_facilities_batched",
         'resinfo' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=resinfo",
         'offers_update' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=offers_update",
+        'room_price' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=room_price",
         'add_products' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=add_hotels_as_products",
+        'reassign_features' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=reassign_features",
         'compute_prices' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=compute_prices",
         'recompute_calendar_prices' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=recompute_calendar_prices",
+        'cleanup' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=cleanup",
     ];
 
     $xml_feed_url = $base_url . "index.php?dispatch=novoton_export.hotel_features_xml&access_key={$cron_key}";
