@@ -16,6 +16,11 @@
             <thead><tr><th>{__("novoton_holidays.cron_mode")}</th><th>{__("novoton_holidays.cron_command")}</th><th>{__("novoton_holidays.cron_suggested_schedule")}</th></tr></thead>
             <tbody>
                 <tr>
+                    <td><strong>hotel_list</strong></td>
+                    <td><code>php {$smarty.const.DIR_ROOT}/index.php?dispatch=novoton_cron.run&amp;access_key=YOUR_KEY&amp;mode=hotel_list</code></td>
+                    <td>Daily (<code>0 2 * * *</code>)</td>
+                </tr>
+                <tr>
                     <td><strong>hotel_info_batched</strong></td>
                     <td><code>php {$smarty.const.DIR_ROOT}/index.php?dispatch=novoton_cron.run&amp;access_key=YOUR_KEY&amp;mode=hotel_info_batched</code></td>
                     <td>Daily (<code>0 3 * * *</code>)</td>
@@ -34,6 +39,16 @@
                     <td><strong>recompute_calendar_prices</strong></td>
                     <td><code>php {$smarty.const.DIR_ROOT}/index.php?dispatch=novoton_cron.run&amp;access_key=YOUR_KEY&amp;mode=recompute_calendar_prices</code></td>
                     <td>After sync or on demand</td>
+                </tr>
+                <tr>
+                    <td><strong>room_price</strong></td>
+                    <td><code>php {$smarty.const.DIR_ROOT}/index.php?dispatch=novoton_cron.run&amp;access_key=YOUR_KEY&amp;mode=room_price&amp;country=ALBANIA</code></td>
+                    <td>Before add_hotels_as_products (sets has_room_price)</td>
+                </tr>
+                <tr>
+                    <td><strong>add_hotels_as_products</strong></td>
+                    <td><code>php {$smarty.const.DIR_ROOT}/index.php?dispatch=novoton_cron.run&amp;access_key=YOUR_KEY&amp;mode=add_hotels_as_products&amp;country=ALBANIA</code></td>
+                    <td>After room_price (adds priced hotels as products)</td>
                 </tr>
                 <tr>
                     <td><strong>resinfo</strong></td>
