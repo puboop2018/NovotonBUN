@@ -236,10 +236,22 @@
                 <td><a href="{$cron_urls.offers_update}" target="_blank" class="novoton-btn novoton-btn-sm">Run</a></td>
             </tr>
             <tr>
+                <td><strong>Room Price</strong><br><small class="muted">Sets has_room_price gate</small></td>
+                <td><div class="novoton-cron-url">{$cron_urls.room_price}</div></td>
+                <td>Before Add Products</td>
+                <td><a href="{$cron_urls.room_price}" target="_blank" class="novoton-btn novoton-btn-sm">Run</a></td>
+            </tr>
+            <tr>
                 <td><strong>Add Products</strong><br><small class="muted">Create CS-Cart products</small></td>
                 <td><div class="novoton-cron-url">{$cron_urls.add_products}</div></td>
-                <td>After sync</td>
+                <td>After Room Price</td>
                 <td><a href="{$cron_urls.add_products}" target="_blank" class="novoton-btn novoton-btn-sm">Run</a></td>
+            </tr>
+            <tr>
+                <td><strong>Reassign Features</strong><br><small class="muted">Re-apply product features</small></td>
+                <td><div class="novoton-cron-url">{$cron_urls.reassign_features}</div></td>
+                <td>After Add Products</td>
+                <td><a href="{$cron_urls.reassign_features}" target="_blank" class="novoton-btn novoton-btn-sm">Run</a></td>
             </tr>
             <tr>
                 <td><strong>Compute Prices</strong><br><small class="muted">min_price, seasons, early booking</small></td>
@@ -258,6 +270,12 @@
                 <td><div class="novoton-cron-url">{$cron_urls.resinfo}</div></td>
                 <td>Every 2 hours</td>
                 <td><a href="{$cron_urls.resinfo}" target="_blank" class="novoton-btn novoton-btn-sm">Run</a></td>
+            </tr>
+            <tr>
+                <td><strong>Cleanup</strong><br><small class="muted">Orphans, logs, cache</small></td>
+                <td><div class="novoton-cron-url">{$cron_urls.cleanup}</div></td>
+                <td>Daily</td>
+                <td><a href="{$cron_urls.cleanup}" target="_blank" class="novoton-btn novoton-btn-sm">Run</a></td>
             </tr>
         </table>
         {else}
