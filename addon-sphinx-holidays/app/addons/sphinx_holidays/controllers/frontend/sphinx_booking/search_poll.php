@@ -20,6 +20,7 @@ if (!defined('BOOTSTRAP')) {
     exit('Access denied');
 }
 
+use Tygh\Addons\SphinxHolidays\Helpers\SearchOfferNormalizer;
 use Tygh\Addons\SphinxHolidays\Services\CacheService;
 use Tygh\Addons\SphinxHolidays\Services\Container;
 use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
@@ -87,6 +88,13 @@ try {
             'api_response' => json_encode($pollResponse),
         ]);
     }
+
+    // The Sphinx search results endpoint returns a nested offer shape
+    // (pricing.selling_price, meal_type_name, rooms[], destination_name).
+    // Flatten each offer to the keys the commission step, slimming list and
+    // template expect (price, currency, board_name, room_name, destination) —
+    // otherwise every offer renders with a 0,00 price and blank room/board.
+    $results = SearchOfferNormalizer::flattenAll($results);
 
     // Apply commission to each result
     $cartService = Container::getCartService();

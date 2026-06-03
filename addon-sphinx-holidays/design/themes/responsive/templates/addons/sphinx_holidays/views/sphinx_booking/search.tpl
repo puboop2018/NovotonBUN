@@ -275,7 +275,13 @@ window.__sphinxSearchParams = {
                 appendResults(data.results || []);
                 cursor = data.next_cursor || null;
 
-                if (data.status === 'completed' || !cursor) {
+                // The Sphinx API reports status=completed from the very first
+                // poll even while offers are still being aggregated server-side
+                // (they can first appear several polls later). Treat the cursor
+                // — not the status — as the continuation signal: keep polling
+                // while a cursor remains, stopping only when it is exhausted.
+                // maxPolls / maxResults (above) bound the loop as a safety net.
+                if (!cursor) {
                     finish();
                     return;
                 }
