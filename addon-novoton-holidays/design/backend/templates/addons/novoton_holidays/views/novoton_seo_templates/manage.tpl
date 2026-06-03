@@ -221,19 +221,19 @@
                 {* Placeholders *}
                 <div class="well well-small" style="background: #f8f9fa;">
                     <h5>{__("novoton_holidays.seo_placeholders_title")|default:"Novoton placeholders to use"}</h5>
-                    <div class="seo-ph-item"><span class="seo-ph-badge" data-insert="{ldelim}{ldelim}name{rdelim}{rdelim}">name</span> <span class="seo-ph-desc">- {__("novoton_holidays.ph_name")}</span></div>
-                    <div class="seo-ph-item"><span class="seo-ph-badge" data-insert="{ldelim}{ldelim}raw_name{rdelim}{rdelim}">raw_name</span> <span class="seo-ph-desc">- {__("novoton_holidays.ph_raw_name")}</span></div>
-                    <div class="seo-ph-item"><span class="seo-ph-badge" data-insert="{ldelim}{ldelim}city{rdelim}{rdelim}">city</span> <span class="seo-ph-desc">- {__("novoton_holidays.ph_city")}</span></div>
-                    <div class="seo-ph-item"><span class="seo-ph-badge" data-insert="{ldelim}{ldelim}country{rdelim}{rdelim}">country</span> <span class="seo-ph-desc">- {__("novoton_holidays.ph_country")}</span></div>
-                    <div class="seo-ph-item"><span class="seo-ph-badge" data-insert="{ldelim}{ldelim}region{rdelim}{rdelim}">region</span> <span class="seo-ph-desc">- {__("novoton_holidays.ph_region")}</span></div>
-                    <div class="seo-ph-item"><span class="seo-ph-badge" data-insert="{ldelim}{ldelim}star_rating{rdelim}{rdelim}">star_rating</span> <span class="seo-ph-desc">- {__("novoton_holidays.ph_star_rating")}</span></div>
-                    <div class="seo-ph-item"><span class="seo-ph-badge" data-insert="{ldelim}{ldelim}stars_emoji{rdelim}{rdelim}">stars_emoji</span> <span class="seo-ph-desc">- {__("novoton_holidays.ph_stars_emoji")}</span></div>
-                    <div class="seo-ph-item"><span class="seo-ph-badge" data-insert="{ldelim}{ldelim}hotel_type{rdelim}{rdelim}">hotel_type</span> <span class="seo-ph-desc">- {__("novoton_holidays.ph_hotel_type")}</span></div>
-                    <div class="seo-ph-item"><span class="seo-ph-badge" data-insert="{ldelim}{ldelim}property_type{rdelim}{rdelim}">property_type</span> <span class="seo-ph-desc">- {__("novoton_holidays.ph_property_type")}</span></div>
-                    <div class="seo-ph-item"><span class="seo-ph-badge" data-insert="{ldelim}{ldelim}year{rdelim}{rdelim}">year</span> <span class="seo-ph-desc">- {__("novoton_holidays.ph_year")}</span></div>
-                    <div class="seo-ph-item"><span class="seo-ph-badge" data-insert="{ldelim}{ldelim}description{rdelim}{rdelim}">description</span> <span class="seo-ph-desc">- {__("novoton_holidays.ph_description")}</span></div>
-                    <div class="seo-ph-item"><span class="seo-ph-badge" data-insert="{ldelim}{ldelim}facilities{rdelim}{rdelim}">facilities</span> <span class="seo-ph-desc">- {__("novoton_holidays.ph_facilities")}</span></div>
-                    <div class="seo-ph-item"><span class="seo-ph-badge" data-insert="{ldelim}{ldelim}latitude{rdelim}{rdelim}">latitude</span> / <span class="seo-ph-badge" data-insert="{ldelim}{ldelim}longitude{rdelim}{rdelim}">longitude</span> <span class="seo-ph-desc">- GPS</span></div>
+                    <div class="seo-ph-item"><span class="seo-ph-badge">{ldelim}{ldelim}name{rdelim}{rdelim}</span> <span class="seo-ph-desc">- {__("novoton_holidays.ph_name")}</span></div>
+                    <div class="seo-ph-item"><span class="seo-ph-badge">{ldelim}{ldelim}raw_name{rdelim}{rdelim}</span> <span class="seo-ph-desc">- {__("novoton_holidays.ph_raw_name")}</span></div>
+                    <div class="seo-ph-item"><span class="seo-ph-badge">{ldelim}{ldelim}city{rdelim}{rdelim}</span> <span class="seo-ph-desc">- {__("novoton_holidays.ph_city")}</span></div>
+                    <div class="seo-ph-item"><span class="seo-ph-badge">{ldelim}{ldelim}country{rdelim}{rdelim}</span> <span class="seo-ph-desc">- {__("novoton_holidays.ph_country")}</span></div>
+                    <div class="seo-ph-item"><span class="seo-ph-badge">{ldelim}{ldelim}region{rdelim}{rdelim}</span> <span class="seo-ph-desc">- {__("novoton_holidays.ph_region")}</span></div>
+                    <div class="seo-ph-item"><span class="seo-ph-badge">{ldelim}{ldelim}star_rating{rdelim}{rdelim}</span> <span class="seo-ph-desc">- {__("novoton_holidays.ph_star_rating")}</span></div>
+                    <div class="seo-ph-item"><span class="seo-ph-badge">{ldelim}{ldelim}stars_emoji{rdelim}{rdelim}</span> <span class="seo-ph-desc">- {__("novoton_holidays.ph_stars_emoji")}</span></div>
+                    <div class="seo-ph-item"><span class="seo-ph-badge">{ldelim}{ldelim}hotel_type{rdelim}{rdelim}</span> <span class="seo-ph-desc">- {__("novoton_holidays.ph_hotel_type")}</span></div>
+                    <div class="seo-ph-item"><span class="seo-ph-badge">{ldelim}{ldelim}property_type{rdelim}{rdelim}</span> <span class="seo-ph-desc">- {__("novoton_holidays.ph_property_type")}</span></div>
+                    <div class="seo-ph-item"><span class="seo-ph-badge">{ldelim}{ldelim}year{rdelim}{rdelim}</span> <span class="seo-ph-desc">- {__("novoton_holidays.ph_year")}</span></div>
+                    <div class="seo-ph-item"><span class="seo-ph-badge">{ldelim}{ldelim}description{rdelim}{rdelim}</span> <span class="seo-ph-desc">- {__("novoton_holidays.ph_description")}</span></div>
+                    <div class="seo-ph-item"><span class="seo-ph-badge">{ldelim}{ldelim}facilities{rdelim}{rdelim}</span> <span class="seo-ph-desc">- {__("novoton_holidays.ph_facilities")}</span></div>
+                    <div class="seo-ph-item"><span class="seo-ph-badge">{ldelim}{ldelim}latitude{rdelim}{rdelim}</span> / <span class="seo-ph-badge">{ldelim}{ldelim}longitude{rdelim}{rdelim}</span> <span class="seo-ph-desc">- GPS</span></div>
                 </div>
 
                 {* Modifiers *}
@@ -243,25 +243,25 @@
                         {__("travel_core.seo_modifiers_example")|default:"Example"}:
                         <code style="background: #e9ecef; padding: 2px 5px; border-radius: 3px; font-size: 11px;">{ldelim}{ldelim}name|lower{rdelim}{rdelim}</code>
                     </div>
-                    <span class="seo-mod-badge" data-modifier="lower">lower</span>
-                    <span class="seo-mod-badge" data-modifier="upper">upper</span>
-                    <span class="seo-mod-badge" data-modifier="title">title</span>
-                    <span class="seo-mod-badge" data-modifier="capitalize">capitalize</span>
-                    <span class="seo-mod-badge" data-modifier="trim">trim</span>
-                    <span class="seo-mod-badge" data-modifier="slug">slug</span>
-                    <span class="seo-mod-badge" data-modifier="strip_tags">strip_tags</span>
-                    <span class="seo-mod-badge" data-modifier="first">first</span>
-                    <span class="seo-mod-badge" data-modifier="last">last</span>
-                    <span class="seo-mod-badge" data-modifier="abs">abs</span>
-                    <span class="seo-mod-badge" data-modifier="round">round</span>
+                    <span class="seo-mod-badge">|lower</span>
+                    <span class="seo-mod-badge">|upper</span>
+                    <span class="seo-mod-badge">|title</span>
+                    <span class="seo-mod-badge">|capitalize</span>
+                    <span class="seo-mod-badge">|trim</span>
+                    <span class="seo-mod-badge">|slug</span>
+                    <span class="seo-mod-badge">|strip_tags</span>
+                    <span class="seo-mod-badge">|first</span>
+                    <span class="seo-mod-badge">|last</span>
+                    <span class="seo-mod-badge">|abs</span>
+                    <span class="seo-mod-badge">|round</span>
                 </div>
 
                 {* Tips *}
                 <div class="well well-small seo-tips">
                     <h5><i class="icon-lightbulb"></i> {__("travel_core.seo_tips_title")|default:"Tips"}</h5>
                     <ul>
-                        <li>{__("travel_core.seo_tip_1")|default:"Click a placeholder badge to insert it at the cursor."}</li>
-                        <li>{__("travel_core.seo_tip_2")|default:"Click a modifier to append it to the nearest placeholder."}</li>
+                        <li>{__("travel_core.seo_tip_1")|default:"Type a placeholder token from the list on the right into any field."}</li>
+                        <li>{__("travel_core.seo_tip_2")|default:"Append a modifier after the placeholder name, inside the braces."}</li>
                         <li>{__("travel_core.seo_tip_3")|default:"Uncheck a field to skip it on import."}</li>
                         <li>{__("travel_core.seo_tip_4")|default:"Use Bulk Apply to re-render all existing products."}</li>
                     </ul>

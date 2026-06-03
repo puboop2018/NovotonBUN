@@ -20,6 +20,7 @@ if (!defined('BOOTSTRAP')) {
     exit('Access denied');
 }
 
+use Tygh\Addons\SphinxHolidays\Helpers\SearchOfferNormalizer;
 use Tygh\Addons\SphinxHolidays\Services\CacheService;
 use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
 use Tygh\Addons\SphinxHolidays\Services\Container;
@@ -218,6 +219,9 @@ try {
 
     // If the API returns final results synchronously, render inline and skip polling.
     if ($initialStatus === 'completed' && !empty($initialResults)) {
+        // Flatten the nested API offer shape (pricing.selling_price,
+        // meal_type_name, rooms[]) to the flat keys the template expects.
+        $initialResults = SearchOfferNormalizer::flattenAll($initialResults);
         $cartService = Container::getCartService();
         foreach ($initialResults as &$result) {
             if (isset($result['price'])) {

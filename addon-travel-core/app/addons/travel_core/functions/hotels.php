@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 /**
  * Travel Core - Hotel Utility Functions
@@ -9,7 +10,9 @@ declare(strict_types=1);
  * @since   1.0.0
  */
 
-if (!defined('BOOTSTRAP')) { exit('Access denied'); }
+if (!defined('BOOTSTRAP')) {
+    exit('Access denied');
+}
 
 /**
  * Render the React booking engine mount-point HTML entirely in PHP.
@@ -31,42 +34,42 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
  * pages and the homepage block where scope chain is not an issue.
  *
  * @param array<string, mixed> $params {
- *     @type string $provider        'novoton' or 'sphinx'
- *     @type string $search_dispatch 'novoton_booking.search' or 'sphinx_booking.search'
- *     @type string $mode            'search' (default) or 'product'
- *     @type array  $search_params   Search params for pre-filling (check_in, check_out, etc.)
- *     @type string $calendar_prices_json  Optional JSON with per-day prices
- *     @type string $calendar_prices_currency  Currency code for calendar prices
- * }
+ * @type string $provider        'novoton' or 'sphinx'
+ * @type string $search_dispatch 'novoton_booking.search' or 'sphinx_booking.search'
+ * @type string $mode            'search' (default) or 'product'
+ * @type array $search_params   Search params for pre-filling (check_in, check_out, etc.)
+ * @type string $calendar_prices_json  Optional JSON with per-day prices
+ * @type string $calendar_prices_currency  Currency code for calendar prices
+ *              }
  * @return string Complete HTML string (safe for {$var nofilter} output)
  */
 function fn_travel_core_render_booking_engine(array $params = []): string
 {
     $vh = \Tygh\Addons\TravelCore\Helpers\ValidationHelpers::class;
-    $provider       = $vh::toString($params['provider'] ?? '');
+    $provider = $vh::toString($params['provider'] ?? '');
     $searchDispatch = $vh::toString($params['search_dispatch'] ?? '');
-    $mode           = $vh::toString($params['mode'] ?? 'search');
+    $mode = $vh::toString($params['mode'] ?? 'search');
     /** @var array<string, mixed> $sp */
-    $sp             = is_array($params['search_params'] ?? null) ? $params['search_params'] : [];
-    $calPricesJson  = $vh::toString($params['calendar_prices_json'] ?? '');
-    $calPricesCurr  = $vh::toString($params['calendar_prices_currency'] ?? '');
+    $sp = is_array($params['search_params'] ?? null) ? $params['search_params'] : [];
+    $calPricesJson = $vh::toString($params['calendar_prices_json'] ?? '');
+    $calPricesCurr = $vh::toString($params['calendar_prices_currency'] ?? '');
 
     // Colors from addon settings (bypasses Smarty completely)
     /** @var array<string, mixed> $tc */
     $tc = is_array(\Tygh\Registry::get('addons.travel_core')) ? \Tygh\Registry::get('addons.travel_core') : [];
     $colors = json_encode([
-        'primary'      => $vh::toString($tc['color_primary'] ?? ''),
-        'accent'       => $vh::toString($tc['color_accent'] ?? ''),
-        'text'         => $vh::toString($tc['color_text'] ?? ''),
-        'textLight'    => $vh::toString($tc['color_text_light'] ?? ''),
-        'bg'           => $vh::toString($tc['color_bg'] ?? ''),
-        'border'       => $vh::toString($tc['color_border'] ?? ''),
-        'btnBg'        => $vh::toString($tc['color_search_btn_bg'] ?? ''),
-        'btnHover'     => $vh::toString($tc['color_search_btn_hover'] ?? ''),
-        'btnText'      => $vh::toString($tc['color_search_btn_text'] ?? ''),
-        'calCheapest'  => $vh::toString($tc['color_cal_cheapest'] ?? ''),
-        'calPrice'     => $vh::toString($tc['color_cal_price'] ?? ''),
-        'danger'       => $vh::toString($tc['color_danger'] ?? ''),
+        'primary' => $vh::toString($tc['color_primary'] ?? ''),
+        'accent' => $vh::toString($tc['color_accent'] ?? ''),
+        'text' => $vh::toString($tc['color_text'] ?? ''),
+        'textLight' => $vh::toString($tc['color_text_light'] ?? ''),
+        'bg' => $vh::toString($tc['color_bg'] ?? ''),
+        'border' => $vh::toString($tc['color_border'] ?? ''),
+        'btnBg' => $vh::toString($tc['color_search_btn_bg'] ?? ''),
+        'btnHover' => $vh::toString($tc['color_search_btn_hover'] ?? ''),
+        'btnText' => $vh::toString($tc['color_search_btn_text'] ?? ''),
+        'calCheapest' => $vh::toString($tc['color_cal_cheapest'] ?? ''),
+        'calPrice' => $vh::toString($tc['color_cal_price'] ?? ''),
+        'danger' => $vh::toString($tc['color_danger'] ?? ''),
     ], JSON_UNESCAPED_SLASHES);
 
     // Translations (50+ keys — built via PHP __() instead of Smarty {__()})
@@ -113,11 +116,11 @@ function fn_travel_core_render_booking_engine(array $params = []): string
     $translationsJson = json_encode($translations, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
     // Resolve IDs
-    $hotelId   = htmlspecialchars($vh::toString($sp['hotel_id'] ?? ''), ENT_QUOTES);
+    $hotelId = htmlspecialchars($vh::toString($sp['hotel_id'] ?? ''), ENT_QUOTES);
     $productId = htmlspecialchars($vh::toString($sp['product_id'] ?? ''), ENT_QUOTES);
-    $lang      = defined('CART_LANGUAGE') ? CART_LANGUAGE : 'en';
-    $cacheVer  = defined('TRAVEL_CACHE_VER') ? TRAVEL_CACHE_VER : '1';
-    $baseUrl   = \Tygh\Registry::get('config.current_location') ?: '';
+    $lang = defined('CART_LANGUAGE') ? CART_LANGUAGE : 'en';
+    $cacheVer = defined('TRAVEL_CACHE_VER') ? TRAVEL_CACHE_VER : '1';
+    $baseUrl = \Tygh\Registry::get('config.current_location') ?: '';
 
     // Build data attributes for search mode
     $searchAttrs = '';
@@ -131,7 +134,7 @@ function fn_travel_core_render_booking_engine(array $params = []): string
             $vh::toInt($sp['children_count'] ?? $sp['children'] ?? 0),
             htmlspecialchars($vh::toString($sp['children_ages'] ?? $sp['children_ages_str'] ?? ''), ENT_QUOTES),
             $vh::toInt($sp['num_rooms'] ?? $sp['rooms'] ?? 1),
-            htmlspecialchars($vh::toString($sp['rooms_data_json'] ?? '[]'), ENT_QUOTES)
+            htmlspecialchars($vh::toString($sp['rooms_data_json'] ?? '[]'), ENT_QUOTES),
         );
     }
 
@@ -141,7 +144,7 @@ function fn_travel_core_render_booking_engine(array $params = []): string
         $calAttrs = sprintf(
             ' data-calendar-prices=\'%s\' data-calendar-prices-currency="%s"',
             $calPricesJson,
-            htmlspecialchars($calPricesCurr, ENT_QUOTES)
+            htmlspecialchars($calPricesCurr, ENT_QUOTES),
         );
     }
 
@@ -151,30 +154,30 @@ function fn_travel_core_render_booking_engine(array $params = []): string
     $translationsAttr = htmlspecialchars((string) $translationsJson, ENT_QUOTES, 'UTF-8');
 
     return <<<HTML
-<div id="travel-booking-root"
-     data-travel-booking
-     data-colors='{$colorsAttr}'
-     data-search-dispatch="{$searchDispatch}"
-     data-provider="{$provider}"
-     data-hotel-id="{$hotelId}"
-     data-product-id="{$productId}"
-     data-debug="false"
-     data-mode="{$mode}"
-     data-lang="{$lang}"
-     {$searchAttrs}
-     {$calAttrs}
-     data-translations='{$translationsAttr}'>
-    <div class="travel-loading-state">
-        <div class="nvt-skeleton-row">
-            <div class="nvt-skeleton-field nvt-skeleton-field--wide"></div>
-            <div class="nvt-skeleton-field"></div>
-            <div class="nvt-skeleton-field nvt-skeleton-field--btn"></div>
+        <div id="travel-booking-root"
+             data-travel-booking
+             data-colors='{$colorsAttr}'
+             data-search-dispatch="{$searchDispatch}"
+             data-provider="{$provider}"
+             data-hotel-id="{$hotelId}"
+             data-product-id="{$productId}"
+             data-debug="false"
+             data-mode="{$mode}"
+             data-lang="{$lang}"
+             {$searchAttrs}
+             {$calAttrs}
+             data-translations='{$translationsAttr}'>
+            <div class="travel-loading-state">
+                <div class="nvt-skeleton-row">
+                    <div class="nvt-skeleton-field nvt-skeleton-field--wide"></div>
+                    <div class="nvt-skeleton-field"></div>
+                    <div class="nvt-skeleton-field nvt-skeleton-field--btn"></div>
+                </div>
+            </div>
         </div>
-    </div>
-</div>
-<script src="{$baseUrl}/js/addons/travel_core/react-vendor.js?v={$cacheVer}" defer></script>
-<script src="{$baseUrl}/js/addons/travel_core/react19-bundle.js?v={$cacheVer}" defer></script>
-HTML;
+        <script src="{$baseUrl}/js/addons/travel_core/react-vendor.js?v={$cacheVer}" defer></script>
+        <script src="{$baseUrl}/js/addons/travel_core/react19-bundle.js?v={$cacheVer}" defer></script>
+        HTML;
 }
 
 /**
@@ -197,11 +200,13 @@ function fn_travel_core_get_or_create_category(string $path): int
 
     foreach ($parts as $part) {
         $category_id = (int) db_get_field(
-            "SELECT c.category_id FROM ?:categories c
+            'SELECT c.category_id FROM ?:categories c
              JOIN ?:category_descriptions cd ON cd.category_id = c.category_id AND cd.lang_code = ?s
              WHERE c.parent_id = ?i AND cd.category = ?s
-             LIMIT 1",
-            CART_LANGUAGE, $parent_id, $part
+             LIMIT 1',
+            CART_LANGUAGE,
+            $parent_id,
+            $part,
         );
 
         if ($category_id > 0) {
@@ -212,15 +217,15 @@ function fn_travel_core_get_or_create_category(string $path): int
         // Inherit company_id from parent category (required in frontend/cron context
         // where Registry::get('runtime.company_id') may not be set)
         $company_id = ($parent_id > 0)
-            ? (int) db_get_field("SELECT company_id FROM ?:categories WHERE category_id = ?i", $parent_id)
+            ? (int) db_get_field('SELECT company_id FROM ?:categories WHERE category_id = ?i', $parent_id)
             : 0;
 
         // Create new category
         $category_data = [
-            'category'   => $part,
-            'parent_id'  => $parent_id,
+            'category' => $part,
+            'parent_id' => $parent_id,
             'company_id' => $company_id,
-            'status'     => 'A',
+            'status' => 'A',
         ];
 
         $category_id = (int) fn_update_category($category_data, 0, CART_LANGUAGE);
@@ -239,10 +244,13 @@ function fn_travel_core_get_or_create_category(string $path): int
                 continue; // Already created by fn_update_category
             }
             db_query(
-                "INSERT INTO ?:category_descriptions (category_id, lang_code, category)
+                'INSERT INTO ?:category_descriptions (category_id, lang_code, category)
                  VALUES (?i, ?s, ?s)
-                 ON DUPLICATE KEY UPDATE category = ?s",
-                $category_id, $lang_code, $part, $part
+                 ON DUPLICATE KEY UPDATE category = ?s',
+                $category_id,
+                $lang_code,
+                $part,
+                $part,
             );
         }
 
@@ -258,9 +266,9 @@ function fn_travel_core_get_or_create_category(string $path): int
  * Uses parent_id directly — no path parsing needed.
  * Idempotent: reuses an existing category if name matches under parent.
  *
- * @param int    $parent_id Parent category_id (must already exist)
- * @param string $name      Category name (e.g. "Turkey")
- * @return int              The child category_id, or 0 on failure
+ * @param int $parent_id Parent category_id (must already exist)
+ * @param string $name Category name (e.g. "Turkey")
+ * @return int The child category_id, or 0 on failure
  */
 function fn_travel_core_get_or_create_child_category(int $parent_id, string $name): int
 {
@@ -271,11 +279,13 @@ function fn_travel_core_get_or_create_child_category(int $parent_id, string $nam
 
     // Look for existing category by name under this parent
     $category_id = (int) db_get_field(
-        "SELECT c.category_id FROM ?:categories c
+        'SELECT c.category_id FROM ?:categories c
          JOIN ?:category_descriptions cd ON cd.category_id = c.category_id AND cd.lang_code = ?s
          WHERE c.parent_id = ?i AND cd.category = ?s
-         LIMIT 1",
-        CART_LANGUAGE, $parent_id, $name
+         LIMIT 1',
+        CART_LANGUAGE,
+        $parent_id,
+        $name,
     );
 
     if ($category_id > 0) {
@@ -285,16 +295,16 @@ function fn_travel_core_get_or_create_child_category(int $parent_id, string $nam
     // Inherit company_id from parent category (required in frontend/cron context
     // where Registry::get('runtime.company_id') may not be set)
     $company_id = (int) db_get_field(
-        "SELECT company_id FROM ?:categories WHERE category_id = ?i",
-        $parent_id
+        'SELECT company_id FROM ?:categories WHERE category_id = ?i',
+        $parent_id,
     );
 
     // Create new category under parent
     $category_data = [
-        'category'   => $name,
-        'parent_id'  => $parent_id,
+        'category' => $name,
+        'parent_id' => $parent_id,
         'company_id' => $company_id,
-        'status'     => 'A',
+        'status' => 'A',
     ];
 
     $category_id = (int) fn_update_category($category_data, 0, CART_LANGUAGE);
@@ -313,10 +323,13 @@ function fn_travel_core_get_or_create_child_category(int $parent_id, string $nam
             continue;
         }
         db_query(
-            "INSERT INTO ?:category_descriptions (category_id, lang_code, category)
+            'INSERT INTO ?:category_descriptions (category_id, lang_code, category)
              VALUES (?i, ?s, ?s)
-             ON DUPLICATE KEY UPDATE category = ?s",
-            $category_id, $lang_code, $name, $name
+             ON DUPLICATE KEY UPDATE category = ?s',
+            $category_id,
+            $lang_code,
+            $name,
+            $name,
         );
     }
 
@@ -336,34 +349,34 @@ function fn_travel_core_get_or_create_child_category(int $parent_id, string $nam
  *
  * Usage in templates: {{name|upper}}, {{price|round}}, {{city|title}}
  *
- * @param string $value    The raw placeholder value
+ * @param string $value The raw placeholder value
  * @param string $modifier Modifier name (case-insensitive)
  * @return string Modified value
  */
 function fn_travel_core_apply_modifier(string $value, string $modifier): string
 {
     return match (strtolower($modifier)) {
-        'lower'      => mb_strtolower($value, 'UTF-8'),
-        'upper'      => mb_strtoupper($value, 'UTF-8'),
-        'title'      => mb_convert_case($value, MB_CASE_TITLE, 'UTF-8'),
+        'lower' => mb_strtolower($value, 'UTF-8'),
+        'upper' => mb_strtoupper($value, 'UTF-8'),
+        'title' => mb_convert_case($value, MB_CASE_TITLE, 'UTF-8'),
         'capitalize' => mb_strtoupper(mb_substr($value, 0, 1, 'UTF-8'), 'UTF-8') . mb_substr($value, 1, null, 'UTF-8'),
-        'trim'       => trim($value),
-        'slug'       => function_exists('fn_generate_seo_name') ? fn_generate_seo_name($value) : preg_replace('/-{2,}/', '-', trim((string) preg_replace('/[^a-z0-9\-]+/', '-', mb_strtolower($value, 'UTF-8')), '-')),
-        'first'      => mb_substr($value, 0, 1, 'UTF-8'),
-        'last'       => mb_substr($value, -1, 1, 'UTF-8'),
-        'abs'        => (string) abs((float) $value),
-        'round'      => (string) round((float) $value),
+        'trim' => trim($value),
+        'slug' => function_exists('fn_generate_seo_name') ? fn_generate_seo_name($value) : preg_replace('/-{2,}/', '-', trim((string) preg_replace('/[^a-z0-9\-]+/', '-', mb_strtolower($value, 'UTF-8')), '-')),
+        'first' => mb_substr($value, 0, 1, 'UTF-8'),
+        'last' => mb_substr($value, -1, 1, 'UTF-8'),
+        'abs' => (string) abs((float) $value),
+        'round' => (string) round((float) $value),
         'strip_tags' => strip_tags($value),
-        default      => $value,
+        default => $value,
     };
 }
 
 /**
  * Truncate a string at a word boundary, appending ellipsis if needed.
  *
- * @param string $value     The string to truncate
- * @param int    $maxLength Maximum length (0 = no limit)
- * @param string $ellipsis  Suffix when truncated (default: empty)
+ * @param string $value The string to truncate
+ * @param int $maxLength Maximum length (0 = no limit)
+ * @param string $ellipsis Suffix when truncated (default: empty)
  * @return string Truncated string
  */
 function fn_travel_core_truncate_seo(string $value, int $maxLength, string $ellipsis = ''): string
@@ -402,8 +415,8 @@ function fn_travel_core_build_star_emoji(int $stars): string
  * Dangling separators are cleaned up.
  * Extra spaces are collapsed.
  *
- * @param string $pattern       Template string with {{placeholder}} tokens
- * @param array<string, mixed>  $placeholders  Key => value map (keys without braces)
+ * @param string $pattern Template string with {{placeholder}} tokens
+ * @param array<string, mixed> $placeholders Key => value map (keys without braces)
  * @return string Rendered string, trimmed
  */
 function fn_travel_core_render_seo_template(string $pattern, array $placeholders): string
@@ -432,7 +445,7 @@ function fn_travel_core_render_seo_template(string $pattern, array $placeholders
             }
             return $value;
         },
-        $pattern
+        $pattern,
     );
 
     // Clean up dangling separators left by empty placeholders
@@ -451,8 +464,8 @@ function fn_travel_core_render_seo_template(string $pattern, array $placeholders
 /**
  * Render an SEO template and convert the result to a URL-safe slug.
  *
- * @param string $pattern       Template string with {{placeholder}} tokens
- * @param array<string, mixed>  $placeholders  Key => value map (keys without braces)
+ * @param string $pattern Template string with {{placeholder}} tokens
+ * @param array<string, mixed> $placeholders Key => value map (keys without braces)
  * @return string URL-safe slug
  */
 function fn_travel_core_render_seo_slug(string $pattern, array $placeholders): string
@@ -485,11 +498,11 @@ function fn_travel_core_render_seo_slug(string $pattern, array $placeholders): s
 function _travel_core_seo_field_map(): array
 {
     return [
-        'seo_field_product_name'     => ['seo_product_name',     'product'],
-        'seo_field_page_title'       => ['seo_page_title',       'page_title'],
+        'seo_field_product_name' => ['seo_product_name',     'product'],
+        'seo_field_page_title' => ['seo_page_title',       'page_title'],
         'seo_field_meta_description' => ['seo_meta_description', 'meta_description'],
-        'seo_field_meta_keywords'    => ['seo_meta_keywords',    'meta_keywords'],
-        'seo_field_name_slug'        => ['seo_name_slug',        'seo_name'],
+        'seo_field_meta_keywords' => ['seo_meta_keywords',    'meta_keywords'],
+        'seo_field_name_slug' => ['seo_name_slug',        'seo_name'],
         'seo_field_full_description' => ['seo_full_description', 'full_description'],
     ];
 }
@@ -500,10 +513,10 @@ function _travel_core_seo_field_map(): array
  * Returns only the product_data keys that should be written — callers merge
  * this into their own product data array before calling fn_update_product().
  *
- * @param string      $addonName    'novoton_holidays' or 'sphinx_holidays'
- * @param array<string, mixed>       $placeholders Key => value map for template rendering
- * @param int         $productId    0 = new product (all enabled fields applied), >0 = existing
- * @param string|null $hotelId      For unique slug generation (SphinxProductFactory pattern)
+ * @param string $addonName 'novoton_holidays' or 'sphinx_holidays'
+ * @param array<string, mixed> $placeholders Key => value map for template rendering
+ * @param int $productId 0 = new product (all enabled fields applied), >0 = existing
+ * @param string|null $hotelId For unique slug generation (SphinxProductFactory pattern)
  * @return array<string, mixed> Product data keys to merge into fn_update_product()
  */
 function fn_travel_core_apply_seo_fields(string $addonName, array $placeholders, int $productId = 0, ?string $hotelId = null): array
@@ -511,7 +524,7 @@ function fn_travel_core_apply_seo_fields(string $addonName, array $placeholders,
     $settings = \Tygh\Registry::get('addons.' . $addonName) ?: [];
 
     $overwriteMode = \Tygh\Addons\TravelCore\Enums\SeoOverwriteMode::tryFrom(
-        ($settings['seo_overwrite_mode'] ?? '') ?: 'override_all'
+        ($settings['seo_overwrite_mode'] ?? '') ?: 'override_all',
     ) ?? \Tygh\Addons\TravelCore\Enums\SeoOverwriteMode::OverrideAll;
     $fillIfEmpty = ($overwriteMode === \Tygh\Addons\TravelCore\Enums\SeoOverwriteMode::FillIfEmpty) && ($productId > 0);
 
@@ -520,14 +533,15 @@ function fn_travel_core_apply_seo_fields(string $addonName, array $placeholders,
     $currentSlug = '';
     if ($fillIfEmpty) {
         $current = db_get_row(
-            "SELECT product, page_title, meta_description, meta_keywords, full_description
+            'SELECT product, page_title, meta_description, meta_keywords, full_description
              FROM ?:product_descriptions
-             WHERE product_id = ?i AND lang_code = ?s",
-            $productId, CART_LANGUAGE
+             WHERE product_id = ?i AND lang_code = ?s',
+            $productId,
+            CART_LANGUAGE,
         ) ?: [];
         $currentSlug = (string) db_get_field(
             "SELECT name FROM ?:seo_names WHERE object_id = ?i AND type = 'p' LIMIT 1",
-            $productId
+            $productId,
         );
     }
 
@@ -562,7 +576,8 @@ function fn_travel_core_apply_seo_fields(string $addonName, array $placeholders,
                 // Check for duplicates (append hotel_id suffix if needed)
                 $existing = db_get_field(
                     "SELECT object_id FROM ?:seo_names WHERE name = ?s AND type = 'p' AND object_id != ?i LIMIT 1",
-                    $rendered, $productId
+                    $rendered,
+                    $productId,
                 );
                 if ($existing) {
                     $rendered .= '-' . preg_replace('/[^a-z0-9]/', '', strtolower($hotelId));
@@ -598,8 +613,8 @@ function fn_travel_core_apply_seo_fields(string $addonName, array $placeholders,
  * Provider addons supply their own data-fetching and placeholder-building
  * callables, keeping travel_core free of addon-specific SQL and class refs.
  *
- * @param string   $addonName          'novoton_holidays' or 'sphinx_holidays'
- * @param callable $hotelFetcher       fn(int $offset, int $batchSize): array — returns hotel rows
+ * @param string $addonName 'novoton_holidays' or 'sphinx_holidays'
+ * @param callable $hotelFetcher fn(int $offset, int $batchSize): array — returns hotel rows
  * @param callable $placeholderBuilder fn(array $hotel): array — returns placeholder map
  * @return array{updated: int, skipped: int, total: int}
  */
@@ -662,15 +677,17 @@ function fn_travel_core_seo_bulk_apply(string $addonName, callable $hotelFetcher
  * Wraps the common controller boilerplate: set_time_limit, progress init/finish,
  * notification, and redirect. Returns a CS-Cart controller redirect array.
  *
- * @param string   $progressLabel Translation key for the progress bar
- * @param callable $task          fn(): mixed — the work to execute
- * @param string   $redirectUrl   CS-Cart dispatch URL to redirect to after completion
+ * @param string $progressLabel Translation key for the progress bar
+ * @param callable $task fn(): mixed — the work to execute
+ * @param string $redirectUrl CS-Cart dispatch URL to redirect to after completion
  * @param callable|null $onResult fn(mixed $result): void — optional post-task notification
  * @return array{0: string, 1: string} CS-Cart [CONTROLLER_STATUS_REDIRECT, $url]
  */
 function fn_travel_core_run_long_task(string $progressLabel, callable $task, string $redirectUrl, ?callable $onResult = null): array
 {
-    if (function_exists('set_time_limit')) { set_time_limit(0); }
+    if (function_exists('set_time_limit')) {
+        set_time_limit(0);
+    }
     fn_set_progress('init', $progressLabel);
     $result = $task();
     fn_set_progress('finish');
@@ -689,10 +706,10 @@ function fn_travel_core_run_long_task(string $progressLabel, callable $task, str
  * fn_sphinx_holidays_add_product_image(). Each addon handles its own download
  * strategy, then calls this function with the temp file path.
  *
- * @param int    $productId Product ID to attach the image to
- * @param string $tempFile  Path to already-downloaded temp file
- * @param string $prefix    Filename prefix (e.g. 'novoton', 'sphinx')
- * @param bool   $isMain    True for main product image, false for additional
+ * @param int $productId Product ID to attach the image to
+ * @param string $tempFile Path to already-downloaded temp file
+ * @param string $prefix Filename prefix (e.g. 'novoton', 'sphinx')
+ * @param bool $isMain True for main product image, false for additional
  * @return bool True on success
  */
 function fn_travel_core_attach_product_image(int $productId, string $tempFile, string $prefix, bool $isMain = false): bool
@@ -702,7 +719,9 @@ function fn_travel_core_attach_product_image(int $productId, string $tempFile, s
     if ($productId <= 0) {
         \Tygh\Addons\TravelCore\Helpers\DebugLogger::$lastImageAttachError = 'attach: invalid product_id';
         fn_log_event('general', 'runtime', ['message' => \Tygh\Addons\TravelCore\Helpers\DebugLogger::$lastImageAttachError]);
-        if (file_exists($tempFile)) { unlink($tempFile); }
+        if (file_exists($tempFile)) {
+            unlink($tempFile);
+        }
         return false;
     }
     if (!file_exists($tempFile)) {
@@ -733,8 +752,8 @@ function fn_travel_core_attach_product_image(int $productId, string $tempFile, s
 
     $mimeToExt = [
         'image/jpeg' => 'jpg',
-        'image/png'  => 'png',
-        'image/gif'  => 'gif',
+        'image/png' => 'png',
+        'image/gif' => 'gif',
         'image/webp' => 'webp',
     ];
 
@@ -743,30 +762,50 @@ function fn_travel_core_attach_product_image(int $productId, string $tempFile, s
 
     $existingPairs = (int) db_get_field(
         "SELECT COUNT(*) FROM ?:images_links WHERE object_id = ?i AND object_type = 'product'",
-        $productId
+        $productId,
     );
 
-    // Do NOT include 'tmp_name' or 'error': fn_update_image_pairs() calls
-    // is_uploaded_file() for those keys, which always returns false in cron context.
-    // Pass as arg 2 ($detailed — full-size image slot); arg 1 ($icon) is empty so
-    // CS-Cart auto-generates thumbnails; arg 3 ($pair_id) is empty for a new pair.
-    $imageData = [
+    // Use fn_attach_image_pairs (high-level wrapper), NOT fn_update_image_pairs directly.
+    // fn_update_image_pairs treats 'path' as relative to config.dir.upload, so absolute
+    // temp paths (/tmp/cscart_XXXX) are never found. fn_attach_image_pairs reads 'path'
+    // from session uploaded_data as an absolute path and handles file movement properly.
+    $pairName = 'tc_' . $productId . '_' . time();
+
+    // Tygh::$app is array<string, mixed> so each level must be narrowed for PHPStan level 10.
+    $tcSession = \Tygh\Tygh::$app['session'];
+    $tcSession = is_array($tcSession) ? $tcSession : [];
+    $tcUploaded = isset($tcSession['uploaded_data']) && is_array($tcSession['uploaded_data'])
+        ? $tcSession['uploaded_data']
+        : [];
+    $tcUploaded[$pairName . '_image_detailed'] = [
         0 => [
-            'pair_id'  => 0,
-            'type'     => $isMain ? 'M' : 'A',
+            'name' => $filename,
+            'path' => $tempFile,
+            'type' => $imageInfo['mime'],
+            'size' => $tempSize,
+        ],
+    ];
+    $tcSession['uploaded_data'] = $tcUploaded;
+    \Tygh\Tygh::$app['session'] = $tcSession;
+
+    $_REQUEST[$pairName . '_image_data'] = [
+        0 => [
+            'pair_id' => 0,
+            'type' => $isMain ? 'M' : 'A',
             'position' => $existingPairs,
-            'name'     => $filename,
-            'path'     => $tempFile,
-            'size'     => $tempSize,
         ],
     ];
 
-    $pairIds = fn_update_image_pairs([], $imageData, [], $productId, 'product');
+    $pairIds = fn_attach_image_pairs($pairName, 'product', $productId);
 
+    unset($tcUploaded[$pairName . '_image_detailed']);
+    $tcSession['uploaded_data'] = $tcUploaded;
+    \Tygh\Tygh::$app['session'] = $tcSession;
+    unset($_REQUEST[$pairName . '_image_data']);
     unlink($tempFile);
 
     if (empty($pairIds)) {
-        \Tygh\Addons\TravelCore\Helpers\DebugLogger::$lastImageAttachError = "attach: fn_update_image_pairs returned no pair (object_id={$productId}, size={$tempSize}, mime={$imageInfo['mime']})";
+        \Tygh\Addons\TravelCore\Helpers\DebugLogger::$lastImageAttachError = "attach: fn_attach_image_pairs returned no pair (object_id={$productId}, size={$tempSize}, mime={$imageInfo['mime']})";
         fn_log_event('general', 'runtime', ['message' => \Tygh\Addons\TravelCore\Helpers\DebugLogger::$lastImageAttachError]);
         return false;
     }
