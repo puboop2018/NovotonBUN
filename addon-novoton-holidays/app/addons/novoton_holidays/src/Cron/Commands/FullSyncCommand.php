@@ -36,7 +36,7 @@ class FullSyncCommand extends AbstractCronCommand
     #[\Override]
     public static function getModes(): array
     {
-        return ['full', 'update_prices'];
+        return ['full'];
     }
 
     #[\Override]
@@ -51,15 +51,6 @@ class FullSyncCommand extends AbstractCronCommand
     #[\Override]
     public function execute(): array
     {
-        $mode = $this->params['_mode'] ?? 'full';
-
-        if ($mode === 'update_prices') {
-            $this->output('Updating hotel prices...');
-            $this->output('This mode is resource-intensive. Use admin panel for full price update.');
-            $this->output('URL: admin.php?dispatch=novoton_holidays.update_prices');
-            return ['success' => true, 'stats' => []];
-        }
-
         // 1. Sync prices
         $this->output('Syncing prices...');
         $sync = $this->priceSync ?? new PriceInfoSync();

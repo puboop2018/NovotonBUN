@@ -6,10 +6,7 @@ declare(strict_types=1);
  * Shared output callback pattern for sync classes.
  *
  * Extracted originally from the three legacy Batched*Sync helpers (now
- * deleted in PR #11 of the audit). Still in use by HotelSync and
- * AdminCronService — those two classes keep the trait alive even
- * though the original Batched*Sync consumers have moved to the
- * AbstractBatchedSync + SyncLogger pipeline.
+ * deleted in PR #11 of the audit). Still in use by AdminCronService.
  *
  * Usage:
  *   class MySync {
