@@ -51,8 +51,6 @@ class FullSyncCommand extends AbstractCronCommand
     #[\Override]
     public function execute(): array
     {
-        $mode = $this->params['_mode'] ?? 'full';
-
         // 1. Sync prices
         $this->output('Syncing prices...');
         $sync = $this->priceSync ?? new PriceInfoSync();
