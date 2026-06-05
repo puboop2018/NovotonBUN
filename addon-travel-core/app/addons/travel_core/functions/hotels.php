@@ -765,47 +765,46 @@ function fn_travel_core_attach_product_image(int $productId, string $tempFile, s
         $productId,
     );
 
-    // Use fn_attach_image_pairs (high-level wrapper), NOT fn_update_image_pairs directly.
-    // fn_update_image_pairs treats 'path' as relative to config.dir.upload, so absolute
-    // temp paths (/tmp/cscart_XXXX) are never found. fn_attach_image_pairs reads 'path'
-    // from session uploaded_data as an absolute path and handles file movement properly.
-    $pairName = 'tc_' . $productId . '_' . time();
-
-    // Tygh::$app is array<string, mixed> so each level must be narrowed for PHPStan level 10.
-    $tcSession = \Tygh\Tygh::$app['session'];
-    $tcSession = is_array($tcSession) ? $tcSession : [];
-    $tcUploaded = isset($tcSession['uploaded_data']) && is_array($tcSession['uploaded_data'])
-        ? $tcSession['uploaded_data']
-        : [];
-    $tcUploaded[$pairName . '_image_detailed'] = [
+    // Import path: hand prepared arrays straight to fn_update_image_pairs(), CS-Cart's
+    // canonical API/import entry point. It does NOT depend on $_FILES or session
+    // uploaded_data — which is why fn_attach_image_pairs() cannot work from cron: that
+    // wrapper reads <name>_image_detailed/_icon out of $_FILES via fn_filter_uploaded_data.
+    //
+    // Two hard requirements learned the hard way:
+    //   1. The loop inside fn_update_image_pairs() is driven by $pairs_data (arg 3), so
+    //      BOTH $detailed and $pairs_data must be populated with MATCHING keys. Passing
+    //      $pairs_data empty (or merging everything into $detailed) makes the loop run
+    //      zero times and return [] — the original "returned no pair" failure.
+    //   2. fn_update_image() reads only 'path' (treated as an absolute filesystem path)
+    //      and 'name', then stores the file via Storage::put(). It never calls
+    //      is_uploaded_file(), so an absolute temp path (/tmp/...) works directly — do
+    //      NOT add a 'tmp_name' key.
+    $detailed = [
         0 => [
             'name' => $filename,
             'path' => $tempFile,
-            'type' => $imageInfo['mime'],
             'size' => $tempSize,
+            'type' => $imageInfo['mime'],
         ],
     ];
-    $tcSession['uploaded_data'] = $tcUploaded;
-    \Tygh\Tygh::$app['session'] = $tcSession;
-
-    $_REQUEST[$pairName . '_image_data'] = [
+    $pairsData = [
         0 => [
-            'pair_id' => 0,
-            'type' => $isMain ? 'M' : 'A',
+            'pair_id'  => 0,
+            'type'     => $isMain ? 'M' : 'A',
             'position' => $existingPairs,
         ],
     ];
 
-    $pairIds = fn_attach_image_pairs($pairName, 'product', $productId);
+    // Args: ($icons, $detailed, $pairs_data, $object_id, $object_type). $icons is empty
+    // so CS-Cart auto-generates the thumbnail from the full-size detailed image.
+    $pairIds = fn_update_image_pairs([], $detailed, $pairsData, $productId, 'product');
 
-    unset($tcUploaded[$pairName . '_image_detailed']);
-    $tcSession['uploaded_data'] = $tcUploaded;
-    \Tygh\Tygh::$app['session'] = $tcSession;
-    unset($_REQUEST[$pairName . '_image_data']);
-    unlink($tempFile);
+    if (file_exists($tempFile)) {
+        unlink($tempFile);
+    }
 
     if (empty($pairIds)) {
-        \Tygh\Addons\TravelCore\Helpers\DebugLogger::$lastImageAttachError = "attach: fn_attach_image_pairs returned no pair (object_id={$productId}, size={$tempSize}, mime={$imageInfo['mime']})";
+        \Tygh\Addons\TravelCore\Helpers\DebugLogger::$lastImageAttachError = "attach: fn_update_image_pairs returned no pair (object_id={$productId}, size={$tempSize}, mime={$imageInfo['mime']})";
         fn_log_event('general', 'runtime', ['message' => \Tygh\Addons\TravelCore\Helpers\DebugLogger::$lastImageAttachError]);
         return false;
     }

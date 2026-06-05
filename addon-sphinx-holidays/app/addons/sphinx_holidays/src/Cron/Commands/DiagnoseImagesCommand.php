@@ -145,7 +145,10 @@ class DiagnoseImagesCommand extends AbstractSyncCommand
             $headers = $isApiHosted ? ImageHelper::getCurlAuthHeaders() : [];
 
             $this->output('');
-            $this->output("[img #{$i}] URL: " . substr($url, 0, 120));
+            // Print the full URL — a previous substr($url, 0, 120) truncated long CDN
+            // URLs mid-extension (".jpg" → ".j"), which looked like a broken/stored URL
+            // even though the value in the DB and the actual HTTP request were intact.
+            $this->output("[img #{$i}] URL: " . $url);
             $this->output("[img #{$i}] API-hosted: " . ($isApiHosted ? 'YES (auth headers sent)' : 'NO (public CDN)'));
 
             // Download to temp file
