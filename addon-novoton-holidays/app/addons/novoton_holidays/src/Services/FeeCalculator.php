@@ -288,7 +288,7 @@ class FeeCalculator implements FeeCalculatorInterface
             } else {
                 $price = $price1;
                 $tierUsed = "Price1 (fallback, nights={$nights} between toDays="
-                    . ($toDays ?? 'n/a') . " and fromDays=" . ($fromDays ?? 'n/a') . ')';
+                    . ($toDays ?? 'n/a') . ' and fromDays=' . ($fromDays ?? 'n/a') . ')';
             }
 
             $count = 1;
