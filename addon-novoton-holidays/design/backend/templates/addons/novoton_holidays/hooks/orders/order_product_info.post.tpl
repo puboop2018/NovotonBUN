@@ -11,8 +11,8 @@
             {/if}
 
             {if $oi.extra.check_in}
-            <strong>Check-in:</strong> {$oi.extra.check_in|date_format:"%d.%m.%Y"} |
-            <strong>Check-out:</strong> {$oi.extra.check_out|default:''|date_format:"%d.%m.%Y"} |
+            <strong>Check-in:</strong> {$oi.extra.check_in_short|default:$oi.extra.check_in|default:''} |
+            <strong>Check-out:</strong> {$oi.extra.check_out_short|default:$oi.extra.check_out|default:''} |
             <strong>Nights:</strong> {$oi.extra.nights|default:'-'}<br>
             {/if}
 
