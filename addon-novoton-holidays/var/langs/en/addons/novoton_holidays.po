@@ -32,6 +32,14 @@ msgctxt "SettingsOptions::novoton_holidays::api_url"
 msgid "API URL"
 msgstr "API URL"
 
+msgctxt "SettingsOptions::novoton_holidays::allow_insecure_api"
+msgid "Allow insecure (HTTP) API connection"
+msgstr "Allow insecure (HTTP) API connection"
+
+msgctxt "SettingsTooltips::novoton_holidays::allow_insecure_api"
+msgid "Permit sending API credentials over unencrypted HTTP. The Novoton provider currently exposes HTTP only, so this is enabled by default. Disable it once the API URL uses https:// — connections will then hard-fail rather than leak credentials in plaintext."
+msgstr "Permit sending API credentials over unencrypted HTTP. The Novoton provider currently exposes HTTP only, so this is enabled by default. Disable it once the API URL uses https:// — connections will then hard-fail rather than leak credentials in plaintext."
+
 msgctxt "SettingsOptions::novoton_holidays::api_key"
 msgid "API Key"
 msgstr "API Key"

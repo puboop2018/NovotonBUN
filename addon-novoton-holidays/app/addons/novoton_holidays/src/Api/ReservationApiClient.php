@@ -92,7 +92,7 @@ class ReservationApiClient extends ApiClientBase implements ReservationApiClient
 
         $this->lastRequest = $xml;
 
-        DebugLogger::log('Novoton hotel_res_RQ Request (Test Mode: ' . ($isTestMode ? 'YES' : 'NO') . ')', ['xml' => $xml]);
+        DebugLogger::log('Novoton hotel_res_RQ Request (Test Mode: ' . ($isTestMode ? 'YES' : 'NO') . ')', ['xml' => $this->maskCredentials($xml)]);
 
         $response = $this->callApi(Constants::API_FUNCTION_RESERVATION, $xml, $bookingData['lang'] ?? 'UK');
 
@@ -132,7 +132,7 @@ class ReservationApiClient extends ApiClientBase implements ReservationApiClient
 
         fn_log_event('general', 'runtime', [
             'message' => 'Novoton hotel_request Request',
-            'xml' => $xml,
+            'xml' => $this->maskCredentials($xml),
         ]);
 
         $response = $this->callApi(Constants::API_FUNCTION_HOTEL_REQUEST, $xml, $lang);
@@ -179,7 +179,7 @@ class ReservationApiClient extends ApiClientBase implements ReservationApiClient
 
         fn_log_event('general', 'runtime', [
             'message' => 'Novoton alternative_RS Request',
-            'xml' => $xml,
+            'xml' => $this->maskCredentials($xml),
         ]);
 
         return $this->callApiAndParse(Constants::API_FUNCTION_ALTERNATIVE_RS, $xml, $lang);
@@ -311,15 +311,5 @@ class ReservationApiClient extends ApiClientBase implements ReservationApiClient
 ' . $roomAccXml . '
 </hotel_acc>
 </hotel_request>';
-    }
-
-    /**
-     * Mask API credentials in XML for logging/display.
-     */
-    private function maskCredentials(string $xml): string
-    {
-        $xml = (string) preg_replace('/<usr>.*?<\/usr>/', '<usr>*****</usr>', $xml);
-        $xml = (string) preg_replace('/<psw>.*?<\/psw>/', '<psw>*****</psw>', $xml);
-        return $xml;
     }
 }
