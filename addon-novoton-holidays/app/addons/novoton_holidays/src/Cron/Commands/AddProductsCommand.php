@@ -109,7 +109,24 @@ class AddProductsCommand extends AbstractCronCommand
                 // Check if CS-Cart product already exists (core products table)
                 $existing = db_get_field('SELECT product_id FROM ?:products WHERE product_code = ?s', $product_code);
                 if ($existing) {
-                    $hotelRepo->linkToProduct($hotel_id, PriceInfoFormatter::toInt($existing));
+                    $existingProductId = PriceInfoFormatter::toInt($existing);
+                    $hotelRepo->linkToProduct($hotel_id, $existingProductId);
+
+                    // Apply facilities and features to the pre-existing product.
+                    // The ADDED path does this inline; LINKED must do it here so
+                    // that hotels linked on re-run don't stay featureless.
+                    try {
+                        fn_novoton_holidays_sync_hotel_facilities($hotel_id);
+                    } catch (\Exception $e) {
+                        fn_log_event('general', 'runtime', ['message' => "Novoton: Failed to sync facilities for hotel {$hotel_id}", 'error' => $e->getMessage()]);
+                    }
+
+                    try {
+                        $this->assignProductFeatures($existingProductId, $hotel_id, $hotel);
+                    } catch (\Exception $e) {
+                        fn_log_event('general', 'runtime', ['message' => "Novoton: Failed to assign features for hotel {$hotel_id}", 'error' => $e->getMessage()]);
+                    }
+
                     $this->output('LINKED');
                     continue;
                 }
