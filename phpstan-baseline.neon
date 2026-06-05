@@ -2280,11 +2280,6 @@ parameters:
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/AddProductsCommand.php
 
-		-
-			message: '#^Parameter \#1 \$hotel_id of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepositoryInterface\:\:linkToProduct\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/AddProductsCommand.php
 
 		-
 			message: '#^Parameter \#1 \$hotel_name of function fn_novoton_holidays_format_hotel_display_name expects string, mixed given\.$#'
@@ -2322,11 +2317,6 @@ parameters:
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/AddProductsCommand.php
 
-		-
-			message: '#^Parameter \#2 \$product_id of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepositoryInterface\:\:linkToProduct\(\) expects int, mixed given\.$#'
-			identifier: argument.type
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/AddProductsCommand.php
 
 		-
 			message: '#^Parameter \#2 \$string of function explode expects string, mixed given\.$#'
@@ -2946,11 +2936,6 @@ parameters:
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/OffersUpdateCommand.php
 
-		-
-			message: '#^Parameter \#2 \$product_id of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepositoryInterface\:\:linkToProduct\(\) expects int, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/OffersUpdateCommand.php
 
 		-
 			message: '#^Part \$product_id \(mixed\) of encapsed string cannot be cast to string\.$#'
@@ -4512,11 +4497,6 @@ parameters:
 			count: 2
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/AdminCronService.php
 
-		-
-			message: '#^Parameter \#1 \$hotel_id of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepositoryInterface\:\:linkToProduct\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/AdminCronService.php
 
 		-
 			message: '#^Parameter \#1 \$hotel_id of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepositoryInterface\:\:update\(\) expects string, mixed given\.$#'
@@ -4530,11 +4510,6 @@ parameters:
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/AdminCronService.php
 
-		-
-			message: '#^Parameter \#2 \$product_id of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepositoryInterface\:\:linkToProduct\(\) expects int, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/AdminCronService.php
 
 		-
 			message: '#^Part \$hotel\[''hotel_id''\] \(mixed\) of encapsed string cannot be cast to string\.$#'

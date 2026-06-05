@@ -4,16 +4,23 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Repository;
 
+use Tygh\Addons\TravelCore\Contracts\HotelRepositoryInterface as CoreHotelRepositoryInterface;
 use Tygh\Addons\TravelCore\Dto\Hotel\Hotel;
 
 /**
+ * Novoton hotel repository contract.
+ *
+ * Extends the shared, provider-neutral {@see CoreHotelRepositoryInterface}
+ * (findById/exists/delete/linkToProduct/unlinkProduct/getCountries) with the
+ * Novoton-specific surface below: DTO views, package/priceinfo access, listing
+ * and sync-selection queries, and reporting aggregates tied to the Novoton
+ * schema.
+ *
  * @phpstan-type HotelRow = array<string, mixed>
  * @phpstan-type PackageRow = array<string, mixed>
  */
-interface HotelRepositoryInterface
+interface HotelRepositoryInterface extends CoreHotelRepositoryInterface
 {
-    /** @return HotelRow|null */
-    public function findById(string $hotel_id): ?array;
     /**
      * Typed view of {@see self::findById()}.
      *
@@ -47,7 +54,6 @@ interface HotelRepositoryInterface
     public function count(array $filters = []): int;
     /** @return array<string, int> */
     public function countWithoutPackagesByCountry(): array;
-    public function exists(string $hotel_id): bool;
     /**
      * @param array<string, mixed> $data
      */
@@ -64,11 +70,6 @@ interface HotelRepositoryInterface
      * @param array<string, mixed> $data
      */
     public function upsert(array $data): bool;
-    public function delete(string $hotel_id): bool;
-    public function linkToProduct(string $hotel_id, int $product_id): bool;
-    public function unlinkProduct(int $product_id): bool;
-    /** @return list<string> */
-    public function getCountries(): array;
     /** @return list<string> */
     public function getResorts(string $country = ''): array;
     /** @return list<PackageRow> */

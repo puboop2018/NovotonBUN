@@ -75,7 +75,7 @@ class PriceInfoService implements PriceInfoServiceInterface
 
         if (!empty($priceinfo)) {
             $this->log('PriceInfo from database', ['hotel_id' => $hotelId, 'package' => $packageName]);
-            return $this->formatPriceInfo($priceinfo, $hotelId);
+            return PriceInfoShaper::format($priceinfo, $hotelId);
         }
 
         // Fallback: Call API directly (for first-time or if cron hasn't run)
@@ -125,7 +125,7 @@ class PriceInfoService implements PriceInfoServiceInterface
             return [];
         }
 
-        return $this->extractPricesFromPriceInfo($priceinfo);
+        return PriceInfoShaper::extractPrices($priceinfo);
     }
 
     /**
@@ -673,102 +673,9 @@ class PriceInfoService implements PriceInfoServiceInterface
         return (string) $val;
     }
 
-    /**
-     * Extract prices from priceinfo response
-     *
-     * @param array<mixed, mixed> $priceinfo Priceinfo data
-     * @return array<string, mixed> Prices grouped by room
-     */
-    private function extractPricesFromPriceInfo(array $priceinfo): array
-    {
-        if (!isset($priceinfo['season_price'])) {
-            return [];
-        }
-
-        $seasonPrices = $priceinfo['season_price'];
-        if (!is_array($seasonPrices)) {
-            return [];
-        }
-        // Normalize single entry to array
-        if (isset($seasonPrices['IdRoom'])) {
-            $seasonPrices = [$seasonPrices];
-        }
-
-        return $this->groupPricesByRoom($seasonPrices);
-    }
-
-    /**
-     * Format priceinfo for display
-     *
-     * @param array<mixed, mixed> $priceinfo Raw priceinfo data
-     * @param string $hotelId Hotel ID
-     * @return array<string, mixed> Formatted priceinfo
-     */
-    private function formatPriceInfo(array $priceinfo, string $hotelId): array
-    {
-        $result = [
-            'hotel_id' => $hotelId,
-            'seasons' => [],
-            'prices' => [],
-            'early_booking' => [],
-            'raw' => $priceinfo,
-        ];
-
-        // Extract seasons
-        if (isset($priceinfo['seasons']['season']) && is_array($priceinfo['seasons']['season'])) {
-            $seasons = $priceinfo['seasons']['season'];
-            if (isset($seasons['IdSeason'])) {
-                $seasons = [$seasons];
-            }
-            $result['seasons'] = $seasons;
-        }
-
-        // Extract prices
-        if (isset($priceinfo['season_price']) && is_array($priceinfo['season_price'])) {
-            $prices = $priceinfo['season_price'];
-            if (isset($prices['IdRoom'])) {
-                $prices = [$prices];
-            }
-            $result['prices'] = $this->groupPricesByRoom($prices);
-        }
-
-        // Extract early booking
-        if (isset($priceinfo['early_booking']) && is_array($priceinfo['early_booking'])) {
-            $eb = $priceinfo['early_booking'];
-            if (isset($eb['Reduction'])) {
-                $eb = [$eb];
-            }
-            $result['early_booking'] = $eb;
-        }
-
-        return $result;
-    }
-
-    /**
-     * Group prices by room
-     *
-     * @param array<string, mixed> $prices Array of price records
-     * @return array<string, mixed> Prices grouped by room
-     */
-    private function groupPricesByRoom(array $prices): array
-    {
-        $result = [];
-
-        foreach ($prices as $price) {
-            if (!is_array($price)) {
-                continue;
-            }
-            $roomId = PriceInfoFormatter::toScalar($price['IdRoom'] ?? $price['room_id'] ?? 'unknown');
-
-            if (!isset($result[$roomId])) {
-                $result[$roomId] = [];
-            }
-
-            $result[$roomId][] = $price;
-        }
-
-        return $result;
-    }
+    // Pure priceinfo-response shaping (extract / format / group-by-room) was
+    // extracted to the stateless PriceInfoShaper collaborator (SRP). Callers
+    // above delegate to it directly.
 
     /**
      * Parse priceinfo API response
@@ -785,7 +692,7 @@ class PriceInfoService implements PriceInfoServiceInterface
             return ['hotel_id' => $hotelId, 'seasons' => [], 'prices' => [], 'early_booking' => [], 'raw' => []];
         }
 
-        return $this->formatPriceInfo($data, $hotelId);
+        return PriceInfoShaper::format($data, $hotelId);
     }
 
     /**

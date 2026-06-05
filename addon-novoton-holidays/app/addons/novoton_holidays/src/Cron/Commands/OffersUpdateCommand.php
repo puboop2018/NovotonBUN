@@ -8,6 +8,7 @@ use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\Cron\AbstractCronCommand;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Services\Container;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 class OffersUpdateCommand extends AbstractCronCommand
 {
@@ -174,7 +175,7 @@ class OffersUpdateCommand extends AbstractCronCommand
 
             $product_id = fn_update_product($product_data, 0, CART_LANGUAGE);
             if ($product_id) {
-                $hotelRepo->linkToProduct($hotel_id, $product_id);
+                $hotelRepo->linkToProduct($hotel_id, TypeCoerce::toInt($product_id));
                 $this->attachImages($hotel_id, $product_id, $image_base_url);
                 $added_to_cart++;
                 $this->output("ADDED (ID: {$product_id})");
