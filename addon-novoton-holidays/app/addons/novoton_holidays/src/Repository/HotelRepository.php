@@ -70,9 +70,9 @@ class HotelRepository implements HotelRepositoryInterface
      * @return array<string, mixed>|null
      */
     #[\Override]
-    public function findById(string $hotel_id): ?array
+    public function findById(string $hotelId): ?array
     {
-        $hotel = self::asRow(db_get_row('SELECT * FROM ?:novoton_hotels WHERE hotel_id = ?s', $hotel_id));
+        $hotel = self::asRow(db_get_row('SELECT * FROM ?:novoton_hotels WHERE hotel_id = ?s', $hotelId));
         return $hotel === [] ? null : $hotel;
     }
 
@@ -114,9 +114,9 @@ class HotelRepository implements HotelRepositoryInterface
     }
 
     #[\Override]
-    public function exists(string $hotel_id): bool
+    public function exists(string $hotelId): bool
     {
-        return TypeCoerce::toInt(db_get_field('SELECT 1 FROM ?:novoton_hotels WHERE hotel_id = ?s', $hotel_id)) > 0;
+        return TypeCoerce::toInt(db_get_field('SELECT 1 FROM ?:novoton_hotels WHERE hotel_id = ?s', $hotelId)) > 0;
     }
 
     /**
@@ -166,13 +166,13 @@ class HotelRepository implements HotelRepositoryInterface
      * failure cannot leave orphaned facility/package rows tied to a deleted hotel.
      */
     #[\Override]
-    public function delete(string $hotel_id): bool
+    public function delete(string $hotelId): bool
     {
         db_query('START TRANSACTION');
         try {
-            db_query('DELETE FROM ?:novoton_hotel_facilities WHERE hotel_id = ?s', $hotel_id);
-            db_query('DELETE FROM ?:novoton_hotel_packages WHERE hotel_id = ?s', $hotel_id);
-            $deleted = (bool) db_query('DELETE FROM ?:novoton_hotels WHERE hotel_id = ?s', $hotel_id);
+            db_query('DELETE FROM ?:novoton_hotel_facilities WHERE hotel_id = ?s', $hotelId);
+            db_query('DELETE FROM ?:novoton_hotel_packages WHERE hotel_id = ?s', $hotelId);
+            $deleted = (bool) db_query('DELETE FROM ?:novoton_hotels WHERE hotel_id = ?s', $hotelId);
             db_query('COMMIT');
             return $deleted;
         } catch (\Throwable $e) {
@@ -182,15 +182,15 @@ class HotelRepository implements HotelRepositoryInterface
     }
 
     #[\Override]
-    public function linkToProduct(string $hotel_id, int $product_id): bool
+    public function linkToProduct(string $hotelId, int $productId): bool
     {
-        return $this->update($hotel_id, ['product_id' => $product_id]);
+        return $this->update($hotelId, ['product_id' => $productId]);
     }
 
     #[\Override]
-    public function unlinkProduct(int $product_id): bool
+    public function unlinkProduct(int $productId): bool
     {
-        return (bool) db_query('UPDATE ?:novoton_hotels SET product_id = NULL WHERE product_id = ?i', $product_id);
+        return (bool) db_query('UPDATE ?:novoton_hotels SET product_id = NULL WHERE product_id = ?i', $productId);
     }
 
     /**
