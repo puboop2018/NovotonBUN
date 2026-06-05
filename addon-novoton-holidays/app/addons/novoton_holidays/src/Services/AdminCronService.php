@@ -20,6 +20,7 @@ use Tygh\Addons\NovotonHolidays\Api\Contracts\NovotonApiKitInterface;
 use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\Helpers\OutputWriterTrait;
 use Tygh\Addons\NovotonHolidays\Repository\CacheRepository;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\TravelConstants;
 
 class AdminCronService implements AdminCronServiceInterface
@@ -202,7 +203,7 @@ class AdminCronService implements AdminCronServiceInterface
                 // Check if CS-Cart product already exists with this code
                 $existing = db_get_field('SELECT product_id FROM ?:products WHERE product_code = ?s', $product_code);
                 if ($existing) {
-                    $hotelRepo->linkToProduct($hotel_id, (int) $existing);
+                    $hotelRepo->linkToProduct(TypeCoerce::toString($hotel_id), (int) $existing);
                     $this->output('LINKED');
                     continue;
                 }
@@ -221,7 +222,7 @@ class AdminCronService implements AdminCronServiceInterface
                 $product_id = fn_update_product($product_data, 0, CART_LANGUAGE);
 
                 if ($product_id) {
-                    $hotelRepo->linkToProduct($hotel_id, $product_id);
+                    $hotelRepo->linkToProduct(TypeCoerce::toString($hotel_id), TypeCoerce::toInt($product_id));
                     $added++;
                     $this->output("ADDED (ID: {$product_id})");
                 } else {

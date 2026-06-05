@@ -25,7 +25,10 @@ class PriceInfoFormatter
      * (SimpleXML json_encode of empty elements produces []).
      *
      * @param mixed $value
-     * @deprecated 3.3.0 Use {@see TypeCoerce::toString()} directly.
+     *
+     * Supported convenience wrapper over {@see TypeCoerce::toString()}. New
+     * code may call TypeCoerce directly; this remains a first-class helper and
+     * is not slated for removal.
      */
     public static function toScalar($value): string
     {
@@ -35,7 +38,9 @@ class PriceInfoFormatter
     /**
      * Safely extract a float value from a mixed field.
      *
-     * @deprecated 3.3.0 Use {@see TypeCoerce::toFloat()} directly.
+     * Supported convenience wrapper over {@see TypeCoerce::toFloat()}. New code
+     * may call TypeCoerce directly; this remains a first-class helper and is not
+     * slated for removal.
      */
     public static function toFloat(mixed $value): float
     {
@@ -45,7 +50,9 @@ class PriceInfoFormatter
     /**
      * Safely extract an int value from a mixed field.
      *
-     * @deprecated 3.3.0 Use {@see TypeCoerce::toInt()} directly.
+     * Supported convenience wrapper over {@see TypeCoerce::toInt()}. New code
+     * may call TypeCoerce directly; this remains a first-class helper and is not
+     * slated for removal.
      */
     public static function toInt(mixed $value): int
     {

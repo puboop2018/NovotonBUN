@@ -19,8 +19,10 @@ declare(strict_types=1);
  *   $api->reservations()->createReservation($data)
  *   $api->destinations()->getResortList()
  *
- * The flat delegate methods (e.g. $api->getHotelList()) are retained for
- * backward compatibility but are deprecated.
+ * The flat delegate methods (e.g. $api->getHotelList()) are a supported
+ * convenience facade over those clients. Calling the domain accessors above
+ * is preferred for new code, but the flat methods are not deprecated and
+ * remain maintained; migrate opportunistically, not urgently.
  *
  * @package NovotonHolidays
  * @since 3.4.0

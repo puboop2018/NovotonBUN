@@ -168,7 +168,7 @@ class AddProductsCommand extends AbstractCronCommand
                 $product_id = fn_update_product($product_data, 0, CART_LANGUAGE);
 
                 if ($product_id) {
-                    $hotelRepo->linkToProduct($hotel_id, $product_id);
+                    $hotelRepo->linkToProduct($hotel_id, PriceInfoFormatter::toInt($product_id));
 
                     try {
                         $images = $this->api->hotels()->getHotelImages($hotel_id);
