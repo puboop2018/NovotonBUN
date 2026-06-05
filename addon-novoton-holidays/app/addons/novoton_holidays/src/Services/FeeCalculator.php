@@ -258,8 +258,12 @@ class FeeCalculator implements FeeCalculatorInterface
             $idAge = PriceInfoFormatter::toScalar($fee['IdAge'] ?? '');
             $rawToDays = PriceInfoFormatter::toScalar($fee['ToDays'] ?? '');
             $rawFromDays = PriceInfoFormatter::toScalar($fee['FromDays'] ?? '');
-            $toDays = ($rawToDays !== '') ? (int) $rawToDays : 3;
-            $fromDays = ($rawFromDays !== '') ? (int) $rawFromDays : 4;
+            // Thresholds are optional in the API payload. Do NOT fabricate
+            // defaults (a stay straddling an invented boundary would silently
+            // get the wrong fee tier) — treat a missing threshold as "no
+            // threshold" and fall back to the flat Price1 tier.
+            $toDays = ($rawToDays !== '') ? (int) $rawToDays : null;
+            $fromDays = ($rawFromDays !== '') ? (int) $rawFromDays : null;
             $price1 = (float) PriceInfoFormatter::toScalar($fee['Price1'] ?? '0');
             $price2 = (float) PriceInfoFormatter::toScalar($fee['Price2'] ?? '0');
 
@@ -272,15 +276,19 @@ class FeeCalculator implements FeeCalculatorInterface
 
             $price = 0;
             $tierUsed = '';
-            if ($nights <= $toDays) {
+            if ($toDays === null && $fromDays === null) {
+                $price = $price1;
+                $tierUsed = "Price1 (no thresholds provided by API, nights={$nights})";
+            } elseif ($toDays !== null && $nights <= $toDays) {
                 $price = $price1;
                 $tierUsed = "Price1 (nights={$nights} <= toDays={$toDays})";
-            } elseif ($nights >= $fromDays) {
+            } elseif ($fromDays !== null && $nights >= $fromDays) {
                 $price = $price2;
                 $tierUsed = "Price2 (nights={$nights} >= fromDays={$fromDays})";
             } else {
                 $price = $price1;
-                $tierUsed = "Price1 (fallback, nights={$nights} between toDays={$toDays} and fromDays={$fromDays})";
+                $tierUsed = "Price1 (fallback, nights={$nights} between toDays="
+                    . ($toDays ?? 'n/a') . " and fromDays=" . ($fromDays ?? 'n/a') . ')';
             }
 
             $count = 1;

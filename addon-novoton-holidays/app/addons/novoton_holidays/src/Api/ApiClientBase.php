@@ -139,6 +139,20 @@ abstract class ApiClientBase
     }
 
     /**
+     * Mask <usr>/<psw> credentials in request XML before logging or display.
+     *
+     * Every API request embeds live credentials via xmlCredentials(); this MUST
+     * be applied to any XML passed to a logger (fn_log_event / DebugLogger) so
+     * credentials never land in cscart_event_log or log aggregation.
+     */
+    protected function maskCredentials(string $xml): string
+    {
+        $xml = (string) preg_replace('/<usr>.*?<\/usr>/', '<usr>*****</usr>', $xml);
+        $xml = (string) preg_replace('/<psw>.*?<\/psw>/', '<psw>*****</psw>', $xml);
+        return $xml;
+    }
+
+    /**
      * Wrap a value in CDATA for safe XML embedding.
      *
      * Resort/city/hotel names may contain characters like & which, when

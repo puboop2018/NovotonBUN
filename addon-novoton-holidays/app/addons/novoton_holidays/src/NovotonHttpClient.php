@@ -16,6 +16,7 @@ use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
 class NovotonHttpClient implements HttpClientInterface
 {
     private string $apiUrl;
+    private bool $allowInsecureApi;
     private string $apiKey;
     private string $apiId;
     private string $apiUser;
@@ -57,11 +58,30 @@ class NovotonHttpClient implements HttpClientInterface
             $this->apiUrl = 'http://' . $apiUrl;
         }
 
-        // Log advisory when API credentials traverse unencrypted HTTP
-        if (str_starts_with(strtolower($this->apiUrl), strtolower('http://'))) {
+        // Insecure-transport policy. The Novoton API provider currently exposes
+        // http:// only, so the opt-in defaults to enabled to keep the addon
+        // working out of the box; operators can switch it off once the provider
+        // offers https:// to hard-fail any accidental plaintext credential leak.
+        $insecureSetting = $settings['allow_insecure_api'] ?? 'Y';
+        $this->allowInsecureApi = $insecureSetting === true
+            || $insecureSetting === 'Y'
+            || $insecureSetting === '1'
+            || $insecureSetting === 1;
+
+        // Refuse to send credentials over unencrypted HTTP unless explicitly allowed.
+        if (str_starts_with(strtolower($this->apiUrl), 'http://')) {
+            if (!$this->allowInsecureApi) {
+                throw new \InvalidArgumentException(
+                    'Novoton API URL uses insecure HTTP but "allow_insecure_api" is disabled. '
+                    . 'Set api_url to an https:// endpoint, or re-enable '
+                    . '"Allow insecure (HTTP) API connection" in addon settings to permit '
+                    . 'sending credentials unencrypted.',
+                );
+            }
             fn_log_event('general', 'runtime', [
                 'message' => 'Novoton API URL uses HTTP — credentials are sent unencrypted. '
-                    . 'When the provider supports HTTPS, update api_url in addon settings.',
+                    . 'When the provider supports HTTPS, update api_url in addon settings '
+                    . 'and disable "Allow insecure (HTTP) API connection".',
             ]);
         }
         $this->apiKey = $settings['api_key'] ?? '';

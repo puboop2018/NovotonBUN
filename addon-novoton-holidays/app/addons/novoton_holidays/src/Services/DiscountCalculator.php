@@ -168,7 +168,14 @@ class DiscountCalculator implements DiscountCalculatorInterface
 
             if (!empty($checkInFrom) && !empty($checkInTo)) {
                 if (strcasecmp($validFor, 'Stay') === 0) {
-                    $checkOutDate = date('Y-m-d', (int) strtotime($checkIn . ' + ' . $nights . ' days'));
+                    // Guard strtotime() failure: a malformed $checkIn returns false,
+                    // which (int)-casts to 0 → 1970-01-01 and silently corrupts the
+                    // date-window comparison. Skip the entry instead.
+                    $checkOutTs = strtotime($checkIn . ' + ' . $nights . ' days');
+                    if ($checkOutTs === false) {
+                        continue;
+                    }
+                    $checkOutDate = date('Y-m-d', $checkOutTs);
                     if (!PriceInfoFormatter::datesOverlap($checkIn, $checkOutDate, $checkInFrom, $checkInTo)) {
                         continue;
                     }
@@ -306,6 +313,8 @@ class DiscountCalculator implements DiscountCalculatorInterface
                     }
                 }
             } else {
+                // Division is safe: the $maxDays >= $nights guard above guarantees
+                // $nights > $maxDays > 0 (i.e. $nights >= 2) by this point.
                 $bpTotal = PriceInfoFormatter::toFloat($basePrice['total'] ?? 0);
                 $avgNightPrice = $bpTotal / $nights;
                 $discount = $avgNightPrice * ($nights - $maxDays);
@@ -433,7 +442,10 @@ class DiscountCalculator implements DiscountCalculatorInterface
             $minStay = PriceInfoFormatter::toInt($entry['MinimumStay'] ?? 0);
             $type = PriceInfoFormatter::toScalar($entry['Type'] ?? '');
 
-            if ($perc === 0.0) {
+            // Business rule: negative commission (a surcharge / markup) is not
+            // allowed. Ignore any non-positive Perc so a marketing entry can
+            // only ever reduce the price, never increase it.
+            if ($perc <= 0.0) {
                 continue;
             }
 
@@ -471,13 +483,9 @@ class DiscountCalculator implements DiscountCalculatorInterface
 
             $applicable = true;
 
-            $isBestDiscount = ($bestPercent > 0);
-            $isCurrentDiscount = ($perc > 0);
-
-            if ($isCurrentDiscount && (!$isBestDiscount || $perc > $bestPercent)) {
-                $bestPercent = $perc;
-                $bestName = $name;
-            } elseif (!$isCurrentDiscount && !$isBestDiscount && $perc < $bestPercent) {
+            // Only positive discounts reach here (negatives skipped above);
+            // pick the largest, i.e. the best deal for the customer.
+            if ($perc > $bestPercent) {
                 $bestPercent = $perc;
                 $bestName = $name;
             }
@@ -499,7 +507,10 @@ class DiscountCalculator implements DiscountCalculatorInterface
         }
 
         $discount = $subtotal * ($bestPercent / 100);
-        $isSurcharge = $bestPercent < 0;
+        // Surcharges are never applied (negative Perc is skipped above), so a
+        // marketing reduction is always a discount. Kept in the contract for
+        // callers/tests that branch on it.
+        $isSurcharge = false;
 
         $this->log('reduction_perc_marketing', [
             'best_percent' => $bestPercent,
