@@ -108,8 +108,8 @@ class DiagnoseImageUrlsCommand extends AbstractCronCommand
         $after = $this->countImageLinks($productId);
         $delta = $after - $before;
 
-        $this->output('Attach path used: ' . ($path !== '' ? $path : '(none — function returned before attaching)'));
-        $this->output("URLs handed to fn_update_product: {$handed}");
+        $this->output('Attach path used: ' . ($path !== '' ? $path : '(none — nothing attached)'));
+        $this->output("Images attached (function return): {$handed}");
         $this->output("images_links rows AFTER: {$after}");
         $this->output('Delta: ' . ($delta >= 0 ? "+{$delta}" : (string) $delta));
         $this->output('');

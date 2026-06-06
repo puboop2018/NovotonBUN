@@ -712,13 +712,20 @@ function fn_travel_core_run_long_task(string $progressLabel, callable $task, str
  * @param int          $productId    CS-Cart product ID
  * @param list<string> $urls         List of image URLs. Index 0 = main image when $firstIsMain is true.
  * @param bool         $firstIsMain  True to set URL[0] as the main (M) product image
- * @return int  Number of URLs handed to fn_update_product (0 on invalid input)
+ * @return int  Number of images actually attached (images_links rows added). 0 means
+ *              nothing was stored — fn_update_product reports no error for unreachable
+ *              URLs, so the row-count delta is the only reliable success signal.
  */
 function fn_travel_core_attach_images_from_urls(int $productId, array $urls, bool $firstIsMain = true): int
 {
     if ($productId <= 0 || empty($urls)) {
         return 0;
     }
+
+    $before = \Tygh\Addons\TravelCore\Helpers\TypeCoerce::toInt(db_get_field(
+        "SELECT COUNT(*) FROM ?:images_links WHERE object_id = ?i AND object_type = 'product'",
+        $productId,
+    ));
 
     // Build the request payload in local arrays first, then assign each $_REQUEST key
     // once. Writing nested offsets directly onto $_REQUEST (mixed) is not statically
@@ -757,11 +764,11 @@ function fn_travel_core_attach_images_from_urls(int $productId, array $urls, boo
 
     fn_update_product([], $productId, CART_LANGUAGE);
 
-    \Tygh\Addons\TravelCore\Helpers\DebugLogger::$lastImageAttachPath = 'url/fn_update_product';
-    \Tygh\Addons\TravelCore\Helpers\DebugLogger::log(
-        'image attach OK [url/fn_update_product]',
-        ['product_id' => $productId, 'urls' => count($urls)],
-    );
+    $after = \Tygh\Addons\TravelCore\Helpers\TypeCoerce::toInt(db_get_field(
+        "SELECT COUNT(*) FROM ?:images_links WHERE object_id = ?i AND object_type = 'product'",
+        $productId,
+    ));
+    $attached = max(0, $after - $before);
 
     unset(
         $_REQUEST['product_main_image_data'],
@@ -772,7 +779,17 @@ function fn_travel_core_attach_images_from_urls(int $productId, array $urls, boo
         $_REQUEST['file_product_add_additional_image_detailed'],
     );
 
-    return count($urls);
+    // Only record the success breadcrumb if rows were actually added — fn_update_product
+    // silently no-ops on unreachable URLs, so a path marker without a delta would lie.
+    if ($attached > 0) {
+        \Tygh\Addons\TravelCore\Helpers\DebugLogger::$lastImageAttachPath = 'url/fn_update_product';
+        \Tygh\Addons\TravelCore\Helpers\DebugLogger::log(
+            'image attach OK [url/fn_update_product]',
+            ['product_id' => $productId, 'requested' => count($urls), 'attached' => $attached],
+        );
+    }
+
+    return $attached;
 }
 
 /**
