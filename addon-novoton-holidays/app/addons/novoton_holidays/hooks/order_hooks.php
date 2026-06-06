@@ -290,9 +290,16 @@ function fn_novoton_holidays_get_order_info(&$order, $additional_data): void
         $co_ts = !empty($check_out) ? strtotime($check_out) : false;
         if ($ci_ts !== false) {
             $extra['check_in_formatted']  = fn_date_format($ci_ts, $date_format);
+            // Short dotted format pre-computed in PHP. Templates must NOT call the
+            // Smarty |date_format modifier inside the order-details {capture} block:
+            // it throws under Smarty 5 / PHP 8.3 and leaves the capture unclosed,
+            // surfacing as "Not matching {capture}{/capture}". fn_date_format is the
+            // blessed safe path (same one used for *_formatted above).
+            $extra['check_in_short']      = fn_date_format($ci_ts, '%d.%m.%Y');
         }
         if ($co_ts !== false) {
             $extra['check_out_formatted'] = fn_date_format($co_ts, $date_format);
+            $extra['check_out_short']     = fn_date_format($co_ts, '%d.%m.%Y');
         }
 
         // [4] Board display name

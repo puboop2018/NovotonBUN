@@ -11,8 +11,8 @@
             <strong>Hotel:</strong> {$oi.extra.hotel_name|escape:'html'}{if $oi.extra.hotel_city} ({$oi.extra.hotel_city|escape:'html'}){/if}<br>
             {/if}
             
-            <strong>Check-in:</strong> {$oi.extra.check_in|default:''|date_format:"%d.%m.%Y"} |
-            <strong>Check-out:</strong> {$oi.extra.check_out|default:''|date_format:"%d.%m.%Y"} |
+            <strong>Check-in:</strong> {$oi.extra.check_in_short|default:$oi.extra.check_in|default:''} |
+            <strong>Check-out:</strong> {$oi.extra.check_out_short|default:$oi.extra.check_out|default:''} |
             <strong>{__("novoton_holidays.nights")|default:"Nopți"}:</strong> {$oi.extra.nights}<br>
 
             {if $oi.extra.package_name}

@@ -109,7 +109,24 @@ class AddProductsCommand extends AbstractCronCommand
                 // Check if CS-Cart product already exists (core products table)
                 $existing = db_get_field('SELECT product_id FROM ?:products WHERE product_code = ?s', $product_code);
                 if ($existing) {
-                    $hotelRepo->linkToProduct($hotel_id, PriceInfoFormatter::toInt($existing));
+                    $existingProductId = PriceInfoFormatter::toInt($existing);
+                    $hotelRepo->linkToProduct($hotel_id, $existingProductId);
+
+                    // Apply facilities and features to the pre-existing product.
+                    // The ADDED path does this inline; LINKED must do it here so
+                    // that hotels linked on re-run don't stay featureless.
+                    try {
+                        fn_novoton_holidays_sync_hotel_facilities($hotel_id);
+                    } catch (\Exception $e) {
+                        fn_log_event('general', 'runtime', ['message' => "Novoton: Failed to sync facilities for hotel {$hotel_id}", 'error' => $e->getMessage()]);
+                    }
+
+                    try {
+                        $this->assignProductFeatures($existingProductId, $hotel_id, $hotel);
+                    } catch (\Exception $e) {
+                        fn_log_event('general', 'runtime', ['message' => "Novoton: Failed to assign features for hotel {$hotel_id}", 'error' => $e->getMessage()]);
+                    }
+
                     $this->output('LINKED');
                     continue;
                 }
@@ -173,13 +190,15 @@ class AddProductsCommand extends AbstractCronCommand
                     try {
                         $images = $this->api->hotels()->getHotelImages($hotel_id);
                         if ($images && isset($images->url)) {
-                            $count = 0;
+                            $urls = [];
                             foreach ($images->url as $url) {
-                                $image_url = $image_base_url . str_replace(' ', '%20', (string) $url);
-                                fn_novoton_holidays_add_product_image($product_id, $image_url, $count === 0);
-                                if (++$count >= 10) {
+                                $urls[] = $image_base_url . str_replace(' ', '%20', (string) $url);
+                                if (count($urls) >= 10) {
                                     break;
                                 }
+                            }
+                            if (!empty($urls)) {
+                                fn_travel_core_attach_images_from_urls(PriceInfoFormatter::toInt($product_id), $urls, true);
                             }
                         }
                     } catch (\Exception $e) {

@@ -925,19 +925,23 @@ function fn_sphinx_holidays_add_product_image(int $product_id, string $image_url
         return false;
     }
 
-    // Only add auth headers + watermark param for images on the Sphinx API host
-    // (exact match or sibling subdomain). CDN images are public and need only a UA.
+    // Only API-hosted images need auth headers + watermark removal via cURL.
+    // CDN images are public — delegate to the URL approach (fn_update_product pipeline).
     $apiBaseUrl  = \Tygh\Addons\SphinxHolidays\Services\ConfigProvider::getApiBaseUrl();
     $isApiHosted = \Tygh\Addons\SphinxHolidays\Api\ImageHelper::matchesApiHost($image_url, $apiBaseUrl);
 
-    $download_url = $isApiHosted
-        ? \Tygh\Addons\SphinxHolidays\Api\ImageHelper::withoutWatermark($image_url)
-        : $image_url;
-    $headers = $isApiHosted
-        ? \Tygh\Addons\SphinxHolidays\Api\ImageHelper::getCurlAuthHeaders()
-        : [];
+    if (!$isApiHosted) {
+        if (file_exists($temp_file)) {
+            unlink($temp_file);
+        }
+        return fn_travel_core_attach_images_from_urls($product_id, [$image_url], $is_main) > 0;
+    }
 
-    // Use direct cURL — CS-Cart's Http::get ignores custom headers.
+    // API-hosted: must strip watermark param and send Bearer auth headers.
+    // CS-Cart's URL-fetch path cannot carry custom headers, so cURL is required.
+    $download_url = \Tygh\Addons\SphinxHolidays\Api\ImageHelper::withoutWatermark($image_url);
+    $headers      = \Tygh\Addons\SphinxHolidays\Api\ImageHelper::getCurlAuthHeaders();
+
     $fp = fopen($temp_file, 'wb');
     if (!$fp) {
         \Tygh\Addons\SphinxHolidays\Api\ImageHelper::$lastDownloadError = 'fopen failed';
