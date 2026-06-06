@@ -37,13 +37,6 @@ $hotels_delegate = [
     'sync_facilities', 'sync_hotel_facilities', 'save_facilities', 'check_packages'
 ];
 
-// Hotels: add_hotels_as_products with &run= streams output and calls exit()
-if ($mode === 'add_hotels_as_products' && isset($_REQUEST['run'])) {
-    $result = include __DIR__ . '/novoton_hotels.php';
-    if (is_array($result)) { return $result; }
-    // The run branch calls exit(), so we never reach here
-}
-
 // Prices: all modes either exit() or return redirect
 $prices_delegate = [
     'update_prices', 'check_prices', 'check_prices_hotel',
@@ -178,85 +171,6 @@ if ($mode === 'recompute_calendar_prices') {
 // ============================================================================
 // TEMPLATE MODES — from novoton_hotels.php
 // ============================================================================
-
-/**
- * Mode: add_hotels_as_products (form display only; run branch delegated above)
- */
-if ($mode === 'add_hotels_as_products') {
-    try {
-        $country = (string) preg_replace('/[^A-Z\s]/', '', strtoupper(RequestCoerce::string($_REQUEST, 'country', 'BULGARIA')));
-
-        $hotelRepo = Container::getInstance()->hotelRepository();
-
-        $stats = [
-            'total' => $hotelRepo->count(['country' => $country]),
-            'with_prices' => $hotelRepo->count(['country' => $country, 'has_room_price' => 'Y']),
-            'with_packages' => $hotelRepo->countWithPackagesByCountry($country),
-            'already_products' => $hotelRepo->count(['country' => $country, 'has_product' => true]),
-        ];
-        $stats['to_add'] = max(0, $stats['with_prices'] - $stats['already_products']);
-
-        $resorts = $hotelRepo->getResortStatsByCountry($country);
-
-        $categories = db_get_array(
-            "SELECT c.category_id, cd.category, c.parent_id
-             FROM ?:categories c
-             LEFT JOIN ?:category_descriptions cd ON c.category_id = cd.category_id AND cd.lang_code = ?s
-             WHERE c.status = 'A'
-             ORDER BY cd.category",
-            CART_LANGUAGE
-        );
-
-        $languages = db_get_array("SELECT lang_code, name FROM ?:languages WHERE status = 'A' ORDER BY name");
-
-        $available_countries = ConfigProvider::getSelectedCountries();
-
-        $view->assign('country', $country);
-        $view->assign('stats', $stats);
-        $view->assign('resorts', $resorts);
-        $view->assign('categories', $categories);
-        $view->assign('languages', $languages);
-        $view->assign('available_countries', $available_countries);
-    } catch (\Throwable $e) {
-        fn_set_notification('E', __('error'), 'Add Hotels as Products error: ' . $e->getMessage());
-        fn_log_event('general', 'runtime', ['message' => 'Novoton: add_hotels_as_products failed: ' . $e->getMessage() . ' at ' . $e->getFile() . ':' . $e->getLine()]);
-        return [CONTROLLER_STATUS_REDIRECT, 'novoton_holidays.manage'];
-    }
-}
-
-/**
- * Mode: view_hotels_to_add
- */
-if ($mode === 'view_hotels_to_add') {
-    if (!fn_check_permissions('manage_catalog', 'update', 'admin')) {
-        return [CONTROLLER_STATUS_DENIED];
-    }
-
-    $country = (string) preg_replace('/[^A-Z\s]/', '', strtoupper(RequestCoerce::string($_REQUEST, 'country', 'BULGARIA')));
-    $filter_raw = RequestCoerce::string($_REQUEST, 'filter');
-    $filter = in_array($filter_raw, ['prices', 'packages'], true) ? $filter_raw : 'prices';
-
-    $hotelRepo = Container::getInstance()->hotelRepository();
-
-    $hotels = $hotelRepo->findUnlinkedForAdmin($country, $filter, 500);
-
-    $stats = [
-        'total' => $hotelRepo->count(['country' => $country]),
-        'with_prices' => $hotelRepo->count(['country' => $country, 'has_room_price' => 'Y']),
-        'with_product' => $hotelRepo->count(['country' => $country, 'has_product' => true]),
-        'ready_to_add' => count($hotels)
-    ];
-
-    $countries = $hotelRepo->getCountriesWithPriceCounts();
-
-    $view->assign('hotels', $hotels);
-    $view->assign('country', $country);
-    $view->assign('filter', $filter);
-    $view->assign('stats', $stats);
-    $view->assign('countries', $countries);
-    $view->assign('in_cart_count', $stats['with_product']);
-    $view->assign('current_year', date('Y'));
-}
 
 /**
  * Mode: list_facilities

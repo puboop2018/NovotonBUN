@@ -404,7 +404,7 @@ function fn_novoton_match_price_from_xml(\SimpleXMLElement $xml, ?string $room_i
  * Output the opening HTML for a streaming progress page.
  *
  * Used by controllers that echo real-time progress (check_prices, check_packages,
- * add_hotels_as_products, etc.) so they share one consistent layout and CSS.
+ * etc.) so they share one consistent layout and CSS.
  *
  * @param string $title  Page title
  * @param string $extra_css  Optional additional CSS rules

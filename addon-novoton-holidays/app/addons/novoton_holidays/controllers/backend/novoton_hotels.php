@@ -4,11 +4,10 @@ declare(strict_types=1);
  * Novoton Holidays - Hotels Sub-Controller
  *
  * Delegated from novoton_holidays.php for modes that stream output or redirect.
- * Template-rendering modes (view_hotels_to_add, list_facilities, add_hotels_as_products
- * form display) live in the main controller for proper CS-Cart template resolution.
+ * Template-rendering modes (list_facilities) live in the main controller for
+ * proper CS-Cart template resolution.
  *
  * Modes handled here (all exit() or return redirect):
- * - add_hotels_as_products (with &run): Streaming import process
  * - sync_facilities: Sync facilities from API (redirect)
  * - sync_hotel_facilities: Sync hotel facilities (redirect)
  * - save_facilities: Save facility classifications (redirect)
@@ -34,160 +33,10 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
  * The cron version saves more complete data (region, lat/lng, proper timestamps).
  */
 
-// NOTE: view_hotels_to_add template mode is handled by novoton_holidays.php (main controller).
-// This sub-controller is only included for the add_hotels_as_products 'run' branch
-// (streaming import) and delegate modes (sync_facilities, etc.).
-
-/**
- * Mode: add_hotels_as_products
- * Import hotels as CS-Cart products (run branch only — form display is in main controller)
- */
-if ($mode === 'add_hotels_as_products') {
-    // Permission check handled by schema in admin.post.php
-    // NOTE: Form display (no &run) is handled by novoton_holidays.php main controller.
-    // This sub-controller is only included when &run is set (import execution).
-
-    if (isset($_REQUEST['run'])) {
-        // Process import
-        fn_novoton_holidays_stream_page_open('Adding Hotels as Products');
-        echo '<div class="log">';
-        
-        $country = (string) preg_replace('/[^A-Z\s]/', '', strtoupper(PriceInfoFormatter::toScalar($_REQUEST['country'] ?? 'BULGARIA')));
-        $category_id = PriceInfoFormatter::toInt($_REQUEST['category_id'] ?? 0);
-        $import_mode_raw = PriceInfoFormatter::toScalar($_REQUEST['import_mode'] ?? '');
-        $import_mode = in_array($import_mode_raw, ['new_only', 'update']) ? $import_mode_raw : 'new_only';
-        $limit = max(0, min(5000, PriceInfoFormatter::toInt($_REQUEST['limit'] ?? 0)));
-        $selected_resorts = is_array($_REQUEST['resorts'] ?? null) ? array_values(array_filter(array_map(function($r) {
-            return preg_replace('/[^\p{L}\s\-\.]/u', '', mb_substr(is_string($r) ? $r : '', 0, 100));
-        }, $_REQUEST['resorts']), fn($v) => is_string($v))) : [];
-        // Whitelist language codes to 2-3 char lowercase alpha codes
-        $selected_languages = is_array($_REQUEST['languages'] ?? null) ? array_filter(array_map(function($l) {
-            $l = strtolower(trim(is_string($l) ? $l : ''));
-            return preg_match('/^[a-z]{2,3}$/', $l) ? $l : null;
-        }, $_REQUEST['languages'])) : ['en', 'ro'];
-        
-        $hotelRepo = Container::getInstance()->hotelRepository();
-        $hotels = $hotelRepo->findForImport($country, $import_mode, $selected_resorts, $limit);
-        
-        echo "Found " . count($hotels) . " hotels to process<br><br>\n";
-        flush();
-        
-        $added = 0;
-        $updated = 0;
-        $skipped = 0;
-        $errors = 0;
-        
-        $hotelRepo = Container::getInstance()->hotelRepository();
-        
-        foreach ($hotels as $hotel) {
-            if (!is_array($hotel)) {
-                continue;
-            }
-            $hotel_id = PriceInfoFormatter::toScalar($hotel['hotel_id'] ?? '');
-            $hotel_name_raw = PriceInfoFormatter::toScalar($hotel['hotel_name'] ?? '');
-            $hotel_name = htmlspecialchars($hotel_name_raw);
-            $hotel_city = PriceInfoFormatter::toScalar($hotel['city'] ?? '');
-
-            // Skip if already has product and mode is new_only
-            if ($import_mode === 'new_only' && !empty($hotel['product_id'])) {
-                echo "<span class='skip'>↷ Skipped (has product): {$hotel_name}</span><br>\n";
-                $skipped++;
-                continue;
-            }
-
-            try {
-                // Detect property type and format display name
-                $propertyDetector = _nvt_property_type_detector();
-                $hotelData = fn_novoton_holidays_get_hotel_data($hotel_id);
-                /** @var array<string, mixed> $hotelData */
-                $hotelData = is_array($hotelData) ? $hotelData : [];
-                $packageNames = [];
-                $roomNames = [];
-                $pkgs = is_array($hotelData['packages'] ?? null) ? $hotelData['packages'] : [];
-                foreach ($pkgs as $pkg) {
-                    $packageNames[] = is_array($pkg) ? PriceInfoFormatter::toScalar($pkg['PackageName'] ?? '') : PriceInfoFormatter::toScalar($pkg);
-                }
-                $rms = is_array($hotelData['rooms'] ?? null) ? $hotelData['rooms'] : [];
-                foreach ($rms as $rm) {
-                    $roomNames[] = is_array($rm) ? PriceInfoFormatter::toScalar($rm['Type'] ?? $rm['IdRoom'] ?? '') : PriceInfoFormatter::toScalar($rm);
-                }
-                $detectedType = $propertyDetector->detect($hotel_name_raw, $packageNames, $roomNames);
-                $display_name = fn_novoton_holidays_format_hotel_display_name($hotel_name_raw, $detectedType);
-
-                // Build product title
-                $title = fn_novoton_holidays_build_hotel_title($display_name, $hotel_city, $country, date('Y'));
-
-                // Create product
-                $product_data = [
-                    'product' => $display_name,
-                    'product_code' => \Tygh\Addons\NovotonHolidays\Constants::PRODUCT_CODE_PREFIX . $hotel_id,
-                    'price' => 0,
-                    'status' => 'A',
-                    'company_id' => Registry::get('runtime.company_id') ?: 1,
-                    'main_category' => $category_id > 0 ? $category_id : fn_get_default_category_id(),
-                ];
-                
-                // Add descriptions for selected languages
-                foreach ($selected_languages as $lang_code) {
-                    $lang_code_str = is_string($lang_code) ? $lang_code : '';
-                    $desc_field = 'description_' . strtolower($lang_code_str);
-                    $desc = !empty($hotel[$desc_field]) ? PriceInfoFormatter::toScalar($hotel[$desc_field]) : PriceInfoFormatter::toScalar($hotel['description_en'] ?? '');
-
-                    $product_data['description'][$lang_code_str] = $desc;
-                    $product_data['product'][$lang_code_str] = $title;
-                }
-
-                $firstLang = is_string($selected_languages[0] ?? null) ? $selected_languages[0] : 'en';
-                if (!empty($hotel['product_id']) && $import_mode === 'update') {
-                    // Update existing
-                    fn_update_product($product_data, PriceInfoFormatter::toInt($hotel['product_id']), $firstLang);
-                    $updated++;
-                    echo "<span class='success'>✓ Updated: {$hotel_name}</span><br>\n";
-                } else {
-                    // Create new
-                    $product_id = fn_update_product($product_data, 0, $firstLang);
-
-                    if ($product_id) {
-                        // Link hotel to product
-                        $hotelRepo->update($hotel_id, ['product_id' => $product_id]);
-
-                        // Set star rating feature
-                        $star_rating = PriceInfoFormatter::toInt($hotel['hotel_type'] ?? 0);
-                        if ($star_rating > 0) {
-                            fn_novoton_holidays_assign_property_rating_feature(PriceInfoFormatter::toInt($product_id), $star_rating);
-                        }
-
-                        $added++;
-                        echo "<span class='success'>✓ Added: {$hotel_name} (#{$product_id})</span><br>\n";
-                    } else {
-                        $errors++;
-                        echo "<span class='error'>✗ Failed: {$hotel_name}</span><br>\n";
-                    }
-                }
-
-            } catch (Exception $e) {
-                $errors++;
-                echo "<span class='error'>✗ Error: {$hotel_name} - " . htmlspecialchars($e->getMessage()) . "</span><br>\n";
-            }
-            
-            if (($added + $updated) > 0 && ($added + $updated) % 10 === 0) {
-                flush();
-            }
-        }
-        
-        echo "<br><strong>Summary:</strong><br>";
-        echo "Added: {$added}<br>";
-        echo "Updated: {$updated}<br>";
-        echo "Skipped: {$skipped}<br>";
-        echo "Errors: {$errors}<br>";
-        
-        echo '</div>';
-        fn_novoton_holidays_stream_page_close();
-        exit;
-    }
-}
-
 // NOTE: list_facilities template mode is handled by novoton_holidays.php (main controller).
+// Hotel-to-product import is handled exclusively by the cron:
+//   dispatch=novoton_cron.run&access_key=KEY&mode=add_hotels_as_products
+// (or the dashboard "Run" button, which calls the same AddProductsCommand).
 
 /**
  * Mode: sync_facilities

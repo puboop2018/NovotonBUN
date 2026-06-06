@@ -1,1 +1,0 @@
-{include file="addons/novoton_holidays/views/novoton_holidays/view_hotels_to_add.tpl"}

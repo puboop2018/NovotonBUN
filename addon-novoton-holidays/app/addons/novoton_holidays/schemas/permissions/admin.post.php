@@ -16,8 +16,6 @@
 $schema['novoton_holidays'] = [
     'modes' => [
         'manage'                     => ['permissions' => 'manage_catalog'],
-        'add_hotels_as_products'     => ['permissions' => 'manage_catalog'],
-        'view_hotels_to_add'         => ['permissions' => 'manage_catalog'],
         'hotels'                     => ['permissions' => 'manage_catalog'],
         'view_hotel'                 => ['permissions' => 'manage_catalog'],
         'list_facilities'            => ['permissions' => 'manage_catalog'],
@@ -104,8 +102,8 @@ $schema['novoton_admin'] = [
 
 // novoton_hotels controller (sub-controller included by novoton_holidays)
 // Only register modes that are dispatched directly to novoton_hotels.
-// Modes like add_hotels_as_products, view_hotels_to_add, list_facilities
-// are handled by novoton_holidays controller and registered above.
+// Modes like list_facilities are handled by the novoton_holidays controller
+// and registered above.
 $schema['novoton_hotels'] = [
     'modes' => [
         'manage'                 => ['permissions' => 'manage_catalog'],
