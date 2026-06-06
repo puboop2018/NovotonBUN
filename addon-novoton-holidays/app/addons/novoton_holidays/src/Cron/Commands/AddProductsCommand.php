@@ -190,13 +190,15 @@ class AddProductsCommand extends AbstractCronCommand
                     try {
                         $images = $this->api->hotels()->getHotelImages($hotel_id);
                         if ($images && isset($images->url)) {
-                            $count = 0;
+                            $urls = [];
                             foreach ($images->url as $url) {
-                                $image_url = $image_base_url . str_replace(' ', '%20', (string) $url);
-                                fn_novoton_holidays_add_product_image($product_id, $image_url, $count === 0);
-                                if (++$count >= 10) {
+                                $urls[] = $image_base_url . str_replace(' ', '%20', (string) $url);
+                                if (count($urls) >= 10) {
                                     break;
                                 }
+                            }
+                            if (!empty($urls)) {
+                                fn_travel_core_attach_images_from_urls(PriceInfoFormatter::toInt($product_id), $urls, true);
                             }
                         }
                     } catch (\Exception $e) {

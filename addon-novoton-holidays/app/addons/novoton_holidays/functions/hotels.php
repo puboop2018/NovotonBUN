@@ -819,12 +819,5 @@ function fn_novoton_holidays_add_product_image(int $product_id, string $image_ur
         return false;
     }
 
-    $temp_file = fn_create_temp_file();
-    if (!$temp_file) {
-        return false;
-    }
-
-    \Tygh\Http::get($image_url, [], ['write_to_file' => $temp_file]);
-
-    return fn_travel_core_attach_product_image($product_id, $temp_file, 'novoton', $is_main);
+    return fn_travel_core_attach_images_from_urls($product_id, [$image_url], $is_main) > 0;
 }

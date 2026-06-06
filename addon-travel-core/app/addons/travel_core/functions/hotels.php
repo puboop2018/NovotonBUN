@@ -700,16 +700,70 @@ function fn_travel_core_run_long_task(string $progressLabel, callable $task, str
 }
 
 /**
- * Validate and attach a downloaded image temp file to a CS-Cart product.
+ * Attach one or more public image URLs to a CS-Cart product via fn_update_product.
  *
- * Shared logic extracted from fn_novoton_holidays_add_product_image() and
- * fn_sphinx_holidays_add_product_image(). Each addon handles its own download
- * strategy, then calls this function with the temp file path.
+ * CS-Cart's pipeline (fn_attach_image_pairs → fn_filter_uploaded_data → fn_get_url_data)
+ * downloads, resizes, and stores each image through Storage::instance('images')->put().
+ * No temp-file management or session shim required.
  *
- * @param int $productId Product ID to attach the image to
- * @param string $tempFile Path to already-downloaded temp file
- * @param string $prefix Filename prefix (e.g. 'novoton', 'sphinx')
- * @param bool $isMain True for main product image, false for additional
+ * Use this for all publicly accessible image URLs (no auth headers needed).
+ * For auth-required downloads (e.g. Sphinx API-hosted), use fn_travel_core_attach_product_image.
+ *
+ * @param int   $productId    CS-Cart product ID
+ * @param array $urls         List of image URLs. Index 0 = main image when $firstIsMain is true.
+ * @param bool  $firstIsMain  True to set URL[0] as the main (M) product image
+ * @return int  Number of URLs handed to fn_update_product (0 on invalid input)
+ */
+function fn_travel_core_attach_images_from_urls(int $productId, array $urls, bool $firstIsMain = true): int
+{
+    if ($productId <= 0 || empty($urls)) {
+        return 0;
+    }
+
+    $addIdx = 0;
+    foreach (array_values($urls) as $i => $url) {
+        $url = (string) $url;
+        if ($url === '') {
+            continue;
+        }
+
+        if ($firstIsMain && $i === 0) {
+            $_REQUEST['product_main_image_data'][0]          = ['type' => 'M', 'object_id' => $productId, 'position' => 0];
+            $_REQUEST['type_product_main_image_detailed'][0] = 'url';
+            $_REQUEST['file_product_main_image_detailed'][0] = $url;
+        } else {
+            $_REQUEST['product_add_additional_image_data'][$addIdx]          = ['type' => 'A', 'object_id' => $productId, 'position' => $addIdx];
+            $_REQUEST['type_product_add_additional_image_detailed'][$addIdx] = 'url';
+            $_REQUEST['file_product_add_additional_image_detailed'][$addIdx] = $url;
+            $addIdx++;
+        }
+    }
+
+    fn_update_product([], $productId, CART_LANGUAGE);
+
+    unset(
+        $_REQUEST['product_main_image_data'],
+        $_REQUEST['type_product_main_image_detailed'],
+        $_REQUEST['file_product_main_image_detailed'],
+        $_REQUEST['product_add_additional_image_data'],
+        $_REQUEST['type_product_add_additional_image_detailed'],
+        $_REQUEST['file_product_add_additional_image_detailed'],
+    );
+
+    return count($urls);
+}
+
+/**
+ * Attach a pre-downloaded image temp file to a CS-Cart product.
+ *
+ * Use this only when the image requires custom auth headers and must be downloaded
+ * manually via cURL before attachment (e.g. Sphinx API-hosted images).
+ * For public URLs, prefer fn_travel_core_attach_images_from_urls().
+ *
+ * @param int    $productId CS-Cart product ID
+ * @param string $tempFile  Path to already-downloaded temp file (will be unlinked)
+ * @param string $prefix    Filename prefix (e.g. 'sphinx')
+ * @param bool   $isMain    True for main product image, false for additional
  * @return bool True on success
  */
 function fn_travel_core_attach_product_image(int $productId, string $tempFile, string $prefix, bool $isMain = false): bool
@@ -765,20 +819,10 @@ function fn_travel_core_attach_product_image(int $productId, string $tempFile, s
         $productId,
     );
 
-    // Import path: hand prepared arrays straight to fn_update_image_pairs(), CS-Cart's
-    // canonical API/import entry point. It does NOT depend on $_FILES or session
-    // uploaded_data — which is why fn_attach_image_pairs() cannot work from cron: that
-    // wrapper reads <name>_image_detailed/_icon out of $_FILES via fn_filter_uploaded_data.
-    //
-    // Two hard requirements learned the hard way:
-    //   1. The loop inside fn_update_image_pairs() is driven by $pairs_data (arg 3), so
-    //      BOTH $detailed and $pairs_data must be populated with MATCHING keys. Passing
-    //      $pairs_data empty (or merging everything into $detailed) makes the loop run
-    //      zero times and return [] — the original "returned no pair" failure.
-    //   2. fn_update_image() reads only 'path' (treated as an absolute filesystem path)
-    //      and 'name', then stores the file via Storage::put(). It never calls
-    //      is_uploaded_file(), so an absolute temp path (/tmp/...) works directly — do
-    //      NOT add a 'tmp_name' key.
+    // fn_update_image_pairs: canonical import/API attach path. Does not touch $_FILES or
+    // session. The loop is driven by $pairsData (arg 3) — both $detailed and $pairsData
+    // must share the same key (0) or the loop runs zero times and returns [].
+    // fn_update_image() reads 'path' (absolute) + 'name' via Storage::put() — no is_uploaded_file().
     $detailed = [
         0 => [
             'name' => $filename,
@@ -795,8 +839,7 @@ function fn_travel_core_attach_product_image(int $productId, string $tempFile, s
         ],
     ];
 
-    // Args: ($icons, $detailed, $pairs_data, $object_id, $object_type). $icons is empty
-    // so CS-Cart auto-generates the thumbnail from the full-size detailed image.
+    // $icons (arg 1) is empty — CS-Cart auto-generates the thumbnail from $detailed.
     $pairIds = fn_update_image_pairs([], $detailed, $pairsData, $productId, 'product');
 
     if (file_exists($tempFile)) {
