@@ -1,4 +1,5 @@
 {* Novoton Holidays - Admin Order Details - Simple text display *}
+{''|novoton_trace:"ENTER orders/order_product_info.post.tpl"}
 
 {if $oi.extra.novoton_booking}
 {* rooms_data is pre-decoded to an array in fn_novoton_holidays_get_order_info *}
@@ -87,3 +88,4 @@
     </td>
 </tr>
 {/if}
+{''|novoton_trace:"EXIT orders/order_product_info.post.tpl"}

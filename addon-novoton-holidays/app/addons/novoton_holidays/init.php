@@ -112,6 +112,47 @@ function smarty_modifier_novoton_format_board($board_id)
 }
 
 /**
+ * Smarty modifier: {$value|novoton_trace:"label"}
+ *
+ * Diagnostic breadcrumb for isolating template-render crashes (e.g. the
+ * "Not matching {capture}{/capture}" error on order details). When a hook
+ * template aborts mid-render inside a core {capture} block, the capture is
+ * left unbalanced and the real culprit is masked. Placing ENTER/EXIT markers
+ * around each hook template's body makes the failure point obvious: after a
+ * crash, the LAST "ENTER" with no matching "EXIT" in the trace log names the
+ * exact template that blew up.
+ *
+ * Transparent: returns $value unchanged so it can wrap a real value, or be
+ * used standalone as {''|novoton_trace:"..."} to emit nothing. Gated behind
+ * the addon's Debug mode (default OFF) so there is zero overhead in
+ * production until an admin explicitly enables it. Never throws — a broken
+ * diagnostic must not break the page it is diagnosing.
+ *
+ * Log file: var/novoton_tpl_trace.log
+ *
+ * @param mixed  $value
+ * @param string $label
+ * @return mixed
+ */
+function smarty_modifier_novoton_trace($value, $label = '')
+{
+    try {
+        if (\Tygh\Addons\NovotonHolidays\Services\ConfigProvider::isDebugMode()) {
+            $root = (string) \Tygh\Registry::get('config.dir.root');
+            $file = rtrim($root, '/') . '/var/novoton_tpl_trace.log';
+            $line = '[' . date('Y-m-d H:i:s') . '] '
+                . (defined('AREA') ? AREA : '?') . ' '
+                . (string) $label . PHP_EOL;
+            @file_put_contents($file, $line, FILE_APPEND);
+        }
+    } catch (\Throwable $e) {
+        // A diagnostic must never crash the page it is diagnosing.
+    }
+
+    return $value;
+}
+
+/**
  * Register Smarty modifiers explicitly as backup.
  * The smarty_modifier_{name} naming convention handles auto-discovery,
  * but explicit registration ensures CS-Cart's Smarty also knows about them.
@@ -130,6 +171,7 @@ function fn_novoton_holidays_register_smarty_modifiers()
             if ($smarty) {
                 $smarty->registerPlugin('modifier', 'novoton_format_room_type', 'smarty_modifier_novoton_format_room_type');
                 $smarty->registerPlugin('modifier', 'novoton_format_board', 'smarty_modifier_novoton_format_board');
+                $smarty->registerPlugin('modifier', 'novoton_trace', 'smarty_modifier_novoton_trace');
                 $registered = true;
             }
         }
