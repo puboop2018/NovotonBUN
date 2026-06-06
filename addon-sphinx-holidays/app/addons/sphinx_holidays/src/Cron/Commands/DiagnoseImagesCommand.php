@@ -201,8 +201,11 @@ class DiagnoseImagesCommand extends AbstractSyncCommand
 
             if ($ok && $doAttach && $productId > 0) {
                 $isMain = ($i === 0);
+                DebugLogger::$lastImageAttachPath = '';
                 $attached = fn_travel_core_attach_product_image($productId, $tempFile, 'sphinx', $isMain);
-                $attachNote = $attached ? 'OK' : 'FAILED — ' . DebugLogger::$lastImageAttachError;
+                $attachNote = $attached
+                    ? 'OK [path: ' . DebugLogger::$lastImageAttachPath . ']'
+                    : 'FAILED — ' . DebugLogger::$lastImageAttachError;
                 $this->output("[img #{$i}] Attach to product #{$productId}: {$attachNote}");
                 if ($attached) {
                     $passed++;

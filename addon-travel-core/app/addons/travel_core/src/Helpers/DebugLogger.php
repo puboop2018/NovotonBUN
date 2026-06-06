@@ -26,6 +26,13 @@ class DebugLogger
     public static string $lastImageAttachError = '';
 
     /**
+     * Last code path used to attach an image, e.g. 'url/fn_update_product'
+     * (public-URL pipeline) or 'curl/fn_update_image_pairs' (manual download).
+     * Set on success so callers/diagnostics can report which path ran.
+     */
+    public static string $lastImageAttachPath = '';
+
+    /**
      * Set a custom debug-enabled checker.
      *
      * @param callable $checker Returns bool

@@ -757,6 +757,12 @@ function fn_travel_core_attach_images_from_urls(int $productId, array $urls, boo
 
     fn_update_product([], $productId, CART_LANGUAGE);
 
+    \Tygh\Addons\TravelCore\Helpers\DebugLogger::$lastImageAttachPath = 'url/fn_update_product';
+    \Tygh\Addons\TravelCore\Helpers\DebugLogger::log(
+        'image attach OK [url/fn_update_product]',
+        ['product_id' => $productId, 'urls' => count($urls)],
+    );
+
     unset(
         $_REQUEST['product_main_image_data'],
         $_REQUEST['type_product_main_image_detailed'],
@@ -867,6 +873,12 @@ function fn_travel_core_attach_product_image(int $productId, string $tempFile, s
         fn_log_event('general', 'runtime', ['message' => \Tygh\Addons\TravelCore\Helpers\DebugLogger::$lastImageAttachError]);
         return false;
     }
+
+    \Tygh\Addons\TravelCore\Helpers\DebugLogger::$lastImageAttachPath = 'curl/fn_update_image_pairs';
+    \Tygh\Addons\TravelCore\Helpers\DebugLogger::log(
+        'image attach OK [curl/fn_update_image_pairs]',
+        ['product_id' => $productId, 'type' => $isMain ? 'M' : 'A', 'size' => $tempSize],
+    );
 
     return true;
 }

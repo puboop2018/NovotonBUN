@@ -102,11 +102,13 @@ class DiagnoseImageUrlsCommand extends AbstractCronCommand
 
         // ── 4. Attach via the URL pipeline ────────────────────────────
         $handed = fn_travel_core_attach_images_from_urls($productId, $urls, true);
+        $path = \Tygh\Addons\TravelCore\Helpers\DebugLogger::$lastImageAttachPath;
 
         // ── 5. Count images_links rows AFTER ──────────────────────────
         $after = $this->countImageLinks($productId);
         $delta = $after - $before;
 
+        $this->output('Attach path used: ' . ($path !== '' ? $path : '(none — function returned before attaching)'));
         $this->output("URLs handed to fn_update_product: {$handed}");
         $this->output("images_links rows AFTER: {$after}");
         $this->output('Delta: ' . ($delta >= 0 ? "+{$delta}" : (string) $delta));

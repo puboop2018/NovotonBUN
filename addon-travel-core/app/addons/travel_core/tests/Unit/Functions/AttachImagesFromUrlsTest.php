@@ -35,6 +35,7 @@ namespace {
 namespace Tygh\Addons\TravelCore\Tests\Unit\Functions {
 
     use PHPUnit\Framework\TestCase;
+    use Tygh\Addons\TravelCore\Helpers\DebugLogger;
 
     final class AttachImagesFromUrlsTest extends TestCase
     {
@@ -42,6 +43,7 @@ namespace Tygh\Addons\TravelCore\Tests\Unit\Functions {
         {
             $GLOBALS['__fn_update_product_calls'] = [];
             $_REQUEST = [];
+            DebugLogger::$lastImageAttachPath = '';
         }
 
         /**
@@ -79,6 +81,26 @@ namespace Tygh\Addons\TravelCore\Tests\Unit\Functions {
             self::assertSame([], $calls[0]['product_data'], 'empty data array must not overwrite product fields');
             self::assertSame(101, $calls[0]['product_id']);
             self::assertSame('en', $calls[0]['lang_code']);
+        }
+
+        public function testSetsAttachPathBreadcrumbOnSuccess(): void
+        {
+            self::assertSame('', DebugLogger::$lastImageAttachPath, 'breadcrumb starts empty');
+
+            fn_travel_core_attach_images_from_urls(101, ['https://cdn/a.jpg']);
+
+            self::assertSame(
+                'url/fn_update_product',
+                DebugLogger::$lastImageAttachPath,
+                'main path must record which pipeline ran',
+            );
+        }
+
+        public function testDoesNotSetAttachPathForInvalidInput(): void
+        {
+            fn_travel_core_attach_images_from_urls(0, ['https://cdn/a.jpg']);
+
+            self::assertSame('', DebugLogger::$lastImageAttachPath, 'no breadcrumb when nothing was attached');
         }
 
         public function testBuildsMainPlusAdditionalRequestPayload(): void
