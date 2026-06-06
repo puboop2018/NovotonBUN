@@ -360,10 +360,6 @@ msgctxt "Languages::menu.novoton_holidays_menu.room_price"
 msgid "Room Price Check"
 msgstr "Verificare Preț Cameră"
 
-msgctxt "Languages::menu.novoton_holidays_menu.add_hotels_as_products"
-msgid "Add Hotels as Products"
-msgstr "Adaugă Hoteluri ca Produse"
-
 msgctxt "Languages::menu.novoton_holidays_menu.list_facilities"
 msgid "Facilities"
 msgstr "Facilități"

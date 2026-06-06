@@ -216,9 +216,21 @@ function fn_sphinx_holidays_seed_language_keys(): void
  * Called from init.php self-heal probe on every admin page-load when the sentinel
  * key is missing, and from post_install. Existing non-empty values are preserved.
  */
-function fn_sphinx_holidays_seed_seo_defaults(): void
+/**
+ * Canonical default SEO template strings + field toggles for Sphinx products.
+ *
+ * Single source of truth shared by the seed routine and the travel_core
+ * runtime renderer (which uses these as a fallback when no admin-configured
+ * template is stored). Defined in func.php so it is loaded in every AREA,
+ * including the storefront cron context that creates products — this is what
+ * lets cron-created products get rendered metadata even when the settings
+ * were never persisted to the DB.
+ *
+ * @return array<string, string>
+ */
+function fn_sphinx_holidays_seo_defaults(): array
 {
-    $defaults = [
+    return [
         'seo_overwrite_mode'         => 'override_all',
         'seo_product_name'           => '{{name}}',
         'seo_page_title'             => '{{name}} {{classification}}* - {{city}}, {{country}}',
@@ -233,6 +245,11 @@ function fn_sphinx_holidays_seed_seo_defaults(): void
         'seo_field_name_slug'        => 'Y',
         'seo_field_full_description' => 'Y',
     ];
+}
+
+function fn_sphinx_holidays_seed_seo_defaults(): void
+{
+    $defaults = fn_sphinx_holidays_seo_defaults();
 
     $current  = \Tygh\Registry::get('addons.sphinx_holidays') ?: [];
     $settings = \Tygh\Settings::instance();

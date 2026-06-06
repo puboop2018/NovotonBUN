@@ -30,7 +30,7 @@ class RoomPriceCheckCommand extends AbstractCronCommand
     public function execute(): array
     {
         $dbHelper = Container::getInstance()->databaseHelper();
-        $check_in = $this->getParam('check_in', date('Y-m-d', strtotime('+7 days')));
+        $check_in = $this->getParam('check_in', date('Y-m-d', strtotime('+30 days')));
         $nights = (int)$this->getParam('nights', 7);
         $limit = (int)$this->getParam('limit', 500);
         $country = strtoupper($this->getParam('country', ''));

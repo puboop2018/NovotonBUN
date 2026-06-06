@@ -523,8 +523,23 @@ function fn_travel_core_apply_seo_fields(string $addonName, array $placeholders,
 {
     $settings = \Tygh\Registry::get('addons.' . $addonName) ?: [];
 
+    // Built-in template defaults exposed by the provider addon's func.php
+    // (fn_<addon>_seo_defaults). func.php is loaded in every AREA — including
+    // the storefront cron context that creates products — so these defaults are
+    // available even when the seo_* settings were never persisted to the DB.
+    // Used only as a fallback for blank/absent settings; an admin-saved
+    // template always takes precedence.
+    $defaults = [];
+    $defaultsFn = 'fn_' . $addonName . '_seo_defaults';
+    if (function_exists($defaultsFn)) {
+        $resolved = $defaultsFn();
+        if (is_array($resolved)) {
+            $defaults = $resolved;
+        }
+    }
+
     $overwriteMode = \Tygh\Addons\TravelCore\Enums\SeoOverwriteMode::tryFrom(
-        ($settings['seo_overwrite_mode'] ?? '') ?: 'override_all',
+        ($settings['seo_overwrite_mode'] ?? '') ?: (($defaults['seo_overwrite_mode'] ?? '') ?: 'override_all'),
     ) ?? \Tygh\Addons\TravelCore\Enums\SeoOverwriteMode::OverrideAll;
     $fillIfEmpty = ($overwriteMode === \Tygh\Addons\TravelCore\Enums\SeoOverwriteMode::FillIfEmpty) && ($productId > 0);
 
@@ -550,7 +565,7 @@ function fn_travel_core_apply_seo_fields(string $addonName, array $placeholders,
 
     foreach ($fieldMap as $toggleKey => [$templateKey, $productKey]) {
         // Check field toggle (default Y for backward compat)
-        $enabled = ($settings[$toggleKey] ?? '') ?: 'Y';
+        $enabled = ($settings[$toggleKey] ?? '') ?: (($defaults[$toggleKey] ?? '') ?: 'Y');
         if ($enabled !== 'Y') {
             continue;
         }
@@ -565,8 +580,12 @@ function fn_travel_core_apply_seo_fields(string $addonName, array $placeholders,
             }
         }
 
-        // Read template pattern from addon settings
+        // Read template pattern from addon settings, falling back to the
+        // addon's built-in default when the stored value is blank/absent.
         $template = (string) ($settings[$templateKey] ?? '');
+        if ($template === '' && isset($defaults[$templateKey]) && is_string($defaults[$templateKey])) {
+            $template = $defaults[$templateKey];
+        }
 
         // Render the field
         if ($productKey === 'seo_name') {
