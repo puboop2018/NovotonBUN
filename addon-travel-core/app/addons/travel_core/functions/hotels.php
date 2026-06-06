@@ -709,9 +709,9 @@ function fn_travel_core_run_long_task(string $progressLabel, callable $task, str
  * Use this for all publicly accessible image URLs (no auth headers needed).
  * For auth-required downloads (e.g. Sphinx API-hosted), use fn_travel_core_attach_product_image.
  *
- * @param int   $productId    CS-Cart product ID
- * @param array $urls         List of image URLs. Index 0 = main image when $firstIsMain is true.
- * @param bool  $firstIsMain  True to set URL[0] as the main (M) product image
+ * @param int          $productId    CS-Cart product ID
+ * @param list<string> $urls         List of image URLs. Index 0 = main image when $firstIsMain is true.
+ * @param bool         $firstIsMain  True to set URL[0] as the main (M) product image
  * @return int  Number of URLs handed to fn_update_product (0 on invalid input)
  */
 function fn_travel_core_attach_images_from_urls(int $productId, array $urls, bool $firstIsMain = true): int
@@ -720,23 +720,39 @@ function fn_travel_core_attach_images_from_urls(int $productId, array $urls, boo
         return 0;
     }
 
+    // Build the request payload in local arrays first, then assign each $_REQUEST key
+    // once. Writing nested offsets directly onto $_REQUEST (mixed) is not statically
+    // analysable; whole-array assignment to a single key is.
+    $mainData = $mainType = $mainFile = [];
+    $addData  = $addType  = $addFile  = [];
+
     $addIdx = 0;
-    foreach (array_values($urls) as $i => $url) {
-        $url = (string) $url;
+    foreach ($urls as $i => $url) {
         if ($url === '') {
             continue;
         }
 
         if ($firstIsMain && $i === 0) {
-            $_REQUEST['product_main_image_data'][0]          = ['type' => 'M', 'object_id' => $productId, 'position' => 0];
-            $_REQUEST['type_product_main_image_detailed'][0] = 'url';
-            $_REQUEST['file_product_main_image_detailed'][0] = $url;
+            $mainData[0] = ['type' => 'M', 'object_id' => $productId, 'position' => 0];
+            $mainType[0] = 'url';
+            $mainFile[0] = $url;
         } else {
-            $_REQUEST['product_add_additional_image_data'][$addIdx]          = ['type' => 'A', 'object_id' => $productId, 'position' => $addIdx];
-            $_REQUEST['type_product_add_additional_image_detailed'][$addIdx] = 'url';
-            $_REQUEST['file_product_add_additional_image_detailed'][$addIdx] = $url;
+            $addData[$addIdx] = ['type' => 'A', 'object_id' => $productId, 'position' => $addIdx];
+            $addType[$addIdx] = 'url';
+            $addFile[$addIdx] = $url;
             $addIdx++;
         }
+    }
+
+    if ($mainData !== []) {
+        $_REQUEST['product_main_image_data']          = $mainData;
+        $_REQUEST['type_product_main_image_detailed'] = $mainType;
+        $_REQUEST['file_product_main_image_detailed'] = $mainFile;
+    }
+    if ($addData !== []) {
+        $_REQUEST['product_add_additional_image_data']          = $addData;
+        $_REQUEST['type_product_add_additional_image_detailed'] = $addType;
+        $_REQUEST['file_product_add_additional_image_detailed'] = $addFile;
     }
 
     fn_update_product([], $productId, CART_LANGUAGE);
@@ -842,9 +858,9 @@ function fn_travel_core_attach_product_image(int $productId, string $tempFile, s
     // $icons (arg 1) is empty — CS-Cart auto-generates the thumbnail from $detailed.
     $pairIds = fn_update_image_pairs([], $detailed, $pairsData, $productId, 'product');
 
-    if (file_exists($tempFile)) {
-        unlink($tempFile);
-    }
+    // fn_update_image_pairs copies the source via Storage::put() and leaves it in place,
+    // so the temp file is still present here — remove it unconditionally.
+    unlink($tempFile);
 
     if (empty($pairIds)) {
         \Tygh\Addons\TravelCore\Helpers\DebugLogger::$lastImageAttachError = "attach: fn_update_image_pairs returned no pair (object_id={$productId}, size={$tempSize}, mime={$imageInfo['mime']})";
