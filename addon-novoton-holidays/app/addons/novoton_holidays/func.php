@@ -65,9 +65,21 @@ function fn_settings_variants_addons_novoton_holidays_api_currency(): array
     return $result;
 }
 
-function fn_novoton_holidays_seed_seo_defaults(): void
+/**
+ * Canonical default SEO template strings + field toggles for Novoton products.
+ *
+ * Single source of truth shared by the seed routine, the SEO Templates admin
+ * page, and the travel_core runtime renderer (which uses these as a fallback
+ * when no admin-configured template is stored). Keeping it here in func.php
+ * (loaded in every AREA, including the storefront cron context) is what lets
+ * cron-created products get rendered metadata even when the settings were
+ * never persisted to the DB.
+ *
+ * @return array<string, string>
+ */
+function fn_novoton_holidays_seo_defaults(): array
 {
-    $defaults = [
+    return [
         'seo_overwrite_mode'         => 'override_all',
         'seo_product_name'           => '{{name}}',
         'seo_page_title'             => '{{name}} - {{city}}, {{country}} {{year}}',
@@ -82,12 +94,28 @@ function fn_novoton_holidays_seed_seo_defaults(): void
         'seo_field_name_slug'        => 'Y',
         'seo_field_full_description' => 'Y',
     ];
+}
+
+function fn_novoton_holidays_seed_seo_defaults(): void
+{
+    $defaults = fn_novoton_holidays_seo_defaults();
+
+    $current  = \Tygh\Registry::get('addons.novoton_holidays') ?: [];
     $settings = \Tygh\Settings::instance();
+    $toMerge  = [];
+
     foreach ($defaults as $key => $value) {
-        $settings->updateValue($key, $value, 'novoton_holidays', true);
+        $stored = $current[$key] ?? null;
+        // Only write if the key is absent or blank (never overwrite admin edits)
+        if ($stored === null || ($stored === '' && $value !== '')) {
+            $settings->updateValue($key, $value, 'novoton_holidays', true);
+            $toMerge[$key] = $value;
+        }
     }
-    $existing = \Tygh\Registry::get('addons.novoton_holidays');
-    \Tygh\Registry::set('addons.novoton_holidays', array_merge(is_array($existing) ? $existing : [], $defaults));
+
+    if (!empty($toMerge)) {
+        \Tygh\Registry::set('addons.novoton_holidays', array_merge($current, $toMerge));
+    }
 }
 
 // ============================================================================

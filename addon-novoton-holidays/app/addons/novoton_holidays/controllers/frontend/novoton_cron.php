@@ -27,6 +27,16 @@ if (!CronHelper::validateAccessKey($provided_access_key)) {
     }
 }
 
+// ── Ensure SEO template defaults are available in this (frontend) request ──
+// The init.php self-heal probe only fires in the admin area (AREA 'A'); the
+// cron runs in the storefront area (AREA 'C'), where addons.novoton_holidays.seo_*
+// keys are absent from the Registry. Without them, product creation renders
+// blank Page title / Meta description / Meta keywords. Seed them here (in-request)
+// so add_hotels_as_products and other modes have the templates available.
+if (function_exists('fn_novoton_holidays_seed_seo_defaults')) {
+    fn_novoton_holidays_seed_seo_defaults();
+}
+
 $mode = preg_replace('/[^a-zA-Z0-9_]/', '', $_REQUEST['mode'] ?? 'resinfo');
 
 header('Content-Type: text/plain; charset=utf-8');
