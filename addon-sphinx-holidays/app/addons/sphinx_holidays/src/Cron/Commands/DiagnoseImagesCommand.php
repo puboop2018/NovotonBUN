@@ -201,8 +201,22 @@ class DiagnoseImagesCommand extends AbstractSyncCommand
 
             if ($ok && $doAttach && $productId > 0) {
                 $isMain = ($i === 0);
-                $attached = fn_travel_core_attach_product_image($productId, $tempFile, 'sphinx', $isMain);
-                $attachNote = $attached ? 'OK' : 'FAILED — ' . DebugLogger::$lastImageAttachError;
+                DebugLogger::$lastImageAttachPath = '';
+
+                // Mirror the live routing in fn_sphinx_holidays_add_product_image:
+                // API-hosted images are attached from the cURL-downloaded temp file
+                // (auth headers + watermark strip required); public CDN images are
+                // handed to CS-Cart's own URL downloader. The temp file above was
+                // only a reachability probe for the CDN case — it is cleaned up below.
+                if ($isApiHosted) {
+                    $attached = fn_travel_core_attach_product_image($productId, $tempFile, 'sphinx', $isMain);
+                } else {
+                    $attached = fn_travel_core_attach_images_from_urls($productId, [$url], $isMain) > 0;
+                }
+
+                $attachNote = $attached
+                    ? 'OK [path: ' . DebugLogger::$lastImageAttachPath . ']'
+                    : 'FAILED — ' . DebugLogger::$lastImageAttachError;
                 $this->output("[img #{$i}] Attach to product #{$productId}: {$attachNote}");
                 if ($attached) {
                     $passed++;

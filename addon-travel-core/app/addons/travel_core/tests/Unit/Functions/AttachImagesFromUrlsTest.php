@@ -25,6 +25,21 @@ namespace {
                 'request'      => $_REQUEST,
             ];
 
+            // Simulate CS-Cart's pipeline attaching the url-type images by bumping
+            // the images_links counter that DbStub::$getField reports. Tests can set
+            // __simulate_attach = false to reproduce unreachable URLs that attach
+            // nothing (fn_update_product still returns the id, but no rows are added).
+            if (!empty($GLOBALS['__simulate_attach'])) {
+                $added = 0;
+                if (!empty($_REQUEST['file_product_main_image_detailed'])) {
+                    $added += count($_REQUEST['file_product_main_image_detailed']);
+                }
+                if (!empty($_REQUEST['file_product_add_additional_image_detailed'])) {
+                    $added += count($_REQUEST['file_product_add_additional_image_detailed']);
+                }
+                $GLOBALS['__images_links_count'] = (int) ($GLOBALS['__images_links_count'] ?? 0) + $added;
+            }
+
             return $product_id;
         }
     }
@@ -35,13 +50,27 @@ namespace {
 namespace Tygh\Addons\TravelCore\Tests\Unit\Functions {
 
     use PHPUnit\Framework\TestCase;
+    use Tygh\Addons\TravelCore\Helpers\DebugLogger;
+    use Tygh\Addons\TravelCore\Tests\Support\DbStub;
 
     final class AttachImagesFromUrlsTest extends TestCase
     {
         protected function setUp(): void
         {
             $GLOBALS['__fn_update_product_calls'] = [];
+            $GLOBALS['__images_links_count'] = 0;
+            $GLOBALS['__simulate_attach'] = true;
             $_REQUEST = [];
+            DebugLogger::$lastImageAttachPath = '';
+
+            // The SUT reads the images_links row count before/after to measure how
+            // many images actually attached. Report the simulated counter.
+            DbStub::$getField = static fn (): int => (int) ($GLOBALS['__images_links_count'] ?? 0);
+        }
+
+        protected function tearDown(): void
+        {
+            DbStub::reset();
         }
 
         /**
@@ -79,6 +108,49 @@ namespace Tygh\Addons\TravelCore\Tests\Unit\Functions {
             self::assertSame([], $calls[0]['product_data'], 'empty data array must not overwrite product fields');
             self::assertSame(101, $calls[0]['product_id']);
             self::assertSame('en', $calls[0]['lang_code']);
+        }
+
+        public function testReturnsActualAttachedCountNotInputCount(): void
+        {
+            // fn_update_product reports no error for unreachable URLs, so the return
+            // value must reflect the images_links delta, never count($urls).
+            $GLOBALS['__simulate_attach'] = false;
+
+            $n = fn_travel_core_attach_images_from_urls(77, ['https://cdn/a.jpg', 'https://cdn/b.jpg']);
+
+            self::assertSame(0, $n, 'nothing attached → returns 0 even though 2 URLs were submitted');
+            self::assertCount(1, $this->calls(), 'fn_update_product is still invoked (the attempt happened)');
+            self::assertSame('', DebugLogger::$lastImageAttachPath, 'no breadcrumb when nothing attached');
+        }
+
+        public function testReturnsDeltaIgnoringPreExistingRows(): void
+        {
+            // Product already has 5 images; attaching 2 more must return 2, not 7.
+            $GLOBALS['__images_links_count'] = 5;
+
+            $n = fn_travel_core_attach_images_from_urls(88, ['https://cdn/a.jpg', 'https://cdn/b.jpg']);
+
+            self::assertSame(2, $n);
+        }
+
+        public function testSetsAttachPathBreadcrumbOnSuccess(): void
+        {
+            self::assertSame('', DebugLogger::$lastImageAttachPath, 'breadcrumb starts empty');
+
+            fn_travel_core_attach_images_from_urls(101, ['https://cdn/a.jpg']);
+
+            self::assertSame(
+                'url/fn_update_product',
+                DebugLogger::$lastImageAttachPath,
+                'main path must record which pipeline ran',
+            );
+        }
+
+        public function testDoesNotSetAttachPathForInvalidInput(): void
+        {
+            fn_travel_core_attach_images_from_urls(0, ['https://cdn/a.jpg']);
+
+            self::assertSame('', DebugLogger::$lastImageAttachPath, 'no breadcrumb when nothing was attached');
         }
 
         public function testBuildsMainPlusAdditionalRequestPayload(): void
