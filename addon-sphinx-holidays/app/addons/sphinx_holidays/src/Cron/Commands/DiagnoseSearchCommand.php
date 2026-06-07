@@ -54,6 +54,10 @@ class DiagnoseSearchCommand extends AbstractSyncCommand
         $adults = max(1, TypeCoerce::toInt($params['adults'] ?? 2));
         $rooms = max(1, TypeCoerce::toInt($params['rooms'] ?? 1));
 
+        // Remember whether dates were supplied so we can warn the operator: a
+        // defaulted date can land out of season and return 0 offers, which is
+        // easily mistaken for "the hotel has no availability".
+        $datesDefaulted = $checkIn === '';
         if ($checkIn === '') {
             $checkIn = date('Y-m-d', (int) strtotime('+30 days'));
         }
@@ -155,6 +159,10 @@ class DiagnoseSearchCommand extends AbstractSyncCommand
         $this->output('');
         $this->output("=== Diagnosing search for hotel [{$hotelId}] ===");
         $this->output("Dates: {$checkIn} → {$checkOut} | adults={$adults}, rooms={$rooms}");
+        if ($datesDefaulted) {
+            $this->output('  NOTE: no &check_in supplied — using default (+30 days). To reproduce a');
+            $this->output('        customer search, pass &check_in=YYYY-MM-DD&check_out=YYYY-MM-DD.');
+        }
 
         // ── Connectivity check ─────────────────────────────────────────
         $this->output('');
