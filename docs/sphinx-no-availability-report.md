@@ -111,6 +111,25 @@ EUR + RON), **no destination returns any hotel availability** while the static
 catalog (`/static/hotels/{id}`, `/static/destinations` = 1000 entries) is fully
 populated.
 
+## Cursor lifecycle (why we conclude "no suppliers", not "we stopped early")
+
+Following the cursor chain on a fresh destination search:
+
+```
+search-init        -> cursor present, payload {search_id, cursor:13638206914426.016, limit:10000}
+GET results poll#1  -> {"data":[], "cursor":"<same position 13638206914426.016>"}   (~3s)
+GET results poll#2  -> {"data":[], "cursor":null}                                    (~7s)  => end
+```
+
+- We follow the cursor exactly per the spec and only stop when the API returns
+  `cursor:null`. The cursor **position never advances** and goes `null` in ~7s
+  with **zero** offers.
+- Per the spec, a live search with connected suppliers keeps a **non-null** cursor
+  for "a couple of tens of seconds" while offers stream in (empty intermediate
+  pages are normal *while the cursor stays non-null*). A sub-10s `cursor:null`
+  with 0 offers and a non-advancing position is the signature of **no suppliers
+  responding** — not a client polling error.
+
 ## Environment note
 
 - Static endpoints return data (`/static/hotels/{id}`, `/static/destinations`
