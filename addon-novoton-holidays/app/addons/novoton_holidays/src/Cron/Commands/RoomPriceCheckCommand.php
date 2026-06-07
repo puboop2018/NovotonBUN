@@ -65,21 +65,16 @@ class RoomPriceCheckCommand extends AbstractCronCommand
                 'nocache' => true,
             ];
 
-            $best_price = 0;
+            $has_prices = false;
             $invalid = false;
             try {
                 $response = $this->api->pricing()->getRoomPrice($params);
 
                 if ($response instanceof \SimpleXMLElement) {
-                    $prices = $response->xpath('//Price');
-                    if (!empty($prices)) {
-                        foreach ($prices as $p) {
-                            $pv = (float)((string)$p);
-                            if ($pv > 0 && ($best_price === 0.0 || $pv < $best_price)) {
-                                $best_price = $pv;
-                            }
-                        }
-                    }
+                    // Presence check only — mirrors PricingApiClient::getRoomPrice() (line 244)
+                    // and the admin check_prices_hotel. The cron only sets has_room_price Y/N;
+                    // it does not store or return a price amount.
+                    $has_prices = !empty($response->xpath('//Price'));
                 } else {
                     // getRoomPrice() returned false — XML parse/API error, distinct
                     // from a valid response that simply carries no <Price> nodes.
@@ -90,9 +85,9 @@ class RoomPriceCheckCommand extends AbstractCronCommand
                 $invalid = true;
             }
 
-            if ($best_price > 0) {
+            if ($has_prices) {
                 $withPricesIds[] = $hotel['hotel_id'];
-                $this->output("NVT-{$hotel['hotel_id']} | {$hotel['hotel_name']} - EUR " . number_format($best_price, 2));
+                $this->output("NVT-{$hotel['hotel_id']} | {$hotel['hotel_name']} - has prices");
             } else {
                 $withoutPricesIds[] = $hotel['hotel_id'];
                 if ($invalid) {
