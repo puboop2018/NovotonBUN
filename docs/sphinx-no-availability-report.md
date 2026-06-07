@@ -97,6 +97,20 @@ So **all three retrieval paths** — live `hotel_ids` search, live `destination_
 search, and the cached `cache/hotels` feed — return zero for a destination whose
 static catalog is fully populated.
 
+### Exhaustive sweep (every destination)
+
+To rule out a destination-specific gap, we swept **all 741 leaf destinations**
+(type city/resort/region) via `POST /api/v1/cache/hotels` for an August 2026 stay:
+
+- **741 / 741 destinations returned `total_hotels: 0`.**
+- A 20-destination spread sample was cross-checked with **live** `/hotels/search`
+  (cursor-polled to `cursor:null`): live and cache agree — **all 0**.
+
+Combined with the earlier coverage (33 destinations live, dates Jun–Dec 2026,
+EUR + RON), **no destination returns any hotel availability** while the static
+catalog (`/static/hotels/{id}`, `/static/destinations` = 1000 entries) is fully
+populated.
+
 ## Environment note
 
 - Static endpoints return data (`/static/hotels/{id}`, `/static/destinations`
