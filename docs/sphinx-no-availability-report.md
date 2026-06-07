@@ -80,6 +80,23 @@ responded at all.
 We also confirmed `hotel_ids` alone, `destination_id` alone, and both combined all
 return 0 for the same hotel/destination.
 
+## The cached-hotels feed is also empty
+
+`POST /api/v1/cache/hotels` (hotels-with-cached-prices by destination — the
+synchronous, non-polling path, and the likely source of product-page "from"
+prices) reports **zero hotels** for the same destination:
+
+```bash
+curl -s -X POST "$BASE/api/v1/cache/hotels" -H "Authorization: Bearer $KEY" \
+  -H 'Content-Type: application/json' \
+  -d '{"destination_id":89728,"check_in":"2026-08-12","check_out":"2026-08-19","occupancy":[{"adults":2,"children_ages":[]}],"currency":"EUR"}'
+# -> {"data":[],"meta":{"stats":{"min_price":{"price":0,"currency":"","nights":0},"total_hotels":0},"pagination":{"page":1,"size":10,"total":0}}}
+```
+
+So **all three retrieval paths** — live `hotel_ids` search, live `destination_id`
+search, and the cached `cache/hotels` feed — return zero for a destination whose
+static catalog is fully populated.
+
 ## Environment note
 
 - Static endpoints return data (`/static/hotels/{id}`, `/static/destinations`

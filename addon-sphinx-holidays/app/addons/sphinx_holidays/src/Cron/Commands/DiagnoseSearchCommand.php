@@ -348,14 +348,26 @@ class DiagnoseSearchCommand extends AbstractSyncCommand
             $this->output('     hotel_ids only (strategy a). (b)/(c) are shown only to cross-check the');
             $this->output('     hotel against its whole destination.');
 
-            // When EVERY strategy returns 0 offers, the problem is not dates or
-            // strategy — no supplier availability is being returned at all. Make
+            // ── Cached hotels for the destination (the "get hotels from a
+            // destination" path). POST /api/v1/cache/hotels returns
+            // hotels-with-cached-prices synchronously (no cursor polling) and is
+            // the likely source of product-page "from" prices. Probing it shows
+            // whether the destination has ANY cached availability, independent of
+            // live search.
+            $this->output('');
+            $this->output('--- 7d. Cached hotels for destination (POST /api/v1/cache/hotels) ---');
+            $cacheTotal = $this->probeCachedHotels($api, $destinationId, $checkIn, $checkOut, $occupancy, $currency);
+
+            // When EVERY retrieval path returns 0 (live hotel_ids, live
+            // destination, live both, AND the cached hotels feed), the problem is
+            // not dates or strategy — no availability is connected at all. Make
             // that conclusion explicit so it can be escalated to the provider.
-            if ($count === 0 && $countB <= 0 && $countC <= 0) {
+            if ($count === 0 && $countB <= 0 && $countC <= 0 && $cacheTotal <= 0) {
                 $this->output('');
-                $this->output('=== DIAGNOSIS: NO supplier availability for ANY strategy. ===');
-                $this->output('    Auth + static catalog work, the search engine accepts the request and');
-                $this->output('    returns cursor:null with zero offers for hotel_ids, destination, and both.');
+                $this->output('=== DIAGNOSIS: NO availability for ANY path (live search + cached feed). ===');
+                $this->output('    Auth + static catalog work; the search engine accepts the request and');
+                $this->output('    returns cursor:null with zero offers for hotel_ids, destination and both,');
+                $this->output('    and cache/hotels reports total_hotels=0 for the destination.');
                 $this->output('    This indicates no live supplier/contract is connected for this account in');
                 $this->output('    this environment — escalate to the API provider (not an addon issue).');
             }
@@ -539,6 +551,60 @@ class DiagnoseSearchCommand extends AbstractSyncCommand
         }
 
         return count($results);
+    }
+
+    /**
+     * Probe the destination's cached hotels feed (POST /api/v1/cache/hotels).
+     *
+     * This is the synchronous "hotels-with-cached-prices by destination" path —
+     * the closest thing to "get hotels from a destination" and the likely source
+     * of product-page "from" prices. Prints total_hotels / min_price / data count
+     * and returns total_hotels (-1 if the call failed).
+     *
+     * @param array<int, array<string, mixed>> $occupancy
+     */
+    private function probeCachedHotels(
+        SphinxApi $api,
+        int $destinationId,
+        string $checkIn,
+        string $checkOut,
+        array $occupancy,
+        string $currency,
+    ): int {
+        $client = $api->getHttpClient();
+        $params = [
+            'destination_id' => $destinationId,
+            'check_in' => $checkIn,
+            'check_out' => $checkOut,
+            'occupancy' => $occupancy,
+            'currency' => $currency,
+        ];
+        $this->output('  body: ' . $this->trunc((string) json_encode($params, JSON_UNESCAPED_UNICODE), 300));
+
+        $resp = $api->cacheHotels($params);
+        if ($resp === null) {
+            $this->output('  cache/hotels FAILED — HTTP ' . $client->getLastHttpCode() . ': ' . ($client->getLastError() ?: '(none)'));
+            return -1;
+        }
+
+        $meta = TypeCoerce::toStringMap($resp['meta'] ?? null);
+        $stats = TypeCoerce::toStringMap($meta['stats'] ?? null);
+        $minPrice = TypeCoerce::toStringMap($stats['min_price'] ?? null);
+        $dataCount = count(TypeCoerce::toRowList($resp['data'] ?? []));
+        $totalHotels = TypeCoerce::toInt($stats['total_hotels'] ?? 0);
+
+        $this->output(sprintf(
+            '  cache/hotels: total_hotels=%d, data_rows=%d, min_price=%s %s',
+            $totalHotels,
+            $dataCount,
+            TypeCoerce::toString($minPrice['price'] ?? '0'),
+            TypeCoerce::toString($minPrice['currency'] ?? ''),
+        ));
+        if ($totalHotels <= 0 && $dataCount === 0) {
+            $this->output('  => Destination has NO cached hotels/prices either (not just live search).');
+        }
+
+        return $totalHotels;
     }
 
     /**
