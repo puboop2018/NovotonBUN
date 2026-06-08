@@ -302,10 +302,18 @@ function fn_novoton_holidays_get_order_info(&$order, $additional_data): void
             $extra['check_out_short']     = fn_date_format($co_ts, '%d.%m.%Y');
         }
 
-        // [4] Board display name
+        // [4] Board display name (single-room)
         $board_id = PriceInfoFormatter::toScalar($extra['board_id'] ?? $extra['board'] ?? '');
         if (!empty($board_id)) {
-            $extra['board_display'] = fn_novoton_holidays_format_board_name($board_id);
+            $extra['board_display']        = fn_novoton_holidays_format_board_name($board_id);
+            $extra['board_name_formatted'] = $extra['board_display'];
+        }
+
+        // [4b] Room display name (single-room) — pre-formatted so templates need no custom modifiers
+        $room_id_raw = PriceInfoFormatter::toScalar($extra['room_id'] ?? '');
+        $room_type   = PriceInfoFormatter::toScalar($extra['room_type'] ?? $extra['room_type_code'] ?? '');
+        if (!empty($room_id_raw)) {
+            $extra['room_name_formatted'] = fn_novoton_holidays_format_room_type($room_id_raw, $room_type);
         }
 
         // Pre-decode JSON strings so templates can use rooms_data/guests_data as arrays
@@ -317,6 +325,26 @@ function fn_novoton_holidays_get_order_info(&$order, $additional_data): void
         } elseif (!is_array($rooms_data_raw)) {
             $extra['rooms_data'] = [];
         }
+
+        // Pre-format room/board labels per room so templates use only safe core modifiers
+        /** @var list<mixed> $nvt_rooms */
+        $nvt_rooms = is_array($extra['rooms_data'] ?? null) ? array_values($extra['rooms_data']) : [];
+        foreach ($nvt_rooms as $idx => $nvt_room) {
+            if (!is_array($nvt_room)) {
+                continue;
+            }
+            $r_id   = PriceInfoFormatter::toScalar($nvt_room['room_id'] ?? '');
+            $r_type = PriceInfoFormatter::toScalar($nvt_room['room_type'] ?? $nvt_room['room_type_code'] ?? '');
+            $r_bid  = PriceInfoFormatter::toScalar($nvt_room['board_id'] ?? '');
+            if (!empty($r_id)) {
+                $nvt_room['room_name_formatted'] = fn_novoton_holidays_format_room_type($r_id, $r_type);
+            }
+            if (!empty($r_bid)) {
+                $nvt_room['board_name_formatted'] = fn_novoton_holidays_format_board_name($r_bid);
+            }
+            $nvt_rooms[$idx] = $nvt_room;
+        }
+        $extra['rooms_data'] = $nvt_rooms;
         $guests_data_raw = $extra['guests_data'] ?? null;
         if (is_string($guests_data_raw) && $guests_data_raw !== '') {
             $decoded = json_decode($guests_data_raw, true);

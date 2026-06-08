@@ -180,9 +180,9 @@
 
                 {* Dates *}
                 <td>
-                    {if $booking.check_in}
-                        {$booking.check_in|date_format:"%d.%m.%Y"}
-                        {if $booking.check_out}<br><small class="muted">→ {$booking.check_out|date_format:"%d.%m.%Y"}</small>{/if}
+                    {if $booking.check_in_short}
+                        {$booking.check_in_short}
+                        {if $booking.check_out_short}<br><small class="muted">→ {$booking.check_out_short}</small>{/if}
                     {/if}
                 </td>
 
