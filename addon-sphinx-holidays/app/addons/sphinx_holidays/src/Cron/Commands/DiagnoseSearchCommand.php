@@ -27,8 +27,14 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
  */
 class DiagnoseSearchCommand extends AbstractSyncCommand
 {
-    /** How long to poll for results before giving up (seconds). */
-    private const int POLL_TIMEOUT = 20;
+    /**
+     * How long to poll for results before giving up (seconds).
+     *
+     * The Sphinx async-search spec notes offers "may take a couple of tens of
+     * seconds to provide all offers", so allow up to 60s before treating a
+     * still-active cursor as a slow/stuck search (vs a definitive cursor:null).
+     */
+    private const int POLL_TIMEOUT = 60;
 
     /** Delay between poll attempts (seconds). */
     private const int POLL_INTERVAL = 2;
@@ -54,6 +60,10 @@ class DiagnoseSearchCommand extends AbstractSyncCommand
         $adults = max(1, TypeCoerce::toInt($params['adults'] ?? 2));
         $rooms = max(1, TypeCoerce::toInt($params['rooms'] ?? 1));
 
+        // Remember whether dates were supplied so we can warn the operator: a
+        // defaulted date can land out of season and return 0 offers, which is
+        // easily mistaken for "the hotel has no availability".
+        $datesDefaulted = $checkIn === '';
         if ($checkIn === '') {
             $checkIn = date('Y-m-d', (int) strtotime('+30 days'));
         }
@@ -155,6 +165,10 @@ class DiagnoseSearchCommand extends AbstractSyncCommand
         $this->output('');
         $this->output("=== Diagnosing search for hotel [{$hotelId}] ===");
         $this->output("Dates: {$checkIn} → {$checkOut} | adults={$adults}, rooms={$rooms}");
+        if ($datesDefaulted) {
+            $this->output('  NOTE: no &check_in supplied — using default (+30 days). To reproduce a');
+            $this->output('        customer search, pass &check_in=YYYY-MM-DD&check_out=YYYY-MM-DD.');
+        }
 
         // ── Connectivity check ─────────────────────────────────────────
         $this->output('');
@@ -269,8 +283,16 @@ class DiagnoseSearchCommand extends AbstractSyncCommand
         $pollStatus = $poll['status'];
         $allResults = $poll['results'];
         $polls = $poll['polls'];
+        $stopReason = $poll['stop_reason'];
+        $elapsed = $poll['elapsed'];
         $count = count($allResults);
-        $this->output('  Final status: ' . $pollStatus . " after {$polls} poll(s)");
+        $stopLabel = match ($stopReason) {
+            'cursor_null' => 'cursor:null (definitive end-of-search)',
+            'timeout' => 'POLL_TIMEOUT reached with cursor still active (API still aggregating)',
+            'error' => 'results endpoint error',
+            default => $stopReason,
+        };
+        $this->output("  Stopped after {$polls} poll(s) / {$elapsed}s — {$stopLabel}");
         $this->output('  Results count: ' . $count);
 
         if ($count > 0) {
@@ -280,14 +302,18 @@ class DiagnoseSearchCommand extends AbstractSyncCommand
             $this->output('  First result price: ' . TypeCoerce::toString($first['price'] ?? '(none)') . ' ' . TypeCoerce::toString($first['currency'] ?? ''));
             $this->output('');
             $this->output("=== DIAGNOSIS: search works — hotel [{$hotelId}] has {$count} offer(s). ===");
-        } elseif ($pollStatus === 'pending') {
+        } elseif ($stopReason === 'timeout') {
             $this->output('');
-            $this->output('=== DIAGNOSIS: still pending after ' . self::POLL_TIMEOUT . 's — API is slow or stuck. ===');
-            $this->output('    The storefront JS would keep polling every 2s until completed.');
+            $this->output('=== DIAGNOSIS: still aggregating after ' . self::POLL_TIMEOUT . 's (cursor never reached null). ===');
+            $this->output('    The API is slow/stuck for this search; the storefront keeps polling. Retry.');
+        } elseif ($stopReason === 'error') {
+            $this->output('');
+            $this->output('=== DIAGNOSIS: polling failed (results endpoint error). See raw output above. ===');
         } else {
             $this->output('');
-            $this->output('=== DIAGNOSIS: search completed with NO availability for these dates/occupancy. ===');
-            $this->output('    The API works but this hotel has no offers. Try different dates or a different hotel.');
+            $this->output("=== DIAGNOSIS: search completed (cursor:null) with NO offers for hotel [{$hotelId}]. ===");
+            $this->output('    The engine + auth work; this hotel returned no live offers for these dates.');
+            $this->output('    See section 7 — if EVERY strategy is 0, no supplier availability is connected.');
         }
 
         // ── 7. Search strategy comparison ──────────────────────────────
@@ -313,16 +339,38 @@ class DiagnoseSearchCommand extends AbstractSyncCommand
             }
 
             $this->output("  (a) hotel_ids only → see sections 4-6 above (total {$count}).");
-            $this->runVariant($api, 'b: destination_id only', $baseParams + ['destination_id' => $destinationId], $hotelId);
-            $this->runVariant($api, 'c: destination_id + hotel_ids', $baseParams + ['destination_id' => $destinationId, 'hotel_ids' => [$hotelId]], $hotelId);
+            $countB = $this->runVariant($api, 'b: destination_id only', $baseParams + ['destination_id' => $destinationId], $hotelId);
+            $countC = $this->runVariant($api, 'c: destination_id + hotel_ids', $baseParams + ['destination_id' => $destinationId, 'hotel_ids' => [$hotelId]], $hotelId);
 
             $this->output('');
-            $this->output('  => The storefront (search.php) queries by destination_id ONLY and narrows');
-            $this->output('     to this hotel client-side. The API\'s hotel_ids filter returns an empty');
-            $this->output('     set when combined with destination_id, which is why (c) is usually 0.');
-            $this->output('     If (b) lists this hotel id above, availability works on the storefront.');
-            $this->output('     If (b) does NOT list it, either the hotel genuinely has no offers for');
-            $this->output('     these dates/occupancy, or its destination_id mapping is wrong.');
+            $this->output('  => Per the Sphinx spec, hotel_ids has priority and restricts the search to');
+            $this->output('     those hotels — so the storefront PDP search (search.php) queries by');
+            $this->output('     hotel_ids only (strategy a). (b)/(c) are shown only to cross-check the');
+            $this->output('     hotel against its whole destination.');
+
+            // ── Cached hotels for the destination (the "get hotels from a
+            // destination" path). POST /api/v1/cache/hotels returns
+            // hotels-with-cached-prices synchronously (no cursor polling) and is
+            // the likely source of product-page "from" prices. Probing it shows
+            // whether the destination has ANY cached availability, independent of
+            // live search.
+            $this->output('');
+            $this->output('--- 7d. Cached hotels for destination (POST /api/v1/cache/hotels) ---');
+            $cacheTotal = $this->probeCachedHotels($api, $destinationId, $checkIn, $checkOut, $occupancy, $currency);
+
+            // When EVERY retrieval path returns 0 (live hotel_ids, live
+            // destination, live both, AND the cached hotels feed), the problem is
+            // not dates or strategy — no availability is connected at all. Make
+            // that conclusion explicit so it can be escalated to the provider.
+            if ($count === 0 && $countB <= 0 && $countC <= 0 && $cacheTotal <= 0) {
+                $this->output('');
+                $this->output('=== DIAGNOSIS: NO availability for ANY path (live search + cached feed). ===');
+                $this->output('    Auth + static catalog work; the search engine accepts the request and');
+                $this->output('    returns cursor:null with zero offers for hotel_ids, destination and both,');
+                $this->output('    and cache/hotels reports total_hotels=0 for the destination.');
+                $this->output('    This indicates no live supplier/contract is connected for this account in');
+                $this->output('    this environment — escalate to the API provider (not an addon issue).');
+            }
         }
 
         // ── Rate limit state ───────────────────────────────────────────
@@ -355,16 +403,25 @@ class DiagnoseSearchCommand extends AbstractSyncCommand
      * Poll /api/v1/hotels/results until the search completes or the poll
      * timeout is reached, accumulating every result page.
      *
-     * @return array{status: string, results: list<array<string, mixed>>, polls: int}
+     * The Sphinx async-search spec defines the ONLY terminal signal as a
+     * `cursor: null` page; empty pages with a non-null cursor are normal and
+     * must keep being polled. stop_reason captures which terminal we hit:
+     *   - cursor_null : API returned cursor:null → definitive end-of-search
+     *   - timeout     : POLL_TIMEOUT elapsed while a cursor was still active
+     *   - error       : results endpoint returned null
+     *
+     * @return array{status: string, results: list<array<string, mixed>>, polls: int, elapsed: int, stop_reason: string}
      */
     private function pollAll(SphinxApi $api, string $cursorToken, string $searchId, bool $verbose): array
     {
         $client = $api->getHttpClient();
-        $deadline = time() + self::POLL_TIMEOUT;
+        $start = time();
+        $deadline = $start + self::POLL_TIMEOUT;
         // Poll by cursor (mirrors the storefront flow): start from the cursor
         // token, then follow the cursor the API returns on each page.
         $cursor = $cursorToken !== '' ? $cursorToken : $searchId;
         $pollStatus = 'pending';
+        $stopReason = 'timeout';
         /** @var list<array<string, mixed>> $allResults */
         $allResults = [];
         $polls = 0;
@@ -378,6 +435,7 @@ class DiagnoseSearchCommand extends AbstractSyncCommand
                     $this->output('  Raw: ' . $this->trunc($client->getLastResponseRaw() ?? '', 300));
                 }
                 $pollStatus = 'error';
+                $stopReason = 'error';
                 break;
             }
 
@@ -400,7 +458,9 @@ class DiagnoseSearchCommand extends AbstractSyncCommand
                 ));
             }
 
-            if ($pollStatus === 'completed' && $cursor === null) {
+            // cursor:null is the spec's definitive end-of-search signal.
+            if ($cursor === null) {
+                $stopReason = 'cursor_null';
                 break;
             }
 
@@ -409,7 +469,13 @@ class DiagnoseSearchCommand extends AbstractSyncCommand
             }
         }
 
-        return ['status' => $pollStatus, 'results' => $allResults, 'polls' => $polls];
+        return [
+            'status' => $pollStatus,
+            'results' => $allResults,
+            'polls' => $polls,
+            'elapsed' => time() - $start,
+            'stop_reason' => $stopReason,
+        ];
     }
 
     /**
@@ -417,8 +483,9 @@ class DiagnoseSearchCommand extends AbstractSyncCommand
      * one-line summary including how many offers came back for the target hotel.
      *
      * @param array<string, mixed> $searchParams
+     * @return int Total offers returned by this strategy (-1 if the call failed)
      */
-    private function runVariant(SphinxApi $api, string $label, array $searchParams, string $targetHotelId): void
+    private function runVariant(SphinxApi $api, string $label, array $searchParams, string $targetHotelId): int
     {
         $client = $api->getHttpClient();
         $this->output('');
@@ -428,7 +495,7 @@ class DiagnoseSearchCommand extends AbstractSyncCommand
         $httpCode = $client->getLastHttpCode();
         if ($resp === null) {
             $this->output("  [{$label}] search FAILED — HTTP {$httpCode}: " . ($client->getLastError() ?: '(none)'));
-            return;
+            return -1;
         }
 
         $cursorToken = TypeCoerce::toString($resp['cursor'] ?? '');
@@ -438,7 +505,7 @@ class DiagnoseSearchCommand extends AbstractSyncCommand
         }
         if ($cursorToken === '' && $searchId === '') {
             $this->output("  [{$label}] no cursor/search_id in response — cannot poll.");
-            return;
+            return -1;
         }
 
         $poll = $this->pollAll($api, $cursorToken, $searchId, false);
@@ -482,6 +549,62 @@ class DiagnoseSearchCommand extends AbstractSyncCommand
                     : "    => hotel [{$targetHotelId}] is NOT among this destination's results.",
             );
         }
+
+        return count($results);
+    }
+
+    /**
+     * Probe the destination's cached hotels feed (POST /api/v1/cache/hotels).
+     *
+     * This is the synchronous "hotels-with-cached-prices by destination" path —
+     * the closest thing to "get hotels from a destination" and the likely source
+     * of product-page "from" prices. Prints total_hotels / min_price / data count
+     * and returns total_hotels (-1 if the call failed).
+     *
+     * @param array<int, array<string, mixed>> $occupancy
+     */
+    private function probeCachedHotels(
+        SphinxApi $api,
+        int $destinationId,
+        string $checkIn,
+        string $checkOut,
+        array $occupancy,
+        string $currency,
+    ): int {
+        $client = $api->getHttpClient();
+        $params = [
+            'destination_id' => $destinationId,
+            'check_in' => $checkIn,
+            'check_out' => $checkOut,
+            'occupancy' => $occupancy,
+            'currency' => $currency,
+        ];
+        $this->output('  body: ' . $this->trunc((string) json_encode($params, JSON_UNESCAPED_UNICODE), 300));
+
+        $resp = $api->cacheHotels($params);
+        if ($resp === null) {
+            $this->output('  cache/hotels FAILED — HTTP ' . $client->getLastHttpCode() . ': ' . ($client->getLastError() ?: '(none)'));
+            return -1;
+        }
+
+        $meta = TypeCoerce::toStringMap($resp['meta'] ?? null);
+        $stats = TypeCoerce::toStringMap($meta['stats'] ?? null);
+        $minPrice = TypeCoerce::toStringMap($stats['min_price'] ?? null);
+        $dataCount = count(TypeCoerce::toRowList($resp['data'] ?? []));
+        $totalHotels = TypeCoerce::toInt($stats['total_hotels'] ?? 0);
+
+        $this->output(sprintf(
+            '  cache/hotels: total_hotels=%d, data_rows=%d, min_price=%s %s',
+            $totalHotels,
+            $dataCount,
+            TypeCoerce::toString($minPrice['price'] ?? '0'),
+            TypeCoerce::toString($minPrice['currency'] ?? ''),
+        ));
+        if ($totalHotels <= 0 && $dataCount === 0) {
+            $this->output('  => Destination has NO cached hotels/prices either (not just live search).');
+        }
+
+        return $totalHotels;
     }
 
     /**
