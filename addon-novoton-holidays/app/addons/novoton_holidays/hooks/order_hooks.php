@@ -327,23 +327,24 @@ function fn_novoton_holidays_get_order_info(&$order, $additional_data): void
         }
 
         // Pre-format room/board labels per room so templates use only safe core modifiers
-        if (!empty($extra['rooms_data'])) {
-            foreach ($extra['rooms_data'] as &$nvt_room) {
-                if (!is_array($nvt_room)) {
-                    continue;
-                }
-                $r_id   = PriceInfoFormatter::toScalar($nvt_room['room_id'] ?? '');
-                $r_type = PriceInfoFormatter::toScalar($nvt_room['room_type'] ?? $nvt_room['room_type_code'] ?? '');
-                $r_bid  = PriceInfoFormatter::toScalar($nvt_room['board_id'] ?? '');
-                if (!empty($r_id)) {
-                    $nvt_room['room_name_formatted'] = fn_novoton_holidays_format_room_type($r_id, $r_type);
-                }
-                if (!empty($r_bid)) {
-                    $nvt_room['board_name_formatted'] = fn_novoton_holidays_format_board_name($r_bid);
-                }
+        /** @var list<mixed> $nvt_rooms */
+        $nvt_rooms = is_array($extra['rooms_data'] ?? null) ? array_values($extra['rooms_data']) : [];
+        foreach ($nvt_rooms as $idx => $nvt_room) {
+            if (!is_array($nvt_room)) {
+                continue;
             }
-            unset($nvt_room);
+            $r_id   = PriceInfoFormatter::toScalar($nvt_room['room_id'] ?? '');
+            $r_type = PriceInfoFormatter::toScalar($nvt_room['room_type'] ?? $nvt_room['room_type_code'] ?? '');
+            $r_bid  = PriceInfoFormatter::toScalar($nvt_room['board_id'] ?? '');
+            if (!empty($r_id)) {
+                $nvt_room['room_name_formatted'] = fn_novoton_holidays_format_room_type($r_id, $r_type);
+            }
+            if (!empty($r_bid)) {
+                $nvt_room['board_name_formatted'] = fn_novoton_holidays_format_board_name($r_bid);
+            }
+            $nvt_rooms[$idx] = $nvt_room;
         }
+        $extra['rooms_data'] = $nvt_rooms;
         $guests_data_raw = $extra['guests_data'] ?? null;
         if (is_string($guests_data_raw) && $guests_data_raw !== '') {
             $decoded = json_decode($guests_data_raw, true);
