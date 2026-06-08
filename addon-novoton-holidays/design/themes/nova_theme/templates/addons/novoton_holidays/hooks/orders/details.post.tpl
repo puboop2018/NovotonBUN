@@ -1,7 +1,6 @@
 {* Novoton Holidays - Order Details Hook - Terms of Payment & Cancellation *}
 {* Hook: orders:details — fires after the products table *}
 {* Groups by hotel_id so multiple products from same hotel show terms only once *}
-{''|novoton_trace:"ENTER orders/details.post.tpl"}
 
 {$_nv_hotels_terms = []}
 {$_nv_hotels_prices = []}
@@ -80,4 +79,3 @@
     {/foreach}
 </div>
 {/if}
-{''|novoton_trace:"EXIT orders/details.post.tpl"}
