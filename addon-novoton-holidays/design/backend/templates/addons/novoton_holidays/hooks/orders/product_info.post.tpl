@@ -34,7 +34,7 @@
     {/if}
 
     {* Guest Names *}
-    {if $oi.extra.guests_data && is_array($oi.extra.guests_data)}
+    {if $oi.extra.guests_data}
         <strong>Guest Names:</strong><br>
         {foreach from=$oi.extra.guests_data item=guest}
             &nbsp;&nbsp;{$guest.name|default:'Guest'|escape:'html'} ({$guest.type|default:'adult'}){if $guest.room} — Room {$guest.room}{/if}<br>
