@@ -227,9 +227,18 @@ if ($mode === 'manage') {
     $total = $paginatedResult['total'];
     $bookings = $paginatedResult['items'];
 
-    // Enrich each booking with provider-specific display data and actions
+    // Enrich each booking with provider-specific display data and actions.
+    // Also pre-format dates in PHP — the list template wraps its rows in
+    // {capture name="mainbox"} and the Smarty |date_format modifier throws under
+    // Smarty 5 / PHP 8.3, surfacing as "Not matching {capture}{/capture}".
     foreach ($bookings as &$booking) {
         $booking = _travel_bookings_enrich($booking);
+        $ci = TypeCoerce::toString($booking['check_in'] ?? '');
+        $co = TypeCoerce::toString($booking['check_out'] ?? '');
+        $ci_ts = $ci !== '' ? strtotime($ci) : false;
+        $co_ts = $co !== '' ? strtotime($co) : false;
+        $booking['check_in_short']  = $ci_ts !== false ? fn_date_format($ci_ts, '%d.%m.%Y') : '';
+        $booking['check_out_short'] = $co_ts !== false ? fn_date_format($co_ts, '%d.%m.%Y') : '';
     }
     unset($booking);
 
@@ -280,6 +289,18 @@ if ($mode === 'manage') {
             $booking['guests_decoded'] = $decoded;
         }
     }
+
+    // Pre-format check-in/check-out dates in PHP. The view template must NOT use
+    // the Smarty |date_format modifier inside its {capture name="mainbox"} block:
+    // under Smarty 5 / PHP 8.3 it throws, leaving the capture unclosed and
+    // surfacing as the masked "Not matching {capture}{/capture}" crash.
+    // fn_date_format is the blessed safe path.
+    $ci = TypeCoerce::toString($booking['check_in'] ?? '');
+    $co = TypeCoerce::toString($booking['check_out'] ?? '');
+    $ci_ts = $ci !== '' ? strtotime($ci) : false;
+    $co_ts = $co !== '' ? strtotime($co) : false;
+    $booking['check_in_short']  = $ci_ts !== false ? fn_date_format($ci_ts, '%d.%m.%Y') : '';
+    $booking['check_out_short'] = $co_ts !== false ? fn_date_format($co_ts, '%d.%m.%Y') : '';
 
     // Get order info if linked
     $orderId = TypeCoerce::toInt($booking['order_id'] ?? 0);
