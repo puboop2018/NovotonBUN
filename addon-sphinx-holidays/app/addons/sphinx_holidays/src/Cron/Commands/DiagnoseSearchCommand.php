@@ -288,9 +288,9 @@ class DiagnoseSearchCommand extends AbstractSyncCommand
         $count = count($allResults);
         $stopLabel = match ($stopReason) {
             'cursor_null' => 'cursor:null (definitive end-of-search)',
-            'timeout'     => 'POLL_TIMEOUT reached with cursor still active (API still aggregating)',
-            'error'       => 'results endpoint error',
-            default       => $stopReason,
+            'timeout' => 'POLL_TIMEOUT reached with cursor still active (API still aggregating)',
+            'error' => 'results endpoint error',
+            default => $stopReason,
         };
         $this->output("  Stopped after {$polls} poll(s) / {$elapsed}s — {$stopLabel}");
         $this->output('  Results count: ' . $count);
