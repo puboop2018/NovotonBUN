@@ -116,7 +116,7 @@
             <table class="table table-condensed">
                 <tr>
                     <td class="span4"><strong>Total Price:</strong></td>
-                    <td><strong>{$booking.total_price|default:0|number_format:2} {$booking.currency|default:'EUR'}</strong></td>
+                    <td><strong>{$booking.total_price_formatted|default:'0.00'} {$booking.currency|default:'EUR'}</strong></td>
                 </tr>
                 <tr>
                     <td><strong>{__("created_at")}:</strong></td>
