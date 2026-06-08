@@ -36,7 +36,7 @@
             {/if}
             
             {* Guest Names — guests_data is pre-decoded to an array in fn_novoton_holidays_get_order_info *}
-            {if $oi.extra.guests_data && is_array($oi.extra.guests_data)}
+            {if $oi.extra.guests_data}
                 {$guests_parsed = $oi.extra.guests_data}
                 {if $guests_parsed}
                     {$adult_list = []}
