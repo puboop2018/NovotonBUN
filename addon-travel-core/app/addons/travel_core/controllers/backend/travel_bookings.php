@@ -326,6 +326,13 @@ if ($mode === 'manage') {
     }
     $booking['provider_display_rows'] = $providerDisplayRows;
 
+    // Pre-format the total price in PHP so the template carries no non-builtin
+    // Smarty modifiers inside its {capture} block.
+    $booking['total_price_formatted'] = number_format(
+        TypeCoerce::toFloat($booking['total_price'] ?? 0),
+        2
+    );
+
     // Get order info if linked
     $orderId = TypeCoerce::toInt($booking['order_id'] ?? 0);
     if ($orderId > 0) {
