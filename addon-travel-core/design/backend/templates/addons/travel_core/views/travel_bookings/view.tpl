@@ -166,24 +166,23 @@
     </table>
     {/if}
 
-    {* Provider-Specific Detail Panel *}
-    {if $booking.provider_display}
+    {* Provider-Specific Detail Panel — rows are pre-flattened in the controller
+       (provider_display_rows) so this template needs no is_array/json_encode
+       PHP calls, which throw under Smarty 5 inside the {capture} block. *}
+    {if $booking.provider_display_rows}
     <h5>{$booking.provider|capitalize} Details</h5>
     <table class="table table-condensed">
-        {foreach from=$booking.provider_display key=field item=value}
-            {* Skip internal fields used for rendering *}
-            {if $field != 'status_label' && $field != 'provider_ref'}
+        {foreach from=$booking.provider_display_rows item=row}
             <tr>
-                <td class="span3"><strong>{$field|replace:'_':' '|capitalize}:</strong></td>
+                <td class="span3"><strong>{$row.label|escape:html}:</strong></td>
                 <td>
-                    {if is_array($value)}
-                        <pre style="max-height:200px;overflow:auto;font-size:11px;">{$value|json_encode:128|escape:html}</pre>
+                    {if $row.is_pre}
+                        <pre style="max-height:200px;overflow:auto;font-size:11px;">{$row.display|escape:html}</pre>
                     {else}
-                        {$value|escape:html}
+                        {$row.display|escape:html}
                     {/if}
                 </td>
             </tr>
-            {/if}
         {/foreach}
     </table>
     {/if}

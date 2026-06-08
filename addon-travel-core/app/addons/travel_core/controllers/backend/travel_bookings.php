@@ -302,6 +302,30 @@ if ($mode === 'manage') {
     $booking['check_in_short']  = $ci_ts !== false ? fn_date_format($ci_ts, '%d.%m.%Y') : '';
     $booking['check_out_short'] = $co_ts !== false ? fn_date_format($co_ts, '%d.%m.%Y') : '';
 
+    // Build provider-display rows in PHP so the template needs no PHP-function
+    // calls (is_array/json_encode). Under Smarty 5 a PHP function call inside the
+    // {capture name="mainbox"} block fails and surfaces as the masked
+    // "Not matching {capture}{/capture}" crash. We pre-flatten each value here:
+    //   - arrays → pretty-printed JSON, flagged is_pre so the template wraps in <pre>
+    //   - scalars → plain string
+    $providerDisplay = is_array($booking['provider_display'] ?? null) ? $booking['provider_display'] : [];
+    $providerDisplayRows = [];
+    foreach ($providerDisplay as $field => $value) {
+        // Skip internal fields used for rendering elsewhere
+        if ($field === 'status_label' || $field === 'provider_ref') {
+            continue;
+        }
+        $isArr = is_array($value);
+        $providerDisplayRows[] = [
+            'label'   => ucfirst(str_replace('_', ' ', (string) $field)),
+            'is_pre'  => $isArr,
+            'display' => $isArr
+                ? (string) json_encode($value, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
+                : TypeCoerce::toString($value),
+        ];
+    }
+    $booking['provider_display_rows'] = $providerDisplayRows;
+
     // Get order info if linked
     $orderId = TypeCoerce::toInt($booking['order_id'] ?? 0);
     if ($orderId > 0) {
