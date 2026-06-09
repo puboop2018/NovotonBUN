@@ -148,7 +148,7 @@ class TravelProviderRegistry
      * addons run init.php, deactivated providers are never registered — their tables
      * are never queried, eliminating "table does not exist" crashes.
      *
-     * @param int    $productId   CS-Cart product_id
+     * @param int $productId CS-Cart product_id
      * @param string $productCode CS-Cart product_code (may be empty)
      */
     public static function resolveProductOwner(int $productId, string $productCode): ?HotelSeoData

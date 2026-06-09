@@ -22,9 +22,9 @@ interface HotelProductProviderInterface
      * The implementation must return null (not throw) when the product
      * does not belong to this provider.
      *
-     * @param int    $productId   CS-Cart product_id
+     * @param int $productId CS-Cart product_id
      * @param string $productCode CS-Cart product_code (may be empty)
-     * @return HotelSeoData|null  null when this provider does not own the product
+     * @return HotelSeoData|null null when this provider does not own the product
      */
     public function resolveProduct(int $productId, string $productCode): ?HotelSeoData;
 
