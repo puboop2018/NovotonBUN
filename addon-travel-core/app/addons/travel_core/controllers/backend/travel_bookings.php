@@ -227,9 +227,18 @@ if ($mode === 'manage') {
     $total = $paginatedResult['total'];
     $bookings = $paginatedResult['items'];
 
-    // Enrich each booking with provider-specific display data and actions
+    // Enrich each booking with provider-specific display data and actions.
+    // Also pre-format dates in PHP — the list template wraps its rows in
+    // {capture name="mainbox"} and the Smarty |date_format modifier throws under
+    // Smarty 5 / PHP 8.3, surfacing as "Not matching {capture}{/capture}".
     foreach ($bookings as &$booking) {
         $booking = _travel_bookings_enrich($booking);
+        $ci = TypeCoerce::toString($booking['check_in'] ?? '');
+        $co = TypeCoerce::toString($booking['check_out'] ?? '');
+        $ci_ts = $ci !== '' ? strtotime($ci) : false;
+        $co_ts = $co !== '' ? strtotime($co) : false;
+        $booking['check_in_short']  = $ci_ts !== false ? fn_date_format($ci_ts, '%d.%m.%Y') : '';
+        $booking['check_out_short'] = $co_ts !== false ? fn_date_format($co_ts, '%d.%m.%Y') : '';
     }
     unset($booking);
 
@@ -281,6 +290,49 @@ if ($mode === 'manage') {
         }
     }
 
+    // Pre-format check-in/check-out dates in PHP. The view template must NOT use
+    // the Smarty |date_format modifier inside its {capture name="mainbox"} block:
+    // under Smarty 5 / PHP 8.3 it throws, leaving the capture unclosed and
+    // surfacing as the masked "Not matching {capture}{/capture}" crash.
+    // fn_date_format is the blessed safe path.
+    $ci = TypeCoerce::toString($booking['check_in'] ?? '');
+    $co = TypeCoerce::toString($booking['check_out'] ?? '');
+    $ci_ts = $ci !== '' ? strtotime($ci) : false;
+    $co_ts = $co !== '' ? strtotime($co) : false;
+    $booking['check_in_short']  = $ci_ts !== false ? fn_date_format($ci_ts, '%d.%m.%Y') : '';
+    $booking['check_out_short'] = $co_ts !== false ? fn_date_format($co_ts, '%d.%m.%Y') : '';
+
+    // Build provider-display rows in PHP so the template needs no PHP-function
+    // calls (is_array/json_encode). Under Smarty 5 a PHP function call inside the
+    // {capture name="mainbox"} block fails and surfaces as the masked
+    // "Not matching {capture}{/capture}" crash. We pre-flatten each value here:
+    //   - arrays → pretty-printed JSON, flagged is_pre so the template wraps in <pre>
+    //   - scalars → plain string
+    $providerDisplay = is_array($booking['provider_display'] ?? null) ? $booking['provider_display'] : [];
+    $providerDisplayRows = [];
+    foreach ($providerDisplay as $field => $value) {
+        // Skip internal fields used for rendering elsewhere
+        if ($field === 'status_label' || $field === 'provider_ref') {
+            continue;
+        }
+        $isArr = is_array($value);
+        $providerDisplayRows[] = [
+            'label'   => ucfirst(str_replace('_', ' ', (string) $field)),
+            'is_pre'  => $isArr,
+            'display' => $isArr
+                ? (string) json_encode($value, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
+                : TypeCoerce::toString($value),
+        ];
+    }
+    $booking['provider_display_rows'] = $providerDisplayRows;
+
+    // Pre-format the total price in PHP so the template carries no non-builtin
+    // Smarty modifiers inside its {capture} block.
+    $booking['total_price_formatted'] = number_format(
+        TypeCoerce::toFloat($booking['total_price'] ?? 0),
+        2
+    );
+
     // Get order info if linked
     $orderId = TypeCoerce::toInt($booking['order_id'] ?? 0);
     if ($orderId > 0) {
@@ -289,6 +341,33 @@ if ($mode === 'manage') {
         $view = Tygh::$app['view'];
         $view->assign('order', $order);
     }
+
+    // Pre-format dates — Smarty |date_format throws inside {capture} under Smarty 5 / PHP 8.3
+    $ci_ts = !empty($booking['check_in'])  ? strtotime(TypeCoerce::toString($booking['check_in']))  : false;
+    $co_ts = !empty($booking['check_out']) ? strtotime(TypeCoerce::toString($booking['check_out'])) : false;
+    $booking['check_in_short']  = $ci_ts !== false ? fn_date_format($ci_ts, '%d.%m.%Y') : '';
+    $booking['check_out_short'] = $co_ts !== false ? fn_date_format($co_ts, '%d.%m.%Y') : '';
+
+    // Pre-format total price — |number_format modifier also throws inside {capture}
+    $booking['total_price_formatted'] = number_format(TypeCoerce::toFloat($booking['total_price'] ?? 0), 2);
+
+    // Pre-flatten provider_display into simple rows — avoids is_array()/json_encode in template
+    $providerDisplay = is_array($booking['provider_display'] ?? null) ? $booking['provider_display'] : [];
+    $providerDisplayRows = [];
+    foreach ($providerDisplay as $field => $value) {
+        if ($field === 'status_label' || $field === 'provider_ref') {
+            continue;
+        }
+        $isArr = is_array($value);
+        $providerDisplayRows[] = [
+            'label'   => ucfirst(str_replace('_', ' ', (string) $field)),
+            'is_pre'  => $isArr,
+            'display' => $isArr
+                ? (string) json_encode($value, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
+                : TypeCoerce::toString($value),
+        ];
+    }
+    $booking['provider_display_rows'] = $providerDisplayRows;
 
     // Get provider-specific tabs
     $providerTabs = [];

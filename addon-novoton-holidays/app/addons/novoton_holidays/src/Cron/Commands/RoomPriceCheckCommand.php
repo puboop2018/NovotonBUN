@@ -30,7 +30,15 @@ class RoomPriceCheckCommand extends AbstractCronCommand
     public function execute(): array
     {
         $dbHelper = Container::getInstance()->databaseHelper();
-        $check_in = $this->getParam('check_in', date('Y-m-d', strtotime('+30 days')));
+        // Remember whether check_in was supplied so we can warn the operator: a
+        // defaulted date can land out of season and return 0 priced hotels, which
+        // is easily mistaken for "no hotel has prices".
+        $check_in_param = $this->getParam('check_in', '');
+        $check_in = is_string($check_in_param) ? $check_in_param : '';
+        $datesDefaulted = $check_in === '';
+        if ($datesDefaulted) {
+            $check_in = date('Y-m-d', (int) strtotime('+30 days'));
+        }
         $nights = (int)$this->getParam('nights', 7);
         $limit = (int)$this->getParam('limit', 500);
         $country = strtoupper($this->getParam('country', ''));
@@ -38,6 +46,11 @@ class RoomPriceCheckCommand extends AbstractCronCommand
 
         $this->output('Checking hotels with active prices...');
         $this->output("Check-in: {$check_in}, Check-out: {$check_out}, Nights: {$nights}, Limit: {$limit}");
+        if ($datesDefaulted) {
+            $this->output('  NOTE: no &check_in supplied — using default (+30 days). Out-of-season');
+            $this->output('        dates can return 0 priced hotels. Pass &check_in=YYYY-MM-DD to');
+            $this->output('        test the dates customers actually search.');
+        }
         if ($country) {
             $this->output("Country: {$country}");
         }
@@ -65,21 +78,16 @@ class RoomPriceCheckCommand extends AbstractCronCommand
                 'nocache' => true,
             ];
 
-            $best_price = 0;
+            $has_prices = false;
             $invalid = false;
             try {
                 $response = $this->api->pricing()->getRoomPrice($params);
 
                 if ($response instanceof \SimpleXMLElement) {
-                    $prices = $response->xpath('//Price');
-                    if (!empty($prices)) {
-                        foreach ($prices as $p) {
-                            $pv = (float)((string)$p);
-                            if ($pv > 0 && ($best_price === 0.0 || $pv < $best_price)) {
-                                $best_price = $pv;
-                            }
-                        }
-                    }
+                    // Presence check only — mirrors PricingApiClient::getRoomPrice() (line 244)
+                    // and the admin check_prices_hotel. The cron only sets has_room_price Y/N;
+                    // it does not store or return a price amount.
+                    $has_prices = !empty($response->xpath('//Price'));
                 } else {
                     // getRoomPrice() returned false — XML parse/API error, distinct
                     // from a valid response that simply carries no <Price> nodes.
@@ -90,9 +98,9 @@ class RoomPriceCheckCommand extends AbstractCronCommand
                 $invalid = true;
             }
 
-            if ($best_price > 0) {
+            if ($has_prices) {
                 $withPricesIds[] = $hotel['hotel_id'];
-                $this->output("NVT-{$hotel['hotel_id']} | {$hotel['hotel_name']} - EUR " . number_format($best_price, 2));
+                $this->output("NVT-{$hotel['hotel_id']} | {$hotel['hotel_name']} - has prices");
             } else {
                 $withoutPricesIds[] = $hotel['hotel_id'];
                 if ($invalid) {

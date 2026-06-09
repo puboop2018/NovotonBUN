@@ -1,7 +1,6 @@
 {* Novoton Holidays - Order Details Hook - Terms of Payment & Cancellation *}
 {* Hook: orders:details — fires after the products table *}
 {* Groups by hotel_id so multiple products from same hotel show terms only once *}
-{''|novoton_trace:"ENTER orders/details.post.tpl"}
 
 {$_nv_hotels_terms = []}
 {$_nv_hotels_prices = []}
@@ -56,7 +55,7 @@
 {/if}
 
 {* Display terms for each hotel *}
-{if $_nv_hotels_terms|count > 0}
+{if $_nv_hotels_terms}
 <div style="margin-top: 20px; padding: 15px;">
     {foreach from=$_nv_hotels_terms item=_hotel_terms key=_hotel_id name=hotel_loop}
         {if !$smarty.foreach.hotel_loop.first}
@@ -80,4 +79,3 @@
     {/foreach}
 </div>
 {/if}
-{''|novoton_trace:"EXIT orders/details.post.tpl"}

@@ -69,13 +69,30 @@ if ($mode === 'manage') {
 }
 
 if ($mode === 'view') {
-    $bookingId = (int) ($_REQUEST['booking_id'] ?? 0);
-    return [CONTROLLER_STATUS_REDIRECT, 'travel_bookings.view&booking_id=' . $bookingId];
+    $novBookingId = (int) ($_REQUEST['booking_id'] ?? 0);
+    // novoton_bookings.booking_id ≠ travel_bookings.booking_id (separate auto-increments).
+    // The travel_bookings row stores the novoton ID in provider_booking_id.
+    $travelBookingId = (int) db_get_field(
+        "SELECT booking_id FROM ?:travel_bookings WHERE provider = 'novoton' AND provider_booking_id = ?s",
+        (string) $novBookingId
+    );
+    if ($travelBookingId > 0) {
+        return [CONTROLLER_STATUS_REDIRECT, 'travel_bookings.view&booking_id=' . $travelBookingId];
+    }
+    fn_set_notification('W', __('warning'), 'Booking #' . $novBookingId . ' has no unified record yet.');
+    return [CONTROLLER_STATUS_REDIRECT, 'travel_bookings.manage&provider=novoton'];
 }
 
 if ($mode === 'alternatives') {
-    $bookingId = (int) ($_REQUEST['booking_id'] ?? 0);
-    return [CONTROLLER_STATUS_REDIRECT, 'travel_bookings.view&booking_id=' . $bookingId . '&tab=alternatives'];
+    $novBookingId = (int) ($_REQUEST['booking_id'] ?? 0);
+    $travelBookingId = (int) db_get_field(
+        "SELECT booking_id FROM ?:travel_bookings WHERE provider = 'novoton' AND provider_booking_id = ?s",
+        (string) $novBookingId
+    );
+    if ($travelBookingId > 0) {
+        return [CONTROLLER_STATUS_REDIRECT, 'travel_bookings.view&booking_id=' . $travelBookingId . '&tab=alternatives'];
+    }
+    return [CONTROLLER_STATUS_REDIRECT, 'travel_bookings.manage&provider=novoton'];
 }
 
 if ($mode === 'order_tab') {

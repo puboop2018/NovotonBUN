@@ -173,7 +173,7 @@ class AvailabilityApiClient extends ApiClientBase implements AvailabilityApiClie
     {
         $xml = $this->buildSearchXml($params);
 
-        DebugLogger::log('Novoton frmsearch Request', ['xml' => $xml, 'params' => $params]);
+        DebugLogger::log('Novoton frmsearch Request', ['xml' => $this->maskCredentials($xml), 'params' => $params]);
 
         $response = $this->callApi(Constants::API_FUNCTION_SEARCH, $xml);
 

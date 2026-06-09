@@ -124,12 +124,14 @@
         {/foreach}
     </div>
 
-    {* No-results state *}
-    {if !$sphinx_search_results && $sphinx_search_status !== 'pending'}
-        <div class="sphinx-no-results" id="sphinx-no-results">
-            <p>{__("sphinx_holidays.no_results")|default:"No hotels found for your search criteria. Please try different dates or destination."}</p>
-        </div>
-    {/if}
+    {* No-results state — always in the DOM so the async poller (which runs when
+       status='pending') can reveal it once polling completes with 0 offers.
+       Visible immediately only when a server-side search already finished empty
+       (completed/error); hidden while pending/idle or when offers exist. *}
+    {assign var="_sx_show_empty" value=(!$sphinx_search_results && ($sphinx_search_status == 'completed' || $sphinx_search_status == 'error'))}
+    <div class="sphinx-no-results" id="sphinx-no-results"{if !$_sx_show_empty} style="display: none;"{/if}>
+        <p>{__("sphinx_holidays.no_results")|default:"No availability for the selected dates. Please try different dates."}</p>
+    </div>
 
 </div>
 

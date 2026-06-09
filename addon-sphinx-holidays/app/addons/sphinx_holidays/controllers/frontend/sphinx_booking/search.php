@@ -129,19 +129,24 @@ try {
         'currency' => ConfigProvider::getDefaultCurrency(),
     ];
 
-    // The Sphinx /hotels/search endpoint needs a destination_id to run a live
-    // availability search — a hotel_ids-only query returns an empty result set.
-    // The product page booking engine only knows the hotel_id, so take the
-    // destination_id from the hotel row already fetched above.
-    if ($destination_id <= 0 && $hotelRow !== null) {
-        $destination_id = TypeCoerce::toInt($hotelRow['destination_id'] ?? 0);
-    }
-
-    if ($destination_id > 0) {
-        $searchParams['destination_id'] = $destination_id;
-    }
+    // ── Search strategy ───────────────────────────────────────────────────
+    // Product-page search (hotel_id present): query the API by hotel_ids
+    // directly. cron_mode=diagnose_search confirms a hotel_ids-only query
+    // returns this hotel's offers (section 4 of the diagnostic) and is the
+    // strategy that returns the MOST offers.
+    //
+    // The previous approach resolved the hotel's destination_id, stripped
+    // hotel_ids, pulled the ENTIRE destination (hundreds of offers across many
+    // paginated polls) and filtered back to the one hotel client-side. That was
+    // slow and could exhaust the JS poll budget (maxPolls) before this hotel's
+    // page arrived — showing zero results on the storefront even though the
+    // offers existed and diagnose_search reported them.
+    //
+    // Destination browse (no hotel_id): query by destination_id.
     if (!empty($hotel_id)) {
         $searchParams['hotel_ids'] = [$hotel_id];
+    } elseif ($destination_id > 0) {
+        $searchParams['destination_id'] = $destination_id;
     }
 
     $ignoreDomains = ConfigProvider::getIgnoreDomains();
@@ -149,16 +154,10 @@ try {
         $searchParams['ignore_domains'] = $ignoreDomains;
     }
 
-    // The Sphinx API's hotel_ids filter returns an EMPTY set when combined with
-    // a destination_id (verified via cron_mode=diagnose_search: destination-only
-    // returns the full destination, destination + hotel_ids returns 0). So when
-    // we have a destination, query by destination alone and narrow back to this
-    // hotel client-side (filter_hotel_id, below + in search_poll). hotel_ids is
-    // kept in $searchParams purely to keep the cache key unique per hotel.
+    // The API query matches $searchParams exactly. The client-side hotel_id
+    // narrowing (initial results below + search_poll) is kept as a harmless
+    // safety net should a destination-scoped result set ever come back.
     $apiSearchParams = $searchParams;
-    if ($destination_id > 0) {
-        unset($apiSearchParams['hotel_ids']);
-    }
 
     // Check cache — if hit, render results inline (no polling needed)
     $cacheEnabled = ConfigProvider::isApiCacheEnabled();

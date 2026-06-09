@@ -63,6 +63,11 @@
                         <default_value>b2b.allinclusivebg.com</default_value>
                         <variants/>
                     </item>
+                    <item id="allow_insecure_api">
+                        <type>checkbox</type>
+                        <default_value>Y</default_value>
+                        <variants/>
+                    </item>
                     <item id="api_key">
                         <type>input</type>
                         <default_value>TEST-TEST-TEST-TEST-TEST</default_value>

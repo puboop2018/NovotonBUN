@@ -1,5 +1,4 @@
 {* Novoton Holidays - Admin Order Details - Simple text display *}
-{''|novoton_trace:"ENTER orders/order_product_info.post.tpl"}
 
 {if $oi.extra.novoton_booking}
 {* rooms_data is pre-decoded to an array in fn_novoton_holidays_get_order_info *}
@@ -23,20 +22,19 @@
             {if $oi.extra.num_rooms > 1 && $_nvt_rooms}
                 <strong>Rooms ({$oi.extra.num_rooms}):</strong><br>
                 {foreach from=$_nvt_rooms item=room key=idx}
-                    {$room_display = $room.room_id|default:$room.room_name|default:''}
-                    &nbsp;&nbsp;- <strong>Room {$idx+1}:</strong> {if $room_display}{$room_display|novoton_format_room_type}{else}{$room.room_type_display|default:'Room'|escape:'html'}{/if} | {$room.board_id|default:$room.board_name|default:''|novoton_format_board} | {$room.adults|default:0} adults{if $room.children}, {$room.children} children{if $room.children_ages_str} ({$room.children_ages_str}){/if}{/if} | {$room.price|default:0} {$smarty.const.CART_PRIMARY_CURRENCY}<br>
+                    &nbsp;&nbsp;- <strong>Room {$idx+1}:</strong> {$room.room_name_formatted|default:$room.room_name|default:$room.room_type_display|default:$room.room_id|default:'Room'|escape:'html'} | {$room.board_name_formatted|default:$room.board_name|default:$room.board_id|default:''|escape:'html'} | {$room.adults|default:0} adults{if $room.children}, {$room.children} children{if $room.children_ages_str} ({$room.children_ages_str}){/if}{/if} | {$room.price|default:0} {$smarty.const.CART_PRIMARY_CURRENCY}<br>
                 {/foreach}
             {else}
                 {$room_id_raw = $oi.extra.room_id|default:''}
                 {$room_display = $oi.extra.room_type_display|default:''}
                 {$board_raw = $oi.extra.board_id|default:''}
-                {if $room_id_raw || $room_display}<strong>Room:</strong> {if $room_id_raw}{$room_id_raw|novoton_format_room_type}{else}{$room_display|escape:'html'}{/if}<br>{/if}
-                {if $board_raw}<strong>Board:</strong> {$board_raw|novoton_format_board}<br>{/if}
+                {if $oi.extra.room_name_formatted || $room_id_raw || $room_display || $oi.extra.room_name}<strong>Room:</strong> {$oi.extra.room_name_formatted|default:$oi.extra.room_name|default:$room_display|default:$room_id_raw|escape:'html'}<br>{/if}
+                {if $oi.extra.board_name_formatted || $board_raw || $oi.extra.board_name}<strong>Board:</strong> {$oi.extra.board_name_formatted|default:$oi.extra.board_name|default:$board_raw|escape:'html'}<br>{/if}
                 <strong>Guests:</strong> {$oi.extra.adults|default:0} adults{if $oi.extra.children}, {$oi.extra.children} children{if $oi.extra.children_ages} ({$oi.extra.children_ages}){/if}{/if}<br>
             {/if}
             
             {* Guest Names — guests_data is pre-decoded to an array in fn_novoton_holidays_get_order_info *}
-            {if $oi.extra.guests_data && is_array($oi.extra.guests_data)}
+            {if $oi.extra.guests_data}
                 {$guests_parsed = $oi.extra.guests_data}
                 {if $guests_parsed}
                     {$adult_list = []}
@@ -79,8 +77,10 @@
             <strong>Novoton Reservation:</strong> NT {$oi.extra.novoton_reservation_id}{if $oi.extra.novoton_reservation_status} ({$oi.extra.novoton_reservation_status}){/if}<br>
             {/if}
             
-            {if $oi.extra.novoton_booking_id}
-            <a href="{"novoton_bookings.view?booking_id=`$oi.extra.novoton_booking_id`"|fn_url}">View Booking #{$oi.extra.novoton_booking_id}</a>
+            {if $oi.extra.travel_booking_id}
+            <a href="{"travel_bookings.view?booking_id=`$oi.extra.travel_booking_id`"|fn_url}">View Booking #{$oi.extra.travel_booking_id}</a>
+            {elseif $oi.extra.novoton_booking_id}
+            <a href="{"novoton_bookings.view?booking_id=`$oi.extra.novoton_booking_id`"|fn_url}">View Booking</a>
             {/if}
             
 
@@ -88,4 +88,3 @@
     </td>
 </tr>
 {/if}
-{''|novoton_trace:"EXIT orders/order_product_info.post.tpl"}
