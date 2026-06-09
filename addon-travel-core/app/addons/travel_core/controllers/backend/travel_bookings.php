@@ -343,8 +343,8 @@ if ($mode === 'manage') {
     }
 
     // Pre-format dates — Smarty |date_format throws inside {capture} under Smarty 5 / PHP 8.3
-    $ci_ts = !empty($booking['check_in'])  ? strtotime((string) $booking['check_in'])  : false;
-    $co_ts = !empty($booking['check_out']) ? strtotime((string) $booking['check_out']) : false;
+    $ci_ts = !empty($booking['check_in'])  ? strtotime(TypeCoerce::toString($booking['check_in']))  : false;
+    $co_ts = !empty($booking['check_out']) ? strtotime(TypeCoerce::toString($booking['check_out'])) : false;
     $booking['check_in_short']  = $ci_ts !== false ? fn_date_format($ci_ts, '%d.%m.%Y') : '';
     $booking['check_out_short'] = $co_ts !== false ? fn_date_format($co_ts, '%d.%m.%Y') : '';
 
