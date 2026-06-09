@@ -213,6 +213,11 @@ class ConfigProvider
         return (string)(self::settings()['cron_access_key'] ?? '');
     }
 
+    public static function isCronReportEmailEnabled(): bool
+    {
+        return (self::settings()['send_cron_report_email'] ?? 'Y') === 'Y';
+    }
+
     public static function getDefaultCountry(): string
     {
         return (string)(self::settings()['default_country'] ?? 'BULGARIA');

@@ -194,7 +194,12 @@
                         <default_value>1234</default_value>
                         <variants/>
                     </item>
-                    
+                    <item id="send_cron_report_email">
+                        <type>checkbox</type>
+                        <default_value>Y</default_value>
+                        <variants/>
+                    </item>
+
                     <!-- Display Header -->
                     <item id="display_header">
                         <type>header</type>

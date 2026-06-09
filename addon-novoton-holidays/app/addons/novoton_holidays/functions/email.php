@@ -101,6 +101,11 @@ function fn_novoton_holidays_generate_import_csv_report($results, $import_type =
  */
 function fn_novoton_holidays_send_import_report_email($results, $import_type, $summary, $country = ''): bool
 {
+    // Respect the admin setting to enable/disable cron report email notifications
+    if (!\Tygh\Addons\NovotonHolidays\Services\ConfigProvider::isCronReportEmailEnabled()) {
+        return false;
+    }
+
     $pif = \Tygh\Addons\NovotonHolidays\Services\PriceInfoFormatter::class;
     // Get admin email from settings
     $admin_email = $pif::toScalar(Registry::get('settings.Company.company_orders_email'));
