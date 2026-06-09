@@ -351,6 +351,18 @@ function fn_novoton_holidays_get_order_info(&$order, $additional_data): void
             $extra['guests_data'] = is_array($decoded) ? $decoded : [];
         }
 
+        // Look up the unified travel_booking_id so templates can link directly to travel_bookings.view
+        $nvt_id = PriceInfoFormatter::toInt($extra['novoton_booking_id'] ?? 0);
+        if ($nvt_id > 0 && empty($extra['travel_booking_id'])) {
+            $tb_id = PriceInfoFormatter::toInt(db_get_field(
+                "SELECT booking_id FROM ?:travel_bookings WHERE provider = 'novoton' AND provider_booking_id = ?s LIMIT 1",
+                (string) $nvt_id
+            ));
+            if ($tb_id > 0) {
+                $extra['travel_booking_id'] = $tb_id;
+            }
+        }
+
         // Write back local extra mutations before delegating to helpers
         // (helpers also mutate $product['extra'] but via their own narrowed vars).
         $product['extra'] = $extra;

@@ -342,6 +342,33 @@ if ($mode === 'manage') {
         $view->assign('order', $order);
     }
 
+    // Pre-format dates — Smarty |date_format throws inside {capture} under Smarty 5 / PHP 8.3
+    $ci_ts = !empty($booking['check_in'])  ? strtotime(TypeCoerce::toString($booking['check_in']))  : false;
+    $co_ts = !empty($booking['check_out']) ? strtotime(TypeCoerce::toString($booking['check_out'])) : false;
+    $booking['check_in_short']  = $ci_ts !== false ? fn_date_format($ci_ts, '%d.%m.%Y') : '';
+    $booking['check_out_short'] = $co_ts !== false ? fn_date_format($co_ts, '%d.%m.%Y') : '';
+
+    // Pre-format total price — |number_format modifier also throws inside {capture}
+    $booking['total_price_formatted'] = number_format(TypeCoerce::toFloat($booking['total_price'] ?? 0), 2);
+
+    // Pre-flatten provider_display into simple rows — avoids is_array()/json_encode in template
+    $providerDisplay = is_array($booking['provider_display'] ?? null) ? $booking['provider_display'] : [];
+    $providerDisplayRows = [];
+    foreach ($providerDisplay as $field => $value) {
+        if ($field === 'status_label' || $field === 'provider_ref') {
+            continue;
+        }
+        $isArr = is_array($value);
+        $providerDisplayRows[] = [
+            'label'   => ucfirst(str_replace('_', ' ', (string) $field)),
+            'is_pre'  => $isArr,
+            'display' => $isArr
+                ? (string) json_encode($value, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
+                : TypeCoerce::toString($value),
+        ];
+    }
+    $booking['provider_display_rows'] = $providerDisplayRows;
+
     // Get provider-specific tabs
     $providerTabs = [];
     $providerName = TypeCoerce::toString($booking['provider'] ?? '');
