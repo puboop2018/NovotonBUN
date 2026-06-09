@@ -216,7 +216,10 @@ use Tygh\Addons\TravelCore\TravelConstants;
     if ($priceData) {
         // Update price if we got one from API
         if (isset($priceData->Price)) {
-            $rawPrice = (float)((string)$priceData->Price);
+            $room_id_for_match  = rawurldecode(TypeCoerce::toString($bookingData['room_id']));
+            $board_id_for_match = TypeCoerce::toString($bookingData['board_id'] ?? '');
+            $minPriceMatch = fn_novoton_min_price_from_xml($priceData, $room_id_for_match, $board_id_for_match);
+            $rawPrice = $minPriceMatch !== null ? (float)$minPriceMatch['price'] : (float)((string)$priceData->Price);
             $base_price = $rawPrice;
             $api_price = fn_novoton_holidays_get_api()->pricing()->applyCommission($rawPrice);
 

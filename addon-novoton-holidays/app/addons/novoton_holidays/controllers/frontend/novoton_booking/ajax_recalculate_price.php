@@ -182,14 +182,23 @@ use Tygh\Addons\TravelCore\Services\CurrencyService;
         $rawResponse = $api->getLastResponse();
         $debug_log('API Last Response (first 2000 chars)', substr($rawResponse, 0, 2000));
 
-        // Direct Price element (API returns single result for specific room/board)
+        // Direct Price element — filter by board_id to avoid reading a different board's price
         if ($response && isset($response->Price)) {
-            $new_price = (float)((string)$response->Price);
-            if ($new_price > 0) {
-                $price_found = true;
-                $matched_room = rawurldecode((string)($response->IdRoom ?? $room_id));
-                $matched_board = (string)($response->IdBoard ?? $board_id);
-                $debug_log('Found direct Price from specific room/board query', $new_price);
+            $minMatch = fn_novoton_min_price_from_xml($response, $room_id_decoded, $board_id);
+            if ($minMatch !== null && $minMatch['price'] > 0) {
+                $new_price    = $minMatch['price'];
+                $price_found  = true;
+                $matched_room  = $minMatch['room'];
+                $matched_board = $minMatch['board'];
+                $debug_log('Found min price (board-filtered) from specific room/board query', $new_price);
+            } else {
+                $new_price = (float)((string)$response->Price);
+                if ($new_price > 0) {
+                    $price_found  = true;
+                    $matched_room  = rawurldecode((string)($response->IdRoom ?? $room_id));
+                    $matched_board = (string)($response->IdBoard ?? $board_id);
+                    $debug_log('Found direct Price (fallback) from specific room/board query', $new_price);
+                }
             }
         }
 
