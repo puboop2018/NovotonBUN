@@ -53,6 +53,20 @@ final class NovotonHotelProductProvider implements HotelProductProviderInterface
         );
     }
 
+    #[\Override]
+    public function ownsHotelId(string $hotelId): bool
+    {
+        // Novoton hotel ids are numeric.
+        if ($hotelId === '' || !ctype_digit($hotelId)) {
+            return false;
+        }
+
+        return (bool) db_get_field(
+            'SELECT hotel_id FROM ?:novoton_hotels WHERE hotel_id = ?i LIMIT 1',
+            (int) $hotelId,
+        );
+    }
+
     private static function optString(mixed $v): ?string
     {
         if ($v === null) {

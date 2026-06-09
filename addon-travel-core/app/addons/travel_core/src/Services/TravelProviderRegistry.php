@@ -167,6 +167,28 @@ class TravelProviderRegistry
     }
 
     /**
+     * Resolve which registered provider owns a bare (provider-native) hotel id.
+     *
+     * Returns the provider entry (as get()) or null. Deactivated providers are
+     * not registered, so their tables are never queried.
+     *
+     * @return array{name: string, label: string, normalizer: ProviderNormalizerInterface, booking_admin_provider?: BookingAdminProviderInterface, hotel_product_provider?: HotelProductProviderInterface, status_sync_callback?: callable, single_status_callback?: callable, scan_config?: array{table: string, id_col: string, json_col: string}}|null
+     */
+    public static function resolveHotelIdOwner(string $hotelId): ?array
+    {
+        foreach (self::$providers as $provider) {
+            $impl = $provider['hotel_product_provider'] ?? null;
+            if ($impl === null) {
+                continue;
+            }
+            if ($impl->ownsHotelId($hotelId)) {
+                return $provider;
+            }
+        }
+        return null;
+    }
+
+    /**
      * Register facility scan configuration for a provider.
      *
      * @param string $name Provider name ('sphinx', 'novoton', etc.)

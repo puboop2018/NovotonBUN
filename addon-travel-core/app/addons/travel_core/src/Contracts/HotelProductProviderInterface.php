@@ -27,4 +27,13 @@ interface HotelProductProviderInterface
      * @return HotelSeoData|null  null when this provider does not own the product
      */
     public function resolveProduct(int $productId, string $productCode): ?HotelSeoData;
+
+    /**
+     * Whether this provider owns the given (provider-native) hotel id.
+     *
+     * Used by the generic booking dispatcher to resolve a provider from a
+     * bare hotel_id when no product context is available. Must return false
+     * (not throw) for ids this provider does not recognise.
+     */
+    public function ownsHotelId(string $hotelId): bool;
 }

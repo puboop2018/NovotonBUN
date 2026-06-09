@@ -52,6 +52,19 @@ final class SphinxHotelProductProvider implements HotelProductProviderInterface
         );
     }
 
+    #[\Override]
+    public function ownsHotelId(string $hotelId): bool
+    {
+        if ($hotelId === '') {
+            return false;
+        }
+
+        return (bool) db_get_field(
+            'SELECT hotel_id FROM ?:sphinx_hotels WHERE hotel_id = ?s LIMIT 1',
+            $hotelId,
+        );
+    }
+
     private static function optString(mixed $v): ?string
     {
         if ($v === null) {
