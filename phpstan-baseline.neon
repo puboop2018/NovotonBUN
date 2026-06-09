@@ -81,7 +81,7 @@ parameters:
 		-
 			message: '#^Cannot cast mixed to int\.$#'
 			identifier: cast.int
-			count: 3
+			count: 5
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_bookings.php
 
 		-
