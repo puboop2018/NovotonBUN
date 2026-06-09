@@ -82,7 +82,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $provider = RequestCoerce::string($_REQUEST, 'provider');
         if (!empty($provider)) {
             $providerInfo = TravelProviderRegistry::get($provider);
-            if ($providerInfo && !empty($providerInfo['status_sync_callback'])) {
+            if ($providerInfo !== null && !empty($providerInfo['status_sync_callback'])) {
                 $result = call_user_func($providerInfo['status_sync_callback']);
                 if (is_array($result)) {
                     $checked = TypeCoerce::toString($result['checked'] ?? $result['processed'] ?? 0);
@@ -106,7 +106,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $bookingProvider = TypeCoerce::toString($booking['provider'] ?? '');
                 $providerInfo = TravelProviderRegistry::get($bookingProvider);
                 try {
-                    if ($providerInfo && !empty($providerInfo['single_status_callback'])) {
+                    if ($providerInfo !== null && !empty($providerInfo['single_status_callback'])) {
                         $result = call_user_func($providerInfo['single_status_callback'], $booking_id);
                         $resultMap = is_array($result) ? $result : [];
                         if (!empty($resultMap['changed'])) {

@@ -48,7 +48,7 @@ if ($provider === null && !empty($product_id)) {
 }
 
 // 3. Resolve by hotel_id in novoton_hotels table (numeric hotel IDs = Novoton)
-if ($provider === null && !empty($hotel_id) && ctype_digit((string) $hotel_id)) {
+if ($provider === null && !empty($hotel_id) && ctype_digit((string) $hotel_id) && TravelProviderRegistry::has('novoton')) {
     $exists = db_get_field('SELECT hotel_id FROM ?:novoton_hotels WHERE hotel_id = ?i LIMIT 1', (int) $hotel_id);
     if ($exists) {
         $provider = TravelProviderRegistry::get('novoton');
@@ -88,8 +88,9 @@ if ($mode === 'booking_config') {
             $providerName = 'novoton';
             $hotelId = substr($productCode, 3);
             $searchDispatch = 'novoton_booking.search';
-        } else {
-            // Sphinx: identify via sphinx_hotels table (works for any product code prefix)
+        } elseif (TravelProviderRegistry::has('sphinx')) {
+            // Sphinx: identify via sphinx_hotels table (works for any product code prefix).
+            // Guard with has('sphinx') to avoid querying a non-existent table when deactivated.
             $sphinxHotelId = (string) db_get_field(
                 'SELECT hotel_id FROM ?:sphinx_hotels WHERE product_id = ?i',
                 (int) $product_id,
