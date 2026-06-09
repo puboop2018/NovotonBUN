@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Tygh\Addons\TravelCore\Services;
 
 use Tygh\Addons\TravelCore\Contracts\BookingAdminProviderInterface;
+use Tygh\Addons\TravelCore\Contracts\HotelProductProviderInterface;
 use Tygh\Addons\TravelCore\Contracts\ProviderNormalizerInterface;
+use Tygh\Addons\TravelCore\Dto\Hotel\HotelSeoData;
 
 /**
  * Registry of active travel providers.
@@ -22,7 +24,7 @@ class TravelProviderRegistry
      */
     public const array KNOWN_PROVIDER_ADDONS = ['novoton_holidays', 'sphinx_holidays'];
 
-    /** @var array<string, array{name: string, label: string, normalizer: ProviderNormalizerInterface, booking_admin_provider?: BookingAdminProviderInterface, status_sync_callback?: callable, single_status_callback?: callable, scan_config?: array{table: string, id_col: string, json_col: string}}> */
+    /** @var array<string, array{name: string, label: string, normalizer: ProviderNormalizerInterface, booking_admin_provider?: BookingAdminProviderInterface, hotel_product_provider?: HotelProductProviderInterface, status_sync_callback?: callable, single_status_callback?: callable, scan_config?: array{table: string, id_col: string, json_col: string}}> */
     private static array $providers = [];
 
     /**
@@ -77,7 +79,7 @@ class TravelProviderRegistry
     /**
      * Get a provider entry by name.
      *
-     * @return array{name: string, label: string, normalizer: ProviderNormalizerInterface, booking_admin_provider?: BookingAdminProviderInterface, status_sync_callback?: callable, single_status_callback?: callable, scan_config?: array{table: string, id_col: string, json_col: string}}|null
+     * @return array{name: string, label: string, normalizer: ProviderNormalizerInterface, booking_admin_provider?: BookingAdminProviderInterface, hotel_product_provider?: HotelProductProviderInterface, status_sync_callback?: callable, single_status_callback?: callable, scan_config?: array{table: string, id_col: string, json_col: string}}|null
      */
     public static function get(string $name): ?array
     {
@@ -95,7 +97,7 @@ class TravelProviderRegistry
     /**
      * Get all registered providers.
      *
-     * @return array<string, array{name: string, label: string, normalizer: ProviderNormalizerInterface, booking_admin_provider?: BookingAdminProviderInterface, status_sync_callback?: callable, single_status_callback?: callable, scan_config?: array{table: string, id_col: string, json_col: string}}>
+     * @return array<string, array{name: string, label: string, normalizer: ProviderNormalizerInterface, booking_admin_provider?: BookingAdminProviderInterface, hotel_product_provider?: HotelProductProviderInterface, status_sync_callback?: callable, single_status_callback?: callable, scan_config?: array{table: string, id_col: string, json_col: string}}>
      */
     public static function all(): array
     {
@@ -117,6 +119,72 @@ class TravelProviderRegistry
             }
         }
 
+        return null;
+    }
+
+    /**
+     * Register the hotel-product resolver for a provider.
+     * Called from each provider addon's init.php alongside register().
+     */
+    public static function setHotelProductProvider(string $name, HotelProductProviderInterface $provider): void
+    {
+        if (isset(self::$providers[$name])) {
+            self::$providers[$name]['hotel_product_provider'] = $provider;
+        }
+    }
+
+    /**
+     * Get the hotel-product resolver for a provider, if registered.
+     */
+    public static function getHotelProductProvider(string $name): ?HotelProductProviderInterface
+    {
+        return self::$providers[$name]['hotel_product_provider'] ?? null;
+    }
+
+    /**
+     * Iterate all registered providers and return the first HotelSeoData match.
+     *
+     * Returns null when no active provider claims the product. Because only active
+     * addons run init.php, deactivated providers are never registered — their tables
+     * are never queried, eliminating "table does not exist" crashes.
+     *
+     * @param int $productId CS-Cart product_id
+     * @param string $productCode CS-Cart product_code (may be empty)
+     */
+    public static function resolveProductOwner(int $productId, string $productCode): ?HotelSeoData
+    {
+        foreach (self::$providers as $provider) {
+            $impl = $provider['hotel_product_provider'] ?? null;
+            if ($impl === null) {
+                continue;
+            }
+            $result = $impl->resolveProduct($productId, $productCode);
+            if ($result !== null) {
+                return $result;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Resolve which registered provider owns a bare (provider-native) hotel id.
+     *
+     * Returns the provider entry (as get()) or null. Deactivated providers are
+     * not registered, so their tables are never queried.
+     *
+     * @return array{name: string, label: string, normalizer: ProviderNormalizerInterface, booking_admin_provider?: BookingAdminProviderInterface, hotel_product_provider?: HotelProductProviderInterface, status_sync_callback?: callable, single_status_callback?: callable, scan_config?: array{table: string, id_col: string, json_col: string}}|null
+     */
+    public static function resolveHotelIdOwner(string $hotelId): ?array
+    {
+        foreach (self::$providers as $provider) {
+            $impl = $provider['hotel_product_provider'] ?? null;
+            if ($impl === null) {
+                continue;
+            }
+            if ($impl->ownsHotelId($hotelId)) {
+                return $provider;
+            }
+        }
         return null;
     }
 

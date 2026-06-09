@@ -204,6 +204,10 @@ if (class_exists(\Tygh\Addons\TravelCore\Services\TravelProviderRegistry::class)
             return $provider->checkStatus((string) $bookingId);
         }
     );
+    \Tygh\Addons\TravelCore\Services\TravelProviderRegistry::setHotelProductProvider(
+        'novoton',
+        new \Tygh\Addons\NovotonHolidays\Providers\NovotonHotelProductProvider()
+    );
 }
 
 // Seed SEO defaults on first admin load (mirrors sphinx pattern)

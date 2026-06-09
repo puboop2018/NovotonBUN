@@ -47,13 +47,10 @@ if ($provider === null && !empty($product_id)) {
     }
 }
 
-// 3. Resolve by hotel_id in novoton_hotels table (numeric hotel IDs = Novoton).
-// Guarded so a deactivated novoton_holidays (missing table) can't crash here.
-if ($provider === null && TravelProviderRegistry::has('novoton') && !empty($hotel_id) && ctype_digit((string) $hotel_id)) {
-    $exists = db_get_field('SELECT hotel_id FROM ?:novoton_hotels WHERE hotel_id = ?i LIMIT 1', (int) $hotel_id);
-    if ($exists) {
-        $provider = TravelProviderRegistry::get('novoton');
-    }
+// 3. Resolve by bare hotel_id via the registered HotelProductProvider(s).
+// No provider-specific SQL here — each provider answers ownsHotelId() for itself.
+if ($provider === null && !empty($hotel_id)) {
+    $provider = TravelProviderRegistry::resolveHotelIdOwner((string) $hotel_id);
 }
 
 // 4. Single-provider fallback
@@ -85,22 +82,14 @@ if ($mode === 'booking_config') {
         $hotelId = '';
         $searchDispatch = '';
 
-        if ($productCode && str_starts_with($productCode, 'NVT')) {
-            $providerName = 'novoton';
-            $hotelId = substr($productCode, 3);
-            $searchDispatch = 'novoton_booking.search';
-        } elseif (TravelProviderRegistry::has('sphinx')) {
-            // Sphinx: identify via sphinx_hotels table (works for any product code prefix).
-            // Guarded so a deactivated sphinx_holidays (missing table) can't crash here.
-            $sphinxHotelId = (string) db_get_field(
-                'SELECT hotel_id FROM ?:sphinx_hotels WHERE product_id = ?i',
-                (int) $product_id,
-            );
-            if ($sphinxHotelId !== '') {
-                $providerName = 'sphinx';
-                $hotelId = $sphinxHotelId;
-                $searchDispatch = 'sphinx_booking.search';
-            }
+        // Resolve provider + hotel via the registered HotelProductProvider(s).
+        // No provider-specific SQL lives here — deactivated providers are not
+        // registered, so their tables are never queried.
+        $owner = TravelProviderRegistry::resolveProductOwner((int) $product_id, $productCode);
+        if ($owner !== null) {
+            $providerName = $owner->providerName;
+            $hotelId = $owner->hotelId;
+            $searchDispatch = $providerName . '_booking.search';
         }
 
         if ($providerName) {
