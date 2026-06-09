@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 use Tygh\Addons\TravelCore\Helpers\ValidationHelpers;
 use Tygh\Addons\TravelCore\Services\BookingDisplayService;
+use Tygh\Addons\TravelCore\Services\TravelProviderRegistry;
 use Tygh\Registry;
 
 if (!defined('BOOTSTRAP')) {
@@ -104,7 +105,11 @@ function fn_travel_core_dispatch_before_display(): void
             $productId,
         ));
 
-        $isSphinxProduct = (bool) db_get_field(
+        // Only query the sphinx_hotels table when the sphinx provider is active.
+        // When sphinx_holidays is deactivated, its init.php never runs (so the
+        // provider is unregistered) and CS-Cart drops its schema — querying the
+        // now-missing table would throw a fatal AException on every hotel page.
+        $isSphinxProduct = TravelProviderRegistry::has('sphinx') && (bool) db_get_field(
             'SELECT hotel_id FROM ?:sphinx_hotels WHERE product_id = ?i LIMIT 1',
             $productId,
         );
@@ -150,8 +155,8 @@ function _travel_core_prepare_hotel_seo_data(int $productId): void
     /** @var array<string, mixed>|null $hotelData */
     $hotelData = null;
 
-    // Novoton hotel (NVT prefix)
-    if (str_starts_with($productCode, 'NVT')) {
+    // Novoton hotel (NVT prefix) — only when the novoton provider is active.
+    if (TravelProviderRegistry::has('novoton') && str_starts_with($productCode, 'NVT')) {
         $hotelId = substr($productCode, 3);
         $hotelData = db_get_row(
             'SELECT hotel_name AS name, star_rating AS classification, hotel_type AS property_type,
@@ -160,8 +165,9 @@ function _travel_core_prepare_hotel_seo_data(int $productId): void
             $hotelId,
         );
     }
-    // Sphinx hotel (identified via sphinx_hotels table — works for any product code prefix)
-    else {
+    // Sphinx hotel (identified via sphinx_hotels table — works for any product code prefix).
+    // Guarded so a deactivated sphinx_holidays (missing table) can't crash this page.
+    elseif (TravelProviderRegistry::has('sphinx')) {
         $sphinxHotelId = (string) db_get_field(
             'SELECT hotel_id FROM ?:sphinx_hotels WHERE product_id = ?i',
             $productId,
@@ -281,10 +287,14 @@ function _travel_core_render_debug(string $dispatch): void
     if ($dispatch === 'products.view' && !empty($_REQUEST['product_id'])) {
         $pid = ValidationHelpers::toInt($_REQUEST['product_id']);
         $pcode = ValidationHelpers::toString(db_get_field('SELECT product_code FROM ?:products WHERE product_id = ?i', $pid));
-        $sphinxDebugId = (string) db_get_field(
+        // Guard provider-table reads so the debug panel never crashes when a
+        // provider addon is deactivated (its table no longer exists).
+        $sphinxActive = TravelProviderRegistry::has('sphinx');
+        $novotonActive = TravelProviderRegistry::has('novoton');
+        $sphinxDebugId = $sphinxActive ? (string) db_get_field(
             'SELECT hotel_id FROM ?:sphinx_hotels WHERE product_id = ?i LIMIT 1',
             $pid,
-        );
+        ) : '';
         $debug['product'] = [
             'product_id' => $pid,
             'product_code' => $pcode,
@@ -293,11 +303,11 @@ function _travel_core_render_debug(string $dispatch): void
         ];
 
         // Check if hotel exists in provider DB
-        if (str_starts_with($pcode, 'NVT')) {
+        if ($novotonActive && str_starts_with($pcode, 'NVT')) {
             $hotelId = substr($pcode, 3);
             $hotel = db_get_row('SELECT hotel_id, hotel_name FROM ?:novoton_hotels WHERE hotel_id = ?s LIMIT 1', $hotelId);
             $debug['product']['hotel_lookup'] = $hotel ?: 'NOT FOUND in novoton_hotels';
-        } elseif ($sphinxDebugId !== '') {
+        } elseif ($sphinxActive && $sphinxDebugId !== '') {
             $hotel = db_get_row('SELECT hotel_id, name FROM ?:sphinx_hotels WHERE hotel_id = ?s LIMIT 1', $sphinxDebugId);
             $debug['product']['hotel_lookup'] = $hotel ?: 'NOT FOUND in sphinx_hotels';
         }
