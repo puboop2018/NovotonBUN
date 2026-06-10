@@ -396,6 +396,43 @@ function fn_novoton_match_price_from_xml(\SimpleXMLElement $xml, ?string $room_i
     return null;
 }
 
+/**
+ * Return the minimum price for a room/board combination from a flat room_price XML.
+ * Filters by both room_id and board_id so other boards' prices are excluded.
+ *
+ * @param \SimpleXMLElement $xml
+ * @param string|null $room_id  URL-decoded room ID, or null/empty to match any
+ * @param string|null $board_id Board ID, or null/empty to match any
+ * @return array{price: float, room: string, board: string}|null Null when no matching room/board price is found
+ */
+function fn_novoton_min_price_from_xml(\SimpleXMLElement $xml, ?string $room_id, ?string $board_id): ?array
+{
+    $prices   = $xml->xpath('//Price');
+    $idRooms  = $xml->xpath('//IdRoom');
+    $idBoards = $xml->xpath('//IdBoard');
+    if (empty($idBoards)) {
+        $idBoards = $xml->xpath('//Board');
+    }
+    if (empty($prices) || empty($idRooms) || empty($idBoards)) {
+        return null;
+    }
+    $numResults = min(count($prices), count($idRooms), count($idBoards));
+    $best = null;
+    for ($i = 0; $i < $numResults; $i++) {
+        $p = (float)((string)$prices[$i]);
+        $r = rawurldecode((string)$idRooms[$i]);
+        $b = (string)$idBoards[$i];
+        $roomMatches  = empty($room_id)  || strcasecmp($r, $room_id)  === 0;
+        $boardMatches = empty($board_id) || strcasecmp($b, $board_id) === 0;
+        if ($roomMatches && $boardMatches && $p > 0) {
+            if ($best === null || $p < $best['price']) {
+                $best = ['price' => $p, 'room' => $r, 'board' => $b];
+            }
+        }
+    }
+    return $best;
+}
+
 // ============================================================================
 // STREAMING HTML HELPERS
 // ============================================================================

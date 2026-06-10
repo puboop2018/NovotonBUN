@@ -2161,6 +2161,14 @@ msgctxt "SettingsOptions::novoton_holidays::cron_access_key"
 msgid "Cron Access Key"
 msgstr "Cheie Acces Cron"
 
+msgctxt "SettingsOptions::novoton_holidays::send_cron_report_email"
+msgid "Send cron report email notifications"
+msgstr "Trimite notificări email cu raportul cron"
+
+msgctxt "SettingsTooltips::novoton_holidays::send_cron_report_email"
+msgid "When enabled, a summary report email is sent to the administrator after cron jobs run (sync, price check, import, etc.). Disable to stop these notifications."
+msgstr "Când este activat, un email cu raportul sumar este trimis administratorului după rularea joburilor cron (sincronizare, verificare preț, import etc.). Dezactivează pentru a opri aceste notificări."
+
 msgctxt "SettingsOptions::novoton_holidays::cron_header"
 msgid "Cron / Automation"
 msgstr "Cron / Automatizare"

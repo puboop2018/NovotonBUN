@@ -215,6 +215,16 @@
                     </item>
                 </items>
             </section>
+
+            <section id="tools_cron">
+                <items>
+                    <item id="cron_links_info">
+                        <type>template</type>
+                        <default_value>cron_info.tpl</default_value>
+                        <variants/>
+                    </item>
+                </items>
+            </section>
         </sections>
     </settings>
 
@@ -616,6 +626,38 @@
         <item lang="ro" id="sphinx_holidays.cron_header"><![CDATA[Setări Cron]]></item>
         <item lang="en" id="sphinx_holidays.cron_access_key"><![CDATA[Cron access key (URL: index.php?dispatch=sphinx_cron.run&access_key=KEY&mode=hotels)]]></item>
         <item lang="ro" id="sphinx_holidays.cron_access_key"><![CDATA[Cheie acces cron (URL: index.php?dispatch=sphinx_cron.run&access_key=KEY&mode=hotels)]]></item>
+
+        <!-- Settings section (tab) titles -->
+        <item lang="en" id="SettingsSections::sphinx_holidays::general"><![CDATA[General]]></item>
+        <item lang="ro" id="SettingsSections::sphinx_holidays::general"><![CDATA[General]]></item>
+        <item lang="en" id="SettingsSections::sphinx_holidays::tools_cron"><![CDATA[Cron Commands]]></item>
+        <item lang="ro" id="SettingsSections::sphinx_holidays::tools_cron"><![CDATA[Comenzi Cron]]></item>
+
+        <!-- Cron Commands tab (cron_info.tpl) -->
+        <item lang="en" id="sphinx_holidays.quick_actions"><![CDATA[Quick Actions]]></item>
+        <item lang="ro" id="sphinx_holidays.quick_actions"><![CDATA[Acțiuni Rapide]]></item>
+        <item lang="en" id="sphinx_holidays.open_dashboard"><![CDATA[Open Sphinx Dashboard]]></item>
+        <item lang="ro" id="sphinx_holidays.open_dashboard"><![CDATA[Deschide Panoul Sphinx]]></item>
+        <item lang="en" id="sphinx_holidays.cron_cli_title"><![CDATA[CLI Cron Commands (PHP)]]></item>
+        <item lang="ro" id="sphinx_holidays.cron_cli_title"><![CDATA[Comenzi Cron CLI (PHP)]]></item>
+        <item lang="en" id="sphinx_holidays.cron_cli_intro"><![CDATA[Run any sync job from the command line. Replace YOUR_KEY with the Cron access key configured on the General tab. The same jobs can also be triggered over HTTP using <code>dispatch=sphinx_cron.run&access_key=YOUR_KEY&cron_mode=MODE</code> (note: HTTP uses <code>cron_mode</code> because CS-Cart reserves <code>mode</code>).]]></item>
+        <item lang="ro" id="sphinx_holidays.cron_cli_intro"><![CDATA[Rulează orice job de sincronizare din linia de comandă. Înlocuiește YOUR_KEY cu cheia de acces cron configurată în tab-ul General. Aceleași joburi pot fi declanșate și prin HTTP folosind <code>dispatch=sphinx_cron.run&access_key=YOUR_KEY&cron_mode=MODE</code> (notă: HTTP folosește <code>cron_mode</code> deoarece CS-Cart rezervă <code>mode</code>).]]></item>
+        <item lang="en" id="sphinx_holidays.cron_recurring_title"><![CDATA[Recurring sync jobs]]></item>
+        <item lang="ro" id="sphinx_holidays.cron_recurring_title"><![CDATA[Joburi recurente de sincronizare]]></item>
+        <item lang="en" id="sphinx_holidays.cron_ondemand_title"><![CDATA[On-demand / maintenance jobs]]></item>
+        <item lang="ro" id="sphinx_holidays.cron_ondemand_title"><![CDATA[Joburi la cerere / mentenanță]]></item>
+        <item lang="en" id="sphinx_holidays.cron_diagnostics_title"><![CDATA[Diagnostics (run manually)]]></item>
+        <item lang="ro" id="sphinx_holidays.cron_diagnostics_title"><![CDATA[Diagnostice (rulează manual)]]></item>
+        <item lang="en" id="sphinx_holidays.cron_full_note"><![CDATA[Tip: <code>mode=full</code> runs the whole recurring pipeline in the correct order in a single command.]]></item>
+        <item lang="ro" id="sphinx_holidays.cron_full_note"><![CDATA[Sfat: <code>mode=full</code> rulează întreaga secvență recurentă în ordinea corectă într-o singură comandă.]]></item>
+        <item lang="en" id="sphinx_holidays.cron_col_mode"><![CDATA[Mode]]></item>
+        <item lang="ro" id="sphinx_holidays.cron_col_mode"><![CDATA[Mod]]></item>
+        <item lang="en" id="sphinx_holidays.cron_col_command"><![CDATA[CLI Command]]></item>
+        <item lang="ro" id="sphinx_holidays.cron_col_command"><![CDATA[Comandă CLI]]></item>
+        <item lang="en" id="sphinx_holidays.cron_col_schedule"><![CDATA[Suggested schedule]]></item>
+        <item lang="ro" id="sphinx_holidays.cron_col_schedule"><![CDATA[Program sugerat]]></item>
+        <item lang="en" id="sphinx_holidays.cron_col_description"><![CDATA[Description]]></item>
+        <item lang="ro" id="sphinx_holidays.cron_col_description"><![CDATA[Descriere]]></item>
 
         <item lang="en" id="sphinx_holidays.product_code_prefix"><![CDATA[Product code prefix]]></item>
         <item lang="ro" id="sphinx_holidays.product_code_prefix"><![CDATA[Prefix cod produs]]></item>
