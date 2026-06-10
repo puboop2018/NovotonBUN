@@ -403,7 +403,7 @@ function fn_novoton_match_price_from_xml(\SimpleXMLElement $xml, ?string $room_i
  * @param \SimpleXMLElement $xml
  * @param string|null $room_id  URL-decoded room ID, or null/empty to match any
  * @param string|null $board_id Board ID, or null/empty to match any
- * @return array<string, mixed>|null ['price'=>float, 'room'=>string, 'board'=>string] or null
+ * @return array{price: float, room: string, board: string}|null Null when no matching room/board price is found
  */
 function fn_novoton_min_price_from_xml(\SimpleXMLElement $xml, ?string $room_id, ?string $board_id): ?array
 {
