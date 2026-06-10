@@ -772,8 +772,9 @@ function doCollectAndRecalculate(roomNum) {
 
 // A74e: Inline price recalculation to avoid external JS loading issues
 // A74y: Updated to handle per-room recalculation for multi-room bookings
-function triggerPriceRecalculationInline(childrenAges, roomNum) {
+function triggerPriceRecalculationInline(childrenAges, roomNum, isInitialLoad) {
     roomNum = roomNum || 1;
+    isInitialLoad = isInitialLoad || false;
     novotonLog('triggerPriceRecalculationInline called for room ' + roomNum, childrenAges);
     
     if (!window.bookingData) {
@@ -900,8 +901,8 @@ function triggerPriceRecalculationInline(childrenAges, roomNum) {
                 var priceDiff = totalPrice - window.bookingData.currentPrice;
                 window.bookingData.currentPrice = totalPrice;
 
-                // Show price change notification
-                if (Math.abs(priceDiff) > 0.01) {
+                // Show price change notification (skip on initial load — wording is child-age specific)
+                if (!isInitialLoad && Math.abs(priceDiff) > 0.01) {
                     showPriceNotification(priceDiff * coeff);
                 }
             } else {
@@ -918,8 +919,8 @@ function triggerPriceRecalculationInline(childrenAges, roomNum) {
                     novotonLog('Updated hidden total_price to: ' + newPrice.toFixed(2));
                 }
 
-                // Show price change notification (converted to display currency)
-                if (data.price_difference && data.price_difference !== 0) {
+                // Show price change notification (skip on initial load — wording is child-age specific)
+                if (!isInitialLoad && data.price_difference && data.price_difference !== 0) {
                     showPriceNotification(data.price_difference * coeff);
                 }
 
@@ -1217,4 +1218,30 @@ function acceptRoomChangeInline() {
     
     setTimeout(function() { if (notif.parentNode) notif.remove(); }, 10000);
 }
+
+// Verify price on initial booking-form load using the actual room/board IDs.
+// The search page uses blank room_id/board_id (one API call for all rooms); the Novoton
+// API can return a different price for that query than for a room-specific query.
+// Calling ajax_recalculate_price here populates the cache with the binding price and
+// updates the hidden total_price field so add_to_cart sees no change.
+document.addEventListener('DOMContentLoaded', function() {
+    if (typeof triggerPriceRecalculationInline !== 'function') return;
+    if (!window.bookingData || !window.bookingData.hotelId) return;
+
+    var isMultiRoom = window.bookingData.numRooms > 1 &&
+                      window.bookingData.roomsData &&
+                      window.bookingData.roomsData.length > 1;
+
+    if (isMultiRoom) {
+        for (var r = 1; r <= window.bookingData.numRooms; r++) {
+            (function(roomNum) {
+                setTimeout(function() {
+                    triggerPriceRecalculationInline([], roomNum, true);
+                }, (roomNum - 1) * 400);
+            })(r);
+        }
+    } else {
+        triggerPriceRecalculationInline([], 1, true);
+    }
+});
 </script>
