@@ -20,8 +20,10 @@ if (!defined('BOOTSTRAP')) {
     exit('Access denied');
 }
 
+use Tygh\Addons\SphinxHolidays\Helpers\OfferAvailability;
 use Tygh\Addons\SphinxHolidays\Helpers\SearchOfferNormalizer;
 use Tygh\Addons\SphinxHolidays\Services\CacheService;
+use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
 use Tygh\Addons\SphinxHolidays\Services\Container;
 use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
@@ -89,6 +91,22 @@ try {
         ]);
     }
 
+    // Show only offers with immediate availability (confirmation=immediate).
+    // Filter the raw offers before flatten/commission/slim/cache so downstream
+    // consumers (and the cached set) contain only immediately-bookable offers.
+    if (ConfigProvider::shouldRequireImmediateAvailability() && !empty($results)) {
+        $beforeCount = count($results);
+        $results = OfferAvailability::filterImmediate($results);
+        if ($beforeCount !== count($results) && ConfigProvider::isDebugLogging()) {
+            fn_log_event('general', 'runtime', [
+                'message' => 'Sphinx search_poll filtered non-immediate offers',
+                'search_id' => $searchId,
+                'kept' => count($results),
+                'dropped' => $beforeCount - count($results),
+            ]);
+        }
+    }
+
     // The Sphinx search results endpoint returns a nested offer shape
     // (pricing.selling_price, meal_type_name, rooms[], destination_name).
     // Flatten each offer to the keys the commission step, slimming list and
@@ -122,7 +140,7 @@ try {
         'offer_id', 'hotel_id', 'product_id',
         'hotel_name', 'hotel_image', 'star_rating', 'destination',
         'room_name', 'room_type', 'board_name', 'board_type',
-        'price', 'original_price', 'currency',
+        'price', 'original_price', 'currency', 'confirmation',
     ];
     $slimResults = [];
     foreach ($results as $result) {

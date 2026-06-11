@@ -52,6 +52,14 @@ return [
         'en' => 'Do not create CS-Cart products for hotels that have an empty description from the API.',
         'ro' => 'Nu crea produse CS-Cart pentru hoteluri care nu au descriere din API.',
     ],
+    'sphinx_holidays.require_immediate_availability' => [
+        'en' => 'Require immediate availability (sync gate + storefront offers)',
+        'ro' => 'Necesită disponibilitate imediată (filtru sync + oferte storefront)',
+    ],
+    'sphinx_holidays.require_immediate_availability.tooltip' => [
+        'en' => 'When enabled, the hotels cron only adds hotels that have at least one offer with confirmation=immediate, and the storefront search shows only immediate-confirmation offers. The hotels cron accepts a per-run override: &availability_gate=0 to skip the gate, &availability_gate=1 to force it.',
+        'ro' => 'Când este activ, cronul de hoteluri adaugă doar hotelurile care au cel puțin o ofertă cu confirmation=immediate, iar căutarea din storefront afișează doar ofertele cu confirmare imediată. Cronul de hoteluri acceptă o suprascriere per rulare: &availability_gate=0 pentru a omite filtrul, &availability_gate=1 pentru a-l forța.',
+    ],
     // General Settings section headers & fields
     'sphinx_holidays.api_header' => ['en' => 'Sphinx API Settings', 'ro' => 'Setări API Sphinx'],
     'sphinx_holidays.api_base_url' => ['en' => 'API Base URL', 'ro' => 'URL bază API'],
