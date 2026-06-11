@@ -317,9 +317,10 @@ class DiagnoseSearchCommand extends AbstractSyncCommand
         }
 
         // ── 7. Search strategy comparison ──────────────────────────────
-        // The storefront PDP search sends hotel_ids only (section 4 above).
-        // The Sphinx API appears to require a destination_id to run a live
-        // availability search, so compare the three strategies side by side.
+        // Section 4 above probes hotel_ids only. Verified against the live API:
+        // any request carrying hotel_ids returns zero offers, so the storefront
+        // PDP search uses strategy (b) below (destination_id only) and narrows
+        // the results to the hotel. The three strategies are compared here.
         $this->output('');
         $this->output('--- 7. Search strategy comparison ---');
 
@@ -343,10 +344,10 @@ class DiagnoseSearchCommand extends AbstractSyncCommand
             $countC = $this->runVariant($api, 'c: destination_id + hotel_ids', $baseParams + ['destination_id' => $destinationId, 'hotel_ids' => [$hotelId]], $hotelId);
 
             $this->output('');
-            $this->output('  => Per the Sphinx spec, hotel_ids has priority and restricts the search to');
-            $this->output('     those hotels — so the storefront PDP search (search.php) queries by');
-            $this->output('     hotel_ids only (strategy a). (b)/(c) are shown only to cross-check the');
-            $this->output('     hotel against its whole destination.');
+            $this->output('  => Only (b) destination_id-only returns offers; any request carrying');
+            $this->output('     hotel_ids (a and c) suppresses the live search and returns zero. So the');
+            $this->output('     storefront PDP search (search.php) queries by destination_id only and');
+            $this->output('     narrows the results to this hotel client-side.');
 
             // ── Cached hotels for the destination (the "get hotels from a
             // destination" path). POST /api/v1/cache/hotels returns
