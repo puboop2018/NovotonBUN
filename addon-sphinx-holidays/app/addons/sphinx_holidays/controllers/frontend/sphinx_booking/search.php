@@ -130,21 +130,34 @@ try {
     ];
 
     // ── Search strategy ───────────────────────────────────────────────────
-    // Product-page search (hotel_id present): query the API by hotel_ids
-    // directly. cron_mode=diagnose_search confirms a hotel_ids-only query
-    // returns this hotel's offers (section 4 of the diagnostic) and is the
-    // strategy that returns the MOST offers.
+    // Product-page search (hotel_id present): the live availability search only
+    // runs when a destination_id is supplied — querying by hotel_ids alone
+    // returns zero offers (confirmed against the live API; see
+    // cron_mode=diagnose_search section 7). Send the hotel's destination_id so
+    // the search runs, plus hotel_ids as an INTEGER so the API restricts the
+    // result stream to just this hotel (hotel_ids has priority over
+    // destination_id per the API spec). Both values are already on $hotelRow
+    // (getById() does SELECT *).
     //
-    // The previous approach resolved the hotel's destination_id, stripped
-    // hotel_ids, pulled the ENTIRE destination (hundreds of offers across many
-    // paginated polls) and filtered back to the one hotel client-side. That was
-    // slow and could exhaust the JS poll budget (maxPolls) before this hotel's
-    // page arrived — showing zero results on the storefront even though the
-    // offers existed and diagnose_search reported them.
+    // Because hotel_ids narrows the stream server-side the result set stays
+    // small, so the JS poller reaches cursor:null well within its budget — the
+    // earlier truncation only happened when pulling an ENTIRE destination with
+    // hotel_ids stripped.
     //
     // Destination browse (no hotel_id): query by destination_id.
     if (!empty($hotel_id)) {
-        $searchParams['hotel_ids'] = [$hotel_id];
+        $hotelDestinationId = $hotelRow !== null
+            ? TypeCoerce::toInt($hotelRow['destination_id'] ?? 0)
+            : 0;
+        if ($hotelDestinationId <= 0) {
+            $hotelDestinationId = $destination_id; // fall back to the request param
+        }
+        if ($hotelDestinationId > 0) {
+            $searchParams['destination_id'] = $hotelDestinationId;
+        }
+        $searchParams['hotel_ids'] = [
+            $hotelRow !== null ? TypeCoerce::toInt($hotelRow['hotel_id'] ?? 0) : (int) $hotel_id,
+        ];
     } elseif ($destination_id > 0) {
         $searchParams['destination_id'] = $destination_id;
     }
@@ -155,8 +168,9 @@ try {
     }
 
     // The API query matches $searchParams exactly. The client-side hotel_id
-    // narrowing (initial results below + search_poll) is kept as a harmless
-    // safety net should a destination-scoped result set ever come back.
+    // narrowing (initial results below + search_poll's filter_hotel_id step) is
+    // a deliberate guard: if the API ever streams the whole destination despite
+    // hotel_ids, other hotels' offers are dropped before display and caching.
     $apiSearchParams = $searchParams;
 
     // Check cache — if hit, render results inline (no polling needed)
