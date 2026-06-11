@@ -135,23 +135,28 @@ try {
         $slimResults[] = $slim;
     }
 
-    // On completion, persist the full result set to cache for future searches
-    if (($status === 'completed' || $finalize) && !empty($slimResults)) {
-        if (!empty($searchMeta['cache_key']) && !empty($searchMeta['cache_ttl'])) {
-            // Accumulate results across multiple poll batches via session
-            $cachedBatch = TypeCoerce::toRowList(Tygh::$app['session']['sphinx_results_' . $searchId] ?? null);
-            $cachedBatch = array_merge($cachedBatch, $slimResults);
-            CacheService::set(TypeCoerce::toString($searchMeta['cache_key']), [
-                'results' => $cachedBatch,
-                'search_id' => $searchId,
-            ], TypeCoerce::toInt($searchMeta['cache_ttl']));
-            unset(Tygh::$app['session']['sphinx_results_' . $searchId]);
-            unset(Tygh::$app['session']['sphinx_search_' . $searchId]);
-        }
-    } elseif (!empty($slimResults)) {
-        // Accumulate intermediate results in session for final caching
-        $existing = TypeCoerce::toRowList(Tygh::$app['session']['sphinx_results_' . $searchId] ?? null);
-        Tygh::$app['session']['sphinx_results_' . $searchId] = array_merge($existing, $slimResults);
+    // Cache the hotel's offers as soon as we have any. The JS early-stops on the
+    // first poll that returns this hotel's offers, and the API never reports
+    // status='completed', so we must cache on the poll that produces them rather
+    // than wait for a terminal status. $slimResults is already narrowed to this
+    // hotel, so the cache holds exactly what is displayed. Never cache an empty
+    // set, so a hotel with no availability is not cached as "no offers".
+    $accumulated = TypeCoerce::toRowList(Tygh::$app['session']['sphinx_results_' . $searchId] ?? null);
+    $accumulated = array_merge($accumulated, $slimResults);
+    $endOfStream = $nextCursor === null || $nextCursor === '';
+
+    if (!empty($accumulated) && !empty($searchMeta['cache_key']) && !empty($searchMeta['cache_ttl'])) {
+        CacheService::set(TypeCoerce::toString($searchMeta['cache_key']), [
+            'results' => $accumulated,
+            'search_id' => $searchId,
+        ], TypeCoerce::toInt($searchMeta['cache_ttl']));
+    }
+
+    if ($endOfStream || $finalize) {
+        unset(Tygh::$app['session']['sphinx_results_' . $searchId]);
+        unset(Tygh::$app['session']['sphinx_search_' . $searchId]);
+    } else {
+        Tygh::$app['session']['sphinx_results_' . $searchId] = $accumulated;
     }
 
     echo json_encode([

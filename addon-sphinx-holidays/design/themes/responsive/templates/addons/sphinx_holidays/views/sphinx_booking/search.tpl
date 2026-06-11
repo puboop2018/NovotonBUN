@@ -36,7 +36,13 @@
     <div class="sphinx-loading-skeleton" style="display: none;">
         <div class="sphinx-loading-message">
             <div class="sphinx-spinner"></div>
-            <span>{__("sphinx_holidays.searching_please_wait")|default:"Searching for hotels... This may take up to a minute."}</span>
+            <span>{__("sphinx_holidays.searching_please_wait")|default:"Searching for live offers…"}</span>
+            {if $sphinx_from_price}
+                <div class="sphinx-from-price" style="margin-top: 8px; font-size: 15px; color: #003580;">
+                    {__("sphinx_holidays.from")|default:"from"}
+                    <strong>{$sphinx_from_price.price|number_format:2:",":"."} {$sphinx_from_price.currency|default:'EUR'|escape:html}</strong>
+                </div>
+            {/if}
         </div>
         {foreach from=[1,2,3] item=i}
             <div class="sphinx-offer-card sphinx-skeleton-card">
@@ -147,6 +153,10 @@ window.__sphinxSearchParams = {
     children_ages: "{$sphinx_search_params.children_ages|default:''|escape:javascript}",
     rooms: {$sphinx_search_params.rooms|default:1}
 };
+window.__sphinxConfig = {
+    maxPolls: {$sphinx_max_polls|default:30},
+    pollInterval: 250
+};
 {literal}
 (function() {
     var root = document.querySelector('.sphinx-search-results');
@@ -168,9 +178,9 @@ window.__sphinxSearchParams = {
     var accumulated = 0;
     var cursor = null;
     var pollCount = 0;
-    var maxPolls = 30;
-    var pollInterval = 2000;
-    var maxResults = 50;
+    var cfg = window.__sphinxConfig || {};
+    var maxPolls = cfg.maxPolls || 30;
+    var pollInterval = cfg.pollInterval || 250;
     var pollUrl = window.TravelBookingConfig && window.TravelBookingConfig.searchPollDispatch
         ? window.TravelBookingConfig.searchPollDispatch
         : (document.body.getAttribute('data-fn-search-poll-url') || '');
@@ -239,7 +249,6 @@ window.__sphinxSearchParams = {
     function appendResults(results) {
         if (!results || !results.length) return;
         for (var i = 0; i < results.length; i++) {
-            if (accumulated >= maxResults) break;
             container.appendChild(renderCard(results[i]));
             accumulated++;
         }
@@ -257,7 +266,7 @@ window.__sphinxSearchParams = {
     }
 
     function poll() {
-        if (pollCount >= maxPolls || accumulated >= maxResults) {
+        if (pollCount >= maxPolls) {
             finish();
             return;
         }
@@ -275,14 +284,20 @@ window.__sphinxSearchParams = {
                     return;
                 }
                 appendResults(data.results || []);
-                cursor = data.next_cursor || null;
 
-                // The Sphinx API reports status=completed from the very first
-                // poll even while offers are still being aggregated server-side
-                // (they can first appear several polls later). Treat the cursor
-                // — not the status — as the continuation signal: keep polling
-                // while a cursor remains, stopping only when it is exhausted.
-                // maxPolls / maxResults (above) bound the loop as a safety net.
+                // Early-stop: search_poll returns only THIS hotel's offers, so
+                // once we have any we have the hotel's page — stop instead of
+                // polling out the rest of the destination (the hotel's offers
+                // arrive together in one bulk page in practice).
+                if (accumulated > 0) {
+                    finish();
+                    return;
+                }
+
+                // No offers yet — the API returns empty pages while suppliers
+                // respond. Keep polling while a cursor remains (the continuation
+                // signal); maxPolls bounds the loop as a safety net.
+                cursor = data.next_cursor || null;
                 if (!cursor) {
                     finish();
                     return;

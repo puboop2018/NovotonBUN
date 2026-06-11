@@ -35,7 +35,7 @@ class ConfigProvider implements ConfigProviderInterface
 
     public static function getCacheTtlSearch(): int
     {
-        return max(0, (int) self::getSetting('cache_ttl_search', 300));
+        return max(0, (int) self::getSetting('cache_ttl_search', 900));
     }
 
     public static function getDefaultCurrency(): string
