@@ -155,6 +155,11 @@
                         <default_value>Y</default_value>
                         <variants/>
                     </item>
+                    <item id="require_immediate_availability">
+                        <type>checkbox</type>
+                        <default_value>Y</default_value>
+                        <variants/>
+                    </item>
                     <item id="default_product_quantity">
                         <type>input</type>
                         <default_value>777</default_value>
@@ -665,6 +670,10 @@
         <item lang="ro" id="sphinx_holidays.product_code_prefix.tooltip"><![CDATA[Prefix pentru codurile de produs CS-Cart create din hoteluri Sphinx (ex. SPX). ID-ul hotelului se adaugă pentru codul complet (ex. SPX12345).]]></item>
         <item lang="en" id="sphinx_holidays.skip_no_description"><![CDATA[Skip hotels without description (do not create products for hotels with empty description)]]></item>
         <item lang="ro" id="sphinx_holidays.skip_no_description"><![CDATA[Omite hoteluri fără descriere (nu crea produse pentru hoteluri fără descriere)]]></item>
+        <item lang="en" id="sphinx_holidays.require_immediate_availability"><![CDATA[Require immediate availability (sync gate + storefront offers)]]></item>
+        <item lang="ro" id="sphinx_holidays.require_immediate_availability"><![CDATA[Necesită disponibilitate imediată (filtru sync + oferte storefront)]]></item>
+        <item lang="en" id="sphinx_holidays.require_immediate_availability.tooltip"><![CDATA[When enabled, the hotels cron only adds hotels that have at least one offer with confirmation=immediate, and the storefront search shows only immediate-confirmation offers. The hotels cron accepts a per-run override: &availability_gate=0 to skip the gate, &availability_gate=1 to force it.]]></item>
+        <item lang="ro" id="sphinx_holidays.require_immediate_availability.tooltip"><![CDATA[Când este activ, cronul de hoteluri adaugă doar hotelurile care au cel puțin o ofertă cu confirmation=immediate, iar căutarea din storefront afișează doar ofertele cu confirmare imediată. Cronul de hoteluri acceptă o suprascriere per rulare: &availability_gate=0 pentru a omite filtrul, &availability_gate=1 pentru a-l forța.]]></item>
         <item lang="en" id="sphinx_holidays.default_product_quantity"><![CDATA[Default product quantity]]></item>
         <item lang="ro" id="sphinx_holidays.default_product_quantity"><![CDATA[Cantitate implicită produs]]></item>
         <item lang="en" id="sphinx_holidays.default_product_quantity.tooltip"><![CDATA[Inventory quantity assigned to hotel products on creation. Set high to prevent 'zero inventory' errors.]]></item>

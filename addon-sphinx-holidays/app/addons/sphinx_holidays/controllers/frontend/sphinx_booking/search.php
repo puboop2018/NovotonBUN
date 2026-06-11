@@ -20,6 +20,7 @@ if (!defined('BOOTSTRAP')) {
     exit('Access denied');
 }
 
+use Tygh\Addons\SphinxHolidays\Helpers\OfferAvailability;
 use Tygh\Addons\SphinxHolidays\Helpers\SearchOfferNormalizer;
 use Tygh\Addons\SphinxHolidays\Services\CacheService;
 use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
@@ -214,6 +215,13 @@ try {
             $initialResults,
             static fn (array $r): bool => TypeCoerce::toString($r['hotel_id'] ?? $r['id'] ?? '') === $hotel_id,
         ));
+    }
+
+    // Show only offers with immediate availability (confirmation=immediate).
+    // Filter raw offers here, before flatten/commission/cache, so the field is
+    // still present and cached entries store the filtered set.
+    if (ConfigProvider::shouldRequireImmediateAvailability() && !empty($initialResults)) {
+        $initialResults = OfferAvailability::filterImmediate($initialResults);
     }
 
     // If the API returns final results synchronously, render inline and skip polling.

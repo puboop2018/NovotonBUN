@@ -7,6 +7,7 @@ namespace Tygh\Addons\SphinxHolidays\Cron\Commands;
 use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
 use Tygh\Addons\SphinxHolidays\Services\Container;
 use Tygh\Addons\SphinxHolidays\Services\HotelSyncService;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 /**
  * Cron command: sync hotels from Sphinx API.
@@ -20,6 +21,8 @@ use Tygh\Addons\SphinxHolidays\Services\HotelSyncService;
  *   php cron.php access_key=KEY mode=hotels country=GR,BG
  *   php cron.php access_key=KEY mode=hotels destination_ids=1234,5678
  *   php cron.php access_key=KEY mode=hotels full=1
+ *   php cron.php access_key=KEY mode=hotels availability_gate=0   (skip the gate this run)
+ *   php cron.php access_key=KEY mode=hotels availability_gate=1   (force the gate this run)
  */
 class HotelSyncCommand extends AbstractSyncCommand
 {
@@ -65,7 +68,14 @@ class HotelSyncCommand extends AbstractSyncCommand
         }
 
         $fullSync = !empty($params['full']);
-        $stats = $service->sync($countryCodes, $destinationIds, $fullSync);
+
+        // Per-run availability-gate override: availability_gate=0|1. Absent → use
+        // the addon setting (require_immediate_availability).
+        $gateOverride = isset($params['availability_gate'])
+            ? TypeCoerce::toBool($params['availability_gate'])
+            : null;
+
+        $stats = $service->sync($countryCodes, $destinationIds, $fullSync, $gateOverride);
 
         $this->outputRateLimitSummary($stats);
 

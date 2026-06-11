@@ -101,6 +101,15 @@ class SearchOfferNormalizerTest extends TestCase
         $this->assertSame('Aliased Hotel', $flat['hotel_name']);
     }
 
+    public function testFlattenPreservesConfirmationField(): void
+    {
+        // The availability filter relies on confirmation surviving flatten().
+        $offer = $this->nestedOffer();
+        $offer['confirmation'] = 'immediate';
+
+        $this->assertSame('immediate', SearchOfferNormalizer::flatten($offer)['confirmation']);
+    }
+
     public function testFlattenAllProcessesEveryOffer(): void
     {
         $result = SearchOfferNormalizer::flattenAll([
