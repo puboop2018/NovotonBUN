@@ -130,19 +130,15 @@ try {
     ];
 
     // ── Search strategy ───────────────────────────────────────────────────
-    // Product-page search (hotel_id present): the live availability search only
-    // runs when a destination_id is supplied — querying by hotel_ids alone
-    // returns zero offers (confirmed against the live API; see
-    // cron_mode=diagnose_search section 7). Send the hotel's destination_id so
-    // the search runs, plus hotel_ids as an INTEGER so the API restricts the
-    // result stream to just this hotel (hotel_ids has priority over
-    // destination_id per the API spec). Both values are already on $hotelRow
-    // (getById() does SELECT *).
+    // Product-page search (hotel_id present): query the API by the hotel's
+    // destination_id, then narrow the results back to this hotel (initial
+    // results below + search_poll's filter_hotel_id step).
     //
-    // Because hotel_ids narrows the stream server-side the result set stays
-    // small, so the JS poller reaches cursor:null well within its budget — the
-    // earlier truncation only happened when pulling an ENTIRE destination with
-    // hotel_ids stripped.
+    // Sending hotel_ids does NOT work: verified against the live API, any
+    // request carrying hotel_ids returns zero offers — even as an integer and
+    // even alongside destination_id. Only a destination_id-only query runs the
+    // live availability search. destination_id is always known for a synced
+    // hotel (the hotels cron stores it on $hotelRow; getById() does SELECT *).
     //
     // Destination browse (no hotel_id): query by destination_id.
     if (!empty($hotel_id)) {
@@ -155,9 +151,6 @@ try {
         if ($hotelDestinationId > 0) {
             $searchParams['destination_id'] = $hotelDestinationId;
         }
-        $searchParams['hotel_ids'] = [
-            $hotelRow !== null ? TypeCoerce::toInt($hotelRow['hotel_id'] ?? 0) : (int) $hotel_id,
-        ];
     } elseif ($destination_id > 0) {
         $searchParams['destination_id'] = $destination_id;
     }
@@ -167,18 +160,27 @@ try {
         $searchParams['ignore_domains'] = $ignoreDomains;
     }
 
-    // The API query matches $searchParams exactly. The client-side hotel_id
-    // narrowing (initial results below + search_poll's filter_hotel_id step) is
-    // a deliberate guard: if the API ever streams the whole destination despite
-    // hotel_ids, other hotels' offers are dropped before display and caching.
+    // The API query matches $searchParams exactly. Because a product-page search
+    // queries the whole destination, the client-side hotel_id narrowing (initial
+    // results below + search_poll's filter_hotel_id step) is what reduces the
+    // stream back to this hotel before display and caching.
     $apiSearchParams = $searchParams;
+
+    // Cache key must be hotel-specific. The API params are destination-scoped and
+    // identical for every hotel in the destination, but the cached results are
+    // narrowed to one hotel, so two hotels in the same destination must not share
+    // a cache entry. hotel_id goes into the KEY only — never into the API query.
+    $cacheParams = $searchParams;
+    if ($hotel_id !== '') {
+        $cacheParams['filter_hotel_id'] = $hotel_id;
+    }
 
     // Check cache — if hit, render results inline (no polling needed)
     $cacheEnabled = ConfigProvider::isApiCacheEnabled();
     $cacheTtl = ConfigProvider::getCacheTtlSearch();
 
     if ($cacheEnabled && $cacheTtl > 0) {
-        $cacheKey = CacheService::buildSearchKey($searchParams);
+        $cacheKey = CacheService::buildSearchKey($cacheParams);
         $cached = CacheService::get($cacheKey);
         if ($cached !== null) {
             $cachedMap = TypeCoerce::toStringMap($cached);
@@ -245,7 +247,7 @@ try {
         unset($result);
 
         if ($cacheEnabled && $cacheTtl > 0) {
-            CacheService::set(CacheService::buildSearchKey($searchParams), [
+            CacheService::set(CacheService::buildSearchKey($cacheParams), [
                 'results' => $initialResults,
                 'search_id' => $searchIdStr,
             ], $cacheTtl);
@@ -272,7 +274,7 @@ try {
     $session = &Tygh::$app['session'];
     $session['sphinx_search_' . $searchIdStr] = [
         'params' => $searchParams,
-        'cache_key' => $cacheEnabled && $cacheTtl > 0 ? CacheService::buildSearchKey($searchParams) : '',
+        'cache_key' => $cacheEnabled && $cacheTtl > 0 ? CacheService::buildSearchKey($cacheParams) : '',
         'cache_ttl' => $cacheTtl,
         'filter_hotel_id' => $hotel_id,
     ];

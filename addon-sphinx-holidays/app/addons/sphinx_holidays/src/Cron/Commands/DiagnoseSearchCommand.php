@@ -212,7 +212,7 @@ class DiagnoseSearchCommand extends AbstractSyncCommand
             'check_out' => $checkOut,
             'occupancy' => $occupancy,
             'currency' => $currency,
-            'hotel_ids' => [(int) $hotelId],
+            'hotel_ids' => [$hotelId],
         ];
 
         $ignoreDomains = ConfigProvider::getIgnoreDomains();
@@ -317,10 +317,10 @@ class DiagnoseSearchCommand extends AbstractSyncCommand
         }
 
         // ── 7. Search strategy comparison ──────────────────────────────
-        // Section 4 above probes hotel_ids only. The Sphinx API requires a
-        // destination_id to run a live availability search, so the storefront
-        // PDP search uses strategy (c) below (destination_id + integer
-        // hotel_ids); the three strategies are compared side by side.
+        // Section 4 above probes hotel_ids only. Verified against the live API:
+        // any request carrying hotel_ids returns zero offers, so the storefront
+        // PDP search uses strategy (b) below (destination_id only) and narrows
+        // the results to the hotel. The three strategies are compared here.
         $this->output('');
         $this->output('--- 7. Search strategy comparison ---');
 
@@ -341,13 +341,13 @@ class DiagnoseSearchCommand extends AbstractSyncCommand
 
             $this->output("  (a) hotel_ids only → see sections 4-6 above (total {$count}).");
             $countB = $this->runVariant($api, 'b: destination_id only', $baseParams + ['destination_id' => $destinationId], $hotelId);
-            $countC = $this->runVariant($api, 'c: destination_id + hotel_ids', $baseParams + ['destination_id' => $destinationId, 'hotel_ids' => [(int) $hotelId]], $hotelId);
+            $countC = $this->runVariant($api, 'c: destination_id + hotel_ids', $baseParams + ['destination_id' => $destinationId, 'hotel_ids' => [$hotelId]], $hotelId);
 
             $this->output('');
-            $this->output('  => The live search needs a destination_id to run; hotel_ids has priority and');
-            $this->output('     restricts the stream to those hotels. So the storefront PDP search');
-            $this->output('     (search.php) queries by destination_id + integer hotel_ids (strategy c).');
-            $this->output('     (a)/(b) are shown only to cross-check this hotel against its destination.');
+            $this->output('  => Only (b) destination_id-only returns offers; any request carrying');
+            $this->output('     hotel_ids (a and c) suppresses the live search and returns zero. So the');
+            $this->output('     storefront PDP search (search.php) queries by destination_id only and');
+            $this->output('     narrows the results to this hotel client-side.');
 
             // ── Cached hotels for the destination (the "get hotels from a
             // destination" path). POST /api/v1/cache/hotels returns
