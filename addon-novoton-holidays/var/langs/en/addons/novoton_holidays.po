@@ -324,6 +324,14 @@ msgctxt "SettingsTooltips::novoton_holidays::cron_access_key"
 msgid "Secret key for authenticating automated cron jobs (not related to Novoton API). Use in cron URLs: index.php?dispatch=novoton_cron.run&api_key=YOUR_KEY"
 msgstr "Secret key for authenticating automated cron jobs (not related to Novoton API). Use in cron URLs: index.php?dispatch=novoton_cron.run&api_key=YOUR_KEY"
 
+msgctxt "SettingsOptions::novoton_holidays::send_cron_report_email"
+msgid "Send cron report email notifications"
+msgstr "Send cron report email notifications"
+
+msgctxt "SettingsTooltips::novoton_holidays::send_cron_report_email"
+msgid "When enabled, a summary report email is sent to the administrator after cron jobs run (sync, price check, import, etc.). Disable to stop these notifications."
+msgstr "When enabled, a summary report email is sent to the administrator after cron jobs run (sync, price check, import, etc.). Disable to stop these notifications."
+
 msgctxt "SettingsOptions::novoton_holidays::show_booking_form"
 msgid "Show Booking Form on Product Pages"
 msgstr "Show Booking Form on Product Pages"

@@ -181,6 +181,21 @@ class ConfigProvider implements ConfigProviderInterface
     }
 
     /**
+     * Whether immediate availability is required.
+     * Default: Y (enabled).
+     *
+     * When enabled, the hotels cron only adds hotels that have at least one
+     * search offer with confirmation=immediate, and the storefront search shows
+     * only immediate-confirmation offers. The hotels cron honours a per-run
+     * override (&availability_gate=0|1); this is the persistent default for both
+     * the sync gate and the storefront filter.
+     */
+    public static function shouldRequireImmediateAvailability(): bool
+    {
+        return self::getSetting('require_immediate_availability', 'Y') === 'Y';
+    }
+
+    /**
      * Get the configured languages for hotel product descriptions.
      *
      * CS-Cart stores "multiple checkboxes" values as comma-separated string.

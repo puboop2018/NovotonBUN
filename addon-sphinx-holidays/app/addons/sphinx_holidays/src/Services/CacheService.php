@@ -83,8 +83,11 @@ class CacheService implements CacheServiceInterface
      */
     public static function buildSearchKey(array $params): string
     {
-        // Sort for deterministic key regardless of param order
+        // Sort for deterministic key regardless of param order.
         ksort($params);
-        return 'search:' . md5((string) json_encode($params));
+        // Key version (v2): bumped when the cached result shape changed —
+        // results are now filtered to immediate-confirmation offers, so pre-v2
+        // entries (unfiltered, missing the confirmation field) must not be reused.
+        return 'search:v2:' . md5((string) json_encode($params));
     }
 }
