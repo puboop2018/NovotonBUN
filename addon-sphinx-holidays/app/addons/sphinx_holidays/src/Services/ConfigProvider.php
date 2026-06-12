@@ -6,17 +6,25 @@ namespace Tygh\Addons\SphinxHolidays\Services;
 
 use Tygh\Addons\SphinxHolidays\Contracts\ConfigProviderInterface;
 use Tygh\Addons\SphinxHolidays\Repository\DestinationWhitelistRepository;
+use Tygh\Addons\TravelCore\Services\AbstractConfigProvider;
 use Tygh\Registry;
 
 /**
  * Sphinx Holidays configuration provider.
  *
  * Centralizes access to all addon settings with type-safe getters
- * and sensible defaults.
+ * and sensible defaults. Registry plumbing (cached settings array,
+ * getSetting) comes from the shared travel_core base.
  */
-class ConfigProvider implements ConfigProviderInterface
+class ConfigProvider extends AbstractConfigProvider implements ConfigProviderInterface
 {
     private const string ADDON_ID = 'sphinx_holidays';
+
+    #[\Override]
+    protected static function addonId(): string
+    {
+        return self::ADDON_ID;
+    }
 
     public static function getApiBaseUrl(): string
     {
@@ -360,11 +368,5 @@ class ConfigProvider implements ConfigProviderInterface
                 }
             }
         }
-    }
-
-    private static function getSetting(string $key, mixed $default = ''): mixed
-    {
-        $value = Registry::get('addons.' . self::ADDON_ID . '.' . $key);
-        return $value !== null ? $value : $default;
     }
 }
