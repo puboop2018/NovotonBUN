@@ -97,6 +97,8 @@ try {
     $view->assign('sphinx_search_results', []);
     $view->assign('sphinx_search_id', '');
     $view->assign('sphinx_search_status', 'idle');
+    $view->assign('sphinx_from_price', null);
+    $view->assign('sphinx_max_polls', ConfigProvider::getSearchMaxPolls());
 
     if (empty($check_in)) {
         fn_set_notification(
@@ -189,6 +191,27 @@ try {
             $view->assign('sphinx_search_id', TypeCoerce::toString($cachedMap['search_id'] ?? ''));
             $view->assign('sphinx_search_status', 'completed');
             return;
+        }
+    }
+
+    // Instant "from" price: cache/hotels returns a cached minimum synchronously
+    // (~1s, no cursor polling), shown in the loading state while the live offers
+    // stream in. It is a general cached minimum (not the date-specific price), so
+    // the template labels it "from". Only fetched on a cache miss (async path).
+    if ($hotel_id !== '') {
+        $cacheResp = $api->cacheHotels(['hotel_ids' => [(int) $hotel_id]]);
+        if (is_array($cacheResp)) {
+            $meta = TypeCoerce::toStringMap($cacheResp['meta'] ?? []);
+            $stats = TypeCoerce::toStringMap($meta['stats'] ?? []);
+            $minPrice = TypeCoerce::toStringMap($stats['min_price'] ?? []);
+            $rawFrom = TypeCoerce::toFloat($minPrice['price'] ?? 0);
+            if ($rawFrom > 0) {
+                $view->assign('sphinx_from_price', [
+                    'price' => Container::getCartService()->applyCommission($rawFrom),
+                    'currency' => TypeCoerce::toString($minPrice['currency'] ?? ''),
+                    'nights' => TypeCoerce::toInt($minPrice['nights'] ?? 0),
+                ]);
+            }
         }
     }
 

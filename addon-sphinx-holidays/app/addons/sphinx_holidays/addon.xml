@@ -69,7 +69,7 @@
                     </item>
                     <item id="cache_ttl_search">
                         <type>input</type>
-                        <default_value>300</default_value>
+                        <default_value>900</default_value>
                         <variants/>
                     </item>
 
