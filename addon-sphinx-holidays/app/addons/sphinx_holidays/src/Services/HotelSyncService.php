@@ -94,8 +94,8 @@ class HotelSyncService extends AbstractSyncService implements HotelSyncServiceIn
     #[\Override]
     protected function doSync(bool $fullSync, array $stats, array $context): array
     {
-        $countryCodes = is_array($context['country_codes'] ?? null) ? $context['country_codes'] : [];
-        $extraDestinationIds = is_array($context['destination_ids'] ?? null) ? $context['destination_ids'] : [];
+        $countryCodes = TypeCoerce::toStringList($context['country_codes'] ?? null);
+        $extraDestinationIds = TypeCoerce::toIntList($context['destination_ids'] ?? null);
 
         // Availability gate: per-run override (cron &availability_gate=0|1) wins,
         // otherwise fall back to the addon setting (default Y).
@@ -141,8 +141,7 @@ class HotelSyncService extends AbstractSyncService implements HotelSyncServiceIn
         }
 
         // Fetch and sync hotels per country (with per-country incremental timestamps)
-        foreach (array_keys($destinationIds) as $countryCode) {
-            $countryCodeStr = ValidationHelpers::toString($countryCode);
+        foreach ($destinationIds as $countryCodeStr => $destIdsForCountry) {
             $updatedSince = null;
             if (!$fullSync) {
                 $lastSynced = $this->hotelRepo->getLastSyncedAt($countryCodeStr);
@@ -153,8 +152,6 @@ class HotelSyncService extends AbstractSyncService implements HotelSyncServiceIn
             $modeLabel = $updatedSince !== null ? "incremental since {$updatedSince}" : 'full';
             $this->output("  {$countryCodeStr}: sync mode: {$modeLabel}");
 
-            /** @var array<string, mixed> $destIdsForCountry */
-            $destIdsForCountry = is_array($destinationIds[$countryCode] ?? null) ? $destinationIds[$countryCode] : [];
             $countryStats = $this->syncCountry($countryCodeStr, $destIdsForCountry, $updatedSince);
             $stats['total'] = ValidationHelpers::toInt($stats['total'] ?? 0) + ValidationHelpers::toInt($countryStats['total'] ?? 0);
             $stats['synced'] = ValidationHelpers::toInt($stats['synced'] ?? 0) + ValidationHelpers::toInt($countryStats['synced'] ?? 0);
@@ -174,9 +171,9 @@ class HotelSyncService extends AbstractSyncService implements HotelSyncServiceIn
 
         // Set overall sync_mode label based on what actually happened
         $stats['sync_mode'] = $fullSync ? 'full' : 'per-country incremental';
-        $sSynced = ValidationHelpers::toInt($stats['synced'] ?? 0);
-        $sTotal = ValidationHelpers::toInt($stats['total'] ?? 0);
-        $sSkipped = ValidationHelpers::toInt($stats['skipped'] ?? 0);
+        $sSynced = ValidationHelpers::toInt($stats['synced']);
+        $sTotal = ValidationHelpers::toInt($stats['total']);
+        $sSkipped = ValidationHelpers::toInt($stats['skipped']);
         $stats['success'] = ($sSynced > 0 || $sTotal === 0);
         $this->output("Sync complete: {$sSynced}/{$sTotal} hotels synced, {$sSkipped} skipped.");
 
@@ -266,21 +263,21 @@ class HotelSyncService extends AbstractSyncService implements HotelSyncServiceIn
                     if (!is_array($raw)) {
                         continue;
                     }
-                    $normalized = $this->normalizeHotel($raw);
+                    $normalized = $this->normalizeHotel(TypeCoerce::toStringMap($raw));
                     if ($normalized === null) {
-                        $stats['skipped'] = ValidationHelpers::toInt($stats['skipped'] ?? 0) + 1;
+                        $stats['skipped']++;
                         continue;
                     }
 
                     // Safety filter: verify country_code matches
                     $hotelCountry = strtoupper(ValidationHelpers::toString($normalized['country_code'] ?? ''));
                     if ($hotelCountry !== '' && $hotelCountry !== $countryCode) {
-                        $stats['skipped'] = ValidationHelpers::toInt($stats['skipped'] ?? 0) + 1;
+                        $stats['skipped']++;
                         continue;
                     }
 
                     $pageBatch[] = $normalized;
-                    $stats['total'] = ValidationHelpers::toInt($stats['total'] ?? 0) + 1;
+                    $stats['total']++;
                 }
 
                 // Batch-resolve country/region/city from destination hierarchy
@@ -288,10 +285,10 @@ class HotelSyncService extends AbstractSyncService implements HotelSyncServiceIn
 
                 // Upsert in sub-batches
                 foreach (array_chunk($pageBatch, self::UPSERT_BATCH_SIZE) as $upsertChunk) {
-                    $stats['synced'] = ValidationHelpers::toInt($stats['synced'] ?? 0) + $this->hotelRepo->upsertBatch($upsertChunk);
+                    $stats['synced'] += $this->hotelRepo->upsertBatch($upsertChunk);
                 }
 
-                $totalPlusSkipped = ValidationHelpers::toInt($stats['total'] ?? 0) + ValidationHelpers::toInt($stats['skipped'] ?? 0);
+                $totalPlusSkipped = $stats['total'] + $stats['skipped'];
                 if (!$this->hasMorePages($response, $page, self::PER_PAGE, $totalPlusSkipped)) {
                     break;
                 }
@@ -300,7 +297,7 @@ class HotelSyncService extends AbstractSyncService implements HotelSyncServiceIn
             }
         }
 
-        if (ValidationHelpers::toInt($stats['total'] ?? 0) === 0) {
+        if ($stats['total'] === 0) {
             if ($updatedSince !== null) {
                 $this->output("    {$countryCode}: no hotels updated since {$updatedSince}");
             } else {
@@ -531,14 +528,14 @@ class HotelSyncService extends AbstractSyncService implements HotelSyncServiceIn
             // Group the already-resolved whitelist destination IDs by country code.
             // These IDs come from ConfigProvider::getAllowedDestinationIds() which
             // correctly respects selection_type ('all' vs 'specific').
-            $rows = db_get_array(
+            $rows = TypeCoerce::toRowList(db_get_array(
                 'SELECT destination_id, country_code FROM ?:sphinx_destinations WHERE destination_id IN (?n)',
                 $allowedDestIds,
-            );
+            ));
 
             foreach ($rows as $row) {
-                $cc = $row['country_code'] ?: 'CUSTOM';
-                $result[$cc][] = (int) $row['destination_id'];
+                $cc = TypeCoerce::toString($row['country_code'] ?? '') ?: 'CUSTOM';
+                $result[$cc][] = TypeCoerce::toInt($row['destination_id'] ?? 0);
             }
 
             foreach ($result as $cc => $ids) {
@@ -548,12 +545,12 @@ class HotelSyncService extends AbstractSyncService implements HotelSyncServiceIn
             // Fallback: when called with explicit country codes (no whitelist IDs),
             // include all destinations for those countries.
             foreach ($countryCodes as $code) {
-                $ids = db_get_fields(
+                $ids = TypeCoerce::toIntList(db_get_fields(
                     'SELECT destination_id FROM ?:sphinx_destinations WHERE country_code = ?s',
                     $code,
-                );
-                if (!empty($ids)) {
-                    $result[$code] = array_map('intval', $ids);
+                ));
+                if ($ids !== []) {
+                    $result[$code] = $ids;
                 }
             }
         }
@@ -571,12 +568,12 @@ class HotelSyncService extends AbstractSyncService implements HotelSyncServiceIn
      */
     private function normalizeHotel(array $raw): ?array
     {
-        $id = (string) ($raw['id'] ?? '');
+        $id = TypeCoerce::toString($raw['id'] ?? '');
         if ($id === '') {
             return null;
         }
 
-        $name = html_entity_decode((string) ($raw['name'] ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $name = html_entity_decode(TypeCoerce::toString($raw['name'] ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8');
         if ($name === '') {
             return null;
         }
@@ -585,42 +582,43 @@ class HotelSyncService extends AbstractSyncService implements HotelSyncServiceIn
             $raw['type'] ?? 'hotel',
         ) ?? 'hotel';
 
-        $classification = (int) ($raw['classification'] ?? 0);
+        $classification = TypeCoerce::toInt($raw['classification'] ?? 0);
         if ($classification < 0 || $classification > 5) {
             $classification = 0;
         }
 
         // Detect adults-only from hotel name (API doesn't provide a dedicated field)
         // Matches: "Adults Only", "Adult Only", "+18", "+16", "(18+)", "(16+)"
-        $isAdultsOnly = preg_match('/\badults?\s*only\b|\(\s*\+\s*1[68]\s*\)|\(\s*1[68]\s*\+\s*\)/i', $name) ? 'Y' : 'N';
+        $isAdultsOnly = preg_match('/\badults?\s*only\b|\(\s*\+\s*1[68]\s*\)|\(\s*1[68]\s*\+\s*\)/i', $name) === 1 ? 'Y' : 'N';
 
-        $address = $raw['address'] ?? [];
+        $address = TypeCoerce::toStringMap($raw['address'] ?? []);
+        $images = TypeCoerce::toRowList($raw['images'] ?? []);
 
         return [
             'hotel_id' => $id,
             'name' => $name,
             'classification' => $classification,
             'property_type' => $propertyType,
-            'destination_id' => (int) ($raw['destination_id'] ?? 0),
-            'destination_name' => (string) ($raw['destination_name'] ?? ''),
-            'region_id' => (int) ($raw['region_id'] ?? 0),
-            'region_name' => (string) ($raw['region_name'] ?? ''),
-            'country_code' => strtoupper((string) ($raw['country_code'] ?? '')),
-            'country_name' => (string) ($raw['country_name'] ?? ''),
-            'latitude' => (float) ($raw['latitude'] ?? 0),
-            'longitude' => (float) ($raw['longitude'] ?? 0),
-            'description' => html_entity_decode((string) ($raw['description'] ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8'),
-            'short_description' => html_entity_decode((string) ($raw['short_description'] ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8'),
-            'image_url' => (string) ($raw['images'][0]['url'] ?? ''),
-            'images_json' => !empty($raw['images']) ? json_encode($raw['images']) : '[]',
+            'destination_id' => TypeCoerce::toInt($raw['destination_id'] ?? 0),
+            'destination_name' => TypeCoerce::toString($raw['destination_name'] ?? ''),
+            'region_id' => TypeCoerce::toInt($raw['region_id'] ?? 0),
+            'region_name' => TypeCoerce::toString($raw['region_name'] ?? ''),
+            'country_code' => strtoupper(TypeCoerce::toString($raw['country_code'] ?? '')),
+            'country_name' => TypeCoerce::toString($raw['country_name'] ?? ''),
+            'latitude' => TypeCoerce::toFloat($raw['latitude'] ?? 0),
+            'longitude' => TypeCoerce::toFloat($raw['longitude'] ?? 0),
+            'description' => html_entity_decode(TypeCoerce::toString($raw['description'] ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8'),
+            'short_description' => html_entity_decode(TypeCoerce::toString($raw['short_description'] ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8'),
+            'image_url' => TypeCoerce::toString($images[0]['url'] ?? ''),
+            'images_json' => $images !== [] ? json_encode($images) : '[]',
             'facilities_json' => !empty($raw['facilities']) ? json_encode($raw['facilities']) : '[]',
             'is_adults_only' => $isAdultsOnly,
-            'address' => trim((string) ($address['street'] ?? '')),
-            'phone' => trim((string) ($address['phone'] ?? '')),
-            'email' => trim((string) ($address['email'] ?? '')),
-            'website' => trim((string) ($address['website'] ?? '')),
-            'rating' => isset($raw['rating']) ? (float) $raw['rating'] : null,
-            'rating_count' => isset($raw['rating_count']) ? (int) $raw['rating_count'] : null,
+            'address' => trim(TypeCoerce::toString($address['street'] ?? '')),
+            'phone' => trim(TypeCoerce::toString($address['phone'] ?? '')),
+            'email' => trim(TypeCoerce::toString($address['email'] ?? '')),
+            'website' => trim(TypeCoerce::toString($address['website'] ?? '')),
+            'rating' => isset($raw['rating']) ? TypeCoerce::toFloat($raw['rating']) : null,
+            'rating_count' => isset($raw['rating_count']) ? TypeCoerce::toInt($raw['rating_count']) : null,
         ];
     }
 
@@ -639,26 +637,26 @@ class HotelSyncService extends AbstractSyncService implements HotelSyncServiceIn
         $prefix = ConfigProvider::getProductCodePrefix();
         $prefixLen = strlen($prefix);
 
-        $spxProducts = db_get_array(
+        $spxProducts = TypeCoerce::toRowList(db_get_array(
             'SELECT product_id, product_code FROM ?:products WHERE product_code LIKE ?l',
             $prefix . '%',
-        );
+        ));
 
         $stats = ['total' => count($spxProducts), 'linked' => 0, 'skipped' => 0, 'not_found' => 0, 'errors' => 0];
 
-        if (empty($spxProducts)) {
+        if ($spxProducts === []) {
             return $stats;
         }
 
         foreach ($spxProducts as $i => $product) {
-            $hotelId = substr($product['product_code'], $prefixLen);
-            if ($progressCallback) {
+            $hotelId = substr(TypeCoerce::toString($product['product_code'] ?? ''), $prefixLen);
+            if ($progressCallback !== null) {
                 $progressCallback($i + 1, $stats['total'], $hotelId);
             }
 
             // Skip if already linked in sphinx_hotels
             $existing = $this->hotelRepo->findById($hotelId);
-            if ($existing && !empty($existing['product_id'])) {
+            if ($existing !== null && !empty($existing['product_id'])) {
                 $stats['skipped']++;
                 continue;
             }
@@ -681,14 +679,14 @@ class HotelSyncService extends AbstractSyncService implements HotelSyncServiceIn
                 $raw = $raw['data'];
             }
 
-            $normalized = $this->normalizeHotel($raw);
+            $normalized = $this->normalizeHotel(TypeCoerce::toStringMap($raw));
             if ($normalized === null) {
                 $stats['errors']++;
                 continue;
             }
 
             $this->hotelRepo->upsertBatch([$normalized]);
-            $this->hotelRepo->linkToProduct($hotelId, (int) $product['product_id']);
+            $this->hotelRepo->linkToProduct($hotelId, TypeCoerce::toInt($product['product_id'] ?? 0));
             $stats['linked']++;
         }
 
@@ -713,11 +711,17 @@ class HotelSyncService extends AbstractSyncService implements HotelSyncServiceIn
         }
 
         // Collect unique destination IDs for batch resolution
-        $destIds = array_filter(array_unique(array_column($hotels, 'destination_id')));
-        $hierarchyMap = !empty($destIds) ? $this->destRepo->resolveHierarchies($destIds) : [];
+        $destIds = [];
+        foreach ($hotels as $hotelRow) {
+            $di = TypeCoerce::toInt($hotelRow['destination_id'] ?? 0);
+            if ($di > 0) {
+                $destIds[$di] = $di;
+            }
+        }
+        $hierarchyMap = $destIds !== [] ? $this->destRepo->resolveHierarchies(array_values($destIds)) : [];
 
         foreach ($hotels as &$hotel) {
-            $destId = (int) $hotel['destination_id'];
+            $destId = TypeCoerce::toInt($hotel['destination_id'] ?? 0);
             $hierarchy = $hierarchyMap[$destId] ?? [];
 
             // Primary: derive from destination hierarchy
@@ -733,8 +737,8 @@ class HotelSyncService extends AbstractSyncService implements HotelSyncServiceIn
             if (!empty($hierarchy['region']) && $hotel['region_name'] === '') {
                 $hotel['region_name'] = $hierarchy['region'];
             }
-            if (!empty($hierarchy['region_id']) && (int) $hotel['region_id'] === 0) {
-                $hotel['region_id'] = (int) $hierarchy['region_id'];
+            if (!empty($hierarchy['region_id']) && TypeCoerce::toInt($hotel['region_id'] ?? 0) === 0) {
+                $hotel['region_id'] = TypeCoerce::toInt($hierarchy['region_id']);
             }
 
             // Fallback: sync context country code (when destinations aren't synced yet)
