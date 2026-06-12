@@ -41,6 +41,9 @@ parameters:
                 # travel_core's settings-reader boundary (same role as
                 # ConfigProvider, but shared across the travel addons).
                 - '*/addon-travel-core/*/src/Services/TravelCoreConfig.php'
+                # Shared base for the per-addon ConfigProviders above — the
+                # `addons.<id>` Registry read now physically lives here.
+                - '*/addon-travel-core/*/src/Services/AbstractConfigProvider.php'
         -
             method: 'Tygh\Registry::set()'
             message: 'Do not mutate the global Registry from inside a src/ service class. Pass a configured object through the constructor, or mutate from the calling controller/hook.'
