@@ -93,7 +93,7 @@ class DiagnoseSeoCommand extends AbstractSyncCommand
         $this->output('');
         $this->output('--- 2. Hotel DB record ---');
 
-        $hotel = Container::getHotelRepository()->getById($hotelId);
+        $hotel = Container::getHotelRepository()->findById($hotelId);
         if ($hotel === null) {
             $this->output("ERROR: Hotel [{$hotelId}] not found in sphinx_hotels table.");
             return ['success' => false, 'error' => 'hotel not found'];

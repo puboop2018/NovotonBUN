@@ -84,6 +84,14 @@ if (!function_exists('db_get_field')) {
     }
 }
 
+if (!function_exists('db_get_row')) {
+    function db_get_row(string $query, ...$params)
+    {
+        $fn = \Tygh\Addons\SphinxHolidays\Tests\Support\DbStub::$getRow;
+        return $fn !== null ? $fn($query, ...$params) : [];
+    }
+}
+
 if (!function_exists('db_query')) {
     function db_query(string $query, ...$params)
     {

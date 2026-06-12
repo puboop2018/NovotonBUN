@@ -79,7 +79,7 @@ class DeduplicateCommand extends AbstractSyncCommand
             // Load full hotel rows to check product_id
             $hotels = [];
             foreach ($hotelIds as $hid) {
-                $row = $repo->getById(trim($hid));
+                $row = $repo->findById(trim($hid));
                 if ($row !== null) {
                     $hotels[] = $row;
                 }
