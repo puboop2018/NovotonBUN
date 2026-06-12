@@ -134,6 +134,17 @@ class ConfigProvider implements ConfigProviderInterface
         return self::getSetting('debug_logging') === 'Y';
     }
 
+    /**
+     * Whether to emit search-path timing / hit-rate metrics (SearchMetrics).
+     *
+     * A dedicated low-volume flag so metrics can run continuously in production
+     * without the noise of full debug logging. Debug logging implies metrics.
+     */
+    public static function isSearchMetricsEnabled(): bool
+    {
+        return self::getSetting('search_metrics') === 'Y' || self::isDebugLogging();
+    }
+
     public static function getCronAccessKey(): string
     {
         return (string) self::getSetting('cron_access_key');

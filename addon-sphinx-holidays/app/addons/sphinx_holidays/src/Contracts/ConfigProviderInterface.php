@@ -35,6 +35,8 @@ interface ConfigProviderInterface
 
     public static function isDebugLogging(): bool;
 
+    public static function isSearchMetricsEnabled(): bool;
+
     public static function getCronAccessKey(): string;
 
     public static function getProductCodePrefix(): string;

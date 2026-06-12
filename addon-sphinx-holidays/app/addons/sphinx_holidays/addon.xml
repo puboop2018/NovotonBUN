@@ -213,6 +213,11 @@
                         <default_value>N</default_value>
                         <variants/>
                     </item>
+                    <item id="search_metrics">
+                        <type>checkbox</type>
+                        <default_value>N</default_value>
+                        <variants/>
+                    </item>
                 </items>
             </section>
         </sections>
@@ -632,6 +637,8 @@
         <item lang="ro" id="sphinx_holidays.debug_header"><![CDATA[Depanare]]></item>
         <item lang="en" id="sphinx_holidays.debug_logging"><![CDATA[Enable debug logging]]></item>
         <item lang="ro" id="sphinx_holidays.debug_logging"><![CDATA[Activează logare depanare]]></item>
+        <item lang="en" id="sphinx_holidays.search_metrics"><![CDATA[Enable search timing metrics]]></item>
+        <item lang="ro" id="sphinx_holidays.search_metrics"><![CDATA[Activează metrici de timp pentru căutare]]></item>
 
         <!-- Destinations & Sync -->
         <item lang="en" id="sphinx_holidays.destinations"><![CDATA[Destinations]]></item>

@@ -94,9 +94,9 @@ polls-to-first-offer, and time-to-complete.
   same cache, mirroring novoton's `OffersUpdateCommand`.
 - **Per-destination caching** and **SSE**: do **not** build on spec — each has a
   metric-driven trigger (destination-browse traffic / poll round-trip overhead).
-- A dedicated always-on `search_metrics` setting (instead of reusing
-  `debug_logging`) is a trivial addon.xml follow-up if continuous collection in
-  production is wanted.
+- A dedicated `search_metrics` setting (separate from `debug_logging`, which
+  still implies it) ships with this increment, so metrics can run continuously
+  in production without verbose debug noise.
 
 ---
 

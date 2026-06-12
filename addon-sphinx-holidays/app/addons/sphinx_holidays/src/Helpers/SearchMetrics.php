@@ -15,8 +15,8 @@ use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
  *
  * One event per meaningful transition — cache hit/miss, first offer, complete —
  * never per poll, so volume stays bounded (<= 3 events per search). Gated behind
- * the addon's `debug_logging` setting to keep production logs quiet; an operator
- * flips it on to collect a representative sample window.
+ * the addon's `search_metrics` setting (or `debug_logging`, which implies it) so
+ * it stays quiet by default; an operator flips it on to collect a sample window.
  *
  * @package SphinxHolidays
  * @since   1.4.0
@@ -45,7 +45,7 @@ final class SearchMetrics
      */
     public static function record(string $event, array $data = []): void
     {
-        if (!ConfigProvider::isDebugLogging()) {
+        if (!ConfigProvider::isSearchMetricsEnabled()) {
             return;
         }
 
