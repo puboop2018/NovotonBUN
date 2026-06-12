@@ -86,7 +86,7 @@ class DiagnoseSearchCommand extends AbstractSyncCommand
         }
 
         // ── Identify the hotel in the local DB ─────────────────────────
-        $hotel = Container::getHotelRepository()->getById($hotelId);
+        $hotel = Container::getHotelRepository()->findById($hotelId);
         if ($hotel === null) {
             $this->output('');
             $this->output("WARNING: hotel [{$hotelId}] is NOT in the local sphinx_hotels table.");

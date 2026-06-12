@@ -655,7 +655,7 @@ class HotelSyncService extends AbstractSyncService implements HotelSyncServiceIn
             }
 
             // Skip if already linked in sphinx_hotels
-            $existing = $this->hotelRepo->getById($hotelId);
+            $existing = $this->hotelRepo->findById($hotelId);
             if ($existing !== null && !empty($existing['product_id'])) {
                 $stats['skipped']++;
                 continue;

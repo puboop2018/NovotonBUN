@@ -15,11 +15,18 @@ declare(strict_types=1);
 namespace Tygh\Addons\NovotonHolidays\Services;
 
 use Tygh\Addons\NovotonHolidays\Constants;
+use Tygh\Addons\TravelCore\Services\AbstractConfigProvider;
 use Tygh\Registry;
 
-class ConfigProvider
+class ConfigProvider extends AbstractConfigProvider
 {
     public const string ADDON_ID = 'novoton_holidays';
+
+    #[\Override]
+    protected static function addonId(): string
+    {
+        return self::ADDON_ID;
+    }
 
     // API rate limiting
     public const int API_DELAY_MS = 100;
@@ -37,9 +44,6 @@ class ConfigProvider
 
     /** @var self|null Instance-based singleton. */
     private static ?self $instance = null;
-
-    /** @var array<string, mixed>|null Cached settings array, loaded once per request. */
-    private static $settings;
 
     /** @var string|null Cached addon version, loaded once per request. */
     private static ?string $version = null;
@@ -90,19 +94,18 @@ class ConfigProvider
     }
 
     /**
+     * Cached addon settings array (shared base plumbing).
+     *
      * @return array<string, mixed>
      */
     public static function settings(): array
     {
-        if (self::$settings === null) {
-            self::$settings = Registry::get('addons.novoton_holidays') ?? [];
-        }
-        return self::$settings;
+        return static::loadSettings();
     }
 
     public static function reset(): void
     {
-        self::$settings = null;
+        static::resetSettingsCache();
         self::$version = null;
         self::$instance = null;
     }

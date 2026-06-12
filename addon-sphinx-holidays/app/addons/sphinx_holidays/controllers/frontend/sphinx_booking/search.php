@@ -55,7 +55,7 @@ try {
     // page heading so the results page shows which hotel is being searched
     // (mirrors the novoton results page).
     $hotelRow = $hotel_id !== ''
-        ? Container::getHotelRepository()->getById($hotel_id)
+        ? Container::getHotelRepository()->findById($hotel_id)
         : null;
 
     $hotel_name = $hotelRow !== null ? TypeCoerce::toString($hotelRow['name'] ?? '') : '';
@@ -143,7 +143,7 @@ try {
     // request carrying hotel_ids returns zero offers — even as an integer and
     // even alongside destination_id. Only a destination_id-only query runs the
     // live availability search. destination_id is always known for a synced
-    // hotel (the hotels cron stores it on $hotelRow; getById() does SELECT *).
+    // hotel (the hotels cron stores it on $hotelRow; findById() does SELECT *).
     //
     // Destination browse (no hotel_id): query by destination_id.
     if (!empty($hotel_id)) {

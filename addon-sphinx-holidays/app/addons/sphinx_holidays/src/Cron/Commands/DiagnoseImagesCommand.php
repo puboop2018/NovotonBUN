@@ -48,7 +48,7 @@ class DiagnoseImagesCommand extends AbstractSyncCommand
         $this->output('Mode: ' . ($doAttach ? 'DIAGNOSE + ATTACH' : 'DIAGNOSE ONLY (add &attach=Y to also attach images)'));
 
         // ── 1. DB record ──────────────────────────────────────────────
-        $hotel = Container::getHotelRepository()->getById($hotelId);
+        $hotel = Container::getHotelRepository()->findById($hotelId);
 
         if ($hotel === null) {
             $this->output("ERROR: Hotel [{$hotelId}] not found in sphinx_hotels table.");

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays\Repository;
 
+use Tygh\Addons\TravelCore\Contracts\HotelRepositoryInterface;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Repository\RowNarrowingTrait;
 
@@ -11,8 +12,11 @@ use Tygh\Addons\TravelCore\Repository\RowNarrowingTrait;
  * Repository for sphinx_hotels table operations.
  *
  * Provides type-safe read/write access with batch upsert support.
+ * Implements the provider-neutral travel_core contract so cross-provider
+ * tooling can depend on the abstraction; everything beyond the contract
+ * (sync, boards, skip/gate, SEO batches) is sphinx-specific surface.
  */
-class HotelRepository
+class HotelRepository implements HotelRepositoryInterface
 {
     use RowNarrowingTrait;
 
@@ -233,7 +237,8 @@ class HotelRepository
      * Get a single hotel by ID.
      * @return array<string, mixed>|null
      */
-    public function getById(string $hotelId): ?array
+    #[\Override]
+    public function findById(string $hotelId): ?array
     {
         $row = self::asRow(db_get_row(
             'SELECT * FROM ?:sphinx_hotels WHERE hotel_id = ?s',
@@ -241,6 +246,18 @@ class HotelRepository
         ));
 
         return $row === [] ? null : $row;
+    }
+
+    /**
+     * Whether a hotel row exists for the given hotel id.
+     */
+    #[\Override]
+    public function exists(string $hotelId): bool
+    {
+        return TypeCoerce::toInt(db_get_field(
+            'SELECT 1 FROM ?:sphinx_hotels WHERE hotel_id = ?s',
+            $hotelId,
+        )) > 0;
     }
 
     /**
@@ -288,6 +305,19 @@ class HotelRepository
         return self::asStringList(db_get_fields(
             "SELECT DISTINCT country_code FROM ?:sphinx_hotels WHERE country_code != '' ORDER BY country_code",
         ));
+    }
+
+    /**
+     * Distinct list of countries that have at least one hotel.
+     *
+     * Contract-named alias of getDistinctCountries().
+     *
+     * @return list<string>
+     */
+    #[\Override]
+    public function getCountries(): array
+    {
+        return $this->getDistinctCountries();
     }
 
     /**
@@ -354,14 +384,34 @@ class HotelRepository
 
     /**
      * Link a hotel to a CS-Cart product.
+     *
+     * @return bool True when the hotel row was updated.
      */
-    public function linkToProduct(string $hotelId, int $productId): void
+    #[\Override]
+    public function linkToProduct(string $hotelId, int $productId): bool
     {
-        db_query(
+        return TypeCoerce::toInt(db_query(
             'UPDATE ?:sphinx_hotels SET product_id = ?i WHERE hotel_id = ?s',
             $productId,
             $hotelId,
-        );
+        )) > 0;
+    }
+
+    /**
+     * Remove the hotel↔product association for the given product.
+     *
+     * Sets product_id to NULL, which findUnlinked()/countLinked() treat as
+     * unlinked (alongside the legacy 0 value).
+     *
+     * @return bool True when a hotel row was unlinked.
+     */
+    #[\Override]
+    public function unlinkProduct(int $productId): bool
+    {
+        return TypeCoerce::toInt(db_query(
+            'UPDATE ?:sphinx_hotels SET product_id = NULL WHERE product_id = ?i',
+            $productId,
+        )) > 0;
     }
 
     /**
@@ -719,6 +769,20 @@ class HotelRepository
             $status,
             $hotelIds,
         );
+    }
+
+    /**
+     * Delete a single hotel by ID.
+     *
+     * Hotel data is self-contained on the row (boards/images/facilities are
+     * JSON columns), so there are no child rows to cascade.
+     *
+     * @return bool True when the hotel existed and was deleted.
+     */
+    #[\Override]
+    public function delete(string $hotelId): bool
+    {
+        return $this->bulkDelete([$hotelId]) > 0;
     }
 
     /**
