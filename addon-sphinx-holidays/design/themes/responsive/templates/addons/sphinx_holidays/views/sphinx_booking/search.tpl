@@ -176,6 +176,7 @@ window.__sphinxConfig = {
     if (noResults) noResults.style.display = 'none';
 
     var accumulated = 0;
+    var revealed = false;
     var cursor = null;
     var pollCount = 0;
     var cfg = window.__sphinxConfig || {};
@@ -258,6 +259,14 @@ window.__sphinxConfig = {
         }
     }
 
+    function reveal() {
+        // First offers in: drop the skeleton so the user sees results
+        // immediately, while the poll loop keeps draining in the background.
+        if (revealed) return;
+        revealed = true;
+        if (skeleton) skeleton.style.display = 'none';
+    }
+
     function finish() {
         if (skeleton) skeleton.style.display = 'none';
         if (accumulated === 0 && noResults) {
@@ -285,18 +294,18 @@ window.__sphinxConfig = {
                 }
                 appendResults(data.results || []);
 
-                // Early-stop: search_poll returns only THIS hotel's offers, so
-                // once we have any we have the hotel's page — stop instead of
-                // polling out the rest of the destination (the hotel's offers
-                // arrive together in one bulk page in practice).
+                // Render early: as soon as the hotel has offers, show them and
+                // drop the skeleton for a fast first paint. Do NOT stop — keep
+                // polling so search_poll drains the stream and caches the
+                // COMPLETE set (also catches offers split across pages).
+                // docs/adr/0001-availability-early-render-and-metrics.md
                 if (accumulated > 0) {
-                    finish();
-                    return;
+                    reveal();
                 }
 
-                // No offers yet — the API returns empty pages while suppliers
-                // respond. Keep polling while a cursor remains (the continuation
-                // signal); maxPolls bounds the loop as a safety net.
+                // Keep polling while a cursor remains (the continuation signal);
+                // maxPolls bounds the loop as a safety net. On a maxPolls bail we
+                // do NOT finalize, so a partial set is never cached as complete.
                 cursor = data.next_cursor || null;
                 if (!cursor) {
                     finish();
