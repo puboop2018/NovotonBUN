@@ -118,10 +118,14 @@ abstract class AbstractBatchedSync implements SyncInterface
     abstract protected function determineSyncType(array $options): string;
 
     /**
-     * Get item IDs to sync based on sync type
+     * Get item IDs to sync based on sync type.
+     *
+     * Implementations return a flat list of item identifiers (hotel ids, or
+     * composite "hotelId/packageId" strings); the key type is therefore left
+     * open so subclasses can return a list.
      *
      * @param array<string, mixed> $options
-     * @return array<string, mixed>
+     * @return array<int|string, mixed>
      */
     abstract protected function getItemsToSync(string $syncType, array $options): array;
 

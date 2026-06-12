@@ -47,7 +47,7 @@ interface StateManagerInterface
      * Start a new sync.
      *
      * @param string $syncType Type of sync (e.g., 'full', 'incremental')
-     * @param array<string, mixed> $itemIds Items to process
+     * @param array<int|string, mixed> $itemIds Items to process (a flat list of ids)
      * @param array<string, mixed> $metadata Additional metadata
      * @return array<string, mixed> New state
      */

@@ -57,6 +57,7 @@ namespace Tygh\Addons\NovotonHolidays\Helpers;
 use Tygh\Addons\NovotonHolidays\Api\AdultOnlyDetector;
 use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 class BatchedHotelInfoSyncV2 extends AbstractBatchedSync
 {
@@ -97,7 +98,7 @@ class BatchedHotelInfoSyncV2 extends AbstractBatchedSync
      * Populated by the curl_multi getHotelInfoBatch() call inside
      * preBatch(). processItem() reads from here instead of re-fetching.
      *
-     * @var array<string, mixed>
+     * @var array<string, \SimpleXMLElement|false>
      */
     private array $batchResults = [];
 
@@ -156,7 +157,7 @@ class BatchedHotelInfoSyncV2 extends AbstractBatchedSync
             return 'full';
         }
 
-        $timeSinceFull = time() - strtotime($lastFullSync);
+        $timeSinceFull = time() - (int) strtotime(TypeCoerce::toString($lastFullSync));
 
         if ($timeSinceFull > $this->fullSyncInterval) {
             $days = round($timeSinceFull / 86400);
@@ -175,7 +176,7 @@ class BatchedHotelInfoSyncV2 extends AbstractBatchedSync
         }
 
         // More than 24 hours since the last completed sync → incremental.
-        $timeSinceLast = time() - strtotime($lastIncremental);
+        $timeSinceLast = time() - (int) strtotime(TypeCoerce::toString($lastIncremental));
         if ($timeSinceLast > 24 * 3600) {
             return 'incremental';
         }
@@ -185,20 +186,20 @@ class BatchedHotelInfoSyncV2 extends AbstractBatchedSync
 
     /**
      * @param array<string, mixed> $options
-     * @return array<string, mixed>
+     * @return list<string>
      */
     #[\Override]
     protected function getItemsToSync(string $syncType, array $options): array
     {
-        $countries = $options['countries'] ?? ConfigProvider::getSelectedCountries();
+        $countries = TypeCoerce::toStringList($options['countries'] ?? ConfigProvider::getSelectedCountries());
 
         if ($syncType === 'full') {
-            return db_get_fields(
+            return TypeCoerce::toStringList(db_get_fields(
                 'SELECT hotel_id FROM ?:novoton_hotels
                  WHERE country IN (?a)
                  ORDER BY hotel_name',
                 $countries,
-            );
+            ));
         }
 
         // Incremental: changed hotels from offers_update API, unioned
@@ -215,7 +216,7 @@ class BatchedHotelInfoSyncV2 extends AbstractBatchedSync
      * Eliminates every N+1 the legacy class built up across its main
      * loop and per-item processing.
      *
-     * @param array<int, string|int> $batch
+     * @param array<int|string, mixed> $batch
      */
     #[\Override]
     protected function preBatch(array $batch): void
@@ -228,14 +229,20 @@ class BatchedHotelInfoSyncV2 extends AbstractBatchedSync
             return;
         }
 
-        $hotelIds = array_values(array_map('strval', $batch));
+        $hotelIds = array_values(array_map(
+            static fn (mixed $id): string => TypeCoerce::toString($id),
+            $batch,
+        ));
 
         // 1. Hotel metadata (hotel_name, product_id) keyed by hotel_id.
-        $this->hotelMap = db_get_hash_array(
+        $hotelRows = TypeCoerce::toStringMap(db_get_hash_array(
             'SELECT hotel_id, hotel_name, product_id FROM ?:novoton_hotels WHERE hotel_id IN (?a)',
             'hotel_id',
             $hotelIds,
-        );
+        ));
+        foreach ($hotelRows as $hid => $row) {
+            $this->hotelMap[$hid] = TypeCoerce::toStringMap($row);
+        }
 
         // 2. Product code -> product_id map for unlinked hotels only.
         $codePatterns = [];
@@ -247,11 +254,14 @@ class BatchedHotelInfoSyncV2 extends AbstractBatchedSync
             }
         }
         if (!empty($codePatterns)) {
-            $this->productCodeMap = db_get_hash_single_array(
+            $codeRows = TypeCoerce::toStringMap(db_get_hash_single_array(
                 'SELECT product_code, product_id FROM ?:products WHERE product_code IN (?a)',
                 ['product_code', 'product_id'],
                 $codePatterns,
-            );
+            ));
+            foreach ($codeRows as $code => $pid) {
+                $this->productCodeMap[$code] = TypeCoerce::toInt($pid);
+            }
         }
 
         // 3. curl_multi parallel fetch of hotel info for the whole batch.
@@ -276,12 +286,12 @@ class BatchedHotelInfoSyncV2 extends AbstractBatchedSync
             $this->preBatch([$hotelId]);
         }
 
-        $hotelName = $this->hotelMap[$hotelId]['hotel_name'] ?? '?';
+        $hotelName = TypeCoerce::toString($this->hotelMap[$hotelId]['hotel_name'] ?? '?');
         $hotelInfo = $this->batchResults[$hotelId] ?? false;
 
         $this->logger->output("[{$hotelId}] {$hotelName} ... ", false);
 
-        if (!$hotelInfo) {
+        if ($hotelInfo === false) {
             $this->logger->output('API returned empty');
             return ['success' => false, 'message' => 'api_returned_empty', 'data' => null];
         }
@@ -326,7 +336,7 @@ class BatchedHotelInfoSyncV2 extends AbstractBatchedSync
      * upserts every package in a single transactional batch INSERT.
      *
      * @param string $hotelId Hotel ID
-     * @param mixed $hotelInfo SimpleXML hotel info from the API
+     * @param \SimpleXMLElement $hotelInfo SimpleXML hotel info from the API
      * @param string $now Current timestamp
      * @param array<string, array<string, mixed>> $hotelMap hotel_id → [hotel_name, product_id] map
      * @param array<string, int> $productCodeMap product_code → product_id map
@@ -334,7 +344,7 @@ class BatchedHotelInfoSyncV2 extends AbstractBatchedSync
      */
     private function processHotelInfo(
         string $hotelId,
-        $hotelInfo,
+        \SimpleXMLElement $hotelInfo,
         string $now,
         array $hotelMap = [],
         array $productCodeMap = [],
@@ -351,7 +361,7 @@ class BatchedHotelInfoSyncV2 extends AbstractBatchedSync
         ];
 
         // Detect adults-only from hotel name
-        $hotelName = $hotelMap[$hotelId]['hotel_name'] ?? '';
+        $hotelName = TypeCoerce::toString($hotelMap[$hotelId]['hotel_name'] ?? '');
         if ($hotelName !== '' && $this->adultOnlyDetector->detect($hotelName)) {
             $update['is_adults_only'] = 'Y';
         }
@@ -428,10 +438,9 @@ class BatchedHotelInfoSyncV2 extends AbstractBatchedSync
      *
      * Verbatim from legacy BatchedHotelInfoSync::extractPackages().
      *
-     * @param \SimpleXMLElement|null $hotelInfo
      * @return array<int, array{IdCont: string, PackageName: string}>
      */
-    private function extractPackages($hotelInfo): array
+    private function extractPackages(\SimpleXMLElement $hotelInfo): array
     {
         $packages = [];
         $seenIds = [];
@@ -466,8 +475,8 @@ class BatchedHotelInfoSyncV2 extends AbstractBatchedSync
         return $packages;
     }
 
-    /** @param \SimpleXMLElement|null $hotelInfo */
-    private function countPackages($hotelInfo): int
+    /**  */
+    private function countPackages(\SimpleXMLElement $hotelInfo): int
     {
         return count($this->extractPackages($hotelInfo));
     }
@@ -486,12 +495,12 @@ class BatchedHotelInfoSyncV2 extends AbstractBatchedSync
         $prefixes = $this->productCodePrefixes;
 
         // 1. Re-link: hotels with NULL product_id whose product exists
-        $orphaned = db_get_fields(
+        $orphaned = TypeCoerce::toStringList(db_get_fields(
             'SELECT hotel_id FROM ?:novoton_hotels WHERE product_id IS NULL OR product_id = 0',
-        );
+        ));
 
         $linked = 0;
-        if (!empty($orphaned)) {
+        if ($orphaned !== []) {
             // Build all possible product_codes in one go, then bulk-fetch
             $codePatterns = [];
             foreach ($orphaned as $hotelId) {
@@ -502,11 +511,11 @@ class BatchedHotelInfoSyncV2 extends AbstractBatchedSync
 
             $productMap = [];
             if (!empty($codePatterns)) {
-                $productMap = db_get_hash_single_array(
+                $productMap = TypeCoerce::toStringMap(db_get_hash_single_array(
                     'SELECT product_code, product_id FROM ?:products WHERE product_code IN (?a)',
                     ['product_code', 'product_id'],
                     $codePatterns,
-                );
+                ));
             }
 
             // Update matched hotels using the map (no per-hotel queries)
@@ -527,12 +536,12 @@ class BatchedHotelInfoSyncV2 extends AbstractBatchedSync
         }
 
         // 2. Cleanup: clear product_id pointing to deleted products
-        $cleaned = db_query(
+        $cleaned = TypeCoerce::toInt(db_query(
             'UPDATE ?:novoton_hotels h
              LEFT JOIN ?:products p ON h.product_id = p.product_id
              SET h.product_id = NULL
              WHERE h.product_id > 0 AND p.product_id IS NULL',
-        );
+        ));
 
         if ($linked > 0 || $cleaned > 0) {
             $this->logger->output("Reconciliation: re-linked {$linked} hotels, cleared {$cleaned} stale references.");
@@ -546,7 +555,7 @@ class BatchedHotelInfoSyncV2 extends AbstractBatchedSync
      * Verbatim from legacy BatchedHotelInfoSync::getChangedHotelIds().
      *
      * @param string[] $countries
-     * @return string[]
+     * @return list<string>
      */
     private function getChangedHotelIds(array $countries): array
     {
@@ -563,9 +572,10 @@ class BatchedHotelInfoSyncV2 extends AbstractBatchedSync
             return [];
         }
 
-        $datetimeParam = date('Y-m-d\TH:i:s', strtotime($lastSync));
+        $datetimeParam = date('Y-m-d\TH:i:s', (int) strtotime(TypeCoerce::toString($lastSync)));
         $this->logger->output("Checking offers_update since: {$datetimeParam}");
 
+        /** @var array<string, true> $changedIds */
         $changedIds = [];
 
         foreach ($countries as $country) {
@@ -574,10 +584,10 @@ class BatchedHotelInfoSyncV2 extends AbstractBatchedSync
             try {
                 $response = $api->destinations()->getOffersUpdate($datetimeParam, $country);
 
-                if ($response && isset($response->Offer)) {
-                    /** @var mixed $offerRaw */
-                    $offerRaw = $response->Offer;
-                    $offers = is_array($offerRaw) ? $offerRaw : [$offerRaw];
+                if (isset($response->Offer)) {
+                    // SimpleXML: wrap the Offer node set so the loop matches the
+                    // legacy single-pass behaviour exactly.
+                    $offers = [$response->Offer];
                     foreach ($offers as $offer) {
                         $hid = (string) ($offer->IdHotel ?? '');
                         if ($hid !== '') {
@@ -594,13 +604,13 @@ class BatchedHotelInfoSyncV2 extends AbstractBatchedSync
         }
 
         // Also include hotels that never had hotelinfo synced
-        $unsynced = db_get_fields(
+        $unsynced = TypeCoerce::toStringList(db_get_fields(
             'SELECT hotel_id FROM ?:novoton_hotels
              WHERE country IN (?a) AND hotelinfo_synced_at IS NULL',
             $countries,
-        );
+        ));
 
-        if (!empty($unsynced)) {
+        if ($unsynced !== []) {
             $this->logger->output('Also adding ' . count($unsynced) . ' hotels that never had hotelinfo synced.');
             foreach ($unsynced as $id) {
                 $changedIds[$id] = true;
