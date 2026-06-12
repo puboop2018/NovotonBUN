@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+
 /**
  * Transform database package record to normalized format
  * Shared helper to avoid code duplication
@@ -36,18 +38,20 @@ function fn_novoton_holidays_normalize_package(array $pkg, bool $include_pricein
     // the SELECT to avoid transferring 50-200KB of JSON per package row.
     if ($include_priceinfo_details && !empty($pkg['priceinfo_data'])) {
         $piJson = $pif::toScalar($pkg['priceinfo_data']);
-        $priceinfo = json_decode($piJson, true);
-        if ($priceinfo === null || !is_array($priceinfo)) return $packageData;
+        $priceinfo = TypeCoerce::toStringMap(json_decode($piJson, true));
+        if ($priceinfo === []) return $packageData;
         $packageData['priceinfo'] = $priceinfo;
 
         // Extract detailed priceinfo components if requested
         // Extract seasons for display
-        if (isset($priceinfo['seasons']['season'])) {
-            $packageData['seasons'] = $priceinfo['seasons']['season'];
+        $seasons = $priceinfo['seasons'] ?? null;
+        if (is_array($seasons) && isset($seasons['season'])) {
+            $seasonData = $seasons['season'];
             // Normalize single season to array
-            if (is_array($packageData['seasons']) && isset($packageData['seasons']['IdSeason'])) {
-                $packageData['seasons'] = [$packageData['seasons']];
+            if (is_array($seasonData) && isset($seasonData['IdSeason'])) {
+                $seasonData = [$seasonData];
             }
+            $packageData['seasons'] = $seasonData;
         }
 
         // Extract early booking for display
@@ -57,11 +61,12 @@ function fn_novoton_holidays_normalize_package(array $pkg, bool $include_pricein
 
         // Extract season prices for display
         if (isset($priceinfo['season_price'])) {
-            $packageData['season_price'] = $priceinfo['season_price'];
+            $seasonPrice = $priceinfo['season_price'];
             // Normalize single entry to array
-            if (is_array($packageData['season_price']) && isset($packageData['season_price']['IdRoom'])) {
-                $packageData['season_price'] = [$packageData['season_price']];
+            if (is_array($seasonPrice) && isset($seasonPrice['IdRoom'])) {
+                $seasonPrice = [$seasonPrice];
             }
+            $packageData['season_price'] = $seasonPrice;
         }
     }
 
@@ -80,6 +85,7 @@ function fn_novoton_holidays_normalize_package(array $pkg, bool $include_pricein
  */
 function &_novoton_hotel_data_cache(): array
 {
+    /** @var array<string, mixed> $cache */
     static $cache = [];
     return $cache;
 }
@@ -122,18 +128,15 @@ function _novoton_enrich_hotel_row(array $hotel, ?array $packages = null): array
     if ($packages !== null) {
         $hotel['packages'] = $packages;
     } else {
-        $rows = db_get_array(
+        $rows = TypeCoerce::toRowList(db_get_array(
             "SELECT id, hotel_id, package_id, package_name, min_price, has_early_booking,
                     seasons_count, currency, synced_at
              FROM ?:novoton_hotel_packages WHERE hotel_id = ?s ORDER BY package_name",
             $pif::toScalar($hotel['hotel_id'] ?? '')
-        );
-        if (!empty($rows)) {
+        ));
+        if ($rows !== []) {
             $hotel['packages'] = [];
             foreach ($rows as $pkg) {
-                if (!is_array($pkg)) {
-                    continue;
-                }
                 $hotel['packages'][] = fn_novoton_holidays_normalize_package($pkg, false);
             }
         }
@@ -169,37 +172,35 @@ function fn_novoton_holidays_prefetch_hotel_data(array $hotel_ids): void
     }
 
     // Batch query 1: all hotel rows
-    $hotels = db_get_hash_array(
+    $hotels = TypeCoerce::toStringMap(db_get_hash_array(
         "SELECT * FROM ?:novoton_hotels WHERE hotel_id IN (?a)",
         'hotel_id',
         $missing
-    );
+    ));
 
     // Batch query 2: package metadata (exclude priceinfo_data JSON — not needed for listing)
-    $all_packages = db_get_array(
+    $all_packages = TypeCoerce::toRowList(db_get_array(
         "SELECT id, hotel_id, package_id, package_name, min_price, has_early_booking,
                 seasons_count, currency, synced_at
          FROM ?:novoton_hotel_packages WHERE hotel_id IN (?a) ORDER BY hotel_id, package_name",
         $missing
-    );
+    ));
 
     // Group & normalize packages by hotel_id
     $pkgs_by_hotel = [];
     foreach ($all_packages as $pkg) {
-        if (!is_array($pkg)) {
-            continue;
-        }
         $pkgHotelId = $pif::toScalar($pkg['hotel_id'] ?? '');
         $pkgs_by_hotel[$pkgHotelId][] = fn_novoton_holidays_normalize_package($pkg, false);
     }
 
     // Enrich and cache each hotel
     foreach ($missing as $hotel_id) {
-        if (!isset($hotels[$hotel_id]) || !is_array($hotels[$hotel_id])) {
+        $hotelRow = TypeCoerce::toStringMap($hotels[$hotel_id] ?? null);
+        if ($hotelRow === []) {
             continue;
         }
         $cache[$hotel_id] = _novoton_enrich_hotel_row(
-            $hotels[$hotel_id],
+            $hotelRow,
             $pkgs_by_hotel[$hotel_id] ?? []
         );
     }
@@ -229,19 +230,20 @@ function fn_novoton_holidays_get_hotel_data(string|int|null $hotel_id, bool $for
     $hotel_id = (string) $hotel_id;
 
     if (!$force && isset($cache[$hotel_id])) {
-        return $cache[$hotel_id];
+        return TypeCoerce::toStringMap($cache[$hotel_id]);
     }
 
-    $hotel = db_get_row(
+    $hotel = TypeCoerce::toStringMap(db_get_row(
         "SELECT * FROM ?:novoton_hotels WHERE hotel_id = ?s",
         $hotel_id
-    );
+    ));
 
-    if (is_array($hotel)) {
+    if ($hotel !== []) {
         $cache[$hotel_id] = _novoton_enrich_hotel_row($hotel);
     }
 
-    return $cache[$hotel_id] ?? null;
+    $cached = $cache[$hotel_id] ?? null;
+    return is_array($cached) ? TypeCoerce::toStringMap($cached) : null;
 }
 
 /**
@@ -255,6 +257,7 @@ function fn_novoton_holidays_get_hotel_data(string|int|null $hotel_id, bool $for
  */
 function fn_novoton_holidays_get_hotel_prices(int $product_id, bool $force = false, string|int|null $hotel_id = null): array
 {
+    /** @var array<string, list<array<string, mixed>>> $cache */
     static $cache = [];
 
     $cache_key = $product_id . '_' . ($hotel_id ?? '');
@@ -272,7 +275,7 @@ function fn_novoton_holidays_get_hotel_prices(int $product_id, bool $force = fal
     // Fallback: extract hotel_id from product_code
     if (empty($hotel_id)) {
         $product_code = $pif::toScalar(db_get_field("SELECT product_code FROM ?:products WHERE product_id = ?i", $product_id));
-        if (!empty($product_code) && preg_match('/\d+/', $product_code, $m)) {
+        if (!empty($product_code) && preg_match('/\d+/', $product_code, $m) === 1) {
             $hotel_id = $m[0];
         }
     }
@@ -389,8 +392,7 @@ function fn_novoton_holidays_get_package_priceinfo(string $hotel_id, string $pac
     }
 
     $data = json_decode(\Tygh\Addons\NovotonHolidays\Services\PriceInfoFormatter::toScalar($pkg['priceinfo_data']), true);
-    if ($data === null || !is_array($data)) return null;
-    return $data;
+    return is_array($data) ? TypeCoerce::toStringMap($data) : null;
 }
 
 /**
@@ -415,8 +417,7 @@ function fn_novoton_holidays_get_package_priceinfo_by_name(string $hotel_id, str
     }
 
     $data = json_decode(\Tygh\Addons\NovotonHolidays\Services\PriceInfoFormatter::toScalar($pkg['priceinfo_data']), true);
-    if ($data === null || !is_array($data)) return null;
-    return $data;
+    return is_array($data) ? TypeCoerce::toStringMap($data) : null;
 }
 
 /**
@@ -437,12 +438,12 @@ function fn_novoton_holidays_get_hotels_count(): int
  */
 function fn_novoton_holidays_get_hotels_no_packages_count(): int
 {
-    return (int)db_get_field(
+    return TypeCoerce::toInt(db_get_field(
         "SELECT COUNT(*) FROM ?:novoton_hotels h
          WHERE NOT EXISTS (
              SELECT 1 FROM ?:novoton_hotel_packages p WHERE p.hotel_id = h.hotel_id
          )"
-    );
+    ));
 }
 
 /**
@@ -453,7 +454,7 @@ function fn_novoton_holidays_get_hotels_no_packages_count(): int
  */
 function fn_novoton_holidays_get_hotels_no_packages_by_country(): array
 {
-    return db_get_hash_single_array(
+    return TypeCoerce::toStringMap(db_get_hash_single_array(
         "SELECT h.country, COUNT(*) as cnt FROM ?:novoton_hotels h
          WHERE NOT EXISTS (
              SELECT 1 FROM ?:novoton_hotel_packages p WHERE p.hotel_id = h.hotel_id
@@ -461,7 +462,7 @@ function fn_novoton_holidays_get_hotels_no_packages_by_country(): array
          GROUP BY h.country
          ORDER BY cnt DESC",
         ['country', 'cnt']
-    );
+    ));
 }
 
 /**
@@ -476,7 +477,7 @@ function fn_novoton_holidays_get_hotel_id_by_product(int $product_id): ?string
         "SELECT hotel_id FROM ?:novoton_hotels WHERE product_id = ?i",
         $product_id
     );
-    return ($result !== false && $result !== '') ? (string)$result : null;
+    return ($result !== false && $result !== '' && $result !== null) ? TypeCoerce::toString($result) : null;
 }
 
 /**
@@ -502,7 +503,7 @@ function fn_novoton_holidays_sync_resorts_list(string $country = \Tygh\Addons\No
     $country = (string) $country;
 
     $api = fn_novoton_holidays_get_api();
-    if (!$api) {
+    if ($api === null) {
         return ['success' => false, 'error' => 'API not available'];
     }
 
@@ -533,14 +534,14 @@ function fn_novoton_holidays_sync_resorts_list(string $country = \Tygh\Addons\No
             $api_resort_names[] = $name;
 
             // Atomic upsert — avoids race condition between SELECT and INSERT/UPDATE
-            $affected = db_query(
+            $affected = TypeCoerce::toInt(db_query(
                 "INSERT INTO ?:novoton_resorts (resort_name, country, synced_at)
                  VALUES (?s, ?s, ?s) AS new_row
                  ON DUPLICATE KEY UPDATE synced_at = new_row.synced_at",
                 $name, $country, $now
-            );
+            ));
             // affected_rows = 1 for INSERT, 2 for UPDATE (MySQL convention)
-            if ($affected == 1) {
+            if ($affected === 1) {
                 $result['added']++;
             } else {
                 $result['updated']++;
@@ -549,11 +550,10 @@ function fn_novoton_holidays_sync_resorts_list(string $country = \Tygh\Addons\No
 
         // Remove resorts no longer in API response
         if (!empty($api_resort_names)) {
-            $affected = db_query(
+            $result['removed'] = TypeCoerce::toInt(db_query(
                 "DELETE FROM ?:novoton_resorts WHERE country = ?s AND resort_name NOT IN (?a)",
                 $country, $api_resort_names
-            );
-            $result['removed'] = (int) $affected;
+            ));
         }
 
     } catch (\Exception $e) {
@@ -571,10 +571,10 @@ function fn_novoton_holidays_sync_resorts_list(string $country = \Tygh\Addons\No
 function fn_novoton_holidays_sync_facilities_list(): array
 {
     $api = fn_novoton_holidays_get_api();
-    if (!$api) {
+    if ($api === null) {
         return ['success' => false, 'error' => 'API not available'];
     }
-    
+
     $result = [
         'success' => true,
         'added' => 0,
@@ -601,13 +601,13 @@ function fn_novoton_holidays_sync_facilities_list(): array
             $result['total']++;
             
             // Atomic upsert — avoids race condition between SELECT and INSERT/UPDATE
-            $affected = db_query(
+            $affected = TypeCoerce::toInt(db_query(
                 "INSERT INTO ?:novoton_facilities (facility_id, facility_name_en, facility_name_ro)
                  VALUES (?i, ?s, ?s) AS new_row
                  ON DUPLICATE KEY UPDATE facility_name_en = new_row.facility_name_en",
                 $facility_id, $name_en, $name_ro
-            );
-            if ($affected == 1) {
+            ));
+            if ($affected === 1) {
                 $result['added']++;
             } else {
                 $result['updated']++;
@@ -634,10 +634,10 @@ function fn_novoton_holidays_sync_hotel_facilities(string $hotel_id): bool
     }
 
     $api = fn_novoton_holidays_get_api();
-    if (!$api) {
+    if ($api === null) {
         return false;
     }
-    
+
     try {
         // Use dedicated hotel_facilities API (function 27) — returns <IdFacility> elements
         $response = $api->hotels()->getHotelFacilities($hotel_id);
@@ -687,7 +687,7 @@ function fn_novoton_holidays_sync_hotel_facilities(string $hotel_id): bool
  * 
  * @param string $hotel_id Hotel ID
  * @param string $lang Language code (en/ro)
- * @return array<string, mixed> Facilities list
+ * @return list<array<string, mixed>> Facilities list
  */
 function fn_novoton_holidays_get_hotel_facilities(string $hotel_id, string $lang = 'en'): array
 {
@@ -698,14 +698,14 @@ function fn_novoton_holidays_get_hotel_facilities(string $hotel_id, string $lang
     $allowed = ['ro' => 'facility_name_ro', 'en' => 'facility_name_en'];
     $col = $allowed[$lang] ?? $allowed['en'];
 
-    return db_get_array(
+    return TypeCoerce::toRowList(db_get_array(
         "SELECT f.facility_id, f.{$col} as facility_name
          FROM ?:novoton_hotel_facilities hf
          LEFT JOIN ?:novoton_facilities f ON hf.facility_id = f.facility_id
          WHERE hf.hotel_id = ?s
          ORDER BY f.{$col}",
         $hotel_id
-    );
+    ));
 }
 
 /**
@@ -714,7 +714,7 @@ function fn_novoton_holidays_get_hotel_facilities(string $hotel_id, string $lang
  * @param string $hotel_id Hotel ID
  * @param string $facility_type Feature type constant: hotel_facility, room_facility, travel_group, beach_access
  * @param string $lang Language code (en/ro)
- * @return array<string, mixed> Facilities list
+ * @return list<array<string, mixed>> Facilities list
  */
 function fn_novoton_holidays_get_hotel_facilities_by_type(string $hotel_id, string $facility_type, string $lang = 'en'): array
 {
@@ -725,14 +725,14 @@ function fn_novoton_holidays_get_hotel_facilities_by_type(string $hotel_id, stri
     $allowed = ['ro' => 'facility_name_ro', 'en' => 'facility_name_en'];
     $col = $allowed[$lang] ?? $allowed['en'];
 
-    return db_get_array(
+    return TypeCoerce::toRowList(db_get_array(
         "SELECT f.facility_id, f.{$col} as facility_name
          FROM ?:novoton_hotel_facilities hf
          JOIN ?:novoton_facilities f ON hf.facility_id = f.facility_id
          WHERE hf.hotel_id = ?s AND f.facility_type = ?s
          ORDER BY f.{$col}",
         $hotel_id, $facility_type
-    );
+    ));
 }
 
 /**
@@ -755,12 +755,12 @@ function fn_novoton_holidays_get_resorts_for_settings(): array
 
     $query .= " ORDER BY country, city";
 
-    $db_resorts = db_get_array($query);
+    $db_resorts = TypeCoerce::toRowList(db_get_array($query));
     $hidden_resorts = array_map('strtoupper', \Tygh\Addons\NovotonHolidays\Constants::HIDDEN_RESORTS);
 
     foreach ($db_resorts as $row) {
-        $country = $row['country'];
-        $resort = $row['city'];
+        $country = TypeCoerce::toString($row['country'] ?? '');
+        $resort = TypeCoerce::toString($row['city'] ?? '');
 
         if (in_array(strtoupper($resort), $hidden_resorts, true)) {
             continue;
