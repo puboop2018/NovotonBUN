@@ -10,6 +10,7 @@ use Tygh\Addons\NovotonHolidays\Cron\AbstractCronCommand;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Services\Container;
 use Tygh\Addons\NovotonHolidays\Services\PriceInfoFormatter;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Services\TravelGroupResolver;
 
 class AddProductsCommand extends AbstractCronCommand
@@ -33,11 +34,11 @@ class AddProductsCommand extends AbstractCronCommand
      */
     public function execute(): array
     {
-        $limit = (int) $this->getParam('limit', 0);
+        $limit = PriceInfoFormatter::toInt($this->getParam('limit', 0));
         $exclude_resorts = $this->getExcludedResorts();
 
         // Determine countries: explicit &country= param, or all selected in addon settings
-        $countryParam = $this->getParam('country', '');
+        $countryParam = PriceInfoFormatter::toScalar($this->getParam('country', ''));
         if (!empty($countryParam)) {
             $countries = [strtoupper($countryParam)];
         } else {
@@ -81,12 +82,12 @@ class AddProductsCommand extends AbstractCronCommand
             }
 
             $category_id = ConfigProvider::getCategoryForCountry($country);
-            if (!$category_id) {
+            if ($category_id === 0) {
                 $category_path = str_replace('{country}', $country, \Tygh\Addons\NovotonHolidays\Constants::PRODUCT_CATEGORY_TEMPLATE);
                 $category_id = fn_novoton_holidays_get_or_create_category($category_path);
             }
 
-            if (!$category_id) {
+            if ($category_id === 0) {
                 $this->output("ERROR: No category mapping for '{$country}' and auto-creation failed. Skipping.");
                 $this->output('');
                 $grand_total += count($hotels);
@@ -96,9 +97,6 @@ class AddProductsCommand extends AbstractCronCommand
             $added = 0;
 
             foreach ($hotels as $hotel) {
-                if (!is_array($hotel)) {
-                    continue;
-                }
                 $hotel_id = PriceInfoFormatter::toScalar($hotel['hotel_id'] ?? '');
                 $hotel_name = PriceInfoFormatter::toScalar($hotel['hotel_name'] ?? '');
                 $hotel_city = PriceInfoFormatter::toScalar($hotel['city'] ?? '');
@@ -154,7 +152,7 @@ class AddProductsCommand extends AbstractCronCommand
                 $description = '';
                 try {
                     $desc = $this->api->hotels()->getHotelDescription($hotel_id, 'UK');
-                    if ($desc && isset($desc->Description)) {
+                    if (isset($desc->Description)) {
                         $description = (string) $desc->Description;
                     }
                 } catch (\Exception $e) {
@@ -182,14 +180,14 @@ class AddProductsCommand extends AbstractCronCommand
                     $product_data['product'] = $display_name;
                 }
 
-                $product_id = fn_update_product($product_data, 0, CART_LANGUAGE);
+                $product_id = PriceInfoFormatter::toInt(fn_update_product($product_data, 0, CART_LANGUAGE));
 
-                if ($product_id) {
-                    $hotelRepo->linkToProduct($hotel_id, PriceInfoFormatter::toInt($product_id));
+                if ($product_id > 0) {
+                    $hotelRepo->linkToProduct($hotel_id, $product_id);
 
                     try {
                         $images = $this->api->hotels()->getHotelImages($hotel_id);
-                        if ($images && isset($images->url)) {
+                        if (isset($images->url)) {
                             $urls = [];
                             foreach ($images->url as $url) {
                                 $urls[] = $image_base_url . str_replace(' ', '%20', (string) $url);
@@ -198,7 +196,7 @@ class AddProductsCommand extends AbstractCronCommand
                                 }
                             }
                             if (!empty($urls)) {
-                                fn_travel_core_attach_images_from_urls(PriceInfoFormatter::toInt($product_id), $urls, true);
+                                fn_travel_core_attach_images_from_urls($product_id, $urls, true);
                             }
                         }
                     } catch (\Exception $e) {
@@ -315,8 +313,8 @@ class AddProductsCommand extends AbstractCronCommand
             $code = $normalizer->normalizeFacilityCode($fid);
             if ($code !== null) {
                 $mapping = \Tygh\Addons\TravelCore\Services\FeatureMapper::resolveFacility('novoton', $code);
-                if ($mapping && !empty($mapping['canonical_code'])) {
-                    $resolvedFacilityCodes[] = $mapping['canonical_code'];
+                if ($mapping !== null && !empty($mapping['canonical_code'])) {
+                    $resolvedFacilityCodes[] = PriceInfoFormatter::toScalar($mapping['canonical_code']);
                 }
             }
         }
@@ -354,9 +352,9 @@ class AddProductsCommand extends AbstractCronCommand
         $paramVal = $this->getParam('exclude_resorts');
         if (!empty($paramVal)) {
             if (is_array($paramVal)) {
-                $excluded = array_filter($paramVal);
+                $excluded = array_filter(TypeCoerce::toStringList($paramVal));
             } else {
-                $excluded = array_filter(array_map('trim', explode(',', $paramVal)));
+                $excluded = array_filter(array_map('trim', explode(',', PriceInfoFormatter::toScalar($paramVal))));
             }
         } else {
             $excluded = ConfigProvider::getExcludedResorts();
