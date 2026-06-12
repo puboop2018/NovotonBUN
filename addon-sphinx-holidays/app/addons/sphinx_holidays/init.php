@@ -67,19 +67,22 @@ if (class_exists(\Tygh\Addons\TravelCore\Services\TravelProviderRegistry::class)
     );
 }
 
-// Self-heal language keys when missing. Existing installations don't re-run
-// post_install when new lang keys are added (e.g. default_product_quantity),
-// so labels stay empty until reinstall. Probe a sentinel key and reseed if
-// absent — the seed itself is idempotent (INSERT ... ON DUPLICATE KEY UPDATE).
+// Self-heal language keys. Existing installations don't re-run post_install
+// when new settings/labels ship (e.g. require_immediate_availability), so
+// labels stay empty until reinstall. The old probe checked one fixed sentinel
+// key, which goes stale the moment that key is seeded — labels added later
+// never healed. Instead compare a stored stamp against the current content
+// hash of addon.xml + lang_keys.php and reseed on any change; the seeder is
+// idempotent and also mirrors settings labels into ?:settings_descriptions.
 if (defined('AREA') && AREA === 'A' && function_exists('fn_sphinx_holidays_seed_language_keys')) {
-    $__sentinel = db_get_field(
+    $__stamp = db_get_field(
         "SELECT value FROM ?:language_values WHERE name = ?s AND lang_code = ?s LIMIT 1",
-        'sphinx_holidays.default_product_quantity', 'en'
+        'sphinx_holidays._lang_seed_hash', 'en'
     );
-    if (empty($__sentinel)) {
+    if ($__stamp !== fn_sphinx_holidays_language_seed_hash()) {
         fn_sphinx_holidays_seed_language_keys();
     }
-    unset($__sentinel);
+    unset($__stamp);
 }
 
 // Self-heal SEO template defaults. On fresh installs the templates are empty

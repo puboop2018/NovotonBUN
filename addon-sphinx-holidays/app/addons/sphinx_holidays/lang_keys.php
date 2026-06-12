@@ -2,6 +2,12 @@
 /**
  * Language keys for the Sphinx Holidays addon.
  * Extracted from fn_sphinx_holidays_seed_language_keys() for maintainability.
+ *
+ * NOTE: the seeder merges these with addon.xml <language_variables>, and
+ * addon.xml WINS on conflict. Settings labels/tooltips belong in addon.xml;
+ * keep this file for runtime-only keys (SEO templates page, placeholders, ...)
+ * that addon.xml does not declare. Editing a key here that also exists in
+ * addon.xml has no effect.
  */
 return [
     'sphinx_holidays.circuits_category_id' => [
