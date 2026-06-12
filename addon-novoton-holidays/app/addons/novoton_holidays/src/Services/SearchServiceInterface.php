@@ -18,8 +18,8 @@ interface SearchServiceInterface
     public function parseSearchParams(array $request): array;
 
     /**
-     * @param array<string, mixed> $rooms_data
-     * @return array<string, mixed>
+     * @param list<array<string, mixed>> $rooms_data
+     * @return array{adults: int, children: int, ages: list<int>}
      */
     public function calculateRoomTotals(array $rooms_data): array;
 
@@ -65,14 +65,14 @@ interface SearchServiceInterface
      * @param string $hotelId Hotel ID
      * @param string $checkIn Guest check-in date (Y-m-d)
      * @param string $checkOut Guest check-out date (Y-m-d)
-     * @return array<string, mixed> List of applicable discount records
+     * @return list<array<string, mixed>> List of applicable discount records
      */
     public static function getEarlyBookingDiscounts(string $hotelId, string $checkIn, string $checkOut): array;
 
     /**
      * Calculate discount range from a list of early booking discounts.
      *
-     * @param array<string, mixed> $discounts From getEarlyBookingDiscounts()
+     * @param list<array<string, mixed>> $discounts From getEarlyBookingDiscounts()
      * @return array<string, mixed> {min, max, all} or empty
      */
     public static function getDiscountRange(array $discounts): array;
@@ -80,8 +80,8 @@ interface SearchServiceInterface
     /**
      * Deduplicate results, keeping the lowest price for each room/board/package.
      *
-     * @param array<string, mixed> $results
-     * @return array<string, mixed> Deduplicated results (re-indexed)
+     * @param list<array<string, mixed>> $results
+     * @return list<array<string, mixed>> Deduplicated results (re-indexed)
      */
     public static function deduplicateResults(array $results): array;
 }
