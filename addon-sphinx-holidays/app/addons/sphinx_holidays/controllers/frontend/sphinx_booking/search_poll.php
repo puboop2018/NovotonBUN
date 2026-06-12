@@ -21,6 +21,7 @@ if (!defined('BOOTSTRAP')) {
 }
 
 use Tygh\Addons\SphinxHolidays\Helpers\OfferAvailability;
+use Tygh\Addons\SphinxHolidays\Helpers\SearchMetrics;
 use Tygh\Addons\SphinxHolidays\Helpers\SearchOfferNormalizer;
 use Tygh\Addons\SphinxHolidays\Services\CacheService;
 use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
@@ -71,6 +72,13 @@ try {
             static fn (array $r): bool => TypeCoerce::toString($r['hotel_id'] ?? $r['id'] ?? '') === $filterHotelId,
         ));
     }
+
+    // P0b metrics: time this poll against the search start stamped by search.php
+    // and track the poll index across requests (both live in the session meta).
+    // docs/adr/0001-availability-early-render-and-metrics.md
+    $startedAtMs = TypeCoerce::toInt($searchMeta['started_at_ms'] ?? 0);
+    $pollIndex = TypeCoerce::toInt($searchMeta['poll_index'] ?? 0) + 1;
+    $elapsedMs = $startedAtMs > 0 ? (int) round(microtime(true) * 1000) - $startedAtMs : 0;
 
     // The API paginates via a `cursor` token (older builds used `next_cursor`).
     $nextCursor = null;
@@ -153,28 +161,62 @@ try {
         $slimResults[] = $slim;
     }
 
-    // Cache the hotel's offers as soon as we have any. The JS early-stops on the
-    // first poll that returns this hotel's offers, and the API never reports
-    // status='completed', so we must cache on the poll that produces them rather
-    // than wait for a terminal status. $slimResults is already narrowed to this
-    // hotel, so the cache holds exactly what is displayed. Never cache an empty
-    // set, so a hotel with no availability is not cached as "no offers".
+    // Accumulate this hotel's offers across polls in the session (a per-user,
+    // in-flight buffer). The cross-user cache is written ONLY when the stream
+    // completes (cursor exhausted) or the client finalizes — never mid-stream —
+    // so a concurrent visitor can never read a half-filled set as authoritative.
+    // The client renders offers as they arrive but keeps polling to the end to
+    // drive this completion. docs/adr/0001-availability-early-render-and-metrics.md
     $accumulated = TypeCoerce::toRowList(Tygh::$app['session']['sphinx_results_' . $searchId] ?? null);
+    $priorCount = count($accumulated);
     $accumulated = array_merge($accumulated, $slimResults);
+    $offerCount = count($accumulated);
     $endOfStream = $nextCursor === null || $nextCursor === '';
+    $terminal = $endOfStream || $finalize;
 
-    if (!empty($accumulated) && !empty($searchMeta['cache_key']) && !empty($searchMeta['cache_ttl'])) {
+    // P0b: first poll that produced this hotel's offers, and stream completion.
+    if ($priorCount === 0 && $offerCount > 0) {
+        SearchMetrics::record(SearchMetrics::EVENT_FIRST_OFFER, [
+            'search_id' => $searchId,
+            'hotel_id' => $filterHotelId,
+            'elapsed_ms' => $elapsedMs,
+            'poll' => $pollIndex,
+            'offers' => $offerCount,
+        ]);
+    }
+    if ($terminal) {
+        SearchMetrics::record(SearchMetrics::EVENT_COMPLETE, [
+            'search_id' => $searchId,
+            'hotel_id' => $filterHotelId,
+            'elapsed_ms' => $elapsedMs,
+            'polls' => $pollIndex,
+            'offers' => $offerCount,
+        ]);
+    }
+
+    // Never cache an empty set, so a hotel with no availability is not cached as
+    // "no offers". `complete` marks the entry as the full, authoritative set.
+    if ($terminal && !empty($accumulated) && !empty($searchMeta['cache_key']) && !empty($searchMeta['cache_ttl'])) {
         CacheService::set(TypeCoerce::toString($searchMeta['cache_key']), [
             'results' => $accumulated,
             'search_id' => $searchId,
+            'complete' => true,
         ], TypeCoerce::toInt($searchMeta['cache_ttl']));
     }
 
-    if ($endOfStream || $finalize) {
+    if ($terminal) {
         unset(Tygh::$app['session']['sphinx_results_' . $searchId]);
         unset(Tygh::$app['session']['sphinx_search_' . $searchId]);
     } else {
         Tygh::$app['session']['sphinx_results_' . $searchId] = $accumulated;
+        // Persist the incremented poll index for the next poll's metrics. Write
+        // the whole meta back — the Session container returns values by copy, so
+        // a nested write would not stick.
+        $meta = Tygh::$app['session']['sphinx_search_' . $searchId] ?? [];
+        if (is_array($meta)) {
+            $meta['poll_index'] = $pollIndex;
+            Tygh::$app['session']['sphinx_search_' . $searchId] = $meta;
+        }
     }
 
     echo json_encode([

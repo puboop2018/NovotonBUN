@@ -21,6 +21,7 @@ if (!defined('BOOTSTRAP')) {
 }
 
 use Tygh\Addons\SphinxHolidays\Helpers\OfferAvailability;
+use Tygh\Addons\SphinxHolidays\Helpers\SearchMetrics;
 use Tygh\Addons\SphinxHolidays\Helpers\SearchOfferNormalizer;
 use Tygh\Addons\SphinxHolidays\Services\CacheService;
 use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
@@ -30,6 +31,7 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Tygh;
 
 try {
+    $requestStartedMs = (int) round(microtime(true) * 1000);
     $api = Container::getApi();
     /** @var \Smarty $view */
     $view = Tygh::$app['view'];
@@ -187,9 +189,15 @@ try {
         $cached = CacheService::get($cacheKey);
         if ($cached !== null) {
             $cachedMap = TypeCoerce::toStringMap($cached);
-            $view->assign('sphinx_search_results', TypeCoerce::toRowList($cachedMap['results'] ?? []));
+            $cachedResults = TypeCoerce::toRowList($cachedMap['results'] ?? []);
+            $view->assign('sphinx_search_results', $cachedResults);
             $view->assign('sphinx_search_id', TypeCoerce::toString($cachedMap['search_id'] ?? ''));
             $view->assign('sphinx_search_status', 'completed');
+            SearchMetrics::record(SearchMetrics::EVENT_CACHE_HIT, [
+                'hotel_id' => $hotel_id,
+                'offers' => count($cachedResults),
+                'elapsed_ms' => (int) round(microtime(true) * 1000) - $requestStartedMs,
+            ]);
             return;
         }
     }
@@ -198,8 +206,11 @@ try {
     // (~1s, no cursor polling), shown in the loading state while the live offers
     // stream in. It is a general cached minimum (not the date-specific price), so
     // the template labels it "from". Only fetched on a cache miss (async path).
+    $fromPriceMs = 0;
     if ($hotel_id !== '') {
+        $fromPriceStart = microtime(true);
         $cacheResp = $api->cacheHotels(['hotel_ids' => [(int) $hotel_id]]);
+        $fromPriceMs = (int) round((microtime(true) - $fromPriceStart) * 1000);
         if (is_array($cacheResp)) {
             $meta = TypeCoerce::toStringMap($cacheResp['meta'] ?? []);
             $stats = TypeCoerce::toStringMap($meta['stats'] ?? []);
@@ -281,12 +292,18 @@ try {
             CacheService::set(CacheService::buildSearchKey($cacheParams), [
                 'results' => $initialResults,
                 'search_id' => $searchIdStr,
+                'complete' => true,
             ], $cacheTtl);
         }
 
         $view->assign('sphinx_search_results', $initialResults);
         $view->assign('sphinx_search_id', $searchIdStr);
         $view->assign('sphinx_search_status', 'completed');
+        SearchMetrics::record(SearchMetrics::EVENT_SYNC_COMPLETE, [
+            'hotel_id' => $hotel_id,
+            'offers' => count($initialResults),
+            'from_price_ms' => $fromPriceMs,
+        ]);
         return;
     }
 
@@ -308,7 +325,17 @@ try {
         'cache_key' => $cacheEnabled && $cacheTtl > 0 ? CacheService::buildSearchKey($cacheParams) : '',
         'cache_ttl' => $cacheTtl,
         'filter_hotel_id' => $hotel_id,
+        // P0b metrics: search start + poll counter, read back by search_poll to
+        // time first-offer/complete. docs/adr/0001-availability-early-render-and-metrics.md
+        'started_at_ms' => $requestStartedMs,
+        'poll_index' => 0,
     ];
+
+    SearchMetrics::record(SearchMetrics::EVENT_SEARCH_START, [
+        'hotel_id' => $hotel_id,
+        'from_price_ms' => $fromPriceMs,
+        'cache' => 'miss',
+    ]);
 
     $view->assign('sphinx_search_id', $searchIdStr);
     $view->assign('sphinx_search_status', 'pending');

@@ -96,6 +96,7 @@ return [
     'sphinx_holidays.cron_commands' => ['en' => 'Cron Commands', 'ro' => 'Comenzi Cron'],
     'sphinx_holidays.debug_header' => ['en' => 'Debug', 'ro' => 'Depanare'],
     'sphinx_holidays.debug_logging' => ['en' => 'Enable debug logging', 'ro' => 'Activează logare depanare'],
+    'sphinx_holidays.search_metrics' => ['en' => 'Enable search timing metrics', 'ro' => 'Activează metrici de timp pentru căutare'],
     'sphinx_holidays.addon_settings' => [
         'en' => 'Settings',
         'ro' => 'Setări',
