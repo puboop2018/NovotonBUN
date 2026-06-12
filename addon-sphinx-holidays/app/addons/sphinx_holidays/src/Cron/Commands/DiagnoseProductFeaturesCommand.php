@@ -49,7 +49,7 @@ class DiagnoseProductFeaturesCommand extends AbstractSyncCommand
         // Re-seed so the diagnostic reflects the same state as an actual add_products run.
         $this->seedFeatureMappings();
 
-        $hotel = Container::getHotelRepository()->getById($hotelId);
+        $hotel = Container::getHotelRepository()->findById($hotelId);
         if ($hotel === null) {
             $this->output("ERROR: hotel [{$hotelId}] not found in sphinx_hotels.");
             return ['success' => false, 'error' => 'hotel not found'];

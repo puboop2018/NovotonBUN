@@ -253,7 +253,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         foreach ($hotelIds as $hotelId) {
             $hotelIdStr = TypeCoerce::toString($hotelId);
-            $hotel = $hotelRepo->getById($hotelIdStr);
+            $hotel = $hotelRepo->findById($hotelIdStr);
             if ($hotel === null) {
                 $skipped[] = "#{$hotelIdStr}: not found";
                 continue;
