@@ -17,6 +17,7 @@ namespace Tygh\Addons\NovotonHolidays\Services;
 use Tygh\Addons\NovotonHolidays\Api\Contracts\PricingApiClientInterface;
 use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\NovotonApi;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\ValueObjects\BoardType;
 use Tygh\Addons\TravelCore\ValueObjects\RoomType;
 
@@ -39,7 +40,7 @@ class SearchService implements SearchServiceInterface
     ) {
         if ($pricing === null) {
             $api = fn_novoton_holidays_get_api();
-            if (!$api) {
+            if ($api === null) {
                 throw new \RuntimeException('Novoton API is not available. Check addon settings and API credentials.');
             }
             $pricing = $api->pricing();
@@ -57,13 +58,13 @@ class SearchService implements SearchServiceInterface
     {
         $params = [
             'check_in' => $request['check_in'] ?? '',
-            'nights' => (int) ($request['nights'] ?? 7),
-            'adults' => (int) ($request['adults'] ?? 2),
-            'children' => (int) ($request['children'] ?? 0),
-            'num_rooms' => (int) ($request['rooms'] ?? 1),
-            'flex_days' => (int) ($request['flex_days'] ?? 0),
+            'nights' => PriceInfoFormatter::toInt($request['nights'] ?? 7),
+            'adults' => PriceInfoFormatter::toInt($request['adults'] ?? 2),
+            'children' => PriceInfoFormatter::toInt($request['children'] ?? 0),
+            'num_rooms' => PriceInfoFormatter::toInt($request['rooms'] ?? 1),
+            'flex_days' => PriceInfoFormatter::toInt($request['flex_days'] ?? 0),
             'hotel_id' => $request['hotel_id'] ?? '',
-            'product_id' => (int) ($request['product_id'] ?? 0),
+            'product_id' => PriceInfoFormatter::toInt($request['product_id'] ?? 0),
             'destination' => $request['destination'] ?? '',
             'country' => $request['country'] ?? '',
             'region' => $request['region'] ?? '',
@@ -73,10 +74,9 @@ class SearchService implements SearchServiceInterface
         // Parse multi-room data
         $rooms_data = [];
         if (!empty($request['room_data'])) {
-            $rooms_data = json_decode($request['room_data'], true);
-            if (!is_array($rooms_data)) {
-                $rooms_data = [];
-            }
+            $rooms_data = TypeCoerce::toRowList(
+                json_decode(PriceInfoFormatter::toScalar($request['room_data']), true),
+            );
         }
 
         // Create default single room if no room_data
@@ -114,7 +114,7 @@ class SearchService implements SearchServiceInterface
             if (isset($request['child_age_' . $i])) {
                 $age = $request['child_age_' . $i];
                 if ($age !== '' && $age !== 'age_needed') {
-                    $ages[] = (int) $age;
+                    $ages[] = PriceInfoFormatter::toInt($age);
                 }
             }
         }
@@ -124,8 +124,8 @@ class SearchService implements SearchServiceInterface
     /**
      * Calculate totals from rooms data
      *
-     * @param array<string, mixed> $rooms_data Rooms configuration
-     * @return array<string, mixed> Totals [adults, children, ages]
+     * @param list<array<string, mixed>> $rooms_data Rooms configuration
+     * @return array{adults: int, children: int, ages: list<int>}
      */
     public function calculateRoomTotals(array $rooms_data): array
     {
@@ -134,12 +134,12 @@ class SearchService implements SearchServiceInterface
         $all_ages = [];
 
         foreach ($rooms_data as $room) {
-            $total_adults += (int) ($room['adults'] ?? 2);
-            $total_children += (int) ($room['children'] ?? 0);
+            $total_adults += PriceInfoFormatter::toInt($room['adults'] ?? 2);
+            $total_children += PriceInfoFormatter::toInt($room['children'] ?? 0);
             if (!empty($room['childrenAges'])) {
-                foreach ($room['childrenAges'] as $age) {
+                foreach (TypeCoerce::toList($room['childrenAges']) as $age) {
                     if ($age !== null && $age !== 'age_needed') {
-                        $all_ages[] = (int) $age;
+                        $all_ages[] = PriceInfoFormatter::toInt($age);
                     }
                 }
             }
@@ -308,13 +308,15 @@ class SearchService implements SearchServiceInterface
                 }
 
                 $finalPrice = $this->pricing->applyCommission($price);
-                $quota = self::parseQuotaValue($quotaMap[$roomId] ?? null);
+                $quota = self::parseQuotaValue(
+                    isset($quotaMap[$roomId]) ? PriceInfoFormatter::toScalar($quotaMap[$roomId]) : null,
+                );
 
                 $item = [
                     'room' => null,
                     'room_id' => $roomId,
                     'room_name' => str_replace(['%2b', '%2B'], '+', $roomId),
-                    'room_type_display' => RoomType::formatRoomLabel($roomId, $roomTypeMap[$roomId] ?? ''),
+                    'room_type_display' => RoomType::formatRoomLabel($roomId, PriceInfoFormatter::toScalar($roomTypeMap[$roomId] ?? '')),
                     'board_id' => $boardId,
                     'board_name' => BoardType::toDisplayName($boardId),
                     'package_name' => rawurldecode(self::xpathValue($packageNames, $i)),
@@ -364,13 +366,15 @@ class SearchService implements SearchServiceInterface
             }
 
             $finalPrice = $this->pricing->applyCommission($price);
-            $quota = self::parseQuotaValue($quotaMap[$roomId] ?? null);
+            $quota = self::parseQuotaValue(
+                isset($quotaMap[$roomId]) ? PriceInfoFormatter::toScalar($quotaMap[$roomId]) : null,
+            );
 
             $item = [
                 'room' => null,
                 'room_id' => $roomId,
                 'room_name' => str_replace(['%2b', '%2B'], '+', $roomId),
-                'room_type_display' => RoomType::formatRoomLabel($roomId, $roomTypeMap[$roomId] ?? ''),
+                'room_type_display' => RoomType::formatRoomLabel($roomId, PriceInfoFormatter::toScalar($roomTypeMap[$roomId] ?? '')),
                 'board_id' => $boardId,
                 'board_name' => BoardType::toDisplayName($boardId),
                 'package_name' => rawurldecode($packageName),
@@ -431,22 +435,25 @@ class SearchService implements SearchServiceInterface
             return [];
         }
 
-        $priceinfo = json_decode($eb_package['priceinfo_data'], true);
+        $priceinfo = TypeCoerce::toStringMap(
+            json_decode(PriceInfoFormatter::toScalar($eb_package['priceinfo_data']), true),
+        );
         if (empty($priceinfo['early_booking'])) {
             return [];
         }
 
-        $eb_data = $priceinfo['early_booking'];
-        // Normalize single entry to array
-        if (isset($eb_data['Reduction'])) {
-            $eb_data = [$eb_data];
-        }
+        // Normalize single entry to a list of entries
+        $ebRaw = $priceinfo['early_booking'];
+        $eb_data = is_array($ebRaw) && isset($ebRaw['Reduction'])
+            ? [$ebRaw]
+            : TypeCoerce::toList($ebRaw);
 
         $today = date('Y-m-d');
-        foreach ($eb_data as $eb) {
-            $bookTo = $eb['BookTo'] ?? '';
-            $stayFrom = $eb['StayFrom'] ?? '';
-            $stayTo = $eb['StayTo'] ?? '';
+        foreach ($eb_data as $ebRow) {
+            $eb = TypeCoerce::toStringMap($ebRow);
+            $bookTo = PriceInfoFormatter::toScalar($eb['BookTo'] ?? '');
+            $stayFrom = PriceInfoFormatter::toScalar($eb['StayFrom'] ?? '');
+            $stayTo = PriceInfoFormatter::toScalar($eb['StayTo'] ?? '');
 
             if (!empty($bookTo) && $bookTo < $today) {
                 continue;
@@ -459,10 +466,10 @@ class SearchService implements SearchServiceInterface
             }
 
             $discounts[] = [
-                'discount' => (float) ($eb['Reduction'] ?? 0),
+                'discount' => PriceInfoFormatter::toFloat($eb['Reduction'] ?? 0),
                 'room_types' => $eb['RoomTypes'] ?? 'all',
                 'package' => $eb['PackageId'] ?? '',
-                'min_stay' => (int) ($eb['MinStay'] ?? 0),
+                'min_stay' => PriceInfoFormatter::toInt($eb['MinStay'] ?? 0),
                 'booking_to' => $bookTo,
             ];
         }
@@ -484,9 +491,9 @@ class SearchService implements SearchServiceInterface
             return [];
         }
 
-        $values = array_column($discounts, 'discount');
-        if (empty($values)) {
-            return [];
+        $values = [];
+        foreach ($discounts as $discount) {
+            $values[] = PriceInfoFormatter::toFloat($discount['discount'] ?? 0);
         }
         $range = [
             'min' => min($values),
@@ -516,7 +523,9 @@ class SearchService implements SearchServiceInterface
     {
         $unique = [];
         foreach ($results as $result) {
-            $key = $result['room_id'] . '|' . $result['board_id'] . '|' . ($result['package_name'] ?? '');
+            $key = PriceInfoFormatter::toScalar($result['room_id'] ?? '')
+                . '|' . PriceInfoFormatter::toScalar($result['board_id'] ?? '')
+                . '|' . PriceInfoFormatter::toScalar($result['package_name'] ?? '');
 
             if (!isset($unique[$key])) {
                 $unique[$key] = $result;
@@ -524,8 +533,8 @@ class SearchService implements SearchServiceInterface
             }
 
             $existing = $unique[$key];
-            $existingHasExtras = !empty(trim($existing['extras'] ?? ''));
-            $currentHasExtras = !empty(trim($result['extras'] ?? ''));
+            $existingHasExtras = !empty(trim(PriceInfoFormatter::toScalar($existing['extras'] ?? '')));
+            $currentHasExtras = !empty(trim(PriceInfoFormatter::toScalar($result['extras'] ?? '')));
 
             if ($existingHasExtras !== $currentHasExtras) {
                 // One has extras promotion, one doesn't — combine into one row
@@ -554,7 +563,7 @@ class SearchService implements SearchServiceInterface
 
     /**
      * Safe xpath value accessor.
-     * @param array<mixed>|null $elements
+     * @param array<\SimpleXMLElement>|null $elements
      */
     private static function xpathValue(?array $elements, int $index, string $default = ''): string
     {
