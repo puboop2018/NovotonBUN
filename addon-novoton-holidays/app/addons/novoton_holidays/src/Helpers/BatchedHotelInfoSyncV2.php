@@ -67,6 +67,9 @@ class BatchedHotelInfoSyncV2 extends AbstractBatchedSync
     /** Adults-only detector (hotel-name-based classification). */
     private readonly AdultOnlyDetector $adultOnlyDetector;
 
+    /** Parses package data out of the hotel-info XML response. */
+    private readonly HotelPackageExtractor $packageExtractor;
+
     /**
      * Product code prefixes from config — e.g. `['NVT', 'NV']`.
      * Cached in constructor so preBatch() and processHotelInfo() don't
@@ -109,6 +112,7 @@ class BatchedHotelInfoSyncV2 extends AbstractBatchedSync
         parent::__construct($state, $logger);
         $this->fullSyncInterval = ConfigProvider::getSyncIntervalHotelInfo();
         $this->adultOnlyDetector = new AdultOnlyDetector();
+        $this->packageExtractor = new HotelPackageExtractor();
         $this->productCodePrefixes = ConfigProvider::getProductCodePrefixes();
     }
 
@@ -313,7 +317,7 @@ class BatchedHotelInfoSyncV2 extends AbstractBatchedSync
             return ['success' => false, 'message' => $e->getMessage(), 'data' => null];
         }
 
-        $packagesCount = $this->countPackages($hotelInfo);
+        $packagesCount = $this->packageExtractor->countPackages($hotelInfo);
         $this->logger->output("OK ({$packagesCount} packages)");
 
         return [
@@ -380,24 +384,13 @@ class BatchedHotelInfoSyncV2 extends AbstractBatchedSync
         }
 
         // Extract package_name
-        $packageName = '';
-        if (isset($hotelInfo->packages->PackageName)) {
-            $packageName = (string) $hotelInfo->packages->PackageName;
-        } elseif (isset($hotelInfo->packages->Package)) {
-            $packageName = (string) $hotelInfo->packages->Package;
-        }
-        if ($packageName === '') {
-            $pn = $hotelInfo->xpath('//PackageName');
-            if (!empty($pn)) {
-                $packageName = (string) $pn[0];
-            }
-        }
+        $packageName = $this->packageExtractor->extractPackageName($hotelInfo);
         if ($packageName !== '') {
             $update['package_name'] = $packageName;
         }
 
         // Extract and store packages (has_room_price is set exclusively by room_price check)
-        $packages = $this->extractPackages($hotelInfo);
+        $packages = $this->packageExtractor->extractPackages($hotelInfo);
         $update['packages_count'] = count($packages);
 
         // Wrap hotel + packages update in a transaction for atomicity
@@ -428,57 +421,6 @@ class BatchedHotelInfoSyncV2 extends AbstractBatchedSync
             db_query('ROLLBACK');
             throw $e;
         }
-    }
-
-    /**
-     * Extract packages from a SimpleXMLElement hotel info response.
-     *
-     * Handles both multiple <packages> siblings and nested <Package>
-     * elements; dedupes by IdCont.
-     *
-     * Verbatim from legacy BatchedHotelInfoSync::extractPackages().
-     *
-     * @return array<int, array{IdCont: string, PackageName: string}>
-     */
-    private function extractPackages(\SimpleXMLElement $hotelInfo): array
-    {
-        $packages = [];
-        $seenIds = [];
-
-        if (isset($hotelInfo->packages)) {
-            foreach ($hotelInfo->packages as $pkg) {
-                $idCont = (string) ($pkg->IdCont ?? '');
-                if ($idCont !== '' && !isset($seenIds[$idCont])) {
-                    $packages[] = [
-                        'IdCont' => $idCont,
-                        'PackageName' => (string) ($pkg->PackageName ?? $pkg->Package ?? ''),
-                    ];
-                    $seenIds[$idCont] = true;
-                }
-
-                // Also check for nested <Package> elements within each <packages>
-                if (isset($pkg->Package)) {
-                    foreach ($pkg->Package as $nestedPkg) {
-                        $nestedIdCont = (string) ($nestedPkg->IdCont ?? '');
-                        if ($nestedIdCont !== '' && !isset($seenIds[$nestedIdCont])) {
-                            $packages[] = [
-                                'IdCont' => $nestedIdCont,
-                                'PackageName' => (string) ($nestedPkg->PackageName ?? ''),
-                            ];
-                            $seenIds[$nestedIdCont] = true;
-                        }
-                    }
-                }
-            }
-        }
-
-        return $packages;
-    }
-
-    /**  */
-    private function countPackages(\SimpleXMLElement $hotelInfo): int
-    {
-        return count($this->extractPackages($hotelInfo));
     }
 
     /**
