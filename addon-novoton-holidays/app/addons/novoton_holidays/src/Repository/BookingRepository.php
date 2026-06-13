@@ -48,6 +48,18 @@ class BookingRepository implements BookingRepositoryInterface
      */
     private static array $hydratedCache = [];
 
+    private readonly BookingSyncRepositoryInterface $syncRepo;
+
+    /**
+     * @param BookingSyncRepositoryInterface|null $syncRepo Mirror writer for the
+     *                                                      shared travel_bookings table; defaults to the concrete repository
+     *                                                      so existing `new BookingRepository()` call sites keep working.
+     */
+    public function __construct(?BookingSyncRepositoryInterface $syncRepo = null)
+    {
+        $this->syncRepo = $syncRepo ?? new BookingSyncRepository();
+    }
+
     /**
      * Find booking by ID (raw DB row, no JSON decoding).
      * @return array<string, mixed>|null
@@ -248,7 +260,7 @@ class BookingRepository implements BookingRepositoryInterface
             $booking_id = TypeCoerce::toInt(db_query('INSERT INTO ?:novoton_bookings ?e', $data));
 
             if ($booking_id > 0) {
-                $this->syncToTravelBookings($booking_id, $data);
+                $this->syncRepo->upsertFromBooking($booking_id, $data);
             }
 
             db_query('COMMIT');
@@ -275,7 +287,7 @@ class BookingRepository implements BookingRepositoryInterface
             // We only fail if the booking doesn't exist at all.
             db_query('UPDATE ?:novoton_bookings SET ?u WHERE booking_id = ?i', $data, $booking_id);
 
-            $this->syncUpdateToTravelBookings($booking_id, $data);
+            $this->syncRepo->applyBookingUpdate($booking_id, $data);
 
             db_query('COMMIT');
         } catch (\Throwable $e) {
@@ -340,10 +352,7 @@ class BookingRepository implements BookingRepositoryInterface
     {
         db_query('START TRANSACTION');
         try {
-            db_query(
-                "DELETE FROM ?:travel_bookings WHERE provider = 'novoton' AND provider_booking_id = ?s",
-                (string) $booking_id,
-            );
+            $this->syncRepo->deleteByBookingId($booking_id);
             $result = (bool) db_query('DELETE FROM ?:novoton_bookings WHERE booking_id = ?i', $booking_id);
             db_query('COMMIT');
         } catch (\Throwable $e) {
@@ -360,13 +369,7 @@ class BookingRepository implements BookingRepositoryInterface
     public function deleteOrphans(int $hours = 24): int
     {
         // Clean up matching travel_bookings first
-        db_query(
-            "DELETE tb FROM ?:travel_bookings tb
-             INNER JOIN ?:novoton_bookings nb ON tb.provider_booking_id = CAST(nb.booking_id AS CHAR)
-             WHERE tb.provider = 'novoton' AND nb.order_id = 0
-               AND nb.created_at < DATE_SUB(NOW(), INTERVAL ?i HOUR)",
-            $hours,
-        );
+        $this->syncRepo->deleteOrphansOlderThan($hours);
 
         $affected = db_query(
             'DELETE FROM ?:novoton_bookings
@@ -393,19 +396,13 @@ class BookingRepository implements BookingRepositoryInterface
         );
 
         if ($affected > 0) {
-            // Sync user_id to travel_bookings for these bookings
+            // Mirror the new owner onto travel_bookings for these bookings
             $id_strings = self::asStringList(db_get_fields(
                 'SELECT booking_id FROM ?:novoton_bookings WHERE session_id = ?s AND user_id = ?i',
                 $session_id,
                 $user_id,
             ));
-            if (!empty($id_strings)) {
-                db_query(
-                    "UPDATE ?:travel_bookings SET user_id = ?i WHERE provider = 'novoton' AND provider_booking_id IN (?a)",
-                    $user_id,
-                    $id_strings,
-                );
-            }
+            $this->syncRepo->assignUser($user_id, $id_strings);
         }
 
         return $affected;
@@ -432,12 +429,8 @@ class BookingRepository implements BookingRepositoryInterface
             $email,
         );
 
-        if ($affected > 0 && !empty($id_strings)) {
-            db_query(
-                "UPDATE ?:travel_bookings SET user_id = ?i WHERE provider = 'novoton' AND provider_booking_id IN (?a)",
-                $user_id,
-                $id_strings,
-            );
+        if ($affected > 0) {
+            $this->syncRepo->assignUser($user_id, $id_strings);
         }
 
         return $affected;
@@ -455,12 +448,7 @@ class BookingRepository implements BookingRepositoryInterface
             'SELECT booking_id FROM ?:novoton_bookings WHERE product_id = ?i',
             $product_id,
         ));
-        if (!empty($id_strings)) {
-            db_query(
-                "DELETE FROM ?:travel_bookings WHERE provider = 'novoton' AND provider_booking_id IN (?a)",
-                $id_strings,
-            );
-        }
+        $this->syncRepo->deleteByBookingIds($id_strings);
 
         return (int) db_query('DELETE FROM ?:novoton_bookings WHERE product_id = ?i', $product_id);
     }
@@ -590,92 +578,6 @@ class BookingRepository implements BookingRepositoryInterface
             'SELECT COUNT(*) FROM ?:novoton_bookings
              WHERE order_id = 0 AND created_at < DATE_SUB(NOW(), INTERVAL ?i HOUR)',
             $hours,
-        );
-    }
-
-    /**
-     * Sync a novoton booking to the shared travel_bookings table.
-     *
-     * Maps novoton-specific fields to the provider-agnostic schema.
-     * Uses INSERT ... ON DUPLICATE KEY UPDATE for idempotency.
-     * @param array<string, mixed> $data
-     */
-    private function syncToTravelBookings(int $booking_id, array $data): void
-    {
-        $travel_record = [
-            'provider' => 'novoton',
-            'provider_booking_id' => (string) $booking_id,
-            'order_id' => (int) ($data['order_id'] ?? 0),
-            'user_id' => (int) ($data['user_id'] ?? 0),
-            'hotel_id' => $data['hotel_id'] ?? '',
-            'hotel_name' => $data['hotel_name'] ?? '',
-            'room_name' => $data['room_type'] ?? '',
-            'board_code' => $data['board_id'] ?? '',
-            'check_in' => $data['check_in'] ?? '',
-            'check_out' => $data['check_out'] ?? '',
-            'nights' => (int) ($data['nights'] ?? 0),
-            'adults' => (int) ($data['adults'] ?? 2),
-            'children' => (int) ($data['children'] ?? 0),
-            'children_ages' => $data['children_ages'] ?? '',
-            'total_price' => (float) ($data['total_price'] ?? 0),
-            'currency' => $data['currency'] ?? 'EUR',
-            'status' => $data['status'] ?? TravelConstants::STATUS_PENDING,
-            'guests_json' => $data['guests_data'] ?? '{}',
-        ];
-
-        // Atomic upsert — relies on UNIQUE KEY uq_provider_booking(provider, provider_booking_id)
-        // Prevents race conditions and eliminates the SELECT round-trip
-        db_query(
-            'INSERT INTO ?:travel_bookings ?e ON DUPLICATE KEY UPDATE ?u',
-            $travel_record,
-            $travel_record,
-        );
-    }
-
-    /**
-     * Sync partial updates from novoton_bookings to travel_bookings.
-     *
-     * Only syncs fields that travel_bookings actually stores.
-     * Skips the sync if no travel_bookings-relevant fields were changed.
-     * @param array<string, mixed> $data
-     */
-    private function syncUpdateToTravelBookings(int $booking_id, array $data): void
-    {
-        // Map novoton field names → travel_bookings field names
-        static $fieldMap = [
-            'order_id' => 'order_id',
-            'user_id' => 'user_id',
-            'hotel_id' => 'hotel_id',
-            'hotel_name' => 'hotel_name',
-            'room_type' => 'room_name',
-            'board_id' => 'board_code',
-            'check_in' => 'check_in',
-            'check_out' => 'check_out',
-            'nights' => 'nights',
-            'adults' => 'adults',
-            'children' => 'children',
-            'children_ages' => 'children_ages',
-            'total_price' => 'total_price',
-            'currency' => 'currency',
-            'status' => 'status',
-            'guests_data' => 'guests_json',
-        ];
-
-        $travelUpdate = [];
-        foreach ($fieldMap as $novotonField => $travelField) {
-            if (array_key_exists($novotonField, $data)) {
-                $travelUpdate[$travelField] = $data[$novotonField];
-            }
-        }
-
-        if (empty($travelUpdate)) {
-            return;
-        }
-
-        db_query(
-            "UPDATE ?:travel_bookings SET ?u WHERE provider = 'novoton' AND provider_booking_id = ?s",
-            $travelUpdate,
-            (string) $booking_id,
         );
     }
 
