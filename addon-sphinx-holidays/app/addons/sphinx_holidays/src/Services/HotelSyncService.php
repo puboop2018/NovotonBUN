@@ -9,6 +9,7 @@ use Tygh\Addons\SphinxHolidays\Contracts\HotelSyncServiceInterface;
 use Tygh\Addons\SphinxHolidays\Helpers\OfferAvailability;
 use Tygh\Addons\SphinxHolidays\Repository\DestinationRepository;
 use Tygh\Addons\SphinxHolidays\Repository\HotelRepository;
+use Tygh\Addons\SphinxHolidays\Repository\HotelSkipRepository;
 use Tygh\Addons\SphinxHolidays\SphinxApi;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Helpers\ValidationHelpers;
@@ -51,6 +52,7 @@ class HotelSyncService extends AbstractSyncService implements HotelSyncServiceIn
         SphinxApi $api,
         private readonly HotelRepository $hotelRepo,
         private readonly DestinationRepository $destRepo,
+        private readonly HotelSkipRepository $skipRepo,
         ?SphinxNormalizer $normalizer = null,
     ) {
         parent::__construct($api);
@@ -358,7 +360,7 @@ class HotelSyncService extends AbstractSyncService implements HotelSyncServiceIn
             return $stats;
         }
 
-        $candidates = $this->hotelRepo->findAvailabilityGateCandidates($destIds);
+        $candidates = $this->skipRepo->findAvailabilityGateCandidates($destIds);
         if ($candidates === []) {
             $this->output("    {$countryCode}: availability gate — no unlinked hotels to check");
             return $stats;
@@ -438,7 +440,7 @@ class HotelSyncService extends AbstractSyncService implements HotelSyncServiceIn
             }
             $reason = TypeCoerce::toString($row['product_skip_reason'] ?? '');
             if (isset($availableSet[$hid])) {
-                if ($reason === HotelRepository::SKIP_REASON_NO_AVAILABILITY) {
+                if ($reason === HotelSkipRepository::SKIP_REASON_NO_AVAILABILITY) {
                     $toClear[] = $hid;
                 }
                 continue;
@@ -451,8 +453,8 @@ class HotelSyncService extends AbstractSyncService implements HotelSyncServiceIn
             }
         }
 
-        $marked = $this->hotelRepo->markSkippedBatch($toMark, HotelRepository::SKIP_REASON_NO_AVAILABILITY);
-        $cleared = $this->hotelRepo->clearSkipReasonBatch($toClear, HotelRepository::SKIP_REASON_NO_AVAILABILITY);
+        $marked = $this->skipRepo->markSkippedBatch($toMark, HotelSkipRepository::SKIP_REASON_NO_AVAILABILITY);
+        $cleared = $this->skipRepo->clearSkipReasonBatch($toClear, HotelSkipRepository::SKIP_REASON_NO_AVAILABILITY);
 
         $stats['availability_probed'] = count($probedDestinations);
         $stats['availability_gated'] = $marked;
