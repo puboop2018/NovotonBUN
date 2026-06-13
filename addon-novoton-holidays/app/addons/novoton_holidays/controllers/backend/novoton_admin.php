@@ -118,8 +118,8 @@ if ($mode === 'bookings') {
         $condition .= db_quote(" AND b.check_in <= ?s", $reqDateTo);
     }
 
-    $bookingRepo = Container::getInstance()->bookingRepository();
-    $bookings = $bookingRepo->findForAdminList($condition, 500);
+    $reportingRepo = Container::getInstance()->bookingReportingRepository();
+    $bookings = $reportingRepo->findForAdminList($condition, 500);
 
     /** @var \Smarty $view */
     $view = Tygh::$app['view'];
@@ -137,8 +137,8 @@ if ($mode === 'booking_details') {
         return [CONTROLLER_STATUS_REDIRECT, 'novoton_admin.bookings'];
     }
 
-    $bookingRepo = Container::getInstance()->bookingRepository();
-    $booking = $bookingRepo->findWithOrderDetails($bookingId);
+    $reportingRepo = Container::getInstance()->bookingReportingRepository();
+    $booking = $reportingRepo->findWithOrderDetails($bookingId);
 
     if ($booking) {
         // Get invoice from Novoton
@@ -202,8 +202,8 @@ if ($mode === 'download_log') {
 // Export bookings
 if ($mode === 'export_bookings') {
     
-    $bookingRepo = Container::getInstance()->bookingRepository();
-    $bookings = $bookingRepo->findAllForExport();
+    $reportingRepo = Container::getInstance()->bookingReportingRepository();
+    $bookings = $reportingRepo->findAllForExport();
     
     // Create CSV
     $csv = "Booking ID,Order ID,Hotel Name,Room Type,Check-in,Check-out,Adults,Children,Price,Currency,Status,Email,Created\n";

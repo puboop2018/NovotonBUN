@@ -48,7 +48,7 @@ if ($mode === 'health') {
     // 1. Database connectivity
     try {
         $hotelRepo = _nvt_hotel_repo();
-        $bookingRepo = _nvt_booking_repo();
+        $bookingRepo = _nvt_booking_reporting_repo();
         $syncLogRepo = _nvt_sync_log_repo();
 
         $db_start = microtime(true);

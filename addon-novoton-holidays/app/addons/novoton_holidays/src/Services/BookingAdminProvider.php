@@ -285,7 +285,7 @@ class BookingAdminProvider implements BookingAdminProviderInterface
     private function handleCleanupOrphans(): array
     {
         $bookingRepo = Container::getInstance()->bookingRepository();
-        $count = $bookingRepo->countOrphans(24);
+        $count = Container::getInstance()->bookingReportingRepository()->countOrphans(24);
 
         if ($count > 0) {
             $bookingRepo->deleteOrphans(24);

@@ -162,6 +162,14 @@ function _nvt_booking_ownership_repo(): \Tygh\Addons\NovotonHolidays\Repository\
 }
 
 /**
+ * Admin/aggregate booking reporting queries (counts, admin lists, export).
+ */
+function _nvt_booking_reporting_repo(): \Tygh\Addons\NovotonHolidays\Repository\BookingReportingRepositoryInterface
+{
+    return Container::getInstance()->bookingReportingRepository();
+}
+
+/**
  */
 function _nvt_facility_repo(): \Tygh\Addons\NovotonHolidays\Repository\FacilityRepositoryInterface
 {

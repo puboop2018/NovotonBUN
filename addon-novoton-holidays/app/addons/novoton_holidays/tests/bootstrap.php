@@ -110,6 +110,33 @@ if (!function_exists('db_get_fields')) {
     }
 }
 
+// db_quote interpolates parameters into a SQL fragment and returns the string.
+// CS-Cart isn't loaded in tests, so emulate enough of it (left-to-right
+// placeholder substitution) for repositories that build conditional WHERE
+// fragments. Strings are single-quoted; arrays become comma-joined lists.
+if (!function_exists('db_quote')) {
+    function db_quote(string $query, ...$params): string
+    {
+        $i = 0;
+
+        return (string) preg_replace_callback(
+            '/\?[sidanp]/',
+            static function (array $m) use (&$i, $params): string {
+                $value = $params[$i] ?? null;
+                $i++;
+                if (is_array($value)) {
+                    return implode(',', array_map(static fn ($v): string => is_scalar($v) ? (string) $v : '', $value));
+                }
+                if (is_string($value)) {
+                    return "'" . $value . "'";
+                }
+                return is_scalar($value) ? (string) $value : '';
+            },
+            $query,
+        );
+    }
+}
+
 // ── CS-Cart Registry stub ───────────────────────────────────────────────────
 if (!class_exists(\Tygh\Registry::class)) {
     // Minimal stub — tests that need specific registry values should

@@ -345,7 +345,7 @@ if ($mode === 'test_alternative_rs') {
  */
 if ($mode === 'manage' || empty($mode)) {
     $hotelRepo = Container::getInstance()->hotelRepository();
-    $bookingRepo = Container::getInstance()->bookingRepository();
+    $bookingReporting = Container::getInstance()->bookingReportingRepository();
     $syncLogRepo = Container::getInstance()->syncLogRepository();
 
     $addon_settings = ConfigProvider::all();
@@ -360,7 +360,7 @@ if ($mode === 'manage' || empty($mode)) {
             'with_packages' => $hotelRepo->count(['has_packages' => true]),
             'without_packages' => $hotelRepo->count(['no_packages' => true]),
         ],
-        'bookings' => (new \Tygh\Addons\NovotonHolidays\Services\BookingQueryService($bookingRepo))->getStats(),
+        'bookings' => (new \Tygh\Addons\NovotonHolidays\Services\BookingQueryService($bookingReporting))->getStats(),
         'by_country' => []
     ];
 
