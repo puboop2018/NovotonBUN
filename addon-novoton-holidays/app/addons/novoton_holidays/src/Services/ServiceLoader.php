@@ -154,6 +154,14 @@ function _nvt_booking_repo(): \Tygh\Addons\NovotonHolidays\Repository\BookingRep
 }
 
 /**
+ * Ownership-scoped booking lookups (frontend security boundary).
+ */
+function _nvt_booking_ownership_repo(): \Tygh\Addons\NovotonHolidays\Repository\BookingOwnershipRepositoryInterface
+{
+    return Container::getInstance()->bookingOwnershipRepository();
+}
+
+/**
  */
 function _nvt_facility_repo(): \Tygh\Addons\NovotonHolidays\Repository\FacilityRepositoryInterface
 {

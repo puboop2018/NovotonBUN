@@ -28,9 +28,9 @@ use Tygh\Addons\NovotonHolidays\Helpers\JsonDecoder;
     $current_user_id = PriceInfoFormatter::toInt($auth['user_id'] ?? 0);
     $current_session_id = TypeCoerce::toString(Tygh::$app['session']->getID());
 
-    $bookingRepo = _nvt_booking_repo();
+    $ownershipRepo = _nvt_booking_ownership_repo();
     /** @var array<string, mixed>|null $booking_record */
-    $booking_record = $bookingRepo->findByIdWithOwnership($booking_id, $current_user_id, $current_session_id);
+    $booking_record = $ownershipRepo->findByIdWithOwnership($booking_id, $current_user_id, $current_session_id);
 
     if (empty($booking_record)) {
         fn_set_notification('E', __('error'), __('novoton_holidays.invalid_booking_data'));

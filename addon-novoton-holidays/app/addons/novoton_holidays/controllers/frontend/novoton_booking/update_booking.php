@@ -9,6 +9,7 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
 use Tygh\Tygh;
 use Tygh\Addons\NovotonHolidays\Services\PriceInfoFormatter;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
 
     $security = _nvt_get_security_service();
@@ -26,10 +27,10 @@ use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
     /** @var array<string, mixed> $auth */
     $auth = is_array(Tygh::$app['session']['auth'] ?? null) ? Tygh::$app['session']['auth'] : [];
     $current_user_id = PriceInfoFormatter::toInt($auth['user_id'] ?? 0);
-    $current_session_id = Tygh::$app['session']->getID();
+    $current_session_id = TypeCoerce::toString(Tygh::$app['session']->getID());
 
-    $bookingRepo = _nvt_booking_repo();
-    $ownership_check = $bookingRepo->checkOwnership($booking_id, $current_user_id, $current_session_id);
+    $ownershipRepo = _nvt_booking_ownership_repo();
+    $ownership_check = $ownershipRepo->checkOwnership($booking_id, $current_user_id, $current_session_id);
     if (empty($ownership_check)) {
         $security->logSecurityEvent('unauthorized_booking_update', [
             'booking_id' => $booking_id,

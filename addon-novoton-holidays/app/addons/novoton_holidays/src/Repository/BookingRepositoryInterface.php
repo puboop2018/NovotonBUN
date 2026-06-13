@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Repository;
 
-use Tygh\Addons\TravelCore\TravelConstants;
-
 /**
  * @phpstan-type BookingRow = array<string, mixed>
  */
@@ -28,12 +26,6 @@ interface BookingRepositoryInterface
     public function findBySessionId(string $session_id): array;
     /** @return list<BookingRow> */
     public function findByHotelId(string $hotel_id, int $limit = 100): array;
-    /**
-     * @param list<int> $product_ids
-     * @param list<string> $statuses
-     * @return list<BookingRow>
-     */
-    public function findByProductIds(array $product_ids, array $statuses = [TravelConstants::STATUS_PENDING, TravelConstants::STATUS_CONFIRMED], string $session_id = '', int $user_id = 0): array;
     /** @return list<BookingRow> */
     public function findPending(int $limit = 500): array;
     /** @return BookingRow|null */
@@ -87,9 +79,6 @@ interface BookingRepositoryInterface
     public function findWithOrderDetails(int $booking_id): ?array;
     /** @return list<BookingRow> */
     public function findAllForExport(): array;
-    /** @return BookingRow|null */
-    public function findByIdWithOwnership(int $booking_id, int $user_id, string $session_id): ?array;
-    public function checkOwnership(int $booking_id, int $user_id, string $session_id): ?int;
 
     /**
      * Decode JSON fields on a raw booking row in-place.
