@@ -21,6 +21,7 @@ declare(strict_types=1);
 use Tygh\Addons\NovotonHolidays\Helpers\JsonDecoder;
 use Tygh\Addons\NovotonHolidays\Services\Container;
 use Tygh\Addons\NovotonHolidays\Services\PriceInfoFormatter;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Registry;
 
 if (!defined('BOOTSTRAP')) {
@@ -59,9 +60,9 @@ function fn_novoton_holidays_calculate_cart_items(&$cart, &$cart_products, $auth
         return;
     }
 
-    $product_ids = array_column($cart_products, 'product_id');
+    $product_ids = TypeCoerce::toIntList(array_column($cart_products, 'product_id'));
 
-    $repo = Container::getInstance()->bookingRepository();
+    $repo = Container::getInstance()->bookingOwnershipRepository();
     $auth_user_id = PriceInfoFormatter::toInt($auth['user_id'] ?? 0);
     $current_session_id = session_id() ?: '';
     $default_statuses = [TravelConstants::STATUS_PENDING, TravelConstants::STATUS_CONFIRMED];
