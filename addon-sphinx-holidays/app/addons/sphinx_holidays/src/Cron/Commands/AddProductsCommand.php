@@ -454,7 +454,6 @@ class AddProductsCommand extends AbstractSyncCommand
             $this->output('Add Products Status: idle (no run in progress)');
 
             // Show unlinked count
-            $hotelRepo = Container::getHotelRepository();
             $unlinkedCount = ValidationHelpers::toInt(db_get_field(
                 "SELECT COUNT(*) FROM ?:sphinx_hotels WHERE product_id IS NULL AND sync_status = 'active' AND product_skip_reason IS NULL",
             ));
