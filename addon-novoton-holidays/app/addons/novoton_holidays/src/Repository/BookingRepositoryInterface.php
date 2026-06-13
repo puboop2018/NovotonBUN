@@ -38,10 +38,6 @@ interface BookingRepositoryInterface
     /** @return list<BookingRow> */
     public function findRqWithoutAlternatives(int $limit = 50): array;
     /**
-     * @param array<string, mixed> $filters
-     */
-    public function count(array $filters = []): int;
-    /**
      * @param array<string, mixed> $data
      * @return int Booking ID
      */
@@ -60,7 +56,6 @@ interface BookingRepositoryInterface
     public function storeApiData(int $booking_id, $request, $response): bool;
     public function delete(int $booking_id): bool;
     public function deleteOrphans(int $hours = 24): int;
-    public function countOrphans(int $hours = 48): int;
     public function linkToUserBySession(int $user_id, string $session_id): int;
     public function linkToUserByEmail(int $user_id, string $email): int;
     public function deleteByProductId(int $product_id): int;
@@ -72,13 +67,6 @@ interface BookingRepositoryInterface
     public function findIdByOrderAndHotelDates(int $order_id, string $hotel_id, string $check_in, string $check_out): ?int;
     /** @return list<BookingRow> */
     public function findWithReservationId(int $limit = 1000): array;
-
-    /** @return list<BookingRow> */
-    public function findForAdminList(string $condition = '', int $limit = 500): array;
-    /** @return BookingRow|null */
-    public function findWithOrderDetails(int $booking_id): ?array;
-    /** @return list<BookingRow> */
-    public function findAllForExport(): array;
 
     /**
      * Decode JSON fields on a raw booking row in-place.

@@ -36,6 +36,8 @@ use Tygh\Addons\NovotonHolidays\Repository\AlternativeRequestRepository;
 use Tygh\Addons\NovotonHolidays\Repository\AlternativeRequestRepositoryInterface;
 use Tygh\Addons\NovotonHolidays\Repository\BookingOwnershipRepository;
 use Tygh\Addons\NovotonHolidays\Repository\BookingOwnershipRepositoryInterface;
+use Tygh\Addons\NovotonHolidays\Repository\BookingReportingRepository;
+use Tygh\Addons\NovotonHolidays\Repository\BookingReportingRepositoryInterface;
 use Tygh\Addons\NovotonHolidays\Repository\BookingRepository;
 use Tygh\Addons\NovotonHolidays\Repository\BookingRepositoryInterface;
 use Tygh\Addons\NovotonHolidays\Repository\FacilityRepository;
@@ -148,6 +150,11 @@ class Container
     public function bookingRepository(): BookingRepositoryInterface
     {
         return $this->resolve('bookingRepository', fn (): \Tygh\Addons\NovotonHolidays\Repository\BookingRepository => new BookingRepository());
+    }
+
+    public function bookingReportingRepository(): BookingReportingRepositoryInterface
+    {
+        return $this->resolve('bookingReportingRepository', fn (): \Tygh\Addons\NovotonHolidays\Repository\BookingReportingRepository => new BookingReportingRepository());
     }
 
     public function bookingOwnershipRepository(): BookingOwnershipRepositoryInterface

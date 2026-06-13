@@ -238,16 +238,6 @@ class BookingRepository implements BookingRepositoryInterface
     }
 
     /**
-     * Count bookings with filters
-     * @param array<string, mixed> $filters
-     */
-    public function count(array $filters = []): int
-    {
-        $where = $this->buildWhereClause($filters);
-        return TypeCoerce::toInt(db_get_field("SELECT COUNT(*) FROM ?:novoton_bookings {$where}"));
-    }
-
-    /**
      * Create new booking
      * @param array<string, mixed> $data
      */
@@ -570,71 +560,6 @@ class BookingRepository implements BookingRepositoryInterface
     }
 
     /**
-     * Count orphan bookings (no order, older than N hours).
-     */
-    public function countOrphans(int $hours = 48): int
-    {
-        return (int) db_get_field(
-            'SELECT COUNT(*) FROM ?:novoton_bookings
-             WHERE order_id = 0 AND created_at < DATE_SUB(NOW(), INTERVAL ?i HOUR)',
-            $hours,
-        );
-    }
-
-    /**
-     * Find bookings for admin listing with order info joined.
-     *
-     * @param string $condition Extra WHERE conditions (must start with " AND ...")
-     * @return list<array<string, mixed>>
-     */
-    public function findForAdminList(string $condition = '', int $limit = 500): array
-    {
-        return self::asRowList(db_get_array(
-            "SELECT b.booking_id, b.order_id, b.hotel_id, b.hotel_name, b.room_type,
-                    b.check_in, b.check_out, b.nights, b.adults, b.children,
-                    b.total_price, b.currency, b.status, b.novoton_status, b.created_at,
-                    o.status as order_status, o.email
-             FROM ?:novoton_bookings b
-             LEFT JOIN ?:orders o ON b.order_id = o.order_id
-             WHERE 1=1 {$condition}
-             ORDER BY b.created_at DESC
-             LIMIT ?i",
-            $limit,
-        ));
-    }
-
-    /**
-     * Find a booking with full order and product info for admin detail view.
-     * @return array<string, mixed>|null
-     */
-    public function findWithOrderDetails(int $booking_id): ?array
-    {
-        $row = self::asRow(db_get_row(
-            'SELECT b.*, o.*, p.product
-             FROM ?:novoton_bookings b
-             LEFT JOIN ?:orders o ON b.order_id = o.order_id
-             LEFT JOIN ?:products p ON b.product_id = p.product_id
-             WHERE b.booking_id = ?i',
-            $booking_id,
-        ));
-        return $row === [] ? null : $row;
-    }
-
-    /**
-     * Find all bookings with order info for CSV export.
-     * @return list<array<string, mixed>>
-     */
-    public function findAllForExport(): array
-    {
-        return self::asRowList(db_get_array(
-            'SELECT b.*, o.email, o.status as order_status
-             FROM ?:novoton_bookings b
-             LEFT JOIN ?:orders o ON b.order_id = o.order_id
-             ORDER BY b.created_at DESC',
-        ));
-    }
-
-    /**
      * Filter null values from data array to prevent PHP 8.1+
      * real_escape_string() deprecation when passed to ?e / ?u placeholders.
      * @param array<string, mixed> $data
@@ -643,41 +568,5 @@ class BookingRepository implements BookingRepositoryInterface
     private static function filterNullValues(array $data): array
     {
         return array_filter($data, static fn ($v): bool => $v !== null);
-    }
-
-    /**
-     * Build WHERE clause from filters
-     * @param array<string, mixed> $filters
-     */
-    private function buildWhereClause(array $filters): string
-    {
-        $conditions = [];
-
-        if (!empty($filters['status'])) {
-            $conditions[] = db_quote('status = ?s', $filters['status']);
-        }
-        if (!empty($filters['hotel_id'])) {
-            $conditions[] = db_quote('hotel_id = ?s', $filters['hotel_id']);
-        }
-        if (!empty($filters['order_id'])) {
-            $conditions[] = db_quote('order_id = ?i', $filters['order_id']);
-        }
-        if (!empty($filters['user_id'])) {
-            $conditions[] = db_quote('user_id = ?i', $filters['user_id']);
-        }
-        if (!empty($filters['has_order'])) {
-            $conditions[] = 'order_id > 0';
-        }
-        if (!empty($filters['no_order'])) {
-            $conditions[] = 'order_id = 0';
-        }
-        if (!empty($filters['check_in_from'])) {
-            $conditions[] = db_quote('check_in >= ?s', $filters['check_in_from']);
-        }
-        if (!empty($filters['check_in_to'])) {
-            $conditions[] = db_quote('check_in <= ?s', $filters['check_in_to']);
-        }
-
-        return !empty($conditions) ? 'WHERE ' . implode(' AND ', $conditions) : '';
     }
 }

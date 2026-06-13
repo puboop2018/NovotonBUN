@@ -18,7 +18,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Services;
 
-use Tygh\Addons\NovotonHolidays\Repository\BookingRepositoryInterface;
+use Tygh\Addons\NovotonHolidays\Repository\BookingReportingRepositoryInterface;
 use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
 use Tygh\Addons\TravelCore\TravelConstants;
 use Tygh\Addons\TravelCore\ValueObjects\BoardType;
@@ -26,14 +26,14 @@ use Tygh\Addons\TravelCore\ValueObjects\RoomType;
 
 class BookingQueryService implements BookingQueryServiceInterface
 {
-    private readonly BookingRepositoryInterface $bookingRepository;
+    private readonly BookingReportingRepositoryInterface $bookingReporting;
     private readonly GuestDataNormalizer $guestDataNormalizer;
 
     public function __construct(
-        BookingRepositoryInterface $bookingRepository,
+        BookingReportingRepositoryInterface $bookingReporting,
         ?GuestDataNormalizer $guestDataNormalizer = null,
     ) {
-        $this->bookingRepository = $bookingRepository;
+        $this->bookingReporting = $bookingReporting;
         $this->guestDataNormalizer = $guestDataNormalizer ?? new GuestDataNormalizer();
     }
 
@@ -45,12 +45,12 @@ class BookingQueryService implements BookingQueryServiceInterface
     public function getStats(): array
     {
         return [
-            'total' => $this->bookingRepository->count(),
-            'pending' => $this->bookingRepository->count(['status' => TravelConstants::STATUS_PENDING]),
-            'confirmed' => $this->bookingRepository->count(['status' => TravelConstants::STATUS_CONFIRMED]),
-            'cancelled' => $this->bookingRepository->count(['status' => TravelConstants::STATUS_CANCELLED]),
-            'with_orders' => $this->bookingRepository->count(['has_order' => true]),
-            'orphans' => $this->bookingRepository->count(['no_order' => true]),
+            'total' => $this->bookingReporting->count(),
+            'pending' => $this->bookingReporting->count(['status' => TravelConstants::STATUS_PENDING]),
+            'confirmed' => $this->bookingReporting->count(['status' => TravelConstants::STATUS_CONFIRMED]),
+            'cancelled' => $this->bookingReporting->count(['status' => TravelConstants::STATUS_CANCELLED]),
+            'with_orders' => $this->bookingReporting->count(['has_order' => true]),
+            'orphans' => $this->bookingReporting->count(['no_order' => true]),
         ];
     }
 

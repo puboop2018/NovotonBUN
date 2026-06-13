@@ -34,7 +34,7 @@ class CleanupCommand extends AbstractCronCommand
         // 1. Clean orphan bookings (no order_id, older than 48h)
         $this->output('1. Cleaning orphan bookings...');
         $bookingRepo = Container::getInstance()->bookingRepository();
-        $orphan_count = $bookingRepo->countOrphans(48);
+        $orphan_count = Container::getInstance()->bookingReportingRepository()->countOrphans(48);
         $bookingRepo->deleteOrphans(48);
         $this->output("   Orphan bookings deleted: {$orphan_count}");
         $this->output('');
