@@ -44,7 +44,8 @@ class HotelSyncCommand extends AbstractSyncCommand
         $api = Container::getApi();
         $hotelRepo = Container::getHotelRepository();
         $destRepo = Container::getDestinationRepository();
-        $service = new HotelSyncService($api, $hotelRepo, $destRepo);
+        $skipRepo = Container::getHotelSkipRepository();
+        $service = new HotelSyncService($api, $hotelRepo, $destRepo, $skipRepo);
 
         if ($this->outputCallback !== null) {
             $service->setOutputCallback($this->outputCallback);

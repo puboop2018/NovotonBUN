@@ -119,6 +119,7 @@ class AddProductsCommand extends AbstractSyncCommand
         $hotelRepo = Container::getHotelRepository();
         $destRepo = Container::getDestinationRepository();
         $factory = Container::getProductFactory();
+        $skipRepo = Container::getHotelSkipRepository();
 
         $countryCode = ValidationHelpers::toString($params['country'] ?? $state['country'] ?? '');
         $limit = ValidationHelpers::toInt($params['limit'] ?? 0);
@@ -128,7 +129,7 @@ class AddProductsCommand extends AbstractSyncCommand
         // Handle retry_skipped: reset product_skip_reason so hotels become eligible again
         if ($retrySkipped !== '') {
             $reason = ($retrySkipped === '1') ? '' : $retrySkipped;
-            $reset = $hotelRepo->resetSkipped($countryCode, $reason);
+            $reset = $skipRepo->resetSkipped($countryCode, $reason);
             $filter = $countryCode !== '' ? " for country {$countryCode}" : '';
             $reasonFilter = $reason !== '' ? " with reason '{$reason}'" : '';
             $this->output("Reset {$reset} previously skipped hotels{$filter}{$reasonFilter}. They are now eligible for product creation.");
@@ -244,7 +245,7 @@ class AddProductsCommand extends AbstractSyncCommand
 
         // Diagnostic: if nothing was processed, check for skipped hotels
         if (ValidationHelpers::toInt($state['total'] ?? 0) === 0 && $processed === 0) {
-            $skippedCount = $hotelRepo->countSkipped();
+            $skippedCount = $skipRepo->countSkipped();
             if ($skippedCount > 0) {
                 $byReason = $this->getSkippedBreakdown();
                 $this->output("No eligible hotels found, but {$skippedCount} hotel(s) were previously skipped:");
@@ -459,7 +460,7 @@ class AddProductsCommand extends AbstractSyncCommand
             ));
             $this->output("  Unlinked hotels ready: {$unlinkedCount}");
 
-            $skippedCount = $hotelRepo->countSkipped();
+            $skippedCount = Container::getHotelSkipRepository()->countSkipped();
             if ($skippedCount > 0) {
                 $this->output("  Previously skipped: {$skippedCount}");
                 $byReason = $this->getSkippedBreakdown();

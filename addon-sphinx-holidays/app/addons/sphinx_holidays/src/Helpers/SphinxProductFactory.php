@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\SphinxHolidays\Helpers;
 
 use Tygh\Addons\SphinxHolidays\Repository\HotelRepository;
+use Tygh\Addons\SphinxHolidays\Repository\HotelSkipRepository;
 use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
 use Tygh\Addons\SphinxHolidays\Services\SphinxFeatureAssigner;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
@@ -22,6 +23,7 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
 {
     private HotelRepository $hotelRepo;
     private SphinxFeatureAssigner $featureAssigner;
+    private HotelSkipRepository $skipRepo;
 
     /** @var array<string, int> Country name → category_id cache (under root) */
     private array $categoryCache = [];
@@ -29,10 +31,14 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
     /** @var array<string, string> Valid CS-Cart country codes (loaded once) */
     private array $validCountryCodes = [];
 
-    public function __construct(HotelRepository $hotelRepo, SphinxFeatureAssigner $featureAssigner)
-    {
+    public function __construct(
+        HotelRepository $hotelRepo,
+        SphinxFeatureAssigner $featureAssigner,
+        HotelSkipRepository $skipRepo,
+    ) {
         $this->hotelRepo = $hotelRepo;
         $this->featureAssigner = $featureAssigner;
+        $this->skipRepo = $skipRepo;
     }
 
     /**
@@ -63,7 +69,7 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
 
         // Country code validation
         if ($cc !== '' && !isset($this->validCountryCodes[$cc])) {
-            $this->hotelRepo->markSkipped($hotelId, 'invalid_country');
+            $this->skipRepo->markSkipped($hotelId, 'invalid_country');
             fn_log_event('general', 'runtime', [
                 'message' => "Sphinx: country code '{$cc}' not found in CS-Cart countries. Hotel {$hotelId} skipped.",
             ]);
@@ -88,14 +94,14 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
         // Resolve root category from addon settings
         $rootCategoryId = ConfigProvider::getHotelsCategoryId();
         if ($rootCategoryId <= 0) {
-            $this->hotelRepo->markSkipped($hotelId, 'no_root_category');
+            $this->skipRepo->markSkipped($hotelId, 'no_root_category');
             return ['status' => 'skipped', 'product_id' => 0, 'reason' => 'hotels_category_id not configured'];
         }
 
         // Resolve country name and create country sub-category
         $countryName = $this->resolveCountryName($hotel, $hierarchy);
         if ($countryName === '') {
-            $this->hotelRepo->markSkipped($hotelId, 'no_destination');
+            $this->skipRepo->markSkipped($hotelId, 'no_destination');
             return ['status' => 'skipped', 'product_id' => 0, 'reason' => 'no country resolved'];
         }
 
@@ -106,7 +112,7 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
         $categoryId = $this->categoryCache[$cacheKey];
 
         if (!$categoryId) {
-            $this->hotelRepo->markSkipped($hotelId, 'category_failed');
+            $this->skipRepo->markSkipped($hotelId, 'category_failed');
             return ['status' => 'failed', 'product_id' => 0, 'reason' => "category: {$countryName} under root {$rootCategoryId}"];
         }
 
@@ -114,7 +120,7 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
         if (ConfigProvider::shouldSkipNoDescription()) {
             $description = trim((string) ($hotel['description'] ?? ''));
             if ($description === '') {
-                $this->hotelRepo->markSkipped($hotelId, 'no_description');
+                $this->skipRepo->markSkipped($hotelId, 'no_description');
                 return ['status' => 'skipped', 'product_id' => 0, 'reason' => 'no description'];
             }
         }
@@ -123,7 +129,7 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
         if (ConfigProvider::shouldSkipUnratedHotels()) {
             $classification = (int) ($hotel['classification'] ?? 0);
             if ($classification < 1 || $classification > 5) {
-                $this->hotelRepo->markSkipped($hotelId, 'unrated');
+                $this->skipRepo->markSkipped($hotelId, 'unrated');
                 return ['status' => 'skipped', 'product_id' => 0, 'reason' => 'no star classification'];
             }
         }
@@ -226,7 +232,7 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
                 'company_id' => $productData['company_id'],
                 'lang' => $primaryLang,
             ]);
-            $this->hotelRepo->markSkipped($hotelId, 'product_creation_failed');
+            $this->skipRepo->markSkipped($hotelId, 'product_creation_failed');
             return ['status' => 'failed', 'product_id' => 0, 'reason' => 'product creation'];
         }
 

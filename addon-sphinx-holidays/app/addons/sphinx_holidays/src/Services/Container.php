@@ -11,6 +11,7 @@ use Tygh\Addons\SphinxHolidays\Helpers\SphinxProductFactoryInterface;
 use Tygh\Addons\SphinxHolidays\Repository\DestinationRepository;
 use Tygh\Addons\SphinxHolidays\Repository\DestinationWhitelistRepository;
 use Tygh\Addons\SphinxHolidays\Repository\HotelRepository;
+use Tygh\Addons\SphinxHolidays\Repository\HotelSkipRepository;
 use Tygh\Addons\SphinxHolidays\Repository\SphinxBookingRepository;
 use Tygh\Addons\SphinxHolidays\Repository\SyncLogRepository;
 use Tygh\Addons\SphinxHolidays\SphinxApi;
@@ -121,6 +122,12 @@ class Container
         return self::resolve('hotelRepository', static fn (): \Tygh\Addons\SphinxHolidays\Repository\HotelRepository => new HotelRepository());
     }
 
+    public static function getHotelSkipRepository(): HotelSkipRepository
+    {
+        /** @var HotelSkipRepository */
+        return self::resolve('hotelSkipRepository', static fn (): \Tygh\Addons\SphinxHolidays\Repository\HotelSkipRepository => new HotelSkipRepository());
+    }
+
     public static function getBookingRepository(): SphinxBookingRepository
     {
         /** @var SphinxBookingRepository */
@@ -149,6 +156,7 @@ class Container
         return self::resolve('productFactory', static fn (): \Tygh\Addons\SphinxHolidays\Helpers\SphinxProductFactory => new SphinxProductFactory(
             self::getHotelRepository(),
             self::getFeatureAssigner(),
+            self::getHotelSkipRepository(),
         ));
     }
 

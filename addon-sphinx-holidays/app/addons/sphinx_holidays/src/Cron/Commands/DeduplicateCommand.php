@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Tygh\Addons\SphinxHolidays\Cron\Commands;
 
 use Tygh\Addons\SphinxHolidays\Repository\HotelRepository;
+use Tygh\Addons\SphinxHolidays\Repository\HotelSkipRepository;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 /**
  * Cron command: find and merge duplicate hotels in sphinx_hotels.
@@ -46,6 +48,7 @@ class DeduplicateCommand extends AbstractSyncCommand
         ];
 
         $repo = new HotelRepository();
+        $skipRepo = new HotelSkipRepository();
 
         if ($dryRun) {
             $this->output('DRY RUN mode — no changes will be made.');
@@ -113,7 +116,7 @@ class DeduplicateCommand extends AbstractSyncCommand
                     continue;
                 }
 
-                $dupHotelId = $h['hotel_id'];
+                $dupHotelId = TypeCoerce::toString($h['hotel_id'] ?? '');
                 $dupProductId = (int) ($h['product_id'] ?? 0);
 
                 // If duplicate has a different product_id and canonical has one — delete orphan product
@@ -138,7 +141,7 @@ class DeduplicateCommand extends AbstractSyncCommand
 
                 // Mark as duplicate
                 if (!$dryRun) {
-                    $repo->markSkipped($dupHotelId, 'duplicate');
+                    $skipRepo->markSkipped($dupHotelId, 'duplicate');
                 }
 
                 $stats['hotels_deduplicated']++;

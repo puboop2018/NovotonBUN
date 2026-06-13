@@ -75,7 +75,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $api = Container::getApi();
         $hotelRepo = Container::getHotelRepository();
         $destRepo = Container::getDestinationRepository();
-        $service = new HotelSyncService($api, $hotelRepo, $destRepo);
+        $skipRepo = Container::getHotelSkipRepository();
+        $service = new HotelSyncService($api, $hotelRepo, $destRepo, $skipRepo);
 
         $countryCodes = ConfigProvider::getSelectedCountryCodes();
         $result = $service->sync($countryCodes);
@@ -132,7 +133,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $api = Container::getApi();
         $hotelRepo = Container::getHotelRepository();
         $destRepo = Container::getDestinationRepository();
-        $service = new HotelSyncService($api, $hotelRepo, $destRepo);
+        $skipRepo = Container::getHotelSkipRepository();
+        $service = new HotelSyncService($api, $hotelRepo, $destRepo, $skipRepo);
 
         $result = $service->relinkExistingProducts();
         $rLinked = TypeCoerce::toInt($result['linked'] ?? 0);
@@ -165,8 +167,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if ($mode === 'retry_skipped') {
-        $hotelRepo = Container::getHotelRepository();
-        $reset = $hotelRepo->resetSkipped();
+        $skipRepo = Container::getHotelSkipRepository();
+        $reset = $skipRepo->resetSkipped();
 
         if ($reset > 0) {
             fn_set_notification('N', __('notice'), __('sphinx_holidays.skipped_reset', ['[count]' => $reset]));
@@ -469,7 +471,7 @@ if ($mode === 'manage') {
 
     // Product stats
     $linkedCount = $hotelRepo->countLinked();
-    $skippedCount = $hotelRepo->countSkipped();
+    $skippedCount = Container::getHotelSkipRepository()->countSkipped();
     $unlinkedCount = $totalHotels - $linkedCount - $skippedCount;
 
     // API status
