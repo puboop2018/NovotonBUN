@@ -70,6 +70,12 @@ class BatchedHotelInfoSyncV2 extends AbstractBatchedSync
     /** Parses package data out of the hotel-info XML response. */
     private readonly HotelPackageExtractor $packageExtractor;
 
+    /** Reconciles hotel<->product links at the start of a fresh sync. */
+    private readonly HotelProductLinkReconciler $linkReconciler;
+
+    /** Detects changed hotels for incremental sync via offers_update. */
+    private readonly ChangedHotelDetector $changedHotelDetector;
+
     /**
      * Product code prefixes from config — e.g. `['NVT', 'NV']`.
      * Cached in constructor so preBatch() and processHotelInfo() don't
@@ -114,6 +120,8 @@ class BatchedHotelInfoSyncV2 extends AbstractBatchedSync
         $this->adultOnlyDetector = new AdultOnlyDetector();
         $this->packageExtractor = new HotelPackageExtractor();
         $this->productCodePrefixes = ConfigProvider::getProductCodePrefixes();
+        $this->linkReconciler = new HotelProductLinkReconciler($this->logger, $this->productCodePrefixes);
+        $this->changedHotelDetector = new ChangedHotelDetector($this->logger);
     }
 
     #[\Override]
@@ -143,7 +151,7 @@ class BatchedHotelInfoSyncV2 extends AbstractBatchedSync
         // The legacy run() flow reconciles product links before deciding
         // the sync type. determineSyncType() is only called on fresh sync
         // starts (not on resume), which matches legacy semantics exactly.
-        $this->reconcileProductLinks();
+        $this->linkReconciler->reconcile();
 
         if (!empty($options['force_full'])) {
             return 'full';
@@ -208,7 +216,7 @@ class BatchedHotelInfoSyncV2 extends AbstractBatchedSync
 
         // Incremental: changed hotels from offers_update API, unioned
         // with hotels that never had hotelinfo synced yet.
-        return $this->getChangedHotelIds($countries);
+        return $this->changedHotelDetector->detect($this->getApi(), $countries);
     }
 
     /**
@@ -421,144 +429,5 @@ class BatchedHotelInfoSyncV2 extends AbstractBatchedSync
             db_query('ROLLBACK');
             throw $e;
         }
-    }
-
-    /**
-     * Re-link hotels with NULL product_id whose CS-Cart product exists,
-     * and clear stale product_id pointing to deleted products.
-     *
-     * Uses configured product_code_prefixes to match products. Called
-     * once per fresh sync from the top of determineSyncType().
-     *
-     * Verbatim from legacy BatchedHotelInfoSync::reconcileProductLinks().
-     */
-    private function reconcileProductLinks(): void
-    {
-        $prefixes = $this->productCodePrefixes;
-
-        // 1. Re-link: hotels with NULL product_id whose product exists
-        $orphaned = TypeCoerce::toStringList(db_get_fields(
-            'SELECT hotel_id FROM ?:novoton_hotels WHERE product_id IS NULL OR product_id = 0',
-        ));
-
-        $linked = 0;
-        if ($orphaned !== []) {
-            // Build all possible product_codes in one go, then bulk-fetch
-            $codePatterns = [];
-            foreach ($orphaned as $hotelId) {
-                foreach ($prefixes as $prefix) {
-                    $codePatterns[] = $prefix . $hotelId;
-                }
-            }
-
-            $productMap = [];
-            if (!empty($codePatterns)) {
-                $productMap = TypeCoerce::toStringMap(db_get_hash_single_array(
-                    'SELECT product_code, product_id FROM ?:products WHERE product_code IN (?a)',
-                    ['product_code', 'product_id'],
-                    $codePatterns,
-                ));
-            }
-
-            // Update matched hotels using the map (no per-hotel queries)
-            foreach ($orphaned as $hotelId) {
-                foreach ($prefixes as $prefix) {
-                    $pid = $productMap[$prefix . $hotelId] ?? null;
-                    if (!empty($pid)) {
-                        db_query(
-                            'UPDATE ?:novoton_hotels SET product_id = ?i WHERE hotel_id = ?s',
-                            $pid,
-                            $hotelId,
-                        );
-                        $linked++;
-                        break;
-                    }
-                }
-            }
-        }
-
-        // 2. Cleanup: clear product_id pointing to deleted products
-        $cleaned = TypeCoerce::toInt(db_query(
-            'UPDATE ?:novoton_hotels h
-             LEFT JOIN ?:products p ON h.product_id = p.product_id
-             SET h.product_id = NULL
-             WHERE h.product_id > 0 AND p.product_id IS NULL',
-        ));
-
-        if ($linked > 0 || $cleaned > 0) {
-            $this->logger->output("Reconciliation: re-linked {$linked} hotels, cleared {$cleaned} stale references.");
-        }
-    }
-
-    /**
-     * Get changed hotel IDs from the offers_update API for the given
-     * countries, unioned with hotels that never had hotelinfo synced yet.
-     *
-     * Verbatim from legacy BatchedHotelInfoSync::getChangedHotelIds().
-     *
-     * @param string[] $countries
-     * @return list<string>
-     */
-    private function getChangedHotelIds(array $countries): array
-    {
-        $api = $this->getApi();
-
-        // Get last sync date
-        $lastSync = db_get_field(
-            "SELECT MAX(sync_date) FROM ?:novoton_sync_log
-             WHERE sync_type = 'hotelinfo' AND status = 'completed'",
-        );
-
-        if (empty($lastSync)) {
-            // No previous sync - should do full sync instead
-            return [];
-        }
-
-        $datetimeParam = date('Y-m-d\TH:i:s', (int) strtotime(TypeCoerce::toString($lastSync)));
-        $this->logger->output("Checking offers_update since: {$datetimeParam}");
-
-        /** @var array<string, true> $changedIds */
-        $changedIds = [];
-
-        foreach ($countries as $country) {
-            $this->logger->output("Checking {$country}...");
-
-            try {
-                $response = $api->destinations()->getOffersUpdate($datetimeParam, $country);
-
-                if (isset($response->Offer)) {
-                    // SimpleXML: wrap the Offer node set so the loop matches the
-                    // legacy single-pass behaviour exactly.
-                    $offers = [$response->Offer];
-                    foreach ($offers as $offer) {
-                        $hid = (string) ($offer->IdHotel ?? '');
-                        if ($hid !== '') {
-                            $changedIds[$hid] = true;
-                        }
-                    }
-                    $this->logger->output('  Found ' . count($offers) . ' changed offers');
-                } else {
-                    $this->logger->output('  No changes');
-                }
-            } catch (ApiException $e) {
-                $this->logger->output('  Error: ' . $e->getMessage());
-            }
-        }
-
-        // Also include hotels that never had hotelinfo synced
-        $unsynced = TypeCoerce::toStringList(db_get_fields(
-            'SELECT hotel_id FROM ?:novoton_hotels
-             WHERE country IN (?a) AND hotelinfo_synced_at IS NULL',
-            $countries,
-        ));
-
-        if ($unsynced !== []) {
-            $this->logger->output('Also adding ' . count($unsynced) . ' hotels that never had hotelinfo synced.');
-            foreach ($unsynced as $id) {
-                $changedIds[$id] = true;
-            }
-        }
-
-        return array_keys($changedIds);
     }
 }
