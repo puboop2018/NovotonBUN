@@ -44,6 +44,8 @@ class PriceInfoService implements PriceInfoServiceInterface
 
     private HotelRepositoryInterface $hotelRepo;
 
+    private readonly PriceInfoExtractor $priceInfoExtractor;
+
     /**
      * Constructor
      */
@@ -57,6 +59,7 @@ class PriceInfoService implements PriceInfoServiceInterface
         $this->debug = ConfigProvider::isDebugLogging();
         $this->packageRepo = $packageRepo ?? new HotelPackageRepository();
         $this->hotelRepo = $hotelRepo ?? new HotelRepository();
+        $this->priceInfoExtractor = new PriceInfoExtractor($this->packageRepo);
     }
 
     /**
@@ -171,41 +174,7 @@ class PriceInfoService implements PriceInfoServiceInterface
      */
     public function getSeasons(string $hotelId): array
     {
-        $priceinfoJson = $this->packageRepo->getLatestPriceinfoData($hotelId);
-
-        if (empty($priceinfoJson)) {
-            return [];
-        }
-
-        $priceinfo = json_decode($priceinfoJson, true);
-        if (!is_array($priceinfo) || !isset($priceinfo['seasons']['season'])) {
-            return [];
-        }
-
-        $seasons = $priceinfo['seasons']['season'];
-        // Normalize single season to array
-        if (is_array($seasons) && isset($seasons['IdSeason'])) {
-            $seasons = [$seasons];
-        }
-        if (!is_array($seasons)) {
-            return [];
-        }
-
-        $result = [];
-        foreach ($seasons as $idx => $season) {
-            if (!is_array($season)) {
-                continue;
-            }
-            $seasonNum = isset($season['IdSeason']) ? PriceInfoFormatter::toInt($season['IdSeason']) : ($idx + 1);
-            $result[$seasonNum] = [
-                'season_number' => $seasonNum,
-                'date_from' => PriceInfoFormatter::toScalar($season['DateFrom'] ?? ''),
-                'date_to' => PriceInfoFormatter::toScalar($season['DateTo'] ?? ''),
-                'season_name' => PriceInfoFormatter::toScalar($season['SeasonName'] ?? "Season {$seasonNum}"),
-            ];
-        }
-
-        return array_values($result);
+        return $this->priceInfoExtractor->getSeasons($hotelId);
     }
 
     /**
@@ -217,49 +186,7 @@ class PriceInfoService implements PriceInfoServiceInterface
      */
     public function getEarlyBooking(string $hotelId): array
     {
-        $row = $this->packageRepo->findEarlyBookingPackage($hotelId);
-        $priceinfoJson = $row['priceinfo_data'] ?? null;
-
-        if (empty($priceinfoJson)) {
-            return [];
-        }
-
-        $priceinfo = json_decode($priceinfoJson, true);
-        if (!is_array($priceinfo) || !isset($priceinfo['early_booking'])) {
-            return [];
-        }
-
-        $eb_data = $priceinfo['early_booking'];
-        // Normalize single entry to array
-        if (is_array($eb_data) && isset($eb_data['Reduction'])) {
-            $eb_data = [$eb_data];
-        }
-        if (!is_array($eb_data)) {
-            return [];
-        }
-
-        $result = [];
-        foreach ($eb_data as $eb) {
-            if (!is_array($eb)) {
-                continue;
-            }
-            $result[] = [
-                'booking_from' => PriceInfoFormatter::toScalar($eb['BookFrom'] ?? ''),
-                'booking_to' => PriceInfoFormatter::toScalar($eb['BookTo'] ?? ''),
-                'stay_from' => PriceInfoFormatter::toScalar($eb['StayFrom'] ?? ''),
-                'stay_to' => PriceInfoFormatter::toScalar($eb['StayTo'] ?? ''),
-                'reduction' => PriceInfoFormatter::toFloat($eb['Reduction'] ?? 0),
-                'payment_date' => PriceInfoFormatter::toScalar($eb['PaymentDate'] ?? ''),
-                'payment_percent' => PriceInfoFormatter::toFloat($eb['PaymentPercent'] ?? 0),
-                'room_types' => PriceInfoFormatter::toScalar($eb['RoomTypes'] ?? 'all'),
-                'min_stay' => PriceInfoFormatter::toInt($eb['MinStay'] ?? 0),
-            ];
-        }
-
-        // Sort by reduction DESC
-        usort($result, fn ($a, $b): int => $b['reduction'] <=> $a['reduction']);
-
-        return $result;
+        return $this->priceInfoExtractor->getEarlyBooking($hotelId);
     }
 
     /**
@@ -271,17 +198,7 @@ class PriceInfoService implements PriceInfoServiceInterface
      */
     public function getActiveEarlyBooking(string $hotelId, ?string $date = null): ?array
     {
-        $date ??= date('Y-m-d');
-
-        $discounts = $this->getEarlyBooking($hotelId);
-
-        foreach ($discounts as $eb) {
-            if ($date >= $eb['booking_from'] && $date <= $eb['booking_to']) {
-                return $eb;
-            }
-        }
-
-        return null;
+        return $this->priceInfoExtractor->getActiveEarlyBooking($hotelId, $date);
     }
 
     /**
