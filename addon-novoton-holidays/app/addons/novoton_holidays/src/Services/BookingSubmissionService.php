@@ -39,6 +39,7 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
     private readonly GuestDataNormalizer $guestDataNormalizer;
     private readonly BookingRoomAssembler $roomAssembler;
     private readonly ApiBookingRequestBuilder $apiRequestBuilder;
+    private readonly BookingRoomsGuestsResolver $roomsGuestsResolver;
 
     public function __construct(
         BookingRepositoryInterface $bookingRepo,
@@ -50,6 +51,7 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
         $this->guestDataNormalizer = $guestDataNormalizer ?? new GuestDataNormalizer();
         $this->roomAssembler = new BookingRoomAssembler();
         $this->apiRequestBuilder = new ApiBookingRequestBuilder();
+        $this->roomsGuestsResolver = new BookingRoomsGuestsResolver($this->guestDataNormalizer, $this->bookingRepo);
     }
 
     /**
@@ -106,9 +108,8 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
             }
 
             // 2. Resolve rooms and guests
-            [$roomsData, $guestsData] = $this->resolveRoomsAndGuests(
+            [$roomsData, $guestsData] = $this->roomsGuestsResolver->resolveRoomsAndGuests(
                 $bookingData,
-                $orderId,
                 $debugLogging,
             );
 
@@ -337,114 +338,6 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
         }
 
         return PriceInfoFormatter::toFloat($product['base_price'] ?? 0);
-    }
-
-    /**
-     * Parse rooms_data and guests_data, with DB fallbacks.
-     *
-     * @param array<string, mixed> $bookingData
-     * @return array{0: list<array<string, mixed>>, 1: array<string, mixed>} [rooms_data[], guests_data[]]
-     */
-    private function resolveRoomsAndGuests(array $bookingData, int $orderId, bool $debug): array
-    {
-        // --- rooms_data ---
-        $roomsData = [];
-        if (!empty($bookingData['rooms_data'])) {
-            $decoded = is_string($bookingData['rooms_data'])
-                ? json_decode($bookingData['rooms_data'], true)
-                : $bookingData['rooms_data'];
-            $roomsData = is_array($decoded) ? $decoded : [];
-        }
-
-        // Synthesise a single-room entry when rooms_data is absent
-        if (empty($roomsData)) {
-            $childrenAges = [];
-            if (!empty($bookingData['children_ages'])) {
-                $childrenAges = is_string($bookingData['children_ages'])
-                    ? array_map('intval', array_filter(explode(',', $bookingData['children_ages']), fn ($v): bool => $v !== ''))
-                    : (array) $bookingData['children_ages'];
-            }
-
-            $roomsData = [[
-                'room_id' => PriceInfoFormatter::toScalar($bookingData['room_id'] ?? ''),
-                'room_name' => PriceInfoFormatter::toScalar($bookingData['room_type'] ?? $bookingData['room_name'] ?? $bookingData['room_id'] ?? ''),
-                'room_type_display' => PriceInfoFormatter::toScalar($bookingData['room_type'] ?? $bookingData['room_name'] ?? $bookingData['room_id'] ?? ''),
-                'board_id' => PriceInfoFormatter::toScalar($bookingData['board_id'] ?? ''),
-                'board_name' => PriceInfoFormatter::toScalar($bookingData['board_name'] ?? $bookingData['board_id'] ?? ''),
-                'package_name' => PriceInfoFormatter::toScalar($bookingData['package_name'] ?? ''),
-                'check_in' => PriceInfoFormatter::toScalar($bookingData['check_in'] ?? ''),
-                'check_out' => PriceInfoFormatter::toScalar($bookingData['check_out'] ?? ''),
-                'adults' => PriceInfoFormatter::toInt($bookingData['adults'] ?? 2),
-                'children' => PriceInfoFormatter::toInt($bookingData['children'] ?? 0),
-                'childrenAges' => $childrenAges,
-                'price' => PriceInfoFormatter::toFloat($bookingData['final_price'] ?? 0),
-            ]];
-        }
-
-        // --- guests_data ---
-        $guestsData = $this->resolveGuestsData($bookingData, $orderId, $debug);
-
-        /** @var list<array<string, mixed>> $roomsData */
-        return [$roomsData, $guestsData];
-    }
-
-    /**
-     * Resolve guests_data with multiple fallback strategies.
-     *
-     * 1. From cart extra (already hydrated from DB if available)
-     * 2. Re-fetch from DB by booking_id
-     * 3. Match unassigned pending booking by hotel + dates
-     * @param array<string, mixed> $bookingData
-     * @return array<string, mixed>
-     */
-    private function resolveGuestsData(array $bookingData, int $orderId, bool $debug): array
-    {
-        // Primary: normalize from cart/DB data (handles both keyed and legacy array formats)
-        if (!empty($bookingData['guests_data'])) {
-            $guestsData = $this->guestDataNormalizer->normalize($bookingData['guests_data']);
-            if (!empty($guestsData)) {
-                return $guestsData;
-            }
-        }
-
-        // Fallback 1: re-fetch from DB by booking_id
-        $bookingId = PriceInfoFormatter::toInt($bookingData['novoton_booking_id'] ?? 0);
-        if ($bookingId > 0) {
-            $dbGuests = $this->bookingRepo->getGuestsData($bookingId);
-            if (!empty($dbGuests)) {
-                $guestsData = $this->guestDataNormalizer->normalize($dbGuests);
-                if ($debug) {
-                    fn_log_event('general', 'runtime', [
-                        'message' => 'Novoton - Fetched guests_data from database (cart was empty)',
-                        'booking_id' => $bookingId,
-                        'guests_count' => count($guestsData),
-                    ]);
-                }
-                if (!empty($guestsData)) {
-                    return $guestsData;
-                }
-            }
-        }
-
-        // Fallback 2: match unassigned pending booking by hotel + dates
-        $existing = $this->bookingRepo->findUnassignedByHotelDates(
-            PriceInfoFormatter::toScalar($bookingData['hotel_id'] ?? ''),
-            PriceInfoFormatter::toScalar($bookingData['check_in'] ?? ''),
-            PriceInfoFormatter::toScalar($bookingData['check_out'] ?? ''),
-        );
-        if (!empty($existing['guests_data'])) {
-            $guestsData = $this->guestDataNormalizer->normalize($existing['guests_data']);
-            if ($debug) {
-                fn_log_event('general', 'runtime', [
-                    'message' => 'Novoton - Fetched guests_data from pending booking record',
-                    'holder_name' => $existing['holder_name'] ?? '',
-                    'guests_count' => count($guestsData),
-                ]);
-            }
-            return $guestsData;
-        }
-
-        return [];
     }
 
     /**
