@@ -471,13 +471,12 @@ class SecurityService implements SecurityServiceInterface
     }
 
     /**
-     * Sanitize general string
+     * Sanitize general string (HTML tags stripped at input time; HTML-encoding
+     * is done at output time by escapeHtml() / Smarty).
      */
     private function sanitizeString(string $string, int $maxLength = 255): string
     {
-        // Remove HTML tags at input time; HTML-encoding is done at output time by escapeHtml() / Smarty
-        $string = strip_tags($string);
-        return mb_substr($string, 0, $maxLength);
+        return ValidationHelpers::sanitizeString($string, $maxLength);
     }
 
     /**

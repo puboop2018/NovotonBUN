@@ -46,6 +46,18 @@ class ValidationHelpers
     }
 
     /**
+     * Strip HTML tags from a free-text string and truncate it.
+     *
+     * Input-time sanitisation only — HTML-encoding for output is the caller's
+     * responsibility (escapeHtml() / the template engine). Use sanitizeName()
+     * for person names, which preserves Unicode letters and name punctuation.
+     */
+    public static function sanitizeString(string $string, int $maxLength = 255): string
+    {
+        return mb_substr(strip_tags($string), 0, $maxLength);
+    }
+
+    /**
      * Validate a hotel/entity ID format.
      *
      * Allows alphanumeric characters, hyphens, and underscores.
