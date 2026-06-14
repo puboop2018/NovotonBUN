@@ -44,6 +44,14 @@ class HotelRepository implements HotelRepositoryInterface
 
     private const array VALID_STATUSES = [self::STATUS_ACTIVE, self::STATUS_INACTIVE, self::STATUS_ERROR];
 
+    /** Read-only aggregate / reporting reads, delegated from this repository. */
+    private readonly HotelStatsRepository $stats;
+
+    public function __construct(?HotelStatsRepository $stats = null)
+    {
+        $this->stats = $stats ?? new HotelStatsRepository();
+    }
+
     /**
      * Get listing columns prefixed with a table alias.
      */
@@ -271,20 +279,7 @@ class HotelRepository implements HotelRepositoryInterface
      */
     public function getCountsByCountry(): array
     {
-        $rows = self::asRowList(db_get_array(
-            "SELECT country_code, COUNT(*) as cnt FROM ?:sphinx_hotels WHERE sync_status = 'active' GROUP BY country_code ORDER BY cnt DESC",
-        ));
-
-        $counts = [];
-        foreach ($rows as $row) {
-            $code = TypeCoerce::toString($row['country_code'] ?? '');
-            if ($code === '') {
-                $code = 'unknown';
-            }
-            $counts[$code] = TypeCoerce::toInt($row['cnt'] ?? 0);
-        }
-
-        return $counts;
+        return $this->stats->getCountsByCountry();
     }
 
     /**
@@ -294,9 +289,7 @@ class HotelRepository implements HotelRepositoryInterface
      */
     public function getDistinctCountries(): array
     {
-        return self::asStringList(db_get_fields(
-            "SELECT DISTINCT country_code FROM ?:sphinx_hotels WHERE country_code != '' ORDER BY country_code",
-        ));
+        return $this->stats->getDistinctCountries();
     }
 
     /**
@@ -317,7 +310,7 @@ class HotelRepository implements HotelRepositoryInterface
      */
     public function getTotal(): int
     {
-        return (int) db_get_field("SELECT COUNT(*) FROM ?:sphinx_hotels WHERE sync_status = 'active'");
+        return $this->stats->getTotal();
     }
 
     /**
@@ -325,15 +318,7 @@ class HotelRepository implements HotelRepositoryInterface
      */
     public function getLastSyncedAt(?string $countryCode = null): ?string
     {
-        if ($countryCode !== null) {
-            $val = TypeCoerce::toString(db_get_field(
-                'SELECT MAX(last_synced_at) FROM ?:sphinx_hotels WHERE country_code = ?s',
-                $countryCode,
-            ));
-        } else {
-            $val = TypeCoerce::toString(db_get_field('SELECT MAX(last_synced_at) FROM ?:sphinx_hotels'));
-        }
-        return $val === '' ? null : $val;
+        return $this->stats->getLastSyncedAt($countryCode);
     }
 
     /**
@@ -462,9 +447,7 @@ class HotelRepository implements HotelRepositoryInterface
      */
     public function countLinked(): int
     {
-        return (int) db_get_field(
-            "SELECT COUNT(*) FROM ?:sphinx_hotels WHERE product_id IS NOT NULL AND product_id > 0 AND sync_status = 'active'",
-        );
+        return $this->stats->countLinked();
     }
 
     /**
@@ -475,17 +458,7 @@ class HotelRepository implements HotelRepositoryInterface
      */
     public function getDestinationIdsByCountry(array $countryCodes): array
     {
-        if (empty($countryCodes)) {
-            return self::asIntList(db_get_fields(
-                "SELECT DISTINCT destination_id FROM ?:sphinx_hotels WHERE sync_status = 'active' AND destination_id > 0",
-            ));
-        }
-
-        $placeholders = implode(',', array_fill(0, count($countryCodes), '?s'));
-        return self::asIntList(db_get_fields(
-            "SELECT DISTINCT destination_id FROM ?:sphinx_hotels WHERE sync_status = 'active' AND destination_id > 0 AND country_code IN ($placeholders)",
-            ...$countryCodes,
-        ));
+        return $this->stats->getDestinationIdsByCountry($countryCodes);
     }
 
     /**
@@ -578,16 +551,7 @@ class HotelRepository implements HotelRepositoryInterface
      */
     public function countWithBoardsAndProduct(string $countryCode = ''): int
     {
-        $condition = ' AND h.boards_json IS NOT NULL AND h.product_id IS NOT NULL AND h.product_id > 0';
-        if ($countryCode !== '') {
-            $condition .= db_quote(' AND h.country_code = ?s', $countryCode);
-        }
-
-        return (int) db_get_field(
-            "SELECT COUNT(*) FROM ?:sphinx_hotels h
-             WHERE h.sync_status = 'active' ?p",
-            $condition,
-        );
+        return $this->stats->countWithBoardsAndProduct($countryCode);
     }
 
     /**
@@ -701,11 +665,7 @@ class HotelRepository implements HotelRepositoryInterface
      */
     public function countOrphanedProducts(): int
     {
-        return (int) db_get_field(
-            'SELECT COUNT(*) FROM ?:sphinx_hotels h
-             WHERE h.product_id > 0
-             AND NOT EXISTS (SELECT 1 FROM ?:products p WHERE p.product_id = h.product_id)',
-        );
+        return $this->stats->countOrphanedProducts();
     }
 
     /**
@@ -734,9 +694,7 @@ class HotelRepository implements HotelRepositoryInterface
      */
     public function getDistinctClassifications(): array
     {
-        return self::asIntList(db_get_fields(
-            'SELECT DISTINCT classification FROM ?:sphinx_hotels WHERE classification IS NOT NULL ORDER BY classification',
-        ));
+        return $this->stats->getDistinctClassifications();
     }
 
     /**
@@ -746,8 +704,6 @@ class HotelRepository implements HotelRepositoryInterface
      */
     public function getDistinctPropertyTypes(): array
     {
-        return self::asStringList(db_get_fields(
-            "SELECT DISTINCT property_type FROM ?:sphinx_hotels WHERE property_type IS NOT NULL AND property_type != '' ORDER BY property_type",
-        ));
+        return $this->stats->getDistinctPropertyTypes();
     }
 }
