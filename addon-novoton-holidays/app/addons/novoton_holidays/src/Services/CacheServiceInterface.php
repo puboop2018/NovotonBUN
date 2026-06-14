@@ -5,7 +5,8 @@ declare(strict_types=1);
 /**
  * Novoton Cache Service Interface
  *
- * Contract for cache operations: get, set, delete, clear, and remember.
+ * Extends the provider-neutral travel_core cache contract (get/set/delete/
+ * cleanup) with novoton's richer extras: prefix clear, remember(), and stats.
  *
  * @package NovotonHolidays
  * @since 3.1.0
@@ -13,16 +14,10 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Services;
 
-interface CacheServiceInterface
+use Tygh\Addons\TravelCore\Contracts\CacheServiceInterface as CoreCacheServiceInterface;
+
+interface CacheServiceInterface extends CoreCacheServiceInterface
 {
-    /**
-     * @return mixed|null Cached value or null if not found/expired
-     */
-    public function get(string $key): mixed;
-
-    public function set(string $key, mixed $value, ?int $ttl = null): bool;
-    public function delete(string $key): bool;
-
     /**
      * @return int Number of entries cleared
      */
@@ -32,11 +27,6 @@ interface CacheServiceInterface
      * Get or compute and cache a value.
      */
     public function remember(string $key, callable $callback, ?int $ttl = null): mixed;
-
-    /**
-     * @return int Number of expired entries removed
-     */
-    public function cleanup(): int;
 
     /**
      * @return array<string, mixed>

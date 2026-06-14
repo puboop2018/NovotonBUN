@@ -44,7 +44,7 @@ fat interface wholesale into core would pollute core and sphinx could never impl
    | `SecurityService` | ~150 LOC validate/sanitize | Already have `TravelCore\Contracts\SecurityServiceInterface`. Extract shared validators (date, email, name, range checks) into a `TravelCore\Services\BaseSecurityService` or trait; providers extend with provider-specific rules. |
    | `ConfigProvider` | ~100 LOC Registry+coerce boilerplate | Extract a `TravelCore` `AbstractConfigProvider` with the common `Registry::get` + `TypeCoerce` plumbing; providers supply their addon id + typed getters. |
    | `Container` / `SyncLogRepository` | DI + sync logging re-implemented per addon | Lift a shared `SyncLogRepositoryInterface` (+ base impl) into core; keep provider-specific table names behind a small config hook. |
-   | `CacheService` (novoton 582 vs sphinx 90) | 6× size gap | Audit novoton's for feature creep before consolidating; likely extract a core cache interface + simple base, leave novoton's extras as a decorator. |
+   | `CacheService` (novoton 582 vs sphinx 90) | 6× size gap | **✅ Done:** added a minimal instance contract `TravelCore\Contracts\CacheServiceInterface` (`get`/`set`/`delete`/`cleanup`); novoton's interface now **extends** it and keeps `clear`/`remember`/`getStats` as extras. Sphinx's cache stays as-is **by design** — it is a *static*, search-result-only API and a static API cannot implement an instance contract; forcing the conversion would add risk for no real sharing. |
 
 ### 3.2 — PHPStan baseline paydown 🔜 (representative increment landed)
 **Baseline today:** ~1,754 suppressed message-blocks (was 1,759). Level 10, all three
