@@ -16,7 +16,6 @@ declare(strict_types=1);
 namespace Tygh\Addons\NovotonHolidays\Services;
 
 use Tygh\Addons\NovotonHolidays\Api\Contracts\NovotonApiKitInterface;
-use Tygh\Addons\NovotonHolidays\Constants;
 
 class HotelAvailabilitySearcher implements HotelAvailabilitySearcherInterface
 {
@@ -29,10 +28,14 @@ class HotelAvailabilitySearcher implements HotelAvailabilitySearcherInterface
     /** @var string[] Accumulated debug lines (read via getDebugLog) */
     private array $debugLog = [];
 
-    public function __construct(SearchServiceInterface $searchService, bool $debug = false)
+    /** Pure hotelinfo-XML parsing (rooms, board types, room-type map). */
+    private readonly HotelInfoExtractor $hotelInfoExtractor;
+
+    public function __construct(SearchServiceInterface $searchService, bool $debug = false, ?HotelInfoExtractor $hotelInfoExtractor = null)
     {
         $this->searchService = $searchService;
         $this->debug = $debug;
+        $this->hotelInfoExtractor = $hotelInfoExtractor ?? new HotelInfoExtractor();
     }
 
     // =====================================================================
@@ -87,8 +90,14 @@ class HotelAvailabilitySearcher implements HotelAvailabilitySearcherInterface
         }
 
         // ── Rooms / boards / packages from XML ──────────────────────
-        $rooms = $this->extractRooms($hotelInfo);
-        $roomTypeMap = $this->buildRoomTypeMap($rooms);
+        $rooms = $this->hotelInfoExtractor->extractRooms($hotelInfo);
+        $roomTypeMap = $this->hotelInfoExtractor->buildRoomTypeMap($rooms);
+        if ($this->debug && !empty($roomTypeMap)) {
+            $this->log('=== ROOM TYPE MAP ===');
+            foreach ($roomTypeMap as $rtId => $rtType) {
+                $this->log("  {$rtId}: " . PriceInfoFormatter::toScalar($rtType));
+            }
+        }
 
         // ── API client ──────────────────────────────────────────────
         // Typed as the narrow kit interface so this method can only
@@ -155,7 +164,7 @@ class HotelAvailabilitySearcher implements HotelAvailabilitySearcherInterface
         if (!$hotelInfo || !isset($hotelInfo->rooms)) {
             return [];
         }
-        return $this->extractRooms($hotelInfo);
+        return $this->hotelInfoExtractor->extractRooms($hotelInfo);
     }
 
     /**
@@ -168,7 +177,7 @@ class HotelAvailabilitySearcher implements HotelAvailabilitySearcherInterface
         if (!$hotelInfo) {
             return [];
         }
-        return $this->extractBoardTypes($hotelInfo, $mealPlan);
+        return $this->hotelInfoExtractor->extractBoardTypes($hotelInfo, $mealPlan);
     }
 
     // =====================================================================
@@ -405,82 +414,6 @@ class HotelAvailabilitySearcher implements HotelAvailabilitySearcherInterface
             'early_booking_discounts' => $earlyBookingDiscounts,
             'early_booking_range' => SearchService::getDiscountRange($earlyBookingDiscounts),
         ];
-    }
-
-    // =====================================================================
-    // Hotel-info extraction helpers
-    // =====================================================================
-
-    /** @return list<\SimpleXMLElement> */
-    private function extractRooms(\SimpleXMLElement $hotelInfo): array
-    {
-        /** @var list<\SimpleXMLElement> */
-        return array_values($hotelInfo->xpath('//rooms') ?: []);
-    }
-
-    /** @return list<string> */
-    private function extractBoardTypes(\SimpleXMLElement $hotelInfo, string $mealPlan): array
-    {
-        $boardTypes = [];
-        $boardElements = $hotelInfo->xpath('//board') ?: [];
-        foreach ($boardElements as $b) {
-            $boardId = (string) $b->IdBoard ?: (string) $b;
-            if (!empty($boardId)) {
-                $boardTypes[] = $boardId;
-            }
-        }
-
-        if (empty($boardTypes)) {
-            $boardTypes = ['ALL INCL', 'AI', 'FB', 'HB', 'BB', 'RO'];
-        }
-
-        // Re-order by preferred if a specific meal plan was selected
-        if (!empty($mealPlan)) {
-            $boardMapping = Constants::BOARD_MAPPING;
-            $preferredBoards = $boardMapping[$mealPlan] ?? [$mealPlan];
-
-            $reordered = [];
-            foreach ($preferredBoards as $pb) {
-                foreach ($boardTypes as $bt) {
-                    if (str_contains(strtolower($bt), strtolower($pb)) || str_contains(strtolower($pb), strtolower($bt))) {
-                        $reordered[] = $bt;
-                    }
-                }
-            }
-            foreach ($boardTypes as $bt) {
-                if (!in_array($bt, $reordered)) {
-                    $reordered[] = $bt;
-                }
-            }
-            $boardTypes = array_unique($reordered);
-        }
-
-        return array_values($boardTypes);
-    }
-
-    /**
-     * @return array<string, mixed>
-     * @param list<\SimpleXMLElement> $rooms
-     */
-    private function buildRoomTypeMap(array $rooms): array
-    {
-        $map = [];
-        foreach ($rooms as $roomNode) {
-            $id = trim((string) ($roomNode->IdRoom ?? ''));
-            $type = trim((string) ($roomNode->Type ?? ''));
-            if (!empty($id) && !empty($type)) {
-                $map[$id] = $type;
-            }
-        }
-
-        if ($this->debug && !empty($map)) {
-            $this->log('=== ROOM TYPE MAP ===');
-            foreach ($map as $rtId => $rtType) {
-                $this->log("  {$rtId}: {$rtType}");
-            }
-        }
-
-        return $map;
     }
 
     // =====================================================================
