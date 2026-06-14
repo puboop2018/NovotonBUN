@@ -41,6 +41,8 @@ class PriceInfoParser
 
     private HotelRepositoryInterface $hotelRepo;
 
+    private readonly AgeBandResolver $ageBandResolver;
+
     public function __construct(
         ?callable $logger = null,
         ?HotelPackageRepositoryInterface $packageRepo = null,
@@ -49,6 +51,7 @@ class PriceInfoParser
         $this->logger = $logger !== null ? $logger(...) : null;
         $this->packageRepo = $packageRepo ?? new HotelPackageRepository();
         $this->hotelRepo = $hotelRepo ?? new HotelRepository();
+        $this->ageBandResolver = new AgeBandResolver();
     }
 
     // -- Getters for parsed data ------------------------------------------
@@ -156,54 +159,7 @@ class PriceInfoParser
      */
     public function parseChildAgeBands(): void
     {
-        $this->childAgeBands = [];
-
-        if (empty($this->hotelinfo)) {
-            return;
-        }
-
-        $ages = $this->hotelinfo['ages'] ?? [];
-
-        if (is_array($ages) && isset($ages['age'])) {
-            $ages = $ages['age'];
-        }
-
-        if (is_array($ages) && isset($ages['IdAge'])) {
-            $ages = [$ages];
-        }
-
-        if (empty($ages) || !is_array($ages)) {
-            return;
-        }
-
-        foreach ($ages as $age) {
-            if (!is_array($age)) {
-                continue;
-            }
-            $fAge = PriceInfoFormatter::toScalar($age['fAge'] ?? '0');
-            $isChild = $fAge === '1';
-            if (!$isChild) {
-                continue;
-            }
-
-            $fromYear = PriceInfoFormatter::toFloat($age['FromYear'] ?? 0);
-            $toYear = PriceInfoFormatter::toFloat($age['ToYear'] ?? 0);
-            if ($toYear <= 0) {
-                continue;
-            }
-
-            $label = PriceInfoFormatter::formatAgeBandLabel($fromYear, $toYear);
-
-            $this->childAgeBands[] = [
-                'from' => $fromYear,
-                'to' => $toYear,
-                'label' => $label,
-                'id_age' => $age['IdAge'] ?? '',
-            ];
-        }
-
-        usort($this->childAgeBands, fn ($a, $b): int => $a['from'] <=> $b['from']);
-
+        $this->childAgeBands = $this->ageBandResolver->parseChildAgeBands($this->hotelinfo);
         $this->log('Parsed hotel child age bands', $this->childAgeBands);
     }
 
@@ -468,22 +424,7 @@ class PriceInfoParser
      */
     public function getAgeBand(float $age): string
     {
-        if (!empty($this->childAgeBands)) {
-            foreach ($this->childAgeBands as $band) {
-                if ($age >= $band['from'] && $age <= $band['to']) {
-                    return PriceInfoFormatter::toScalar($band['label']);
-                }
-            }
-            return PriceInfoFormatter::formatAgeBandLabel(floor($age), 17.99);
-        }
-
-        if ($age < 2.0) {
-            return '0-1,99';
-        }
-        if ($age < 12.0) {
-            return '2-11,99';
-        }
-        return '12-17,99';
+        return $this->ageBandResolver->getAgeBand($age, $this->childAgeBands);
     }
 
     /**
@@ -492,54 +433,7 @@ class PriceInfoParser
      */
     public function getAvailableChildAgeBands(string $roomId, string $boardId): array
     {
-        $seasonPrices = $this->priceinfo['season_price'] ?? [];
-        if (!is_array($seasonPrices)) {
-            return [];
-        }
-        if (isset($seasonPrices['IdRoom'])) {
-            $seasonPrices = [$seasonPrices];
-        }
-
-        $bands = [];
-        foreach ($seasonPrices as $row) {
-            if (!is_array($row)) {
-                continue;
-            }
-            $rowRoom = PriceInfoFormatter::toScalar($row['IdRoom'] ?? '');
-            $rowBoard = PriceInfoFormatter::toScalar($row['IdBoard'] ?? '');
-
-            if (!PriceInfoFormatter::matchRoom($rowRoom, $roomId)) {
-                continue;
-            }
-            if (!PriceInfoFormatter::matchBoard($rowBoard, $boardId)) {
-                continue;
-            }
-
-            $rowAge = '';
-            $fAgeVal = $row['fAge'] ?? null;
-            if (!empty($fAgeVal) && is_string($fAgeVal)) {
-                $rowAge = $fAgeVal;
-            } else {
-                $rawIdAge = PriceInfoFormatter::toScalar($row['IdAge'] ?? '');
-                static $ageTypeMap = ['1' => 'ADULT', '2' => 'CHD 0-1.99', '3' => 'CHD 2-11.99', '4' => 'CHD 12-17.99'];
-                $rowAge = $ageTypeMap[$rawIdAge] ?? $rawIdAge;
-            }
-
-            $rowAge = strtoupper(trim($rowAge));
-            if (!str_contains($rowAge, 'CHD') && !str_contains($rowAge, 'CHILD')) {
-                continue;
-            }
-
-            if (preg_match('/(\d+[\-\.]\d+[,\.]?\d*)/', $rowAge, $m)) {
-                $band = str_replace('.', ',', $m[1]);
-                $band = preg_replace('/(\d+)-(\d+),(\d+)/', '$1-$2,$3', $band);
-                if (!in_array($band, $bands)) {
-                    $bands[] = $band;
-                }
-            }
-        }
-
-        return $bands;
+        return $this->ageBandResolver->getAvailableChildAgeBands($this->priceinfo, $roomId, $boardId);
     }
 
     /**
@@ -547,50 +441,7 @@ class PriceInfoParser
      */
     public function hasAdultExtraBedPricing(string $roomId, string $boardId): bool
     {
-        $seasonPrices = $this->priceinfo['season_price'] ?? [];
-        if (!is_array($seasonPrices)) {
-            return false;
-        }
-        if (isset($seasonPrices['IdRoom'])) {
-            $seasonPrices = [$seasonPrices];
-        }
-
-        foreach ($seasonPrices as $row) {
-            if (!is_array($row)) {
-                continue;
-            }
-            $rowRoom = PriceInfoFormatter::toScalar($row['IdRoom'] ?? '');
-            $rowBoard = PriceInfoFormatter::toScalar($row['IdBoard'] ?? '');
-
-            if (!PriceInfoFormatter::matchRoom($rowRoom, $roomId)) {
-                continue;
-            }
-            if (!PriceInfoFormatter::matchBoard($rowBoard, $boardId)) {
-                continue;
-            }
-
-            $rowAge = '';
-            $fAgeVal2 = $row['fAge'] ?? null;
-            if (!empty($fAgeVal2) && is_string($fAgeVal2)) {
-                $rowAge = $fAgeVal2;
-            } else {
-                $rawIdAge = PriceInfoFormatter::toScalar($row['IdAge'] ?? '');
-                static $ageMap = ['1' => 'ADULT', '2' => 'CHD 0-1.99', '3' => 'CHD 2-11.99', '4' => 'CHD 12-17.99'];
-                $rowAge = $ageMap[$rawIdAge] ?? $rawIdAge;
-            }
-
-            $rowAge = strtoupper(trim($rowAge));
-            $rowAcc = strtoupper(trim(PriceInfoFormatter::toScalar($row['IdAcc'] ?? '')));
-
-            if (
-                preg_match('/\d+\s*(ST|ND|RD|TH)\s*ADULT/i', $rowAge) &&
-                ($rowAcc === 'EXTRA BED' || $rowAcc === 'EB' || $rowAcc === 'EXTRABED')
-            ) {
-                return true;
-            }
-        }
-
-        return false;
+        return $this->ageBandResolver->hasAdultExtraBedPricing($this->priceinfo, $roomId, $boardId);
     }
 
     /**
