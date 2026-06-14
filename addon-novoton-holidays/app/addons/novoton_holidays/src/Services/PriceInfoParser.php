@@ -43,6 +43,8 @@ class PriceInfoParser
 
     private readonly AgeBandResolver $ageBandResolver;
 
+    private readonly OccupancyStructureBuilder $occupancyStructureBuilder;
+
     public function __construct(
         ?callable $logger = null,
         ?HotelPackageRepositoryInterface $packageRepo = null,
@@ -52,6 +54,7 @@ class PriceInfoParser
         $this->packageRepo = $packageRepo ?? new HotelPackageRepository();
         $this->hotelRepo = $hotelRepo ?? new HotelRepository();
         $this->ageBandResolver = new AgeBandResolver();
+        $this->occupancyStructureBuilder = new OccupancyStructureBuilder($this->ageBandResolver, $logger);
     }
 
     // -- Getters for parsed data ------------------------------------------
@@ -253,170 +256,15 @@ class PriceInfoParser
      */
     public function buildOccupancyStructure(int $adults, array $childrenAges, array $capacity, string $roomId = '', string $boardId = ''): array
     {
-        $occupancy = [
-            'adults' => [],
-            'children' => [],
-            'children_as_adults' => [],
-            'total_rb_used' => 0,
-            'total_eb_used' => 0,
-        ];
-
-        $rbAvailable = PriceInfoFormatter::toInt($capacity['RB'] ?? 2);
-        $rbUsed = 0;
-        $ebUsed = 0;
-
-        $availableBands = [];
-        if (!empty($roomId) && !empty($boardId) && !empty($this->priceinfo)) {
-            $availableBands = $this->getAvailableChildAgeBands($roomId, $boardId);
-            $this->log('Available child age bands for room', [
-                'room_id' => $roomId,
-                'board_id' => $boardId,
-                'bands' => $availableBands,
-            ]);
-        }
-
-        // Check if this room has separate pricing for 3rd+ adults on extra beds.
-        // When it does NOT (e.g., FAM 4+1 DELUXE where all adults are "ADULT"),
-        // extra-bed adults are classified as plain "ADULT" with "REGULAR" acc_type
-        // so they match the same season_price row as regular-bed adults.
-        $hasExtraBedAdultPricing = false;
-        if (!empty($roomId) && !empty($boardId) && !empty($this->priceinfo)) {
-            $hasExtraBedAdultPricing = $this->hasAdultExtraBedPricing($roomId, $boardId);
-            $this->log('Adult extra bed pricing check', [
-                'room_id' => $roomId,
-                'board_id' => $boardId,
-                'has_extra_bed_adult_pricing' => $hasExtraBedAdultPricing,
-            ]);
-        }
-
-        // Place adults
-        $adultCount = $adults;
-        for ($i = 0; $i < $adults; $i++) {
-            if ($rbUsed < $rbAvailable) {
-                $occupancy['adults'][] = [
-                    'index' => $i + 1,
-                    'bed_type' => 'REGULAR',
-                    'age_type' => 'ADULT ',
-                    'acc_type' => 'REGULAR',
-                ];
-                $rbUsed++;
-            } else {
-                if ($hasExtraBedAdultPricing) {
-                    // Room has separate pricing for 3rd+ adults (e.g., "3 RD ADULT" / "EXTRA BED")
-                    $ordinal = PriceInfoFormatter::getOrdinal($i + 1);
-                    $occupancy['adults'][] = [
-                        'index' => $i + 1,
-                        'bed_type' => 'EXTRA BED',
-                        'age_type' => $ordinal . ' ADULT',
-                        'acc_type' => 'EXTRA BED',
-                    ];
-                } else {
-                    // No separate pricing — all adults use plain "ADULT" / "REGULAR"
-                    // so they match the generic adult season_price row
-                    $occupancy['adults'][] = [
-                        'index' => $i + 1,
-                        'bed_type' => 'EXTRA BED',
-                        'age_type' => 'ADULT ',
-                        'acc_type' => 'REGULAR',
-                    ];
-                }
-                $ebUsed++;
-            }
-        }
-
-        // Sort children by age descending (oldest first) before assigning ordinals.
-        // The API uses ordinal-based child pricing (1 ST CHD = highest %, 2 ND CHD = lower %)
-        // and expects the oldest child to be the 1st child.
-        $sortedChildrenAges = $childrenAges;
-        rsort($sortedChildrenAges);
-
-        // Place children
-        $childOrdinalCounter = 0;
-        foreach ($sortedChildrenAges as $age) {
-            $ageBand = $this->getAgeBand($age);
-
-            $bandHasPricing = true;
-            if (!empty($availableBands)) {
-                $bandNorm = str_replace(',', '.', $ageBand);
-                $hasBand = false;
-                foreach ($availableBands as $ab) {
-                    if (str_replace(',', '.', (string) $ab) === $bandNorm) {
-                        $hasBand = true;
-                        break;
-                    }
-                }
-                $bandHasPricing = $hasBand;
-            }
-
-            if (!$bandHasPricing) {
-                $adultCount++;
-                $ordinal = PriceInfoFormatter::getOrdinal($adultCount);
-
-                $this->log('Child reclassified as adult (no pricing for age band)', [
-                    'child_age' => $age,
-                    'age_band' => $ageBand,
-                    'reclassified_as' => $ordinal . ' ADULT',
-                ]);
-
-                if ($rbUsed < $rbAvailable) {
-                    $entry = [
-                        'index' => $adultCount,
-                        'bed_type' => 'REGULAR',
-                        'age_type' => 'ADULT ',
-                        'acc_type' => 'REGULAR',
-                        'original_child_age' => $age,
-                        'reclassified' => true,
-                    ];
-                    $rbUsed++;
-                } else {
-                    $entry = [
-                        'index' => $adultCount,
-                        'bed_type' => 'EXTRA BED',
-                        'age_type' => $ordinal . ' ADULT',
-                        'acc_type' => 'EXTRA BED',
-                        'original_child_age' => $age,
-                        'reclassified' => true,
-                    ];
-                    $ebUsed++;
-                }
-
-                $occupancy['adults'][] = $entry;
-                $occupancy['children_as_adults'][] = $entry;
-                continue;
-            }
-
-            $childOrdinalCounter++;
-            $ordinal = PriceInfoFormatter::getChildOrdinal($childOrdinalCounter);
-
-            if ($rbUsed < $rbAvailable) {
-                $occupancy['children'][] = [
-                    'index' => $childOrdinalCounter,
-                    'age' => $age,
-                    'age_band' => $ageBand,
-                    'bed_type' => 'REGULAR',
-                    'age_type' => $ordinal . ' CHD ' . $ageBand,
-                    'acc_type' => 'REGULAR',
-                    'by_1_ad' => ($adults === 1),
-                ];
-                $rbUsed++;
-            } else {
-                $occupancy['children'][] = [
-                    'index' => $childOrdinalCounter,
-                    'age' => $age,
-                    'age_band' => $ageBand,
-                    'bed_type' => 'EXTRA BED',
-                    'age_type' => $ordinal . ' CHD ' . $ageBand,
-                    'acc_type' => 'EXTRA BED',
-                    'by_1_ad' => ($adults === 1),
-                ];
-                $ebUsed++;
-            }
-        }
-
-        $occupancy['total_rb_used'] = $rbUsed;
-        $occupancy['total_eb_used'] = $ebUsed;
-
-        return $occupancy;
+        return $this->occupancyStructureBuilder->build(
+            $adults,
+            $childrenAges,
+            $capacity,
+            $this->priceinfo,
+            $this->childAgeBands,
+            $roomId,
+            $boardId,
+        );
     }
 
     /**
