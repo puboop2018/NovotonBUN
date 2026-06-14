@@ -33,12 +33,17 @@ class HotelRepository implements HotelRepositoryInterface
     /** Name/filter search reads, delegated from this repository. */
     private readonly HotelSearchRepository $searchRepo;
 
+    /** Product-pipeline reads (unlinked / missing images / boards / SEO). */
+    private readonly HotelLinkingRepository $linkingRepo;
+
     public function __construct(
         ?HotelStatsRepository $stats = null,
         ?HotelSearchRepository $searchRepo = null,
+        ?HotelLinkingRepository $linkingRepo = null,
     ) {
         $this->stats = $stats ?? new HotelStatsRepository();
         $this->searchRepo = $searchRepo ?? new HotelSearchRepository();
+        $this->linkingRepo = $linkingRepo ?? new HotelLinkingRepository();
     }
 
     /**
@@ -208,7 +213,7 @@ class HotelRepository implements HotelRepositoryInterface
     public function getByDestination(int $destinationId): array
     {
         return self::asRowList(db_get_array(
-            'SELECT ' . self::LISTING_COLUMNS . ' FROM ?:sphinx_hotels WHERE destination_id = ?i ORDER BY name ASC',
+            'SELECT ' . $this->listingColumns() . ' FROM ?:sphinx_hotels WHERE destination_id = ?i ORDER BY name ASC',
             $destinationId,
         ));
     }
@@ -321,18 +326,7 @@ class HotelRepository implements HotelRepositoryInterface
      */
     public function findMissingImages(string $countryCode = '', int $limit = 100): array
     {
-        $cond = "(h.images_json IS NULL OR h.images_json = '' OR h.images_json = '[]')";
-        if ($countryCode !== '') {
-            $cond .= db_quote(' AND h.country_code = ?s', $countryCode);
-        }
-        $limitClause = $limit > 0 ? db_quote(' LIMIT ?i', $limit) : '';
-
-        return self::asRowList(db_get_array(
-            "SELECT h.hotel_id, h.name, h.product_id
-             FROM ?:sphinx_hotels h
-             WHERE h.sync_status = 'active' AND {$cond}
-             ORDER BY h.hotel_id ASC {$limitClause}",
-        ));
+        return $this->linkingRepo->findMissingImages($countryCode, $limit);
     }
 
     /**
@@ -342,26 +336,7 @@ class HotelRepository implements HotelRepositoryInterface
      */
     public function findUnlinked(string $countryCode = '', int $limit = 0): array
     {
-        $condition = '';
-        if ($countryCode !== '') {
-            $condition .= db_quote(' AND h.country_code = ?s', $countryCode);
-        }
-
-        $limitClause = $limit > 0 ? db_quote(' LIMIT ?i', $limit) : '';
-        $cols = $this->aliasedListingColumns();
-
-        // Product creation needs TEXT/JSON columns excluded from LISTING_COLUMNS
-        $extraCols = ', h.description, h.short_description, h.facilities_json, h.boards_json';
-
-        return self::asRowList(db_get_array(
-            "SELECT {$cols}{$extraCols} FROM ?:sphinx_hotels h
-             WHERE h.sync_status = 'active'
-               AND (h.product_id IS NULL OR h.product_id = 0)
-               AND h.product_skip_reason IS NULL ?p
-             ORDER BY h.country_code ASC, h.name ASC ?p",
-            $condition,
-            $limitClause,
-        ));
+        return $this->linkingRepo->findUnlinked($countryCode, $limit);
     }
 
     /**
@@ -443,29 +418,7 @@ class HotelRepository implements HotelRepositoryInterface
      */
     public function findWithBoardsAndProduct(string $countryCode = '', int $limit = 0, int $offset = 0): array
     {
-        $condition = ' AND h.boards_json IS NOT NULL AND h.product_id IS NOT NULL AND h.product_id > 0';
-        if ($countryCode !== '') {
-            $condition .= db_quote(' AND h.country_code = ?s', $countryCode);
-        }
-
-        $limitClause = '';
-        if ($limit > 0) {
-            $limitClause = db_quote(' LIMIT ?i, ?i', $offset, $limit);
-        } elseif ($offset > 0) {
-            // MySQL max BIGINT UNSIGNED — effectively "no limit, offset only"
-            $limitClause = db_quote(' LIMIT ?i, 18446744073709551615', $offset);
-        }
-
-        return self::asRowList(db_get_array(
-            "SELECT h.hotel_id, h.product_id, h.boards_json, h.name,
-                    h.classification, h.property_type, h.destination_name,
-                    h.facilities_json, h.country_code
-             FROM ?:sphinx_hotels h
-             WHERE h.sync_status = 'active' ?p
-             ORDER BY h.hotel_id ASC ?p",
-            $condition,
-            $limitClause,
-        ));
+        return $this->linkingRepo->findWithBoardsAndProduct($countryCode, $limit, $offset);
     }
 
     /**
@@ -565,18 +518,7 @@ class HotelRepository implements HotelRepositoryInterface
      */
     public function fetchLinkedBatchForSeo(int $offset, int $batch): array
     {
-        return self::asRowList(db_get_array(
-            "SELECT h.hotel_id, h.product_id, h.name, h.classification, h.property_type,
-                    h.description, h.rating, h.facilities_json, h.boards_json,
-                    h.latitude, h.longitude, h.image_url, h.address, h.phone, h.email, h.website,
-                    h.destination_name, h.country_name, h.region_name
-             FROM ?:sphinx_hotels h
-             WHERE h.product_id IS NOT NULL AND h.product_id > 0
-               AND h.sync_status = 'active'
-             LIMIT ?i, ?i",
-            $offset,
-            $batch,
-        ));
+        return $this->linkingRepo->fetchLinkedBatchForSeo($offset, $batch);
     }
 
     /**

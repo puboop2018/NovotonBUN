@@ -16,14 +16,8 @@ trait HotelListingColumnsTrait
 {
     /**
      * Core columns for hotel listing (excludes large JSON/TEXT columns).
+     * Single source of truth; the string forms are derived from it.
      */
-    private const string LISTING_COLUMNS = 'hotel_id, product_id, name, classification, property_type,
-        destination_id, destination_name, region_id, region_name,
-        country_code, country_name, latitude, longitude,
-        image_url, is_recommended, is_adults_only, rating, rating_count,
-        sync_status, last_synced_at, created_at, updated_at';
-
-    /** Explicit column list for safe aliasing (no regex needed). */
     private const array LISTING_COLUMN_NAMES = [
         'hotel_id', 'product_id', 'name', 'classification', 'property_type',
         'destination_id', 'destination_name', 'region_id', 'region_name',
@@ -31,6 +25,14 @@ trait HotelListingColumnsTrait
         'image_url', 'is_recommended', 'is_adults_only', 'rating', 'rating_count',
         'sync_status', 'last_synced_at', 'created_at', 'updated_at',
     ];
+
+    /**
+     * Comma-separated listing columns (no alias).
+     */
+    private function listingColumns(): string
+    {
+        return implode(', ', self::LISTING_COLUMN_NAMES);
+    }
 
     /**
      * Get listing columns prefixed with a table alias.
