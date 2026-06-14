@@ -1711,12 +1711,6 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Api/ApiClientBase.php
 
 		-
-			message: '#^Parameter \#3 \$ttl of method Tygh\\Addons\\NovotonHolidays\\Services\\CacheServiceInterface\:\:set\(\) expects int\|null, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Api/ApiClientBase.php
-
-		-
 			message: '#^Cannot cast mixed to float\.$#'
 			identifier: cast.double
 			count: 1
