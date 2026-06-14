@@ -353,7 +353,7 @@ class PriceInfoFormatter
      * pricing rows in season_price).
      *
      * Comma/dot and whitespace normalization IS applied for consistency.
-     * @param array<string, mixed> $seasonAgeTypes
+     * @param array<array-key, mixed> $seasonAgeTypes List or map of season age-type values
      */
     public static function correlatesWithSeasonAgeTypes(string $feeIdAge, array $seasonAgeTypes): bool
     {
