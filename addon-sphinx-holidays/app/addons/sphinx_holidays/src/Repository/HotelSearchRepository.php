@@ -85,7 +85,7 @@ class HotelSearchRepository
         $query = trim($query);
         $escaped = addcslashes($query, '%_\\');
         return self::asRowList(db_get_array(
-            'SELECT ' . self::LISTING_COLUMNS . ' FROM ?:sphinx_hotels WHERE name LIKE ?l ORDER BY country_code ASC, name ASC LIMIT ?i',
+            'SELECT ' . $this->listingColumns() . ' FROM ?:sphinx_hotels WHERE name LIKE ?l ORDER BY country_code ASC, name ASC LIMIT ?i',
             '%' . $escaped . '%',
             $limit,
         ));
