@@ -19,24 +19,7 @@ use Tygh\Addons\TravelCore\Repository\RowNarrowingTrait;
 class HotelRepository implements HotelRepositoryInterface
 {
     use RowNarrowingTrait;
-
-    /**
-     * Core columns for hotel listing (excludes large JSON/TEXT columns).
-     */
-    private const string LISTING_COLUMNS = 'hotel_id, product_id, name, classification, property_type,
-        destination_id, destination_name, region_id, region_name,
-        country_code, country_name, latitude, longitude,
-        image_url, is_recommended, is_adults_only, rating, rating_count,
-        sync_status, last_synced_at, created_at, updated_at';
-
-    /** Explicit column list for safe aliasing (no regex needed). */
-    private const array LISTING_COLUMN_NAMES = [
-        'hotel_id', 'product_id', 'name', 'classification', 'property_type',
-        'destination_id', 'destination_name', 'region_id', 'region_name',
-        'country_code', 'country_name', 'latitude', 'longitude',
-        'image_url', 'is_recommended', 'is_adults_only', 'rating', 'rating_count',
-        'sync_status', 'last_synced_at', 'created_at', 'updated_at',
-    ];
+    use HotelListingColumnsTrait;
 
     private const string STATUS_ACTIVE = 'active';
     private const string STATUS_INACTIVE = 'inactive';
@@ -47,20 +30,15 @@ class HotelRepository implements HotelRepositoryInterface
     /** Read-only aggregate / reporting reads, delegated from this repository. */
     private readonly HotelStatsRepository $stats;
 
-    public function __construct(?HotelStatsRepository $stats = null)
-    {
-        $this->stats = $stats ?? new HotelStatsRepository();
-    }
+    /** Name/filter search reads, delegated from this repository. */
+    private readonly HotelSearchRepository $searchRepo;
 
-    /**
-     * Get listing columns prefixed with a table alias.
-     */
-    private function aliasedListingColumns(string $alias = 'h'): string
-    {
-        return implode(', ', array_map(
-            static fn (string $col): string => $alias . '.' . $col,
-            self::LISTING_COLUMN_NAMES,
-        ));
+    public function __construct(
+        ?HotelStatsRepository $stats = null,
+        ?HotelSearchRepository $searchRepo = null,
+    ) {
+        $this->stats = $stats ?? new HotelStatsRepository();
+        $this->searchRepo = $searchRepo ?? new HotelSearchRepository();
     }
 
     /**
@@ -193,44 +171,7 @@ class HotelRepository implements HotelRepositoryInterface
         int $page = 1,
         int $perPage = 50,
     ): array {
-        $condition = '';
-
-        if ($countryCode !== '') {
-            $condition .= db_quote(' AND h.country_code = ?s', $countryCode);
-        }
-        if ($destinationId > 0) {
-            $condition .= db_quote(' AND h.destination_id = ?i', $destinationId);
-        }
-        if ($regionId > 0) {
-            $condition .= db_quote(' AND h.region_id = ?i', $regionId);
-        }
-        if ($syncStatus !== '') {
-            $condition .= db_quote(' AND h.sync_status = ?s', $syncStatus);
-        }
-        if ($query !== '') {
-            $escaped = addcslashes($query, '%_\\');
-            $condition .= db_quote(' AND h.name LIKE ?l', '%' . $escaped . '%');
-        }
-
-        $total = (int) db_get_field(
-            'SELECT COUNT(*) FROM ?:sphinx_hotels h WHERE 1 ?p',
-            $condition,
-        );
-
-        $offset = ($page - 1) * $perPage;
-
-        $cols = $this->aliasedListingColumns();
-        $items = self::asRowList(db_get_array(
-            "SELECT {$cols} FROM ?:sphinx_hotels h
-             WHERE 1 ?p
-             ORDER BY h.country_code ASC, h.name ASC
-             LIMIT ?i, ?i",
-            $condition,
-            $offset,
-            $perPage,
-        ));
-
-        return ['items' => $items, 'total' => $total];
+        return $this->searchRepo->getFiltered($countryCode, $destinationId, $regionId, $syncStatus, $query, $page, $perPage);
     }
 
     /**
@@ -327,13 +268,7 @@ class HotelRepository implements HotelRepositoryInterface
      */
     public function search(string $query, int $limit = 20): array
     {
-        $query = trim($query);
-        $escaped = addcslashes($query, '%_\\');
-        return self::asRowList(db_get_array(
-            'SELECT ' . self::LISTING_COLUMNS . ' FROM ?:sphinx_hotels WHERE name LIKE ?l ORDER BY country_code ASC, name ASC LIMIT ?i',
-            '%' . $escaped . '%',
-            $limit,
-        ));
+        return $this->searchRepo->search($query, $limit);
     }
 
     /**
@@ -343,20 +278,7 @@ class HotelRepository implements HotelRepositoryInterface
      */
     public function searchByName(string $query, int $limit = 20): array
     {
-        $query = trim($query);
-        if ($query === '') {
-            return [];
-        }
-        $escaped = addcslashes($query, '%_\\');
-        return self::asRowList(db_get_array(
-            'SELECT hotel_id, name, classification, country_code, destination_name
-             FROM ?:sphinx_hotels
-             WHERE name LIKE ?l
-             ORDER BY country_code ASC, name ASC
-             LIMIT ?i',
-            '%' . $escaped . '%',
-            $limit,
-        ));
+        return $this->searchRepo->searchByName($query, $limit);
     }
 
     /**
