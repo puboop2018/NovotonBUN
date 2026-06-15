@@ -131,7 +131,7 @@ class AgeBandResolver
                 continue;
             }
 
-            if (preg_match('/(\d+[\-\.]\d+[,\.]?\d*)/', $rowAge, $m) === 1) {
+            if (preg_match('/(\d+[-.]\d+[,.]?\d*)/', $rowAge, $m) === 1) {
                 $band = str_replace('.', ',', $m[1]);
                 $band = preg_replace('/(\d+)-(\d+),(\d+)/', '$1-$2,$3', $band);
                 if (!in_array($band, $bands)) {

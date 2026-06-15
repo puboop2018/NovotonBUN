@@ -41,7 +41,7 @@ class ValidationHelpers
      */
     public static function sanitizeName(string $name, int $maxLength = 100): string
     {
-        $name = (string) preg_replace('/[^\p{L}\p{N}\s\'\-\.]/u', '', $name);
+        $name = (string) preg_replace('/[^\p{L}\p{N}\s\'\-.]/u', '', $name);
         return mb_substr(trim($name), 0, $maxLength);
     }
 
@@ -107,6 +107,6 @@ class ValidationHelpers
      */
     public static function isValidName(string $name, int $maxLength = 100): bool
     {
-        return (bool) preg_match('/^[\p{L}\p{N}\s\'\-\.]{1,' . $maxLength . '}$/u', $name);
+        return (bool) preg_match('/^[\p{L}\p{N}\s\'\-.]{1,' . $maxLength . '}$/u', $name);
     }
 }
