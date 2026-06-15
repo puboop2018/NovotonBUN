@@ -12,6 +12,7 @@ declare(strict_types=1);
  */
 
 use Tygh\Registry;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\TravelConstants;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
@@ -44,7 +45,7 @@ function fn_travel_core_fetch_bnr_rates(): string|false
     $error = curl_error($ch);
     curl_close($ch);
 
-    if ($error) {
+    if ($error !== '') {
         fn_log_event('general', 'runtime', [
             'message' => 'BNR exchange rate fetch failed: ' . $error
         ]);
@@ -138,7 +139,7 @@ function fn_travel_core_parse_bnr_xml($xml_content, $currencies = ['EUR', 'USD',
  * Assumes EUR is the primary currency in CS-Cart.
  * Converts BNR rates (RON-based) to EUR-based coefficients.
  *
- * @param array<string, mixed> $bnr_rates Rates from BNR (currency => RON rate)
+ * @param array<int|string, mixed> $bnr_rates Rates from BNR (currency => RON rate)
  * @param float $commission Commission percentage to add (e.g., 2 for 2%)
  * @return array<string, float> Currency coefficients for CS-Cart
  */
@@ -150,7 +151,7 @@ function fn_travel_core_calculate_currency_coefficients($bnr_rates, $commission 
         return $coefficients;
     }
 
-    $eur_rate = $bnr_rates['EUR'];
+    $eur_rate = TypeCoerce::toFloat($bnr_rates['EUR']);
     $commission_multiplier = 1 + ($commission / 100);
 
     // RON coefficient = EUR rate from BNR (1 EUR = X RON)
@@ -158,12 +159,12 @@ function fn_travel_core_calculate_currency_coefficients($bnr_rates, $commission 
 
     // USD coefficient = EUR/USD cross rate
     if (!empty($bnr_rates['USD'])) {
-        $coefficients['USD'] = round(($eur_rate / $bnr_rates['USD']) * $commission_multiplier, 4);
+        $coefficients['USD'] = round(($eur_rate / TypeCoerce::toFloat($bnr_rates['USD'])) * $commission_multiplier, 4);
     }
 
     // GBP coefficient = EUR/GBP cross rate
     if (!empty($bnr_rates['GBP'])) {
-        $coefficients['GBP'] = round(($eur_rate / $bnr_rates['GBP']) * $commission_multiplier, 4);
+        $coefficients['GBP'] = round(($eur_rate / TypeCoerce::toFloat($bnr_rates['GBP'])) * $commission_multiplier, 4);
     }
 
     return $coefficients;
@@ -185,7 +186,7 @@ function fn_travel_core_update_cscart_currencies($coefficients): array
             $currency_code
         );
 
-        if (empty($currency)) {
+        if (!is_array($currency) || $currency === []) {
             $results[$currency_code] = [
                 'success' => false,
                 'error' => 'Currency not found in CS-Cart'
@@ -194,35 +195,36 @@ function fn_travel_core_update_cscart_currencies($coefficients): array
         }
 
         // Skip primary currency (EUR should have coefficient = 1)
-        if ($currency['is_primary'] === 'Y') {
+        if (($currency['is_primary'] ?? '') === 'Y') {
             $results[$currency_code] = [
                 'success' => true,
                 'message' => 'Primary currency - coefficient unchanged',
-                'old_rate' => $currency['coefficient'],
+                'old_rate' => $currency['coefficient'] ?? null,
                 'new_rate' => 1.0
             ];
             continue;
         }
 
-        $old_coefficient = $currency['coefficient'];
+        $old_coefficient = $currency['coefficient'] ?? null;
+        $coefficientFloat = TypeCoerce::toFloat($coefficient);
 
         db_query(
             "UPDATE ?:currencies SET coefficient = ?d WHERE currency_code = ?s",
-            round($coefficient, 5),
+            round($coefficientFloat, 5),
             $currency_code
         );
 
-        $stored = (float) db_get_field(
+        $stored = TypeCoerce::toFloat(db_get_field(
             "SELECT coefficient FROM ?:currencies WHERE currency_code = ?s",
             $currency_code
-        );
+        ));
 
-        if (abs($stored - $coefficient) > 0.001) {
+        if (abs($stored - $coefficientFloat) > 0.001) {
             fn_log_event('general', 'runtime', [
                 'message' => sprintf(
                     'WARNING: Currency coefficient mismatch after update for %s: expected %s, got %s',
                     $currency_code,
-                    $coefficient,
+                    $coefficientFloat,
                     $stored
                 )
             ]);
@@ -278,8 +280,8 @@ function fn_travel_core_update_exchange_rates(float $commission = 0.0, bool $ret
 
     // Step 2: Parse XML for EUR, USD, GBP (with publishing date)
     $parsed = fn_travel_core_parse_bnr_xml($xml, ['EUR', 'USD', 'GBP'], true);
-    $bnr_rates = $parsed['rates'];
-    $result['publishing_date'] = $parsed['publishing_date'];
+    $bnr_rates = is_array($parsed['rates'] ?? null) ? $parsed['rates'] : [];
+    $result['publishing_date'] = $parsed['publishing_date'] ?? '';
 
     if (empty($bnr_rates)) {
         $result['message'] = 'Failed to parse BNR exchange rates';
@@ -337,37 +339,41 @@ function fn_travel_core_format_exchange_rate_output(array $result): string
 {
     $lines = [];
 
-    $lines[] = "Status: " . (($result['success'] ?? false) ? 'SUCCESS' : 'FAILED');
-    $lines[] = "Message: " . ($result['message'] ?? 'Unknown');
+    $lines[] = 'Status: ' . (!empty($result['success']) ? 'SUCCESS' : 'FAILED');
+    $lines[] = 'Message: ' . TypeCoerce::toString($result['message'] ?? 'Unknown');
 
     if (!empty($result['publishing_date'])) {
-        $lines[] = "Publishing Date: " . $result['publishing_date'];
+        $lines[] = 'Publishing Date: ' . TypeCoerce::toString($result['publishing_date']);
     }
 
-    if (!empty($result['bnr_rates'])) {
+    $bnrRates = is_array($result['bnr_rates'] ?? null) ? $result['bnr_rates'] : [];
+    if (!empty($bnrRates)) {
         $lines[] = '';
         $lines[] = 'BNR Rates (RON-based):';
-        foreach ($result['bnr_rates'] as $currency => $rate) {
-            $lines[] = "  {$currency}: {$rate}";
+        foreach ($bnrRates as $currency => $rate) {
+            $lines[] = '  ' . TypeCoerce::toString($currency) . ': ' . TypeCoerce::toString($rate);
         }
     }
 
-    if (!empty($result['coefficients'])) {
+    $coefficients = is_array($result['coefficients'] ?? null) ? $result['coefficients'] : [];
+    if (!empty($coefficients)) {
         $lines[] = '';
-        $lines[] = "Calculated Coefficients (EUR-based, commission: " . ($result['commission'] ?? 0) . "%):";
-        foreach ($result['coefficients'] as $currency => $coefficient) {
-            $lines[] = "  {$currency}: {$coefficient}";
+        $lines[] = 'Calculated Coefficients (EUR-based, commission: ' . TypeCoerce::toString($result['commission'] ?? 0) . '%):';
+        foreach ($coefficients as $currency => $coefficient) {
+            $lines[] = '  ' . TypeCoerce::toString($currency) . ': ' . TypeCoerce::toString($coefficient);
         }
     }
 
-    if (!empty($result['updates'])) {
+    $updates = is_array($result['updates'] ?? null) ? $result['updates'] : [];
+    if (!empty($updates)) {
         $lines[] = '';
         $lines[] = 'Update Results:';
-        foreach ($result['updates'] as $currency => $update) {
-            if ($update['success']) {
-                $lines[] = "  {$currency}: " . ($update['old_rate'] ?? '-') . " -> " . ($update['new_rate'] ?? '-');
+        foreach ($updates as $currency => $update) {
+            $update = is_array($update) ? $update : [];
+            if (!empty($update['success'])) {
+                $lines[] = '  ' . TypeCoerce::toString($currency) . ': ' . TypeCoerce::toString($update['old_rate'] ?? '-') . ' -> ' . TypeCoerce::toString($update['new_rate'] ?? '-');
             } else {
-                $lines[] = "  {$currency}: FAILED - " . ($update['error'] ?? 'Unknown');
+                $lines[] = '  ' . TypeCoerce::toString($currency) . ': FAILED - ' . TypeCoerce::toString($update['error'] ?? 'Unknown');
             }
         }
     }
