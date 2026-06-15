@@ -313,3 +313,40 @@ jobs:
                addon-travel-core/app/addons/travel_core/src \
                addon-sphinx-holidays/app/addons/sphinx_holidays/src \
                -name '*.php' -print0 | xargs -0 -n 50 php -l
+
+  # ── Qodana (JetBrains static analysis) ──
+  # Gated behind the rest of the gauntlet via `needs`, so Qodana runs only
+  # AFTER PHPStan/Psalm/PHPCS/php-cs-fixer/Rector/PHPMD/PHPUnit/Lint have all
+  # passed — it is the final quality gate, not a parallel one. (If any of those
+  # fail, this job is skipped.) The optional, usually-skipped integration job is
+  # intentionally not a dependency, so its skip can't propagate here.
+  qodana:
+    name: Qodana
+    needs:
+      - phpstan
+      - psalm
+      - phpcs
+      - phpcsfixer
+      - rector
+      - phpmd
+      - phpunit
+      - phpunit-travel-core
+      - phpunit-sphinx
+      - lint
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      checks: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}  # actual PR commit on PRs; empty on push → defaults to the pushed commit
+          fetch-depth: 0                                   # full history required for Qodana PR analysis
+      - name: 'Qodana Scan'
+        uses: JetBrains/qodana-action@v2026.1
+        with:
+          pr-mode: false
+        env:
+          QODANA_TOKEN: ${{ secrets.QODANA_TOKEN_1757207161 }}
+          QODANA_ENDPOINT: 'https://qodana.cloud'
