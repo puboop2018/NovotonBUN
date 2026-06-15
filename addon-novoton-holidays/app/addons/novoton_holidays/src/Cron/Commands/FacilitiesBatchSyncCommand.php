@@ -7,6 +7,7 @@ namespace Tygh\Addons\NovotonHolidays\Cron\Commands;
 use Tygh\Addons\NovotonHolidays\Cron\AbstractCronCommand;
 use Tygh\Addons\NovotonHolidays\Helpers\SyncInterface;
 use Tygh\Addons\NovotonHolidays\Services\Container;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 /**
  * Batched hotel facilities sync cron command.
@@ -55,16 +56,16 @@ class FacilitiesBatchSyncCommand extends AbstractCronCommand
         // The local is typed SyncInterface so future migrations
         // (V3, replacement, etc.) don't need to touch this file.
         $sync = Container::getInstance()->batchedHotelFacilitiesSyncV2();
-        $sync->setOutputCallback(function ($msg): void {
+        $sync->setOutputCallback(function (string $msg): void {
             $this->output(rtrim($msg, "\n"));
         });
 
         // Apply configuration from request params
         if (!empty($this->params['batch_size'])) {
-            $sync->setBatchSize((int)$this->params['batch_size']);
+            $sync->setBatchSize(TypeCoerce::toInt($this->params['batch_size']));
         }
         if (!empty($this->params['max_time'])) {
-            $sync->setMaxExecutionTime((int)$this->params['max_time']);
+            $sync->setMaxExecutionTime(TypeCoerce::toInt($this->params['max_time']));
         }
         if (!empty($this->params['unlimited'])) {
             $sync->setUnlimited(true);
@@ -91,7 +92,7 @@ class FacilitiesBatchSyncCommand extends AbstractCronCommand
         $result = $sync->run($options);
 
         $this->output('');
-        $this->output("Result: {$result['status']}");
+        $this->output('Result: ' . TypeCoerce::toString($result['status'] ?? ''));
         $this->printResult($result);
 
         return ['success' => true, 'stats' => $result];
@@ -103,18 +104,18 @@ class FacilitiesBatchSyncCommand extends AbstractCronCommand
     private function printStatus(SyncInterface $sync): array
     {
         $status = $sync->getStatus();
-        $this->output("Status: {$status['status']}");
+        $this->output('Status: ' . TypeCoerce::toString($status['status'] ?? ''));
 
         if ($status['status'] === 'in_progress') {
-            $this->output("Started: {$status['started_at']}");
-            $this->output("Progress: {$status['processed']}/{$status['total']} ({$status['percent']}%)");
-            $this->output("Synced: {$status['synced']}, Errors: {$status['errors']}");
-            $this->output("Elapsed: {$status['elapsed']}");
-            $this->output("ETA: {$status['eta']}");
+            $this->output('Started: ' . TypeCoerce::toString($status['started_at'] ?? ''));
+            $this->output('Progress: ' . TypeCoerce::toInt($status['processed'] ?? 0) . '/' . TypeCoerce::toInt($status['total'] ?? 0) . ' (' . TypeCoerce::toString($status['percent'] ?? '0') . '%)');
+            $this->output('Synced: ' . TypeCoerce::toInt($status['synced'] ?? 0) . ', Errors: ' . TypeCoerce::toInt($status['errors'] ?? 0));
+            $this->output('Elapsed: ' . TypeCoerce::toString($status['elapsed'] ?? ''));
+            $this->output('ETA: ' . TypeCoerce::toString($status['eta'] ?? ''));
         } elseif ($status['status'] === 'idle') {
-            $this->output('Last Sync: ' . ($status['last_sync'] ?? 'Never'));
+            $this->output('Last Sync: ' . TypeCoerce::toString($status['last_sync'] ?? 'Never'));
             if (isset($status['last_total'])) {
-                $this->output("Last Total: {$status['last_total']}");
+                $this->output('Last Total: ' . TypeCoerce::toString($status['last_total']));
             }
         }
 
@@ -127,23 +128,23 @@ class FacilitiesBatchSyncCommand extends AbstractCronCommand
     private function printResult(array $result): void
     {
         if ($result['status'] === 'in_progress') {
-            $this->output('Processed this run: ' . ($result['synced_this_run'] ?? 0));
-            $this->output("Total progress: {$result['processed']}/{$result['total']}");
-            $this->output("Remaining: {$result['remaining']}");
-            $this->output("Estimated runs remaining: {$result['estimated_runs_remaining']}");
+            $this->output('Processed this run: ' . TypeCoerce::toInt($result['synced_this_run'] ?? 0));
+            $this->output('Total progress: ' . TypeCoerce::toInt($result['processed'] ?? 0) . '/' . TypeCoerce::toInt($result['total'] ?? 0));
+            $this->output('Remaining: ' . TypeCoerce::toInt($result['remaining'] ?? 0));
+            $this->output('Estimated runs remaining: ' . TypeCoerce::toInt($result['estimated_runs_remaining'] ?? 0));
             $this->output('');
             $this->output('Run this cron again to continue.');
         } elseif ($result['status'] === 'completed') {
-            $this->output("Total synced: {$result['synced']}");
-            $this->output("Errors: {$result['errors']}");
-            $this->output('Duration: ' . round($result['duration'] / 60, 1) . ' minutes');
+            $this->output('Total synced: ' . TypeCoerce::toInt($result['synced'] ?? 0));
+            $this->output('Errors: ' . TypeCoerce::toInt($result['errors'] ?? 0));
+            $this->output('Duration: ' . round(TypeCoerce::toFloat($result['duration'] ?? 0) / 60, 1) . ' minutes');
 
             $this->sendReport('hotel_facilities_batched', [
                 'sync_type' => $result['sync_type'],
                 'total' => $result['total'],
                 'synced' => $result['synced'],
                 'errors' => $result['errors'],
-                'duration' => round($result['duration'] / 60, 1) . ' min',
+                'duration' => round(TypeCoerce::toFloat($result['duration'] ?? 0) / 60, 1) . ' min',
             ]);
         }
     }
