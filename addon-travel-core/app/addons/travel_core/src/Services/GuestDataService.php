@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\TravelCore\Services;
 
 use Tygh\Addons\TravelCore\Contracts\GuestDataServiceInterface;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 /**
  * Guest Data Service
@@ -36,7 +37,7 @@ class GuestDataService implements GuestDataServiceInterface
     {
         // Primary source: guests_data field
         if (!empty($bookingData['guests_data'])) {
-            $normalized = $this->normalizer->normalize($bookingData['guests_data']);
+            $normalized = $this->normalizer->normalize(self::normalizableInput($bookingData['guests_data']));
             if (!empty($normalized)) {
                 return $normalized;
             }
@@ -44,7 +45,7 @@ class GuestDataService implements GuestDataServiceInterface
 
         // Fallback: guests array (legacy format)
         if (!empty($bookingData['guests'])) {
-            return $this->normalizer->normalize($bookingData['guests']);
+            return $this->normalizer->normalize(self::normalizableInput($bookingData['guests']));
         }
 
         return [];
@@ -61,19 +62,19 @@ class GuestDataService implements GuestDataServiceInterface
     {
         // If already has api_name, use it
         if (!empty($guest['api_name'])) {
-            return $guest['api_name'];
+            return TypeCoerce::toString($guest['api_name']);
         }
 
         // Build from first/last name
-        $first = trim($guest['first_name'] ?? '');
-        $last = trim($guest['last_name'] ?? '');
+        $first = trim(TypeCoerce::toString($guest['first_name'] ?? ''));
+        $last = trim(TypeCoerce::toString($guest['last_name'] ?? ''));
 
-        if ($first && $last) {
+        if ($first !== '' && $last !== '') {
             return $first . ' ' . $last;
         }
 
         // Fall back to name field
-        return trim($guest['name'] ?? 'Guest');
+        return trim(TypeCoerce::toString($guest['name'] ?? 'Guest'));
     }
 
     /**
@@ -89,8 +90,8 @@ class GuestDataService implements GuestDataServiceInterface
 
         foreach ($guests_data as $guest) {
             if (is_array($guest)) {
-                $name = $guest['api_name'] ?? $guest['name'] ?? '';
-                if (!empty($name)) {
+                $name = TypeCoerce::toString($guest['api_name'] ?? $guest['name'] ?? '');
+                if ($name !== '') {
                     $names[] = $name;
                 }
             }
@@ -112,7 +113,7 @@ class GuestDataService implements GuestDataServiceInterface
         // Look for holder flag
         foreach ($guests_data as $guest) {
             if (is_array($guest) && !empty($guest['is_holder'])) {
-                $name = trim($guest['api_name'] ?? $guest['name'] ?? '');
+                $name = trim(TypeCoerce::toString($guest['api_name'] ?? $guest['name'] ?? ''));
                 if ($name !== '') {
                     return $name;
                 }
@@ -122,7 +123,7 @@ class GuestDataService implements GuestDataServiceInterface
         // Look for room1_adult_1 (usually the holder)
         if (isset($guests_data['room1_adult_1']) && is_array($guests_data['room1_adult_1'])) {
             $guest = $guests_data['room1_adult_1'];
-            $name = trim($guest['api_name'] ?? $guest['name'] ?? '');
+            $name = trim(TypeCoerce::toString($guest['api_name'] ?? $guest['name'] ?? ''));
             if ($name !== '') {
                 return $name;
             }
@@ -131,21 +132,21 @@ class GuestDataService implements GuestDataServiceInterface
         // First guest
         $first = reset($guests_data);
         if (is_array($first)) {
-            $name = trim($first['api_name'] ?? $first['name'] ?? '');
+            $name = trim(TypeCoerce::toString($first['api_name'] ?? $first['name'] ?? ''));
             if ($name !== '') {
                 return $name;
             }
         }
 
         // Fallback to booking data
-        return $bookingData['holder_name'] ?? 'Guest';
+        return TypeCoerce::toString($bookingData['holder_name'] ?? 'Guest');
     }
 
     /**
      * Get guests grouped by room
      *
      * @param array<string, mixed> $guests_data Guests data
-     * @return array<int, array<int, array<string, mixed>>> Guests by room [room_num => [guests]]
+     * @return array<int, array<int, array<int|string, mixed>>> Guests by room [room_num => [guests]]
      */
     #[\Override]
     public function getGuestsByRoom(array $guests_data): array
@@ -158,10 +159,10 @@ class GuestDataService implements GuestDataServiceInterface
             }
 
             // Try to get room from data
-            $room = $guest['room'] ?? 1;
+            $room = TypeCoerce::toInt($guest['room'] ?? 1);
 
             // Or parse from key (room1_adult_1)
-            if (preg_match('/^room(\d+)_/', $key, $matches)) {
+            if (preg_match('/^room(\d+)_/', (string) $key, $matches) === 1) {
                 $room = (int) $matches[1];
             }
 
@@ -248,7 +249,7 @@ class GuestDataService implements GuestDataServiceInterface
      * @param array<string, mixed> $guests_data Guests data
      * @param int $expected_adults Expected adult count
      * @param int $expected_children Expected children count
-     * @return array<string, mixed> Validation result [valid, errors]
+     * @return array{valid: bool, errors: array<string>, adults: int, children: int} Validation result
      */
     #[\Override]
     public function validate(array $guests_data, int $expected_adults = 0, int $expected_children = 0): array
@@ -263,8 +264,8 @@ class GuestDataService implements GuestDataServiceInterface
             }
 
             // Check name
-            $name = $guest['api_name'] ?? $guest['name'] ?? '';
-            if (empty($name) || strlen($name) < 2) {
+            $name = TypeCoerce::toString($guest['api_name'] ?? $guest['name'] ?? '');
+            if ($name === '' || strlen($name) < 2) {
                 $errors[] = "Guest '{$key}' has invalid name";
             }
 
@@ -313,7 +314,7 @@ class GuestDataService implements GuestDataServiceInterface
             return [];
         }
 
-        $guests_data = (new GuestDataNormalizer())->normalize($guests_data);
+        $guests_data = (new GuestDataNormalizer())->normalize(self::normalizableInput($guests_data));
         if (empty($guests_data)) {
             return [];
         }
@@ -326,10 +327,10 @@ class GuestDataService implements GuestDataServiceInterface
                 continue;
             }
 
-            $display_name = $guest['display_name'] ?? $guest['name'] ?? '';
-            $api_name = $guest['api_name'] ?? '';
+            $display_name = TypeCoerce::toString($guest['display_name'] ?? $guest['name'] ?? '');
+            $api_name = TypeCoerce::toString($guest['api_name'] ?? '');
 
-            if (empty($display_name) && !empty($api_name)) {
+            if ($display_name === '' && $api_name !== '') {
                 $parts = explode(' ', trim($api_name), 2);
                 $display_name = count($parts) === 2
                     ? $parts[1] . ', ' . $parts[0]
@@ -350,7 +351,7 @@ class GuestDataService implements GuestDataServiceInterface
                 'display_name' => $display_name,
                 'name' => $guest['name'] ?? $display_name,
                 'type' => $guest_type,
-                'age' => (int)($guest['age'] ?? 0),
+                'age' => TypeCoerce::toInt($guest['age'] ?? 0),
                 'is_holder' => $is_holder,
                 'birthday' => $guest['birthday'] ?? '',
                 'room' => $guest['room'] ?? 1,
@@ -373,15 +374,19 @@ class GuestDataService implements GuestDataServiceInterface
 
         foreach ($sources as $source) {
             foreach ($source as $key => $guest) {
-                if (!isset($merged[$key]) || empty($merged[$key]['name'])) {
+                $existing = $merged[$key] ?? null;
+                if (!is_array($existing) || empty($existing['name'])) {
                     $merged[$key] = $guest;
-                } else {
-                    // Merge non-empty values
+                    continue;
+                }
+                // Merge non-empty values into the existing guest
+                if (is_array($guest)) {
                     foreach ($guest as $field => $value) {
-                        if (!empty($value) && empty($merged[$key][$field])) {
-                            $merged[$key][$field] = $value;
+                        if (!empty($value) && empty($existing[$field])) {
+                            $existing[$field] = $value;
                         }
                     }
+                    $merged[$key] = $existing;
                 }
             }
         }
@@ -409,10 +414,10 @@ class GuestDataService implements GuestDataServiceInterface
 
         // Format 1: $guest['dob'] field (DD/MM/YYYY or YYYY-MM-DD)
         if (!empty($guest['dob'])) {
-            $dob = trim($guest['dob']);
+            $dob = trim(TypeCoerce::toString($guest['dob']));
 
             // DD/MM/YYYY
-            if (preg_match('/^(\d{2})\/(\d{2})\/(\d{4})$/', $dob, $m)) {
+            if (preg_match('/^(\d{2})\/(\d{2})\/(\d{4})$/', $dob, $m) === 1) {
                 $d = (int) $m[1];
                 $mo = (int) $m[2];
                 $y = (int) $m[3];
@@ -426,7 +431,7 @@ class GuestDataService implements GuestDataServiceInterface
             }
 
             // YYYY-MM-DD
-            if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $dob)) {
+            if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $dob) === 1) {
                 $parts = explode('-', $dob);
                 if (checkdate((int) $parts[1], (int) $parts[2], (int) $parts[0])) {
                     return $dob;
@@ -436,9 +441,9 @@ class GuestDataService implements GuestDataServiceInterface
 
         // Format 2: Component fields (dob_day, dob_month, dob_year)
         if (!empty($guest['dob_day']) && !empty($guest['dob_month']) && !empty($guest['dob_year'])) {
-            $d = (int) $guest['dob_day'];
-            $mo = (int) $guest['dob_month'];
-            $y = (int) $guest['dob_year'];
+            $d = TypeCoerce::toInt($guest['dob_day']);
+            $mo = TypeCoerce::toInt($guest['dob_month']);
+            $y = TypeCoerce::toInt($guest['dob_year']);
             if (
                 $d >= 1 && $d <= 31 && $mo >= 1 && $mo <= 12
                 && $y >= $minYear && $y <= $currentYear
@@ -450,8 +455,8 @@ class GuestDataService implements GuestDataServiceInterface
 
         // Format 3: $guest['birthday'] as YYYY-MM-DD
         if (!empty($guest['birthday'])) {
-            $raw = trim($guest['birthday']);
-            if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $raw)) {
+            $raw = trim(TypeCoerce::toString($guest['birthday']));
+            if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $raw) === 1) {
                 $parts = explode('-', $raw);
                 if (checkdate((int) $parts[1], (int) $parts[2], (int) $parts[0])) {
                     return $raw;
@@ -487,17 +492,21 @@ class GuestDataService implements GuestDataServiceInterface
         $guestsData = [];
 
         foreach ($guests as $key => $guest) {
-            $firstName = trim($guest['first_name'] ?? '');
-            $lastName = trim($guest['last_name'] ?? '');
-            $name = trim($guest['name'] ?? '');
+            if (!is_array($guest)) {
+                continue;
+            }
 
-            $birthday = self::parseDob($guest);
+            $firstName = trim(TypeCoerce::toString($guest['first_name'] ?? ''));
+            $lastName = trim(TypeCoerce::toString($guest['last_name'] ?? ''));
+            $name = trim(TypeCoerce::toString($guest['name'] ?? ''));
+
+            $birthday = self::parseDob(TypeCoerce::toStringMap($guest));
 
             // Validate DOB: not in future
             if (!empty($birthday)) {
                 $dobTimestamp = strtotime($birthday);
                 $todayMidnight = strtotime('today midnight');
-                if ($dobTimestamp && $dobTimestamp > $todayMidnight) {
+                if ($dobTimestamp !== false && $dobTimestamp > $todayMidnight) {
                     $birthday = '';
                     if (!empty($provider)) {
                         fn_log_event('general', 'runtime', [
@@ -509,9 +518,9 @@ class GuestDataService implements GuestDataServiceInterface
                 }
 
                 // Validate child age: must be under 18 at check-in
-                $guestType = strtolower($guest['type'] ?? '');
+                $guestType = strtolower(TypeCoerce::toString($guest['type'] ?? ''));
                 $isChild = (str_contains($key, 'child') || $guestType === 'child');
-                if ($dobTimestamp && $isChild && !empty($checkIn)) {
+                if ($dobTimestamp !== false && $isChild && !empty($checkIn)) {
                     try {
                         $dobDate = new \DateTime($birthday);
                         $checkInDate = new \DateTime($checkIn);
@@ -554,7 +563,7 @@ class GuestDataService implements GuestDataServiceInterface
                 }
                 $guestNames[] = $displayName;
 
-                $guestAge = self::calculateAge($birthday, (int) ($guest['age'] ?? 0));
+                $guestAge = self::calculateAge($birthday, TypeCoerce::toInt($guest['age'] ?? 0));
 
                 $guestsData[$key] = [
                     'name' => $displayName,
@@ -565,13 +574,13 @@ class GuestDataService implements GuestDataServiceInterface
                     'age' => $guestAge,
                     'birthday' => $birthday,
                     'dob' => !empty($birthday) ? date('d/m/Y', (int) strtotime($birthday)) : '',
-                    'room' => (int) ($guest['room'] ?? 1),
+                    'room' => TypeCoerce::toInt($guest['room'] ?? 1),
                     'is_holder' => !empty($guest['is_holder']) ? 1 : 0,
                 ];
             } elseif (!empty($name)) {
                 $guestNames[] = $name;
 
-                $guestAge = self::calculateAge($birthday, (int) ($guest['age'] ?? 0));
+                $guestAge = self::calculateAge($birthday, TypeCoerce::toInt($guest['age'] ?? 0));
 
                 $guestsData[$key] = [
                     'name' => $name,
@@ -582,7 +591,7 @@ class GuestDataService implements GuestDataServiceInterface
                     'age' => $guestAge,
                     'birthday' => $birthday,
                     'dob' => !empty($birthday) ? date('d/m/Y', (int) strtotime($birthday)) : '',
-                    'room' => (int) ($guest['room'] ?? 1),
+                    'room' => TypeCoerce::toInt($guest['room'] ?? 1),
                     'is_holder' => !empty($guest['is_holder']) ? 1 : 0,
                 ];
             }
@@ -603,6 +612,23 @@ class GuestDataService implements GuestDataServiceInterface
             'guest_list' => implode(', ', $guestNames),
             'holder_name' => $holderName,
         ];
+    }
+
+    /**
+     * Coerce raw guest data to the string the normalizer can decode.
+     *
+     * The normalizer accepts array<string,mixed>|string; arrays (including the
+     * legacy indexed format) are JSON round-tripped so a mixed value still
+     * reaches it as a decodable string without changing the structure it sees
+     * (guest data is JSON round-trip safe).
+     */
+    private static function normalizableInput(mixed $raw): string
+    {
+        if (is_string($raw)) {
+            return $raw;
+        }
+        $json = json_encode($raw);
+        return $json === false ? '' : $json;
     }
 
     /**
