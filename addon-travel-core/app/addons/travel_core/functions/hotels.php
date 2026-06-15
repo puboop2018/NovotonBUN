@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+
 /**
  * Travel Core - Hotel Utility Functions
  *
@@ -9,6 +10,8 @@ declare(strict_types=1);
  * @package TravelCore
  * @since   1.0.0
  */
+
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 if (!defined('BOOTSTRAP')) {
     exit('Access denied');
@@ -118,9 +121,9 @@ function fn_travel_core_render_booking_engine(array $params = []): string
     // Resolve IDs
     $hotelId = htmlspecialchars($vh::toString($sp['hotel_id'] ?? ''), ENT_QUOTES);
     $productId = htmlspecialchars($vh::toString($sp['product_id'] ?? ''), ENT_QUOTES);
-    $lang = defined('CART_LANGUAGE') ? CART_LANGUAGE : 'en';
-    $cacheVer = defined('TRAVEL_CACHE_VER') ? TRAVEL_CACHE_VER : '1';
-    $baseUrl = \Tygh\Registry::get('config.current_location') ?: '';
+    $lang = $vh::toString(defined('CART_LANGUAGE') ? CART_LANGUAGE : 'en');
+    $cacheVer = $vh::toString(defined('TRAVEL_CACHE_VER') ? TRAVEL_CACHE_VER : '1');
+    $baseUrl = $vh::toString(\Tygh\Registry::get('config.current_location') ?: '');
 
     // Build data attributes for search mode
     $searchAttrs = '';
@@ -199,7 +202,7 @@ function fn_travel_core_get_or_create_category(string $path): int
     $parent_id = 0;
 
     foreach ($parts as $part) {
-        $category_id = (int) db_get_field(
+        $category_id = TypeCoerce::toInt(db_get_field(
             'SELECT c.category_id FROM ?:categories c
              JOIN ?:category_descriptions cd ON cd.category_id = c.category_id AND cd.lang_code = ?s
              WHERE c.parent_id = ?i AND cd.category = ?s
@@ -207,7 +210,7 @@ function fn_travel_core_get_or_create_category(string $path): int
             CART_LANGUAGE,
             $parent_id,
             $part,
-        );
+        ));
 
         if ($category_id > 0) {
             $parent_id = $category_id;
@@ -217,7 +220,7 @@ function fn_travel_core_get_or_create_category(string $path): int
         // Inherit company_id from parent category (required in frontend/cron context
         // where Registry::get('runtime.company_id') may not be set)
         $company_id = ($parent_id > 0)
-            ? (int) db_get_field('SELECT company_id FROM ?:categories WHERE category_id = ?i', $parent_id)
+            ? TypeCoerce::toInt(db_get_field('SELECT company_id FROM ?:categories WHERE category_id = ?i', $parent_id))
             : 0;
 
         // Create new category
@@ -228,7 +231,7 @@ function fn_travel_core_get_or_create_category(string $path): int
             'status' => 'A',
         ];
 
-        $category_id = (int) fn_update_category($category_data, 0, CART_LANGUAGE);
+        $category_id = TypeCoerce::toInt(fn_update_category($category_data, 0, CART_LANGUAGE));
 
         if ($category_id <= 0) {
             fn_log_event('general', 'runtime', [
@@ -238,7 +241,7 @@ function fn_travel_core_get_or_create_category(string $path): int
         }
 
         // Ensure descriptions exist for all active languages
-        $languages = db_get_fields("SELECT lang_code FROM ?:languages WHERE status = 'A'");
+        $languages = TypeCoerce::toStringList(db_get_fields("SELECT lang_code FROM ?:languages WHERE status = 'A'"));
         foreach ($languages as $lang_code) {
             if ($lang_code === CART_LANGUAGE) {
                 continue; // Already created by fn_update_category
@@ -278,7 +281,7 @@ function fn_travel_core_get_or_create_child_category(int $parent_id, string $nam
     }
 
     // Look for existing category by name under this parent
-    $category_id = (int) db_get_field(
+    $category_id = TypeCoerce::toInt(db_get_field(
         'SELECT c.category_id FROM ?:categories c
          JOIN ?:category_descriptions cd ON cd.category_id = c.category_id AND cd.lang_code = ?s
          WHERE c.parent_id = ?i AND cd.category = ?s
@@ -286,7 +289,7 @@ function fn_travel_core_get_or_create_child_category(int $parent_id, string $nam
         CART_LANGUAGE,
         $parent_id,
         $name,
-    );
+    ));
 
     if ($category_id > 0) {
         return $category_id;
@@ -294,10 +297,10 @@ function fn_travel_core_get_or_create_child_category(int $parent_id, string $nam
 
     // Inherit company_id from parent category (required in frontend/cron context
     // where Registry::get('runtime.company_id') may not be set)
-    $company_id = (int) db_get_field(
+    $company_id = TypeCoerce::toInt(db_get_field(
         'SELECT company_id FROM ?:categories WHERE category_id = ?i',
         $parent_id,
-    );
+    ));
 
     // Create new category under parent
     $category_data = [
@@ -307,7 +310,7 @@ function fn_travel_core_get_or_create_child_category(int $parent_id, string $nam
         'status' => 'A',
     ];
 
-    $category_id = (int) fn_update_category($category_data, 0, CART_LANGUAGE);
+    $category_id = TypeCoerce::toInt(fn_update_category($category_data, 0, CART_LANGUAGE));
 
     if ($category_id <= 0) {
         fn_log_event('general', 'runtime', [
@@ -317,7 +320,7 @@ function fn_travel_core_get_or_create_child_category(int $parent_id, string $nam
     }
 
     // Ensure descriptions exist for all active languages
-    $languages = db_get_fields("SELECT lang_code FROM ?:languages WHERE status = 'A'");
+    $languages = TypeCoerce::toStringList(db_get_fields("SELECT lang_code FROM ?:languages WHERE status = 'A'"));
     foreach ($languages as $lang_code) {
         if ($lang_code === CART_LANGUAGE) {
             continue;
@@ -361,7 +364,7 @@ function fn_travel_core_apply_modifier(string $value, string $modifier): string
         'title' => mb_convert_case($value, MB_CASE_TITLE, 'UTF-8'),
         'capitalize' => mb_strtoupper(mb_substr($value, 0, 1, 'UTF-8'), 'UTF-8') . mb_substr($value, 1, null, 'UTF-8'),
         'trim' => trim($value),
-        'slug' => function_exists('fn_generate_seo_name') ? fn_generate_seo_name($value) : preg_replace('/-{2,}/', '-', trim((string) preg_replace('/[^a-z0-9\-]+/', '-', mb_strtolower($value, 'UTF-8')), '-')),
+        'slug' => TypeCoerce::toString(function_exists('fn_generate_seo_name') ? fn_generate_seo_name($value) : preg_replace('/-{2,}/', '-', trim((string) preg_replace('/[^a-z0-9\-]+/', '-', mb_strtolower($value, 'UTF-8')), '-'))),
         'first' => mb_substr($value, 0, 1, 'UTF-8'),
         'last' => mb_substr($value, -1, 1, 'UTF-8'),
         'abs' => (string) abs((float) $value),
@@ -429,9 +432,12 @@ function fn_travel_core_render_seo_template(string $pattern, array $placeholders
     $resolved = [];
     foreach ($placeholders as $key => $value) {
         if (is_array($value)) {
-            $resolved[$key] = implode(', ', array_slice(array_filter(array_map('trim', $value)), 0, 3));
+            $resolved[$key] = implode(', ', array_slice(array_filter(array_map(
+                static fn ($item): string => trim(TypeCoerce::toString($item)),
+                $value,
+            )), 0, 3));
         } else {
-            $resolved[$key] = (string) $value;
+            $resolved[$key] = TypeCoerce::toString($value);
         }
     }
 
@@ -477,7 +483,7 @@ function fn_travel_core_render_seo_slug(string $pattern, array $placeholders): s
 
     // Use CS-Cart's built-in SEO name generator if available
     if (function_exists('fn_generate_seo_name')) {
-        return fn_generate_seo_name($rendered);
+        return TypeCoerce::toString(fn_generate_seo_name($rendered));
     }
 
     // Fallback: basic slug generation
@@ -521,7 +527,7 @@ function _travel_core_seo_field_map(): array
  */
 function fn_travel_core_apply_seo_fields(string $addonName, array $placeholders, int $productId = 0, ?string $hotelId = null): array
 {
-    $settings = \Tygh\Registry::get('addons.' . $addonName) ?: [];
+    $settings = TypeCoerce::toStringMap(\Tygh\Registry::get('addons.' . $addonName));
 
     // Built-in template defaults exposed by the provider addon's func.php
     // (fn_<addon>_seo_defaults). func.php is loaded in every AREA — including
@@ -539,7 +545,7 @@ function fn_travel_core_apply_seo_fields(string $addonName, array $placeholders,
     }
 
     $overwriteMode = \Tygh\Addons\TravelCore\Enums\SeoOverwriteMode::tryFrom(
-        ($settings['seo_overwrite_mode'] ?? '') ?: (($defaults['seo_overwrite_mode'] ?? '') ?: 'override_all'),
+        TypeCoerce::toString(($settings['seo_overwrite_mode'] ?? '') ?: (($defaults['seo_overwrite_mode'] ?? '') ?: 'override_all')),
     ) ?? \Tygh\Addons\TravelCore\Enums\SeoOverwriteMode::OverrideAll;
     $fillIfEmpty = ($overwriteMode === \Tygh\Addons\TravelCore\Enums\SeoOverwriteMode::FillIfEmpty) && ($productId > 0);
 
@@ -547,17 +553,17 @@ function fn_travel_core_apply_seo_fields(string $addonName, array $placeholders,
     $current = [];
     $currentSlug = '';
     if ($fillIfEmpty) {
-        $current = db_get_row(
+        $current = TypeCoerce::toStringMap(db_get_row(
             'SELECT product, page_title, meta_description, meta_keywords, full_description
              FROM ?:product_descriptions
              WHERE product_id = ?i AND lang_code = ?s',
             $productId,
             CART_LANGUAGE,
-        ) ?: [];
-        $currentSlug = (string) db_get_field(
+        ));
+        $currentSlug = TypeCoerce::toString(db_get_field(
             "SELECT name FROM ?:seo_names WHERE object_id = ?i AND type = 'p' LIMIT 1",
             $productId,
-        );
+        ));
     }
 
     $result = [];
@@ -574,7 +580,7 @@ function fn_travel_core_apply_seo_fields(string $addonName, array $placeholders,
         if ($fillIfEmpty) {
             $existingValue = ($productKey === 'seo_name')
                 ? $currentSlug
-                : ($current[$productKey] ?? '');
+                : TypeCoerce::toString($current[$productKey] ?? '');
             if (trim($existingValue) !== '') {
                 continue;
             }
@@ -582,7 +588,7 @@ function fn_travel_core_apply_seo_fields(string $addonName, array $placeholders,
 
         // Read template pattern from addon settings, falling back to the
         // addon's built-in default when the stored value is blank/absent.
-        $template = (string) ($settings[$templateKey] ?? '');
+        $template = TypeCoerce::toString($settings[$templateKey] ?? '');
         if ($template === '' && isset($defaults[$templateKey]) && is_string($defaults[$templateKey])) {
             $template = $defaults[$templateKey];
         }
@@ -608,7 +614,7 @@ function fn_travel_core_apply_seo_fields(string $addonName, array $placeholders,
             if ($template !== '') {
                 $result[$productKey] = fn_travel_core_render_seo_template($template, $placeholders);
             } else {
-                $result[$productKey] = (string) ($placeholders['description'] ?? '');
+                $result[$productKey] = TypeCoerce::toString($placeholders['description'] ?? '');
             }
         } else {
             // Skip empty templates — don't write blank strings that would erase
@@ -657,7 +663,7 @@ function fn_travel_core_seo_bulk_apply(string $addonName, callable $hotelFetcher
     }
 
     while (true) {
-        $hotels = $hotelFetcher($offset, $batchSize);
+        $hotels = TypeCoerce::toRowList($hotelFetcher($offset, $batchSize));
 
         if (empty($hotels)) {
             break;
@@ -665,10 +671,11 @@ function fn_travel_core_seo_bulk_apply(string $addonName, callable $hotelFetcher
 
         foreach ($hotels as $hotel) {
             $total++;
-            $productId = (int) $hotel['product_id'];
-            $placeholders = $placeholderBuilder($hotel);
+            $productId = TypeCoerce::toInt($hotel['product_id'] ?? 0);
+            $placeholders = TypeCoerce::toStringMap($placeholderBuilder($hotel));
+            $hotelId = isset($hotel['hotel_id']) ? TypeCoerce::toString($hotel['hotel_id']) : null;
 
-            $seoFields = fn_travel_core_apply_seo_fields($addonName, $placeholders, $productId, $hotel['hotel_id']);
+            $seoFields = fn_travel_core_apply_seo_fields($addonName, $placeholders, $productId, $hotelId);
 
             if (empty($seoFields)) {
                 $skipped++;
@@ -680,7 +687,7 @@ function fn_travel_core_seo_bulk_apply(string $addonName, callable $hotelFetcher
             }
 
             if (function_exists('fn_set_progress')) {
-                fn_set_progress('echo', ($hotel['hotel_name'] ?? $hotel['name'] ?? $hotel['hotel_id']) . ' — ' . ($seoFields ? 'updated' : 'skipped'));
+                fn_set_progress('echo', TypeCoerce::toString($hotel['hotel_name'] ?? $hotel['name'] ?? $hotel['hotel_id'] ?? '') . ' — ' . ($seoFields !== [] ? 'updated' : 'skipped'));
             }
         }
 
@@ -715,7 +722,7 @@ function fn_travel_core_run_long_task(string $progressLabel, callable $task, str
         $onResult($result);
     }
 
-    return [CONTROLLER_STATUS_REDIRECT, $redirectUrl];
+    return [TypeCoerce::toString(CONTROLLER_STATUS_REDIRECT), $redirectUrl];
 }
 
 /**
@@ -855,7 +862,7 @@ function fn_travel_core_attach_product_image(int $productId, string $tempFile, s
         $imageInfo = false;
     }
 
-    if (!$imageInfo) {
+    if ($imageInfo === false) {
         \Tygh\Addons\TravelCore\Helpers\DebugLogger::$lastImageAttachError = 'attach: getimagesize failed (not a valid image)';
         fn_log_event('general', 'runtime', ['message' => \Tygh\Addons\TravelCore\Helpers\DebugLogger::$lastImageAttachError]);
         unlink($tempFile);
@@ -872,10 +879,10 @@ function fn_travel_core_attach_product_image(int $productId, string $tempFile, s
     $ext = $mimeToExt[$imageInfo['mime']] ?? 'jpg';
     $filename = "{$prefix}_hotel_{$productId}_" . time() . '_' . random_int(100, 999) . ".{$ext}";
 
-    $existingPairs = (int) db_get_field(
+    $existingPairs = TypeCoerce::toInt(db_get_field(
         "SELECT COUNT(*) FROM ?:images_links WHERE object_id = ?i AND object_type = 'product'",
         $productId,
-    );
+    ));
 
     // fn_update_image_pairs: canonical import/API attach path. Does not touch $_FILES or
     // session. The loop is driven by $pairsData (arg 3) — both $detailed and $pairsData
