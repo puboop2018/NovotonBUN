@@ -6,6 +6,7 @@ namespace Tygh\Addons\SphinxHolidays\Services;
 
 use Tygh\Addons\SphinxHolidays\Contracts\CacheEndpointServiceInterface;
 use Tygh\Addons\SphinxHolidays\SphinxApi;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Services\CommissionCalculator;
 
 /**
@@ -47,7 +48,7 @@ class CacheEndpointService implements CacheEndpointServiceInterface
             return [];
         }
 
-        $deals = $this->normalizeDeals($response['results'] ?? $response['hotels'] ?? []);
+        $deals = $this->normalizeDeals(TypeCoerce::toRowList($response['results'] ?? $response['hotels'] ?? []));
 
         if (!empty($deals)) {
             CacheService::set($cacheKey, $deals, self::DEALS_CACHE_TTL);
@@ -77,7 +78,7 @@ class CacheEndpointService implements CacheEndpointServiceInterface
             return [];
         }
 
-        $deals = $this->normalizeDeals($response['results'] ?? $response['packages'] ?? []);
+        $deals = $this->normalizeDeals(TypeCoerce::toRowList($response['results'] ?? $response['packages'] ?? []));
 
         if (!empty($deals)) {
             CacheService::set($cacheKey, $deals, self::DEALS_CACHE_TTL);
@@ -89,7 +90,7 @@ class CacheEndpointService implements CacheEndpointServiceInterface
     /**
      * Refresh all cached deals (called by cron).
      *
-     * @return array<string, mixed> Stats: {hotels_count, packages_count, errors}
+     * @return array{hotels_count: int, packages_count: int, errors: int} Stats
      */
     #[\Override]
     public function refreshAll(): array
@@ -121,7 +122,7 @@ class CacheEndpointService implements CacheEndpointServiceInterface
 
     /**
      * Normalize and apply commission to deal entries.
-     * @param array<string, mixed> $items
+     * @param list<array<string, mixed>> $items
      * @return list<array<string, mixed>>
      */
     private function normalizeDeals(array $items): array
@@ -134,7 +135,7 @@ class CacheEndpointService implements CacheEndpointServiceInterface
 
         $deals = [];
         foreach ($items as $item) {
-            $price = (float)($item['price'] ?? 0);
+            $price = TypeCoerce::toFloat($item['price'] ?? 0);
             if ($price <= 0) {
                 continue;
             }
@@ -143,15 +144,15 @@ class CacheEndpointService implements CacheEndpointServiceInterface
                 'hotel_id' => $item['hotel_id'] ?? '',
                 'hotel_name' => $item['hotel_name'] ?? '',
                 'destination' => $item['destination'] ?? $item['destination_name'] ?? '',
-                'star_rating' => (int)($item['star_rating'] ?? $item['stars'] ?? 0),
+                'star_rating' => TypeCoerce::toInt($item['star_rating'] ?? $item['stars'] ?? 0),
                 'image' => $item['image'] ?? $item['hotel_image'] ?? '',
                 'check_in' => $item['check_in'] ?? '',
                 'check_out' => $item['check_out'] ?? '',
-                'nights' => (int)($item['nights'] ?? 0),
+                'nights' => TypeCoerce::toInt($item['nights'] ?? 0),
                 'room_name' => $item['room_name'] ?? $item['room_type'] ?? '',
                 'board_name' => $item['board_name'] ?? $item['board_type'] ?? '',
                 'original_price' => $price,
-                'price' => $calculator ? $calculator->apply($price) : $price,
+                'price' => $calculator !== null ? $calculator->apply($price) : $price,
                 'currency' => $item['currency'] ?? ConfigProvider::getDefaultCurrency(),
                 'offer_id' => $item['offer_id'] ?? '',
             ];
