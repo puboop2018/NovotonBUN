@@ -46,6 +46,10 @@ namespace Tygh {
         public static function cleanup(?string $key = null): void
         {
         }
+
+        public static function del(string $key): void
+        {
+        }
     }
 
     class Tygh
