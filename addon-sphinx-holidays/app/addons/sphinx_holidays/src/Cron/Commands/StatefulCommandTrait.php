@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays\Cron\Commands;
 
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+
 /**
  * Provides JSON-based state file persistence for resumable cron commands.
  *
@@ -19,7 +21,7 @@ trait StatefulCommandTrait
 {
     private function getStatePath(): string
     {
-        $cacheDir = defined('DIR_CACHE') ? DIR_CACHE : sys_get_temp_dir() . '/';
+        $cacheDir = defined('DIR_CACHE') ? TypeCoerce::toString(DIR_CACHE) : sys_get_temp_dir() . '/';
         return $cacheDir . self::STATE_FILE_NAME;
     }
 
@@ -54,7 +56,7 @@ trait StatefulCommandTrait
             $state = $decoded;
         }
 
-        return is_array($state) ? array_merge(self::DEFAULT_STATE, $state) : self::DEFAULT_STATE;
+        return is_array($state) ? TypeCoerce::toStringMap(array_merge(self::DEFAULT_STATE, $state)) : self::DEFAULT_STATE;
     }
 
     /**
@@ -107,7 +109,7 @@ trait StatefulCommandTrait
             return true;
         }
 
-        $ageHours = (time() - strtotime($lastRun)) / 3600;
+        $ageHours = (time() - strtotime(TypeCoerce::toString($lastRun))) / 3600;
         return $ageHours > self::STALE_HOURS;
     }
 
