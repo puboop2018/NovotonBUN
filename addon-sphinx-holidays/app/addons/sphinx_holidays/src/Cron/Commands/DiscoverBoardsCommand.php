@@ -225,7 +225,7 @@ class DiscoverBoardsCommand extends AbstractSyncCommand
             }
 
             // Poll for results
-            $destOffers = $this->pollResults($api, $cursor);
+            $destOffers = $this->pollResults($api, ValidationHelpers::toString($cursor));
 
             if ($debug) {
                 $this->output("  [DEBUG] dest={$destId}: search returned " . count($destOffers) . ' offers');
@@ -240,7 +240,7 @@ class DiscoverBoardsCommand extends AbstractSyncCommand
                 if ($debug) {
                     $this->output("  [DEBUG] dest={$destId}: " . count($knownHotels) . ' known hotels in DB');
                     // Show first 3 offer hotel_ids vs first 3 known hotel_ids for comparison
-                    $offerIds = array_unique(array_slice(array_column($destOffers, 'hotel_id'), 0, 5));
+                    $offerIds = array_unique(array_slice(array_column($destOffers, 'hotel_id'), 0, 5), SORT_REGULAR);
                     $knownIds = array_slice(array_keys($knownHotels), 0, 5);
                     $this->output('  [DEBUG] API offer hotel_ids (sample): ' . json_encode($offerIds) . ' (types: ' . implode(',', array_map('gettype', $offerIds)) . ')');
                     $this->output('  [DEBUG] DB known hotel_ids (sample): ' . json_encode($knownIds) . ' (types: ' . implode(',', array_map('gettype', $knownIds)) . ')');
@@ -248,6 +248,7 @@ class DiscoverBoardsCommand extends AbstractSyncCommand
 
                 // Extract and normalize boards, then update DB immediately per destination
                 $boardsByHotel = [];
+                $boardsFound = is_array($state['boards_found'] ?? null) ? $state['boards_found'] : [];
                 $debugSkipNoId = 0;
                 $debugSkipUnknown = 0;
                 $debugSkipNoMeal = 0;
@@ -285,8 +286,9 @@ class DiscoverBoardsCommand extends AbstractSyncCommand
                         $boardsByHotel[$hotelId][] = $canonicalCode;
                     }
 
-                    $state['boards_found'][$canonicalCode] = ($state['boards_found'][$canonicalCode] ?? 0) + 1;
+                    $boardsFound[$canonicalCode] = ValidationHelpers::toInt($boardsFound[$canonicalCode] ?? 0) + 1;
                 }
+                $state['boards_found'] = $boardsFound;
 
                 if ($debug) {
                     $this->output("  [DEBUG] dest={$destId}: matched=" . count($boardsByHotel) . " hotels, skip_no_id={$debugSkipNoId}, skip_unknown={$debugSkipUnknown}, skip_no_meal={$debugSkipNoMeal}, skip_normalize={$debugSkipNormalize}");
@@ -435,31 +437,43 @@ class DiscoverBoardsCommand extends AbstractSyncCommand
             $lastRun = db_get_row(
                 "SELECT * FROM ?:sphinx_sync_log WHERE sync_type = 'discover_boards' ORDER BY started_at DESC LIMIT 1",
             );
-            if (!empty($lastRun)) {
-                $this->output("  Last run: {$lastRun['started_at']} — {$lastRun['items_synced']} hotels updated");
+            if (is_array($lastRun) && $lastRun !== []) {
+                $startedAt = ValidationHelpers::toString($lastRun['started_at'] ?? '');
+                $itemsSynced = ValidationHelpers::toInt($lastRun['items_synced'] ?? 0);
+                $this->output("  Last run: {$startedAt} — {$itemsSynced} hotels updated");
             }
 
             return ['success' => true, 'status' => 'idle'];
         }
 
-        $pct = $state['total'] > 0 ? round($state['processed'] / $state['total'] * 100, 1) : 0;
-        $remaining = $state['total'] - $state['processed'];
+        $sStatus = ValidationHelpers::toString($state['status'] ?? '');
+        $sTotal = ValidationHelpers::toInt($state['total'] ?? 0);
+        $sProcessed = ValidationHelpers::toInt($state['processed'] ?? 0);
+        $sHotelsUpdated = ValidationHelpers::toInt($state['hotels_updated'] ?? 0);
+        $sOffersFound = ValidationHelpers::toInt($state['offers_found'] ?? 0);
+        $sSearchErrors = ValidationHelpers::toInt($state['search_errors'] ?? 0);
+        $sStartedAt = ValidationHelpers::toString($state['started_at'] ?? '');
+        $sLastRunAt = ValidationHelpers::toString($state['last_run_at'] ?? '');
+        $countryCodes = is_array($state['country_codes'] ?? null) ? $state['country_codes'] : [];
+
+        $pct = $sTotal > 0 ? round($sProcessed / $sTotal * 100, 1) : 0;
+        $remaining = $sTotal - $sProcessed;
 
         $this->output('Board Discovery Status:');
-        $this->output("  Status: {$state['status']}");
-        $this->output("  Progress: {$state['processed']}/{$state['total']} ({$pct}%)");
+        $this->output('  Status: ' . $sStatus);
+        $this->output("  Progress: {$sProcessed}/{$sTotal} ({$pct}%)");
         $this->output("  Remaining: {$remaining} destinations");
-        $this->output("  Hotels updated: {$state['hotels_updated']}");
-        $this->output("  Offers found: {$state['offers_found']}");
-        $this->output("  Search errors: {$state['search_errors']}");
-        $this->output('  Countries: ' . implode(', ', $state['country_codes'] ?? []));
-        $this->output("  Started: {$state['started_at']}");
-        $this->output("  Last activity: {$state['last_run_at']}");
+        $this->output("  Hotels updated: {$sHotelsUpdated}");
+        $this->output("  Offers found: {$sOffersFound}");
+        $this->output("  Search errors: {$sSearchErrors}");
+        $this->output('  Countries: ' . implode(', ', array_map(static fn ($c): string => ValidationHelpers::toString($c), $countryCodes)));
+        $this->output('  Started: ' . $sStartedAt);
+        $this->output('  Last activity: ' . $sLastRunAt);
 
         // ETA estimate
-        if (!empty($state['started_at']) && $state['processed'] > 0) {
-            $elapsed = time() - strtotime($state['started_at']);
-            $rate = $state['processed'] / max(1, $elapsed);
+        if ($sStartedAt !== '' && $sProcessed > 0) {
+            $elapsed = time() - strtotime($sStartedAt);
+            $rate = $sProcessed / max(1, $elapsed);
             $etaSeconds = (int) ($remaining / max(0.001, $rate));
             $this->output('  ETA: ~' . $this->formatDuration($etaSeconds));
         }
@@ -468,7 +482,7 @@ class DiscoverBoardsCommand extends AbstractSyncCommand
             $this->output('  WARNING: State appears stale (no activity for 6+ hours). Run with reset=1 to clear.');
         }
 
-        return ['success' => true, 'status' => $state['status'], 'processed' => $state['processed'], 'total' => $state['total']];
+        return ['success' => true, 'status' => $sStatus, 'processed' => $sProcessed, 'total' => $sTotal];
     }
 
     /**
@@ -493,7 +507,8 @@ class DiscoverBoardsCommand extends AbstractSyncCommand
                 break;
             }
 
-            $results = $response['data'] ?? $response['results'] ?? [];
+            $resultsRaw = $response['data'] ?? $response['results'] ?? [];
+            $results = is_array($resultsRaw) ? $resultsRaw : [];
             foreach ($results as $r) {
                 $allResults[] = $r;
             }
@@ -503,7 +518,8 @@ class DiscoverBoardsCommand extends AbstractSyncCommand
                 break;
             }
 
-            $nextCursor = $response['cursor'] ?? $response['next_cursor'] ?? null;
+            $nextCursorRaw = $response['cursor'] ?? $response['next_cursor'] ?? null;
+            $nextCursor = $nextCursorRaw === null ? null : ValidationHelpers::toString($nextCursorRaw);
 
             if ($nextCursor === null && empty($results)) {
                 break;
@@ -528,7 +544,7 @@ class DiscoverBoardsCommand extends AbstractSyncCommand
     private function resolveCountryCodes(array $params): array
     {
         if (!empty($params['country'])) {
-            return array_values(array_filter(array_map(fn ($c) => strtoupper(trim($c)), explode(',', $params['country']))));
+            return array_values(array_filter(array_map(fn ($c) => strtoupper(trim($c)), explode(',', ValidationHelpers::toString($params['country'])))));
         }
 
         return array_values(ConfigProvider::getSelectedCountryCodes());
