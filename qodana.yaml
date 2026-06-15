@@ -6,5 +6,44 @@ version: "1.0"
 linter: qodana-php
 profile:
   name: qodana.recommended
+
+# ── Why these exclusions ─────────────────────────────────────────────────────
+# This repo holds CS-Cart *addons*. The CS-Cart core (the `Tygh\…` classes,
+# the `fn_*()` / `db_*()` globals, AREA/`CART_LANGUAGE`/`BOOTSTRAP`-style
+# constants, …) lives OUTSIDE the repo, so Qodana's "undefined symbol"
+# inspections flag thousands of phantom problems for code that is perfectly
+# valid at runtime. PHPStan (level 10) + Psalm already resolve those symbols
+# correctly via stubs/Tygh.php and the baseline, so silencing them here keeps
+# Qodana's report meaningful and non-overlapping with the existing gauntlet.
+#
+# A couple of style inspections are also dropped because they directly conflict
+# with the project's PHPCS / php-cs-fixer rules (acting on them would fight the
+# gauntlet). Third-party / generated / test directories are skipped too.
+exclude:
+  # Framework "undefined symbol" false-positives (owned by PHPStan + Psalm):
+  - name: PhpUndefinedClassInspection
+  - name: PhpUndefinedMethodInspection
+  - name: PhpUndefinedFunctionInspection
+  - name: PhpUndefinedNamespaceInspection
+  - name: PhpUndefinedConstantInspection
+  - name: PhpUndefinedVariableInspection
+  - name: PhpUndefinedFieldInspection
+  # ext-* requirements are managed per-addon, not at the repo root:
+  - name: PhpComposerExtensionStubsInspection
+  # Style opinions that conflict with our PHPCS / php-cs-fixer config:
+  - name: PhpUnnecessaryCurlyVarSyntaxInspection   # "{$var}" interpolation is the house style
+  - name: PhpFullyQualifiedNameUsageInspection     # deliberate \Tygh\… FQNs in procedural files
+  # Don't analyse third-party code, build output, or the test scaffolding
+  # (its guarded fn_* stubs trip the duplicate-declaration check):
+  - name: All
+    paths:
+      - vendor
+      - node_modules
+      - var
+      - addon-novoton-holidays/app/addons/novoton_holidays/tests
+      - addon-travel-core/app/addons/travel_core/tests
+      - addon-sphinx-holidays/app/addons/sphinx_holidays/tests
+      - addon-fgo-invoicing/app/addons/fgo_invoicing/tests
+
 include:
   - name: CheckDependencyLicenses
