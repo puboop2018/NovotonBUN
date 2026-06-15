@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\SphinxHolidays\Cron\Commands;
 
 use Tygh\Addons\SphinxHolidays\Services\Container;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Helpers\ValidationHelpers;
 
 /**
@@ -165,7 +166,7 @@ class DestinationSyncCommand extends AbstractSyncCommand
                 if (!is_array($item)) {
                     continue;
                 }
-                $normalized = $this->normalizeDestination($item);
+                $normalized = $this->normalizeDestination(TypeCoerce::toStringMap($item));
                 if ($normalized !== null) {
                     $pageBatch[] = $normalized;
                     $state['total'] = ValidationHelpers::toInt($state['total'] ?? 0) + 1;
@@ -292,24 +293,27 @@ class DestinationSyncCommand extends AbstractSyncCommand
             $lastRun = db_get_row(
                 "SELECT * FROM ?:sphinx_sync_log WHERE sync_type = 'destinations' ORDER BY started_at DESC LIMIT 1",
             );
-            if (!empty($lastRun)) {
-                $this->output("  Last completed: {$lastRun['started_at']} — {$lastRun['items_synced']}/{$lastRun['items_total']} synced");
+            if (is_array($lastRun) && $lastRun !== []) {
+                $startedAt = ValidationHelpers::toString($lastRun['started_at'] ?? '');
+                $itemsSynced = ValidationHelpers::toInt($lastRun['items_synced'] ?? 0);
+                $itemsTotal = ValidationHelpers::toInt($lastRun['items_total'] ?? 0);
+                $this->output("  Last completed: {$startedAt} — {$itemsSynced}/{$itemsTotal} synced");
             }
 
             return ['success' => true, 'stats' => ['status' => 'idle']];
         }
 
         $this->output('Destination Sync Status:');
-        $this->output("  Status: {$state['status']}");
-        $this->output("  Mode: {$state['sync_mode']}");
-        $this->output("  Next page: {$state['next_page']}");
-        $this->output("  Synced: {$state['synced']}/{$state['total']}");
-        $this->output("  Skipped: {$state['skipped']}");
-        $this->output("  Started: {$state['started_at']}");
-        $this->output("  Last activity: {$state['last_run_at']}");
+        $this->output('  Status: ' . ValidationHelpers::toString($state['status'] ?? ''));
+        $this->output('  Mode: ' . ValidationHelpers::toString($state['sync_mode'] ?? ''));
+        $this->output('  Next page: ' . ValidationHelpers::toInt($state['next_page'] ?? 0));
+        $this->output('  Synced: ' . ValidationHelpers::toInt($state['synced'] ?? 0) . '/' . ValidationHelpers::toInt($state['total'] ?? 0));
+        $this->output('  Skipped: ' . ValidationHelpers::toInt($state['skipped'] ?? 0));
+        $this->output('  Started: ' . ValidationHelpers::toString($state['started_at'] ?? ''));
+        $this->output('  Last activity: ' . ValidationHelpers::toString($state['last_run_at'] ?? ''));
 
         if (!empty($state['error'])) {
-            $this->output("  Last error: {$state['error']}");
+            $this->output('  Last error: ' . ValidationHelpers::toString($state['error']));
         }
 
         if ($this->isStale($state)) {
@@ -318,7 +322,7 @@ class DestinationSyncCommand extends AbstractSyncCommand
 
         // ETA estimate
         if (!empty($state['started_at']) && $state['synced'] > 0 && $state['total'] > 0) {
-            $elapsed = time() - strtotime($state['started_at']);
+            $elapsed = time() - strtotime(ValidationHelpers::toString($state['started_at']));
             $this->output('  Elapsed: ' . $this->formatDuration($elapsed));
         }
 
@@ -333,30 +337,30 @@ class DestinationSyncCommand extends AbstractSyncCommand
      */
     private function normalizeDestination(array $raw): ?array
     {
-        $id = (int) ($raw['id'] ?? $raw['destination_id'] ?? 0);
+        $id = ValidationHelpers::toInt($raw['id'] ?? $raw['destination_id'] ?? 0);
         if ($id <= 0) {
             return null;
         }
 
-        $name = (string) ($raw['name'] ?? $raw['title'] ?? $raw['label'] ?? '');
+        $name = ValidationHelpers::toString($raw['name'] ?? $raw['title'] ?? $raw['label'] ?? '');
 
-        if ($name === '' && isset($raw['translations'])) {
+        if ($name === '' && isset($raw['translations']) && is_array($raw['translations'])) {
             $translations = $raw['translations'];
-            $name = (string) ($translations['en'] ?? $translations['en_US'] ?? reset($translations) ?? '');
+            $name = ValidationHelpers::toString($translations['en'] ?? $translations['en_US'] ?? reset($translations) ?? '');
         }
-        if ($name === '' && isset($raw['names'])) {
+        if ($name === '' && isset($raw['names']) && is_array($raw['names'])) {
             $names = $raw['names'];
-            $name = (string) ($names['en'] ?? $names['en_US'] ?? reset($names) ?? '');
+            $name = ValidationHelpers::toString($names['en'] ?? $names['en_US'] ?? reset($names) ?? '');
         }
         if ($name === '' && isset($raw['name_en'])) {
-            $name = (string) $raw['name_en'];
+            $name = ValidationHelpers::toString($raw['name_en']);
         }
 
         if (trim($name) === '') {
             return null;
         }
 
-        $type = strtolower((string) ($raw['type'] ?? $raw['destination_type'] ?? 'destination'));
+        $type = strtolower(ValidationHelpers::toString($raw['type'] ?? $raw['destination_type'] ?? 'destination'));
         $typeMap = [
             'continent' => 'continent',
             'country' => 'country',
@@ -372,12 +376,12 @@ class DestinationSyncCommand extends AbstractSyncCommand
             'destination_id' => $id,
             'name' => trim($name),
             'type' => $type,
-            'parent_id' => (int) ($raw['parent_id'] ?? $raw['parent'] ?? 0),
-            'country_code' => (string) ($raw['country_code'] ?? $raw['iso'] ?? $raw['iso_code'] ?? ''),
-            'geoname_id' => (int) ($raw['geoname_id'] ?? $raw['geonames_id'] ?? 0),
-            'latitude' => (float) ($raw['latitude'] ?? $raw['lat'] ?? 0),
-            'longitude' => (float) ($raw['longitude'] ?? $raw['lng'] ?? $raw['lon'] ?? 0),
-            'hotel_count' => (int) ($raw['hotel_count'] ?? $raw['hotels_count'] ?? 0),
+            'parent_id' => ValidationHelpers::toInt($raw['parent_id'] ?? $raw['parent'] ?? 0),
+            'country_code' => ValidationHelpers::toString($raw['country_code'] ?? $raw['iso'] ?? $raw['iso_code'] ?? ''),
+            'geoname_id' => ValidationHelpers::toInt($raw['geoname_id'] ?? $raw['geonames_id'] ?? 0),
+            'latitude' => ValidationHelpers::toFloat($raw['latitude'] ?? $raw['lat'] ?? 0),
+            'longitude' => ValidationHelpers::toFloat($raw['longitude'] ?? $raw['lng'] ?? $raw['lon'] ?? 0),
+            'hotel_count' => ValidationHelpers::toInt($raw['hotel_count'] ?? $raw['hotels_count'] ?? 0),
         ];
     }
 
@@ -403,13 +407,15 @@ class DestinationSyncCommand extends AbstractSyncCommand
      */
     private function hasMorePages(array $response, int $currentPage, int $perPage, int $fetchedSoFar): bool
     {
-        $lastPage = $response['last_page'] ?? $response['meta']['last_page'] ?? null;
-        if ($lastPage !== null && $currentPage >= (int) $lastPage) {
+        $meta = is_array($response['meta'] ?? null) ? $response['meta'] : [];
+
+        $lastPage = $response['last_page'] ?? $meta['last_page'] ?? null;
+        if ($lastPage !== null && $currentPage >= ValidationHelpers::toInt($lastPage)) {
             return false;
         }
 
-        $totalItems = $response['total'] ?? $response['meta']['total'] ?? null;
-        if ($totalItems !== null && $fetchedSoFar >= (int) $totalItems) {
+        $totalItems = $response['total'] ?? $meta['total'] ?? null;
+        if ($totalItems !== null && $fetchedSoFar >= ValidationHelpers::toInt($totalItems)) {
             return false;
         }
 
