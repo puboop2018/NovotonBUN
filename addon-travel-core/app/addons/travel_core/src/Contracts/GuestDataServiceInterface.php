@@ -20,7 +20,7 @@ interface GuestDataServiceInterface extends GuestParserInterface, GuestDisplayIn
      * Get guests grouped by room
      *
      * @param array<string, mixed> $guests_data Guests data
-     * @return array<int, array<int, array<string, mixed>>> Guests by room [room_num => [guests]]
+     * @return array<int, array<int, array<int|string, mixed>>> Guests by room [room_num => [guests]]
      */
     public function getGuestsByRoom(array $guests_data): array;
 
