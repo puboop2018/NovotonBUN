@@ -20,7 +20,7 @@ use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
     $cartService = new CartService();
 
     // Rate limit + input
-    if ($rateLimited = $cartService->checkRateLimit()) {
+    if (($rateLimited = $cartService->checkRateLimit()) !== null) {
         return $rateLimited;
     }
 
@@ -43,7 +43,7 @@ use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
         $verifyResult = null;
     }
 
-    if (empty($verifyResult) || !($verifyResult['available'] ?? false)) {
+    if (empty($verifyResult) || !TypeCoerce::toBool($verifyResult['available'] ?? false)) {
         fn_set_notification('E', __('error'),
             __('sphinx_holidays.offer_no_longer_available', ['[default]' => 'This offer is no longer available.']));
         return [CONTROLLER_STATUS_REDIRECT, 'index.index'];

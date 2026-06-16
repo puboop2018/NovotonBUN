@@ -19,7 +19,7 @@ header('Content-Type: application/json; charset=utf-8');
 
 try {
     $raw = file_get_contents('php://input');
-    $input = $raw ? json_decode($raw, true) : null;
+    $input = ($raw !== false && $raw !== '' && $raw !== '0') ? json_decode($raw, true) : null;
     if (!is_array($input)) { $input = $_REQUEST; }
 
     $inputMap = TypeCoerce::toStringMap($input);
@@ -34,7 +34,7 @@ try {
     $api = Container::getApi();
     $verifyResult = $api->verifyHotelOffer($offer_id);
 
-    if (empty($verifyResult) || !($verifyResult['available'] ?? false)) {
+    if (empty($verifyResult) || !TypeCoerce::toBool($verifyResult['available'] ?? false)) {
         echo json_encode(['success' => false, 'message' => 'Offer no longer available. Please search again.']);
         exit;
     }
@@ -44,7 +44,7 @@ try {
     $priceDiff = $newPrice - $original_price;
     $currency = ConfigProvider::getDefaultCurrency();
     $symbols = ConfigProvider::getCurrencySymbols();
-    $symbol = $symbols[$currency] ?? $currency;
+    $symbol = TypeCoerce::toString($symbols[$currency] ?? $currency);
     $formattedPrice = number_format($newPrice, 2, ',', '.') . ' ' . $symbol;
 
     echo json_encode([

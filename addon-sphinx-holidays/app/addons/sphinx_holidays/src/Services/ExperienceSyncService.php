@@ -7,6 +7,7 @@ namespace Tygh\Addons\SphinxHolidays\Services;
 use Tygh\Addons\SphinxHolidays\Contracts\ExperienceSyncServiceInterface;
 use Tygh\Addons\SphinxHolidays\Repository\ExperienceRepository;
 use Tygh\Addons\SphinxHolidays\SphinxApi;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 /**
  * Fetches experiences from the Sphinx static API and syncs them into the local DB.
@@ -74,15 +75,15 @@ class ExperienceSyncService extends AbstractSyncService implements ExperienceSyn
             }
 
             foreach ($items as $raw) {
-                $normalized = $this->normalizeExperience($raw);
+                $normalized = $this->normalizeExperience(TypeCoerce::toStringMap($raw));
                 if ($normalized === null) {
-                    $stats['failed']++;
+                    $stats['failed'] = TypeCoerce::toInt($stats['failed']) + 1;
                     continue;
                 }
 
                 // Client-side filtering: skip experiences outside sync targets
                 $expDestIds = !empty($normalized['destination_ids'])
-                    ? json_decode($normalized['destination_ids'], true) ?: []
+                    ? TypeCoerce::toIntList(json_decode(TypeCoerce::toString($normalized['destination_ids']), true) ?: [])
                     : [];
                 if (!empty($expDestIds) && empty(array_intersect($expDestIds, $allowedDestIds))) {
                     $filtered++;
@@ -90,26 +91,30 @@ class ExperienceSyncService extends AbstractSyncService implements ExperienceSyn
                 }
 
                 $allExperiences[] = $normalized;
-                $stats['total']++;
+                $stats['total'] = TypeCoerce::toInt($stats['total']) + 1;
             }
 
-            if (!$this->hasMorePages($response, $page, self::PER_PAGE, $stats['total'] + $stats['failed'] + $filtered)) {
+            if (!$this->hasMorePages($response, $page, self::PER_PAGE, TypeCoerce::toInt($stats['total']) + TypeCoerce::toInt($stats['failed']) + $filtered)) {
                 break;
             }
             $page++;
         }
 
         if (!empty($allExperiences)) {
-            $this->output("Upserting {$stats['total']} experiences...");
+            $total = TypeCoerce::toInt($stats['total']);
+            $this->output("Upserting {$total} experiences...");
             $batches = array_chunk($allExperiences, self::UPSERT_BATCH_SIZE);
             foreach ($batches as $batch) {
-                $stats['synced'] += $this->upsertBatch($batch);
+                $stats['synced'] = TypeCoerce::toInt($stats['synced']) + $this->upsertBatch($batch);
             }
         }
 
         $stats['success'] = true;
         $filterMsg = $filtered > 0 ? ", {$filtered} filtered (outside sync targets)" : '';
-        $this->output("Experience sync complete: {$stats['synced']}/{$stats['total']} synced, {$stats['failed']} failed{$filterMsg}.");
+        $synced = TypeCoerce::toInt($stats['synced']);
+        $total = TypeCoerce::toInt($stats['total']);
+        $failed = TypeCoerce::toInt($stats['failed']);
+        $this->output("Experience sync complete: {$synced}/{$total} synced, {$failed} failed{$filterMsg}.");
 
         return $stats;
     }
@@ -120,12 +125,12 @@ class ExperienceSyncService extends AbstractSyncService implements ExperienceSyn
      */
     private function normalizeExperience(array $raw): ?array
     {
-        $id = (int) ($raw['id'] ?? 0);
+        $id = TypeCoerce::toInt($raw['id'] ?? 0);
         if ($id <= 0) {
             return null;
         }
 
-        $name = (string) ($raw['name'] ?? $raw['title'] ?? '');
+        $name = TypeCoerce::toString($raw['name'] ?? $raw['title'] ?? '');
         if ($name === '') {
             return null;
         }
@@ -133,12 +138,12 @@ class ExperienceSyncService extends AbstractSyncService implements ExperienceSyn
         $destinations = $raw['destinations'] ?? [];
         $destIds = [];
         $destNames = [];
-        foreach ($destinations as $dest) {
+        foreach (TypeCoerce::toRowList($destinations) as $dest) {
             if (isset($dest['id'])) {
-                $destIds[] = (int) $dest['id'];
+                $destIds[] = TypeCoerce::toInt($dest['id']);
             }
             if (isset($dest['name'])) {
-                $destNames[] = $dest['name'];
+                $destNames[] = TypeCoerce::toString($dest['name']);
             }
         }
 
@@ -146,29 +151,31 @@ class ExperienceSyncService extends AbstractSyncService implements ExperienceSyn
         $durationDays = 0;
         if (isset($raw['duration'])) {
             if (is_array($raw['duration'])) {
-                $durationHours = (int) ($raw['duration']['hours'] ?? 0);
-                $durationDays = (int) ($raw['duration']['days'] ?? 0);
+                $durationHours = TypeCoerce::toInt($raw['duration']['hours'] ?? 0);
+                $durationDays = TypeCoerce::toInt($raw['duration']['days'] ?? 0);
             } else {
-                $durationHours = (int) $raw['duration'];
+                $durationHours = TypeCoerce::toInt($raw['duration']);
             }
         }
+
+        $pricing = TypeCoerce::toStringMap($raw['pricing'] ?? []);
 
         return [
             'experience_id' => $id,
             'name' => $name,
-            'summary' => (string) ($raw['summary'] ?? ''),
-            'description' => (string) ($raw['description'] ?? ''),
+            'summary' => TypeCoerce::toString($raw['summary'] ?? ''),
+            'description' => TypeCoerce::toString($raw['description'] ?? ''),
             'duration_hours' => $durationHours,
             'duration_days' => $durationDays,
             'destination_ids' => !empty($destIds) ? json_encode($destIds) : null,
             'destination_names' => !empty($destNames) ? implode(', ', $destNames) : null,
             'pickup_points_json' => !empty($raw['pickup_points']) ? json_encode($raw['pickup_points']) : null,
-            'image_url' => (string) ($raw['image'] ?? $raw['image_url'] ?? ''),
+            'image_url' => TypeCoerce::toString($raw['image'] ?? $raw['image_url'] ?? ''),
             'highlights_json' => !empty($raw['highlights']) ? json_encode($raw['highlights']) : null,
             'features_json' => !empty($raw['features']) ? json_encode($raw['features']) : null,
             'tags_json' => !empty($raw['tags']) ? json_encode($raw['tags']) : null,
-            'min_price' => isset($raw['pricing']['selling_price']) ? (float) $raw['pricing']['selling_price'] : null,
-            'currency' => (string) ($raw['pricing']['currency'] ?? 'EUR'),
+            'min_price' => isset($pricing['selling_price']) ? TypeCoerce::toFloat($pricing['selling_price']) : null,
+            'currency' => TypeCoerce::toString($pricing['currency'] ?? 'EUR'),
             'sync_status' => 'active',
             'last_synced_at' => date('Y-m-d H:i:s'),
         ];
@@ -182,7 +189,7 @@ class ExperienceSyncService extends AbstractSyncService implements ExperienceSyn
         $repo = new ExperienceRepository();
         $affected = 0;
         foreach ($batch as $row) {
-            $repo->upsert((int) $row['experience_id'], $row);
+            $repo->upsert(TypeCoerce::toInt($row['experience_id']), $row);
             $affected++;
         }
         return $affected;

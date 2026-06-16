@@ -6,6 +6,7 @@ namespace Tygh\Addons\SphinxHolidays\Cron\Commands;
 
 use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
 use Tygh\Addons\SphinxHolidays\Services\Container;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Services\FeatureMapper;
 
 /**
@@ -37,9 +38,9 @@ class UpdateProductsCommand extends AbstractSyncCommand
         $this->seedFeatureMappings();
 
         $featureAssigner = Container::getFeatureAssigner();
-        $countryCode = $params['country'] ?? '';
-        $limit = (int) ($params['limit'] ?? 0);
-        $batchSize = (int) ($params['batch_size'] ?? self::BATCH_SIZE);
+        $countryCode = TypeCoerce::toString($params['country'] ?? '');
+        $limit = TypeCoerce::toInt($params['limit'] ?? 0);
+        $batchSize = TypeCoerce::toInt($params['batch_size'] ?? self::BATCH_SIZE);
 
         $stats = [
             'updated' => 0,
@@ -66,8 +67,9 @@ class UpdateProductsCommand extends AbstractSyncCommand
             $stats['total'] += count($hotels);
 
             foreach ($hotels as $hotel) {
-                $hotelId = $hotel['hotel_id'];
-                $productId = (int) $hotel['product_id'];
+                $hotelId = TypeCoerce::toString($hotel['hotel_id'] ?? '');
+                $productId = TypeCoerce::toInt($hotel['product_id'] ?? 0);
+                $hotelName = TypeCoerce::toString($hotel['name'] ?? '');
 
                 // Apply SEO templates respecting overwrite mode + field toggles
                 $placeholders = \Tygh\Addons\SphinxHolidays\Helpers\SphinxProductFactory::buildPlaceholders($hotel);
@@ -86,7 +88,7 @@ class UpdateProductsCommand extends AbstractSyncCommand
 
                 // Use configured languages (addon setting) instead of all active
                 $configuredLanguages = ConfigProvider::getProductLanguages();
-                $primaryLang = !empty($configuredLanguages) ? $configuredLanguages[0] : CART_LANGUAGE;
+                $primaryLang = TypeCoerce::toString(!empty($configuredLanguages) ? $configuredLanguages[0] : CART_LANGUAGE);
 
                 $result = fn_update_product($product_data, $productId, $primaryLang);
 
@@ -117,7 +119,7 @@ class UpdateProductsCommand extends AbstractSyncCommand
                     }
                 }
                 if (!$result) {
-                    $this->output("[{$hotelId}] {$hotel['name']} ... FAILED (product update)");
+                    $this->output("[{$hotelId}] {$hotelName} ... FAILED (product update)");
                     $stats['failed']++;
                     continue;
                 }
@@ -137,7 +139,7 @@ class UpdateProductsCommand extends AbstractSyncCommand
                     $hotelId,
                 );
 
-                $this->output("[{$hotelId}] {$hotel['name']} ... UPDATED");
+                $this->output("[{$hotelId}] {$hotelName} ... UPDATED");
                 $stats['updated']++;
             }
 
@@ -160,7 +162,7 @@ class UpdateProductsCommand extends AbstractSyncCommand
 
     /**
      * Find hotels that have product_needs_update = 'Y' and a linked product.
-     * @return array<string, mixed>
+     * @return list<array<string, mixed>>
      */
     private function findHotelsNeedingUpdate(string $countryCode, int $limit): array
     {
@@ -171,7 +173,7 @@ class UpdateProductsCommand extends AbstractSyncCommand
 
         $limitClause = $limit > 0 ? db_quote(' LIMIT ?i', $limit) : '';
 
-        return db_get_array(
+        return TypeCoerce::toRowList(db_get_array(
             "SELECT h.hotel_id, h.product_id, h.name, h.classification, h.property_type,
                     h.description, h.short_description, h.destination_name,
                     h.country_name, h.region_name, h.rating, h.latitude, h.longitude,
@@ -183,6 +185,6 @@ class UpdateProductsCommand extends AbstractSyncCommand
              ORDER BY h.country_code ASC, h.hotel_id ASC ?p",
             $condition,
             $limitClause,
-        );
+        ));
     }
 }

@@ -6,6 +6,7 @@ namespace Tygh\Addons\SphinxHolidays\Services;
 
 use Tygh\Addons\SphinxHolidays\Contracts\ConfigProviderInterface;
 use Tygh\Addons\SphinxHolidays\Repository\DestinationWhitelistRepository;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Services\AbstractConfigProvider;
 use Tygh\Registry;
 
@@ -28,12 +29,12 @@ class ConfigProvider extends AbstractConfigProvider implements ConfigProviderInt
 
     public static function getApiBaseUrl(): string
     {
-        return rtrim((string) self::getSetting('api_base_url'), '/');
+        return rtrim(TypeCoerce::toString(self::getSetting('api_base_url')), '/');
     }
 
     public static function getApiKey(): string
     {
-        return (string) self::getSetting('api_key');
+        return TypeCoerce::toString(self::getSetting('api_key'));
     }
 
     public static function isApiCacheEnabled(): bool
@@ -43,12 +44,12 @@ class ConfigProvider extends AbstractConfigProvider implements ConfigProviderInt
 
     public static function getCacheTtlSearch(): int
     {
-        return max(0, (int) self::getSetting('cache_ttl_search', 900));
+        return max(0, TypeCoerce::toInt(self::getSetting('cache_ttl_search', 900)));
     }
 
     public static function getDefaultCurrency(): string
     {
-        return (string) self::getSetting('default_currency', 'EUR');
+        return TypeCoerce::toString(self::getSetting('default_currency', 'EUR'));
     }
 
     /** @return array<string, string> Currency code => display symbol */
@@ -62,22 +63,22 @@ class ConfigProvider extends AbstractConfigProvider implements ConfigProviderInt
 
     public static function getIgnoreDomains(): string
     {
-        return (string) self::getSetting('ignore_domains', '');
+        return TypeCoerce::toString(self::getSetting('ignore_domains', ''));
     }
 
     public static function getSearchPollInterval(): int
     {
-        return max(1, (int) self::getSetting('search_poll_interval', 2));
+        return max(1, TypeCoerce::toInt(self::getSetting('search_poll_interval', 2)));
     }
 
     public static function getSearchMaxPolls(): int
     {
-        return max(1, (int) self::getSetting('search_max_polls', 30));
+        return max(1, TypeCoerce::toInt(self::getSetting('search_max_polls', 30)));
     }
 
     public static function getCommission(): float
     {
-        return (float) self::getSetting('commission', 0);
+        return TypeCoerce::toFloat(self::getSetting('commission', 0));
     }
 
     public static function shouldRoundPrices(): bool
@@ -87,7 +88,7 @@ class ConfigProvider extends AbstractConfigProvider implements ConfigProviderInt
 
     public static function getHotelsCategoryId(): int
     {
-        return (int) self::getSetting('hotels_category_id', 0);
+        return TypeCoerce::toInt(self::getSetting('hotels_category_id', 0));
     }
 
     /** CS-Cart runtime company context — 1 in single-store mode. */
@@ -99,42 +100,42 @@ class ConfigProvider extends AbstractConfigProvider implements ConfigProviderInt
 
     public static function getPackagesCategoryId(): int
     {
-        return (int) self::getSetting('packages_category_id', 0);
+        return TypeCoerce::toInt(self::getSetting('packages_category_id', 0));
     }
 
     public static function getCircuitsCategoryId(): int
     {
-        return (int) self::getSetting('circuits_category_id', 0);
+        return TypeCoerce::toInt(self::getSetting('circuits_category_id', 0));
     }
 
     public static function getExperiencesCategoryId(): int
     {
-        return (int) self::getSetting('experiences_category_id', 0);
+        return TypeCoerce::toInt(self::getSetting('experiences_category_id', 0));
     }
 
     public static function getMaxRetries(): int
     {
-        return max(0, (int) self::getSetting('api_max_retries', 3));
+        return max(0, TypeCoerce::toInt(self::getSetting('api_max_retries', 3)));
     }
 
     public static function getRetryDelayMs(): int
     {
-        return max(0, (int) self::getSetting('api_retry_delay_ms', 500));
+        return max(0, TypeCoerce::toInt(self::getSetting('api_retry_delay_ms', 500)));
     }
 
     public static function getRetryMultiplier(): float
     {
-        return max(1.0, (float) self::getSetting('api_retry_multiplier', 2));
+        return max(1.0, TypeCoerce::toFloat(self::getSetting('api_retry_multiplier', 2)));
     }
 
     public static function getCircuitBreakerThreshold(): int
     {
-        return max(1, (int) self::getSetting('circuit_breaker_threshold', 5));
+        return max(1, TypeCoerce::toInt(self::getSetting('circuit_breaker_threshold', 5)));
     }
 
     public static function getCircuitBreakerTimeout(): int
     {
-        return max(1, (int) self::getSetting('circuit_breaker_timeout', 60));
+        return max(1, TypeCoerce::toInt(self::getSetting('circuit_breaker_timeout', 60)));
     }
 
     public static function isDebugLogging(): bool
@@ -155,7 +156,7 @@ class ConfigProvider extends AbstractConfigProvider implements ConfigProviderInt
 
     public static function getCronAccessKey(): string
     {
-        return (string) self::getSetting('cron_access_key');
+        return TypeCoerce::toString(self::getSetting('cron_access_key'));
     }
 
     /**
@@ -163,12 +164,12 @@ class ConfigProvider extends AbstractConfigProvider implements ConfigProviderInt
      */
     public static function getProductCodePrefix(): string
     {
-        return (string) self::getSetting('product_code_prefix', 'SPX');
+        return TypeCoerce::toString(self::getSetting('product_code_prefix', 'SPX'));
     }
 
     public static function getDefaultProductQuantity(): int
     {
-        return max(0, (int) self::getSetting('default_product_quantity', 777));
+        return max(0, TypeCoerce::toInt(self::getSetting('default_product_quantity', 777)));
     }
 
     /**

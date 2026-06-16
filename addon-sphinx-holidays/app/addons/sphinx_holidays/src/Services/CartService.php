@@ -6,6 +6,7 @@ namespace Tygh\Addons\SphinxHolidays\Services;
 
 use Tygh\Addons\SphinxHolidays\Contracts\CartServiceInterface;
 use Tygh\Addons\TravelCore\Helpers\SessionAccessor;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Services\CommissionCalculator;
 use Tygh\Addons\TravelCore\Services\CurrencyService;
 use Tygh\Addons\TravelCore\Services\GuestDataService;
@@ -38,7 +39,7 @@ final class CartService implements CartServiceInterface
     {
         $security = Container::getSecurityService();
         $auth = $this->session->auth();
-        $rateLimitId = !empty($auth['user_id']) ? (string) $auth['user_id'] : (string) session_id();
+        $rateLimitId = !empty($auth['user_id']) ? TypeCoerce::toString($auth['user_id']) : (string) session_id();
 
         if (!$security->checkBookingRateLimit($rateLimitId)) {
             fn_set_notification(
@@ -127,10 +128,10 @@ final class CartService implements CartServiceInterface
             return 0;
         }
 
-        return (int) db_get_field(
+        return TypeCoerce::toInt(db_get_field(
             'SELECT product_id FROM ?:sphinx_hotels WHERE hotel_id = ?s',
             $entityId,
-        );
+        ));
     }
 
     /**
@@ -175,7 +176,7 @@ final class CartService implements CartServiceInterface
     ): array {
         $primaryCurrency = defined('CART_PRIMARY_CURRENCY') ? CART_PRIMARY_CURRENCY : 'EUR';
         $currencyService = new CurrencyService($apiCurrency);
-        $cartPrice = $currencyService->convertFromApiCurrency($totalPrice, $primaryCurrency);
+        $cartPrice = $currencyService->convertFromApiCurrency($totalPrice, TypeCoerce::toString($primaryCurrency));
 
         $cartId = fn_generate_cart_id($productId, $productExtra);
 
@@ -222,7 +223,7 @@ final class CartService implements CartServiceInterface
 
         return [
             'order_id' => 0,
-            'user_id' => !empty($auth['user_id']) ? (int) $auth['user_id'] : 0,
+            'user_id' => !empty($auth['user_id']) ? TypeCoerce::toInt($auth['user_id']) : 0,
             'session_id' => session_id(),
             'product_id' => $productId,
             'hotel_id' => $entityId,

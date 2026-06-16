@@ -33,7 +33,7 @@ try {
     $api = Container::getApi();
     $verifyResult = $api->verifyHotelOffer($offer_id);
 
-    if (empty($verifyResult) || !($verifyResult['available'] ?? false)) {
+    if (empty($verifyResult) || !TypeCoerce::toBool($verifyResult['available'] ?? false)) {
         fn_set_notification('W', __('warning'),
             __('sphinx_holidays.offer_no_longer_available', ['[default]' => 'This offer is no longer available. Please search again.']));
         return [CONTROLLER_STATUS_REDIRECT, 'sphinx_booking.search?' . http_build_query([

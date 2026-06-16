@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\TravelCore\Services;
 
 use Tygh\Addons\TravelCore\Contracts\GuestDataNormalizerInterface;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 /**
  * Guest Data Normalizer
@@ -44,22 +45,31 @@ class GuestDataNormalizer implements GuestDataNormalizerInterface
     #[\Override]
     public function normalize(array|string $raw): array
     {
-        $data = $this->decode($raw);
+        // Decode JSON strings here with their integer keys intact: the legacy
+        // indexed-array format (e.g. `[{...}, {...}]`, as written by the
+        // booking submission flow) relies on isArrayFormat() seeing integer
+        // keys. decode()'s contract narrows the result to string keys, which
+        // would discard the integer indices and hide the indexed format.
+        $data = is_string($raw)
+            ? (is_array($decoded = json_decode($raw, true)) ? $decoded : [])
+            : $raw;
 
         if (empty($data)) {
             return [];
-        }
-
-        if ($this->isKeyedFormat($data)) {
-            return $this->ensureFields($data);
         }
 
         if ($this->isArrayFormat($data)) {
             return $this->convertArrayToKeyed($data);
         }
 
+        $map = TypeCoerce::toStringMap($data);
+
+        if ($this->isKeyedFormat($map)) {
+            return $this->ensureFields($map);
+        }
+
         // Unknown structure — return with field defaults applied
-        return $this->ensureFields($data);
+        return $this->ensureFields($map);
     }
 
     /**
@@ -73,7 +83,7 @@ class GuestDataNormalizer implements GuestDataNormalizerInterface
     {
         if (is_string($raw)) {
             $decoded = json_decode($raw, true);
-            return is_array($decoded) ? $decoded : [];
+            return is_array($decoded) ? TypeCoerce::toStringMap($decoded) : [];
         }
 
         return $raw;

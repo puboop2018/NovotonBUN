@@ -31,7 +31,7 @@ class Container
     /** @var array<string, object> Resolved singleton instances */
     private static array $instances = [];
 
-    /** @var array<string, callable> Factory overrides for testing */
+    /** @var array<string, callable(): object> Factory overrides for testing */
     private static array $overrides = [];
 
     // ── Resolve helper ──
@@ -40,7 +40,7 @@ class Container
      * Resolve a service by ID, using override factory if registered.
      *
      * @param string $id Service identifier
-     * @param callable $factory Default factory returning the instance
+     * @param callable(): object $factory Default factory returning the instance
      */
     private static function resolve(string $id, callable $factory): object
     {
@@ -55,7 +55,7 @@ class Container
      * Override a factory for testing.
      *
      * @param string $id Service identifier (e.g. 'destinationRepository')
-     * @param callable $factory Factory returning the mock/stub
+     * @param callable(): object $factory Factory returning the mock/stub
      */
     public static function override(string $id, callable $factory): void
     {

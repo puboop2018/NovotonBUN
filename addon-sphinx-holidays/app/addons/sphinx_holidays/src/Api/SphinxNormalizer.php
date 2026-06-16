@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\SphinxHolidays\Api;
 
 use Tygh\Addons\TravelCore\Contracts\ProviderNormalizerInterface;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\TravelConstants;
 
 /**
@@ -77,7 +78,7 @@ class SphinxNormalizer implements ProviderNormalizerInterface
             return null;
         }
 
-        $stars = (int) $rawValue;
+        $stars = TypeCoerce::toInt($rawValue);
         return ($stars >= 1 && $stars <= 5) ? (string) $stars : null;
     }
 

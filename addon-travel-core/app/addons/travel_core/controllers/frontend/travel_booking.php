@@ -75,10 +75,10 @@ if ($mode === 'booking_config') {
     }
 
     if (!empty($product_id)) {
-        $productCode = (string) db_get_field(
+        $productCode = TypeCoerce::toString(db_get_field(
             'SELECT product_code FROM ?:products WHERE product_id = ?i',
-            (int) $product_id,
-        );
+            TypeCoerce::toInt($product_id),
+        ));
 
         $providerName = '';
         $hotelId = '';
@@ -87,16 +87,16 @@ if ($mode === 'booking_config') {
         // Resolve provider + hotel via the registered HotelProductProvider(s).
         // No provider-specific SQL lives here — deactivated providers are not
         // registered, so their tables are never queried.
-        $owner = TravelProviderRegistry::resolveProductOwner((int) $product_id, $productCode);
+        $owner = TravelProviderRegistry::resolveProductOwner(TypeCoerce::toInt($product_id), $productCode);
         if ($owner !== null) {
             $providerName = $owner->providerName;
             $hotelId = $owner->hotelId;
             $searchDispatch = $providerName . '_booking.search';
         }
 
-        if ($providerName) {
+        if ($providerName !== '') {
             // Colors from travel_core addon settings
-            $tc = \Tygh\Registry::get('addons.travel_core') ?: [];
+            $tc = TypeCoerce::toStringMap(\Tygh\Registry::get('addons.travel_core') ?: []);
             $colors = [];
             $colorMap = [
                 'primary' => 'color_primary',
@@ -146,7 +146,7 @@ if ($mode === 'booking_config') {
                 'isHotel' => true,
                 'provider' => $providerName,
                 'hotelId' => $hotelId,
-                'productId' => (int) $product_id,
+                'productId' => TypeCoerce::toInt($product_id),
                 'searchDispatch' => $searchDispatch,
                 'mode' => 'product',
                 'colors' => $colors,
@@ -180,7 +180,7 @@ if ($provider !== null) {
     unset($params['dispatch']);
     $queryString = !empty($params) ? '?' . http_build_query($params) : '';
 
-    return [CONTROLLER_STATUS_REDIRECT, $targetController . '.' . $mode . $queryString];
+    return [CONTROLLER_STATUS_REDIRECT, $targetController . '.' . TypeCoerce::toString($mode) . $queryString];
 }
 
 // No provider found — show error

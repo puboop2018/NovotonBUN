@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\SphinxHolidays\Cron\Commands;
 
 use Tygh\Addons\TravelCore\Cron\AbstractCronCommand as BaseCommand;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Services\FeatureMapper;
 
 /**
@@ -32,16 +33,18 @@ abstract class AbstractSyncCommand extends BaseCommand
             return;
         }
 
-        $rlHits = $stats['rate_limit_hits'] ?? 0;
+        $rlHits = TypeCoerce::toInt($stats['rate_limit_hits'] ?? 0);
         if ($rlHits > 0) {
             $this->output("Rate limit: {$rlHits} request(s) were throttled (HTTP 429).");
         }
 
-        $rl = $stats['rate_limit'] ?? [];
+        $rl = TypeCoerce::toStringMap($stats['rate_limit'] ?? []);
         if (isset($rl['remaining'], $rl['limit'])) {
-            $msg = "Rate limit: {$rl['remaining']}/{$rl['limit']} requests remaining.";
-            $resetIn = $rl['reset_in'] ?? null;
-            if ($resetIn !== null && $resetIn > 0) {
+            $remaining = TypeCoerce::toString($rl['remaining']);
+            $limit = TypeCoerce::toString($rl['limit']);
+            $msg = "Rate limit: {$remaining}/{$limit} requests remaining.";
+            $resetIn = TypeCoerce::toInt($rl['reset_in'] ?? null);
+            if ($resetIn > 0) {
                 $msg .= ' Resets in ' . $this->formatResetTime($resetIn) . '.';
             }
             $this->output($msg);

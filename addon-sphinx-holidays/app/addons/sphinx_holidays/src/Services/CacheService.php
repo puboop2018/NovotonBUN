@@ -6,6 +6,7 @@ namespace Tygh\Addons\SphinxHolidays\Services;
 
 use Tygh\Addons\SphinxHolidays\Contracts\CacheServiceInterface;
 use Tygh\Addons\SphinxHolidays\Repository\SphinxCacheRepository;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 /**
  * Cache service using the sphinx_cache table.
@@ -25,7 +26,7 @@ class CacheService implements CacheServiceInterface
     /**
      * Get a cached value by key.
      *
-     * @return array<int|string, mixed>|null Decoded data or null if missing/expired
+     * @return array<string, mixed>|null Decoded data or null if missing/expired
      */
     public static function get(string $key): ?array
     {
@@ -36,12 +37,12 @@ class CacheService implements CacheServiceInterface
 
         $row = self::repo()->findByKey($key);
 
-        if (!$row || (int) $row['expires_at'] < time()) {
+        if ($row === null || TypeCoerce::toInt($row['expires_at']) < time()) {
             return null;
         }
 
-        $decoded = json_decode($row['cache_data'], true);
-        return is_array($decoded) ? $decoded : null;
+        $decoded = json_decode(TypeCoerce::toString($row['cache_data']), true);
+        return is_array($decoded) ? TypeCoerce::toStringMap($decoded) : null;
     }
 
     /**
