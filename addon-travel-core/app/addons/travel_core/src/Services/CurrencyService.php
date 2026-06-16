@@ -16,6 +16,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\TravelCore\Services;
 
 use Tygh\Addons\TravelCore\Contracts\CurrencyServiceInterface;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 class CurrencyService implements CurrencyServiceInterface
 {
@@ -36,10 +37,10 @@ class CurrencyService implements CurrencyServiceInterface
     public static function getDisplayCurrency(): string
     {
         if (defined('CART_SECONDARY_CURRENCY')) {
-            return CART_SECONDARY_CURRENCY;
+            return TypeCoerce::toString(CART_SECONDARY_CURRENCY);
         }
         if (defined('CART_PRIMARY_CURRENCY')) {
-            return CART_PRIMARY_CURRENCY;
+            return TypeCoerce::toString(CART_PRIMARY_CURRENCY);
         }
         return 'EUR';
     }
@@ -87,14 +88,18 @@ class CurrencyService implements CurrencyServiceInterface
             return $apiPrice;
         }
 
+        $currencyMap = TypeCoerce::toStringMap($currencies);
+        $sourceRow = TypeCoerce::toStringMap($currencyMap[$source] ?? null);
+        $targetRow = TypeCoerce::toStringMap($currencyMap[$target] ?? null);
+
         $sourceCoefficient = 1.0;
-        if (isset($currencies[$source]['coefficient'])) {
-            $sourceCoefficient = (float)$currencies[$source]['coefficient'];
+        if (isset($sourceRow['coefficient'])) {
+            $sourceCoefficient = TypeCoerce::toFloat($sourceRow['coefficient']);
         }
 
         $targetCoefficient = 1.0;
-        if (isset($currencies[$target]['coefficient'])) {
-            $targetCoefficient = (float)$currencies[$target]['coefficient'];
+        if (isset($targetRow['coefficient'])) {
+            $targetCoefficient = TypeCoerce::toFloat($targetRow['coefficient']);
         }
 
         if ($sourceCoefficient <= 0) {
@@ -120,11 +125,14 @@ class CurrencyService implements CurrencyServiceInterface
         }
 
         foreach ($results as &$result) {
+            if (!is_array($result)) {
+                continue;
+            }
             if (isset($result['total_price'])) {
-                $result['total_price'] = $this->convertFromApiCurrency((float)$result['total_price']);
+                $result['total_price'] = $this->convertFromApiCurrency(TypeCoerce::toFloat($result['total_price']));
             }
             if (isset($result['price_per_night'])) {
-                $result['price_per_night'] = $this->convertFromApiCurrency((float)$result['price_per_night']);
+                $result['price_per_night'] = $this->convertFromApiCurrency(TypeCoerce::toFloat($result['price_per_night']));
             }
         }
         unset($result);

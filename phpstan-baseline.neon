@@ -13,18 +13,6 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_admin.php
 
 		-
-			message: '#^Binary operation "\.\=" between '''' and mixed results in an error\.$#'
-			identifier: assignOp.invalid
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_admin.php
-
-		-
-			message: '#^Binary operation "\.\=" between string and mixed results in an error\.$#'
-			identifier: assignOp.invalid
-			count: 3
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_admin.php
-
-		-
 			message: '#^Only booleans are allowed in &&, SimpleXMLElement given on the left side\.$#'
 			identifier: booleanAnd.leftNotBoolean
 			count: 1
@@ -181,25 +169,7 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_hotels.php
 
 		-
-			message: '#^Call to function is_array\(\) with array\<string, mixed\> will always evaluate to true\.$#'
-			identifier: function.alreadyNarrowedType
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_hotels.php
-
-		-
-			message: '#^Call to function is_string\(\) with non\-falsy\-string will always evaluate to true\.$#'
-			identifier: function.alreadyNarrowedType
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_hotels.php
-
-		-
 			message: '#^Cannot access offset int\<1, max\> on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_hotels.php
-
-		-
-			message: '#^Cannot access offset non\-falsy\-string on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_hotels.php
@@ -219,12 +189,6 @@ parameters:
 		-
 			message: '#^Only booleans are allowed in &&, SimpleXMLElement given on the left side\.$#'
 			identifier: booleanAnd.leftNotBoolean
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_hotels.php
-
-		-
-			message: '#^Only booleans are allowed in a ternary operator condition, int\|false given\.$#'
-			identifier: ternary.condNotBoolean
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_hotels.php
 
@@ -274,12 +238,6 @@ parameters:
 			message: '#^Part \$hotel\[''hotel_name''\] \(mixed\) of encapsed string cannot be cast to string\.$#'
 			identifier: encapsedStringPart.nonString
 			count: 3
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_hotels.php
-
-		-
-			message: '#^Part \$product_id \(mixed\) of encapsed string cannot be cast to string\.$#'
-			identifier: encapsedStringPart.nonString
-			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/backend/novoton_hotels.php
 
 		-
@@ -608,12 +566,6 @@ parameters:
 
 		-
 			message: '#^Only booleans are allowed in an if condition, Tygh\\Addons\\NovotonHolidays\\NovotonApi\|null given\.$#'
-			identifier: if.condNotBoolean
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/add_to_cart.php
-
-		-
-			message: '#^Only booleans are allowed in an if condition, mixed given\.$#'
 			identifier: if.condNotBoolean
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/add_to_cart.php
@@ -955,12 +907,6 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/update_booking.php
 
 		-
-			message: '#^Parameter \#3 \$session_id of method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepositoryInterface\:\:checkOwnership\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/update_booking.php
-
-		-
 			message: '#^Parameter \#1 \$providedKey of static method Tygh\\Addons\\NovotonHolidays\\Helpers\\CronHelper\:\:validateAccessKey\(\) expects string, mixed given\.$#'
 			identifier: argument.type
 			count: 1
@@ -1084,12 +1030,6 @@ parameters:
 			message: '#^Parameter \#1 \$value of function count expects array\|Countable, mixed given\.$#'
 			identifier: argument.type
 			count: 3
-			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_holidays.php
-
-		-
-			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, list\<mixed\> given\.$#'
-			identifier: argument.type
-			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_holidays.php
 
 		-
@@ -1570,12 +1510,6 @@ parameters:
 			message: '#^Parameter \#1 \$haystack of function str_starts_with expects string, mixed given\.$#'
 			identifier: argument.type
 			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/cart_hooks.php
-
-		-
-			message: '#^Parameter \#1 \$product_ids of method Tygh\\Addons\\NovotonHolidays\\Repository\\BookingRepositoryInterface\:\:findByProductIds\(\) expects list\<int\>, non\-empty\-list given\.$#'
-			identifier: argument.type
-			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/hooks/cart_hooks.php
 
 		-
@@ -2226,7 +2160,6 @@ parameters:
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/OffersUpdateCommand.php
 
-
 		-
 			message: '#^Part \$product_id \(mixed\) of encapsed string cannot be cast to string\.$#'
 			identifier: encapsedStringPart.nonString
@@ -2342,12 +2275,6 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/ResInfoCommand.php
 
 		-
-			message: '#^Binary operation "\." between mixed and '' \+ '' results in an error\.$#'
-			identifier: binaryOp.invalid
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/RoomPriceCheckCommand.php
-
-		-
 			message: '#^Cannot cast mixed to int\.$#'
 			identifier: cast.int
 			count: 2
@@ -2381,12 +2308,6 @@ parameters:
 			message: '#^Parameter \#2 \$withoutPrices of method Tygh\\Addons\\NovotonHolidays\\Helpers\\DatabaseHelperInterface\:\:batchUpdateHasRoomPriceFlag\(\) expects list\<string\>, list\<mixed\> given\.$#'
 			identifier: argument.type
 			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/RoomPriceCheckCommand.php
-
-		-
-			message: '#^Part \$check_in \(mixed\) of encapsed string cannot be cast to string\.$#'
-			identifier: encapsedStringPart.nonString
-			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/RoomPriceCheckCommand.php
 
 		-
@@ -3314,50 +3235,14 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/PriceInfoSync.php
 
 		-
-			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, list\<mixed\> given\.$#'
-			identifier: argument.type
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/PriceInfoSync.php
-
-		-
-			message: '#^Argument of an invalid type mixed supplied for foreach, only iterables are supported\.$#'
-			identifier: foreach.nonIterable
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepository.php
-
-		-
-			message: '#^Cannot cast mixed to float\.$#'
-			identifier: cast.double
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepository.php
-
-		-
 			message: '#^Cannot cast mixed to int\.$#'
 			identifier: cast.int
-			count: 10
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepository.php
-
-		-
-			message: '#^Parameter \#1 \$key of function array_key_exists expects int\|string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
+			count: 4
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepository.php
 
 		-
 			message: '#^Parameter \#1 \$raw of method Tygh\\Addons\\TravelCore\\Services\\GuestDataNormalizer\:\:normalize\(\) expects array\<string, mixed\>\|string, mixed given\.$#'
 			identifier: argument.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepository.php
-
-		-
-			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, list\<int, mixed\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepository.php
-
-		-
-			message: '#^Possibly invalid array key type mixed\.$#'
-			identifier: offsetAccess.invalidOffset
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/BookingRepository.php
 
@@ -3380,32 +3265,8 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepository.php
 
 		-
-			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, list\<int, mixed\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepository.php
-
-		-
-			message: '#^Part \$limit_clause \(mixed\) of encapsed string cannot be cast to string\.$#'
-			identifier: encapsedStringPart.nonString
-			count: 4
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/HotelSearchRepository.php
-
-		-
 			message: '#^Cannot cast mixed to int\.$#'
 			identifier: cast.int
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/SyncLogRepository.php
-
-		-
-			message: '#^Part \$limit_clause \(mixed\) of encapsed string cannot be cast to string\.$#'
-			identifier: encapsedStringPart.nonString
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/SyncLogRepository.php
-
-		-
-			message: '#^Part \$where \(mixed\) of encapsed string cannot be cast to string\.$#'
-			identifier: encapsedStringPart.nonString
 			count: 2
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/SyncLogRepository.php
 
@@ -3469,7 +3330,6 @@ parameters:
 			count: 2
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/AdminCronService.php
 
-
 		-
 			message: '#^Parameter \#1 \$hotel_id of method Tygh\\Addons\\NovotonHolidays\\Repository\\HotelRepositoryInterface\:\:update\(\) expects string, mixed given\.$#'
 			identifier: argument.type
@@ -3481,7 +3341,6 @@ parameters:
 			identifier: argument.type
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/AdminCronService.php
-
 
 		-
 			message: '#^Part \$hotel\[''hotel_id''\] \(mixed\) of encapsed string cannot be cast to string\.$#'
@@ -3754,12 +3613,6 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingQueryService.php
 
 		-
-			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, list\<int, mixed\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingQueryService.php
-
-		-
 			message: '#^Parameter \#2 \$nb of method Tygh\\Addons\\NovotonHolidays\\Services\\BookingQueryService\:\:enrichWithGuestDisplay\(\) expects array\<string, mixed\>, mixed given\.$#'
 			identifier: argument.type
 			count: 1
@@ -3856,12 +3709,6 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingService.php
 
 		-
-			message: '#^Call to function is_array\(\) with array\<string, mixed\> will always evaluate to true\.$#'
-			identifier: function.alreadyNarrowedType
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingSubmissionService.php
-
-		-
 			message: '#^Cannot cast mixed to float\.$#'
 			identifier: cast.double
 			count: 2
@@ -3898,12 +3745,6 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingSubmissionService.php
 
 		-
-			message: '#^Parameter \#1 \$raw of method Tygh\\Addons\\TravelCore\\Services\\GuestDataNormalizer\:\:normalize\(\) expects array\<string, mixed\>\|string, mixed given\.$#'
-			identifier: argument.type
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingSubmissionService.php
-
-		-
 			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, list given\.$#'
 			identifier: argument.type
 			count: 1
@@ -3911,12 +3752,6 @@ parameters:
 
 		-
 			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, list\<mixed\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingSubmissionService.php
-
-		-
-			message: '#^Parameter \#2 \$guestsData of method Tygh\\Addons\\NovotonHolidays\\Services\\BookingSubmissionService\:\:buildGroupGuestsAndRooms\(\) expects array\<int\|string, array\<string, mixed\>\>, array\<string, mixed\> given\.$#'
 			identifier: argument.type
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/BookingSubmissionService.php
@@ -4000,21 +3835,9 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/ConfigProvider.php
 
 		-
-			message: '#^Method Tygh\\Addons\\NovotonHolidays\\Services\\ConfigProvider\:\:settings\(\) should return array\<string, mixed\> but returns mixed\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/ConfigProvider.php
-
-		-
 			message: '#^Parameter \#2 \$string of function explode expects string, mixed given\.$#'
 			identifier: argument.type
 			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/ConfigProvider.php
-
-		-
-			message: '#^Static property Tygh\\Addons\\NovotonHolidays\\Services\\ConfigProvider\:\:\$settings \(array\<string, mixed\>\|null\) does not accept mixed\.$#'
-			identifier: assign.propertyType
-			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/ConfigProvider.php
 
 		-
@@ -4342,12 +4165,6 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/FeeCalculator.php
 
 		-
-			message: '#^Parameter \#4 \$seasonAgeTypes of method Tygh\\Addons\\NovotonHolidays\\Services\\FeeCalculator\:\:calculateExtrasDaily\(\) expects array\<string, mixed\>, array\<string\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/FeeCalculator.php
-
-		-
 			message: '#^Parameter \#4 \$seasonAgeTypes of method Tygh\\Addons\\NovotonHolidays\\Services\\FeeCalculator\:\:calculateHandlingFee\(\) expects array\<string, mixed\>, array\<string\> given\.$#'
 			identifier: argument.type
 			count: 1
@@ -4456,12 +4273,6 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PreOrderPriceVerifier.php
 
 		-
-			message: '#^Only booleans are allowed in &&, mixed given on the left side\.$#'
-			identifier: booleanAnd.leftNotBoolean
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PreOrderPriceVerifier.php
-
-		-
 			message: '#^Only booleans are allowed in a negated boolean, SimpleXMLElement\|false given\.$#'
 			identifier: booleanNot.exprNotBoolean
 			count: 1
@@ -4470,12 +4281,6 @@ parameters:
 		-
 			message: '#^Only booleans are allowed in a negated boolean, Tygh\\Addons\\NovotonHolidays\\NovotonApi\|null given\.$#'
 			identifier: booleanNot.exprNotBoolean
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PreOrderPriceVerifier.php
-
-		-
-			message: '#^Only booleans are allowed in an if condition, mixed given\.$#'
-			identifier: if.condNotBoolean
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PreOrderPriceVerifier.php
 
@@ -4594,98 +4399,14 @@ parameters:
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoFormatter.php
 
 		-
-			message: '#^Cannot access offset string on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoParser.php
-
-		-
-			message: '#^Only booleans are allowed in &&, int\|false given on the left side\.$#'
-			identifier: booleanAnd.leftNotBoolean
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoParser.php
-
-		-
 			message: '#^Only booleans are allowed in an if condition, Closure\|null given\.$#'
 			identifier: if.condNotBoolean
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoParser.php
 
 		-
-			message: '#^Only booleans are allowed in an if condition, int\|false given\.$#'
-			identifier: if.condNotBoolean
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoParser.php
-
-		-
-			message: '#^Parameter \#1 \$string of function trim expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoParser.php
-
-		-
-			message: '#^Cannot access offset ''IdSeason'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoService.php
-
-		-
-			message: '#^Cannot access offset ''Season'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoService.php
-
-		-
-			message: '#^Cannot access offset ''SeasonNr'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoService.php
-
-		-
-			message: '#^Cannot access offset ''season'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 3
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoService.php
-
-		-
-			message: '#^Cannot access offset 0 on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoService.php
-
-		-
-			message: '#^Cannot access offset string on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoService.php
-
-		-
-			message: '#^Cannot cast mixed to string\.$#'
-			identifier: cast.string
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoService.php
-
-		-
 			message: '#^Only booleans are allowed in a negated boolean, SimpleXMLElement given\.$#'
 			identifier: booleanNot.exprNotBoolean
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoService.php
-
-		-
-			message: '#^Parameter \#1 \$json of function json_decode expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoService.php
-
-		-
-			message: '#^Parameter \#1 \$prices of method Tygh\\Addons\\NovotonHolidays\\Services\\PriceInfoService\:\:groupPricesByRoom\(\) expects array\<string, mixed\>, array\<mixed\> given\.$#'
-			identifier: argument.type
-			count: 2
-			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoService.php
-
-		-
-			message: '#^Parameter \#1 \$string of function trim expects string, mixed given\.$#'
-			identifier: argument.type
 			count: 1
 			path: addon-novoton-holidays/app/addons/novoton_holidays/src/Services/PriceInfoService.php
 
@@ -5650,12 +5371,6 @@ parameters:
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/AddProductsCommand.php
 
 		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Cron\\Commands\\AddProductsCommand\:\:loadState\(\) should return array\<string, mixed\> but returns array\<mixed\>\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/AddProductsCommand.php
-
-		-
 			message: '#^Offset ''product_id'' on array\{status\: string, product_id\: int, reason\: string\} on left side of \?\? always exists and is not nullable\.$#'
 			identifier: nullCoalesce.offset
 			count: 1
@@ -5682,7 +5397,7 @@ parameters:
 		-
 			message: '#^Parameter \#1 \$datetime of function strtotime expects string, mixed given\.$#'
 			identifier: argument.type
-			count: 2
+			count: 1
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/AddProductsCommand.php
 
 		-
@@ -5752,12 +5467,6 @@ parameters:
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/AssignBoardsCommand.php
 
 		-
-			message: '#^Method Tygh\\Addons\\SphinxHolidays\\Cron\\Commands\\AssignBoardsCommand\:\:loadState\(\) should return array\<string, mixed\> but returns array\<mixed\>\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/AssignBoardsCommand.php
-
-		-
 			message: '#^Offset ''errors'' on non\-empty\-array\<string, mixed\> on left side of \?\? always exists and is not nullable\.$#'
 			identifier: nullCoalesce.offset
 			count: 1
@@ -5766,7 +5475,7 @@ parameters:
 		-
 			message: '#^Parameter \#1 \$datetime of function strtotime expects string, mixed given\.$#'
 			identifier: argument.type
-			count: 2
+			count: 1
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/AssignBoardsCommand.php
 
 		-
@@ -5902,24 +5611,6 @@ parameters:
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/AuditFacilitiesCommand.php
 
 		-
-			message: '#^Part \$stats\[''errors''\] \(mixed\) of encapsed string cannot be cast to string\.$#'
-			identifier: encapsedStringPart.nonString
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/CacheRefreshCommand.php
-
-		-
-			message: '#^Part \$stats\[''hotels_count''\] \(mixed\) of encapsed string cannot be cast to string\.$#'
-			identifier: encapsedStringPart.nonString
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/CacheRefreshCommand.php
-
-		-
-			message: '#^Part \$stats\[''packages_count''\] \(mixed\) of encapsed string cannot be cast to string\.$#'
-			identifier: encapsedStringPart.nonString
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/CacheRefreshCommand.php
-
-		-
 			message: '#^Cannot cast mixed to int\.$#'
 			identifier: cast.int
 			count: 5
@@ -5980,18 +5671,6 @@ parameters:
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/DeduplicateCommand.php
 
 		-
-			message: '#^Parameter \#1 \$hotelId of method Tygh\\Addons\\SphinxHolidays\\Repository\\HotelRepository\:\:linkToProduct\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/DeduplicateCommand.php
-
-		-
-			message: '#^Parameter \#1 \$hotelId of method Tygh\\Addons\\SphinxHolidays\\Repository\\HotelRepository\:\:markSkipped\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/DeduplicateCommand.php
-
-		-
 			message: '#^Parameter \#2 \$string of function explode expects string, mixed given\.$#'
 			identifier: argument.type
 			count: 1
@@ -6001,12 +5680,6 @@ parameters:
 			message: '#^Part \$canonicalId \(mixed\) of encapsed string cannot be cast to string\.$#'
 			identifier: encapsedStringPart.nonString
 			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/DeduplicateCommand.php
-
-		-
-			message: '#^Part \$dupHotelId \(mixed\) of encapsed string cannot be cast to string\.$#'
-			identifier: encapsedStringPart.nonString
-			count: 2
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/DeduplicateCommand.php
 
 		-
@@ -6076,28 +5749,10 @@ parameters:
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/PackageRouteSyncCommand.php
 
 		-
-			message: '#^Binary operation "\.\=" between mixed and '' AND il\.pair_id IS…'' results in an error\.$#'
-			identifier: assignOp.invalid
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/SyncImagesCommand.php
-
-		-
-			message: '#^Binary operation "\.\=" between mixed and mixed results in an error\.$#'
-			identifier: assignOp.invalid
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/SyncImagesCommand.php
-
-		-
 			message: '#^Call to function is_array\(\) with array\<string, mixed\> will always evaluate to true\.$#'
 			identifier: function.alreadyNarrowedType
 			count: 1
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/SyncImagesCommand.php
-
-		-
-			message: '#^Binary operation "\.\=" between '''' and mixed results in an error\.$#'
-			identifier: assignOp.invalid
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Cron/Commands/UpdateProductsCommand.php
 
 		-
 			message: '#^Cannot access offset ''hotel_id'' on mixed\.$#'
@@ -6250,44 +5905,8 @@ parameters:
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Helpers/SphinxProductFactory.php
 
 		-
-			message: '#^Parameter \#1 \$hotelId of method Tygh\\Addons\\SphinxHolidays\\Repository\\HotelRepository\:\:linkToProduct\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 3
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Helpers/SphinxProductFactory.php
-
-		-
-			message: '#^Parameter \#1 \$hotelId of method Tygh\\Addons\\SphinxHolidays\\Repository\\HotelRepository\:\:markSkipped\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 7
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Helpers/SphinxProductFactory.php
-
-		-
 			message: '#^Parameter \#2 \$arrays of function array_diff expects an array of values castable to string, array\<int, mixed\> given\.$#'
 			identifier: argument.type
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Helpers/SphinxProductFactory.php
-
-		-
-			message: '#^Parameter \#4 \$hotelId of function fn_travel_core_apply_seo_fields expects string\|null, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Helpers/SphinxProductFactory.php
-
-		-
-			message: '#^Part \$cc \(mixed\) of encapsed string cannot be cast to string\.$#'
-			identifier: encapsedStringPart.nonString
-			count: 2
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Helpers/SphinxProductFactory.php
-
-		-
-			message: '#^Part \$hotelId \(mixed\) of encapsed string cannot be cast to string\.$#'
-			identifier: encapsedStringPart.nonString
-			count: 2
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Helpers/SphinxProductFactory.php
-
-		-
-			message: '#^Possibly invalid array key type mixed\.$#'
-			identifier: offsetAccess.invalidOffset
 			count: 1
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Helpers/SphinxProductFactory.php
 
@@ -6302,18 +5921,6 @@ parameters:
 			identifier: method.childReturnType
 			count: 1
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Helpers/SphinxProductFactory.php
-
-		-
-			message: '#^Binary operation "\.\=" between '''' and mixed results in an error\.$#'
-			identifier: assignOp.invalid
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Repository/DestinationRepository.php
-
-		-
-			message: '#^Binary operation "\.\=" between string and mixed results in an error\.$#'
-			identifier: assignOp.invalid
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Repository/DestinationRepository.php
 
 		-
 			message: '#^Call to function is_array\(\) with array\<string, mixed\> will always evaluate to true\.$#'
@@ -6334,24 +5941,6 @@ parameters:
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Repository/DestinationRepository.php
 
 		-
-			message: '#^Binary operation "\.\=" between '' AND h\.boards_json…'' and mixed results in an error\.$#'
-			identifier: assignOp.invalid
-			count: 2
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Repository/HotelRepository.php
-
-		-
-			message: '#^Binary operation "\.\=" between '''' and mixed results in an error\.$#'
-			identifier: assignOp.invalid
-			count: 3
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Repository/HotelRepository.php
-
-		-
-			message: '#^Binary operation "\.\=" between string and mixed results in an error\.$#'
-			identifier: assignOp.invalid
-			count: 5
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Repository/HotelRepository.php
-
-		-
 			message: '#^Call to function is_array\(\) with array\<string, mixed\> will always evaluate to true\.$#'
 			identifier: function.alreadyNarrowedType
 			count: 1
@@ -6360,7 +5949,7 @@ parameters:
 		-
 			message: '#^Cannot cast mixed to int\.$#'
 			identifier: cast.int
-			count: 10
+			count: 3
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Repository/HotelRepository.php
 
 		-
@@ -7252,84 +6841,6 @@ parameters:
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/SphinxFeatureAssigner.php
 
 		-
-			message: '#^Cannot access offset string on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 2
-			path: addon-travel-core/app/addons/travel_core/controllers/backend/travel_booking_styles.php
-
-		-
-			message: '#^Cannot call method assign\(\) on mixed\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/controllers/backend/travel_booking_styles.php
-
-		-
-			message: '#^Cannot call method updateValue\(\) on mixed\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/controllers/backend/travel_booking_styles.php
-
-		-
-			message: '#^Cannot cast mixed to string\.$#'
-			identifier: cast.string
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/controllers/backend/travel_booking_styles.php
-
-		-
-			message: '#^Only booleans are allowed in a negated boolean, int\|false given\.$#'
-			identifier: booleanNot.exprNotBoolean
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/controllers/backend/travel_booking_styles.php
-
-		-
-			message: '#^Binary operation "\.\=" between '''' and mixed results in an error\.$#'
-			identifier: assignOp.invalid
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/controllers/backend/travel_bookings.php
-
-		-
-			message: '#^Binary operation "\.\=" between string and mixed results in an error\.$#'
-			identifier: assignOp.invalid
-			count: 5
-			path: addon-travel-core/app/addons/travel_core/controllers/backend/travel_bookings.php
-
-		-
-			message: '#^Only booleans are allowed in &&, array\<string, array\<string, string\>\|\(callable\)\|string\|Tygh\\Addons\\TravelCore\\Contracts\\BookingAdminProviderInterface\|Tygh\\Addons\\TravelCore\\Contracts\\ProviderNormalizerInterface\>\|null given on the left side\.$#'
-			identifier: booleanAnd.leftNotBoolean
-			count: 2
-			path: addon-travel-core/app/addons/travel_core/controllers/backend/travel_bookings.php
-
-		-
-			message: '#^Only booleans are allowed in an if condition, Tygh\\Addons\\TravelCore\\Contracts\\BookingAdminProviderInterface\|null given\.$#'
-			identifier: if.condNotBoolean
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/controllers/backend/travel_bookings.php
-
-		-
-			message: '#^Only booleans are allowed in an if condition, array\<string, mixed\>\|null given\.$#'
-			identifier: if.condNotBoolean
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/controllers/backend/travel_bookings.php
-
-		-
-			message: '#^Binary operation "\.\=" between '''' and mixed results in an error\.$#'
-			identifier: assignOp.invalid
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/controllers/backend/travel_feature_mappings.php
-
-		-
-			message: '#^Binary operation "\.\=" between mixed and mixed results in an error\.$#'
-			identifier: assignOp.invalid
-			count: 3
-			path: addon-travel-core/app/addons/travel_core/controllers/backend/travel_feature_mappings.php
-
-		-
-			message: '#^Binary operation "\.\=" between string and mixed results in an error\.$#'
-			identifier: assignOp.invalid
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/controllers/backend/travel_feature_mappings.php
-
-		-
 			message: '#^Cannot call method assign\(\) on mixed\.$#'
 			identifier: method.nonObject
 			count: 1
@@ -7378,18 +6889,6 @@ parameters:
 			path: addon-travel-core/app/addons/travel_core/controllers/backend/travel_feature_mappings.php
 
 		-
-			message: '#^Parameter \#1 \$condition of method Tygh\\Addons\\TravelCore\\Contracts\\FeatureMapRepositoryInterface\:\:getPaginatedMappings\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 2
-			path: addon-travel-core/app/addons/travel_core/controllers/backend/travel_feature_mappings.php
-
-		-
-			message: '#^Parameter \#1 \$condition of method Tygh\\Addons\\TravelCore\\Contracts\\FeatureMapRepositoryInterface\:\:getPaginatedUnmapped\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/controllers/backend/travel_feature_mappings.php
-
-		-
 			message: '#^Parameter \#1 \$langCode of method Tygh\\Addons\\TravelCore\\Contracts\\FeatureMapRepositoryInterface\:\:findAllCsCartFeatures\(\) expects string, mixed given\.$#'
 			identifier: argument.type
 			count: 1
@@ -7400,78 +6899,6 @@ parameters:
 			identifier: argument.type
 			count: 2
 			path: addon-travel-core/app/addons/travel_core/controllers/backend/travel_feature_mappings.php
-
-		-
-			message: '#^Argument of an invalid type mixed supplied for foreach, only iterables are supported\.$#'
-			identifier: foreach.nonIterable
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/controllers/backend/travel_tools.php
-
-		-
-			message: '#^Binary operation "\." between ''BNR date\: '' and mixed results in an error\.$#'
-			identifier: binaryOp.invalid
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/controllers/backend/travel_tools.php
-
-		-
-			message: '#^Binary operation "\." between mixed and ''/'' results in an error\.$#'
-			identifier: binaryOp.invalid
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/controllers/backend/travel_tools.php
-
-		-
-			message: '#^Binary operation "\." between mixed and ''\: '' results in an error\.$#'
-			identifier: binaryOp.invalid
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/controllers/backend/travel_tools.php
-
-		-
-			message: '#^Binary operation "\." between mixed and string results in an error\.$#'
-			identifier: binaryOp.invalid
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/controllers/backend/travel_tools.php
-
-		-
-			message: '#^Binary operation "\." between non\-falsy\-string and mixed results in an error\.$#'
-			identifier: binaryOp.invalid
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/controllers/backend/travel_tools.php
-
-		-
-			message: '#^Cannot access offset ''view'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 3
-			path: addon-travel-core/app/addons/travel_core/controllers/backend/travel_tools.php
-
-		-
-			message: '#^Cannot call method assign\(\) on mixed\.$#'
-			identifier: method.nonObject
-			count: 3
-			path: addon-travel-core/app/addons/travel_core/controllers/backend/travel_tools.php
-
-		-
-			message: '#^Cannot cast mixed to float\.$#'
-			identifier: cast.double
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/controllers/backend/travel_tools.php
-
-		-
-			message: '#^Part \$coeff \(mixed\) of encapsed string cannot be cast to string\.$#'
-			identifier: encapsedStringPart.nonString
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/controllers/backend/travel_tools.php
-
-		-
-			message: '#^Part \$cron_key \(mixed\) of encapsed string cannot be cast to string\.$#'
-			identifier: encapsedStringPart.nonString
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/controllers/backend/travel_tools.php
-
-		-
-			message: '#^Part \$cur \(mixed\) of encapsed string cannot be cast to string\.$#'
-			identifier: encapsedStringPart.nonString
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/controllers/backend/travel_tools.php
 
 		-
 			message: '#^Binary operation "\." between non\-falsy\-string and mixed results in an error\.$#'
@@ -7488,36 +6915,18 @@ parameters:
 		-
 			message: '#^Cannot cast mixed to int\.$#'
 			identifier: cast.int
-			count: 4
+			count: 3
 			path: addon-travel-core/app/addons/travel_core/controllers/frontend/travel_booking.php
 
 		-
 			message: '#^Cannot cast mixed to string\.$#'
 			identifier: cast.string
-			count: 3
-			path: addon-travel-core/app/addons/travel_core/controllers/frontend/travel_booking.php
-
-		-
-			message: '#^Only booleans are allowed in &&, string given on the left side\.$#'
-			identifier: booleanAnd.leftNotBoolean
 			count: 1
 			path: addon-travel-core/app/addons/travel_core/controllers/frontend/travel_booking.php
 
 		-
 			message: '#^Only booleans are allowed in an if condition, string given\.$#'
 			identifier: if.condNotBoolean
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/controllers/frontend/travel_booking.php
-
-		-
-			message: '#^Parameter \#1 \$haystack of function str_starts_with expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 2
-			path: addon-travel-core/app/addons/travel_core/controllers/frontend/travel_booking.php
-
-		-
-			message: '#^Parameter \#1 \$name of static method Tygh\\Addons\\TravelCore\\Services\\TravelProviderRegistry\:\:get\(\) expects string, mixed given\.$#'
-			identifier: argument.type
 			count: 1
 			path: addon-travel-core/app/addons/travel_core/controllers/frontend/travel_booking.php
 
@@ -7538,330 +6947,6 @@ parameters:
 			identifier: argument.type
 			count: 1
 			path: addon-travel-core/app/addons/travel_core/controllers/frontend/travel_cron.php
-
-		-
-			message: '#^Cannot cast mixed to string\.$#'
-			identifier: cast.string
-			count: 2
-			path: addon-travel-core/app/addons/travel_core/hooks/cart_hooks.php
-
-		-
-			message: '#^Binary operation "\." between mixed and ''/js/addons/travel…'' results in an error\.$#'
-			identifier: binaryOp.invalid
-			count: 2
-			path: addon-travel-core/app/addons/travel_core/hooks/cart_hooks.php
-
-		-
-			message: '#^Binary operation "\." between non\-falsy\-string and mixed results in an error\.$#'
-			identifier: binaryOp.invalid
-			count: 2
-			path: addon-travel-core/app/addons/travel_core/hooks/cart_hooks.php
-
-		-
-			message: '#^Call to function is_array\(\) with array\<string, mixed\> will always evaluate to true\.$#'
-			identifier: function.alreadyNarrowedType
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/hooks/cart_hooks.php
-
-		-
-			message: '#^Cannot access an offset on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/hooks/cart_hooks.php
-
-		-
-			message: '#^Cannot access offset ''extra'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/hooks/cart_hooks.php
-
-		-
-			message: '#^Cannot access offset ''rooms_data'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 2
-			path: addon-travel-core/app/addons/travel_core/hooks/cart_hooks.php
-
-		-
-			message: '#^Cannot access offset ''travel_booking'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/hooks/cart_hooks.php
-
-		-
-			message: '#^Cannot access offset ''travel_booking_product_code'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/hooks/cart_hooks.php
-
-		-
-			message: '#^Cannot access offset ''travel_booking_product_id'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/hooks/cart_hooks.php
-
-		-
-			message: '#^Cannot access offset ''travel_booking_scripts'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/hooks/cart_hooks.php
-
-		-
-			message: '#^Cannot access offset ''travel_hotel_schema_json'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/hooks/cart_hooks.php
-
-		-
-			message: '#^Cannot access offset string on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/hooks/cart_hooks.php
-
-		-
-			message: '#^Cannot call method assign\(\) on mixed\.$#'
-			identifier: method.nonObject
-			count: 10
-			path: addon-travel-core/app/addons/travel_core/hooks/cart_hooks.php
-
-		-
-			message: '#^Cannot call method getTemplateVars\(\) on mixed\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/hooks/cart_hooks.php
-
-		-
-			message: '#^Parameter \#1 \$dispatch of function _travel_core_render_debug expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/hooks/cart_hooks.php
-
-		-
-			message: '#^Parameter \#1 \$haystack of function str_starts_with expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/hooks/cart_hooks.php
-
-		-
-			message: '#^Parameter \#1 \$string of function rtrim expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/hooks/cart_hooks.php
-
-		-
-			message: '#^Parameter \#1 \$string of function strlen expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/hooks/cart_hooks.php
-
-		-
-			message: '#^Parameter \#1 \$value of function count expects array\|Countable, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/hooks/cart_hooks.php
-
-		-
-			message: '#^Parameter \#2 \$haystack of function in_array expects array, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/hooks/cart_hooks.php
-
-		-
-			message: '#^Argument of an invalid type mixed supplied for foreach, only iterables are supported\.$#'
-			identifier: foreach.nonIterable
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/hooks/order_hooks.php
-
-		-
-			message: '#^Cannot access offset ''check_in'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/hooks/order_hooks.php
-
-		-
-			message: '#^Cannot access offset ''check_in_formatted'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/hooks/order_hooks.php
-
-		-
-			message: '#^Cannot access offset ''check_out'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/hooks/order_hooks.php
-
-		-
-			message: '#^Cannot access offset ''check_out_formatted'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/hooks/order_hooks.php
-
-		-
-			message: '#^Cannot access offset ''extra'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/hooks/order_hooks.php
-
-		-
-			message: '#^Cannot access offset ''guests_data'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/hooks/order_hooks.php
-
-		-
-			message: '#^Cannot access offset ''holder_name'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/hooks/order_hooks.php
-
-		-
-			message: '#^Cannot access offset ''travel_booking'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/hooks/order_hooks.php
-
-		-
-			message: '#^Parameter \#1 \$datetime of function strtotime expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 2
-			path: addon-travel-core/app/addons/travel_core/hooks/order_hooks.php
-
-		-
-			message: '#^Parameter \#2 \$holder_name of static method Tygh\\Addons\\TravelCore\\Services\\GuestDataService\:\:formatGuestsForOrderDisplay\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/hooks/order_hooks.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Cron\\CronRunner\:\:parseArgs\(\) should return array\{string, string, array\<string, string\>\} but returns array\{mixed, mixed, array\<string, string\>\}\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Cron/CronRunner.php
-
-		-
-			message: '#^Parameter \#1 \$haystack of function str_contains expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Cron/CronRunner.php
-
-		-
-			message: '#^Parameter \#1 \$haystack of function str_starts_with expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 2
-			path: addon-travel-core/app/addons/travel_core/src/Cron/CronRunner.php
-
-		-
-			message: '#^Parameter \#1 \$string of function substr expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 2
-			path: addon-travel-core/app/addons/travel_core/src/Cron/CronRunner.php
-
-		-
-			message: '#^Parameter \#2 \$string of function explode expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Cron/CronRunner.php
-
-		-
-			message: '#^Only booleans are allowed in a negated boolean, int\|false given\.$#'
-			identifier: booleanNot.exprNotBoolean
-			count: 2
-			path: addon-travel-core/app/addons/travel_core/src/Dto/Booking/StayDates.php
-
-		-
-			message: '#^Only booleans are allowed in a negated boolean, int\|false given\.$#'
-			identifier: booleanNot.exprNotBoolean
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Helpers/ValidationHelpers.php
-
-		-
-			message: '#^Cannot cast mixed to int\.$#'
-			identifier: cast.int
-			count: 3
-			path: addon-travel-core/app/addons/travel_core/src/Repository/FeatureMapRepository.php
-
-		-
-			message: '#^Binary operation "\." between mixed and '' → '' results in an error\.$#'
-			identifier: binaryOp.invalid
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Services/BookingDisplayService.php
-
-		-
-			message: '#^Binary operation "\." between non\-falsy\-string and mixed results in an error\.$#'
-			identifier: binaryOp.invalid
-			count: 2
-			path: addon-travel-core/app/addons/travel_core/src/Services/BookingDisplayService.php
-
-		-
-			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, list given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Services/BookingDisplayService.php
-
-		-
-			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, list\<mixed\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Services/BookingDisplayService.php
-
-		-
-			message: '#^Cannot access offset ''coefficient'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 2
-			path: addon-travel-core/app/addons/travel_core/src/Services/CurrencyService.php
-
-		-
-			message: '#^Cannot access offset ''price_per_night'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Services/CurrencyService.php
-
-		-
-			message: '#^Cannot access offset ''total_price'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Services/CurrencyService.php
-
-		-
-			message: '#^Cannot access offset string on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 2
-			path: addon-travel-core/app/addons/travel_core/src/Services/CurrencyService.php
-
-		-
-			message: '#^Cannot cast mixed to float\.$#'
-			identifier: cast.double
-			count: 4
-			path: addon-travel-core/app/addons/travel_core/src/Services/CurrencyService.php
-
-		-
-			message: '#^Method Tygh\\Addons\\TravelCore\\Services\\CurrencyService\:\:getDisplayCurrency\(\) should return string but returns mixed\.$#'
-			identifier: return.type
-			count: 2
-			path: addon-travel-core/app/addons/travel_core/src/Services/CurrencyService.php
-
-		-
-			message: '#^Only booleans are allowed in an if condition, int\|false given\.$#'
-			identifier: if.condNotBoolean
-			count: 2
-			path: addon-travel-core/app/addons/travel_core/src/Services/DateHelper.php
-
-		-
-			message: '#^Cannot cast mixed to int\.$#'
-			identifier: cast.int
-			count: 2
-			path: addon-travel-core/app/addons/travel_core/src/Services/FeatureMapper.php
-
-		-
-			message: '#^Only booleans are allowed in a negated boolean, array\<string, mixed\>\|null given\.$#'
-			identifier: booleanNot.exprNotBoolean
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Services/FeatureMapper.php
-
-		-
-			message: '#^Only booleans are allowed in an if condition, array\<string, mixed\>\|null given\.$#'
-			identifier: if.condNotBoolean
-			count: 3
-			path: addon-travel-core/app/addons/travel_core/src/Services/FeatureMapper.php
 
 		-
 			message: '#^Cannot cast mixed to int\.$#'
@@ -7924,33 +7009,9 @@ parameters:
 			path: addon-travel-core/app/addons/travel_core/src/Services/GuestDataNormalizer.php
 
 		-
-			message: '#^Return type \(array\<string, mixed\>\) of method Tygh\\Addons\\TravelCore\\Services\\PriceChangeDetector\:\:analyse\(\) should be covariant with return type \(array\{significant\: bool, direction\: string, old_price\: float, new_price\: float, difference\: float, percent\: float, currency\: string, badge_type\: string, \.\.\.\}\) of method Tygh\\Addons\\TravelCore\\Contracts\\PriceChangeDetectorInterface\:\:analyse\(\)$#'
-			identifier: method.childReturnType
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Services/PriceChangeDetector.php
-
-		-
-			message: '#^Argument of an invalid type mixed supplied for foreach, only iterables are supported\.$#'
-			identifier: foreach.nonIterable
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Services/VariantResolver.php
-
-		-
-			message: '#^Cannot access offset ''variant'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Services/VariantResolver.php
-
-		-
-			message: '#^Cannot access offset ''variant_id'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Services/VariantResolver.php
-
-		-
 			message: '#^Cannot cast mixed to int\.$#'
 			identifier: cast.int
-			count: 10
+			count: 2
 			path: addon-travel-core/app/addons/travel_core/src/Services/VariantResolver.php
 
 		-
@@ -7963,24 +7024,6 @@ parameters:
 			message: '#^Parameter \#1 \$callback of function array_map expects \(callable\(mixed\)\: mixed\)\|null, ''intval'' given\.$#'
 			identifier: argument.type
 			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Services/VariantResolver.php
-
-		-
-			message: '#^Parameter \#1 \$featureType of static method Tygh\\Addons\\TravelCore\\Services\\FeatureMapper\:\:getFeatureId\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Services/VariantResolver.php
-
-		-
-			message: '#^Parameter \#1 \$name of static method Tygh\\Addons\\TravelCore\\Services\\VariantResolver\:\:normalizeName\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/Services/VariantResolver.php
-
-		-
-			message: '#^Parameter \#1 \$string of function trim expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 4
 			path: addon-travel-core/app/addons/travel_core/src/Services/VariantResolver.php
 
 		-
@@ -8072,15 +7115,3 @@ parameters:
 			identifier: argument.type
 			count: 1
 			path: addon-travel-core/app/addons/travel_core/src/ValueObjects/RequestDebugInfo.php
-
-		-
-			message: '#^Only booleans are allowed in &&, int\|false given on the right side\.$#'
-			identifier: booleanAnd.rightNotBoolean
-			count: 1
-			path: addon-travel-core/app/addons/travel_core/src/ValueObjects/RoomType.php
-
-		-
-			message: '#^Only booleans are allowed in an if condition, int\|false given\.$#'
-			identifier: if.condNotBoolean
-			count: 2
-			path: addon-travel-core/app/addons/travel_core/src/ValueObjects/RoomType.php

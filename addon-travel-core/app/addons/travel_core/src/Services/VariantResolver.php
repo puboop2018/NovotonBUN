@@ -6,6 +6,7 @@ namespace Tygh\Addons\TravelCore\Services;
 
 use Tygh\Addons\TravelCore\Contracts\FeatureMapRepositoryInterface;
 use Tygh\Addons\TravelCore\Contracts\VariantResolverInterface;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Traits\CsCartFeatureAssignment;
 
 /**
@@ -46,9 +47,9 @@ class VariantResolver implements VariantResolverInterface
     #[\Override]
     public function ensureVariantExists(array $mapping): int
     {
-        $variantId = (int) ($mapping['cscart_variant_id'] ?? 0);
-        $featureId = (int) ($mapping['cscart_feature_id'] ?? 0);
-        $mapId = (int) ($mapping['map_id'] ?? 0);
+        $variantId = TypeCoerce::toInt($mapping['cscart_variant_id'] ?? 0);
+        $featureId = TypeCoerce::toInt($mapping['cscart_feature_id'] ?? 0);
+        $mapId = TypeCoerce::toInt($mapping['map_id'] ?? 0);
         $variantSource = $mapping['variant_source'] ?? 'auto';
 
         if ($mapId <= 0) {
@@ -58,7 +59,7 @@ class VariantResolver implements VariantResolverInterface
         if ($featureId <= 0) {
             $featureType = $mapping['feature_type'] ?? '';
             if ($featureType !== '') {
-                $featureId = FeatureMapper::getFeatureId($featureType);
+                $featureId = FeatureMapper::getFeatureId(TypeCoerce::toString($featureType));
                 if ($featureId > 0) {
                     $this->repo->updateFeatureId($mapId, $featureId);
                 }
@@ -96,8 +97,8 @@ class VariantResolver implements VariantResolverInterface
         }
 
         // Auto-create the variant
-        $nameEn = trim($mapping['display_name_en'] ?? '');
-        $nameRo = trim($mapping['display_name_ro'] ?? '');
+        $nameEn = trim(TypeCoerce::toString($mapping['display_name_en'] ?? ''));
+        $nameRo = trim(TypeCoerce::toString($mapping['display_name_ro'] ?? ''));
         if ($nameEn === '') {
             return 0;
         }
@@ -124,8 +125,8 @@ class VariantResolver implements VariantResolverInterface
     #[\Override]
     public function findVariantByName(array $mapping, int $featureId): int
     {
-        $nameEn = trim($mapping['display_name_en'] ?? '');
-        $nameRo = trim($mapping['display_name_ro'] ?? '');
+        $nameEn = trim(TypeCoerce::toString($mapping['display_name_en'] ?? ''));
+        $nameRo = trim(TypeCoerce::toString($mapping['display_name_ro'] ?? ''));
 
         if ($featureId <= 0 || $nameEn === '') {
             return 0;
@@ -148,8 +149,8 @@ class VariantResolver implements VariantResolverInterface
                 $lang,
                 $name,
             );
-            if ((int) $variantId > 0) {
-                return (int) $variantId;
+            if (TypeCoerce::toInt($variantId) > 0) {
+                return TypeCoerce::toInt($variantId);
             }
 
             // Pass 2: Case-insensitive match
@@ -163,8 +164,8 @@ class VariantResolver implements VariantResolverInterface
                 $lang,
                 $name,
             );
-            if ((int) $variantId > 0) {
-                return (int) $variantId;
+            if (TypeCoerce::toInt($variantId) > 0) {
+                return TypeCoerce::toInt($variantId);
             }
 
             // Pass 3: Normalized match — strips punctuation, collapses whitespace
@@ -177,9 +178,10 @@ class VariantResolver implements VariantResolverInterface
                 $featureId,
                 $lang,
             );
-            foreach ($rows as $row) {
-                if (self::normalizeName($row['variant']) === $normalized) {
-                    return (int) $row['variant_id'];
+            foreach (TypeCoerce::toList($rows) as $row) {
+                $rowArr = TypeCoerce::toStringMap($row);
+                if (self::normalizeName(TypeCoerce::toString($rowArr['variant'] ?? '')) === $normalized) {
+                    return TypeCoerce::toInt($rowArr['variant_id'] ?? 0);
                 }
             }
         }

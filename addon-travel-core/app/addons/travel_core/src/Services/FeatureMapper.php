@@ -6,6 +6,7 @@ namespace Tygh\Addons\TravelCore\Services;
 
 use Tygh\Addons\TravelCore\Contracts\FeatureMapperInterface;
 use Tygh\Addons\TravelCore\Contracts\FeatureMapRepositoryInterface;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Repository\FeatureMapRepository;
 
 /**
@@ -113,9 +114,9 @@ class FeatureMapper implements FeatureMapperInterface
 
         $result = self::getRepository()->findByAlias($apiSource, $featureType, $apiValue);
 
-        if ($result) {
+        if ($result !== null && $result !== []) {
             // Batch last_used_at updates — collect map_ids and flush at clearCache()
-            self::$usedMapIds[(int) $result['map_id']] = true;
+            self::$usedMapIds[TypeCoerce::toInt($result['map_id'])] = true;
         }
 
         self::$cache[$cacheKey] = $result;
@@ -139,7 +140,7 @@ class FeatureMapper implements FeatureMapperInterface
     {
         foreach (self::FACILITY_TYPES as $type) {
             $result = self::resolve($apiSource, $type, $apiValue);
-            if ($result) {
+            if ($result !== null && $result !== []) {
                 return $result;
             }
         }
@@ -166,7 +167,7 @@ class FeatureMapper implements FeatureMapperInterface
     public static function resolveWithVariant(string $apiSource, string $featureType, string $apiValue): ?array
     {
         $mapping = self::resolve($apiSource, $featureType, $apiValue);
-        if (!$mapping) {
+        if ($mapping === null || $mapping === []) {
             return null;
         }
 
@@ -187,7 +188,7 @@ class FeatureMapper implements FeatureMapperInterface
     {
         foreach (self::FACILITY_TYPES as $type) {
             $result = self::resolveWithVariant($apiSource, $type, $apiValue);
-            if ($result) {
+            if ($result !== null && $result !== []) {
                 return $result;
             }
         }
@@ -343,7 +344,7 @@ class FeatureMapper implements FeatureMapperInterface
         if ($mapping === null) {
             return null;
         }
-        $vid = (int) ($mapping['cscart_variant_id'] ?? 0);
+        $vid = TypeCoerce::toInt($mapping['cscart_variant_id'] ?? 0);
         return $vid > 0 ? $vid : null;
     }
 

@@ -18,6 +18,8 @@ declare(strict_types=1);
  * @since 1.0.0
  */
 
+use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Services\TravelProviderRegistry;
 
 if (!defined('BOOTSTRAP')) {
@@ -32,12 +34,12 @@ $product_id = $_REQUEST['product_id'] ?? '';
 // 1. Explicit provider parameter (most reliable)
 $provider = null;
 if (!empty($_REQUEST['provider'])) {
-    $provider = TravelProviderRegistry::get($_REQUEST['provider']);
+    $provider = TravelProviderRegistry::get(RequestCoerce::string($_REQUEST, 'provider'));
 }
 
 // 2. Resolve by product code prefix (NVT* → novoton, SPH* → sphinx)
 if ($provider === null && !empty($product_id)) {
-    $productCode = db_get_field('SELECT product_code FROM ?:products WHERE product_id = ?i', (int) $product_id);
+    $productCode = TypeCoerce::toString(db_get_field('SELECT product_code FROM ?:products WHERE product_id = ?i', TypeCoerce::toInt($product_id)));
     if ($productCode !== '') {
         if (str_starts_with($productCode, 'NVT')) {
             $provider = TravelProviderRegistry::get('novoton');
@@ -50,7 +52,7 @@ if ($provider === null && !empty($product_id)) {
 // 3. Resolve by bare hotel_id via the registered HotelProductProvider(s).
 // No provider-specific SQL here — each provider answers ownsHotelId() for itself.
 if ($provider === null && !empty($hotel_id)) {
-    $provider = TravelProviderRegistry::resolveHotelIdOwner((string) $hotel_id);
+    $provider = TravelProviderRegistry::resolveHotelIdOwner(TypeCoerce::toString($hotel_id));
 }
 
 // 4. Single-provider fallback

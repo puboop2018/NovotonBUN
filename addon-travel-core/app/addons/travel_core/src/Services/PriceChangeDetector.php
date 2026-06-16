@@ -41,7 +41,19 @@ class PriceChangeDetector implements PriceChangeDetectorInterface
      * Analyse a price change and return structured display data.
      *
      * @param array<string, mixed> $bookingMeta
-     * @return array<string, mixed>
+     * @return array{
+     *   significant: bool,
+     *   direction: string,
+     *   old_price: float,
+     *   new_price: float,
+     *   difference: float,
+     *   percent: float,
+     *   currency: string,
+     *   badge_type: string,
+     *   context: string,
+     *   booking_meta: array<string, mixed>,
+     *   timestamp: int
+     * }
      */
     #[\Override]
     public function analyse(

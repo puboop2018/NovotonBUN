@@ -102,7 +102,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $booking_id = RequestCoerce::int($_REQUEST, 'booking_id');
         if ($booking_id > 0) {
             $booking = $bookingRepo->getProviderInfo($booking_id);
-            if ($booking) {
+            if (!empty($booking)) {
                 $bookingProvider = TypeCoerce::toString($booking['provider'] ?? '');
                 $providerInfo = TravelProviderRegistry::get($bookingProvider);
                 try {
@@ -119,7 +119,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     } else {
                         // Fallback: try BookingAdminProvider directly
                         $adminProvider = TravelProviderRegistry::getBookingAdminProvider($bookingProvider);
-                        if ($adminProvider) {
+                        if ($adminProvider !== null) {
                             $pbId = TypeCoerce::toString($booking['provider_booking_id'] ?? $booking_id);
                             $result = $adminProvider->checkStatus($pbId);
                             if (!empty($result['changed'])) {

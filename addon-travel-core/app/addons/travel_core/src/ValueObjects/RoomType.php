@@ -114,7 +114,7 @@ final class RoomType
             return $instance->displayName();
         }
 
-        if (preg_match('/^(\d+)-BR$/i', strtoupper(trim($roomTypeCode)), $m)) {
+        if (preg_match('/^(\d+)-BR$/i', strtoupper(trim($roomTypeCode)), $m) === 1) {
             $bedrooms = (int)$m[1];
             return $bedrooms === 1
                 ? self::BEDROOM_PREFIX_SINGULAR
@@ -138,10 +138,10 @@ final class RoomType
         $roomId = self::normalizeRoomCode($roomId);
 
         $formatted_pattern = '/^(Camera|Apartament|Studio|Suita|Vila|Bungalou|Maisoneta|Penthouse|Junior Suita)\s.*\(.+\)$/i';
-        if (!empty($roomType) && preg_match($formatted_pattern, $roomType)) {
+        if (!empty($roomType) && preg_match($formatted_pattern, $roomType) === 1) {
             return $roomType;
         }
-        if (preg_match($formatted_pattern, $roomId)) {
+        if (preg_match($formatted_pattern, $roomId) === 1) {
             return $roomId;
         }
 

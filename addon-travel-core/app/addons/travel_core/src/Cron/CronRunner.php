@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\TravelCore\Cron;
 
 use Tygh\Addons\TravelCore\Contracts\CronDispatcherInterface;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 /**
  * Shared cron entry-point helper.
@@ -38,8 +39,8 @@ class CronRunner
     {
         global $argv;
 
-        $accessKey = $_GET['access_key'] ?? '';
-        $mode = $_GET['mode'] ?? '';
+        $accessKey = TypeCoerce::toString($_GET['access_key'] ?? '');
+        $mode = TypeCoerce::toString($_GET['mode'] ?? '');
         $params = [];
 
         if (isset($argv) && is_array($argv)) {
@@ -47,6 +48,7 @@ class CronRunner
                 if ($i === 0) {
                     continue;
                 }
+                $arg = TypeCoerce::toString($arg);
                 if (str_starts_with($arg, 'access_key=')) {
                     $accessKey = substr($arg, strlen('access_key='));
                 } elseif (str_starts_with($arg, 'mode=')) {

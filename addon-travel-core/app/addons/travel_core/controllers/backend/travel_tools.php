@@ -11,13 +11,15 @@ declare(strict_types=1);
  */
 
 use Tygh\Registry;
+use Tygh\Tygh;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($mode === 'run_exchange_rates') {
-        $commission = (float) Registry::get('addons.travel_core.currency_risk_commission');
+        $commission = TypeCoerce::toFloat(Registry::get('addons.travel_core.currency_risk_commission'));
 
         $result = fn_travel_core_update_exchange_rates($commission, true);
 
@@ -28,17 +30,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!empty($result['success'])) {
             $parts = [];
             if (!empty($result['publishing_date'])) {
-                $parts[] = 'BNR date: ' . $result['publishing_date'];
+                $parts[] = 'BNR date: ' . TypeCoerce::toString($result['publishing_date']);
             }
             if (!empty($result['coefficients'])) {
-                foreach ($result['coefficients'] as $cur => $coeff) {
-                    $parts[] = "{$cur}: {$coeff}";
+                foreach (TypeCoerce::toStringMap($result['coefficients']) as $cur => $coeff) {
+                    $coeffStr = TypeCoerce::toString($coeff);
+                    $parts[] = "{$cur}: {$coeffStr}";
                 }
             }
             $detail = !empty($parts) ? ' (' . implode(', ', $parts) . ')' : '';
-            fn_set_notification('N', __('notice'), __('travel_core.exchange_rates_updated') . $detail);
+            fn_set_notification('N', __('notice'), TypeCoerce::toString(__('travel_core.exchange_rates_updated')) . $detail);
         } else {
-            fn_set_notification('E', __('error'), __('travel_core.exchange_rates_failed') . ': ' . ($result['message'] ?? 'Unknown error'));
+            fn_set_notification('E', __('error'), TypeCoerce::toString(__('travel_core.exchange_rates_failed')) . ': ' . TypeCoerce::toString($result['message'] ?? 'Unknown error'));
         }
 
         return [CONTROLLER_STATUS_REDIRECT, 'travel_tools.manage'];
@@ -46,8 +49,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 if ($mode === 'manage') {
-    $cron_key = Registry::get('addons.travel_core.cron_access_key');
-    $base_url = Registry::get('config.http_location') . '/';
+    $cron_key = TypeCoerce::toString(Registry::get('addons.travel_core.cron_access_key'));
+    $base_url = TypeCoerce::toString(Registry::get('config.http_location')) . '/';
 
     $cron_jobs = [];
 
@@ -62,7 +65,10 @@ if ($mode === 'manage') {
         'run_action'  => 'run_exchange_rates',
     ];
 
-    Tygh::$app['view']->assign('cron_jobs', $cron_jobs);
-    Tygh::$app['view']->assign('cron_key', $cron_key);
-    Tygh::$app['view']->assign('base_url', $base_url);
+    $view = Tygh::$app['view'];
+    if ($view instanceof \Smarty) {
+        $view->assign('cron_jobs', $cron_jobs);
+        $view->assign('cron_key', $cron_key);
+        $view->assign('base_url', $base_url);
+    }
 }

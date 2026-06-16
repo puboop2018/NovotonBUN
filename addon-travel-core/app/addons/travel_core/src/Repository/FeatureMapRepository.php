@@ -80,7 +80,7 @@ class FeatureMapRepository implements FeatureMapRepositoryInterface
     #[\Override]
     public function insertMapping(string $featureType, string $canonicalCode, string $nameEn, string $nameRo, ?int $featureId): int
     {
-        return (int) db_query(
+        return TypeCoerce::toInt(db_query(
             "INSERT IGNORE INTO ?:travel_feature_map
              (feature_type, canonical_code, display_name_en, display_name_ro,
               cscart_feature_id, mapping_source, status)
@@ -90,17 +90,17 @@ class FeatureMapRepository implements FeatureMapRepositoryInterface
             $nameEn,
             $nameRo,
             $featureId ?: null,
-        );
+        ));
     }
 
     #[\Override]
     public function findMapId(string $featureType, string $canonicalCode): int
     {
-        return (int) db_get_field(
+        return TypeCoerce::toInt(db_get_field(
             'SELECT map_id FROM ?:travel_feature_map WHERE feature_type = ?s AND canonical_code = ?s',
             $featureType,
             $canonicalCode,
-        );
+        ));
     }
 
     #[\Override]
@@ -403,10 +403,10 @@ class FeatureMapRepository implements FeatureMapRepositoryInterface
     #[\Override]
     public function createFeatureVariant(int $featureId, int $position = 0): int
     {
-        return (int) db_query(
+        return TypeCoerce::toInt(db_query(
             'INSERT INTO ?:product_feature_variants ?e',
             ['feature_id' => $featureId, 'position' => $position],
-        );
+        ));
     }
 
     #[\Override]
