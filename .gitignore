@@ -40,6 +40,11 @@ phpcs.cache
 .phpunit.cache.integration/
 .php-cs-fixer.cache
 
+# PHPStan baseline-paydown working configs (derived from phpstan.neon; not committed)
+/phpstan-nobaseline.neon
+/phpstan-agent*.neon
+/phpstan-*tmp*.neon
+
 # Legacy pre-split monolithic addon (archived — use addon-* directories instead)
 NovotonBeforeSplit/
 
