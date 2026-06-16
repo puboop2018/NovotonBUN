@@ -58,7 +58,7 @@ class PricingApiClient extends ApiClientBase implements PricingApiClientInterfac
     {
         $ages = [];
         foreach (TypeCoerce::toList($children) as $index => $age) {
-            $ages[(string) $index] = $age;
+            $ages['age_' . $index] = $age;
         }
         return $ages;
     }
@@ -253,7 +253,7 @@ class PricingApiClient extends ApiClientBase implements PricingApiClientInterfac
         $xml = $this->buildRoomPriceXml($params);
         $this->lastRequest = $xml;
 
-        $response = $this->callApi(Constants::API_FUNCTION_ROOM_PRICE, $xml, $params['lang'] ?? 'UK');
+        $response = $this->callApi(Constants::API_FUNCTION_ROOM_PRICE, $xml, TypeCoerce::toString($params['lang'] ?? 'UK'));
 
         try {
             $result = $this->xmlParser->parse($response);
@@ -279,17 +279,17 @@ class PricingApiClient extends ApiClientBase implements PricingApiClientInterfac
     #[\Override]
     public function getRoomPriceByResort(array $params): \SimpleXMLElement|false
     {
-        $resort = $params['resort'] ?? '';
-        $checkIn = $params['check_in'] ?? '';
-        $checkOut = $params['check_out'] ?? '';
-        $adultsCount = (int) ($params['adults'] ?? 2);
+        $resort = TypeCoerce::toString($params['resort'] ?? '');
+        $checkIn = TypeCoerce::toString($params['check_in'] ?? '');
+        $checkOut = TypeCoerce::toString($params['check_out'] ?? '');
+        $adultsCount = TypeCoerce::toInt($params['adults'] ?? 2);
         if ($adultsCount < 1) {
             $adultsCount = 2;
         }
-        $boardId = $params['board_id'] ?? '';
+        $boardId = TypeCoerce::toString($params['board_id'] ?? '');
 
         $childrenXml = !empty($params['children']) && is_array($params['children'])
-            ? $this->buildChildrenAgesXml($params['children'])
+            ? $this->buildChildrenAgesXml($this->childrenAgesArg($params['children']))
             : '';
 
         // Match the exact Novoton API room_price request format.
@@ -323,7 +323,7 @@ class PricingApiClient extends ApiClientBase implements PricingApiClientInterfac
             'adults' => $adultsCount,
         ];
 
-        $response = $this->callApi(Constants::API_FUNCTION_ROOM_PRICE, $xml, $params['lang'] ?? 'UK');
+        $response = $this->callApi(Constants::API_FUNCTION_ROOM_PRICE, $xml, TypeCoerce::toString($params['lang'] ?? 'UK'));
 
         // Resort-based responses return multiple <room_price> siblings without
         // a wrapper root element (not valid XML).  SimpleXML would only parse
@@ -376,17 +376,17 @@ class PricingApiClient extends ApiClientBase implements PricingApiClientInterfac
     #[\Override]
     public function getRoomPriceByResortRaw(array $params): string
     {
-        $resort = $params['resort'] ?? '';
-        $checkIn = $params['check_in'] ?? '';
-        $checkOut = $params['check_out'] ?? '';
-        $adultsCount = (int) ($params['adults'] ?? 2);
+        $resort = TypeCoerce::toString($params['resort'] ?? '');
+        $checkIn = TypeCoerce::toString($params['check_in'] ?? '');
+        $checkOut = TypeCoerce::toString($params['check_out'] ?? '');
+        $adultsCount = TypeCoerce::toInt($params['adults'] ?? 2);
         if ($adultsCount < 1) {
             $adultsCount = 2;
         }
-        $boardId = $params['board_id'] ?? '';
+        $boardId = TypeCoerce::toString($params['board_id'] ?? '');
 
         $childrenXml = !empty($params['children']) && is_array($params['children'])
-            ? $this->buildChildrenAgesXml($params['children'])
+            ? $this->buildChildrenAgesXml($this->childrenAgesArg($params['children']))
             : '';
 
         // Same raw embedding as getRoomPriceByResort() — see comment there.
@@ -408,7 +408,7 @@ class PricingApiClient extends ApiClientBase implements PricingApiClientInterfac
         </room_price>';
 
         $this->lastRequest = $xml;
-        return $this->callApi(Constants::API_FUNCTION_ROOM_PRICE, $xml, $params['lang'] ?? 'UK');
+        return $this->callApi(Constants::API_FUNCTION_ROOM_PRICE, $xml, TypeCoerce::toString($params['lang'] ?? 'UK'));
     }
 
     /**
@@ -433,7 +433,7 @@ class PricingApiClient extends ApiClientBase implements PricingApiClientInterfac
     #[\Override]
     public function getSpecialOffers(string $hotelId, string $packageName = '', string $lang = 'UK'): \SimpleXMLElement
     {
-        $packageXml = $packageName ? '<PackageName>' . htmlspecialchars($packageName) . '</PackageName>' : '';
+        $packageXml = $packageName !== '' && $packageName !== '0' ? '<PackageName>' . htmlspecialchars($packageName) . '</PackageName>' : '';
 
         $xml = $this->xmlHeader() . '
         <spo>

@@ -9,6 +9,7 @@ declare(strict_types=1);
  * @since 3.0.0
  */
 
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Registry;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
@@ -22,7 +23,7 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 function fn_novoton_holidays_uninstall(): bool
 {
     // Remove Novoton aliases from shared feature mapping (table may not exist if travel_core already uninstalled)
-    $tablePrefix = Registry::get('config.table_prefix');
+    $tablePrefix = TypeCoerce::toString(Registry::get('config.table_prefix'));
     $aliasTableExists = db_get_field(
         "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?s",
         $tablePrefix . 'travel_api_alias'
@@ -54,19 +55,19 @@ function fn_novoton_holidays_uninstall(): bool
     db_query("DELETE FROM ?:template_emails WHERE addon = ?s", 'novoton_holidays');
     
     // OPTIONAL: Delete products that were created by the addon
-    $addon_settings = Registry::get('addons.novoton_holidays') ?? [];
+    $addon_settings = TypeCoerce::toStringMap(Registry::get('addons.novoton_holidays'));
     $delete_products = ($addon_settings['delete_products_on_uninstall'] ?? 'N') === 'Y';
     
     if ($delete_products) {
-        $addon_product_ids = db_get_fields(
+        $addon_product_ids = TypeCoerce::toList(db_get_fields(
             "SELECT product_id FROM ?:novoton_hotels WHERE product_id > 0"
-        );
-        
+        ));
+
         if (!empty($addon_product_ids)) {
             foreach ($addon_product_ids as $product_id) {
                 fn_delete_product($product_id);
             }
-            
+
             fn_log_event('general', 'runtime', [
                 'message' => 'Novoton uninstall: Deleted ' . count($addon_product_ids) . ' addon-created products'
             ]);
@@ -77,19 +78,19 @@ function fn_novoton_holidays_uninstall(): bool
     db_query("DELETE FROM ?:language_values WHERE name LIKE 'novoton_holidays.%'");
 
     // Remove novoton_reports directory and its contents
-    $reports_dir = fn_get_files_dir_path() . 'novoton_reports/';
+    $reports_dir = TypeCoerce::toString(fn_get_files_dir_path()) . 'novoton_reports/';
     if (is_dir($reports_dir)) {
         fn_rm($reports_dir);
     }
 
     // Remove novoton_logs directory and its contents
-    $logs_dir = fn_get_files_dir_path() . 'novoton_logs/';
+    $logs_dir = TypeCoerce::toString(fn_get_files_dir_path()) . 'novoton_logs/';
     if (is_dir($logs_dir)) {
         fn_rm($logs_dir);
     }
 
     // Remove API file cache directory (var/cache/novoton/)
-    $cache_dir = Registry::get('config.dir.root') . '/var/cache/novoton/';
+    $cache_dir = TypeCoerce::toString(Registry::get('config.dir.root')) . '/var/cache/novoton/';
     if (is_dir($cache_dir)) {
         fn_rm($cache_dir);
     }
@@ -123,13 +124,13 @@ function fn_novoton_holidays_fix_tab_name(?int $tab_id = null): bool
     }
     
     if ($tab_id) {
-        $languages = db_get_array("SELECT lang_code FROM ?:languages WHERE status = 'A'");
+        $languages = TypeCoerce::toRowList(db_get_array("SELECT lang_code FROM ?:languages WHERE status = 'A'"));
         foreach ($languages as $lang) {
             $exists = db_get_field(
                 "SELECT tab_id FROM ?:product_tabs_descriptions WHERE tab_id = ?i AND lang_code = ?s",
                 $tab_id, $lang['lang_code']
             );
-            
+
             if ($exists) {
                 db_query(
                     "UPDATE ?:product_tabs_descriptions SET name = 'Hotel Prices' WHERE tab_id = ?i AND lang_code = ?s",
@@ -142,7 +143,7 @@ function fn_novoton_holidays_fix_tab_name(?int $tab_id = null): bool
                 );
             }
         }
-        
+
         return true;
     }
     
@@ -161,11 +162,11 @@ function fn_novoton_holidays_post_install(): bool
     $tab_id = db_get_field("SELECT tab_id FROM ?:product_tabs WHERE addon = ?s", 'novoton_holidays');
     
     if ($tab_id) {
-        $languages = db_get_array("SELECT lang_code FROM ?:languages WHERE status = 'A'");
-        
+        $languages = TypeCoerce::toRowList(db_get_array("SELECT lang_code FROM ?:languages WHERE status = 'A'"));
+
         foreach ($languages as $lang) {
             db_query(
-                "INSERT INTO ?:product_tabs_descriptions (tab_id, lang_code, name) 
+                "INSERT INTO ?:product_tabs_descriptions (tab_id, lang_code, name)
                  VALUES (?i, ?s, 'Hotel Prices')
                  ON DUPLICATE KEY UPDATE name = 'Hotel Prices'",
                 $tab_id, $lang['lang_code']
@@ -183,7 +184,7 @@ function fn_novoton_holidays_post_install(): bool
     fn_novoton_holidays_seed_travel_aliases();
 
     // Create novoton_reports directory for report storage
-    $reports_dir = fn_get_files_dir_path() . 'novoton_reports/';
+    $reports_dir = TypeCoerce::toString(fn_get_files_dir_path()) . 'novoton_reports/';
     if (!is_dir($reports_dir)) {
         fn_mkdir($reports_dir);
     }
@@ -247,7 +248,7 @@ function fn_novoton_holidays_seed_travel_aliases(): void
     // Guard: travel_feature_map table may not exist if travel_core isn't installed yet
     $tableExists = db_get_field(
         "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?s",
-        Registry::get('config.table_prefix') . 'travel_feature_map'
+        TypeCoerce::toString(Registry::get('config.table_prefix')) . 'travel_feature_map'
     );
     if (!$tableExists) {
         fn_log_event('general', 'runtime', [
@@ -275,13 +276,13 @@ function fn_novoton_holidays_seed_travel_aliases(): void
 
     // Batch-load canonical_code → map_id per feature type (4 queries instead of ~43)
     $seedAliasGroup = static function (string $featureType, array $aliases, string $matchType = 'exact') use ($featureMapper): void {
-        $allMaps = db_get_hash_single_array(
+        $allMaps = TypeCoerce::toStringMap(db_get_hash_single_array(
             "SELECT canonical_code, map_id FROM ?:travel_feature_map WHERE feature_type = ?s",
             ['canonical_code', 'map_id'],
             $featureType
-        );
+        ));
         foreach ($aliases as $apiValue => $canonicalCode) {
-            $mapId = (int) ($allMaps[$canonicalCode] ?? 0);
+            $mapId = TypeCoerce::toInt($allMaps[TypeCoerce::toString($canonicalCode)] ?? 0);
             if ($mapId > 0) {
                 $featureMapper::addAlias('novoton', (string) $apiValue, $mapId, $matchType);
             }
@@ -359,7 +360,7 @@ function fn_novoton_holidays_seed_travel_aliases(): void
  */
 function fn_novoton_holidays_setup_db(): void
 {
-    $table_prefix = Registry::get('config.table_prefix');
+    $table_prefix = TypeCoerce::toString(Registry::get('config.table_prefix'));
     $resolve = function (string $table) use ($table_prefix): string {
         return str_replace('?:', $table_prefix, $table);
     };
@@ -470,15 +471,15 @@ function fn_novoton_holidays_setup_db(): void
     // ── Feature type rename: star_rating → property_rating, board → meals ──
     // Updates existing data in hotel_feature_mappings and addon settings
     $mappingsTable = $resolve('?:hotel_feature_mappings');
-    $hasOldStarRating = (int) db_get_field(
+    $hasOldStarRating = TypeCoerce::toInt(db_get_field(
         "SELECT COUNT(*) FROM ?:hotel_feature_mappings WHERE feature_type = 'star_rating'"
-    );
+    ));
     if ($hasOldStarRating > 0) {
         @db_query("UPDATE ?:hotel_feature_mappings SET feature_type = 'property_rating' WHERE feature_type = 'star_rating'");
     }
-    $hasOldBoard = (int) db_get_field(
+    $hasOldBoard = TypeCoerce::toInt(db_get_field(
         "SELECT COUNT(*) FROM ?:hotel_feature_mappings WHERE feature_type = 'board'"
-    );
+    ));
     if ($hasOldBoard > 0) {
         @db_query("UPDATE ?:hotel_feature_mappings SET feature_type = 'meals' WHERE feature_type = 'board'");
     }
@@ -513,13 +514,13 @@ function fn_novoton_holidays_setup_db(): void
     // Allows each facility to map directly to a CS-Cart feature type (hotel_facility,
     // room_facility, travel_group, beach_access, etc.) instead of just hotel/room.
     $facTable = $resolve('?:novoton_facilities');
-    $colType = db_get_field(
+    $colType = TypeCoerce::toString(db_get_field(
         "SELECT COLUMN_TYPE FROM INFORMATION_SCHEMA.COLUMNS
          WHERE TABLE_SCHEMA = DATABASE()
          AND TABLE_NAME = ?s AND COLUMN_NAME = 'facility_type'",
         $facTable
-    );
-    if ($colType && str_contains(strtolower($colType), strtolower('enum'))) {
+    ));
+    if ($colType !== '' && str_contains(strtolower($colType), strtolower('enum'))) {
         @db_query("ALTER TABLE ?:novoton_facilities MODIFY COLUMN `facility_type` varchar(30) NOT NULL DEFAULT 'hotel_facility' COMMENT 'CS-Cart feature type: hotel_facility, room_facility, travel_group, beach_access, etc.'");
         // Convert legacy enum values to feature type constants
         @db_query("UPDATE ?:novoton_facilities SET facility_type = 'hotel_facility' WHERE facility_type = 'hotel'");
@@ -529,13 +530,13 @@ function fn_novoton_holidays_setup_db(): void
     // ── Cache table migration: TIMESTAMP → INT UNSIGNED for expires_at/created_at ──
     // Aligns with sphinx_cache (INT unix timestamp) for consistency and performance
     $cacheTable = $resolve('?:novoton_cache');
-    $cacheExpiresType = db_get_field(
+    $cacheExpiresType = TypeCoerce::toString(db_get_field(
         "SELECT DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS
          WHERE TABLE_SCHEMA = DATABASE()
          AND TABLE_NAME = ?s AND COLUMN_NAME = 'expires_at'",
         $cacheTable
-    );
-    if ($cacheExpiresType && strtolower($cacheExpiresType) === 'timestamp') {
+    ));
+    if ($cacheExpiresType !== '' && strtolower($cacheExpiresType) === 'timestamp') {
         // Convert existing TIMESTAMP values to unix timestamps, then change column type
         @db_query("ALTER TABLE ?:novoton_cache ADD COLUMN `expires_at_new` INT UNSIGNED NOT NULL DEFAULT 0 AFTER `expires_at`");
         @db_query("UPDATE ?:novoton_cache SET `expires_at_new` = UNIX_TIMESTAMP(`expires_at`)");
@@ -646,7 +647,7 @@ function fn_novoton_holidays_create_theme_presets(): void
  */
 function fn_novoton_holidays_remove_theme_presets(): void
 {
-    $root = rtrim(Registry::get('config.dir.root'), '/');
+    $root = rtrim(TypeCoerce::toString(Registry::get('config.dir.root')), '/');
     $themes = ['nova_theme', 'responsive'];
 
     foreach ($themes as $theme) {
@@ -681,8 +682,10 @@ function fn_novoton_holidays_remove_theme_presets(): void
         }
 
         $changed = false;
-        if (isset($manifest['names']['novoton_default'])) {
-            unset($manifest['names']['novoton_default']);
+        $names = TypeCoerce::toStringMap($manifest['names'] ?? null);
+        if (isset($names['novoton_default'])) {
+            unset($names['novoton_default']);
+            $manifest['names'] = $names;
             $changed = true;
         }
         if (isset($manifest['default']) && is_array($manifest['default'])) {
@@ -693,7 +696,7 @@ function fn_novoton_holidays_remove_theme_presets(): void
             }
         }
         if (($manifest['default_style'] ?? '') === 'novoton_default') {
-            $remaining = array_keys($manifest['names'] ?? []);
+            $remaining = array_keys($names);
             $manifest['default_style'] = $remaining[0] ?? '';
             $changed = true;
         }

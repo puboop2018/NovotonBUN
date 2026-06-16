@@ -68,7 +68,7 @@ class NovotonApi implements NovotonApiKitInterface
      * sees the XML returned by the pricing client — not stale state
      * from an earlier facade call.
      */
-    private ?object $lastActiveClient = null;
+    private ?\Tygh\Addons\NovotonHolidays\Api\ApiClientBase $lastActiveClient = null;
 
     public function __construct()
     {
@@ -159,12 +159,12 @@ class NovotonApi implements NovotonApiKitInterface
 
     public function getLastRequest(): string
     {
-        return (string) ($this->lastActiveClient->lastRequest ?? '');
+        return $this->lastActiveClient->lastRequest ?? '';
     }
 
     public function getLastResponse(): string
     {
-        return (string) ($this->lastActiveClient->lastResponse ?? '');
+        return $this->lastActiveClient->lastResponse ?? '';
     }
 
     /**
@@ -172,13 +172,13 @@ class NovotonApi implements NovotonApiKitInterface
      */
     public function getLastRequestFormatted(): array
     {
-        return (array) ($this->lastActiveClient->lastRequestFormatted ?? []);
+        return $this->lastActiveClient->lastRequestFormatted ?? [];
     }
 
     public function getLastError(): string
     {
-        $error = (string) ($this->lastActiveClient->lastError ?? '');
-        $code = (int) ($this->lastActiveClient->lastHttpCode ?? 0);
+        $error = $this->lastActiveClient->lastError ?? '';
+        $code = $this->lastActiveClient->lastHttpCode ?? 0;
         if ($code !== 0 && $code !== 200) {
             $error .= " (HTTP {$code})";
         }
@@ -187,12 +187,12 @@ class NovotonApi implements NovotonApiKitInterface
 
     public function getLastResponseRaw(): string
     {
-        return (string) ($this->lastActiveClient->lastResponseRaw ?? '');
+        return $this->lastActiveClient->lastResponseRaw ?? '';
     }
 
     public function getLastHttpCode(): int
     {
-        return (int) ($this->lastActiveClient->lastHttpCode ?? 0);
+        return $this->lastActiveClient->lastHttpCode ?? 0;
     }
 
     // ========== CIRCUIT BREAKER ==========
@@ -213,10 +213,10 @@ class NovotonApi implements NovotonApiKitInterface
 
     public function clearCache(?string $function = null): int
     {
-        if (!$this->cache) {
+        if ($this->cache === null) {
             return 0;
         }
-        $prefix = $function ? 'nvt_api_' . $function : 'nvt_api_';
+        $prefix = $function !== null && $function !== '' && $function !== '0' ? 'nvt_api_' . $function : 'nvt_api_';
         return $this->cache->clear($prefix);
     }
 }

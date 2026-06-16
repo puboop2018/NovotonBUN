@@ -15,6 +15,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Services;
 
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Services\FeatureMapper as CoreFeatureMapper;
 use Tygh\Addons\TravelCore\Traits\CsCartFeatureAssignment;
 
@@ -42,13 +43,13 @@ class FeatureMapper
         string $apiSource = 'novoton',
     ): bool {
         $mapping = CoreFeatureMapper::resolveWithVariant($apiSource, $coreFeatureType, $providerCode);
-        if (!$mapping) {
+        if ($mapping === null || $mapping === []) {
             CoreFeatureMapper::handleUnmapped($apiSource, $coreFeatureType, $providerCode);
             return false;
         }
 
-        $featureId = (int) ($mapping['cscart_feature_id'] ?? 0);
-        $variantId = (int) ($mapping['cscart_variant_id'] ?? 0);
+        $featureId = TypeCoerce::toInt($mapping['cscart_feature_id'] ?? 0);
+        $variantId = TypeCoerce::toInt($mapping['cscart_variant_id'] ?? 0);
 
         if ($featureId <= 0 || $variantId <= 0) {
             return false;
@@ -90,13 +91,13 @@ class FeatureMapper
         $wantedByFeature = [];
         foreach ($providerCodes as $code) {
             $mapping = CoreFeatureMapper::resolveWithVariant($apiSource, $coreFeatureType, $code);
-            if (!$mapping) {
+            if ($mapping === null || $mapping === []) {
                 CoreFeatureMapper::handleUnmapped($apiSource, $coreFeatureType, $code);
                 continue;
             }
 
-            $featureId = (int) ($mapping['cscart_feature_id'] ?? 0);
-            $variantId = (int) ($mapping['cscart_variant_id'] ?? 0);
+            $featureId = TypeCoerce::toInt($mapping['cscart_feature_id'] ?? 0);
+            $variantId = TypeCoerce::toInt($mapping['cscart_variant_id'] ?? 0);
 
             if ($featureId > 0 && $variantId > 0) {
                 $wantedByFeature[$featureId][] = $variantId;
@@ -134,13 +135,13 @@ class FeatureMapper
         $wantedByFeature = [];
         foreach ($providerCodes as $code) {
             $mapping = CoreFeatureMapper::resolveWithVariantFacility($apiSource, $code);
-            if (!$mapping) {
+            if ($mapping === null || $mapping === []) {
                 CoreFeatureMapper::handleUnmapped($apiSource, 'hotel_facility', $code);
                 continue;
             }
 
-            $featureId = (int) ($mapping['cscart_feature_id'] ?? 0);
-            $variantId = (int) ($mapping['cscart_variant_id'] ?? 0);
+            $featureId = TypeCoerce::toInt($mapping['cscart_feature_id'] ?? 0);
+            $variantId = TypeCoerce::toInt($mapping['cscart_variant_id'] ?? 0);
 
             if ($featureId > 0 && $variantId > 0) {
                 $wantedByFeature[$featureId][] = $variantId;
@@ -186,12 +187,12 @@ class FeatureMapper
             return null;
         }
 
-        $name = db_get_field(
+        $name = TypeCoerce::toString(db_get_field(
             'SELECT description FROM ?:product_features_descriptions WHERE feature_id = ?i AND lang_code = ?s',
             $featureId,
             $langCode,
-        );
+        ));
 
-        return $name ?: null;
+        return $name !== '' ? $name : null;
     }
 }

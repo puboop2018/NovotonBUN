@@ -17,6 +17,7 @@ use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
 use Tygh\Addons\NovotonHolidays\Exceptions\XmlParsingException;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Services\PriceInfoFormatter;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 class PriceInfoSync
 {
@@ -39,7 +40,7 @@ class PriceInfoSync
 
     /**
      * Get products to sync based on prefix
-     * @return array<string, mixed>
+     * @return list<array<string, mixed>>
      */
     private function getProductsToSync(): array
     {
@@ -54,14 +55,14 @@ class PriceInfoSync
 
         $condition = implode(' OR ', $prefixConditions);
 
-        return db_get_array(
+        return TypeCoerce::toRowList(db_get_array(
             'SELECT p.product_id, pd.product, p.product_code, p.status
              FROM ?:products AS p
              LEFT JOIN ?:product_descriptions AS pd ON p.product_id = pd.product_id AND pd.lang_code = ?s
              WHERE (' . $condition . ")
              AND p.status = 'A'",
             CART_LANGUAGE,
-        );
+        ));
     }
 
     /**
@@ -100,17 +101,16 @@ class PriceInfoSync
      */
     public function syncProductPrices(int $productId, array &$stats): bool
     {
-        /** @var array<string, mixed>|null $product */
-        $product = db_get_row(
+        $product = TypeCoerce::toStringMap(db_get_row(
             'SELECT p.product_id, pd.product, p.product_code
              FROM ?:products AS p
              LEFT JOIN ?:product_descriptions AS pd ON p.product_id = pd.product_id AND pd.lang_code = ?s
              WHERE p.product_id = ?i',
             CART_LANGUAGE,
             $productId,
-        );
+        ));
 
-        if (empty($product) || !is_array($product)) {
+        if (empty($product)) {
             $stats['errors'][] = "Product ID $productId not found";
             return false;
         }
@@ -128,7 +128,7 @@ class PriceInfoSync
             // Get hotel info (for packages)
             $hotelInfo = $this->api->hotels()->getHotelInfo($hotelId);
 
-            if (!$hotelInfo || !isset($hotelInfo->packages)) {
+            if (!(bool) $hotelInfo || !isset($hotelInfo->packages)) {
                 $stats['no_data'][] = $productCode . ' - ' . $productName;
                 return false;
             }
@@ -252,9 +252,6 @@ class PriceInfoSync
         $currentIndex = 0;
 
         foreach ($products as $product) {
-            if (!is_array($product)) {
-                continue;
-            }
             $currentIndex++;
 
             $pCode = PriceInfoFormatter::toScalar($product['product_code'] ?? '');
@@ -318,7 +315,7 @@ class PriceInfoSync
         try {
             $apiHotels = $this->api->hotels()->getHotelList($this->defaultCountry);
 
-            if ($apiHotels && isset($apiHotels->hotelinfo)) {
+            if ((bool) $apiHotels && isset($apiHotels->hotelinfo)) {
                 // Build LIKE conditions for all prefixes and fetch all matching products at once
                 $likeConditions = [];
                 foreach ($this->productPrefixes as $prefix) {
@@ -328,9 +325,9 @@ class PriceInfoSync
                 // Single query to get all product codes matching any prefix
                 $existingProducts = [];
                 if (!empty($likeConditions)) {
-                    $productCodes = db_get_fields(
+                    $productCodes = TypeCoerce::toStringList(db_get_fields(
                         'SELECT product_code FROM ?:products WHERE ' . implode(' OR ', $likeConditions),
-                    );
+                    ));
                     $existingProducts = array_flip($productCodes);
                 }
 
@@ -368,7 +365,7 @@ class PriceInfoSync
      */
     private function saveLogFile(array $stats): string
     {
-        $logDir = fn_get_files_dir_path() . 'novoton_logs/';
+        $logDir = TypeCoerce::toString(fn_get_files_dir_path()) . 'novoton_logs/';
 
         if (!is_dir($logDir)) {
             fn_mkdir($logDir);
@@ -382,18 +379,18 @@ class PriceInfoSync
         $content .= str_repeat('=', 50) . "\n\n";
 
         $content .= "SUMMARY\n";
-        $content .= 'Total products: ' . $stats['total'] . "\n";
-        $content .= 'Updated: ' . count($stats['updated']) . "\n";
-        $content .= 'Failed: ' . count($stats['failed']) . "\n";
-        $content .= 'No data: ' . count($stats['no_data']) . "\n";
-        $content .= 'Missing in CS-Cart: ' . count($stats['missing']) . "\n\n";
+        $content .= 'Total products: ' . TypeCoerce::toString($stats['total'] ?? '') . "\n";
+        $content .= 'Updated: ' . count(TypeCoerce::toList($stats['updated'] ?? null)) . "\n";
+        $content .= 'Failed: ' . count(TypeCoerce::toList($stats['failed'] ?? null)) . "\n";
+        $content .= 'No data: ' . count(TypeCoerce::toList($stats['no_data'] ?? null)) . "\n";
+        $content .= 'Missing in CS-Cart: ' . count(TypeCoerce::toList($stats['missing'] ?? null)) . "\n\n";
 
         if (!empty($stats['updated'])) {
             $content .= str_repeat('=', 50) . "\n";
             $content .= "UPDATED PRODUCTS\n";
             $content .= str_repeat('=', 50) . "\n";
-            foreach ($stats['updated'] as $item) {
-                $content .= $item . "\n";
+            foreach (TypeCoerce::toList($stats['updated']) as $item) {
+                $content .= TypeCoerce::toString($item) . "\n";
             }
             $content .= "\n";
         }
@@ -402,8 +399,8 @@ class PriceInfoSync
             $content .= str_repeat('=', 50) . "\n";
             $content .= "FAILED PRODUCTS\n";
             $content .= str_repeat('=', 50) . "\n";
-            foreach ($stats['failed'] as $item) {
-                $content .= $item . "\n";
+            foreach (TypeCoerce::toList($stats['failed']) as $item) {
+                $content .= TypeCoerce::toString($item) . "\n";
             }
             $content .= "\n";
         }
@@ -412,8 +409,8 @@ class PriceInfoSync
             $content .= str_repeat('=', 50) . "\n";
             $content .= "PRODUCTS WITH NO DATA\n";
             $content .= str_repeat('=', 50) . "\n";
-            foreach ($stats['no_data'] as $item) {
-                $content .= $item . "\n";
+            foreach (TypeCoerce::toList($stats['no_data']) as $item) {
+                $content .= TypeCoerce::toString($item) . "\n";
             }
             $content .= "\n";
         }
@@ -422,8 +419,8 @@ class PriceInfoSync
             $content .= str_repeat('=', 50) . "\n";
             $content .= "MISSING IN CS-CART (Present in API)\n";
             $content .= str_repeat('=', 50) . "\n";
-            foreach ($stats['missing'] as $item) {
-                $content .= $item . "\n";
+            foreach (TypeCoerce::toList($stats['missing']) as $item) {
+                $content .= TypeCoerce::toString($item) . "\n";
             }
             $content .= "\n";
         }
@@ -468,7 +465,7 @@ class PriceInfoSync
         }
 
         // Clear from sharded file cache
-        $cacheDir = DIR_ROOT . '/var/cache/novoton/';
+        $cacheDir = TypeCoerce::toString(DIR_ROOT) . '/var/cache/novoton/';
         if (is_dir($cacheDir)) {
             foreach ($functions as $fn) {
                 $safeHotelId = preg_replace('/[^a-zA-Z0-9_-]/', '_', $hotelId);
@@ -487,7 +484,7 @@ class PriceInfoSync
         // we re-query the concrete facade singleton for this call.
         // The cache backend is shared, so the effect is identical.
         $concrete = fn_novoton_holidays_get_api();
-        if ($concrete) {
+        if ($concrete !== null) {
             $concrete->clearCache('room_price');
             $concrete->clearCache('hotel_quota');
         }
@@ -500,7 +497,7 @@ class PriceInfoSync
     {
         db_query("DELETE FROM ?:novoton_cache WHERE cache_key LIKE 'nvt_api_%'");
 
-        $cacheDir = DIR_ROOT . '/var/cache/novoton/';
+        $cacheDir = TypeCoerce::toString(DIR_ROOT) . '/var/cache/novoton/';
         if (is_dir($cacheDir)) {
             foreach (glob($cacheDir . '*/nvt_api_*.cache') ?: [] as $file) {
                 if (is_file($file)) {

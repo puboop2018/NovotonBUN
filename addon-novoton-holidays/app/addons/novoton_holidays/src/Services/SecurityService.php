@@ -16,6 +16,7 @@ namespace Tygh\Addons\NovotonHolidays\Services;
 
 use Tygh\Addons\NovotonHolidays\Repository\CacheRepository;
 use Tygh\Addons\NovotonHolidays\Repository\CacheRepositoryInterface;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Helpers\ValidationHelpers;
 use Tygh\Addons\TravelCore\TravelConstants;
 
@@ -35,7 +36,7 @@ class SecurityService implements SecurityServiceInterface
      * Validate booking data
      *
      * @param array<string, mixed> $data Booking data
-     * @return array<string, mixed> [valid => bool, errors => array]
+     * @return array{valid: bool, errors: array<int, string>} [valid => bool, errors => array]
      */
     public function validateBookingData(array $data): array
     {
@@ -254,15 +255,16 @@ class SecurityService implements SecurityServiceInterface
             if (!empty($guest['dob'])) {
                 $dob = trim(PriceInfoFormatter::toScalar($guest['dob']));
                 // Accept DD/MM/YYYY or YYYY-MM-DD format
-                if (preg_match('/^(\d{2})\/(\d{2})\/(\d{4})$/', $dob) || preg_match('/^\d{4}-\d{2}-\d{2}$/', $dob)) {
+                if (preg_match('/^(\d{2})\/(\d{2})\/(\d{4})$/', $dob) === 1 || preg_match('/^\d{4}-\d{2}-\d{2}$/', $dob) === 1) {
                     $sanitized[$key]['dob'] = $dob;
                 }
             }
 
             // Validate birthday format (YYYY-MM-DD)
             if (!empty($guest['birthday'])) {
-                if ($this->isValidDate($guest['birthday'])) {
-                    $sanitized[$key]['birthday'] = $guest['birthday'];
+                $birthday = PriceInfoFormatter::toScalar($guest['birthday']);
+                if ($this->isValidDate($birthday)) {
+                    $sanitized[$key]['birthday'] = $birthday;
                 }
             }
         }
@@ -284,11 +286,11 @@ class SecurityService implements SecurityServiceInterface
 
         // CS-Cart's built-in CSRF check
         if (defined('CSRF_TOKEN_NAME')) {
-            return fn_csrf_validate_request([CSRF_TOKEN_NAME => $token]);
+            return TypeCoerce::toBool(fn_csrf_validate_request([TypeCoerce::toString(CSRF_TOKEN_NAME) => $token]));
         }
 
         // Fallback: check session token
-        $session_token = $_SESSION['nvt_csrf_token'] ?? '';
+        $session_token = TypeCoerce::toString($_SESSION['nvt_csrf_token'] ?? '');
         return hash_equals($session_token, $token);
     }
 
@@ -302,7 +304,7 @@ class SecurityService implements SecurityServiceInterface
         if (!isset($_SESSION['nvt_csrf_token'])) {
             $_SESSION['nvt_csrf_token'] = bin2hex(random_bytes(32));
         }
-        return $_SESSION['nvt_csrf_token'];
+        return TypeCoerce::toString($_SESSION['nvt_csrf_token']);
     }
 
     /**
@@ -311,7 +313,7 @@ class SecurityService implements SecurityServiceInterface
      * @param string $key Rate limit key (e.g., IP, user_id)
      * @param int $maxRequests Max requests per window
      * @param int $window Window in seconds
-     * @return array<string, mixed> [allowed => bool, remaining => int, reset => int]
+     * @return array{allowed: bool, remaining: int, reset: int} [allowed => bool, remaining => int, reset => int]
      */
     public function checkRateLimit(string $key, ?int $maxRequests = null, ?int $window = null): array
     {
@@ -489,15 +491,20 @@ class SecurityService implements SecurityServiceInterface
 
     /**
      * Get rate limit data from cache
-     * @return array<string, mixed>
+     * @return array{count: int, reset: int}
      */
     private function getRateLimitData(string $key): array
     {
         $row = $this->cacheRepo->findByKey($key);
 
-        if ($row && (int) $row['expires_at'] > time()) {
+        if ($row !== null && $row['expires_at'] > time()) {
             $decoded = json_decode($row['cache_data'], true);
-            return is_array($decoded) ? $decoded : ['count' => 0, 'reset' => time() + self::RATE_LIMIT_WINDOW];
+            if (is_array($decoded)) {
+                return [
+                    'count' => TypeCoerce::toInt($decoded['count'] ?? 0),
+                    'reset' => TypeCoerce::toInt($decoded['reset'] ?? 0),
+                ];
+            }
         }
 
         return ['count' => 0, 'reset' => time() + self::RATE_LIMIT_WINDOW];
@@ -512,7 +519,7 @@ class SecurityService implements SecurityServiceInterface
         $this->cacheRepo->upsert(
             $key,
             json_encode($data, JSON_UNESCAPED_UNICODE) ?: '',
-            $data['reset'] + 60,
+            TypeCoerce::toInt($data['reset'] ?? 0) + 60,
         );
     }
 
@@ -546,7 +553,7 @@ class SecurityService implements SecurityServiceInterface
      */
     private function getOrCreatePersistedKey(): string
     {
-        $keyDir = DIR_ROOT . '/var/novoton';
+        $keyDir = TypeCoerce::toString(DIR_ROOT) . '/var/novoton';
         $keyFile = $keyDir . '/.encryption_key';
 
         if (file_exists($keyFile)) {
@@ -594,12 +601,12 @@ class SecurityService implements SecurityServiceInterface
 
         foreach ($headers as $header) {
             if (!empty($_SERVER[$header])) {
-                $ip = $_SERVER[$header];
+                $ip = TypeCoerce::toString($_SERVER[$header]);
                 // Handle comma-separated IPs
                 if (str_contains($ip, ',')) {
                     $ip = trim(explode(',', $ip)[0]);
                 }
-                if (filter_var($ip, FILTER_VALIDATE_IP)) {
+                if (filter_var($ip, FILTER_VALIDATE_IP) !== false) {
                     return $ip;
                 }
             }

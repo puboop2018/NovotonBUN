@@ -13,6 +13,7 @@ use Tygh\Registry;
 use Tygh\Addons\NovotonHolidays\NovotonApi;
 use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
@@ -68,7 +69,8 @@ function fn_novoton_holidays_is_debug(): bool
 {
     // Debug via URL parameter requires authenticated admin session
     if (!empty($_REQUEST['debug_novoton'])) {
-        $auth = \Tygh\Tygh::$app['session']['auth'] ?? [];
+        $session = TypeCoerce::toStringMap(\Tygh\Tygh::$app['session'] ?? null);
+        $auth = TypeCoerce::toStringMap($session['auth'] ?? null);
         if (!empty($auth['user_id']) && ($auth['area'] ?? '') === 'A') {
             return true;
         }
@@ -183,8 +185,8 @@ function fn_novoton_holidays_get_api(): ?NovotonApi
     static $api = null;
     
     if ($api === null) {
-        $src_dir = Registry::get('config.dir.addons') . 'novoton_holidays/src/';
-        
+        $src_dir = TypeCoerce::toString(Registry::get('config.dir.addons')) . 'novoton_holidays/src/';
+
         if (!class_exists('Tygh\Addons\NovotonHolidays\NovotonApi')) {
             if (file_exists($src_dir . 'NovotonApi.php')) {
                 require_once($src_dir . 'NovotonApi.php');
@@ -192,7 +194,7 @@ function fn_novoton_holidays_get_api(): ?NovotonApi
                 return null;
             }
         }
-        
+
         try {
             $api = new NovotonApi();
         } catch (\Exception $e) {
@@ -200,8 +202,8 @@ function fn_novoton_holidays_get_api(): ?NovotonApi
             return null;
         }
     }
-    
-    return $api;
+
+    return $api instanceof NovotonApi ? $api : null;
 }
 
 /**
@@ -214,20 +216,20 @@ function fn_novoton_holidays_get_api(): ?NovotonApi
 function fn_novoton_holidays_update_product_prices($product_id): bool|string
 {
     $api = fn_novoton_holidays_get_api();
-    if (!$api) {
+    if ($api === null) {
         return false;
     }
 
     try {
         // Get product info
-        $product = db_get_row(
+        $product = TypeCoerce::toStringMap(db_get_row(
             "SELECT p.product_id, p.product_code, pd.product
              FROM ?:products AS p
              LEFT JOIN ?:product_descriptions AS pd ON p.product_id = pd.product_id AND pd.lang_code = ?s
              WHERE p.product_id = ?i",
             CART_LANGUAGE,
             $product_id
-        );
+        ));
 
         if (empty($product)) {
             return false;
@@ -239,7 +241,7 @@ function fn_novoton_holidays_update_product_prices($product_id): bool|string
         if (empty($hotel_id)) {
             // Try extracting from product code (NVT-XXXX or NVT format)
             if (!empty($product['product_code'])) {
-                preg_match('/\d+/', $product['product_code'], $matches);
+                preg_match('/\d+/', TypeCoerce::toString($product['product_code']), $matches);
                 $hotel_id = $matches[0] ?? null;
             }
         }
@@ -256,14 +258,15 @@ function fn_novoton_holidays_update_product_prices($product_id): bool|string
         }
 
         // Convert to array
-        $hotelData = json_decode((string) json_encode($hotel_info), true);
+        $hotelData = TypeCoerce::toStringMap(json_decode((string) json_encode($hotel_info), true));
 
         // Normalize packages array
+        $packagesData = $hotelData['packages'] ?? null;
         $packages = [];
-        if (isset($hotelData['packages']['IdCont'])) {
-            $packages = [$hotelData['packages']];
-        } elseif (!empty($hotelData['packages'])) {
-            $packages = $hotelData['packages'];
+        if (is_array($packagesData) && isset($packagesData['IdCont'])) {
+            $packages = [$packagesData];
+        } elseif (!empty($packagesData)) {
+            $packages = $packagesData;
         }
 
         if (empty($packages)) {
@@ -276,9 +279,9 @@ function fn_novoton_holidays_update_product_prices($product_id): bool|string
         // and compute min_price inline for immediate product price update.
         $lowestPrice = null;
 
-        foreach ($packages as $pkg) {
-            $packageId = $pkg['IdCont'] ?? '';
-            $packageName = $pkg['PackageName'] ?? '';
+        foreach (TypeCoerce::toRowList($packages) as $pkg) {
+            $packageId = TypeCoerce::toString($pkg['IdCont'] ?? '');
+            $packageName = TypeCoerce::toString($pkg['PackageName'] ?? '');
 
             if (empty($packageId) || empty($packageName)) {
                 continue;
@@ -310,7 +313,7 @@ function fn_novoton_holidays_update_product_prices($product_id): bool|string
 
             // Compute min_price using canonical method for immediate product price update
             if (!empty($priceData)) {
-                $mp = \Tygh\Addons\NovotonHolidays\Cron\Commands\PriceComputeCommand::extractMinPrice($priceData);
+                $mp = \Tygh\Addons\NovotonHolidays\Cron\Commands\PriceComputeCommand::extractMinPrice(TypeCoerce::toStringMap($priceData));
                 if ($mp !== null && ($lowestPrice === null || $mp < $lowestPrice)) {
                     $lowestPrice = $mp;
                 }
@@ -490,7 +493,7 @@ function fn_novoton_holidays_stream_page_open(string $title, string $extra_css =
 function fn_novoton_holidays_stream_page_close(string $back_url = '', array $extra_buttons = []): void
 {
     if (empty($back_url)) {
-        $back_url = fn_url('novoton_holidays.manage');
+        $back_url = TypeCoerce::toString(fn_url('novoton_holidays.manage'));
     }
 
     echo '<a href="' . htmlspecialchars($back_url) . '" class="btn">&larr; Back</a>';

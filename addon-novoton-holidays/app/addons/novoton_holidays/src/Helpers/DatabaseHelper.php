@@ -17,6 +17,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\NovotonHolidays\Helpers;
 
 use Tygh\Addons\NovotonHolidays\Constants;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 class DatabaseHelper implements DatabaseHelperInterface
 {
@@ -32,21 +33,21 @@ class DatabaseHelper implements DatabaseHelperInterface
         $updated = 0;
 
         if (!empty($withPrices)) {
-            $updated += (int) \db_query(
+            $updated += TypeCoerce::toInt(\db_query(
                 "UPDATE ?:novoton_hotels
                  SET has_room_price = 'Y', last_price_check = NOW()
                  WHERE hotel_id IN (?a)",
                 $withPrices,
-            );
+            ));
         }
 
         if (!empty($withoutPrices)) {
-            $updated += (int) \db_query(
+            $updated += TypeCoerce::toInt(\db_query(
                 "UPDATE ?:novoton_hotels
                  SET has_room_price = 'N', last_price_check = NOW()
                  WHERE hotel_id IN (?a)",
                 $withoutPrices,
-            );
+            ));
         }
 
         return $updated;
@@ -66,19 +67,20 @@ class DatabaseHelper implements DatabaseHelperInterface
 
         $productCodes = array_map(fn ($id): string => Constants::PRODUCT_CODE_PREFIX . $id, $hotelIds);
 
-        $results = \db_get_hash_array(
+        $results = TypeCoerce::toStringMap(\db_get_hash_array(
             'SELECT product_code, product_id
              FROM ?:products
              WHERE product_code IN (?a)',
             'product_code',
             $productCodes,
-        );
+        ));
 
         $map = [];
         foreach ($hotelIds as $hotelId) {
             $code = Constants::PRODUCT_CODE_PREFIX . $hotelId;
             if (isset($results[$code])) {
-                $map[$hotelId] = $results[$code]['product_id'];
+                $row = TypeCoerce::toStringMap($results[$code]);
+                $map[$hotelId] = TypeCoerce::toInt($row['product_id'] ?? null);
             }
         }
 
@@ -88,7 +90,7 @@ class DatabaseHelper implements DatabaseHelperInterface
     /**
      * Bulk lookup: Check which hotel IDs already exist in database
      *
-     * @return string[] Existing hotel IDs
+     * @return list<string> Existing hotel IDs
      * @param list<string> $hotelIds
      */
     public function getExistingHotelIds(array $hotelIds): array
@@ -97,10 +99,10 @@ class DatabaseHelper implements DatabaseHelperInterface
             return [];
         }
 
-        return \db_get_fields(
+        return TypeCoerce::toStringList(\db_get_fields(
             'SELECT hotel_id FROM ?:novoton_hotels WHERE hotel_id IN (?a)',
             $hotelIds,
-        );
+        ));
     }
 
     /**
@@ -126,12 +128,12 @@ class DatabaseHelper implements DatabaseHelperInterface
 
             $hotel['updated_at'] = $now;
 
-            $affected = (int) \db_query(
+            $affected = TypeCoerce::toInt(\db_query(
                 'INSERT INTO ?:novoton_hotels ?e
                  ON DUPLICATE KEY UPDATE ?u',
                 array_merge($hotel, ['created_at' => $now]),
                 $hotel,
-            );
+            ));
 
             if ($affected === 1) {
                 $inserted++;
@@ -201,7 +203,7 @@ class DatabaseHelper implements DatabaseHelperInterface
                 continue;
             }
 
-            $pid = (int)($link['product_id']);
+            $pid = TypeCoerce::toInt($link['product_id']);
             if ($pid <= 0) {
                 continue;
             }
@@ -273,7 +275,7 @@ class DatabaseHelper implements DatabaseHelperInterface
 
         $query = "SELECT {$fieldList} FROM ?:novoton_hotels {$whereClause} ORDER BY hotel_name {$limitClause}";
 
-        return \db_get_array($query, ...$params);
+        return TypeCoerce::toRowList(\db_get_array($query, ...$params));
     }
 
     /**
@@ -292,7 +294,12 @@ class DatabaseHelper implements DatabaseHelperInterface
             $params[] = '%"sync_type":"' . $escaped . '"%';
         }
 
-        return \db_get_field($query, ...$params) ?: null;
+        $result = \db_get_field($query, ...$params);
+        if (empty($result)) {
+            return null;
+        }
+
+        return TypeCoerce::toString($result);
     }
 
     /**
@@ -301,7 +308,7 @@ class DatabaseHelper implements DatabaseHelperInterface
      */
     public function getSyncStats(string $syncType, int $days = 30): array
     {
-        $stats = \db_get_row(
+        $stats = TypeCoerce::toStringMap(\db_get_row(
             'SELECT
                 COUNT(*) as total_runs,
                 SUM(products_updated) as total_updated,
@@ -313,13 +320,13 @@ class DatabaseHelper implements DatabaseHelperInterface
              AND sync_date > DATE_SUB(NOW(), INTERVAL ?i DAY)',
             $syncType,
             $days,
-        );
+        ));
 
         return [
-            'total_runs' => (int)($stats['total_runs'] ?? 0),
-            'total_updated' => (int)($stats['total_updated'] ?? 0),
-            'total_failed' => (int)($stats['total_failed'] ?? 0),
-            'avg_duration' => round((float)($stats['avg_duration'] ?? 0), 1),
+            'total_runs' => TypeCoerce::toInt($stats['total_runs'] ?? 0),
+            'total_updated' => TypeCoerce::toInt($stats['total_updated'] ?? 0),
+            'total_failed' => TypeCoerce::toInt($stats['total_failed'] ?? 0),
+            'avg_duration' => round(TypeCoerce::toFloat($stats['avg_duration'] ?? 0), 1),
             'last_sync' => $stats['last_sync'] ?? null,
         ];
     }
@@ -331,11 +338,11 @@ class DatabaseHelper implements DatabaseHelperInterface
      */
     public function cleanupOldLogs(int $days = 90): int
     {
-        return (int) \db_query(
+        return TypeCoerce::toInt(\db_query(
             'DELETE FROM ?:novoton_sync_log
              WHERE sync_date < DATE_SUB(NOW(), INTERVAL ?i DAY)',
             $days,
-        );
+        ));
     }
 
     /**

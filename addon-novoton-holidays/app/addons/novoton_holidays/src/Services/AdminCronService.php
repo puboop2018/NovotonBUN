@@ -99,20 +99,22 @@ class AdminCronService implements AdminCronServiceInterface
         $with_prices = 0;
 
         foreach ($hotels as $hotel) {
+            $hotelId = TypeCoerce::toString($hotel['hotel_id'] ?? '');
+            $hotelName = TypeCoerce::toString($hotel['hotel_name'] ?? '');
             $check_in = date(TravelConstants::DATE_FORMAT, strtotime('+' . Constants::PRICE_CHECK_OFFSET_DAYS . ' days'));
             $check_out = date(TravelConstants::DATE_FORMAT, strtotime('+' . (Constants::PRICE_CHECK_OFFSET_DAYS + TravelConstants::DEFAULT_NIGHTS) . ' days'));
 
             $response = $this->api->pricing()->getRoomPrice([
-                'hotel_id' => $hotel['hotel_id'],
+                'hotel_id' => $hotelId,
                 'check_in' => $check_in,
                 'check_out' => $check_out,
                 'adults' => TravelConstants::DEFAULT_ADULTS,
                 'children' => TravelConstants::DEFAULT_CHILDREN,
                 'rooms' => TravelConstants::DEFAULT_ROOMS,
             ]);
-            $has_room_price = ($response && isset($response->hotel)) ? 'Y' : 'N';
+            $has_room_price = ((bool) $response && isset($response->hotel)) ? 'Y' : 'N';
 
-            $hotelRepo->update($hotel['hotel_id'], [
+            $hotelRepo->update($hotelId, [
                 'has_room_price' => $has_room_price,
                 'last_price_check' => date('Y-m-d H:i:s'),
             ]);
@@ -122,7 +124,7 @@ class AdminCronService implements AdminCronServiceInterface
                 $with_prices++;
             }
 
-            $this->output("[{$hotel['hotel_id']}] {$hotel['hotel_name']}: " . ($has_room_price === 'Y' ? 'HAS PRICES' : 'no prices'));
+            $this->output("[{$hotelId}] {$hotelName}: " . ($has_room_price === 'Y' ? 'HAS PRICES' : 'no prices'));
             usleep(Constants::API_DELAY_NORMAL);
         }
 
@@ -139,14 +141,12 @@ class AdminCronService implements AdminCronServiceInterface
     {
         $response = $this->api->hotels()->listFacilities();
 
-        if (!$response || !isset($response->Facility)) {
+        if (!(bool) $response || !isset($response->Facility)) {
             return ['success' => false, 'message' => 'No facilities returned from API'];
         }
 
         $facilityRepo = $this->container->facilityRepository();
-        /** @var mixed $facilityRaw */
-        $facilityRaw = $response->Facility;
-        $facilities = is_array($facilityRaw) ? $facilityRaw : [$facilityRaw];
+        $facilities = [$response->Facility];
         $count = 0;
 
         foreach ($facilities as $f) {
