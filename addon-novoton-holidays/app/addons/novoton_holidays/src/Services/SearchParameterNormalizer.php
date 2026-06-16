@@ -16,6 +16,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\NovotonHolidays\Services;
 
 use Tygh\Addons\TravelCore\Dto\Search\SearchQuery;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 class SearchParameterNormalizer
 {
@@ -48,8 +49,8 @@ class SearchParameterNormalizer
         $checkIn = $this->resolveCheckIn($searchParams);
         $nights = $this->resolveNights($searchParams, $checkIn);
 
-        $adults = !empty($searchParams['adults']) ? (int) $searchParams['adults'] : 2;
-        $flexDays = !empty($searchParams['flex_days']) ? (int) $searchParams['flex_days'] : 0;
+        $adults = !empty($searchParams['adults']) ? TypeCoerce::toInt($searchParams['adults']) : 2;
+        $flexDays = !empty($searchParams['flex_days']) ? TypeCoerce::toInt($searchParams['flex_days']) : 0;
 
         // ── Multi-room data ──────────────────────────────────────────
         $roomsData = $this->parseRoomsData($searchParams);
@@ -72,14 +73,14 @@ class SearchParameterNormalizer
 
         // ── Hotel / product ID ───────────────────────────────────────
         $hotelId = $searchParams['hotel_id'] ?? '';
-        $productId = !empty($searchParams['product_id']) ? (int) $searchParams['product_id'] : 0;
+        $productId = !empty($searchParams['product_id']) ? TypeCoerce::toInt($searchParams['product_id']) : 0;
 
         if (!empty($hotelId) && empty($productId)) {
             $prefix = ConfigProvider::getFirstProductCodePrefix();
-            $productId = (int) db_get_field(
+            $productId = TypeCoerce::toInt(db_get_field(
                 'SELECT product_id FROM ?:products WHERE product_code = ?s',
-                $prefix . $hotelId,
-            );
+                $prefix . TypeCoerce::toString($hotelId),
+            ));
         }
 
         $novotonParams = [
@@ -128,7 +129,7 @@ class SearchParameterNormalizer
      */
     private function resolveCheckIn(array $params): string
     {
-        return !empty($params['check_in']) ? $params['check_in'] : '';
+        return !empty($params['check_in']) ? TypeCoerce::toString($params['check_in']) : '';
     }
 
     /**
@@ -140,7 +141,7 @@ class SearchParameterNormalizer
             if (!empty($checkIn)) {
                 try {
                     $d1 = new \DateTime($checkIn);
-                    $d2 = new \DateTime($params['check_out']);
+                    $d2 = new \DateTime(TypeCoerce::toString($params['check_out']));
                     $nights = $d1->diff($d2)->days;
                     return $nights >= 1 ? $nights : 7;
                 } catch (\Exception $e) {
@@ -150,7 +151,7 @@ class SearchParameterNormalizer
             return 7;
         }
 
-        return !empty($params['nights']) ? (int) $params['nights'] : 7;
+        return !empty($params['nights']) ? TypeCoerce::toInt($params['nights']) : 7;
     }
 
     /**
@@ -181,7 +182,8 @@ class SearchParameterNormalizer
 
         // Normalize each room
         if (!empty($roomsData)) {
-            foreach ($roomsData as $idx => $room) {
+            $normalizedRooms = [];
+            foreach (TypeCoerce::toRowList($roomsData) as $room) {
                 $cleanAges = [];
                 if (!empty($room['childrenAges']) && is_array($room['childrenAges'])) {
                     foreach ($room['childrenAges'] as $age) {
@@ -190,16 +192,17 @@ class SearchParameterNormalizer
                         }
                     }
                 }
-                $roomsData[$idx]['adults'] = (int) ($room['adults'] ?? 2);
-                $roomsData[$idx]['children'] = !empty($cleanAges) ? count($cleanAges) : (int) ($room['children'] ?? 0);
-                $roomsData[$idx]['childrenAges'] = $cleanAges;
+                $room['adults'] = TypeCoerce::toInt($room['adults'] ?? 2);
+                $room['children'] = !empty($cleanAges) ? count($cleanAges) : TypeCoerce::toInt($room['children'] ?? 0);
+                $room['childrenAges'] = $cleanAges;
+                $normalizedRooms[] = $room;
             }
-            return array_values($roomsData);
+            return $normalizedRooms;
         }
 
         // Fallback: build single room from scalar params
-        $childrenCount = !empty($params['children']) ? (int) $params['children'] : 0;
-        $childrenAges = $this->parseCommaAges($params['children_ages'] ?? '');
+        $childrenCount = !empty($params['children']) ? TypeCoerce::toInt($params['children']) : 0;
+        $childrenAges = $this->parseCommaAges(TypeCoerce::toString($params['children_ages'] ?? ''));
 
         // Legacy: child_age_1, child_age_2, ... individual URL params
         if (empty($childrenAges) && $childrenCount > 0) {
@@ -217,7 +220,7 @@ class SearchParameterNormalizer
 
         return [
             [
-                'adults' => !empty($params['adults']) ? (int) $params['adults'] : 2,
+                'adults' => !empty($params['adults']) ? TypeCoerce::toInt($params['adults']) : 2,
                 'children' => $childrenCount,
                 'childrenAges' => $childrenAges,
             ],
@@ -244,7 +247,7 @@ class SearchParameterNormalizer
 
         foreach ($roomsData as $idx => $room) {
             if (empty($room['childrenAges']) && ($room['children'] ?? 0) > 0) {
-                $roomsData[$idx]['childrenAges'] = array_slice($urlAges, 0, $room['children']);
+                $roomsData[$idx]['childrenAges'] = array_slice($urlAges, 0, TypeCoerce::toInt($room['children'] ?? 0));
             }
         }
 
@@ -262,12 +265,12 @@ class SearchParameterNormalizer
         $allAges = [];
 
         foreach ($roomsData as $room) {
-            $totalAdults += (int) ($room['adults'] ?? 2);
-            $totalChildren += (int) ($room['children'] ?? 0);
+            $totalAdults += TypeCoerce::toInt($room['adults'] ?? 2);
+            $totalChildren += TypeCoerce::toInt($room['children'] ?? 0);
             if (!empty($room['childrenAges'])) {
-                foreach ($room['childrenAges'] as $age) {
+                foreach (TypeCoerce::toList($room['childrenAges']) as $age) {
                     if ($age !== null && $age !== 'age_needed') {
-                        $allAges[] = (int) $age;
+                        $allAges[] = TypeCoerce::toInt($age);
                     }
                 }
             }

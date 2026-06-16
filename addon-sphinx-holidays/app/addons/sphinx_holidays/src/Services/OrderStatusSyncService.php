@@ -87,13 +87,14 @@ class OrderStatusSyncService implements OrderStatusSyncServiceInterface
                     'reference_code' => (string) $orderId,
                 ]);
 
-                if (empty($apiResponse['data'])) {
+                $apiData = $apiResponse['data'] ?? null;
+                if (empty($apiData)) {
                     $this->output("  Order #{$orderId}: not found in Sphinx API.");
                     continue;
                 }
 
                 // Process the first matching order
-                $apiOrder = $apiResponse['data'][0];
+                $apiOrder = TypeCoerce::toStringMap(TypeCoerce::toList($apiData)[0] ?? []);
                 $changed = $this->processApiOrder($apiOrder, $orderBookings);
                 $stats['changed'] += $changed;
             } catch (\Throwable $e) {
@@ -122,9 +123,10 @@ class OrderStatusSyncService implements OrderStatusSyncServiceInterface
             return ['changed' => false, 'old_status' => '', 'new_status' => '', 'error' => 'Booking not found'];
         }
 
-        $orderId = (int) ($booking['order_id'] ?? 0);
+        $oldStatus = TypeCoerce::toString($booking['status'] ?? '');
+        $orderId = TypeCoerce::toInt($booking['order_id'] ?? 0);
         if ($orderId <= 0) {
-            return ['changed' => false, 'old_status' => $booking['status'] ?? '', 'new_status' => '', 'error' => 'Booking not linked to an order'];
+            return ['changed' => false, 'old_status' => $oldStatus, 'new_status' => '', 'error' => 'Booking not linked to an order'];
         }
 
         try {
@@ -132,22 +134,23 @@ class OrderStatusSyncService implements OrderStatusSyncServiceInterface
                 'reference_code' => (string) $orderId,
             ]);
 
-            if (empty($apiResponse['data'])) {
-                return ['changed' => false, 'old_status' => $booking['status'] ?? '', 'new_status' => '', 'error' => 'Order not found in Sphinx API'];
+            $apiData = $apiResponse['data'] ?? null;
+            if (empty($apiData)) {
+                return ['changed' => false, 'old_status' => $oldStatus, 'new_status' => '', 'error' => 'Order not found in Sphinx API'];
             }
 
-            $apiOrder = $apiResponse['data'][0];
+            $apiOrder = TypeCoerce::toStringMap(TypeCoerce::toList($apiData)[0] ?? []);
             $changed = $this->processApiOrder($apiOrder, [$booking]);
 
             $updatedBooking = $this->repo->findById($bookingId);
             return [
                 'changed' => $changed > 0,
-                'old_status' => $booking['status'] ?? '',
-                'new_status' => $updatedBooking['status'] ?? $booking['status'] ?? '',
+                'old_status' => $oldStatus,
+                'new_status' => TypeCoerce::toString($updatedBooking['status'] ?? $booking['status'] ?? ''),
                 'error' => null,
             ];
         } catch (\Throwable $e) {
-            return ['changed' => false, 'old_status' => $booking['status'] ?? '', 'new_status' => '', 'error' => $e->getMessage()];
+            return ['changed' => false, 'old_status' => $oldStatus, 'new_status' => '', 'error' => $e->getMessage()];
         }
     }
 
@@ -161,28 +164,30 @@ class OrderStatusSyncService implements OrderStatusSyncServiceInterface
     private function processApiOrder(array $apiOrder, array $localBookings): int
     {
         $changed = 0;
-        $apiBookings = $apiOrder['bookings'] ?? [];
+        $rawApiBookings = $apiOrder['bookings'] ?? [];
 
-        if (empty($apiBookings)) {
+        if (empty($rawApiBookings)) {
             return 0;
         }
+
+        $apiBookings = TypeCoerce::toRowList($rawApiBookings);
 
         // Match API bookings to local bookings.
         // For single-booking orders (most common), match by position.
         // For multi-booking orders, attempt matching by api_booking_ref first.
         foreach ($localBookings as $local) {
-            $localStatus = $local['status'] ?? '';
-            $bookingId = (int) $local['booking_id'];
-            $bookingType = $local['room_type'] ?? 'hotel';
+            $localStatus = TypeCoerce::toString($local['status'] ?? '');
+            $bookingId = TypeCoerce::toInt($local['booking_id'] ?? 0);
+            $bookingType = TypeCoerce::toString($local['room_type'] ?? 'hotel');
 
             // Try to find the matching API booking
             $apiBooking = null;
-            $localRef = $local['api_booking_ref'] ?? '';
+            $localRef = TypeCoerce::toString($local['api_booking_ref'] ?? '');
 
             // Match by booking reference if available
-            if (!empty($localRef)) {
+            if ($localRef !== '') {
                 foreach ($apiBookings as $ab) {
-                    if (($ab['booking_confirmation_number'] ?? '') === $localRef) {
+                    if (TypeCoerce::toString($ab['booking_confirmation_number'] ?? '') === $localRef) {
                         $apiBooking = $ab;
                         break;
                     }
@@ -198,7 +203,7 @@ class OrderStatusSyncService implements OrderStatusSyncServiceInterface
                 continue;
             }
 
-            $apiStatus = $apiBooking['status'] ?? '';
+            $apiStatus = TypeCoerce::toString($apiBooking['status'] ?? '');
             $internalStatus = self::STATUS_MAP[$apiStatus] ?? '';
 
             if (empty($internalStatus) || $localStatus === $internalStatus) {
@@ -208,8 +213,8 @@ class OrderStatusSyncService implements OrderStatusSyncServiceInterface
             // Status changed — update
             $this->repo->update($bookingId, ['status' => $internalStatus]);
 
-            $orderId = (int) ($local['order_id'] ?? 0);
-            $hotelName = $local['hotel_name'] ?? '';
+            $orderId = TypeCoerce::toInt($local['order_id'] ?? 0);
+            $hotelName = TypeCoerce::toString($local['hotel_name'] ?? '');
 
             $this->output("  Booking #{$bookingId} [{$bookingType}] (Order #{$orderId}): {$localStatus} → {$internalStatus}");
 

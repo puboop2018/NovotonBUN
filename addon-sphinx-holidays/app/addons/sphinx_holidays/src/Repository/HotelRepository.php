@@ -60,9 +60,6 @@ class HotelRepository implements HotelRepositoryInterface
 
         $affected = 0;
         foreach ($hotels as $hotel) {
-            if (!is_array($hotel)) {
-                continue;
-            }
             $hotelId = TypeCoerce::toString($hotel['hotel_id'] ?? '');
             if ($hotelId === '') {
                 continue;
@@ -447,12 +444,12 @@ class HotelRepository implements HotelRepositoryInterface
             return 0;
         }
 
-        return (int) db_query(
+        return TypeCoerce::toInt(db_query(
             "UPDATE ?:sphinx_hotels SET sync_status = 'inactive'
              WHERE country_code = ?s AND sync_status = 'active' AND last_synced_at < ?s",
             $countryCode,
             $syncStartedAt,
-        );
+        ));
     }
 
     /**
@@ -468,11 +465,11 @@ class HotelRepository implements HotelRepositoryInterface
             return 0;
         }
 
-        return (int) db_query(
+        return TypeCoerce::toInt(db_query(
             'UPDATE ?:sphinx_hotels SET sync_status = ?s WHERE hotel_id IN (?a)',
             $status,
             $hotelIds,
-        );
+        ));
     }
 
     /**
@@ -501,10 +498,10 @@ class HotelRepository implements HotelRepositoryInterface
             return 0;
         }
 
-        return (int) db_query(
+        return TypeCoerce::toInt(db_query(
             'DELETE FROM ?:sphinx_hotels WHERE hotel_id IN (?a)',
             $hotelIds,
-        );
+        ));
     }
 
     /**

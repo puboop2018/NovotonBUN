@@ -157,11 +157,11 @@ class SphinxBookingRepository
      */
     public function linkToUserBySession(int $user_id, string $session_id): int
     {
-        $affected = (int) db_query(
+        $affected = TypeCoerce::toInt(db_query(
             'UPDATE ?:sphinx_bookings SET user_id = ?i WHERE session_id = ?s AND user_id = 0 AND order_id = 0',
             $user_id,
             $session_id,
-        );
+        ));
 
         if ($affected > 0) {
             $id_strings = self::asStringList(db_get_fields(
@@ -208,12 +208,12 @@ class SphinxBookingRepository
             $hours,
         );
 
-        return (int) db_query(
+        return TypeCoerce::toInt(db_query(
             'DELETE FROM ?:sphinx_bookings
              WHERE order_id = 0
                AND created_at < DATE_SUB(NOW(), INTERVAL ?i HOUR)',
             $hours,
-        );
+        ));
     }
 
     /**
@@ -233,19 +233,19 @@ class SphinxBookingRepository
         $travel_record = [
             'provider' => 'sphinx',
             'provider_booking_id' => (string) $booking_id,
-            'order_id' => (int) ($data['order_id'] ?? 0),
-            'user_id' => (int) ($data['user_id'] ?? 0),
+            'order_id' => TypeCoerce::toInt($data['order_id'] ?? 0),
+            'user_id' => TypeCoerce::toInt($data['user_id'] ?? 0),
             'hotel_id' => $data['hotel_id'] ?? '',
             'hotel_name' => $data['hotel_name'] ?? '',
             'room_name' => $data['room_type'] ?? '',
             'board_code' => $data['board_id'] ?? '',
             'check_in' => $data['check_in'] ?? '',
             'check_out' => $data['check_out'] ?? '',
-            'nights' => (int) ($data['nights'] ?? 0),
-            'adults' => (int) ($data['adults'] ?? 2),
-            'children' => (int) ($data['children'] ?? 0),
+            'nights' => TypeCoerce::toInt($data['nights'] ?? 0),
+            'adults' => TypeCoerce::toInt($data['adults'] ?? 2),
+            'children' => TypeCoerce::toInt($data['children'] ?? 0),
             'children_ages' => $data['children_ages'] ?? '',
-            'total_price' => (float) ($data['total_price'] ?? 0),
+            'total_price' => TypeCoerce::toFloat($data['total_price'] ?? 0),
             'currency' => $data['currency'] ?? 'EUR',
             'status' => $data['status'] ?? TravelConstants::STATUS_PENDING,
             'guests_json' => $guests_json,
@@ -266,7 +266,7 @@ class SphinxBookingRepository
      */
     private function syncUpdateToTravelBookings(int $booking_id, array $data): void
     {
-        static $fieldMap = [
+        $fieldMap = [
             'order_id' => 'order_id',
             'user_id' => 'user_id',
             'hotel_id' => 'hotel_id',

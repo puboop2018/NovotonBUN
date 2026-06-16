@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\SphinxHolidays\Cron\Commands;
 
 use Tygh\Addons\SphinxHolidays\Cron\CronDispatcher;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 /**
  * Cron command: run all sync modes in sequence.
@@ -91,16 +92,17 @@ class FullSyncCommand
             $this->output("──── {$mode} ────");
             $result = $dispatcher->dispatch($mode, $params);
 
-            $success = $result['success'] ?? false;
+            $success = TypeCoerce::toBool($result['success'] ?? false);
             $results[$mode] = $success;
 
             if ($success) {
                 $totalSuccess++;
-            } elseif ($result['busy'] ?? false) {
+            } elseif (TypeCoerce::toBool($result['busy'] ?? false)) {
                 $this->output("[INFO] {$mode} is already running, skipped.");
             } else {
                 $totalFailed++;
-                $error = $result['error'] ?? $result['stats']['error'] ?? 'unknown error';
+                $stats = TypeCoerce::toStringMap($result['stats'] ?? []);
+                $error = TypeCoerce::toString($result['error'] ?? $stats['error'] ?? 'unknown error');
                 $this->output("[WARN] {$mode} finished with errors: {$error}");
             }
 

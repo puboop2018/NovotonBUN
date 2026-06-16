@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays\Cron\Commands;
 
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+
 class AuditFacilitiesCommand extends AbstractSyncCommand
 {
     #[\Override]
@@ -22,20 +24,20 @@ class AuditFacilitiesCommand extends AbstractSyncCommand
         $this->output('Scanning sphinx_hotels.facilities_json for all facility IDs...');
 
         // Step 1: Extract all unique facility IDs and names from the database
-        $hotels = db_get_array(
+        $hotels = TypeCoerce::toRowList(db_get_array(
             "SELECT hotel_id, facilities_json FROM ?:sphinx_hotels WHERE facilities_json IS NOT NULL AND facilities_json != '[]' AND sync_status = 'active' LIMIT 5000",
-        );
+        ));
 
         $allFacilities = []; // id => name
         $facilityHotelCount = []; // id => count of hotels that have it
         foreach ($hotels as $hotel) {
-            $facilities = json_decode($hotel['facilities_json'], true);
+            $facilities = json_decode(TypeCoerce::toString($hotel['facilities_json'] ?? ''), true);
             if (!is_array($facilities)) {
                 continue;
             }
-            foreach ($facilities as $f) {
-                $fid = (string) ($f['id'] ?? '');
-                $fname = (string) ($f['name'] ?? '');
+            foreach (TypeCoerce::toRowList($facilities) as $f) {
+                $fid = TypeCoerce::toString($f['id'] ?? '');
+                $fname = TypeCoerce::toString($f['name'] ?? '');
                 if ($fid === '') {
                     continue;
                 }
@@ -55,18 +57,18 @@ class AuditFacilitiesCommand extends AbstractSyncCommand
         $incomplete = [];
 
         foreach ($allFacilities as $fid => $fname) {
-            $alias = db_get_row(
+            $alias = TypeCoerce::toStringMap(db_get_row(
                 "SELECT a.alias_id, a.map_id, m.cscart_feature_id, m.cscart_variant_id, m.canonical_code
                  FROM ?:travel_api_alias a
                  JOIN ?:travel_feature_map m ON m.map_id = a.map_id
                  WHERE a.api_source = 'sphinx' AND m.feature_type IN ('hotel_facility', 'room_facility', 'beach_access') AND a.api_value = ?s",
                 $fid,
-            );
+            ));
 
             if (empty($alias)) {
                 $unmapped[$fid] = $fname;
-            } elseif (empty($alias['cscart_variant_id']) || (int)$alias['cscart_variant_id'] <= 0) {
-                $incomplete[$fid] = ['name' => $fname, 'canonical' => $alias['canonical_code'] ?? '', 'feature_id' => $alias['cscart_feature_id'] ?? 0];
+            } elseif (empty($alias['cscart_variant_id']) || TypeCoerce::toInt($alias['cscart_variant_id']) <= 0) {
+                $incomplete[$fid] = ['name' => $fname, 'canonical' => TypeCoerce::toString($alias['canonical_code'] ?? ''), 'feature_id' => TypeCoerce::toInt($alias['cscart_feature_id'] ?? 0)];
             } else {
                 $mapped[$fid] = $fname;
             }

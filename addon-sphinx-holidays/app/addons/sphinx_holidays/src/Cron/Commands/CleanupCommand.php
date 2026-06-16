@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays\Cron\Commands;
 
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+
 /**
  * Cron command: clean up orphan data, old logs, and expired cache.
  *
@@ -38,9 +40,9 @@ class CleanupCommand extends AbstractSyncCommand
 
         // 1. Remove orphan bookings (order_id = 0, created more than 48h ago)
         try {
-            $cleaned['orphan_bookings'] = (int) db_query(
+            $cleaned['orphan_bookings'] = TypeCoerce::toInt(db_query(
                 'DELETE FROM ?:sphinx_bookings WHERE order_id = 0 AND created_at < DATE_SUB(NOW(), INTERVAL 48 HOUR)',
-            );
+            ));
             $this->output("Orphan bookings removed: {$cleaned['orphan_bookings']}");
         } catch (\Throwable $e) {
             $errors++;
@@ -50,11 +52,11 @@ class CleanupCommand extends AbstractSyncCommand
 
         // 2. Trim sync log — keep latest 200 entries, delete older ones
         try {
-            $cutoffId = (int)db_get_field(
+            $cutoffId = TypeCoerce::toInt(db_get_field(
                 'SELECT log_id FROM ?:sphinx_sync_log ORDER BY log_id DESC LIMIT 1 OFFSET 200',
-            );
+            ));
             if ($cutoffId > 0) {
-                $cleaned['old_logs'] = (int) db_query('DELETE FROM ?:sphinx_sync_log WHERE log_id <= ?i', $cutoffId);
+                $cleaned['old_logs'] = TypeCoerce::toInt(db_query('DELETE FROM ?:sphinx_sync_log WHERE log_id <= ?i', $cutoffId));
             }
             $this->output("Old sync log entries removed: {$cleaned['old_logs']}");
         } catch (\Throwable $e) {
@@ -65,10 +67,10 @@ class CleanupCommand extends AbstractSyncCommand
 
         // 3. Delete expired cache entries
         try {
-            $cleaned['expired_cache'] = (int) db_query(
+            $cleaned['expired_cache'] = TypeCoerce::toInt(db_query(
                 'DELETE FROM ?:sphinx_cache WHERE expires_at < ?i',
                 time(),
-            );
+            ));
             $this->output("Expired cache entries removed: {$cleaned['expired_cache']}");
         } catch (\Throwable $e) {
             $errors++;
@@ -78,12 +80,12 @@ class CleanupCommand extends AbstractSyncCommand
 
         // 4. Unlink orphan product references (product deleted in CS-Cart but still referenced in sphinx_hotels)
         try {
-            $cleaned['orphan_products'] = (int) db_query(
+            $cleaned['orphan_products'] = TypeCoerce::toInt(db_query(
                 "UPDATE ?:sphinx_hotels h
                  LEFT JOIN ?:products p ON p.product_id = h.product_id
                  SET h.product_id = NULL, h.product_skip_reason = NULL, h.product_needs_update = 'N'
                  WHERE h.product_id IS NOT NULL AND h.product_id > 0 AND p.product_id IS NULL",
-            );
+            ));
             if ($cleaned['orphan_products'] > 0) {
                 $this->output("Orphan product links cleared: {$cleaned['orphan_products']} (products deleted in CS-Cart, hotels eligible for re-creation)");
             }

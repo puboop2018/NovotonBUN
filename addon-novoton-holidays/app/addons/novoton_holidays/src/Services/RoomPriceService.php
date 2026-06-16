@@ -16,6 +16,7 @@ namespace Tygh\Addons\NovotonHolidays\Services;
 use Tygh\Addons\NovotonHolidays\Api\Contracts\PricingApiClientInterface;
 use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\NovotonApi;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 class RoomPriceService implements RoomPriceServiceInterface
 {
@@ -100,7 +101,7 @@ class RoomPriceService implements RoomPriceServiceInterface
         $total = 0;
 
         foreach ($rooms_data as $room) {
-            $total += (float) ($room['price'] ?? 0);
+            $total += TypeCoerce::toFloat(TypeCoerce::toStringMap($room)['price'] ?? 0);
         }
 
         return round($total, 2);
@@ -153,13 +154,13 @@ class RoomPriceService implements RoomPriceServiceInterface
 
         if ($cached !== null) {
             $this->log('Price cache hit', ['key' => $cache_key]);
-            return $cached;
+            return TypeCoerce::toStringMap($cached);
         }
 
         // Call API via the injected pricing sub-client.
         $response = $this->pricing->getRoomPrice($params);
 
-        if (!$response || !isset($response->Price)) {
+        if (!($response instanceof \SimpleXMLElement) || !isset($response->Price)) {
             return null;
         }
 
@@ -192,7 +193,7 @@ class RoomPriceService implements RoomPriceServiceInterface
         $prices = [];
 
         foreach ($rooms_params as $index => $params) {
-            $price_data = $this->getRoomPrice($params);
+            $price_data = $this->getRoomPrice(TypeCoerce::toStringMap($params));
             $prices[$index] = $price_data;
         }
 
@@ -215,10 +216,10 @@ class RoomPriceService implements RoomPriceServiceInterface
         $currencies = ConfigProvider::getCurrencies();
 
         if (!empty($currencies[$currency_code])) {
-            $curr = $currencies[$currency_code];
-            $decimals = isset($curr['decimals']) ? (int)$curr['decimals'] : 2;
-            $dec_sign = $curr['decimals_separator'] ?? ',';
-            $ths_sign = $curr['thousands_separator'] ?? '.';
+            $curr = TypeCoerce::toStringMap($currencies[$currency_code]);
+            $decimals = isset($curr['decimals']) ? TypeCoerce::toInt($curr['decimals']) : 2;
+            $dec_sign = isset($curr['decimals_separator']) && is_string($curr['decimals_separator']) ? $curr['decimals_separator'] : ',';
+            $ths_sign = isset($curr['thousands_separator']) && is_string($curr['thousands_separator']) ? $curr['thousands_separator'] : '.';
 
             $formatted = number_format($price, $decimals, $dec_sign, $ths_sign);
 
@@ -226,7 +227,7 @@ class RoomPriceService implements RoomPriceServiceInterface
                 return $formatted;
             }
 
-            $symbol = $curr['symbol'] ?? $currency_code;
+            $symbol = isset($curr['symbol']) && is_string($curr['symbol']) ? $curr['symbol'] : $currency_code;
             $after = !empty($curr['after']) && $curr['after'] === 'Y';
 
             return $after ? $formatted . ' ' . $symbol : $symbol . ' ' . $formatted;
@@ -262,11 +263,11 @@ class RoomPriceService implements RoomPriceServiceInterface
         $currencies = ConfigProvider::getCurrencies();
 
         if (!empty($currencies[$currency_code])) {
-            $curr = $currencies[$currency_code];
-            $decimals = isset($curr['decimals']) ? (int)$curr['decimals'] : 2;
-            $dec_sign = $curr['decimals_separator'] ?? ',';
-            $ths_sign = $curr['thousands_separator'] ?? '.';
-            $symbol = $curr['symbol'] ?? $currency_code;
+            $curr = TypeCoerce::toStringMap($currencies[$currency_code]);
+            $decimals = isset($curr['decimals']) ? TypeCoerce::toInt($curr['decimals']) : 2;
+            $dec_sign = isset($curr['decimals_separator']) && is_string($curr['decimals_separator']) ? $curr['decimals_separator'] : ',';
+            $ths_sign = isset($curr['thousands_separator']) && is_string($curr['thousands_separator']) ? $curr['thousands_separator'] : '.';
+            $symbol = isset($curr['symbol']) && is_string($curr['symbol']) ? $curr['symbol'] : $currency_code;
             $after = !empty($curr['after']) && $curr['after'] === 'Y';
 
             $min_formatted = number_format($min_price, $decimals, $dec_sign, $ths_sign);
@@ -361,7 +362,7 @@ class RoomPriceService implements RoomPriceServiceInterface
             json_encode($params['children'] ?? []),
         ];
 
-        return 'nvt_price_' . md5(implode('|', $key_parts));
+        return 'nvt_price_' . md5(implode('|', TypeCoerce::toStringList($key_parts)));
     }
 
     /**

@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\NovotonHolidays;
 
 use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 class NovotonHttpClient implements HttpClientInterface
 {
@@ -49,10 +50,10 @@ class NovotonHttpClient implements HttpClientInterface
                 'Novoton API URL not configured — set api_url in addon settings',
             );
         }
-        $apiUrl = $settings['api_url'];
+        $apiUrl = TypeCoerce::toString($settings['api_url']);
         // Preserve scheme if provided in settings, otherwise default to http://
         // (Novoton API provider currently specifies http:// only)
-        if (preg_match('#^https?://#', $apiUrl)) {
+        if (preg_match('#^https?://#', $apiUrl) === 1) {
             $this->apiUrl = $apiUrl;
         } else {
             $this->apiUrl = 'http://' . $apiUrl;
@@ -84,10 +85,10 @@ class NovotonHttpClient implements HttpClientInterface
                     . 'and disable "Allow insecure (HTTP) API connection".',
             ]);
         }
-        $this->apiKey = $settings['api_key'] ?? '';
-        $this->apiId = $settings['api_id'] ?? '';
-        $this->apiUser = $settings['api_user'] ?? '';
-        $this->apiPassword = $settings['api_password'] ?? '';
+        $this->apiKey = TypeCoerce::toString($settings['api_key'] ?? '');
+        $this->apiId = TypeCoerce::toString($settings['api_id'] ?? '');
+        $this->apiUser = TypeCoerce::toString($settings['api_user'] ?? '');
+        $this->apiPassword = TypeCoerce::toString($settings['api_password'] ?? '');
 
         if (empty($this->apiKey) || empty($this->apiUser) || empty($this->apiPassword)) {
             fn_log_event('general', 'runtime', [
@@ -98,11 +99,11 @@ class NovotonHttpClient implements HttpClientInterface
             ]);
         }
 
-        $this->maxRetries = (int)($settings['api_max_retries'] ?? 3);
-        $this->retryDelayMs = (int)($settings['api_retry_delay_ms'] ?? 1000);
-        $this->retryMultiplier = max(1, (int)($settings['api_retry_multiplier'] ?? 2));
-        $this->circuitBreakerThreshold = (int)($settings['circuit_breaker_threshold'] ?? 5);
-        $this->circuitBreakerTimeout = (int)($settings['circuit_breaker_timeout'] ?? 60);
+        $this->maxRetries = TypeCoerce::toInt($settings['api_max_retries'] ?? 3);
+        $this->retryDelayMs = TypeCoerce::toInt($settings['api_retry_delay_ms'] ?? 1000);
+        $this->retryMultiplier = max(1, TypeCoerce::toInt($settings['api_retry_multiplier'] ?? 2));
+        $this->circuitBreakerThreshold = TypeCoerce::toInt($settings['circuit_breaker_threshold'] ?? 5);
+        $this->circuitBreakerTimeout = TypeCoerce::toInt($settings['circuit_breaker_timeout'] ?? 60);
     }
 
     /**
@@ -156,8 +157,9 @@ class NovotonHttpClient implements HttpClientInterface
         $lastError = '';
         $lastHttpCode = 0;
         $response = false;
+        $attempt = 1;
 
-        for ($attempt = 1; $attempt <= $this->maxRetries; $attempt++) {
+        for (; $attempt <= $this->maxRetries; $attempt++) {
             $ch = curl_init();
             if ($ch === false) {
                 throw ApiException::requestFailed($function, 'Failed to initialize curl', 0, 1);
@@ -181,7 +183,7 @@ class NovotonHttpClient implements HttpClientInterface
 
             curl_close($ch);
 
-            if (!$lastError && $lastHttpCode >= 200 && $lastHttpCode < 300) {
+            if (($lastError === '' || $lastError === '0') && $lastHttpCode >= 200 && $lastHttpCode < 300) {
                 $this->recordSuccess();
                 break;
             }
@@ -209,7 +211,7 @@ class NovotonHttpClient implements HttpClientInterface
         $this->lastError = $lastError;
         $this->lastResponseRaw = is_string($response) ? $response : '';
 
-        if ($lastError || $lastHttpCode < 200 || $lastHttpCode >= 300) {
+        if (($lastError !== '' && $lastError !== '0') || $lastHttpCode < 200 || $lastHttpCode >= 300) {
             $this->recordFailure();
             $attempts = min($attempt, $this->maxRetries);
             fn_log_event('general', 'runtime', [
@@ -251,12 +253,13 @@ class NovotonHttpClient implements HttpClientInterface
             $handles = [];
 
             foreach ($chunk as $key => $req) {
+                $reqData = TypeCoerce::toStringMap($req);
                 $postData = [
-                    'fn' => $req['function'],
+                    'fn' => $reqData['function'],
                     'key' => $this->apiKey,
                     'id' => $this->apiId,
-                    'xml' => $req['xml'],
-                    'lang' => $req['lang'] ?? 'UK',
+                    'xml' => $reqData['xml'],
+                    'lang' => $reqData['lang'] ?? 'UK',
                 ];
 
                 $ch = curl_init();
@@ -289,7 +292,7 @@ class NovotonHttpClient implements HttpClientInterface
                 $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
                 $error = curl_error($ch);
 
-                if (!$error && $httpCode >= 200 && $httpCode < 300 && !empty($response)) {
+                if (($error === '' || $error === '0') && $httpCode >= 200 && $httpCode < 300 && !empty($response)) {
                     $this->recordSuccess();
                     $results[$key] = $response;
                 } else {
@@ -360,7 +363,7 @@ class NovotonHttpClient implements HttpClientInterface
 
     /**
      * Get circuit breaker status (for monitoring)
-     * @return array<string, mixed>
+     * @return array{is_open: bool, failure_count: int, threshold: int, last_failure: string|null, timeout_seconds: int, seconds_until_retry: int}
      */
     public function getCircuitStatus(): array
     {

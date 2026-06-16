@@ -15,6 +15,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\NovotonHolidays\Services;
 
 use Tygh\Addons\NovotonHolidays\Constants;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Services\AbstractConfigProvider;
 use Tygh\Registry;
 
@@ -162,7 +163,7 @@ class ConfigProvider extends AbstractConfigProvider
      */
     public static function getPriceHigherThreshold(): float
     {
-        return max(0.0, (float) (self::settings()['price_higher_threshold'] ?? 55));
+        return max(0.0, TypeCoerce::toFloat(self::settings()['price_higher_threshold'] ?? 55));
     }
 
     /**
@@ -173,47 +174,47 @@ class ConfigProvider extends AbstractConfigProvider
      */
     public static function getPreorderCacheTtl(): int
     {
-        return max(0, (int) (self::settings()['preorder_cache_ttl'] ?? 180));
+        return max(0, TypeCoerce::toInt(self::settings()['preorder_cache_ttl'] ?? 180));
     }
 
     // ── Float Settings ──
 
     public static function getCommission(): float
     {
-        return max(0.0, (float) (self::settings()['commission'] ?? 0));
+        return max(0.0, TypeCoerce::toFloat(self::settings()['commission'] ?? 0));
     }
 
     // ── String Settings ──
 
     public static function getApiCurrency(): string
     {
-        $val = (string)(self::settings()['api_currency'] ?? 'EUR');
+        $val = TypeCoerce::toString(self::settings()['api_currency'] ?? 'EUR');
         return $val !== '' ? $val : 'EUR';
     }
 
     public static function getApiUrl(): string
     {
-        return (string)(self::settings()['api_url'] ?? '');
+        return TypeCoerce::toString(self::settings()['api_url'] ?? '');
     }
 
     public static function getApiUser(): string
     {
-        return (string)(self::settings()['api_user'] ?? '');
+        return TypeCoerce::toString(self::settings()['api_user'] ?? '');
     }
 
     public static function getApiPassword(): string
     {
-        return (string)(self::settings()['api_password'] ?? '');
+        return TypeCoerce::toString(self::settings()['api_password'] ?? '');
     }
 
     public static function getApiKey(): string
     {
-        return (string)(self::settings()['api_key'] ?? '');
+        return TypeCoerce::toString(self::settings()['api_key'] ?? '');
     }
 
     public static function getCronAccessKey(): string
     {
-        return (string)(self::settings()['cron_access_key'] ?? '');
+        return TypeCoerce::toString(self::settings()['cron_access_key'] ?? '');
     }
 
     public static function isCronReportEmailEnabled(): bool
@@ -223,12 +224,12 @@ class ConfigProvider extends AbstractConfigProvider
 
     public static function getDefaultCountry(): string
     {
-        return (string)(self::settings()['default_country'] ?? 'BULGARIA');
+        return TypeCoerce::toString(self::settings()['default_country'] ?? 'BULGARIA');
     }
 
     public static function getLastExchangeRateUpdate(): string
     {
-        return (string) (db_get_field(
+        return TypeCoerce::toString(db_get_field(
             "SELECT MAX(sync_date) FROM ?:novoton_sync_log WHERE sync_type = 'exchange_rates' AND status = 'completed'",
         ) ?: '');
     }
@@ -236,10 +237,10 @@ class ConfigProvider extends AbstractConfigProvider
     public static function getVersion(): string
     {
         if (self::$version === null) {
-            self::$version = (string) db_get_field(
+            self::$version = TypeCoerce::toString(db_get_field(
                 'SELECT version FROM ?:addons WHERE addon = ?s',
                 self::ADDON_ID,
-            ) ?: 'unknown';
+            )) ?: 'unknown';
         }
 
         return self::$version;
@@ -276,7 +277,7 @@ class ConfigProvider extends AbstractConfigProvider
     public static function getProductCodePrefixes(): array
     {
         $val = self::settings()['product_code_prefixes'] ?? 'NVT';
-        return array_map('trim', explode(',', $val));
+        return array_map('trim', explode(',', TypeCoerce::toString($val)));
     }
 
     public static function getFirstProductCodePrefix(): string
@@ -286,7 +287,7 @@ class ConfigProvider extends AbstractConfigProvider
 
     public static function getDefaultProductQuantity(): int
     {
-        return max(0, (int) (self::settings()['default_product_quantity'] ?? 555));
+        return max(0, TypeCoerce::toInt(self::settings()['default_product_quantity'] ?? 555));
     }
 
     /**
@@ -297,7 +298,7 @@ class ConfigProvider extends AbstractConfigProvider
      */
     public static function getCategoryForCountry(string $country): int
     {
-        $raw = trim((string)(self::settings()['country_category_map'] ?? ''));
+        $raw = trim(TypeCoerce::toString(self::settings()['country_category_map'] ?? ''));
         if ($raw === '') {
             return 0;
         }
@@ -327,72 +328,72 @@ class ConfigProvider extends AbstractConfigProvider
     public static function getExcludedResorts(): array
     {
         $val = self::settings()['excluded_resorts'] ?? '';
-        return $val !== '' ? array_map('trim', explode(',', $val)) : [];
+        return $val !== '' ? array_map('trim', explode(',', TypeCoerce::toString($val))) : [];
     }
 
     // ── Advanced Settings (Cache, Sync, Rate Limits) ──
 
     public static function getCacheTtlRoomPrice(): int
     {
-        return max(0, (int)(self::settings()['cache_ttl_room_price'] ?? 300));
+        return max(0, TypeCoerce::toInt(self::settings()['cache_ttl_room_price'] ?? 300));
     }
 
     public static function getCacheTtlAvailability(): int
     {
-        return max(0, (int)(self::settings()['cache_ttl_availability'] ?? 180));
+        return max(0, TypeCoerce::toInt(self::settings()['cache_ttl_availability'] ?? 180));
     }
 
     public static function getCacheTtlSearch(): int
     {
-        return max(0, (int)(self::settings()['cache_ttl_search'] ?? 300));
+        return max(0, TypeCoerce::toInt(self::settings()['cache_ttl_search'] ?? 300));
     }
 
     /** Returns the hotel info full sync interval in seconds. */
     public static function getSyncIntervalHotelInfo(): int
     {
-        $days = max(1, (int)(self::settings()['sync_interval_hotel_info_days'] ?? 180));
+        $days = max(1, TypeCoerce::toInt(self::settings()['sync_interval_hotel_info_days'] ?? 180));
         return $days * 86400;
     }
 
     /** Returns the price info full sync interval in seconds. */
     public static function getSyncIntervalPriceInfo(): int
     {
-        $days = max(1, (int)(self::settings()['sync_interval_price_info_days'] ?? 7));
+        $days = max(1, TypeCoerce::toInt(self::settings()['sync_interval_price_info_days'] ?? 7));
         return $days * 86400;
     }
 
     /** Returns the facilities sync interval in seconds. */
     public static function getSyncIntervalFacilities(): int
     {
-        $days = max(1, (int)(self::settings()['sync_interval_facilities_days'] ?? 30));
+        $days = max(1, TypeCoerce::toInt(self::settings()['sync_interval_facilities_days'] ?? 30));
         return $days * 86400;
     }
 
     public static function getCronBatchSize(): int
     {
-        $val = (int)(self::settings()['cron_batch_size'] ?? 100);
+        $val = TypeCoerce::toInt(self::settings()['cron_batch_size'] ?? 100);
         return max(self::MIN_BATCH_SIZE, min(self::MAX_BATCH_SIZE, $val));
     }
 
     public static function getCronMaxExecutionTime(): int
     {
-        $val = (int)(self::settings()['cron_max_execution_time'] ?? 300);
+        $val = TypeCoerce::toInt(self::settings()['cron_max_execution_time'] ?? 300);
         return max(self::MIN_EXECUTION_TIME, min(self::MAX_EXECUTION_TIME, $val));
     }
 
     public static function getSlowItemWarningMs(): int
     {
-        return max(1000, (int)(self::settings()['slow_item_warning_ms'] ?? 30000));
+        return max(1000, TypeCoerce::toInt(self::settings()['slow_item_warning_ms'] ?? 30000));
     }
 
     public static function getRateLimitRequestsPerMin(): int
     {
-        return max(1, (int)(self::settings()['rate_limit_requests_per_min'] ?? 100));
+        return max(1, TypeCoerce::toInt(self::settings()['rate_limit_requests_per_min'] ?? 100));
     }
 
     public static function getRateLimitBookingsPerHour(): int
     {
-        return max(1, (int)(self::settings()['rate_limit_bookings_per_hour'] ?? 20));
+        return max(1, TypeCoerce::toInt(self::settings()['rate_limit_bookings_per_hour'] ?? 20));
     }
 
     // ── Raw Access ──
@@ -431,7 +432,7 @@ class ConfigProvider extends AbstractConfigProvider
 
     public static function getTimezone(): string
     {
-        return Registry::get('settings.Appearance.timezone') ?: 'Europe/Bucharest';
+        return TypeCoerce::toString(Registry::get('settings.Appearance.timezone') ?: 'Europe/Bucharest');
     }
 
     public static function getAdminEmail(): string
@@ -448,12 +449,12 @@ class ConfigProvider extends AbstractConfigProvider
             );
         }
 
-        return $email ?: '';
+        return TypeCoerce::toString($email ?: '');
     }
 
     public static function getCompanyId(): int
     {
-        return (int) (Registry::get('runtime.company_id') ?: 1);
+        return TypeCoerce::toInt(Registry::get('runtime.company_id') ?: 1);
     }
 
     /**
@@ -499,31 +500,31 @@ class ConfigProvider extends AbstractConfigProvider
 
     public static function getSeoProductName(): string
     {
-        return (string) (self::settings()['seo_product_name'] ?? '{{name}}');
+        return TypeCoerce::toString(self::settings()['seo_product_name'] ?? '{{name}}');
     }
 
     public static function getSeoPageTitle(): string
     {
-        return (string) (self::settings()['seo_page_title'] ?? '{{name}} - {{city}}, {{country}} {{year}}');
+        return TypeCoerce::toString(self::settings()['seo_page_title'] ?? '{{name}} - {{city}}, {{country}} {{year}}');
     }
 
     public static function getSeoMetaDescription(): string
     {
-        return (string) (self::settings()['seo_meta_description'] ?? 'Rezervă cazare la {{name}} în {{city}}, {{country}}. Hotel de {{star_rating}} stele cu {{facilities}}. Vezi tarife și disponibilitate.');
+        return TypeCoerce::toString(self::settings()['seo_meta_description'] ?? 'Rezervă cazare la {{name}} în {{city}}, {{country}}. Hotel de {{star_rating}} stele cu {{facilities}}. Vezi tarife și disponibilitate.');
     }
 
     public static function getSeoMetaKeywords(): string
     {
-        return (string) (self::settings()['seo_meta_keywords'] ?? '{{name}}, {{city}}, {{country}}, {{property_type}}, {{star_rating}} stele');
+        return TypeCoerce::toString(self::settings()['seo_meta_keywords'] ?? '{{name}}, {{city}}, {{country}}, {{property_type}}, {{star_rating}} stele');
     }
 
     public static function getSeoNameSlug(): string
     {
-        return (string) (self::settings()['seo_name_slug'] ?? '{{name}}-{{city}}-{{country}}');
+        return TypeCoerce::toString(self::settings()['seo_name_slug'] ?? '{{name}}-{{city}}-{{country}}');
     }
 
     public static function getSeoFullDescription(): string
     {
-        return (string) (self::settings()['seo_full_description'] ?? '');
+        return TypeCoerce::toString(self::settings()['seo_full_description'] ?? '');
     }
 }

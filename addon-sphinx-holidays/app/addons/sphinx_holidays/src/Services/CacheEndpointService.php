@@ -37,10 +37,9 @@ class CacheEndpointService implements CacheEndpointServiceInterface
     public function getHotelDeals(array $filters = []): array
     {
         $cacheKey = 'deals:hotels:' . md5((string) json_encode($filters));
-        /** @var list<array<string, mixed>>|null $cached */
         $cached = CacheService::get($cacheKey);
         if ($cached !== null) {
-            return $cached;
+            return TypeCoerce::toRowList($cached);
         }
 
         $response = $this->api->cacheHotels($filters);
@@ -67,10 +66,9 @@ class CacheEndpointService implements CacheEndpointServiceInterface
     public function getPackageDeals(array $filters = []): array
     {
         $cacheKey = 'deals:packages:' . md5((string) json_encode($filters));
-        /** @var list<array<string, mixed>>|null $cached */
         $cached = CacheService::get($cacheKey);
         if ($cached !== null) {
-            return $cached;
+            return TypeCoerce::toRowList($cached);
         }
 
         $response = $this->api->cachePackages($filters);

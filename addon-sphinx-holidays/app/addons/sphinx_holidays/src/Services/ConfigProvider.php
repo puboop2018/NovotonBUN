@@ -219,10 +219,10 @@ class ConfigProvider extends AbstractConfigProvider implements ConfigProviderInt
 
         // CS-Cart may return an array (multiple checkboxes) or a comma-separated string
         if (is_array($value)) {
-            return array_values(array_filter(array_map('trim', $value)));
+            return array_values(array_filter(TypeCoerce::toStringList($value)));
         }
 
-        $value = (string) $value;
+        $value = TypeCoerce::toString($value);
         if (empty($value)) {
             return [];
         }
@@ -232,7 +232,7 @@ class ConfigProvider extends AbstractConfigProvider implements ConfigProviderInt
     /**
      * Get selected country codes for hotel sync filtering.
      *
-     * @return string[] Uppercase country codes (e.g. ['GR', 'BG', 'TR'])
+     * @return list<string> Uppercase country codes (e.g. ['GR', 'BG', 'TR'])
      */
     public static function getSelectedCountryCodes(): array
     {
@@ -254,11 +254,11 @@ class ConfigProvider extends AbstractConfigProvider implements ConfigProviderInt
         }
 
         // Sphinx keys have format: digits|alphanumeric (e.g. 51|q3s6ZrK7...)
-        if (!preg_match('/^\d+\|[a-zA-Z0-9]+$/', $key)) {
+        if (preg_match('/^\d+\|[a-zA-Z0-9]+$/', $key) !== 1) {
             return false;
         }
 
-        if (!filter_var($url, FILTER_VALIDATE_URL) || !str_starts_with($url, 'https://')) {
+        if (filter_var($url, FILTER_VALIDATE_URL) === false || !str_starts_with($url, 'https://')) {
             return false;
         }
 
@@ -273,13 +273,13 @@ class ConfigProvider extends AbstractConfigProvider implements ConfigProviderInt
      * Used by circuit, experience, and package route sync services
      * for client-side filtering.
      *
-     * @return int[] Destination IDs allowed by sync targets (empty = nothing configured)
+     * @return list<int> Destination IDs allowed by sync targets (empty = nothing configured)
      */
     public static function getAllowedDestinationIds(): array
     {
         static $cached = null;
         if ($cached !== null) {
-            return $cached;
+            return TypeCoerce::toIntList($cached);
         }
 
         self::migrateFromLegacySetting();
@@ -291,7 +291,7 @@ class ConfigProvider extends AbstractConfigProvider implements ConfigProviderInt
             $cached = [];
         }
 
-        return $cached;
+        return TypeCoerce::toIntList($cached);
     }
 
     /**
@@ -302,7 +302,7 @@ class ConfigProvider extends AbstractConfigProvider implements ConfigProviderInt
      * explicitly listed destinations.
      *
      * @param list<array<string, mixed>> $entries Rows from sphinx_destination_whitelist
-     * @return int[] Deduplicated destination IDs
+     * @return list<int> Deduplicated destination IDs
      */
     private static function resolveWhitelistEntries(array $entries): array
     {
@@ -311,7 +311,7 @@ class ConfigProvider extends AbstractConfigProvider implements ConfigProviderInt
 
         // Collect all destination IDs and identify which need country expansion
         foreach ($entries as $entry) {
-            $destId = (int) $entry['destination_id'];
+            $destId = TypeCoerce::toInt($entry['destination_id']);
             $allIds[] = $destId;
 
             if ($entry['selection_type'] === 'all') {
@@ -354,7 +354,7 @@ class ConfigProvider extends AbstractConfigProvider implements ConfigProviderInt
             return; // Whitelist already has data, no migration needed
         }
 
-        $val = (string) self::getSetting('selected_destinations', '');
+        $val = TypeCoerce::toString(self::getSetting('selected_destinations', ''));
         $tokens = array_filter(array_map('trim', explode(',', $val)));
         if (empty($tokens)) {
             return;

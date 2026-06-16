@@ -24,6 +24,7 @@ use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
 use Tygh\Addons\NovotonHolidays\NovotonApi;
 use Tygh\Addons\NovotonHolidays\Repository\AlternativeRequestRepository;
 use Tygh\Addons\NovotonHolidays\Repository\AlternativeRequestRepositoryInterface;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\TravelConstants;
 
 class AlternativeRequestService implements AlternativeRequestServiceInterface
@@ -95,17 +96,17 @@ class AlternativeRequestService implements AlternativeRequestServiceInterface
     {
         $security = $this->getSecurity();
 
-        $hotelId = $params['hotel_id'] ?? '';
-        $hotelName = $params['hotel_name'] ?? '';
-        $checkIn = $params['check_in'] ?? '';
-        $checkOut = $params['check_out'] ?? '';
-        $nights = (int) ($params['nights'] ?? 7);
-        $adults = (int) ($params['adults'] ?? 2);
-        $children = (int) ($params['children'] ?? 0);
-        $numRooms = (int) ($params['num_rooms'] ?? 1);
-        $contactEmail = trim($params['contact_email'] ?? '');
-        $contactPhone = trim($params['contact_phone'] ?? '');
-        $notes = strip_tags(mb_substr(trim($params['notes'] ?? ''), 0, 2000));
+        $hotelId = TypeCoerce::toString($params['hotel_id'] ?? '');
+        $hotelName = TypeCoerce::toString($params['hotel_name'] ?? '');
+        $checkIn = TypeCoerce::toString($params['check_in'] ?? '');
+        $checkOut = TypeCoerce::toString($params['check_out'] ?? '');
+        $nights = TypeCoerce::toInt($params['nights'] ?? 7);
+        $adults = TypeCoerce::toInt($params['adults'] ?? 2);
+        $children = TypeCoerce::toInt($params['children'] ?? 0);
+        $numRooms = TypeCoerce::toInt($params['num_rooms'] ?? 1);
+        $contactEmail = trim(TypeCoerce::toString($params['contact_email'] ?? ''));
+        $contactPhone = trim(TypeCoerce::toString($params['contact_phone'] ?? ''));
+        $notes = strip_tags(mb_substr(trim(TypeCoerce::toString($params['notes'] ?? '')), 0, 2000));
 
         // Validate required fields
         if (empty($hotelId) || empty($checkIn) || empty($contactEmail)) {
@@ -130,7 +131,7 @@ class AlternativeRequestService implements AlternativeRequestServiceInterface
             ];
         }
 
-        if (!filter_var($contactEmail, FILTER_VALIDATE_EMAIL)) {
+        if (filter_var($contactEmail, FILTER_VALIDATE_EMAIL) === false) {
             return [
                 'success' => false,
                 'request_id' => 0,
@@ -141,7 +142,7 @@ class AlternativeRequestService implements AlternativeRequestServiceInterface
         }
 
         // Validate check_out format
-        if (!empty($checkOut) && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $checkOut)) {
+        if (!empty($checkOut) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $checkOut) !== 1) {
             $checkOut = '';
         }
 
@@ -165,7 +166,7 @@ class AlternativeRequestService implements AlternativeRequestServiceInterface
                 'board_id' => '',
                 'holder' => 'Request from ' . $contactEmail,
                 'remark' => $notes,
-                'comment' => "Contact: {$contactEmail}" . ($contactPhone ? ", Phone: {$contactPhone}" : ''),
+                'comment' => "Contact: {$contactEmail}" . ($contactPhone !== '' && $contactPhone !== '0' ? ", Phone: {$contactPhone}" : ''),
                 'guests' => $guests,
                 'room_guests' => $roomGuests,
             ];
@@ -186,9 +187,9 @@ class AlternativeRequestService implements AlternativeRequestServiceInterface
                 $contactPhone,
                 $notes,
                 TravelConstants::STATUS_PENDING,
-                $apiResult['xml_sent'] ?? '',
-                $apiResult['xml_response'] ?? '',
-                $apiResult['id_num'] ?? '',
+                TypeCoerce::toString($apiResult['xml_sent'] ?? ''),
+                TypeCoerce::toString($apiResult['xml_response'] ?? ''),
+                TypeCoerce::toString($apiResult['id_num'] ?? ''),
             );
 
             $security->logSecurityEvent('alternative_request_created', [
@@ -213,7 +214,7 @@ class AlternativeRequestService implements AlternativeRequestServiceInterface
             return [
                 'success' => true,
                 'request_id' => $requestId,
-                'novoton_id' => $apiResult['id_num'] ?? '',
+                'novoton_id' => TypeCoerce::toString($apiResult['id_num'] ?? ''),
                 'message' => 'alternatives_request_sent',
                 'error' => '',
             ];
