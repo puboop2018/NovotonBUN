@@ -168,7 +168,7 @@ if ($mode === 'download_log') {
 
     // Security: Sanitize filename to prevent path traversal
     $logFile = basename($logFile); // Remove any path components
-    $logFile = (string) preg_replace('/[^a-zA-Z0-9_\-\.]/', '', $logFile); // Only allow safe characters
+    $logFile = (string) preg_replace('/[^a-zA-Z0-9_.-]/', '', $logFile); // Only allow safe characters
 
     if (empty($logFile)) {
         fn_set_notification('E', __('error'), __('novoton_holidays.invalid_log_file'));

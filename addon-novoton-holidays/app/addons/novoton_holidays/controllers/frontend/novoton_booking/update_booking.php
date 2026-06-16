@@ -46,7 +46,7 @@ use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
     $raw_contact = is_array($bookingData['contact'] ?? null) ? $bookingData['contact'] : [];
     $contact = [
         'email' => filter_var(trim(PriceInfoFormatter::toScalar($raw_contact['email'] ?? '')), FILTER_SANITIZE_EMAIL),
-        'phone' => preg_replace('/[^\d\s\+\-\(\)]/', '', trim(PriceInfoFormatter::toScalar($raw_contact['phone'] ?? ''))),
+        'phone' => preg_replace('/[^\d\s+()-]/', '', trim(PriceInfoFormatter::toScalar($raw_contact['phone'] ?? ''))),
     ];
     // Get check-in date for age validation
     /** @var array<string, mixed>|null $existing_for_checkin */

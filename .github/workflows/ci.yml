@@ -345,6 +345,13 @@ jobs:
           fetch-depth: 0                                   # full history required for Qodana PR analysis
       - name: 'Qodana Scan'
         uses: JetBrains/qodana-action@v2026.1
+      - name: 'Upload Qodana SARIF (offline triage of findings)'
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qodana-sarif
+          path: ${{ runner.temp }}/qodana/results/qodana.sarif.json
+          if-no-files-found: warn
         with:
           pr-mode: false
         env:

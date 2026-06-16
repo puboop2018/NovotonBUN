@@ -309,7 +309,7 @@ class BookingAdminProvider implements BookingAdminProviderInterface
     {
         $bookingId = (int) ($request['booking_id'] ?? 0);
         $novotonInvoiceId = isset($request['novoton_invoice_id'])
-            ? preg_replace('/[^a-zA-Z0-9\-_]/', '', trim($request['novoton_invoice_id']))
+            ? preg_replace('/[^a-zA-Z0-9_-]/', '', trim($request['novoton_invoice_id']))
             : '';
 
         if ($bookingId > 0) {
