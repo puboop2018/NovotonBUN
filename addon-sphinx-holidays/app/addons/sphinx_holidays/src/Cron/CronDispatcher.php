@@ -29,6 +29,7 @@ use Tygh\Addons\SphinxHolidays\Cron\Commands\SyncAndUploadImagesCommand;
 use Tygh\Addons\SphinxHolidays\Cron\Commands\SyncImagesCommand;
 use Tygh\Addons\SphinxHolidays\Cron\Commands\UpdateProductsCommand;
 use Tygh\Addons\TravelCore\Contracts\CronDispatcherInterface;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 /**
  * Dispatches cron jobs by mode name.
@@ -79,7 +80,7 @@ class CronDispatcher implements CronDispatcherInterface
     {
         $result = [];
         foreach (self::$modes as $mode => $class) {
-            $result[$mode] = $class::getDescription();
+            $result[$mode] = TypeCoerce::toString($class::getDescription());
         }
         return $result;
     }
@@ -159,7 +160,7 @@ class CronDispatcher implements CronDispatcherInterface
             $result = $command->execute($params);
         } finally {
             // Release lock
-            if ($lockFp) {
+            if ($lockFp !== null) {
                 flock($lockFp, LOCK_UN);
                 fclose($lockFp);
                 if (file_exists($lockFile)) {
@@ -190,7 +191,7 @@ class CronDispatcher implements CronDispatcherInterface
     private function acquireLock(string $lockFile)
     {
         $fp = fopen($lockFile, 'c'); // 'c' = create if missing, don't truncate
-        if (!$fp) {
+        if ($fp === false) {
             return false;
         }
 
@@ -224,7 +225,7 @@ class CronDispatcher implements CronDispatcherInterface
             unlink($lockFile);
         }
         $fp = fopen($lockFile, 'c');
-        if (!$fp) {
+        if ($fp === false) {
             return false;
         }
 
@@ -244,7 +245,7 @@ class CronDispatcher implements CronDispatcherInterface
      */
     private function getLockPath(string $mode): string
     {
-        $cacheDir = defined('DIR_CACHE') ? DIR_CACHE : sys_get_temp_dir();
+        $cacheDir = TypeCoerce::toString(defined('DIR_CACHE') ? DIR_CACHE : sys_get_temp_dir());
         return rtrim($cacheDir, '/') . "/sphinx_cron_{$mode}.lock";
     }
 }

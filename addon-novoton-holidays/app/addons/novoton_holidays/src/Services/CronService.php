@@ -20,6 +20,7 @@ use Tygh\Addons\NovotonHolidays\NovotonApi;
 use Tygh\Addons\NovotonHolidays\Repository\AlternativeRequestRepository;
 use Tygh\Addons\NovotonHolidays\Repository\AlternativeRequestRepositoryInterface;
 use Tygh\Addons\NovotonHolidays\Repository\BookingRepositoryInterface;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\TravelConstants;
 
 class CronService implements CronServiceInterface
@@ -83,9 +84,9 @@ class CronService implements CronServiceInterface
                     continue;
                 }
 
-                $resInfo = $this->reservations->getReservationInfo($idNum);
+                $resInfo = $this->reservations->getReservationInfo(TypeCoerce::toString($idNum));
 
-                if (!$resInfo) {
+                if (!(bool) $resInfo) {
                     $results['unchanged']++;
                     continue;
                 }
@@ -97,13 +98,13 @@ class CronService implements CronServiceInterface
                     $csStatus = $this->mapNovotonStatus($newStatus);
 
                     $this->bookingRepo->updateStatus(
-                        (int) $booking['booking_id'],
+                        TypeCoerce::toInt($booking['booking_id']),
                         $csStatus,
                         $newStatus,
                     );
                     // last_status_check is novoton-specific, update directly
                     $this->bookingRepo->update(
-                        (int) $booking['booking_id'],
+                        TypeCoerce::toInt($booking['booking_id']),
                         ['last_status_check' => date('Y-m-d H:i:s')],
                     );
 
@@ -116,7 +117,7 @@ class CronService implements CronServiceInterface
                     ];
                 } else {
                     $this->bookingRepo->update(
-                        (int) $booking['booking_id'],
+                        TypeCoerce::toInt($booking['booking_id']),
                         ['last_status_check' => date('Y-m-d H:i:s')],
                     );
                     $results['unchanged']++;
@@ -160,9 +161,9 @@ class CronService implements CronServiceInterface
             $results['processed']++;
 
             try {
-                $response = $this->reservations->getAlternatives($request['novoton_request_id']);
+                $response = $this->reservations->getAlternatives(TypeCoerce::toString($request['novoton_request_id']));
 
-                if ($response && !empty($response->alternative)) {
+                if ((bool) $response && !empty($response->alternative)) {
                     // Found alternatives
                     $alternatives = [];
                     foreach ($response->alternative as $alt) {
@@ -176,7 +177,7 @@ class CronService implements CronServiceInterface
                     }
 
                     $this->altRequestRepo->markAlternativesFound(
-                        (int) $request['request_id'],
+                        TypeCoerce::toInt($request['request_id']),
                         (string) json_encode($alternatives),
                     );
 
@@ -227,11 +228,11 @@ class CronService implements CronServiceInterface
             fn_send_mail([
                 'to' => $request['contact_email'],
                 'from' => 'default_company_orders_department',
-                'subj' => 'Alternative Hotels Available - ' . $request['hotel_name'],
+                'subj' => 'Alternative Hotels Available - ' . TypeCoerce::toString($request['hotel_name']),
                 'body' => $this->formatAlternativesEmail($request, $alternatives),
             ]);
 
-            $this->altRequestRepo->markNotified((int) $request['request_id']);
+            $this->altRequestRepo->markNotified(TypeCoerce::toInt($request['request_id']));
         }
     }
 
@@ -244,15 +245,20 @@ class CronService implements CronServiceInterface
      */
     private function formatAlternativesEmail(array $request, array $alternatives): string
     {
+        $hotelName = TypeCoerce::toString($request['hotel_name']);
         $body = "We found alternative hotels for your request:\n\n";
-        $body .= "Original hotel: {$request['hotel_name']}\n\n";
+        $body .= "Original hotel: {$hotelName}\n\n";
         $body .= "Available alternatives:\n";
 
         foreach ($alternatives as $i => $alt) {
-            $body .= ($i + 1) . ". {$alt['hotel_name']}\n";
-            $body .= "   Room: {$alt['room']}\n";
-            $body .= "   Board: {$alt['board']}\n";
-            $body .= "   Price: {$alt['price']}\n\n";
+            $altHotelName = TypeCoerce::toString($alt['hotel_name']);
+            $altRoom = TypeCoerce::toString($alt['room']);
+            $altBoard = TypeCoerce::toString($alt['board']);
+            $altPrice = TypeCoerce::toString($alt['price']);
+            $body .= ($i + 1) . ". {$altHotelName}\n";
+            $body .= "   Room: {$altRoom}\n";
+            $body .= "   Board: {$altBoard}\n";
+            $body .= "   Price: {$altPrice}\n\n";
         }
 
         return $body;

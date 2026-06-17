@@ -7,6 +7,7 @@ namespace Tygh\Addons\SphinxHolidays\Services;
 use Tygh\Addons\SphinxHolidays\Contracts\OrderStatusSyncServiceInterface;
 use Tygh\Addons\SphinxHolidays\Repository\SphinxBookingRepository;
 use Tygh\Addons\SphinxHolidays\SphinxApi;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\TravelConstants;
 
 /**
@@ -72,7 +73,7 @@ class OrderStatusSyncService implements OrderStatusSyncServiceInterface
         // Group bookings by order_id for efficient API lookups
         $byOrderId = [];
         foreach ($bookings as $booking) {
-            $orderId = (int) $booking['order_id'];
+            $orderId = TypeCoerce::toInt($booking['order_id'] ?? 0);
             if ($orderId > 0) {
                 $byOrderId[$orderId][] = $booking;
             }

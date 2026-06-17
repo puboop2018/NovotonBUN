@@ -8,12 +8,24 @@ declare(strict_types=1);
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
 use Tygh\Tygh;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 
     $security = _nvt_get_security_service();
 
     // --- Rate limiting ---
-    $auth = Tygh::$app['session']['auth'] ?? [];
-    $rate_id = !empty($auth['user_id']) ? (string)$auth['user_id'] : Tygh::$app['session']->getID();
+    // CS-Cart's session is an ArrayAccess container object; a plain (non-reference)
+    // local binds the same object handle, so offset reads below operate on the
+    // live session exactly as direct `Tygh::$app['session'][...]` access would.
+    $session = Tygh::$app['session'];
+    if (!is_array($session) && !$session instanceof \ArrayAccess) {
+        $session = [];
+    }
+    $auth = TypeCoerce::toStringMap($session['auth'] ?? []);
+    $session_id = is_object($session) && method_exists($session, 'getID')
+        ? TypeCoerce::toString($session->getID())
+        : '';
+    $rate_id = !empty($auth['user_id']) ? TypeCoerce::toString($auth['user_id']) : $session_id;
     if (!$security->checkBookingRateLimit($rate_id)) {
         $security->logSecurityEvent('rate_limit_exceeded', ['mode' => 'request_alternatives', 'identifier' => $rate_id]);
         fn_set_notification('E', __('error'), 'Too many requests. Please try again later.');
@@ -21,26 +33,26 @@ use Tygh\Tygh;
     }
 
     // --- Validate and sanitize search params ---
-    $sanitized = $security->validateSearchParams($_REQUEST);
+    $sanitized = $security->validateSearchParams(TypeCoerce::toStringMap($_REQUEST));
 
-    $hotel_id = $sanitized['hotel_id'] ?? '';
-    $check_in = $sanitized['check_in'] ?? '';
-    $nights = $sanitized['nights'] ?? 7;
+    $hotel_id = TypeCoerce::toString($sanitized['hotel_id'] ?? '');
+    $check_in = TypeCoerce::toString($sanitized['check_in'] ?? '');
+    $nights = TypeCoerce::toInt($sanitized['nights'] ?? 7);
 
     // Delegate to AlternativeRequestService
     $altService = _nvt_alternative_request_service();
     $result = $altService->submitAlternativeBookingRequest([
         'hotel_id' => $hotel_id,
-        'hotel_name' => strip_tags(mb_substr(trim($_REQUEST['hotel_name'] ?? ''), 0, 200)),
+        'hotel_name' => strip_tags(mb_substr(RequestCoerce::string($_REQUEST, 'hotel_name'), 0, 200)),
         'check_in' => $check_in,
         'check_out' => $sanitized['check_out'] ?? ($_REQUEST['check_out'] ?? ''),
         'nights' => $nights,
         'adults' => $sanitized['adults'] ?? 2,
         'children' => $sanitized['children'] ?? 0,
         'num_rooms' => $sanitized['rooms'] ?? 1,
-        'contact_email' => trim($_REQUEST['contact_email'] ?? ''),
-        'contact_phone' => trim($_REQUEST['contact_phone'] ?? ''),
-        'notes' => strip_tags(mb_substr(trim($_REQUEST['notes'] ?? ''), 0, 1000)),
+        'contact_email' => RequestCoerce::string($_REQUEST, 'contact_email'),
+        'contact_phone' => RequestCoerce::string($_REQUEST, 'contact_phone'),
+        'notes' => strip_tags(mb_substr(RequestCoerce::string($_REQUEST, 'notes'), 0, 1000)),
     ]);
 
     if (!empty($result['error']) && $result['error'] === 'missing_required_fields') {

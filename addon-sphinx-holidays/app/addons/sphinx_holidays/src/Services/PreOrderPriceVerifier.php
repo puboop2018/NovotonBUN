@@ -16,13 +16,14 @@ declare(strict_types=1);
 namespace Tygh\Addons\SphinxHolidays\Services;
 
 use Tygh\Addons\TravelCore\Contracts\PreOrderPriceVerifierInterface;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
 {
     /**
      * {@inheritdoc}
      * @param array<string, mixed> $cart
-     * @return array<string, mixed>
+     * @return array{allow: bool, corrections: array<string, mixed>, notifications: array<int, array<string, mixed>>, unavailable: array<string, mixed>}
      */
     #[\Override]
     public function verify(array $cart): array
@@ -40,14 +41,15 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
 
         $api = null;
 
-        foreach ($cart['products'] as $cartId => $product) {
-            if (empty($product['extra']['sphinx_booking'])) {
+        foreach (TypeCoerce::toStringMap($cart['products']) as $cartId => $product) {
+            $productData = TypeCoerce::toStringMap($product);
+            $extra = TypeCoerce::toStringMap($productData['extra'] ?? null);
+            if (empty($extra['sphinx_booking'])) {
                 continue;
             }
 
-            $extra = $product['extra'];
-            $offerId = $extra['offer_id'] ?? '';
-            $formPrice = (float)($extra['total_price'] ?? $product['price'] ?? 0);
+            $offerId = TypeCoerce::toString($extra['offer_id'] ?? '');
+            $formPrice = TypeCoerce::toFloat($extra['total_price'] ?? $productData['price'] ?? 0);
 
             if (empty($offerId) || $formPrice <= 0) {
                 continue;
@@ -66,7 +68,7 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
             }
 
             try {
-                $verifyResult = $api->verifyHotelOffer($offerId);
+                $verifyResult = TypeCoerce::toStringMap($api->verifyHotelOffer($offerId));
             } catch (\Throwable $e) {
                 fn_log_event('general', 'runtime', [
                     'message' => 'Sphinx PreOrderPriceVerifier: offer verify failed',
@@ -78,7 +80,7 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
 
             // If offer is no longer available, mark for removal instead of blocking the entire order.
             // This allows mixed-provider carts (Novoton + Sphinx) to proceed with the available items.
-            if (empty($verifyResult) || !($verifyResult['available'] ?? false)) {
+            if (empty($verifyResult) || !(bool) ($verifyResult['available'] ?? false)) {
                 fn_log_event('general', 'runtime', [
                     'message' => 'Sphinx PreOrderPriceVerifier: offer unavailable — marking for removal',
                     'offer_id' => $offerId,
@@ -93,7 +95,7 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
             }
 
             // Re-calculate price with commission
-            $apiPrice = (float)($verifyResult['price'] ?? 0);
+            $apiPrice = TypeCoerce::toFloat($verifyResult['price'] ?? 0);
             if ($apiPrice <= 0) {
                 continue;
             }
@@ -129,7 +131,7 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
 
                 $result['corrections'][$cartId] = [
                     'api_price' => $apiPrice,
-                    'api_price_raw' => (float)($verifyResult['price'] ?? 0),
+                    'api_price_raw' => TypeCoerce::toFloat($verifyResult['price'] ?? 0),
                 ];
                 $result['notifications'][] = $notificationData;
             } elseif ($threshold > 20) {

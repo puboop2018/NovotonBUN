@@ -54,9 +54,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $result = $service->sync();
 
         if (!empty($result['success'])) {
-            fn_set_notification('N', __('notice'), TypeCoerce::toString(__('sphinx_holidays.sync_completed')) . ': ' . TypeCoerce::toInt($result['synced'] ?? 0) . '/' . TypeCoerce::toInt($result['total'] ?? 0));
+            fn_set_notification('N', __('notice'), TypeCoerce::toString(__('sphinx_holidays.sync_completed')) . ': ' . TypeCoerce::toInt($result['synced']) . '/' . TypeCoerce::toInt($result['total']));
         } else {
-            fn_set_notification('E', __('error'), TypeCoerce::toString(__('sphinx_holidays.sync_failed')) . ': ' . (TypeCoerce::toString($result['error'] ?? '') ?: 'Unknown error'));
+            fn_set_notification('E', __('error'), TypeCoerce::toString(__('sphinx_holidays.sync_failed')) . ': ' . (TypeCoerce::toString($result['error']) ?: 'Unknown error'));
         }
 
         return [CONTROLLER_STATUS_REDIRECT, 'sphinx_holidays.manage'];
@@ -82,9 +82,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $result = $service->sync($countryCodes);
 
         if (!empty($result['success'])) {
-            fn_set_notification('N', __('notice'), TypeCoerce::toString(__('sphinx_holidays.hotel_sync_completed')) . ': ' . TypeCoerce::toInt($result['synced'] ?? 0) . '/' . TypeCoerce::toInt($result['total'] ?? 0));
+            fn_set_notification('N', __('notice'), TypeCoerce::toString(__('sphinx_holidays.hotel_sync_completed')) . ': ' . TypeCoerce::toInt($result['synced']) . '/' . TypeCoerce::toInt($result['total']));
         } else {
-            fn_set_notification('E', __('error'), TypeCoerce::toString(__('sphinx_holidays.hotel_sync_failed')) . ': ' . (TypeCoerce::toString($result['error'] ?? '') ?: 'Unknown error'));
+            fn_set_notification('E', __('error'), TypeCoerce::toString(__('sphinx_holidays.hotel_sync_failed')) . ': ' . (TypeCoerce::toString($result['error']) ?: 'Unknown error'));
         }
 
         return [CONTROLLER_STATUS_REDIRECT, 'sphinx_holidays.manage'];
@@ -137,11 +137,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $service = new HotelSyncService($api, $hotelRepo, $destRepo, $skipRepo);
 
         $result = $service->relinkExistingProducts();
-        $rLinked = TypeCoerce::toInt($result['linked'] ?? 0);
-        $rSkipped = TypeCoerce::toInt($result['skipped'] ?? 0);
-        $rNotFound = TypeCoerce::toInt($result['not_found'] ?? 0);
-        $rErrors = TypeCoerce::toInt($result['errors'] ?? 0);
-        $rTotal = TypeCoerce::toInt($result['total'] ?? 0);
+        $rLinked = TypeCoerce::toInt($result['linked']);
+        $rSkipped = TypeCoerce::toInt($result['skipped']);
+        $rNotFound = TypeCoerce::toInt($result['not_found']);
+        $rErrors = TypeCoerce::toInt($result['errors']);
+        $rTotal = TypeCoerce::toInt($result['total']);
 
         if ($rLinked > 0 || $rSkipped > 0) {
             fn_set_notification('N', __('notice'), __('sphinx_holidays.relink_done', [
@@ -183,9 +183,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Single JSON field to avoid PHP max_input_vars limit
         $whitelist = json_decode(TypeCoerce::toString($_REQUEST['whitelist_json'] ?? '[]'), true) ?: [];
 
+        $whitelistEntries = [];
+        foreach (TypeCoerce::toRowList($whitelist) as $entry) {
+            $whitelistEntries[] = [
+                'destination_id' => TypeCoerce::toInt($entry['destination_id'] ?? 0),
+                'selection_type' => TypeCoerce::toString($entry['selection_type'] ?? ''),
+            ];
+        }
+
         $whitelistRepo = Container::getDestinationWhitelistRepository();
         try {
-            $whitelistRepo->replaceAll(is_array($whitelist) ? $whitelist : []);
+            $whitelistRepo->replaceAll($whitelistEntries);
         } catch (\Exception $e) {
             fn_set_notification('E', __('error'), __('sphinx_holidays.whitelist_save_failed'));
             return [CONTROLLER_STATUS_REDIRECT, 'sphinx_holidays.whitelist'];
@@ -552,7 +560,9 @@ if ($mode === 'manage') {
     $view->assign('total_items', $total);
 
 } elseif ($mode === 'hotels') {
-    [$hotels, $search] = fn_sphinx_holidays_get_hotels($_REQUEST);
+    $hotelsResult = TypeCoerce::toList(fn_sphinx_holidays_get_hotels($_REQUEST));
+    $hotels = $hotelsResult[0] ?? [];
+    $search = TypeCoerce::toStringMap($hotelsResult[1] ?? []);
 
     $hotelRepo = Container::getHotelRepository();
     $distinctCountries = $hotelRepo->getDistinctCountries();
@@ -594,13 +604,14 @@ if ($mode === 'manage') {
     $whitelistRows = $whitelistRepo->findAll();
     $whitelistMap = []; // destination_id => selection_type
     foreach ($whitelistRows as $row) {
-        $whitelistMap[(int) $row['destination_id']] = $row['selection_type'];
+        $whitelistMap[TypeCoerce::toInt($row['destination_id'])] = $row['selection_type'];
     }
 
     // For each whitelisted country, get child count for badge display
     $countryData = [];
     foreach ($countries as $country) {
-        $cid = (int) $country['destination_id'];
+        $cid = TypeCoerce::toInt($country['destination_id']);
+        $countryCode = TypeCoerce::toString($country['country_code']);
         $isWhitelisted = isset($whitelistMap[$cid]);
         $selectionType = $whitelistMap[$cid] ?? null;
 
@@ -608,14 +619,14 @@ if ($mode === 'manage') {
         $whitelistedChildren = [];
         if ($isWhitelisted && $selectionType !== 'all') {
             // Get whitelisted children for this country
-            $whitelistedChildren = $whitelistRepo->getWhitelistedChildIdsByCountry($country['country_code']);
+            $whitelistedChildren = $whitelistRepo->getWhitelistedChildIdsByCountry($countryCode);
             $childCount = count($whitelistedChildren);
         }
 
         $countryData[] = [
             'destination_id' => $cid,
             'name' => $country['name'],
-            'country_code' => $country['country_code'],
+            'country_code' => $countryCode,
             'is_whitelisted' => $isWhitelisted,
             'selection_type' => $selectionType,
             'whitelisted_child_count' => $childCount,
@@ -647,7 +658,7 @@ if ($mode === 'manage') {
             $totalCities = $destRepo->countCitiesByCountry($cd['country_code']);
         } else {
             foreach ($regions as $region) {
-                $rid = (int) $region['destination_id'];
+                $rid = TypeCoerce::toInt($region['destination_id']);
                 $citiesInRegion = $destRepo->getCitiesByParent($rid);
                 $totalInRegion = count($citiesInRegion);
                 $whitelistedInRegion = 0;

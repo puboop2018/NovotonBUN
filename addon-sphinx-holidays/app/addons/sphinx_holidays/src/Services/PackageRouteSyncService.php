@@ -6,6 +6,7 @@ namespace Tygh\Addons\SphinxHolidays\Services;
 
 use Tygh\Addons\SphinxHolidays\Repository\PackageRouteRepository;
 use Tygh\Addons\SphinxHolidays\SphinxApi;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 /**
  * Fetches package routes from the Sphinx static API and syncs them into the local DB.
@@ -87,40 +88,43 @@ class PackageRouteSyncService extends AbstractSyncService
             }
 
             foreach ($items as $raw) {
-                $normalized = $this->normalizeRoute($raw);
+                $normalized = $this->normalizeRoute(TypeCoerce::toStringMap($raw));
                 if ($normalized === null) {
-                    $stats['failed']++;
+                    $stats['failed'] = TypeCoerce::toInt($stats['failed'] ?? 0) + 1;
                     continue;
                 }
 
                 // Filter by country: resolve arrival destination's country code
-                $arrivalCountry = $this->resolveCountryCode($normalized['arrival_id']);
+                $arrivalCountry = $this->resolveCountryCode(TypeCoerce::toInt($normalized['arrival_id']));
                 if ($arrivalCountry === '' || !in_array($arrivalCountry, $allowedCountryCodes, true)) {
                     $filtered++;
                     continue;
                 }
 
                 $allRoutes[] = $normalized;
-                $stats['total']++;
+                $stats['total'] = TypeCoerce::toInt($stats['total'] ?? 0) + 1;
             }
 
-            if (!$this->hasMorePages($response, $page, self::PER_PAGE, $stats['total'] + $stats['failed'] + $filtered)) {
+            if (!$this->hasMorePages($response, $page, self::PER_PAGE, TypeCoerce::toInt($stats['total'] ?? 0) + TypeCoerce::toInt($stats['failed'] ?? 0) + $filtered)) {
                 break;
             }
             $page++;
         }
 
+        $totalRoutes = TypeCoerce::toInt($stats['total'] ?? 0);
         if (!empty($allRoutes)) {
-            $this->output("Upserting {$stats['total']} routes...");
+            $this->output("Upserting {$totalRoutes} routes...");
             $batches = array_chunk($allRoutes, self::UPSERT_BATCH_SIZE);
             foreach ($batches as $batch) {
-                $stats['synced'] += $this->upsertBatch($batch);
+                $stats['synced'] = TypeCoerce::toInt($stats['synced'] ?? 0) + $this->upsertBatch($batch);
             }
         }
 
         $stats['success'] = empty($stats['error']);
+        $syncedRoutes = TypeCoerce::toInt($stats['synced'] ?? 0);
+        $failedRoutes = TypeCoerce::toInt($stats['failed'] ?? 0);
         $filterMsg = $filtered > 0 ? ", {$filtered} filtered (outside sync targets)" : '';
-        $this->output("Package route sync complete: {$stats['synced']}/{$stats['total']} synced, {$stats['failed']} failed{$filterMsg}.");
+        $this->output("Package route sync complete: {$syncedRoutes}/{$totalRoutes} synced, {$failedRoutes} failed{$filterMsg}.");
 
         return $stats;
     }
@@ -132,16 +136,16 @@ class PackageRouteSyncService extends AbstractSyncService
      */
     private function normalizeRoute(array $raw): ?array
     {
-        $departure = $raw['departure'] ?? [];
-        $arrival = $raw['arrival'] ?? [];
+        $departure = TypeCoerce::toStringMap($raw['departure'] ?? []);
+        $arrival = TypeCoerce::toStringMap($raw['arrival'] ?? []);
 
-        $departureId = (int) ($departure['id'] ?? 0);
-        $arrivalId = (int) ($arrival['id'] ?? 0);
+        $departureId = TypeCoerce::toInt($departure['id'] ?? 0);
+        $arrivalId = TypeCoerce::toInt($arrival['id'] ?? 0);
         if ($departureId <= 0 || $arrivalId <= 0) {
             return null;
         }
 
-        $transportType = strtolower((string) ($raw['type'] ?? 'flight'));
+        $transportType = strtolower(TypeCoerce::toString($raw['type'] ?? 'flight'));
         if (!in_array($transportType, ['flight', 'bus'], true)) {
             $transportType = 'flight';
         }
@@ -154,13 +158,13 @@ class PackageRouteSyncService extends AbstractSyncService
         return [
             'transport_type' => $transportType,
             'departure_id' => $departureId,
-            'departure_name' => (string) ($departure['name'] ?? ''),
-            'departure_iata' => (string) ($departure['iata_code'] ?? '') ?: null,
+            'departure_name' => TypeCoerce::toString($departure['name'] ?? ''),
+            'departure_iata' => TypeCoerce::toString($departure['iata_code'] ?? '') ?: null,
             'arrival_id' => $arrivalId,
-            'arrival_name' => (string) ($arrival['name'] ?? ''),
-            'arrival_iata' => (string) ($arrival['iata_code'] ?? '') ?: null,
+            'arrival_name' => TypeCoerce::toString($arrival['name'] ?? ''),
+            'arrival_iata' => TypeCoerce::toString($arrival['iata_code'] ?? '') ?: null,
             'available_dates' => json_encode($dates),
-            'duration' => (int) ($raw['duration'] ?? 0),
+            'duration' => TypeCoerce::toInt($raw['duration'] ?? 0),
             'last_synced_at' => date('Y-m-d H:i:s'),
         ];
     }

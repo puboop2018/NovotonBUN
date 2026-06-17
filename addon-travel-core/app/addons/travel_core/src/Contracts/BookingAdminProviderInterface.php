@@ -39,7 +39,7 @@ interface BookingAdminProviderInterface
      * Each action has: name, label, url, method (GET/POST), css_class, icon.
      *
      * @param array<string, mixed> $booking The travel_bookings row merged with provider display data
-     * @return array<int, array{name: string, label: string, url: string, method: string, css_class: string, icon: string}>
+     * @return array<int, array<string, mixed>> Each action has at least name/label/url/method/css_class/icon, plus provider-specific keys (e.g. booking_id, extra_params).
      */
     public function getAvailableActions(array $booking): array;
 

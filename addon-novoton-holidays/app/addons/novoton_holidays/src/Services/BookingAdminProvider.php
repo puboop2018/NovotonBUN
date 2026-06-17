@@ -97,7 +97,7 @@ class BookingAdminProvider implements BookingAdminProviderInterface
 
     /**
      * @param array<string, mixed> $booking
-     * @return list<array{name: string, label: string, url: string, method: string, css_class: string, icon: string}>
+     * @return list<array<string, mixed>>
      */
     public function getAvailableActions(array $booking): array
     {

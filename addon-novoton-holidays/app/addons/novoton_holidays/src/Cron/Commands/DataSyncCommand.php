@@ -7,6 +7,8 @@ namespace Tygh\Addons\NovotonHolidays\Cron\Commands;
 use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\Cron\AbstractCronCommand;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
+use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 class DataSyncCommand extends AbstractCronCommand
 {
@@ -61,18 +63,18 @@ class DataSyncCommand extends AbstractCronCommand
 
         foreach ($countries as $country) {
             $this->output("Fetching {$country}... ", false);
-            $result = fn_novoton_holidays_sync_resorts_list($country);
+            $result = TypeCoerce::toStringMap(fn_novoton_holidays_sync_resorts_list($country));
 
             if (!empty($result['success'])) {
-                $added = $result['added'] ?? 0;
-                $updated = $result['updated'] ?? 0;
-                $total = $result['total'] ?? ($added + $updated);
+                $added = RequestCoerce::int($result, 'added', 0);
+                $updated = RequestCoerce::int($result, 'updated', 0);
+                $total = RequestCoerce::int($result, 'total', $added + $updated);
                 $totalAdded += $added;
                 $totalUpdated += $updated;
                 $this->output("{$total} resorts ({$added} added, {$updated} updated)");
             } else {
                 $totalErrors++;
-                $this->output('Error: ' . ($result['error'] ?? 'Unknown error'));
+                $this->output('Error: ' . RequestCoerce::string($result, 'error', 'Unknown error'));
             }
         }
 
@@ -100,19 +102,19 @@ class DataSyncCommand extends AbstractCronCommand
         $this->output('Syncing facilities list from Novoton API...');
         $this->output('');
 
-        $result = fn_novoton_holidays_sync_facilities_list();
+        $result = TypeCoerce::toStringMap(fn_novoton_holidays_sync_facilities_list());
 
         $added = 0;
         $updated = 0;
         $errors = 0;
 
         if (!empty($result['success'])) {
-            $added = $result['added'] ?? 0;
-            $updated = $result['updated'] ?? 0;
-            $this->output('Synced ' . ($result['total'] ?? ($added + $updated)) . " facilities ({$added} added, {$updated} updated).");
+            $added = RequestCoerce::int($result, 'added', 0);
+            $updated = RequestCoerce::int($result, 'updated', 0);
+            $this->output('Synced ' . RequestCoerce::int($result, 'total', $added + $updated) . " facilities ({$added} added, {$updated} updated).");
         } else {
             $errors = 1;
-            $this->output('Error: ' . ($result['error'] ?? 'Unknown error'));
+            $this->output('Error: ' . RequestCoerce::string($result, 'error', 'Unknown error'));
         }
 
         // Sync new facilities to feature mapping table
