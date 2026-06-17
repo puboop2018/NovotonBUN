@@ -7,6 +7,7 @@ namespace Tygh\Addons\NovotonHolidays\Services;
 use Tygh\Addons\NovotonHolidays\Repository\BookingRepository;
 use Tygh\Addons\NovotonHolidays\Repository\BookingRepositoryInterface;
 use Tygh\Addons\TravelCore\Contracts\BookingAdminProviderInterface;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 /**
  * Novoton implementation of BookingAdminProviderInterface.
@@ -39,11 +40,11 @@ class BookingAdminProvider implements BookingAdminProviderInterface
 
         // Provider reference: Novoton invoice ID
         $display['provider_ref'] = !empty($booking['novoton_invoice_id'])
-            ? 'NT ' . $booking['novoton_invoice_id']
+            ? 'NT ' . TypeCoerce::toString($booking['novoton_invoice_id'])
             : '';
 
         // Status label with Novoton-specific styling
-        $novotonStatus = $booking['novoton_status'] ?? '';
+        $novotonStatus = TypeCoerce::toString($booking['novoton_status'] ?? '');
         $display['novoton_status'] = $novotonStatus;
         $display['novoton_invoice_id'] = $booking['novoton_invoice_id'] ?? '';
         $display['novoton_confirm_id'] = $booking['novoton_confirm_id'] ?? '';
@@ -55,7 +56,7 @@ class BookingAdminProvider implements BookingAdminProviderInterface
             'WT' => '<span class="label label-info">WT</span>',
             'RQ' => '<span class="label label-primary">RQ</span>',
         ];
-        $display['status_label'] = $statusLabels[$novotonStatus] ?? '<span class="label">' . htmlspecialchars($booking['status'] ?? '') . '</span>';
+        $display['status_label'] = $statusLabels[$novotonStatus] ?? '<span class="label">' . htmlspecialchars(TypeCoerce::toString($booking['status'] ?? '')) . '</span>';
 
         // Price info
         if (!empty($booking['api_price'])) {
@@ -65,7 +66,7 @@ class BookingAdminProvider implements BookingAdminProviderInterface
         return $display;
     }
 
-    /** @return array<string, mixed> */
+    /** @return array{changed: bool, old_status: string, new_status: string, error: string|null} */
     public function checkStatus(string $providerBookingId): array
     {
         $bookingId = (int) $providerBookingId;
@@ -74,7 +75,7 @@ class BookingAdminProvider implements BookingAdminProviderInterface
         }
 
         $booking = $this->bookingRepo->findById($bookingId);
-        $oldStatus = $booking['novoton_status'] ?? $booking['status'] ?? '';
+        $oldStatus = TypeCoerce::toString($booking['novoton_status'] ?? $booking['status'] ?? '');
 
         if (function_exists('fn_novoton_holidays_check_reservation_status')) {
             fn_novoton_holidays_check_reservation_status($bookingId);
@@ -84,7 +85,7 @@ class BookingAdminProvider implements BookingAdminProviderInterface
 
         BookingRepository::invalidateCache($bookingId);
         $updatedBooking = $this->bookingRepo->findById($bookingId);
-        $newStatus = $updatedBooking['novoton_status'] ?? $updatedBooking['status'] ?? '';
+        $newStatus = TypeCoerce::toString($updatedBooking['novoton_status'] ?? $updatedBooking['status'] ?? '');
 
         return [
             'changed' => $oldStatus !== $newStatus,
@@ -95,15 +96,14 @@ class BookingAdminProvider implements BookingAdminProviderInterface
     }
 
     /**
-     * @return array<string, mixed>
      * @param array<string, mixed> $booking
      * @return list<array{name: string, label: string, url: string, method: string, css_class: string, icon: string}>
      */
     public function getAvailableActions(array $booking): array
     {
         $actions = [];
-        $providerBookingId = $booking['provider_booking_id'] ?? '';
-        $display = $booking['provider_display'] ?? [];
+        $providerBookingId = TypeCoerce::toString($booking['provider_booking_id'] ?? '');
+        $display = TypeCoerce::toStringMap($booking['provider_display'] ?? []);
         $novotonStatus = $display['novoton_status'] ?? '';
 
         // Check Status action for ASK bookings
@@ -175,15 +175,14 @@ class BookingAdminProvider implements BookingAdminProviderInterface
     }
 
     /**
-     * @return array<string, mixed>
      * @param array<string, mixed> $booking
      * @return list<array{name: string, label: string, dispatch: string, ajax: bool}>
      */
     public function getProviderTabs(array $booking): array
     {
         $tabs = [];
-        $bookingId = $booking['provider_booking_id'] ?? $booking['booking_id'] ?? '';
-        $display = $booking['provider_display'] ?? [];
+        $bookingId = TypeCoerce::toString($booking['provider_booking_id'] ?? $booking['booking_id'] ?? '');
+        $display = TypeCoerce::toStringMap($booking['provider_display'] ?? []);
         $novotonStatus = $display['novoton_status'] ?? '';
 
         // Alternatives tab for ST/RQ bookings or if alternatives were previously requested

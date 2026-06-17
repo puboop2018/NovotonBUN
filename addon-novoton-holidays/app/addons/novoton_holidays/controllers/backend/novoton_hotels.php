@@ -23,6 +23,8 @@ use Tygh\Addons\NovotonHolidays\NovotonApi;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Services\Container;
 use Tygh\Addons\NovotonHolidays\Services\PriceInfoFormatter;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
@@ -48,9 +50,11 @@ if ($mode === 'sync_facilities') {
     }
     
     $result = fn_novoton_holidays_sync_facilities_list();
-    
-    if ($result['success']) {
-        fn_set_notification('N', __('notice'), "Facilities synced! Added: {$result['added']}, Updated: {$result['updated']}");
+
+    if (TypeCoerce::toBool($result['success'])) {
+        $added = TypeCoerce::toInt($result['added']);
+        $updated = TypeCoerce::toInt($result['updated']);
+        fn_set_notification('N', __('notice'), "Facilities synced! Added: {$added}, Updated: {$updated}");
     } else {
         fn_set_notification('E', __('error'), $result['error'] ?? 'Sync failed');
     }
@@ -95,8 +99,10 @@ if ($mode === 'save_facilities') {
         return [CONTROLLER_STATUS_DENIED];
     }
 
-    $facility_types = $_REQUEST['facility_types'] ?? [];
-    $facility_translations = $_REQUEST['facility_translations'] ?? [];
+    $facility_types_raw = $_REQUEST['facility_types'] ?? [];
+    $facility_types = is_array($facility_types_raw) ? $facility_types_raw : [];
+    $facility_translations_raw = $_REQUEST['facility_translations'] ?? [];
+    $facility_translations = is_array($facility_translations_raw) ? $facility_translations_raw : [];
     $allowed = [
         \Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_HOTEL_FACILITY,
         \Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_ROOM_FACILITY,
@@ -113,7 +119,7 @@ if ($mode === 'save_facilities') {
         }
 
         $name_ro = isset($facility_translations[$facility_id])
-            ? trim((string) $facility_translations[$facility_id])
+            ? TypeCoerce::toString($facility_translations[$facility_id])
             : null;
 
         $facilityRepo->updateTypeAndTranslation($facility_id, $type, $name_ro);
@@ -134,14 +140,14 @@ if ($mode === 'check_packages') {
         return [CONTROLLER_STATUS_DENIED];
     }
 
-    $limit = max(1, min(2000, (int)($_REQUEST['limit'] ?? 500)));
+    $limit = max(1, min(2000, RequestCoerce::int($_REQUEST, 'limit', 500)));
     $run = isset($_REQUEST['run']);
 
     fn_novoton_holidays_stream_page_open('Check Hotel Packages');
     echo '<p class="hint">Retrieves <code>&lt;PackageName&gt;</code> from <code>hotelinfo</code> API for all hotels across all countries.</p>';
 
     // Form
-    $form = fn_novoton_holidays_stream_form_fields(fn_url('novoton_holidays.check_packages'));
+    $form = fn_novoton_holidays_stream_form_fields(TypeCoerce::toString(fn_url('novoton_holidays.check_packages')));
     echo '<form method="get" action="' . $form['action'] . '">';
     echo $form['hidden_fields'];
     echo '<input type="hidden" name="run" value="1">';
@@ -192,13 +198,15 @@ if ($mode === 'check_packages') {
 
             foreach ($hotels as $hotel) {
                 $grand_total++;
+                $hotel_id = TypeCoerce::toString($hotel['hotel_id'] ?? '');
+                $hotel_name = TypeCoerce::toString($hotel['hotel_name'] ?? '');
 
                 try {
-                    $hotel_info = $api->hotels()->getHotelInfo($hotel['hotel_id']);
+                    $hotel_info = $api->hotels()->getHotelInfo($hotel_id);
 
                     // V3: Extract all packages from hotelinfo
                     $packages = [];
-                    if ($hotel_info && isset($hotel_info->packages)) {
+                    if ((bool) $hotel_info && isset($hotel_info->packages)) {
                         // Single package format
                         if (isset($hotel_info->packages->IdCont)) {
                             $packages[] = [
@@ -224,30 +232,30 @@ if ($mode === 'check_packages') {
                         // V3: Store packages in novoton_hotel_packages table
                         foreach ($packages as $pkg) {
                             if (!empty($pkg['id'])) {
-                                $packageRepo->upsertByHotelAndPackage($hotel['hotel_id'], $pkg['id'], $pkg['name']);
+                                $packageRepo->upsertByHotelAndPackage($hotel_id, $pkg['id'], $pkg['name']);
                                 $pkg_names[] = $pkg['name'];
                             }
                         }
 
                         // Update hotel packages_count (has_room_price is set exclusively by room_price check)
-                        $hotelRepo->updatePackagesCount($hotel['hotel_id'], count($packages));
+                        $hotelRepo->updatePackagesCount($hotel_id, count($packages));
 
                         $display_pkgs = implode(', ', array_slice($pkg_names, 0, 2)) . (count($pkg_names) > 2 ? '...' : '');
-                        echo "<span class='success'>&check; NVT-{$hotel['hotel_id']} | {$hotel['hotel_name']} &rarr; " . count($packages) . " pkg: " . htmlspecialchars($display_pkgs) . "</span><br>\n";
+                        echo "<span class='success'>&check; NVT-{$hotel_id} | {$hotel_name} &rarr; " . count($packages) . " pkg: " . htmlspecialchars($display_pkgs) . "</span><br>\n";
 
                         $results_table[] = [
-                            'hotel_id' => $hotel['hotel_id'],
-                            'hotel_name' => $hotel['hotel_name'],
+                            'hotel_id' => $hotel_id,
+                            'hotel_name' => $hotel_name,
                             'package_name' => implode(', ', $pkg_names),
                             'country' => $country
                         ];
                     } else {
                         $without_packages++;
-                        echo "<span class='skip'>&cir; NVT-{$hotel['hotel_id']} | {$hotel['hotel_name']} - No packages</span><br>\n";
+                        echo "<span class='skip'>&cir; NVT-{$hotel_id} | {$hotel_name} - No packages</span><br>\n";
                     }
                 } catch (Exception $e) {
                     $errors++;
-                    echo "<span class='error'>&cross; NVT-{$hotel['hotel_id']} | {$hotel['hotel_name']} - Error: " . htmlspecialchars($e->getMessage()) . "</span><br>\n";
+                    echo "<span class='error'>&cross; NVT-{$hotel_id} | {$hotel_name} - Error: " . htmlspecialchars($e->getMessage()) . "</span><br>\n";
                 }
 
                 if ($grand_total % 25 === 0) {

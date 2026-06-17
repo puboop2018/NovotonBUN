@@ -18,6 +18,7 @@ use Tygh\Addons\NovotonHolidays\Api\Contracts\PricingApiClientInterface;
 use Tygh\Addons\NovotonHolidays\Repository\BookingRepositoryInterface;
 use Tygh\Addons\NovotonHolidays\Repository\HotelRepositoryInterface;
 use Tygh\Addons\TravelCore\Helpers\SessionAccessor;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
 use Tygh\Addons\TravelCore\TravelConstants;
 
@@ -83,18 +84,23 @@ class BookingService implements BookingServiceInterface
     {
         // Get current user/session
         $auth = $this->session->auth();
-        $user_id = !empty($auth['user_id']) ? (int) $auth['user_id'] : 0;
+        $user_id = !empty($auth['user_id']) ? TypeCoerce::toInt($auth['user_id']) : 0;
         $session_id = session_id();
 
         // Parse and validate data
         $rooms_data = $this->roomsParser->parseRoomsData($bookingData);
         $guests_data = $this->guestService->parseGuestsData($bookingData);
 
+        // RoomsDataParser's aggregation helpers declare an array<string, mixed>
+        // contract but reindex their input via TypeCoerce::toRowList, so a
+        // string-keyed view of the parsed list yields identical results.
+        $rooms_map = $this->roomsAsKeyedMap($rooms_data);
+
         // Extract room info for database columns
-        $room_info = $this->roomsParser->extractRoomInfo($rooms_data, $bookingData);
+        $room_info = $this->roomsParser->extractRoomInfo($rooms_map, $bookingData);
 
         // Calculate totals
-        $totals = $this->roomsParser->calculateTotals($rooms_data);
+        $totals = $this->roomsParser->calculateTotals($rooms_map);
 
         // Get hotel info (typed DTO)
         $hotelId = \Tygh\Addons\TravelCore\Helpers\TypeCoerce::toString($bookingData['hotel_id'] ?? '');
@@ -115,7 +121,10 @@ class BookingService implements BookingServiceInterface
             'board_name' => $bookingData['board_name'] ?? '',
             'check_in' => $bookingData['check_in'],
             'check_out' => $bookingData['check_out'],
-            'nights' => $this->calculateNights($bookingData['check_in'], $bookingData['check_out']),
+            'nights' => $this->calculateNights(
+                TypeCoerce::toString($bookingData['check_in']),
+                TypeCoerce::toString($bookingData['check_out']),
+            ),
             'adults' => $totals['adults'],
             'children' => $totals['children'],
             'children_ages' => implode(',', $totals['ages']),
@@ -126,9 +135,9 @@ class BookingService implements BookingServiceInterface
             'guest_email' => '',
             'guest_phone' => $bookingData['phone'] ?? '',
             'guests_data' => $this->guestDataNormalizer->toJson($guests_data),
-            'base_price' => (float) ($bookingData['base_price'] ?? 0),
-            'api_price' => (float) ($bookingData['api_price'] ?? 0),
-            'total_price' => (float) ($bookingData['total_price'] ?? 0),
+            'base_price' => TypeCoerce::toFloat($bookingData['base_price'] ?? 0),
+            'api_price' => TypeCoerce::toFloat($bookingData['api_price'] ?? 0),
+            'total_price' => TypeCoerce::toFloat($bookingData['total_price'] ?? 0),
             'currency' => ConfigProvider::getApiCurrency(),
             'status' => TravelConstants::STATUS_PENDING,
         ];
@@ -136,14 +145,14 @@ class BookingService implements BookingServiceInterface
         // Check for duplicate booking (delegate to repository)
         $existing = $this->bookingRepo->findExisting(
             $booking_record['hotel_id'],
-            $booking_record['check_in'],
-            $booking_record['check_out'],
+            TypeCoerce::toString($booking_record['check_in']),
+            TypeCoerce::toString($booking_record['check_out']),
             $booking_record['holder_name'],
             1, // hours
         );
-        $existing_id = $existing ? (int) $existing['booking_id'] : null;
+        $existing_id = !empty($existing) ? TypeCoerce::toInt($existing['booking_id']) : null;
 
-        if ($existing_id) {
+        if (!empty($existing_id)) {
             // Update existing (routes through repository → syncs to travel_bookings)
             $this->updateBooking($existing_id, $booking_record);
             return $existing_id;
@@ -213,11 +222,11 @@ class BookingService implements BookingServiceInterface
     public function linkToOrder(int $booking_id, int $order_id): bool
     {
         // Get order info for user/email
-        $order_info = fn_get_order_info($order_id);
+        $order_info = TypeCoerce::toStringMap(fn_get_order_info($order_id));
 
         $update = [
             'order_id' => $order_id,
-            'user_id' => (int) ($order_info['user_id'] ?? 0),
+            'user_id' => TypeCoerce::toInt($order_info['user_id'] ?? 0),
             'guest_email' => $order_info['email'] ?? '',
         ];
 
@@ -235,7 +244,7 @@ class BookingService implements BookingServiceInterface
     public function addToCart(int $booking_id, int $product_id, array $bookingData): bool
     {
         $booking = $this->getBooking($booking_id);
-        if (!$booking) {
+        if (empty($booking)) {
             return false;
         }
 
@@ -267,7 +276,30 @@ class BookingService implements BookingServiceInterface
      */
     public function parseRoomsData(array $bookingData): array
     {
-        return $this->roomsParser->parseRoomsData($bookingData);
+        return $this->roomsAsKeyedMap($this->roomsParser->parseRoomsData($bookingData));
+    }
+
+    /**
+     * Present a parsed rooms list as an array<string, mixed>.
+     *
+     * RoomsDataParser::parseRoomsData() returns a list<array<string, mixed>>,
+     * but both this service's interface contract and the parser's aggregation
+     * helpers (extractRoomInfo/calculateTotals) are typed array<string, mixed>.
+     * Those helpers reindex their input through TypeCoerce::toRowList(), so
+     * substituting string keys here is observationally identical to passing
+     * the original list.
+     *
+     * @param list<array<string, mixed>> $rooms
+     * @return array<string, mixed>
+     */
+    private function roomsAsKeyedMap(array $rooms): array
+    {
+        $map = [];
+        foreach ($rooms as $index => $room) {
+            $map['room_' . $index] = $room;
+        }
+
+        return $map;
     }
 
     /**
@@ -359,10 +391,10 @@ class BookingService implements BookingServiceInterface
         $prefix = ConfigProvider::getFirstProductCodePrefix();
         $productCode = $prefix . $hotelId;
 
-        $productId = (int)db_get_field(
+        $productId = TypeCoerce::toInt(db_get_field(
             'SELECT product_id FROM ?:products WHERE product_code = ?s',
             $productCode,
-        );
+        ));
 
         return $productId ?: $fallbackProductId;
     }
