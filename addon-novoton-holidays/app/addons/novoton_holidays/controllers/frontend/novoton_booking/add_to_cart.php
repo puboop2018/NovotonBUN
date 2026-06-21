@@ -18,8 +18,18 @@ use Tygh\Addons\TravelCore\TravelConstants;
 
     // --- Security: Rate limiting ---
     $security = _nvt_get_security_service();
-    $auth = TypeCoerce::toStringMap(Tygh::$app['session']['auth'] ?? null);
-    $rate_limit_id = !empty($auth['user_id']) ? TypeCoerce::toString($auth['user_id']) : Tygh::$app['session']->getID();
+    // CS-Cart's session is an ArrayAccess container object; a plain (non-reference)
+    // local binds the same object handle, so offset reads below operate on the
+    // live session exactly as direct `Tygh::$app['session'][...]` access would.
+    $session = Tygh::$app['session'];
+    if (!is_array($session) && !$session instanceof \ArrayAccess) {
+        $session = [];
+    }
+    $auth = TypeCoerce::toStringMap($session['auth'] ?? null);
+    $session_id = (is_object($session) && method_exists($session, 'getID'))
+        ? TypeCoerce::toString($session->getID())
+        : '';
+    $rate_limit_id = !empty($auth['user_id']) ? TypeCoerce::toString($auth['user_id']) : $session_id;
     if (!$security->checkBookingRateLimit($rate_limit_id)) {
         $security->logSecurityEvent('rate_limit_exceeded', ['mode' => 'add_to_cart', 'identifier' => $rate_limit_id]);
         fn_set_notification('E', __('error'), 'Too many booking requests. Please try again later.');

@@ -32,6 +32,7 @@ declare(strict_types=1);
 use Tygh\Registry;
 use Tygh\Tygh;
 use Tygh\Addons\NovotonHolidays\Services\RoomPriceService;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
@@ -49,7 +50,7 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 //   _nvt_booking_repo()      - Booking database access
 //=============================================================================
 
-$service_loader = Registry::get('config.dir.addons') . 'novoton_holidays/src/Services/ServiceLoader.php';
+$service_loader = TypeCoerce::toString(Registry::get('config.dir.addons')) . 'novoton_holidays/src/Services/ServiceLoader.php';
 if (file_exists($service_loader)) {
     require_once $service_loader;
 }
@@ -89,7 +90,7 @@ $_nvt_array_params = ['children_ages', 'ages'];
 foreach ($_nvt_array_params as $_nvt_param) {
     foreach ([&$_REQUEST, &$_GET] as &$_nvt_superglobal) {
         if (isset($_nvt_superglobal[$_nvt_param]) && is_array($_nvt_superglobal[$_nvt_param])) {
-            $_nvt_superglobal[$_nvt_param] = implode(',', array_map('intval', $_nvt_superglobal[$_nvt_param]));
+            $_nvt_superglobal[$_nvt_param] = implode(',', array_map(static fn ($_nvt_v): int => intval(TypeCoerce::toString($_nvt_v)), $_nvt_superglobal[$_nvt_param]));
         }
     }
     unset($_nvt_superglobal);
@@ -130,13 +131,13 @@ function _nvt_get_cached_hotel_info($hotel_id, $force = false) {
                     // Cache corrupted, fetch fresh
                 }
             }
-            return $cached;
+            return $cached instanceof \SimpleXMLElement ? $cached : null;
         }
     }
 
     // Fetch from API
     $api = fn_novoton_holidays_get_api();
-    if (!$api) {
+    if ($api === null) {
         return null;
     }
 
@@ -162,38 +163,38 @@ function _nvt_get_cached_hotel_info($hotel_id, $force = false) {
 
 $_nvt_mode_dir = __DIR__ . '/novoton_booking';
 
-if ($mode == 'search') {
+if ($mode === 'search') {
     $__nvt_result = include($_nvt_mode_dir . '/search.php');
     if ($__nvt_result !== 1) return $__nvt_result;
 
-} elseif ($mode == 'booking_form') {
+} elseif ($mode === 'booking_form') {
     $__nvt_result = include($_nvt_mode_dir . '/booking_form.php');
     if ($__nvt_result !== 1) return $__nvt_result;
 
-} elseif ($mode == 'add_to_cart') {
+} elseif ($mode === 'add_to_cart') {
     $__nvt_result = include($_nvt_mode_dir . '/add_to_cart.php');
     if ($__nvt_result !== 1) return $__nvt_result;
 
-} elseif ($mode == 'book') {
+} elseif ($mode === 'book') {
     // Legacy redirect — only forward known booking parameters
     $allowed_keys = ['hotel_id', 'check_in', 'check_out', 'adults', 'children', 'rooms', 'package_name', 'room_id', 'board_id'];
     $bookingData = array_intersect_key($_REQUEST, array_flip($allowed_keys));
     $redirect_url = 'novoton_booking.booking_form?' . http_build_query($bookingData);
     return [CONTROLLER_STATUS_REDIRECT, $redirect_url];
 
-} elseif ($mode == 'edit_booking') {
+} elseif ($mode === 'edit_booking') {
     $__nvt_result = include($_nvt_mode_dir . '/edit_booking.php');
     if ($__nvt_result !== 1) return $__nvt_result;
 
-} elseif ($mode == 'update_booking') {
+} elseif ($mode === 'update_booking') {
     $__nvt_result = include($_nvt_mode_dir . '/update_booking.php');
     if ($__nvt_result !== 1) return $__nvt_result;
 
-} elseif ($mode == 'request_alternatives') {
+} elseif ($mode === 'request_alternatives') {
     $__nvt_result = include($_nvt_mode_dir . '/request_alternatives.php');
     if ($__nvt_result !== 1) return $__nvt_result;
 
-} elseif ($mode == 'ajax_recalculate_price') {
+} elseif ($mode === 'ajax_recalculate_price') {
     // This mode always dies with JSON output; include never returns
     include($_nvt_mode_dir . '/ajax_recalculate_price.php');
 }

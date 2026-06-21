@@ -34,7 +34,7 @@ const NOVOTON_STAR_LABELS = [
 function fn_novoton_holidays_csv_escape(string $value): string
 {
     // Neutralise formula injection characters
-    if ($value !== '' && preg_match('/^[=+\-@\t\r]/', $value)) {
+    if ($value !== '' && preg_match('/^[=+\-@\t\r]/', $value) === 1) {
         $value = "'" . $value;
     }
     return '"' . str_replace('"', '""', $value) . '"';
@@ -68,9 +68,6 @@ function fn_novoton_holidays_generate_import_csv_report($results, $import_type =
     $pif = \Tygh\Addons\NovotonHolidays\Services\PriceInfoFormatter::class;
     // Data rows
     foreach ($results as $row) {
-        if (!is_array($row)) {
-            continue;
-        }
         $csv_lines[] = implode(';', [
             fn_novoton_holidays_csv_escape($pif::toScalar($row['hotel_id'] ?? '')),
             fn_novoton_holidays_csv_escape($pif::toScalar($row['hotel_name'] ?? '')),
@@ -161,7 +158,7 @@ function fn_novoton_holidays_send_import_report_email($results, $import_type, $s
         $csv_content = fn_novoton_holidays_generate_import_csv_report($results, $import_type, $summary);
 
         $filename = 'novoton_' . $import_type . '_report_' . date('Y-m-d_H-i-s') . '.csv';
-        $temp_path = fn_get_files_dir_path() . 'novoton_reports/';
+        $temp_path = TypeCoerce::toString(fn_get_files_dir_path()) . 'novoton_reports/';
 
         if (!is_dir($temp_path)) {
             fn_mkdir($temp_path);
@@ -184,20 +181,20 @@ function fn_novoton_holidays_send_import_report_email($results, $import_type, $s
         /** @var \Tygh\Mailer\Mailer $mailer */
         $mailer = Tygh::$app['mailer'];
 
-        $send_result = $mailer->send([
+        $send_result = TypeCoerce::toBool($mailer->send([
             'to' => $admin_email,
             'from' => 'default_company_orders_department',
             'data' => $email_data,
             'template_code' => 'novoton_holidays_import_report',
             'attachments' => $attachments,
-        ], 'A', CART_LANGUAGE);
+        ], 'A', CART_LANGUAGE));
 
     } catch (\Exception $e) {
         fn_log_event('general', 'runtime', 'Failed to send cron report email: ' . $e->getMessage());
     }
 
     // Clean up old reports (once a day)
-    $temp_path = fn_get_files_dir_path() . 'novoton_reports/';
+    $temp_path = TypeCoerce::toString(fn_get_files_dir_path()) . 'novoton_reports/';
     if (is_dir($temp_path)) {
         fn_novoton_holidays_cleanup_old_reports($temp_path, 7);
     }
@@ -382,10 +379,10 @@ function fn_novoton_holidays_generate_hotel_features_csv(): array
             fn_log_event('general', 'runtime', 'Feature mapper initialization failed: ' . $e->getMessage());
         }
 
-        $starHeaderRo = $featureMapper ? ($featureMapper->getFeatureName(\Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_PROPERTY_RATING, 'ro') ?? 'Stele') : 'Stele';
-        $starHeaderEn = $featureMapper ? ($featureMapper->getFeatureName(\Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_PROPERTY_RATING, 'en') ?? 'Stars') : 'Stars';
-        $boardHeaderRo = $featureMapper ? ($featureMapper->getFeatureName(\Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_MEALS, 'ro') ?? 'Tip Masa') : 'Tip Masa';
-        $boardHeaderEn = $featureMapper ? ($featureMapper->getFeatureName(\Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_MEALS, 'en') ?? 'Board Type') : 'Board Type';
+        $starHeaderRo = $featureMapper !== null ? ($featureMapper->getFeatureName(\Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_PROPERTY_RATING, 'ro') ?? 'Stele') : 'Stele';
+        $starHeaderEn = $featureMapper !== null ? ($featureMapper->getFeatureName(\Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_PROPERTY_RATING, 'en') ?? 'Stars') : 'Stars';
+        $boardHeaderRo = $featureMapper !== null ? ($featureMapper->getFeatureName(\Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_MEALS, 'ro') ?? 'Tip Masa') : 'Tip Masa';
+        $boardHeaderEn = $featureMapper !== null ? ($featureMapper->getFeatureName(\Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_MEALS, 'en') ?? 'Board Type') : 'Board Type';
 
         // CSV header (use EN feature names as column headers)
         $csv_lines = [];
@@ -474,7 +471,7 @@ function fn_novoton_holidays_generate_hotel_features_csv(): array
 
         // Save to file in novoton_reports directory
         $filename = 'novoton_hotel_features.csv';
-        $dir = fn_get_files_dir_path() . 'novoton_reports/';
+        $dir = TypeCoerce::toString(fn_get_files_dir_path()) . 'novoton_reports/';
 
         if (!is_dir($dir)) {
             fn_mkdir($dir);
@@ -483,7 +480,7 @@ function fn_novoton_holidays_generate_hotel_features_csv(): array
         $file_path = $dir . $filename;
         $csv_content = implode("\n", $csv_lines);
         
-        if (file_put_contents($file_path, $csv_content)) {
+        if (file_put_contents($file_path, $csv_content) > 0) {
             $result['success'] = true;
             $result['file_path'] = $file_path;
             $result['filename'] = $filename;
@@ -629,7 +626,7 @@ function fn_novoton_holidays_generate_hotel_features_xml(): array
 
         // Save
         $filename  = 'novoton_hotel_features.xml';
-        $dir       = fn_get_files_dir_path() . 'novoton_reports/';
+        $dir       = TypeCoerce::toString(fn_get_files_dir_path()) . 'novoton_reports/';
 
         if (!is_dir($dir)) {
             fn_mkdir($dir);
@@ -637,7 +634,7 @@ function fn_novoton_holidays_generate_hotel_features_xml(): array
 
         $file_path = $dir . $filename;
 
-        if ($dom->save($file_path)) {
+        if ($dom->save($file_path) > 0) {
             $result['success']   = true;
             $result['file_path'] = $file_path;
             $result['filename']  = $filename;

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\TravelCore\ValueObjects;
 
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+
 /**
  * Immutable value object encapsulating API request/response debug state.
  *
@@ -44,13 +46,15 @@ class RequestDebugInfo
      */
     public static function fromClient(object $client): self
     {
+        $vars = get_object_vars($client);
+
         return new self(
-            $client->lastRequest ?? '',
-            $client->lastResponse ?? '',
-            $client->lastResponseRaw ?? '',
-            $client->lastRequestFormatted ?? [],
-            $client->lastError ?? '',
-            $client->lastHttpCode ?? 0,
+            TypeCoerce::toString($vars['lastRequest'] ?? ''),
+            TypeCoerce::toString($vars['lastResponse'] ?? ''),
+            TypeCoerce::toString($vars['lastResponseRaw'] ?? ''),
+            TypeCoerce::toStringMap($vars['lastRequestFormatted'] ?? []),
+            TypeCoerce::toString($vars['lastError'] ?? ''),
+            TypeCoerce::toInt($vars['lastHttpCode'] ?? 0),
         );
     }
 
@@ -62,7 +66,7 @@ class RequestDebugInfo
     public function getErrorSummary(): string
     {
         $error = $this->lastError;
-        if ($this->lastHttpCode && $this->lastHttpCode !== 200) {
+        if ($this->lastHttpCode !== 0 && $this->lastHttpCode !== 200) {
             $error .= " (HTTP {$this->lastHttpCode})";
         }
         return trim($error);

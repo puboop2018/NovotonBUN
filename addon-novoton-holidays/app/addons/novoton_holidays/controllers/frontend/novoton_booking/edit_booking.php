@@ -24,9 +24,18 @@ use Tygh\Addons\NovotonHolidays\Helpers\JsonDecoder;
     }
 
     // Get booking record — verify ownership (user_id or session_id)
-    $auth = TypeCoerce::toStringMap(Tygh::$app['session']['auth'] ?? []);
+    // CS-Cart's session is an ArrayAccess container object; a plain (non-reference)
+    // local binds the same object handle, so offset reads below operate on the
+    // live session exactly as direct `Tygh::$app['session'][...]` access would.
+    $session = Tygh::$app['session'];
+    if (!is_array($session) && !$session instanceof \ArrayAccess) {
+        $session = [];
+    }
+    $auth = TypeCoerce::toStringMap($session['auth'] ?? []);
     $current_user_id = PriceInfoFormatter::toInt($auth['user_id'] ?? 0);
-    $current_session_id = TypeCoerce::toString(Tygh::$app['session']->getID());
+    $current_session_id = (is_object($session) && method_exists($session, 'getID'))
+        ? TypeCoerce::toString($session->getID())
+        : '';
 
     $ownershipRepo = _nvt_booking_ownership_repo();
     /** @var array<string, mixed>|null $booking_record */
@@ -38,11 +47,12 @@ use Tygh\Addons\NovotonHolidays\Helpers\JsonDecoder;
     }
 
     // Also try to get data from cart session (more up-to-date)
-    $cart = &Tygh::$app['session']['cart'];
+    $cart = $session['cart'] ?? null;
+    $cart_products = is_array($cart) ? TypeCoerce::toStringMap($cart['products'] ?? null) : [];
     /** @var array<string, mixed>|null $cart_item */
     $cart_item = null;
-    if (!empty($cart_id) && is_array($cart) && !empty($cart['products'][$cart_id]) && is_array($cart['products'][$cart_id])) {
-        $cart_item = $cart['products'][$cart_id];
+    if (!empty($cart_id) && !empty($cart_products[$cart_id]) && is_array($cart_products[$cart_id])) {
+        $cart_item = $cart_products[$cart_id];
     }
 
     // Get hotel info (typed DTO + legacy array view for downstream template vars)
@@ -99,7 +109,7 @@ use Tygh\Addons\NovotonHolidays\Helpers\JsonDecoder;
         if (empty($guest['dob']) && !empty($guest['birthday'])) {
             // Convert YYYY-MM-DD to DD/MM/YYYY
             $ts = strtotime(PriceInfoFormatter::toScalar($guest['birthday']));
-            if ($ts) {
+            if ($ts !== false && $ts !== 0) {
                 $guest['dob'] = date('d/m/Y', $ts);
             }
         }
@@ -210,7 +220,7 @@ use Tygh\Addons\NovotonHolidays\Helpers\JsonDecoder;
     $view->assign('hotel_stars', $hotel_stars);
     $view->assign('package_name', $package_name);
     $view->assign('hotel_all_packages', $all_packages);
-    $view->assign('auth', TypeCoerce::toStringMap(Tygh::$app['session']['auth'] ?? []));
+    $view->assign('auth', TypeCoerce::toStringMap($session['auth'] ?? []));
 
     // Page setup
     $page_title = __('novoton_holidays.edit_booking');

@@ -11,7 +11,9 @@ declare(strict_types=1);
 
 use Tygh\Registry;
 use Tygh\Addons\NovotonHolidays\Constants;
+use Tygh\Addons\NovotonHolidays\Services\SecurityServiceInterface;
 use Tygh\Addons\TravelCore\TravelConstants;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\NovotonHolidays\Helpers\JsonDecoder;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
@@ -36,7 +38,7 @@ function fn_novoton_holidays_decrypt_request_pii(array $request): array
     // Lazy-load SecurityService (works in both controller and cron context)
     static $security = null;
     if ($security === null) {
-        $loader = Registry::get('config.dir.addons') . 'novoton_holidays/src/Services/ServiceLoader.php';
+        $loader = TypeCoerce::toString(Registry::get('config.dir.addons')) . 'novoton_holidays/src/Services/ServiceLoader.php';
         if (file_exists($loader)) {
             require_once $loader;
         }
@@ -45,13 +47,13 @@ function fn_novoton_holidays_decrypt_request_pii(array $request): array
         }
     }
 
-    if ($security === null) {
+    if (!$security instanceof SecurityServiceInterface) {
         return $request;
     }
 
     foreach (['contact_email', 'contact_phone', 'notes'] as $field) {
         if (!empty($request[$field])) {
-            $decrypted = $security->decrypt($request[$field]);
+            $decrypted = $security->decrypt(TypeCoerce::toString($request[$field]));
             if ($decrypted !== null) {
                 $request[$field] = $decrypted;
             }
@@ -85,7 +87,7 @@ function fn_novoton_holidays_decrypt_requests_pii(array $requests): array
 function fn_novoton_holidays_check_reservation_status($booking_id = 0): array
 {
     $api = fn_novoton_holidays_get_api();
-    if (!$api) {
+    if ($api === null) {
         return ['success' => false, 'error' => 'API not available'];
     }
 
@@ -93,7 +95,7 @@ function fn_novoton_holidays_check_reservation_status($booking_id = 0): array
 
     if ($booking_id > 0) {
         $booking = $bookingRepo->findById($booking_id);
-        $bookings = $booking ? [$booking] : [];
+        $bookings = $booking !== null ? [$booking] : [];
     } else {
         $bookings = $bookingRepo->findWithReservationId();
         // Filter to only pending
@@ -111,22 +113,27 @@ function fn_novoton_holidays_check_reservation_status($booking_id = 0): array
         if (empty($booking['novoton_reservation_id'])) continue;
         $result['checked']++;
 
+        $booking_pk = TypeCoerce::toInt($booking['booking_id'] ?? 0);
+        $current_status = TypeCoerce::toString($booking['status'] ?? '');
+
         try {
-            $status_response = $api->reservations()->getReservationInfo($booking['novoton_reservation_id']);
+            $status_response = $api->reservations()->getReservationInfo(TypeCoerce::toString($booking['novoton_reservation_id']));
 
             if (!empty($status_response)) {
                 // getReservationInfo returns an XML object — access via object properties
                 $new_status = (string)($status_response->Status ?? $status_response->status ?? '');
 
                 // Map Novoton API status codes to internal status via centralized constant
-                $internal_status = \Tygh\Addons\NovotonHolidays\Constants::NOVOTON_STATUS_TO_INTERNAL[$new_status]
-                    ?? $booking['status'];
+                $internal_status = TypeCoerce::toString(
+                    \Tygh\Addons\NovotonHolidays\Constants::NOVOTON_STATUS_TO_INTERNAL[$new_status]
+                        ?? $current_status
+                );
 
-                if ($internal_status !== $booking['status']) {
-                    $bookingRepo->updateStatus((int) $booking['booking_id'], $internal_status, $new_status);
+                if ($internal_status !== $current_status) {
+                    $bookingRepo->updateStatus($booking_pk, $internal_status, $new_status);
                     $result['updated']++;
-                    $result['details'][$booking['booking_id']] = [
-                        'old' => $booking['status'],
+                    $result['details'][$booking_pk] = [
+                        'old' => $current_status,
                         'new' => $internal_status,
                         'novoton' => $new_status
                     ];
@@ -134,7 +141,7 @@ function fn_novoton_holidays_check_reservation_status($booking_id = 0): array
             }
 
         } catch (\Exception $e) {
-            $result['details'][$booking['booking_id']] = [
+            $result['details'][$booking_pk] = [
                 'error' => $e->getMessage()
             ];
         }
@@ -165,7 +172,7 @@ function fn_novoton_holidays_request_alternatives($booking_id): array
     );
 
     if ($existing) {
-        return ['success' => false, 'error' => 'Alternative request already pending', 'request_id' => $existing];
+        return ['success' => false, 'error' => 'Alternative request already pending', 'request_id' => TypeCoerce::toInt($existing)];
     }
 
     // Create new request
@@ -180,7 +187,7 @@ function fn_novoton_holidays_request_alternatives($booking_id): array
 
     return [
         'success' => true,
-        'request_id' => $request_id,
+        'request_id' => TypeCoerce::toInt($request_id),
         'message' => 'Alternative request created'
     ];
 }
@@ -193,15 +200,15 @@ function fn_novoton_holidays_request_alternatives($booking_id): array
  */
 function fn_novoton_holidays_get_alternatives($booking_id): array
 {
-    $request = db_get_row(
+    $request = TypeCoerce::toStringMap(db_get_row(
         "SELECT request_id, booking_id, order_id, status, alternatives_data, notes, created_at, updated_at FROM ?:novoton_alternative_requests WHERE booking_id = ?i ORDER BY created_at DESC LIMIT 1",
         $booking_id
-    );
-    
+    ));
+
     if (empty($request)) {
         return [];
     }
-    
+
     return JsonDecoder::decode($request['alternatives_data'] ?? '', 'alternatives_data');
 }
 
@@ -225,10 +232,10 @@ function fn_novoton_holidays_get_order_bookings($order_id): array
 function fn_novoton_holidays_cron_resinfo(): array
 {
     $api = fn_novoton_holidays_get_api();
-    if (!$api) {
+    if ($api === null) {
         return ['success' => false, 'error' => 'API not available'];
     }
-    
+
     $countries = fn_novoton_holidays_parse_countries();
     
     $result = [

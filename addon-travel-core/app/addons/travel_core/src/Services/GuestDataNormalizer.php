@@ -123,7 +123,7 @@ class GuestDataNormalizer implements GuestDataNormalizerInterface
                 return false;
             }
             // At least one key must match the room pattern
-            if (preg_match('/^room\d+_(adult|child)_\d+$/', $key)) {
+            if (preg_match('/^room\d+_(adult|child)_\d+$/', $key) === 1) {
                 return true;
             }
         }
@@ -177,12 +177,12 @@ class GuestDataNormalizer implements GuestDataNormalizerInterface
                 continue;
             }
 
-            $type = strtolower($guest['type'] ?? 'adult');
+            $type = strtolower(TypeCoerce::toString($guest['type'] ?? 'adult'));
             if ($type !== 'child') {
                 $type = 'adult';
             }
 
-            $room = (int) ($guest['room'] ?? 1);
+            $room = TypeCoerce::toInt($guest['room'] ?? 1);
             if ($room < 1) {
                 $room = 1;
             }
@@ -231,7 +231,7 @@ class GuestDataNormalizer implements GuestDataNormalizerInterface
                 continue;
             }
 
-            $guest = array_merge(self::GUEST_DEFAULTS, $guest);
+            $guest = array_merge(self::GUEST_DEFAULTS, TypeCoerce::toStringMap($guest));
             $guest = self::deriveNameFields($guest);
         }
 
@@ -249,19 +249,19 @@ class GuestDataNormalizer implements GuestDataNormalizerInterface
      */
     private static function deriveNameFields(array $guest): array
     {
-        $firstName = trim($guest['first_name'] ?? '');
-        $lastName = trim($guest['last_name'] ?? '');
-        $name = trim($guest['name'] ?? '');
-        $apiName = trim($guest['api_name'] ?? '');
+        $firstName = TypeCoerce::toString($guest['first_name'] ?? '');
+        $lastName = TypeCoerce::toString($guest['last_name'] ?? '');
+        $name = TypeCoerce::toString($guest['name'] ?? '');
+        $apiName = TypeCoerce::toString($guest['api_name'] ?? '');
 
         // Build api_name from first/last if missing
-        if (empty($apiName) && ($firstName || $lastName)) {
+        if (empty($apiName) && ($firstName !== '' || $lastName !== '')) {
             $apiName = trim($firstName . ' ' . $lastName);
         }
 
         // Build display name from last, first if missing
-        if (empty($name) && ($firstName || $lastName)) {
-            $name = $lastName && $firstName
+        if (empty($name) && ($firstName !== '' || $lastName !== '')) {
+            $name = $lastName !== '' && $firstName !== ''
                 ? $lastName . ', ' . $firstName
                 : ($lastName ?: $firstName);
         }

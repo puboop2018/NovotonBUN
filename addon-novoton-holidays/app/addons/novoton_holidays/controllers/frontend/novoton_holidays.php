@@ -15,20 +15,23 @@ use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
+
 // Cron update
-if ($mode == 'cron_update') {
+if ($mode === 'cron_update') {
 
     // Get addon settings with null safety
     $addon_settings = ConfigProvider::all();
 
     // Verify API key
-    $provided_key = $_REQUEST['access_key'] ?? '';
+    $provided_key = RequestCoerce::string($_REQUEST, 'access_key');
     $stored_key = ConfigProvider::getCronAccessKey();
-    
+
     if (empty($stored_key)) {
         exit('ERROR: Cron Access Key not configured in addon settings.');
     }
-    
+
     if (empty($provided_key) || !hash_equals($stored_key, $provided_key)) {
         exit('ERROR: Invalid or missing API key.');
     }
@@ -42,8 +45,9 @@ if ($mode == 'cron_update') {
     echo "Started: " . date('Y-m-d H:i:s') . "\n\n";
     
     // Get all products with Novoton prefix
-    $prefixes = !empty($addon_settings['product_code_prefixes']) 
-        ? explode(',', $addon_settings['product_code_prefixes']) 
+    $prefixes_setting = TypeCoerce::toString($addon_settings['product_code_prefixes'] ?? '');
+    $prefixes = $prefixes_setting !== ''
+        ? explode(',', $prefixes_setting)
         : array('NVT');
     
     $prefix_conditions = array();
@@ -61,16 +65,16 @@ if ($mode == 'cron_update') {
     
     $condition = '(' . implode(' OR ', $prefix_conditions) . ')';
     
-    $products = db_get_array(
-        "SELECT p.product_id, p.product_code, pd.product 
+    $products = TypeCoerce::toRowList(db_get_array(
+        "SELECT p.product_id, p.product_code, pd.product
          FROM ?:products AS p
          LEFT JOIN ?:product_descriptions AS pd ON p.product_id = pd.product_id AND pd.lang_code = ?s
-         WHERE " . $condition . " 
-         AND p.status = 'A' 
+         WHERE " . $condition . "
+         AND p.status = 'A'
          ORDER BY p.product_id",
         CART_LANGUAGE
-    );
-    
+    ));
+
     if (empty($products)) {
         echo "No products found.\n";
         exit;
@@ -87,7 +91,7 @@ if ($mode == 'cron_update') {
     
     // Load func.php if needed
     if (!function_exists('fn_novoton_holidays_update_product_prices')) {
-        $func_file = Registry::get('config.dir.addons') . 'novoton_holidays/func.php';
+        $func_file = TypeCoerce::toString(Registry::get('config.dir.addons')) . 'novoton_holidays/func.php';
         if (file_exists($func_file)) {
             require_once($func_file);
         }
@@ -96,10 +100,11 @@ if ($mode == 'cron_update') {
     // Update each product
     foreach ($products as $index => $product) {
         $num = $index + 1;
-        echo "[$num/" . count($products) . "] {$product['product_code']}... ";
-        
+        $product_code = TypeCoerce::toString($product['product_code'] ?? '');
+        echo "[$num/" . count($products) . "] {$product_code}... ";
+
         if (function_exists('fn_novoton_holidays_update_product_prices')) {
-            $result = fn_novoton_holidays_update_product_prices($product['product_id']);
+            $result = fn_novoton_holidays_update_product_prices(TypeCoerce::toInt($product['product_id'] ?? 0));
             
             if ($result === true) {
                 echo "Good\n";
@@ -150,9 +155,9 @@ if ($mode == 'cron_update') {
  * Generate hotel features CSV via cron (frontend)
  * URL: index.php?dispatch=novoton_holidays.cron_export_hotel_features&access_key=YOUR_ACCESS_KEY
  */
-if ($mode == 'cron_export_hotel_features') {
+if ($mode === 'cron_export_hotel_features') {
     $expected_key = ConfigProvider::getCronAccessKey();
-    $provided_key = $_REQUEST['access_key'] ?? '';
+    $provided_key = RequestCoerce::string($_REQUEST, 'access_key');
 
     header('Content-Type: text/plain; charset=utf-8');
 
@@ -160,7 +165,7 @@ if ($mode == 'cron_export_hotel_features') {
         echo "[ERROR] Cron API key not configured.\n";
         exit;
     }
-    
+
     if (!hash_equals($expected_key, $provided_key)) {
         echo "[ERROR] Invalid API key.\n";
         exit;
@@ -189,9 +194,9 @@ if ($mode == 'cron_export_hotel_features') {
  * Direct download of hotel features CSV (frontend)
  * URL: index.php?dispatch=novoton_holidays.get_hotel_features_csv&access_key=YOUR_ACCESS_KEY
  */
-if ($mode == 'get_hotel_features_csv') {
+if ($mode === 'get_hotel_features_csv') {
     $expected_key = ConfigProvider::getCronAccessKey();
-    $provided_key = $_REQUEST['access_key'] ?? '';
+    $provided_key = RequestCoerce::string($_REQUEST, 'access_key');
 
     // Verify API key
     if (empty($expected_key) || !hash_equals($expected_key, $provided_key)) {
@@ -201,7 +206,7 @@ if ($mode == 'get_hotel_features_csv') {
         exit;
     }
 
-    $export_dir = fn_get_files_dir_path() . 'novoton_exports/';
+    $export_dir = TypeCoerce::toString(fn_get_files_dir_path()) . 'novoton_exports/';
     $file_path = $export_dir . 'hotel_features_import.csv';
     
     if (!file_exists($file_path)) {
