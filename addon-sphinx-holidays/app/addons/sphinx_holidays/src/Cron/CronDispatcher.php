@@ -104,7 +104,7 @@ class CronDispatcher implements CronDispatcherInterface
      *
      * @param string $mode The cron mode to execute
      * @param array<string, mixed> $params Additional parameters
-     * @return array<string, mixed> Result from the command
+     * @return array<string, mixed> Result from the command (shape varies by mode: success, plus mode-specific keys like stats/busy/synced/error)
      */
     #[\Override]
     public function dispatch(string $mode, array $params = []): array
@@ -169,7 +169,27 @@ class CronDispatcher implements CronDispatcherInterface
             }
         }
 
-        return $result;
+        // Normalise the command result to the dispatcher contract: callers
+        // (CronRunner / HTTP) rely on a boolean `success` flag and string
+        // `error`/`message` fields. The diagnostic keys consumers read
+        // (busy, stats) are carried over verbatim, and every optional key is
+        // only included when the command actually set it, preserving the
+        // `?? default` fallbacks on the reading side.
+        $normalized = ['success' => TypeCoerce::toBool($result['success'] ?? false)];
+        if (array_key_exists('error', $result)) {
+            $normalized['error'] = TypeCoerce::toString($result['error']);
+        }
+        if (array_key_exists('message', $result)) {
+            $normalized['message'] = TypeCoerce::toString($result['message']);
+        }
+        if (array_key_exists('busy', $result)) {
+            $normalized['busy'] = $result['busy'];
+        }
+        if (array_key_exists('stats', $result)) {
+            $normalized['stats'] = $result['stats'];
+        }
+
+        return $normalized;
     }
 
     /** Maximum lock age before it's considered stale (seconds). */

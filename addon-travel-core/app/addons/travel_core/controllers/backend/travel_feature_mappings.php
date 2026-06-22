@@ -56,7 +56,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (isset($data['cscart_variant_id'])) {
                 $updateData['cscart_variant_id'] = TypeCoerce::toInt($data['cscart_variant_id']) ?: null;
                 // Mark as manually set to prevent auto-overwrite
-                if (TypeCoerce::toInt($data['cscart_variant_id'] ?? 0) > 0) {
+                if (TypeCoerce::toInt($data['cscart_variant_id']) > 0) {
                     $updateData['variant_source'] = 'manual';
                 }
             }
@@ -170,7 +170,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $variantId = $variantNameToId[$nameEn] ?? null;
 
                 // Pass 2: case-insensitive match
-                if (!$variantId) {
+                if (empty($variantId)) {
                     $nameEnLower = mb_strtolower($nameEn);
                     foreach ($variantNameToId as $vName => $vId) {
                         if (mb_strtolower($vName) === $nameEnLower) {
@@ -181,7 +181,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
 
                 // Pass 3: normalized match (strip punctuation, collapse whitespace)
-                if (!$variantId) {
+                if (empty($variantId)) {
                     $normalizedTarget = preg_replace('/\s+/', ' ', trim((string) preg_replace('/[^\p{L}\p{N}\s]/u', ' ', mb_strtolower($nameEn, 'UTF-8'))));
                     foreach ($variantNameToId as $vName => $vId) {
                         $normalizedExisting = preg_replace('/\s+/', ' ', trim((string) preg_replace('/[^\p{L}\p{N}\s]/u', ' ', mb_strtolower($vName, 'UTF-8'))));
@@ -192,7 +192,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                 }
 
-                if ($variantId) {
+                if (!empty($variantId)) {
                     FeatureMapper::updateVariantId(TypeCoerce::toInt($mappingMap['map_id'] ?? 0), TypeCoerce::toInt($variantId), 'auto');
                     $resolved++;
                 } else {
@@ -267,14 +267,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $unmappedId = RequestCoerce::int($_REQUEST, 'unmapped_id');
         if ($unmappedId > 0) {
             $row = $repo->getUnmappedById($unmappedId);
-            if ($row) {
+            if (!empty($row)) {
                 $mapId = FeatureMapper::registerUnmapped(
                     TypeCoerce::toString($row['api_source'] ?? ''),
                     TypeCoerce::toString($row['feature_type'] ?? ''),
                     TypeCoerce::toString($row['api_value'] ?? ''),
                     TypeCoerce::toString($row['api_label'] ?? '')
                 );
-                if ($mapId) {
+                if (!empty($mapId)) {
                     fn_set_notification('N', __('notice'), __('travel_core.fm_unmapped_promoted'));
                     return [CONTROLLER_STATUS_REDIRECT, 'travel_feature_mappings.edit&map_id=' . $mapId];
                 }
@@ -297,7 +297,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // Provider-specific: determine source table and JSON column
         $scanConfig = _travel_fm_get_scan_config($provider);
-        if (!$scanConfig) {
+        if (empty($scanConfig)) {
             fn_set_notification('E', __('error'), "Provider '" . htmlspecialchars($provider, ENT_QUOTES, 'UTF-8') . "' does not support facility scanning.");
             return [CONTROLLER_STATUS_REDIRECT, 'travel_feature_mappings.manage'];
         }
@@ -339,7 +339,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 // Check if already mapped (facility could be hotel_facility, room_facility, or beach_access)
                 $mapping = FeatureMapper::resolveFacility($provider, $facilityId);
-                if (!$mapping) {
+                if (empty($mapping)) {
                     // Track as unmapped — default to hotel_facility
                     FeatureMapper::trackUnmapped($provider, 'hotel_facility', $facilityId, $facilityName);
                     $newUnmapped++;
@@ -394,7 +394,7 @@ if ($mode === 'manage') {
     $searchQuery = trim(RequestCoerce::string($_REQUEST, 'q'));
 
     // ── Dashboard mode (no feature_type selected) ──
-    if (!$featureTypeFilter || !in_array($featureTypeFilter, $validFeatureTypes, true)) {
+    if (empty($featureTypeFilter) || !in_array($featureTypeFilter, $validFeatureTypes, true)) {
 
         // Per-type stats for dashboard cards
         $typeStats = $repo->getTypeStats();
@@ -623,12 +623,12 @@ if ($mode === 'edit') {
     }
 
     // Load all CS-Cart product features for the feature dropdown
-    $allFeatures = $repo->findAllCsCartFeatures(DESCR_SL);
+    $allFeatures = $repo->findAllCsCartFeatures(TypeCoerce::toString(DESCR_SL));
 
     // Load variants for the currently selected feature
     $featureVariants = [];
     if (!empty($mapping['cscart_feature_id'])) {
-        $featureVariants = $repo->findVariantsForFeature((int) $mapping['cscart_feature_id'], DESCR_SL);
+        $featureVariants = $repo->findVariantsForFeature(TypeCoerce::toInt($mapping['cscart_feature_id']), TypeCoerce::toString(DESCR_SL));
     }
 
     // Load aliases for this mapping
@@ -646,11 +646,14 @@ if ($mode === 'get_variants') {
     $variants = [];
 
     if ($featureId > 0) {
-        $variants = $repo->findVariantsForFeature($featureId, DESCR_SL);
+        $variants = $repo->findVariantsForFeature($featureId, TypeCoerce::toString(DESCR_SL));
     }
 
     if (defined('AJAX_REQUEST')) {
-        Tygh::$app['ajax']->assign('variants', $variants);
+        $ajax = Tygh::$app['ajax'];
+        if (is_object($ajax) && method_exists($ajax, 'assign')) {
+            $ajax->assign('variants', $variants);
+        }
     } else {
         header('Content-Type: application/json');
         fn_echo(json_encode($variants));

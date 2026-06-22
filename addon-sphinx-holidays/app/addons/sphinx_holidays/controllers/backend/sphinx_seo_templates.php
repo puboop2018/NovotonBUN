@@ -21,6 +21,7 @@ declare(strict_types=1);
 
 use Tygh\Addons\SphinxHolidays\Services\Container;
 use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Registry;
 use Tygh\Settings;
 use Tygh\Tygh;
@@ -58,7 +59,7 @@ function _sphinx_seo_setting_defaults(): array
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($mode === 'save') {
-        $submitted = $_REQUEST['seo'] ?? [];
+        $submitted = TypeCoerce::toStringMap($_REQUEST['seo'] ?? []);
         $defaults  = _sphinx_seo_setting_defaults();
         $settings  = Settings::instance();
 
@@ -69,14 +70,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (str_starts_with($key, 'seo_field_')) {
                 $toSave[$key] = !empty($submitted[$key]) ? 'Y' : 'N';
             } else {
-                $toSave[$key] = trim((string) ($submitted[$key] ?? ''));
+                $toSave[$key] = TypeCoerce::toString($submitted[$key] ?? '');
             }
         }
 
-        foreach ($toSave as $key => $value) {
-            // auto_create=true so settings that were never in addon.xml are
-            // inserted on first save rather than silently discarded.
-            $settings->updateValue($key, $value, 'sphinx_holidays', true);
+        if (is_object($settings) && method_exists($settings, 'updateValue')) {
+            foreach ($toSave as $key => $value) {
+                // auto_create=true so settings that were never in addon.xml are
+                // inserted on first save rather than silently discarded.
+                $settings->updateValue($key, $value, 'sphinx_holidays', true);
+            }
         }
 
         // Refresh in-request Registry so the same request (e.g. subsequent hooks)
@@ -97,21 +100,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $fetcher = static fn(int $offset, int $batch): array =>
             $hotelRepo->fetchLinkedBatchForSeo($offset, $batch);
 
-        $builder = static fn(array $hotel): array =>
-            \Tygh\Addons\SphinxHolidays\Helpers\SphinxProductFactory::buildPlaceholders($hotel, [
-                'city'    => $hotel['destination_name'] ?? '',
-                'country' => $hotel['country_name'] ?? '',
-                'region'  => $hotel['region_name'] ?? '',
+        $builder = static function (array $hotel): array {
+            $hotelMap = TypeCoerce::toStringMap($hotel);
+            return \Tygh\Addons\SphinxHolidays\Helpers\SphinxProductFactory::buildPlaceholders($hotelMap, [
+                'city'    => $hotelMap['destination_name'] ?? '',
+                'country' => $hotelMap['country_name'] ?? '',
+                'region'  => $hotelMap['region_name'] ?? '',
             ]);
+        };
 
         return fn_travel_core_run_long_task(
-            __('travel_core.seo_bulk_apply_progress'),
+            TypeCoerce::toString(__('travel_core.seo_bulk_apply_progress')),
             static fn() => fn_travel_core_seo_bulk_apply('sphinx_holidays', $fetcher, $builder),
             'sphinx_seo_templates.manage',
             static function (array $result) {
                 fn_set_notification('N', __('notice'),
-                    str_replace(['[updated]', '[total]'], [$result['updated'], $result['total']],
-                        __('travel_core.seo_bulk_apply_done')));
+                    str_replace(
+                        ['[updated]', '[total]'],
+                        [TypeCoerce::toString($result['updated'] ?? ''), TypeCoerce::toString($result['total'] ?? '')],
+                        TypeCoerce::toString(__('travel_core.seo_bulk_apply_done'))));
             }
         );
     }
@@ -121,7 +128,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 if ($mode === 'manage' || $mode === '') {
     $defaults = _sphinx_seo_setting_defaults();
-    $current  = Registry::get('addons.sphinx_holidays') ?: [];
+    $current  = TypeCoerce::toStringMap(Registry::get('addons.sphinx_holidays'));
 
     $values = [];
     foreach ($defaults as $key => $default) {
@@ -131,5 +138,8 @@ if ($mode === 'manage' || $mode === '') {
             : ($stored ?? $default);
     }
 
-    Tygh::$app['view']->assign('seo_values', $values);
+    $view = Tygh::$app['view'];
+    if ($view instanceof \Smarty) {
+        $view->assign('seo_values', $values);
+    }
 }

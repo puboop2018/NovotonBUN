@@ -12,6 +12,7 @@ declare(strict_types=1);
 
 use Tygh\Registry;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
@@ -72,14 +73,14 @@ if ($mode === 'health') {
 
     // 2. API connectivity (circuit breaker status)
     try {
-        $src_dir = Registry::get('config.dir.addons') . 'novoton_holidays/src/';
+        $src_dir = TypeCoerce::toString(Registry::get('config.dir.addons')) . 'novoton_holidays/src/';
         if (file_exists($src_dir . 'NovotonApi.php')) {
             require_once($src_dir . 'NovotonApi.php');
             $api = _nvt_api();
             $circuit_status = $api->getCircuitStatus();
 
             $api_status = 'healthy';
-            if ($circuit_status['is_open']) {
+            if (TypeCoerce::toBool($circuit_status['is_open'])) {
                 $api_status = 'unhealthy';
                 $issues[] = 'api_circuit_open';
             } elseif ($circuit_status['failure_count'] > 0) {
@@ -107,7 +108,7 @@ if ($mode === 'health') {
 
     // 3. Cache status
     try {
-        $cache_service_file = Registry::get('config.dir.addons') . 'novoton_holidays/src/Services/CacheService.php';
+        $cache_service_file = TypeCoerce::toString(Registry::get('config.dir.addons')) . 'novoton_holidays/src/Services/CacheService.php';
         if (file_exists($cache_service_file)) {
             require_once($cache_service_file);
             $cache = _nvt_cache_service();
@@ -140,8 +141,8 @@ if ($mode === 'health') {
         $recent = $syncLogRepo->findRecent(1);
         $last_sync = !empty($recent) ? $recent[0] : null;
 
-        if ($last_sync) {
-            $sync_age_hours = (time() - strtotime($last_sync['sync_date'])) / 3600;
+        if ($last_sync !== null && $last_sync !== []) {
+            $sync_age_hours = (time() - strtotime(TypeCoerce::toString($last_sync['sync_date']))) / 3600;
 
             $sync_status = 'healthy';
             if ($sync_age_hours > 48) {
@@ -220,7 +221,7 @@ if ($mode === 'check') {
     echo "========================================\n";
     echo "Time: " . date('Y-m-d H:i:s') . "\n\n";
     
-    $addon_dir = Registry::get('config.dir.addons') . 'novoton_holidays/';
+    $addon_dir = TypeCoerce::toString(Registry::get('config.dir.addons')) . 'novoton_holidays/';
     
     // 1. FILE CHECK
     echo "1. FILE CHECK\n";
@@ -331,10 +332,13 @@ if ($mode === 'check') {
     echo "-------------------\n";
     
     $addon = db_get_row("SELECT * FROM ?:addons WHERE addon = ?s", \Tygh\Addons\NovotonHolidays\Constants::ADDON_ID);
+    $addonRow = TypeCoerce::toStringMap($addon);
+    $addonStatus = TypeCoerce::toString($addonRow['status'] ?? '');
+    $addonVersion = TypeCoerce::toString($addonRow['version'] ?? '');
     if ($addon) {
         echo "[Good] Addon in database\n";
-        echo "     Status: {$addon['status']} " . ($addon['status'] === 'A' ? '(Active)' : '(Disabled)') . "\n";
-        echo "     Version: {$addon['version']}\n";
+        echo "     Status: {$addonStatus} " . ($addonStatus === 'A' ? '(Active)' : '(Disabled)') . "\n";
+        echo "     Version: {$addonVersion}\n";
     } else {
         echo "[ERROR] Addon not found in database\n";
     }
@@ -342,7 +346,7 @@ if ($mode === 'check') {
     // Check tables (V3 architecture)
     $tables = array('novoton_hotels', 'novoton_hotel_packages', 'novoton_bookings', 'novoton_sync_log');
     foreach ($tables as $table) {
-        $exists = db_get_field("SHOW TABLES LIKE ?s", Registry::get('config.table_prefix') . $table);
+        $exists = db_get_field("SHOW TABLES LIKE ?s", TypeCoerce::toString(Registry::get('config.table_prefix')) . $table);
         echo ($exists ? "[Good]" : "[MISSING]") . " Table: $table\n";
     }
     echo "\n";
@@ -375,7 +379,7 @@ if ($mode === 'check') {
         }
     }
     
-    if ($addon && $addon['status'] !== 'A') {
+    if ($addon && $addonStatus !== 'A') {
         $issues++;
         echo "??  MEDIUM: Addon is disabled\n";
         echo "   ? Enable it in Add-ons ? Manage add-ons\n\n";

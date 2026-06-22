@@ -16,6 +16,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\NovotonHolidays\Services;
 
 use Tygh\Addons\NovotonHolidays\Api\Contracts\NovotonApiKitInterface;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 class HotelAvailabilitySearcher implements HotelAvailabilitySearcherInterface
 {
@@ -85,7 +86,7 @@ class HotelAvailabilitySearcher implements HotelAvailabilitySearcherInterface
 
         $this->logHotelInfo($hotelInfo);
 
-        if (!$hotelInfo || !isset($hotelInfo->rooms)) {
+        if ($hotelInfo === null || !isset($hotelInfo->rooms)) {
             return $this->emptyResult();
         }
 
@@ -104,7 +105,7 @@ class HotelAvailabilitySearcher implements HotelAvailabilitySearcherInterface
         // reach the five domain sub-clients (+ debugInfo) and never
         // falls back to the deprecated NovotonApi facade methods.
         $api = fn_novoton_holidays_get_api();
-        if (!$api) {
+        if ($api === null) {
             fn_set_notification(
                 'W',
                 __('warning'),
@@ -161,7 +162,7 @@ class HotelAvailabilitySearcher implements HotelAvailabilitySearcherInterface
     public function getRooms(string $hotelId): array
     {
         $hotelInfo = _nvt_get_cached_hotel_info($hotelId);
-        if (!$hotelInfo || !isset($hotelInfo->rooms)) {
+        if ($hotelInfo === null || !isset($hotelInfo->rooms)) {
             return [];
         }
         return $this->hotelInfoExtractor->extractRooms($hotelInfo);
@@ -174,7 +175,7 @@ class HotelAvailabilitySearcher implements HotelAvailabilitySearcherInterface
     public function getBoardTypes(string $hotelId, string $mealPlan = ''): array
     {
         $hotelInfo = _nvt_get_cached_hotel_info($hotelId);
-        if (!$hotelInfo) {
+        if ($hotelInfo === null) {
             return [];
         }
         return $this->hotelInfoExtractor->extractBoardTypes($hotelInfo, $mealPlan);
@@ -248,7 +249,7 @@ class HotelAvailabilitySearcher implements HotelAvailabilitySearcherInterface
         $allRoomResults = [];
         foreach ($batchResponses as $roomKey => $response) {
             $meta = $roomMeta[$roomKey] ?? null;
-            if (!$meta) {
+            if ($meta === null) {
                 continue;
             }
             $roomNum = $meta['roomNum'];
@@ -258,7 +259,7 @@ class HotelAvailabilitySearcher implements HotelAvailabilitySearcherInterface
             $priceData = $response['data'];
             $rawXml = $response['rawXml'];
 
-            if ($priceData && !empty($rawXml)) {
+            if ($priceData !== false && !empty($rawXml)) {
                 $this->log("  Room #{$roomNum}: API response received (parsing...)");
                 $roomResults = $this->searchService->parseRoomPriceResponse(
                     $rawXml,
@@ -358,7 +359,7 @@ class HotelAvailabilitySearcher implements HotelAvailabilitySearcherInterface
         $this->logSingleRoomDebug($api, $hotelId, $priceParams);
 
         $results = [];
-        if ($priceData) {
+        if ($priceData !== false) {
             $rawXml = $api->debugInfo()->lastResponse;
             $this->log('=== PARSING ROOM_PRICE RESPONSE ===');
 
@@ -385,7 +386,7 @@ class HotelAvailabilitySearcher implements HotelAvailabilitySearcherInterface
             );
 
             foreach ($results as $r) {
-                $status = $r['is_on_request']
+                $status = TypeCoerce::toBool($r['is_on_request'])
                     ? 'ON REQUEST'
                     : ($r['rooms_available'] !== null ? PriceInfoFormatter::toScalar($r['rooms_available']) . ' rooms' : 'available');
                 $rRoomId = PriceInfoFormatter::toScalar($r['room_id']);
@@ -431,7 +432,7 @@ class HotelAvailabilitySearcher implements HotelAvailabilitySearcherInterface
 
         foreach ($results as $result) {
             $roomId = PriceInfoFormatter::toScalar($result['room_id']);
-            if (preg_match('/(\d+)\+(\d+)/', $roomId, $m)) {
+            if (preg_match('/(\d+)\+(\d+)/', $roomId, $m) === 1) {
                 $maxAdults = max($maxAdults, (int) $m[1]);
                 $maxChildren = max($maxChildren, (int) $m[2]);
             }
@@ -507,15 +508,15 @@ class HotelAvailabilitySearcher implements HotelAvailabilitySearcherInterface
             return;
         }
         $api = fn_novoton_holidays_get_api();
-        if ($api) {
+        if ($api !== null) {
             $cs = $api->getCircuitStatus();
             $this->log('=== API CIRCUIT BREAKER STATUS ===');
-            $this->log('Circuit Open: ' . ($cs['is_open'] ? 'YES (BLOCKING REQUESTS!)' : 'NO'));
+            $this->log('Circuit Open: ' . (TypeCoerce::toBool($cs['is_open']) ? 'YES (BLOCKING REQUESTS!)' : 'NO'));
             $this->log('Failure Count: ' . PriceInfoFormatter::toScalar($cs['failure_count']) . '/' . PriceInfoFormatter::toScalar($cs['threshold']));
-            if ($cs['last_failure']) {
+            if (TypeCoerce::toString($cs['last_failure']) !== '') {
                 $this->log('Last Failure: ' . PriceInfoFormatter::toScalar($cs['last_failure']));
             }
-            if ($cs['is_open']) {
+            if (TypeCoerce::toBool($cs['is_open'])) {
                 $this->log('Seconds Until Retry: ' . PriceInfoFormatter::toScalar($cs['seconds_until_retry']));
             }
         }
@@ -527,7 +528,7 @@ class HotelAvailabilitySearcher implements HotelAvailabilitySearcherInterface
             return;
         }
         $this->log('=== HOTEL INFO RESPONSE (hotelinfo) ===');
-        if ($hotelInfo) {
+        if ($hotelInfo !== null) {
             $this->log('Has rooms: ' . (isset($hotelInfo->rooms) ? 'YES' : 'NO'));
             $this->log('Has board: ' . (isset($hotelInfo->board) ? 'YES' : 'NO'));
             $this->log('Has packages: ' . (isset($hotelInfo->packages) ? 'YES' : 'NO'));
@@ -552,9 +553,9 @@ class HotelAvailabilitySearcher implements HotelAvailabilitySearcherInterface
         // Circuit-breaker state isn't on the narrow kit interface — re-query
         // the concrete facade singleton for diagnostic output only.
         $concrete = fn_novoton_holidays_get_api();
-        if ($concrete) {
+        if ($concrete !== null) {
             $cs = $concrete->getCircuitStatus();
-            if ($cs['is_open']) {
+            if (TypeCoerce::toBool($cs['is_open'])) {
                 $this->log($prefix . 'CIRCUIT BREAKER IS OPEN!');
             }
         }

@@ -547,6 +547,6 @@ class DiscoverBoardsCommand extends AbstractSyncCommand
             return array_values(array_filter(array_map(fn ($c) => strtoupper(trim($c)), explode(',', ValidationHelpers::toString($params['country'])))));
         }
 
-        return array_values(ConfigProvider::getSelectedCountryCodes());
+        return ConfigProvider::getSelectedCountryCodes();
     }
 }

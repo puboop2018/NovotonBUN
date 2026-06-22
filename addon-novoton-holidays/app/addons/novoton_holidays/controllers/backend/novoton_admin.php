@@ -65,10 +65,10 @@ if ($mode === 'update_prices') {
             $updatedList = is_array($stats['updated'] ?? null) ? $stats['updated'] : [];
             $failedList = is_array($stats['failed'] ?? null) ? $stats['failed'] : [];
             $noDataList = is_array($stats['no_data'] ?? null) ? $stats['no_data'] : [];
-            $message = __('novoton_holidays.sync_completed') . ': ';
-            $message .= count($updatedList) . ' ' . __('novoton_holidays.updated') . ', ';
-            $message .= count($failedList) . ' ' . __('novoton_holidays.failed') . ', ';
-            $message .= count($noDataList) . ' ' . __('novoton_holidays.no_data');
+            $message = TypeCoerce::toString(__('novoton_holidays.sync_completed')) . ': ';
+            $message .= count($updatedList) . ' ' . TypeCoerce::toString(__('novoton_holidays.updated')) . ', ';
+            $message .= count($failedList) . ' ' . TypeCoerce::toString(__('novoton_holidays.failed')) . ', ';
+            $message .= count($noDataList) . ' ' . TypeCoerce::toString(__('novoton_holidays.no_data'));
             
             fn_set_notification('N', __('notice'), $message);
             
