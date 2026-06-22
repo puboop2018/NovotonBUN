@@ -7,6 +7,7 @@ namespace Tygh\Addons\NovotonHolidays\Cron\Commands;
 use Tygh\Addons\NovotonHolidays\Cron\AbstractCronCommand;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Services\Container;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 class RoomPriceCheckCommand extends AbstractCronCommand
 {
@@ -39,9 +40,9 @@ class RoomPriceCheckCommand extends AbstractCronCommand
         if ($datesDefaulted) {
             $check_in = date('Y-m-d', (int) strtotime('+30 days'));
         }
-        $nights = (int)$this->getParam('nights', 7);
-        $limit = (int)$this->getParam('limit', 500);
-        $country = strtoupper($this->getParam('country', ''));
+        $nights = TypeCoerce::toInt($this->getParam('nights', 7));
+        $limit = TypeCoerce::toInt($this->getParam('limit', 500));
+        $country = strtoupper(TypeCoerce::toString($this->getParam('country', '')));
         $check_out = date('Y-m-d', (int) strtotime($check_in . ' + ' . $nights . ' days'));
 
         $this->output('Checking hotels with active prices...');
@@ -51,12 +52,12 @@ class RoomPriceCheckCommand extends AbstractCronCommand
             $this->output('        dates can return 0 priced hotels. Pass &check_in=YYYY-MM-DD to');
             $this->output('        test the dates customers actually search.');
         }
-        if ($country) {
+        if ($country !== '' && $country !== '0') {
             $this->output("Country: {$country}");
         }
         $this->output('');
 
-        $conditions = $country ? ['country' => $country] : [];
+        $conditions = ($country !== '' && $country !== '0') ? ['country' => $country] : [];
         $hotels = $dbHelper->getHotelsForSync($conditions, $limit, ['hotel_id', 'hotel_name', 'country']);
 
         $withPricesIds = [];
@@ -100,7 +101,9 @@ class RoomPriceCheckCommand extends AbstractCronCommand
 
             if ($has_prices) {
                 $withPricesIds[] = $hotel['hotel_id'];
-                $this->output("NVT-{$hotel['hotel_id']} | {$hotel['hotel_name']} - has prices");
+                $hotelId = TypeCoerce::toString($hotel['hotel_id']);
+                $hotelName = TypeCoerce::toString($hotel['hotel_name']);
+                $this->output("NVT-{$hotelId} | {$hotelName} - has prices");
             } else {
                 $withoutPricesIds[] = $hotel['hotel_id'];
                 if ($invalid) {
@@ -110,7 +113,7 @@ class RoomPriceCheckCommand extends AbstractCronCommand
 
             // Batch update every 25 hotels
             if (($idx + 1) % 25 === 0) {
-                $dbHelper->batchUpdateHasRoomPriceFlag($withPricesIds, $withoutPricesIds);
+                $dbHelper->batchUpdateHasRoomPriceFlag(TypeCoerce::toStringList($withPricesIds), TypeCoerce::toStringList($withoutPricesIds));
                 $withPricesCount += count($withPricesIds);
                 $withoutPricesCount += count($withoutPricesIds);
                 $withPricesIds = [];
@@ -122,7 +125,7 @@ class RoomPriceCheckCommand extends AbstractCronCommand
 
         // Final batch
         if (!empty($withPricesIds) || !empty($withoutPricesIds)) {
-            $dbHelper->batchUpdateHasRoomPriceFlag($withPricesIds, $withoutPricesIds);
+            $dbHelper->batchUpdateHasRoomPriceFlag(TypeCoerce::toStringList($withPricesIds), TypeCoerce::toStringList($withoutPricesIds));
             $withPricesCount += count($withPricesIds);
             $withoutPricesCount += count($withoutPricesIds);
         }

@@ -18,6 +18,8 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Helpers;
 
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+
 class JsonDecoder
 {
     /**
@@ -36,7 +38,7 @@ class JsonDecoder
 
         if (!is_string($json)) {
             if (is_array($json)) {
-                return $json; // already decoded
+                return TypeCoerce::toStringMap($json); // already decoded
             }
             self::logError($context, 'Expected string, got ' . gettype($json), '');
             return $default;
@@ -49,7 +51,7 @@ class JsonDecoder
             return $default;
         }
 
-        return is_array($decoded) ? $decoded : $default;
+        return is_array($decoded) ? TypeCoerce::toStringMap($decoded) : $default;
     }
 
     /**
@@ -57,7 +59,7 @@ class JsonDecoder
      */
     private static function logError(string $context, string $error, string $snippet): void
     {
-        $label = $context ? "JsonDecoder [{$context}]" : 'JsonDecoder';
+        $label = ($context !== '' && $context !== '0') ? "JsonDecoder [{$context}]" : 'JsonDecoder';
 
         fn_log_event('general', 'runtime', [
             'message' => "{$label}: {$error}",

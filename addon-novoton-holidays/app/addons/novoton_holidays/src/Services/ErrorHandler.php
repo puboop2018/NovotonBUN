@@ -15,6 +15,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\NovotonHolidays\Services;
 
 use Tygh\Addons\NovotonHolidays\Constants;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 class ErrorHandler
 {
@@ -144,10 +145,10 @@ class ErrorHandler
     public static function getMessage(string $code, string $lang = 'en'): string
     {
         if ($lang === 'ro' && isset(self::$messagesRo[$code])) {
-            return self::$messagesRo[$code];
+            return TypeCoerce::toString(self::$messagesRo[$code]);
         }
 
-        return self::$messages[$code] ?? 'An error occurred';
+        return TypeCoerce::toString(self::$messages[$code] ?? 'An error occurred');
     }
 
     /**
@@ -236,7 +237,8 @@ class ErrorHandler
         $missing = [];
 
         foreach ($required as $field) {
-            if (!isset($data[$field]) || $data[$field] === '') {
+            $fieldKey = TypeCoerce::toString($field);
+            if (!isset($data[$fieldKey]) || $data[$fieldKey] === '') {
                 $missing[] = $field;
             }
         }
@@ -261,7 +263,7 @@ class ErrorHandler
         }
 
         $prefix = $lang === 'ro' ? 'Câmpuri lipsă: ' : 'Missing fields: ';
-        return $prefix . implode(', ', $errors);
+        return $prefix . implode(', ', TypeCoerce::toStringList($errors));
     }
 
     /**
@@ -278,7 +280,7 @@ class ErrorHandler
         }
 
         if (is_array($response) && isset($response['error'])) {
-            self::addError(Constants::ERROR_API_FAILURE, $response['error']);
+            self::addError(Constants::ERROR_API_FAILURE, TypeCoerce::toString($response['error']));
             return true;
         }
 

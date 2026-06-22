@@ -18,6 +18,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\NovotonHolidays\Helpers;
 
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 class SyncLogger implements SyncLoggerInterface
 {
@@ -116,7 +117,7 @@ class SyncLogger implements SyncLoggerInterface
 
         $this->messages[] = $message;
 
-        if ($this->outputCallback) {
+        if ($this->outputCallback !== null) {
             call_user_func($this->outputCallback, $formatted);
         } else {
             echo $formatted;
@@ -164,7 +165,7 @@ class SyncLogger implements SyncLoggerInterface
     public function outputProgress(int $current, int $total, string $prefix = ''): void
     {
         $percent = $total > 0 ? round($current / $total * 100, 1) : 0;
-        $message = $prefix ? "{$prefix}: " : '';
+        $message = $prefix !== '' ? "{$prefix}: " : '';
         $message .= "--- Progress: {$current}/{$total} ({$percent}%) ---";
         $this->output($message);
     }
@@ -183,23 +184,29 @@ class SyncLogger implements SyncLoggerInterface
         $this->output('SYNC COMPLETED');
         $this->output('========================================');
 
-        if (isset($s['total']) && $s['total'] > 0) {
-            $this->output("Total: {$s['total']}");
+        $total = isset($s['total']) ? TypeCoerce::toInt($s['total']) : 0;
+        if ($total > 0) {
+            $this->output("Total: {$total}");
         }
-        if (isset($s['synced']) && $s['synced'] > 0) {
-            $this->output("Synced: {$s['synced']}");
+        $synced = isset($s['synced']) ? TypeCoerce::toInt($s['synced']) : 0;
+        if ($synced > 0) {
+            $this->output("Synced: {$synced}");
         }
-        if (isset($s['added']) && $s['added'] > 0) {
-            $this->output("Added: {$s['added']}");
+        $added = isset($s['added']) ? TypeCoerce::toInt($s['added']) : 0;
+        if ($added > 0) {
+            $this->output("Added: {$added}");
         }
-        if (isset($s['updated']) && $s['updated'] > 0) {
-            $this->output("Updated: {$s['updated']}");
+        $updated = isset($s['updated']) ? TypeCoerce::toInt($s['updated']) : 0;
+        if ($updated > 0) {
+            $this->output("Updated: {$updated}");
         }
-        if (isset($s['skipped']) && $s['skipped'] > 0) {
-            $this->output("Skipped: {$s['skipped']}");
+        $skipped = isset($s['skipped']) ? TypeCoerce::toInt($s['skipped']) : 0;
+        if ($skipped > 0) {
+            $this->output("Skipped: {$skipped}");
         }
-        if (isset($s['errors']) && $s['errors'] > 0) {
-            $this->output("Errors: {$s['errors']}");
+        $errors = isset($s['errors']) ? TypeCoerce::toInt($s['errors']) : 0;
+        if ($errors > 0) {
+            $this->output("Errors: {$errors}");
         }
 
         $this->output('Duration: ' . $this->getFormattedDuration());
@@ -217,7 +224,7 @@ class SyncLogger implements SyncLoggerInterface
         if (!isset($this->stats[$key])) {
             $this->stats[$key] = 0;
         }
-        $this->stats[$key] += $amount;
+        $this->stats[$key] = TypeCoerce::toInt($this->stats[$key]) + $amount;
     }
 
     /**
@@ -293,7 +300,14 @@ class SyncLogger implements SyncLoggerInterface
 
         $notes = !empty($extra) ? json_encode($extra) : '';
 
-        return db_query(
+        $total = TypeCoerce::toInt($stats['total'] ?? 0);
+        $updated = TypeCoerce::toInt($stats['synced'] ?? 0)
+            + TypeCoerce::toInt($stats['added'] ?? 0)
+            + TypeCoerce::toInt($stats['updated'] ?? 0);
+        $failed = TypeCoerce::toInt($stats['errors'] ?? 0)
+            + TypeCoerce::toInt($stats['failed'] ?? 0);
+
+        $result = db_query(
             'INSERT INTO ?:novoton_sync_log SET
              sync_type = ?s,
              sync_date = NOW(),
@@ -304,13 +318,15 @@ class SyncLogger implements SyncLoggerInterface
              status = ?s,
              notes = ?s',
             $this->syncType,
-            $stats['total'] ?? 0,
-            ($stats['synced'] ?? 0) + ($stats['added'] ?? 0) + ($stats['updated'] ?? 0),
-            ($stats['errors'] ?? 0) + ($stats['failed'] ?? 0),
+            $total,
+            $updated,
+            $failed,
             $duration,
             $status,
             $notes,
         );
+
+        return is_int($result) ? $result : false;
     }
 
     /**

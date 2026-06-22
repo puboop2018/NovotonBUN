@@ -21,6 +21,8 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Helpers;
 
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+
 class DatabaseIterator implements DatabaseIteratorInterface
 {
     /**
@@ -107,7 +109,7 @@ class DatabaseIterator implements DatabaseIteratorInterface
             $query = "SELECT hotel_id FROM ?:novoton_hotels {$where} ORDER BY hotel_name LIMIT ?i OFFSET ?i";
             $query_params = array_merge($params, [$chunk_size, $offset]);
 
-            $ids = db_get_fields($query, ...$query_params);
+            $ids = TypeCoerce::toList(db_get_fields($query, ...$query_params));
 
             if (empty($ids)) {
                 break;
@@ -170,7 +172,7 @@ class DatabaseIterator implements DatabaseIteratorInterface
                       LIMIT ?i OFFSET ?i";
             $query_params = array_merge($params, [$chunk_size, $offset]);
 
-            $packages = db_get_array($query, ...$query_params);
+            $packages = TypeCoerce::toRowList(db_get_array($query, ...$query_params));
 
             if (empty($packages)) {
                 break;
@@ -224,7 +226,7 @@ class DatabaseIterator implements DatabaseIteratorInterface
             $query = "SELECT * FROM ?:novoton_bookings {$where} ORDER BY created_at DESC LIMIT ?i OFFSET ?i";
             $query_params = array_merge($params, [$chunk_size, $offset]);
 
-            $bookings = db_get_array($query, ...$query_params);
+            $bookings = TypeCoerce::toRowList(db_get_array($query, ...$query_params));
 
             if (empty($bookings)) {
                 break;
@@ -265,7 +267,7 @@ class DatabaseIterator implements DatabaseIteratorInterface
             $query = "SELECT * FROM ?:novoton_sync_log {$where} ORDER BY sync_date DESC LIMIT ?i OFFSET ?i";
             $query_params = array_merge($params, [$chunk_size, $offset]);
 
-            $logs = db_get_array($query, ...$query_params);
+            $logs = TypeCoerce::toRowList(db_get_array($query, ...$query_params));
 
             if (empty($logs)) {
                 break;
@@ -297,7 +299,7 @@ class DatabaseIterator implements DatabaseIteratorInterface
 
         while (true) {
             $query_params = array_merge($params, [$chunk_size, $offset]);
-            $rows = db_get_array($query, ...$query_params);
+            $rows = TypeCoerce::toRowList(db_get_array($query, ...$query_params));
 
             if (empty($rows)) {
                 break;
@@ -371,13 +373,13 @@ class DatabaseIterator implements DatabaseIteratorInterface
 
         $where = !empty($where_parts) ? 'WHERE ' . implode(' AND ', $where_parts) : '';
 
-        return (int) db_get_field("SELECT COUNT(*) FROM ?:{$table} {$where}", ...$params);
+        return TypeCoerce::toInt(db_get_field("SELECT COUNT(*) FROM ?:{$table} {$where}", ...$params));
     }
 
     /**
      * Fetch a chunk of hotels
      * @param array<string, mixed> $filters
-     * @return array<string, mixed>
+     * @return list<array<string, mixed>>
      */
     private function fetchHotelChunk(array $filters, int $limit, int $offset): array
     {
@@ -417,6 +419,6 @@ class DatabaseIterator implements DatabaseIteratorInterface
 
         $query_params = array_merge($params, [$limit, $offset]);
 
-        return db_get_array($query, ...$query_params);
+        return TypeCoerce::toRowList(db_get_array($query, ...$query_params));
     }
 }

@@ -178,7 +178,7 @@ final class CartService implements CartServiceInterface
         $currencyService = new CurrencyService($apiCurrency);
         $cartPrice = $currencyService->convertFromApiCurrency($totalPrice, TypeCoerce::toString($primaryCurrency));
 
-        $cartId = fn_generate_cart_id($productId, $productExtra);
+        $cartId = TypeCoerce::toString(fn_generate_cart_id($productId, $productExtra));
 
         // Write the assembled row into the session cart via the allowlisted
         // functions/ boundary — keeps Tygh::\$app out of this service class.

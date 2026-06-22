@@ -74,7 +74,7 @@ if ($mode === 'update_prices') {
             
         } catch (Exception $e) {
             fn_set_progress('error', $e->getMessage());
-            fn_set_notification('E', __('error'), __('novoton_holidays.sync_failed') . ': ' . $e->getMessage());
+            fn_set_notification('E', __('error'), TypeCoerce::toString(__('novoton_holidays.sync_failed')) . ': ' . $e->getMessage());
         }
         
         return [CONTROLLER_STATUS_REDIRECT, 'addons.update?addon=novoton_holidays&selected_section=sync'];
@@ -109,12 +109,12 @@ if ($mode === 'bookings') {
     }
 
     $reqDateFrom = RequestCoerce::string($_REQUEST, 'date_from');
-    if (!empty($reqDateFrom) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $reqDateFrom)) {
+    if (!empty($reqDateFrom) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $reqDateFrom) === 1) {
         $condition .= db_quote(" AND b.check_in >= ?s", $reqDateFrom);
     }
 
     $reqDateTo = RequestCoerce::string($_REQUEST, 'date_to');
-    if (!empty($reqDateTo) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $reqDateTo)) {
+    if (!empty($reqDateTo) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $reqDateTo) === 1) {
         $condition .= db_quote(" AND b.check_in <= ?s", $reqDateTo);
     }
 
@@ -140,7 +140,7 @@ if ($mode === 'booking_details') {
     $reportingRepo = Container::getInstance()->bookingReportingRepository();
     $booking = $reportingRepo->findWithOrderDetails($bookingId);
 
-    if ($booking) {
+    if (!empty($booking)) {
         // Get invoice from Novoton
         $api = _nvt_api();
 
@@ -240,14 +240,14 @@ if ($mode === 'test_api') {
     
     try {
         $resorts = $api->destinations()->getResortList('BULGARIA');
-        
-        if ($resorts && isset($resorts->Resort)) {
+
+        if ((bool) $resorts && isset($resorts->Resort)) {
             fn_set_notification('N', __('notice'), __('novoton_holidays.api_connection_successful'));
         } else {
             fn_set_notification('W', __('warning'), __('novoton_holidays.api_connection_no_data'));
         }
     } catch (Exception $e) {
-        fn_set_notification('E', __('error'), __('novoton_holidays.api_connection_failed') . ': ' . $e->getMessage());
+        fn_set_notification('E', __('error'), TypeCoerce::toString(__('novoton_holidays.api_connection_failed')) . ': ' . $e->getMessage());
     }
     
     return [CONTROLLER_STATUS_REDIRECT, 'addons.update?addon=novoton_holidays&selected_section=api'];
@@ -290,12 +290,14 @@ if ($mode === 'run_cron') {
         $params['days'] = $reqDays;
     }
     
+    // Capture output via callback instead of ob_start(). Declared before the
+    // try so the catch block can still reference it after an early failure.
+    $outputLines = [];
+
     try {
         $api     = _nvt_api();
         $service = _nvt_admin_cron_service();
 
-        // Capture output via callback instead of ob_start()
-        $outputLines = [];
         $service->setOutputCallback(function (string $msg) use (&$outputLines) {
             $outputLines[] = rtrim($msg, "\n");
         });
@@ -372,7 +374,7 @@ if ($mode === 'run_cron') {
         ]);
 
     } catch (Exception $e) {
-        $output = implode("\n", $outputLines ?? []);
+        $output = implode("\n", $outputLines);
         echo json_encode([
             'success' => false,
             'error'   => $e->getMessage(),

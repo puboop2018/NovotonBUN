@@ -8,7 +8,11 @@
 
 defined('BOOTSTRAP') or die('Access denied');
 
-/** @var array $schema */
+/** @var array<string, mixed> $schema */
+
+if (!isset($schema['central']) || !is_array($schema['central'])) {
+    $schema['central'] = [];
+}
 
 $schema['central']['sphinx_holidays'] = [
     'title' => __('sphinx_holidays.addon_name', ['[default]' => 'Sphinx Holidays']),

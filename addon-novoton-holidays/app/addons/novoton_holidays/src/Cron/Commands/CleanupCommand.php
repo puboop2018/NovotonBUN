@@ -6,6 +6,7 @@ namespace Tygh\Addons\NovotonHolidays\Cron\Commands;
 
 use Tygh\Addons\NovotonHolidays\Cron\AbstractCronCommand;
 use Tygh\Addons\NovotonHolidays\Services\Container;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 class CleanupCommand extends AbstractCronCommand
 {
@@ -50,9 +51,9 @@ class CleanupCommand extends AbstractCronCommand
 
         // 3. Clean expired cache entries
         $this->output('3. Cleaning expired cache...');
-        $expired_count = (int)db_get_field(
+        $expired_count = TypeCoerce::toInt(db_get_field(
             'SELECT COUNT(*) FROM ?:novoton_cache WHERE expires_at < NOW()',
-        );
+        ));
         db_query('DELETE FROM ?:novoton_cache WHERE expires_at < NOW()');
         $this->output("   Expired cache entries deleted: {$expired_count}");
         $this->output('');

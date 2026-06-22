@@ -8,6 +8,8 @@
  * @package SphinxHolidays
  */
 
+/** @var array<string, mixed> $schema */
+
 if (isset($schema['template']) && is_array($schema['template'])) {
     if (!isset($schema['template']['templates']) || !is_array($schema['template']['templates'])) {
         $schema['template']['templates'] = [];

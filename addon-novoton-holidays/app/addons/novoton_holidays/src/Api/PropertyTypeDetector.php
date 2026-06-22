@@ -118,7 +118,7 @@ class PropertyTypeDetector
         }
 
         foreach ($keywordMap as $entry) {
-            if (preg_match($entry['pattern'], $text)) {
+            if (preg_match($entry['pattern'], $text) === 1) {
                 return $entry['type'];
             }
         }

@@ -16,6 +16,7 @@ namespace Tygh\Addons\NovotonHolidays\Services;
 
 use Tygh\Addons\NovotonHolidays\Repository\CacheRepository;
 use Tygh\Addons\NovotonHolidays\Repository\CacheRepositoryInterface;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 class CacheService implements CacheServiceInterface
 {
@@ -37,7 +38,7 @@ class CacheService implements CacheServiceInterface
     public function __construct(string $storage = 'file', ?CacheRepositoryInterface $cacheRepo = null)
     {
         $this->storage = $storage;
-        $this->cache_dir = DIR_ROOT . '/var/cache/novoton/';
+        $this->cache_dir = TypeCoerce::toString(DIR_ROOT) . '/var/cache/novoton/';
         $this->debug = ConfigProvider::isDebugLogging();
         $this->cacheRepo = $cacheRepo ?? new CacheRepository();
 
@@ -59,7 +60,7 @@ class CacheService implements CacheServiceInterface
     {
         // Check memory cache first (fastest)
         if (isset(self::$memory_cache[$key])) {
-            $item = self::$memory_cache[$key];
+            $item = TypeCoerce::toStringMap(self::$memory_cache[$key]);
             if ($item['expires'] > time()) {
                 return $item['data'];
             }
@@ -169,7 +170,7 @@ class CacheService implements CacheServiceInterface
     {
         // Check memory cache with array_key_exists to support null values
         if (array_key_exists($key, self::$memory_cache)) {
-            $item = self::$memory_cache[$key];
+            $item = TypeCoerce::toStringMap(self::$memory_cache[$key]);
             if ($item['expires'] > time()) {
                 return $item['data'];
             }
@@ -420,7 +421,7 @@ class CacheService implements CacheServiceInterface
     {
         $row = $this->cacheRepo->findByKey($key);
 
-        if (!$row) {
+        if ($row === null) {
             return null;
         }
 

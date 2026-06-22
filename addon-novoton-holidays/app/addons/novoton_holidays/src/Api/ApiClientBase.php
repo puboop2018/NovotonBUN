@@ -103,7 +103,7 @@ abstract class ApiClientBase
         if (in_array($function, $this->noCacheFunctions)) {
             return null;
         }
-        if (!$this->enableCache || !$this->cache) {
+        if (!$this->enableCache || $this->cache === null) {
             return null;
         }
         return $this->cache->get($cacheKey);
@@ -115,7 +115,7 @@ abstract class ApiClientBase
         if (in_array($function, $this->noCacheFunctions)) {
             return;
         }
-        if (!$this->enableCache || !$this->cache || $data === null) {
+        if (!$this->enableCache || $this->cache === null || $data === null) {
             return;
         }
         $ttl = TypeCoerce::toInt($this->cacheTtl[$function] ?? ConfigProvider::getCacheTtlSearch());
@@ -177,7 +177,7 @@ abstract class ApiClientBase
      */
     protected function buildChildrenAgesXml(array $children): string
     {
-        return Occupancy::buildAgeXml($children);
+        return Occupancy::buildAgeXml(TypeCoerce::toIntList($children));
     }
 
     /**
@@ -189,7 +189,7 @@ abstract class ApiClientBase
     {
         $ages = [];
         for ($i = 0; $i < $count; $i++) {
-            $ages[] = isset($adultAges[$i]) ? (int) $adultAges[$i] : Constants::DEFAULT_ADULT_AGE;
+            $ages[] = isset($adultAges[$i]) ? TypeCoerce::toInt($adultAges[$i]) : Constants::DEFAULT_ADULT_AGE;
         }
         return Occupancy::buildAgeXml($ages);
     }
@@ -201,7 +201,7 @@ abstract class ApiClientBase
     {
         // Include hotel_id before the hash so cache invalidation per hotel
         // can use index-friendly prefix matching (no leading wildcards).
-        $hotelId = $params['hotel_id'] ?? '';
+        $hotelId = TypeCoerce::toString($params['hotel_id'] ?? '');
         $hotelPart = $hotelId !== '' ? $hotelId . '_' : '';
         return 'nvt_api_' . $function . '_' . $hotelPart . md5((string) json_encode($params));
     }

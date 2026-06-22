@@ -195,7 +195,7 @@ if ($mode === 'check_prices') {
 
         $resorts = [];
         $resort_list_response = $api->destinations()->getResortList($country);
-        if ($resort_list_response) {
+        if ((bool) $resort_list_response) {
             foreach ($resort_list_response->xpath('//Resort') ?: [] as $r) {
                 $name = trim((string)$r);
                 if (!empty($name)) {
@@ -490,7 +490,7 @@ if ($mode === 'check_prices_hotel') {
 
         foreach ($all_hotels as $idx => $hotel) {
             $hotel_num = $idx + 1;
-            $hotel_id = $hotel['hotel_id'];
+            $hotel_id = TypeCoerce::toString($hotel['hotel_id'] ?? '');
             $hotel_name = htmlspecialchars(TypeCoerce::toString($hotel['hotel_name'] ?? ''));
             $city = htmlspecialchars(TypeCoerce::toString($hotel['city'] ?? '') ?: '(no city)');
 
@@ -520,7 +520,7 @@ if ($mode === 'check_prices_hotel') {
                     if ($has_room_price) {
                         foreach ($prices as $p) {
                             $pval = (float)((string)$p);
-                            if ($pval > 0 && ($min_price == 0 || $pval < $min_price)) {
+                            if ($pval > 0 && ($min_price === 0 || $pval < $min_price)) {
                                 $min_price = $pval;
                             }
                         }
@@ -528,7 +528,7 @@ if ($mode === 'check_prices_hotel') {
                 }
 
                 // Update database
-                $hotelRepo->update((string) $hotel_id, [
+                $hotelRepo->update($hotel_id, [
                     'has_room_price' => $has_room_price ? 'Y' : 'N',
                     'last_price_check' => $now
                 ]);

@@ -3,6 +3,8 @@
  * Travel Core - Admin permissions schema
  */
 
+/** @var array<string, mixed> $schema */
+
 $schema['travel_core'] = [
     'permissions' => ['GET', 'POST'],
 ];

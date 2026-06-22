@@ -22,10 +22,11 @@ require dirname(__FILE__) . '/../../../init.php';
 
 use Tygh\Registry;
 use Tygh\Addons\TravelCore\Cron\CronRunner;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 [$accessKey, $mode, $params] = CronRunner::parseArgs();
 CronRunner::authenticate(
-    Registry::get('addons.travel_core.cron_access_key'),
+    TypeCoerce::toString(Registry::get('addons.travel_core.cron_access_key')),
     $accessKey,
     'Travel Core'
 );
@@ -44,7 +45,7 @@ echo "[" . date('Y-m-d H:i:s') . "] Travel Core Cron - Mode: {$mode}\n\n";
 
 // --- Execute ---
 if ($mode === 'exchange_rates') {
-    $commission = (float) Registry::get('addons.travel_core.currency_risk_commission');
+    $commission = TypeCoerce::toFloat(Registry::get('addons.travel_core.currency_risk_commission'));
 
     $result = fn_travel_core_update_exchange_rates($commission, true);
 
@@ -54,7 +55,7 @@ if ($mode === 'exchange_rates') {
 
     echo fn_travel_core_format_exchange_rate_output($result) . "\n";
 
-    $exitCode = ($result['success'] ?? false) ? 0 : 1;
+    $exitCode = TypeCoerce::toBool($result['success'] ?? false) ? 0 : 1;
     echo "\n[" . date('Y-m-d H:i:s') . "] Cron job completed.\n";
     exit($exitCode);
 }

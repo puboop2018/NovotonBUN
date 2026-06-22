@@ -22,6 +22,7 @@ namespace Tygh\Addons\NovotonHolidays\Helpers;
 
 use Tygh\Addons\NovotonHolidays\NovotonApi;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 class CronHelper
 {
@@ -98,7 +99,7 @@ class CronHelper
     public static function initialize(array $params = []): array
     {
         $rawMode = $params['mode'] ?? $_REQUEST['mode'] ?? 'resinfo';
-        $mode = preg_replace('/[^a-zA-Z0-9_]/', '', $rawMode);
+        $mode = TypeCoerce::toString(preg_replace('/[^a-zA-Z0-9_]/', '', TypeCoerce::toString($rawMode)));
 
         header('Content-Type: text/plain; charset=utf-8');
 
@@ -126,7 +127,7 @@ class CronHelper
             if (is_array($excludeResorts)) {
                 return array_values(array_filter($excludeResorts));
             }
-            return array_values(array_filter(array_map('trim', explode(',', $excludeResorts))));
+            return TypeCoerce::toStringList(array_values(array_filter(array_map('trim', explode(',', TypeCoerce::toString($excludeResorts))))));
         }
 
         // Fall back to settings

@@ -15,6 +15,8 @@ declare(strict_types=1);
 use Tygh\Tygh;
 use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
 use Tygh\Addons\TravelCore\Services\TravelProviderRegistry;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
@@ -48,7 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $adminProvider = TravelProviderRegistry::getBookingAdminProvider('novoton');
 
     if ($adminProvider !== null) {
-        $result = $adminProvider->handleAction($mode, $_REQUEST);
+        $result = $adminProvider->handleAction(TypeCoerce::toString($mode), TypeCoerce::toStringMap($_REQUEST));
 
         if (!empty($result['notification'])) {
             $n = $result['notification'];
@@ -69,13 +71,13 @@ if ($mode === 'manage') {
 }
 
 if ($mode === 'view') {
-    $novBookingId = (int) ($_REQUEST['booking_id'] ?? 0);
+    $novBookingId = RequestCoerce::int($_REQUEST, 'booking_id');
     // novoton_bookings.booking_id ≠ travel_bookings.booking_id (separate auto-increments).
     // The travel_bookings row stores the novoton ID in provider_booking_id.
-    $travelBookingId = (int) db_get_field(
+    $travelBookingId = TypeCoerce::toInt(db_get_field(
         "SELECT booking_id FROM ?:travel_bookings WHERE provider = 'novoton' AND provider_booking_id = ?s",
         (string) $novBookingId
-    );
+    ));
     if ($travelBookingId > 0) {
         return [CONTROLLER_STATUS_REDIRECT, 'travel_bookings.view&booking_id=' . $travelBookingId];
     }
@@ -84,11 +86,11 @@ if ($mode === 'view') {
 }
 
 if ($mode === 'alternatives') {
-    $novBookingId = (int) ($_REQUEST['booking_id'] ?? 0);
-    $travelBookingId = (int) db_get_field(
+    $novBookingId = RequestCoerce::int($_REQUEST, 'booking_id');
+    $travelBookingId = TypeCoerce::toInt(db_get_field(
         "SELECT booking_id FROM ?:travel_bookings WHERE provider = 'novoton' AND provider_booking_id = ?s",
         (string) $novBookingId
-    );
+    ));
     if ($travelBookingId > 0) {
         return [CONTROLLER_STATUS_REDIRECT, 'travel_bookings.view&booking_id=' . $travelBookingId . '&tab=alternatives'];
     }
@@ -97,21 +99,23 @@ if ($mode === 'alternatives') {
 
 if ($mode === 'order_tab') {
     // AJAX content for order page tab — keep functional for backward compat
-    $order_id = (int) ($_REQUEST['order_id'] ?? 0);
+    $order_id = RequestCoerce::int($_REQUEST, 'order_id');
 
     if ($order_id > 0) {
         $bookings = fn_novoton_holidays_get_order_bookings($order_id);
 
         foreach ($bookings as &$booking) {
             if (!empty($booking['guests_data'])) {
-                $booking['guests'] = (new \Tygh\Addons\TravelCore\Services\GuestDataNormalizer())->normalize($booking['guests_data']);
+                $booking['guests'] = (new \Tygh\Addons\TravelCore\Services\GuestDataNormalizer())->normalize(TypeCoerce::toString($booking['guests_data']));
             }
             if (!empty($booking['alternatives_data'])) {
-                $booking['alternatives'] = json_decode($booking['alternatives_data'], true);
+                $booking['alternatives'] = json_decode(TypeCoerce::toString($booking['alternatives_data']), true);
             }
         }
 
-        Tygh::$app['view']->assign('bookings', $bookings);
-        Tygh::$app['view']->assign('order_id', $order_id);
+        /** @var \Smarty $view */
+        $view = Tygh::$app['view'];
+        $view->assign('bookings', $bookings);
+        $view->assign('order_id', $order_id);
     }
 }
