@@ -247,7 +247,6 @@ class DestinationSyncCommand extends AbstractSyncCommand
             $sFailed = 0;
         } else {
             $sFailed = $sTotal - $sSynced;
-            $state['failed'] = $sFailed;
 
             // Build full_path breadcrumbs
             $this->output('Building destination breadcrumb paths...');

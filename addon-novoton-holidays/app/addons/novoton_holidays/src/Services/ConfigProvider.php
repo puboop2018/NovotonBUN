@@ -311,7 +311,7 @@ class ConfigProvider extends AbstractConfigProvider
             [$key, $value] = explode(':', $line, 2);
             if (strtoupper(trim($key)) === strtoupper($country)) {
                 $id = (int) trim($value);
-                return $id > 0 ? $id : 0;
+                return max($id, 0);
             }
         }
 

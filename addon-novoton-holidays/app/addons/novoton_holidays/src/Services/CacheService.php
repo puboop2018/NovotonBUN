@@ -300,7 +300,7 @@ class CacheService implements CacheServiceInterface
      *
      * @param \SimpleXMLElement $xml The element to convert
      * @param int $depth Current recursion depth
-     * @return mixed Array representation, or string for leaf text nodes
+     * @return array<string, mixed>|string Array representation, or string for leaf text nodes
      */
     private function simpleXmlToArray(\SimpleXMLElement $xml, int $depth = 0)
     {

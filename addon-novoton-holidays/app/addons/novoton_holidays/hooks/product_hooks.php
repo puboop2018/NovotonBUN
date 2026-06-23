@@ -111,10 +111,6 @@ function fn_novoton_holidays_gather_additional_product_data_post(&$product, $aut
  */
 function fn_novoton_holidays_get_product_data_post(&$product_data, $auth, $preview, $lang_code): void
 {
-    if (empty($product_data)) {
-        return;
-    }
-
     // No-op: hotel detection and data enrichment are handled entirely in
     // gather_additional_product_data_post. We no longer assign addon-specific
     // keys to $product_data here to avoid polluting Smarty's $product scope

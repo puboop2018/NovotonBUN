@@ -399,7 +399,6 @@ function fn_sphinx_holidays_seed_aliases(): void
         'BUFFET BREAKFAST'     => 'BB',
         'ULTRA ALL INCLUSIVE'  => 'UAI',
         'PLATINUM ALL INCLUSIVE' => 'AI',
-        'ALL INCLUSIVE PLUS'   => 'AI',
     ];
 
     // Room type aliases (prefix match)
@@ -1125,8 +1124,8 @@ function fn_sphinx_holidays_get_hotels(array $params = []): array
         'property_type'  => 'h.property_type',
     ];
 
-    $sort_by = isset($sortings[$params['sort_by']]) ? $params['sort_by'] : 'name';
-    $sort_order = strtolower($params['sort_order']) === 'desc' ? 'DESC' : 'ASC';
+    $sort_by = isset($sortings[(string) $params['sort_by']]) ? (string) $params['sort_by'] : 'name';
+    $sort_order = strtolower((string) $params['sort_order']) === 'desc' ? 'DESC' : 'ASC';
     $sort_column = $sortings[$sort_by];
 
     $params['sort_by'] = $sort_by;

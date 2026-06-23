@@ -443,7 +443,7 @@ function fn_travel_core_render_seo_template(string $pattern, array $placeholders
 
     // Replace {{key}} and {{key|modifier}} in one pass
     $result = (string) preg_replace_callback(
-        '/\{\{([a-z_][a-z0-9_]*)(?:\|([a-z_]+))?\}\}/',
+        '/\{\{([a-z_][a-z0-9_]*)(?:\|([a-z_]+))?}}/',
         function ($m) use ($resolved) {
             $value = $resolved[$m[1]] ?? '';
             if (isset($m[2])) {

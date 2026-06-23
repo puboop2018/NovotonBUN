@@ -224,7 +224,6 @@ class AddProductsCommand extends AbstractSyncCommand
                     'skipped' => str_contains($resultReason, 'invalid country')
                         ? $state['invalid_country'] = $stateInvalidCountry + 1
                         : $state['failed'] = $stateFailed + 1,
-                    'failed' => $state['failed'] = $stateFailed + 1,
                     default => $state['failed'] = $stateFailed + 1,
                 };
             }

@@ -150,7 +150,7 @@ final class RoomType
             return $typeName . ' (' . $roomId . ')';
         }
 
-        $parts = preg_split('/[\s]+/', $roomId, 2);
+        $parts = preg_split('/\s+/', $roomId, 2);
         $baseCode = strtoupper($parts[0] ?? '');
         $displayName = self::toDisplayName($baseCode);
 

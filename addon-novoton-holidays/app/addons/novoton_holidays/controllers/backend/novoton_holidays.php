@@ -89,7 +89,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             return [CONTROLLER_STATUS_DENIED];
         }
 
-        $excluded = isset($_POST['excluded_resorts']) ? $_POST['excluded_resorts'] : [];
+        $excluded = $_POST['excluded_resorts'] ?? [];
 
         $clean_excluded = [];
         if (is_array($excluded)) {

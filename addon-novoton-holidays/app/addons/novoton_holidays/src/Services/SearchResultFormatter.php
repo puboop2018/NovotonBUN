@@ -236,7 +236,7 @@ class SearchResultFormatter implements SearchResultFormatterInterface
         $packageName = '';
         foreach ($packages as $pkg) {
             $pname = PriceInfoFormatter::toScalar($pkg['package_name'] ?? '');
-            if (!empty($pname) && substr($pname, -1) !== ']') {
+            if (!empty($pname) && !str_ends_with($pname, ']')) {
                 $packageName = $pname;
                 break;
             }

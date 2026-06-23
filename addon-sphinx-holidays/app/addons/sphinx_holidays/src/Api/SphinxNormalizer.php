@@ -205,7 +205,6 @@ class SphinxNormalizer implements ProviderNormalizerInterface
     {
         return match (strtolower($sphinxStatus)) {
             'confirmed' => TravelConstants::STATUS_CONFIRMED,
-            'pending', 'on_hold' => TravelConstants::STATUS_PENDING,
             'cancelled', 'canceled' => TravelConstants::STATUS_CANCELLED,
             'rejected', 'failed' => TravelConstants::STATUS_FAILED,
             default => TravelConstants::STATUS_PENDING,
