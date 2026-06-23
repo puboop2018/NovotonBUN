@@ -49,6 +49,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\NovotonHolidays\Services;
 
 use Tygh\Addons\NovotonHolidays\Constants;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 class PriceInfoCalculation implements PriceInfoCalculationInterface
 {
@@ -135,7 +136,7 @@ class PriceInfoCalculation implements PriceInfoCalculationInterface
         if (!is_array($childrenAges)) {
             $childrenAges = !empty($childrenAges) ? explode(',', PriceInfoFormatter::toScalar($childrenAges)) : [];
         }
-        $childrenAges = array_values(array_map('intval', $childrenAges));
+        $childrenAges = array_values(array_map(static fn ($age): int => TypeCoerce::toInt($age), $childrenAges));
         $numChildren = count($childrenAges);
 
         $checkOut = date('Y-m-d', (int) strtotime($checkIn . ' + ' . $nights . ' days'));
@@ -156,8 +157,8 @@ class PriceInfoCalculation implements PriceInfoCalculationInterface
         $this->log('Room capacity', $roomCapacity);
 
         $occupancyValid = $this->parser->validateOccupancy($adults, $numChildren, $roomCapacity);
-        if (!$occupancyValid['valid']) {
-            return PriceInfoFormatter::errorResult('Invalid occupancy: ' . $occupancyValid['reason'], $this->debugLog, $this->debug);
+        if (!TypeCoerce::toBool($occupancyValid['valid'])) {
+            return PriceInfoFormatter::errorResult('Invalid occupancy: ' . PriceInfoFormatter::toScalar($occupancyValid['reason'] ?? ''), $this->debugLog, $this->debug);
         }
 
         // Step 2: Build occupancy structure
@@ -337,7 +338,7 @@ class PriceInfoCalculation implements PriceInfoCalculationInterface
      * Used by the handling-fee correlation logic: handling_fee entries are
      * only considered when their IdAge matches an age type present in the
      * season_price for the booked room.
-     * @return array<string, mixed>
+     * @return array<string>
      */
     public function collectSeasonPriceAgeTypes(string $roomId, string $boardId): array
     {

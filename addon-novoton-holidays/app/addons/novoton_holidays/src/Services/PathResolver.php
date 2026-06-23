@@ -18,7 +18,7 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 class PathResolver
 {
-    /** @var array<string, mixed>|null Cached paths array. */
+    /** @var array<string, string>|null Cached paths array. */
     private static ?array $paths = null;
 
     /**
@@ -50,7 +50,7 @@ class PathResolver
             self::$paths = $paths;
             return $paths;
         }
-        return TypeCoerce::toStringMap(self::$paths);
+        return self::$paths;
     }
 
     /**

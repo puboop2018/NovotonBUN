@@ -310,7 +310,9 @@ use Tygh\Addons\TravelCore\Services\CurrencyService;
     $view->assign('hotel_stars', $hotel_stars);
     $view->assign('package_name', $package_name);
     $view->assign('hotel_all_packages', $all_packages);
-    $view->assign('auth', TypeCoerce::toStringMap(Tygh::$app['session']['auth'] ?? []));
+    $session = Tygh::$app['session'];
+    $sessionAuth = (is_array($session) || $session instanceof \ArrayAccess) ? ($session['auth'] ?? []) : [];
+    $view->assign('auth', TypeCoerce::toStringMap($sessionAuth));
 
     // Calendar prices: per-date approximate total for the cheapest room
     // Uses guest count to calculate realistic per-night totals

@@ -53,13 +53,13 @@ class PriceVerificationService implements PriceVerificationServiceInterface
             'star_rating' => '',
             'check_in' => $params['check_in'],
             'check_out' => $params['check_out'],
-            'adults' => (int) ($params['adults'] ?? 2),
+            'adults' => PriceInfoFormatter::toInt($params['adults'] ?? 2),
             'children' => $params['children_ages'] ?? [],
         ];
 
         $priceData = $this->pricing->getRoomPrice($priceParams);
 
-        if (!$priceData || !isset($priceData->Price)) {
+        if (!(bool) $priceData || !isset($priceData->Price)) {
             $this->log('Price verification failed', [
                 'hotel_id' => $params['hotel_id'],
                 'room_id' => $params['room_id'] ?? '',

@@ -247,7 +247,7 @@ class SearchParameterNormalizer
 
         foreach ($roomsData as $idx => $room) {
             if (empty($room['childrenAges']) && ($room['children'] ?? 0) > 0) {
-                $roomsData[$idx]['childrenAges'] = array_slice($urlAges, 0, TypeCoerce::toInt($room['children'] ?? 0));
+                $roomsData[$idx]['childrenAges'] = array_slice($urlAges, 0, TypeCoerce::toInt($room['children']));
             }
         }
 

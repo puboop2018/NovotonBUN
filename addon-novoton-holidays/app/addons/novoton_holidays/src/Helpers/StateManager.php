@@ -388,12 +388,6 @@ class StateManager implements StateManagerInterface
     }
 
     /**
-     * Get the next batch of item IDs to process
-     *
-     * @param int $batchSize Number of items to get
-     * @return list<mixed> Array of item IDs
-     */
-    /**
      * Get the next batch of item IDs to process.
      * If item_ids are stored in state (legacy), uses array_slice.
      * Otherwise returns empty — callers should use DB-based pagination.

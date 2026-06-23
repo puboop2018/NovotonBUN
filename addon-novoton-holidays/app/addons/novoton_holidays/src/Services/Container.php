@@ -55,6 +55,7 @@ use Tygh\Addons\NovotonHolidays\Repository\HotelSearchRepositoryInterface;
 use Tygh\Addons\NovotonHolidays\Repository\SyncLogRepository;
 use Tygh\Addons\NovotonHolidays\Repository\SyncLogRepositoryInterface;
 use Tygh\Addons\TravelCore\Contracts\ProviderNormalizerInterface;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 class Container
 {
@@ -116,6 +117,24 @@ class Container
         }
         /** @var T */
         return $this->instances[$id] ??= $factory();
+    }
+
+    /**
+     * Like {@see self::resolve()} but never caches: a new instance is created
+     * on every call (or produced by the test override). Used for the batched
+     * sync helpers, which must be fresh per invocation.
+     *
+     * @template T of object
+     * @param callable(): T $factory
+     * @return T
+     */
+    private function resolveFresh(string $id, callable $factory): object
+    {
+        if (isset($this->overrides[$id])) {
+            /** @var T */
+            return ($this->overrides[$id])();
+        }
+        return $factory();
     }
 
     // ═══════════════════════════════════════════════════════════════════
@@ -291,7 +310,7 @@ class Container
     public function priceChangeDetector(): \Tygh\Addons\TravelCore\Services\PriceChangeDetector
     {
         return $this->resolve('priceChangeDetector', fn (): \Tygh\Addons\TravelCore\Services\PriceChangeDetector => new \Tygh\Addons\TravelCore\Services\PriceChangeDetector(
-            (float) ConfigProvider::get('price_change_tolerance_percent', 1.0),
+            TypeCoerce::toFloat(ConfigProvider::get('price_change_tolerance_percent', 1.0)),
         ));
     }
 
@@ -350,10 +369,10 @@ class Container
      */
     public function batchedHotelFacilitiesSyncV2(): SyncInterface
     {
-        if (isset($this->overrides['batchedHotelFacilitiesSyncV2'])) {
-            return ($this->overrides['batchedHotelFacilitiesSyncV2'])();
-        }
-        return new BatchedHotelFacilitiesSyncV2();
+        return $this->resolveFresh(
+            'batchedHotelFacilitiesSyncV2',
+            fn (): \Tygh\Addons\NovotonHolidays\Helpers\BatchedHotelFacilitiesSyncV2 => new BatchedHotelFacilitiesSyncV2(),
+        );
     }
 
     /**
@@ -366,10 +385,10 @@ class Container
      */
     public function batchedPriceInfoSyncV2(): BatchedPriceInfoSyncV2
     {
-        if (isset($this->overrides['batchedPriceInfoSyncV2'])) {
-            return ($this->overrides['batchedPriceInfoSyncV2'])();
-        }
-        return new BatchedPriceInfoSyncV2();
+        return $this->resolveFresh(
+            'batchedPriceInfoSyncV2',
+            fn (): BatchedPriceInfoSyncV2 => new BatchedPriceInfoSyncV2(),
+        );
     }
 
     /**
@@ -383,9 +402,9 @@ class Container
      */
     public function batchedHotelInfoSyncV2(): \Tygh\Addons\NovotonHolidays\Helpers\AbstractBatchedSync
     {
-        if (isset($this->overrides['batchedHotelInfoSyncV2'])) {
-            return ($this->overrides['batchedHotelInfoSyncV2'])();
-        }
-        return new BatchedHotelInfoSyncV2();
+        return $this->resolveFresh(
+            'batchedHotelInfoSyncV2',
+            fn (): \Tygh\Addons\NovotonHolidays\Helpers\BatchedHotelInfoSyncV2 => new BatchedHotelInfoSyncV2(),
+        );
     }
 }

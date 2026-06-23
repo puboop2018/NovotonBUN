@@ -28,6 +28,7 @@ namespace Tygh\Addons\NovotonHolidays\Services;
 
 use Tygh\Addons\TravelCore\Contracts\PreOrderPriceVerifierInterface;
 use Tygh\Addons\TravelCore\Helpers\SessionAccessor;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
 {
@@ -73,7 +74,7 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
         // PricingApiClientInterface rather than the deprecated facade.
         $pricing = null;
 
-        $cartProducts = is_array($cart['products'] ?? null) ? $cart['products'] : [];
+        $cartProducts = is_array($cart['products']) ? $cart['products'] : [];
         foreach ($cartProducts as $cartId => $product) {
             if (!is_array($product)) {
                 continue;
@@ -112,7 +113,7 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
                 // Cache miss / stale — call the API
                 if ($pricing === null) {
                     $api = fn_novoton_holidays_get_api();
-                    if (!$api) {
+                    if ($api === null) {
                         fn_log_event('general', 'runtime', [
                             'message' => 'PreOrderPriceVerifier: API unavailable, skipping price check',
                         ]);
@@ -138,7 +139,7 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
 
                 $priceData = $pricing->getRoomPrice($priceParams);
 
-                if (!$priceData || !isset($priceData->Price)) {
+                if (!(bool) $priceData || !isset($priceData->Price)) {
                     if ($debug) {
                         fn_log_event('general', 'runtime', [
                             'message' => 'PreOrderPriceVerifier: API returned no price, allowing order',
@@ -163,7 +164,7 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
             );
 
             if (!empty($checkResult['correction'])) {
-                $result['corrections'][$cartId] = $checkResult['correction'];
+                $result['corrections'][(string) $cartId] = $checkResult['correction'];
             }
 
             if (!empty($checkResult['notification'])) {
@@ -209,6 +210,7 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
         if (!is_array($entry)) {
             return null;
         }
+        $entry = TypeCoerce::toStringMap($entry);
         $age = time() - PriceInfoFormatter::toInt($entry['timestamp'] ?? 0);
 
         if ($age > $ttl) {
@@ -401,7 +403,7 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
         $raw = $extra['children_ages'] ?? '';
 
         if (is_array($raw)) {
-            $ages = array_map('intval', $raw);
+            $ages = array_map(static fn ($v): int => TypeCoerce::toInt($v), $raw);
         } elseif (is_string($raw) && $raw !== '') {
             $ages = array_map('intval', array_filter(
                 explode(',', $raw),

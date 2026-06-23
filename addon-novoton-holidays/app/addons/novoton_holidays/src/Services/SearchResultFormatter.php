@@ -15,6 +15,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Services;
 
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Services\CurrencyService;
 
 class SearchResultFormatter implements SearchResultFormatterInterface
@@ -48,7 +49,7 @@ class SearchResultFormatter implements SearchResultFormatterInterface
         $this->assignCurrency($view);
 
         // ── Multi-room data ──────────────────────────────────────────
-        if ($searchResult['is_multi_room']) {
+        if (TypeCoerce::toBool($searchResult['is_multi_room'])) {
             $view->assign('all_room_results', $searchResult['all_room_results']);
             $view->assign('is_multi_room_search', true);
             $view->assign('multi_room_total_options', $searchResult['multi_room_total_options']);
@@ -138,7 +139,7 @@ class SearchResultFormatter implements SearchResultFormatterInterface
 
         $this->assignMeta($view);
 
-        if ($warningLangKey) {
+        if ($warningLangKey !== null && $warningLangKey !== '') {
             fn_set_notification(
                 'W',
                 __('warning'),
@@ -154,7 +155,7 @@ class SearchResultFormatter implements SearchResultFormatterInterface
     /** @param \Smarty $view */
     private function assignCurrency($view): void
     {
-        $currency = defined('CART_SECONDARY_CURRENCY') ? CART_SECONDARY_CURRENCY : 'EUR';
+        $currency = defined('CART_SECONDARY_CURRENCY') ? TypeCoerce::toString(CART_SECONDARY_CURRENCY) : 'EUR';
         $currencies = ConfigProvider::getCurrencies();
         $entry = is_array($currencies[$currency] ?? null) ? $currencies[$currency] : [];
         $coefficient = is_numeric($entry['coefficient'] ?? null) ? (float) $entry['coefficient'] : 1.0;
@@ -178,7 +179,7 @@ class SearchResultFormatter implements SearchResultFormatterInterface
             $hotelRepo = Container::getInstance()->hotelRepository();
             $hotelInfo = $hotelRepo->findBasicById($hotelId);
 
-            if ($hotelInfo) {
+            if ($hotelInfo !== null) {
                 $hotelName = $hotelInfo['hotel_name'] ?? '';
                 $hotelCity = $hotelInfo['city'] ?? '';
                 $hotelRegion = $hotelInfo['region'] ?? '';
@@ -196,18 +197,18 @@ class SearchResultFormatter implements SearchResultFormatterInterface
             }
 
             // Room-level facilities
-            $lang_code = CART_LANGUAGE;
+            $lang_code = TypeCoerce::toString(CART_LANGUAGE);
             $roomFacilities = fn_novoton_holidays_get_hotel_facilities_by_type($hotelId, \Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_ROOM_FACILITY, $lang_code);
             $view->assign('novoton_room_facilities', $roomFacilities);
         }
 
         // Fallback: product name
         if (empty($hotelName) && !empty($productId)) {
-            $hotelName = (string) db_get_field(
+            $hotelName = TypeCoerce::toString(db_get_field(
                 'SELECT product FROM ?:product_descriptions WHERE product_id = ?i AND lang_code = ?s',
                 $productId,
                 CART_LANGUAGE,
-            );
+            ));
         }
         if (empty($hotelName)) {
             $hotelName = !empty($hotelId) ? 'Hotel #' . $hotelId : '';
@@ -298,7 +299,7 @@ class SearchResultFormatter implements SearchResultFormatterInterface
             }
         }
 
-        if ($activeEb) {
+        if ($activeEb !== null) {
             $view->assign('active_early_booking', $activeEb);
         }
     }

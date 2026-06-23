@@ -197,7 +197,7 @@ class CartAssemblyService implements CartAssemblyServiceInterface
                 $validAges = array_filter($room['childrenAges'], fn ($age): bool => $age !== null && $age !== '');
                 $validAgesStrList = array_map(static fn ($age): string => TypeCoerce::toString($age), $validAges);
                 $room['children_ages_str'] = !empty($validAgesStrList)
-                    ? implode(', ', $validAgesStrList) . ' ' . __('novoton_holidays.years_old')
+                    ? implode(', ', $validAgesStrList) . ' ' . TypeCoerce::toString(__('novoton_holidays.years_old'))
                     : '';
             } else {
                 $room['children_ages_str'] = '';
@@ -276,7 +276,7 @@ class CartAssemblyService implements CartAssemblyServiceInterface
         $in = strtotime($checkIn);
         $out = strtotime($checkOut);
 
-        if (!$in || !$out || $out <= $in) {
+        if ($in === false || $in === 0 || $out === false || $out === 0 || $out <= $in) {
             return 0;
         }
 

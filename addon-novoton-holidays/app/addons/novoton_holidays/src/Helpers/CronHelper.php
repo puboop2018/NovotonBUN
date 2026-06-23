@@ -125,7 +125,7 @@ class CronHelper
 
         if (!empty($excludeResorts)) {
             if (is_array($excludeResorts)) {
-                return array_values(array_filter($excludeResorts));
+                return TypeCoerce::toStringList(array_values(array_filter($excludeResorts)));
             }
             return TypeCoerce::toStringList(array_values(array_filter(array_map('trim', explode(',', TypeCoerce::toString($excludeResorts))))));
         }

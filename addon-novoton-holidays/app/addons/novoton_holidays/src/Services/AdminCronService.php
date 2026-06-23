@@ -189,27 +189,28 @@ class AdminCronService implements AdminCronServiceInterface
             }
 
             $category_id = ConfigProvider::getCategoryForCountry($country);
-            if (!$category_id) {
+            if ($category_id === 0) {
                 $category_id = fn_novoton_holidays_get_or_create_category(str_replace('{country}', $country, \Tygh\Addons\NovotonHolidays\Constants::PRODUCT_CATEGORY_TEMPLATE));
             }
             $added = 0;
 
             foreach ($hotels as $hotel) {
-                $hotel_id = $hotel['hotel_id'];
+                $hotel_id = TypeCoerce::toString($hotel['hotel_id']);
+                $hotel_name = TypeCoerce::toString($hotel['hotel_name']);
                 $product_code = 'NVT' . $hotel_id;
 
-                $this->output("[{$hotel_id}] {$hotel['hotel_name']} ... ", false);
+                $this->output("[{$hotel_id}] {$hotel_name} ... ", false);
 
                 // Check if CS-Cart product already exists with this code
                 $existing = db_get_field('SELECT product_id FROM ?:products WHERE product_code = ?s', $product_code);
                 if ($existing) {
-                    $hotelRepo->linkToProduct(TypeCoerce::toString($hotel_id), (int) $existing);
+                    $hotelRepo->linkToProduct($hotel_id, TypeCoerce::toInt($existing));
                     $this->output('LINKED');
                     continue;
                 }
 
                 $product_data = [
-                    'product' => $hotel['hotel_name'],
+                    'product' => $hotel_name,
                     'product_code' => $product_code,
                     'price' => 0,
                     'amount' => ConfigProvider::getDefaultProductQuantity(),
@@ -219,10 +220,10 @@ class AdminCronService implements AdminCronServiceInterface
                     'category_ids' => [$category_id],
                 ];
 
-                $product_id = fn_update_product($product_data, 0, CART_LANGUAGE);
+                $product_id = TypeCoerce::toInt(fn_update_product($product_data, 0, CART_LANGUAGE));
 
-                if ($product_id) {
-                    $hotelRepo->linkToProduct(TypeCoerce::toString($hotel_id), TypeCoerce::toInt($product_id));
+                if ($product_id !== 0) {
+                    $hotelRepo->linkToProduct($hotel_id, $product_id);
                     $added++;
                     $this->output("ADDED (ID: {$product_id})");
                 } else {
@@ -263,13 +264,11 @@ class AdminCronService implements AdminCronServiceInterface
 
         $response = $this->api->destinations()->getOffersUpdate($last_check, $country);
 
-        if (!$response || !isset($response->Offer)) {
+        if (!(bool) $response || !isset($response->Offer)) {
             return ['success' => true, 'message' => 'No new offers found'];
         }
 
-        /** @var mixed $offerRaw */
-        $offerRaw = $response->Offer;
-        $offers = is_array($offerRaw) ? $offerRaw : [$offerRaw];
+        $offers = [$response->Offer];
         $count = count($offers);
 
         return ['success' => true, 'message' => "Found {$count} offers"];
@@ -316,7 +315,7 @@ class AdminCronService implements AdminCronServiceInterface
 
         $notified = 0;
         foreach ($requests as $request) {
-            $altRequestRepo->markNotified($request['request_id']);
+            $altRequestRepo->markNotified(TypeCoerce::toInt($request['request_id']));
             $notified++;
         }
 
