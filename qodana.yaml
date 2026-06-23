@@ -33,6 +33,24 @@ exclude:
   # Style opinions that conflict with our PHPCS / php-cs-fixer config:
   - name: PhpUnnecessaryCurlyVarSyntaxInspection   # "{$var}" interpolation is the house style
   - name: PhpFullyQualifiedNameUsageInspection     # deliberate \Tygh\… FQNs in procedural files
+  # ── Notice-level inspections muted ──────────────────────────────────────────
+  # Either owned by PHPStan L10 (type/dead-code correctness) or conflicting with
+  # this codebase's pragmatic, procedural CS-Cart style. Muting them keeps the
+  # Qodana report focused on real, non-overlapping findings (≈70 instead of ≈1450).
+  - name: PhpDeprecationInspection                    # CS-Cart core deprecations — mostly unavoidable
+  - name: PhpDeprecatedClassUsageInspection
+  - name: PhpUnnecessaryFullyQualifiedNameInspection  # FQN style, not a bug
+  - name: PhpMissingParamTypeInspection               # PHPStan L10 owns type correctness
+  - name: PhpMissingReturnTypeInspection
+  - name: PhpMissingFieldTypeInspection
+  - name: PhpUnusedParameterInspection                # fixed CS-Cart hook/callback signatures
+  - name: PhpRedundantOptionalArgumentInspection
+  - name: PhpUnhandledExceptionInspection             # CS-Cart doesn't use checked-exception style
+  - name: PhpDocMissingThrowsInspection
+  - name: PhpRedundantCastInspection                  # conflicts with the TypeCoerce coercion pattern
+  - name: PhpMethodParametersCountMismatchInspection  # CS-Cart variadic fn_* false positives
+  - name: PhpClassCanBeReadonlyInspection
+  - name: DuplicatedCode                              # refactoring suggestion, not a defect
   # Don't analyse third-party code, build output, or the test scaffolding
   # (its guarded fn_* stubs trip the duplicate-declaration check):
   - name: All
