@@ -555,6 +555,7 @@
     /**
      * A73: Show price change notification
      */
+    // eslint-disable-next-line no-unused-vars -- A73 feature helper, retained; caller wired separately
     function showPriceChangeNotification(text, type) {
         // Remove existing notification
         var existing = document.getElementById('novoton-price-notification');

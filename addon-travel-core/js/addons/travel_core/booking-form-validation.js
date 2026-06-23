@@ -120,7 +120,7 @@
             return;
         }
 
-        var masked = '';
+        masked = '';
         if (digits.length > 0) masked = digits.substring(0, Math.min(2, digits.length));
         if (digits.length >= 2) masked = digits.substring(0, 2) + '/';
         if (digits.length > 2) masked = digits.substring(0, 2) + '/' + digits.substring(2, Math.min(4, digits.length));
@@ -130,7 +130,7 @@
         input.value = masked;
 
         var newLen = masked.length;
-        var newPos = cursorPos;
+        newPos = cursorPos;
         if (newLen > oldLen) {
             if (cursorPos === 2 || cursorPos === 3) newPos = 3;
             else if (cursorPos === 5 || cursorPos === 6) newPos = 6;
@@ -419,7 +419,7 @@
         var roomIdx = roomNum - 1;
 
         // Get room-specific data for multi-room, or use single room data
-        var roomData = {};
+        var roomData;
         if (isMultiRoom && window.bookingData.roomsData[roomIdx]) {
             roomData = window.bookingData.roomsData[roomIdx];
         } else {

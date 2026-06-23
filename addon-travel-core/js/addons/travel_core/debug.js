@@ -77,7 +77,7 @@
                 } catch(e) {
                     log('booking_config JSON parse', 'FAILED: ' + e.message, false);
                     log('booking_config raw (first 200)', text.substring(0, 200), false);
-                    var apiPanel = document.getElementById('travel-debug-api');
+                    apiPanel = document.getElementById('travel-debug-api');
                     if (apiPanel) apiPanel.innerHTML = '<pre style="color:#e94560;margin:0;">JSON PARSE ERROR: ' + e.message + '\n\nRaw:\n' + text.substring(0, 500) + '</pre>';
                 }
                 console.table(results);
