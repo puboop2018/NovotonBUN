@@ -11,27 +11,29 @@ declare(strict_types=1);
  * @since   1.1.0
  */
 
+use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Registry;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
 // --- Authenticate ---
 $storedKey = Registry::get('addons.travel_core.cron_access_key');
-$providedKey = isset($_REQUEST['access_key']) ? (string)$_REQUEST['access_key'] : '';
+$providedKey = RequestCoerce::string($_REQUEST, 'access_key');
 
 if (empty($storedKey)) {
     die("ERROR: Cron access key not set in Travel Core addon settings.\n");
 }
-if (empty($providedKey) || !hash_equals($storedKey, $providedKey)) {
+if (empty($providedKey) || !hash_equals(TypeCoerce::toString($storedKey), $providedKey)) {
     die("ERROR: Invalid or missing access key.\n");
 }
 
 if ($mode === 'run') {
-    $cron_mode = isset($_REQUEST['mode']) ? preg_replace('/[^a-z0-9_]/', '', strtolower((string)$_REQUEST['mode'])) : '';
+    $cron_mode = isset($_REQUEST['mode']) ? preg_replace('/[^a-z0-9_]/', '', strtolower(RequestCoerce::string($_REQUEST, 'mode'))) : '';
 
     // Fix: 'mode' param was consumed by CS-Cart dispatch, use 'cron_mode' as fallback
     if (empty($cron_mode) || $cron_mode === 'run') {
-        $cron_mode = isset($_REQUEST['cron_mode']) ? preg_replace('/[^a-z0-9_]/', '', strtolower((string)$_REQUEST['cron_mode'])) : '';
+        $cron_mode = isset($_REQUEST['cron_mode']) ? preg_replace('/[^a-z0-9_]/', '', strtolower(RequestCoerce::string($_REQUEST, 'cron_mode'))) : '';
     }
 
     $supported_modes = ['exchange_rates'];
@@ -48,7 +50,7 @@ if ($mode === 'run') {
     echo "[" . date('Y-m-d H:i:s') . "] Travel Core Cron - Mode: {$cron_mode}\n\n";
 
     // Currently only 'exchange_rates' is in $supported_modes, so we always reach here.
-    $commission = (float) Registry::get('addons.travel_core.currency_risk_commission');
+    $commission = TypeCoerce::toFloat(Registry::get('addons.travel_core.currency_risk_commission'));
 
     $result = fn_travel_core_update_exchange_rates($commission, true);
 

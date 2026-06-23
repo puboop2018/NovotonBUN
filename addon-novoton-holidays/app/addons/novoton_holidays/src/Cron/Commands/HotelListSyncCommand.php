@@ -114,7 +114,7 @@ class HotelListSyncCommand extends AbstractCronCommand
         if ($hotelType === '') {
             return null;
         }
-        if (preg_match('/^(\d)/', $hotelType, $matches)) {
+        if (preg_match('/^(\d)/', $hotelType, $matches) === 1) {
             $stars = (int) $matches[1];
             return ($stars >= 1 && $stars <= 5) ? $stars : null;
         }

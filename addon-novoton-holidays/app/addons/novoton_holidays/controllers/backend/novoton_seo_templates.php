@@ -23,6 +23,8 @@ use Tygh\Addons\NovotonHolidays\Services\Container;
 use Tygh\Registry;
 use Tygh\Settings;
 use Tygh\Tygh;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
@@ -60,7 +62,7 @@ function _novoton_seo_setting_defaults(): array
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($mode === 'save') {
-        $submitted = $_REQUEST['seo'] ?? [];
+        $submitted = RequestCoerce::stringMap($_REQUEST, 'seo');
         $defaults  = _novoton_seo_setting_defaults();
         $settings  = Settings::instance();
 
@@ -69,12 +71,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (str_starts_with($key, 'seo_field_')) {
                 $toSave[$key] = !empty($submitted[$key]) ? 'Y' : 'N';
             } else {
-                $toSave[$key] = trim((string) ($submitted[$key] ?? ''));
+                $toSave[$key] = TypeCoerce::toString($submitted[$key] ?? '');
             }
         }
 
-        foreach ($toSave as $key => $value) {
-            $settings->updateValue($key, $value, 'novoton_holidays', true);
+        if ($settings instanceof Settings) {
+            foreach ($toSave as $key => $value) {
+                $settings->updateValue($key, $value, 'novoton_holidays', true);
+            }
         }
 
         $existing = \Tygh\Registry::get('addons.novoton_holidays');
@@ -94,17 +98,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $builder = static fn(array $hotel): array =>
             \Tygh\Addons\NovotonHolidays\Helpers\ProductFactory::buildNovotonPlaceholders(
-                $hotel, $hotel['hotel_name'] ?? ''
+                TypeCoerce::toStringMap($hotel), TypeCoerce::toString($hotel['hotel_name'] ?? '')
             );
 
         return fn_travel_core_run_long_task(
-            __('travel_core.seo_bulk_apply_progress'),
+            TypeCoerce::toString(__('travel_core.seo_bulk_apply_progress')),
             static fn() => fn_travel_core_seo_bulk_apply('novoton_holidays', $fetcher, $builder),
             'novoton_seo_templates.manage',
             static function (array $result) {
                 fn_set_notification('N', __('notice'),
-                    str_replace(['[updated]', '[total]'], [$result['updated'], $result['total']],
-                        __('travel_core.seo_bulk_apply_done')));
+                    str_replace(
+                        ['[updated]', '[total]'],
+                        [TypeCoerce::toString($result['updated'] ?? ''), TypeCoerce::toString($result['total'] ?? '')],
+                        TypeCoerce::toString(__('travel_core.seo_bulk_apply_done'))
+                    ));
             }
         );
     }
@@ -114,7 +121,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 if ($mode === 'manage' || $mode === '') {
     $defaults = _novoton_seo_setting_defaults();
-    $current  = Registry::get('addons.novoton_holidays') ?: [];
+    $current  = TypeCoerce::toStringMap(Registry::get('addons.novoton_holidays'));
 
     $values = [];
     foreach ($defaults as $key => $default) {
@@ -124,5 +131,7 @@ if ($mode === 'manage' || $mode === '') {
             : ($stored ?? $default);
     }
 
-    Tygh::$app['view']->assign('seo_values', $values);
+    /** @var \Smarty $view */
+    $view = Tygh::$app['view'];
+    $view->assign('seo_values', $values);
 }

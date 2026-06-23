@@ -86,7 +86,7 @@ class PriceInfoService implements PriceInfoServiceInterface
 
         $response = $this->pricing->getPriceInfo($hotelId, $packageName, $lang);
 
-        if (!$response) {
+        if (!(bool) $response) {
             return null;
         }
 

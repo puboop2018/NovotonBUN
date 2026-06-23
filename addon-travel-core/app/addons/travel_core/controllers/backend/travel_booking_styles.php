@@ -18,6 +18,8 @@ declare(strict_types=1);
 use Tygh\Tygh;
 use Tygh\Registry;
 use Tygh\Settings;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
@@ -52,16 +54,16 @@ function _travel_styles_color_map(): array
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($mode === 'save') {
-        $submitted = $_REQUEST['appearance'] ?? [];
+        $submitted = RequestCoerce::stringMap($_REQUEST, 'appearance');
         $colorMap = _travel_styles_color_map();
         $errors = [];
         $saved = 0;
 
         foreach ($colorMap as $settingName => $info) {
-            $value = trim((string) ($submitted[$settingName] ?? ''));
+            $value = TypeCoerce::toString($submitted[$settingName] ?? '');
 
             // Validate: empty or valid hex color
-            if ($value !== '' && !preg_match('/^#[0-9a-fA-F]{6}$/', $value)) {
+            if ($value !== '' && preg_match('/^#[0-9a-fA-F]{6}$/', $value) !== 1) {
                 $errors[] = __('travel_core.invalid_color_value', ['[setting]' => __('travel_core.' . $settingName)]);
                 continue;
             }
@@ -70,7 +72,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $value = ($value !== '') ? strtolower($value) : '';
 
             // Use CS-Cart's Settings API — handles DB write + cache invalidation
-            Settings::instance()->updateValue($settingName, $value, 'travel_core');
+            $settings = Settings::instance();
+            if ($settings instanceof Settings) {
+                $settings->updateValue($settingName, $value, 'travel_core');
+            }
             $saved++;
         }
 
@@ -92,7 +97,7 @@ if ($mode === 'manage') {
     $colorMap = _travel_styles_color_map();
 
     // Read current values via Registry (reliable — Settings API manages cache)
-    $tc = Registry::get('addons.travel_core') ?: [];
+    $tc = TypeCoerce::toStringMap(Registry::get('addons.travel_core'));
 
     $color_groups = [
         'base' => [
@@ -134,5 +139,8 @@ if ($mode === 'manage') {
         ];
     }
 
-    Tygh::$app['view']->assign('color_groups', $color_groups);
+    $view = Tygh::$app['view'];
+    if ($view instanceof \Smarty) {
+        $view->assign('color_groups', $color_groups);
+    }
 }

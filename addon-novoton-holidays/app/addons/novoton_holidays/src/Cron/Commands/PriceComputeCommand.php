@@ -8,6 +8,7 @@ use Tygh\Addons\NovotonHolidays\Cron\AbstractCronCommand;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Services\PriceInfoFormatter;
 use Tygh\Addons\NovotonHolidays\Services\PriceInfoService;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 /**
  * Cron command: Compute derived price metadata from raw priceinfo_data
@@ -63,7 +64,7 @@ class PriceComputeCommand extends AbstractCronCommand
 
         $singleHotel = $this->getParam('hotel_id', '');
         if (!empty($singleHotel)) {
-            return $this->computeForHotel((string) $singleHotel);
+            return $this->computeForHotel(TypeCoerce::toString($singleHotel));
         }
 
         $force = !empty($this->params['force']);
@@ -85,6 +86,7 @@ class PriceComputeCommand extends AbstractCronCommand
             );
         }
 
+        $packages = TypeCoerce::toList($packages);
         $total = count($packages);
         $this->output("Packages to process: {$total}");
         $this->output('');
@@ -111,6 +113,7 @@ class PriceComputeCommand extends AbstractCronCommand
                     $this->output("  ERROR [{$pkgHotelId}/{$pkgPackageId}]: invalid JSON");
                     continue;
                 }
+                $priceinfo = TypeCoerce::toStringMap($priceinfo);
 
                 $minPrice = self::extractMinPrice($priceinfo);
                 $seasonsCount = self::countSeasons($priceinfo);
@@ -217,7 +220,7 @@ class PriceComputeCommand extends AbstractCronCommand
         $processed = 0;
         $errors = 0;
 
-        foreach ($packages as $pkg) {
+        foreach (TypeCoerce::toList($packages) as $pkg) {
             if (!is_array($pkg)) {
                 continue;
             }
@@ -227,6 +230,7 @@ class PriceComputeCommand extends AbstractCronCommand
                     $errors++;
                     continue;
                 }
+                $priceinfo = TypeCoerce::toStringMap($priceinfo);
 
                 $minPrice = self::extractMinPrice($priceinfo);
                 $seasonsCount = self::countSeasons($priceinfo);
@@ -296,7 +300,7 @@ class PriceComputeCommand extends AbstractCronCommand
             $hotelId,
         );
 
-        if (empty($row) || !is_array($row) || empty($row['product_id']) || empty($row['lowest_price'])) {
+        if (empty($row) || empty($row['product_id']) || empty($row['lowest_price'])) {
             return false;
         }
 
@@ -330,9 +334,13 @@ class PriceComputeCommand extends AbstractCronCommand
             return null;
         }
 
+        $seasonPricesMap = TypeCoerce::toStringMap($seasonPrices);
+
         // Normalize single entry to array
-        if (isset($seasonPrices['Code']) || isset($seasonPrices['IdRoom'])) {
-            $seasonPrices = [$seasonPrices];
+        if (isset($seasonPricesMap['Code']) || isset($seasonPricesMap['IdRoom'])) {
+            $seasonPrices = [$seasonPricesMap];
+        } else {
+            $seasonPrices = TypeCoerce::toList($seasonPrices);
         }
 
         foreach ($seasonPrices as $sp) {
@@ -380,7 +388,8 @@ class PriceComputeCommand extends AbstractCronCommand
      */
     public static function countSeasons(array $priceinfo): int
     {
-        $seasons = $priceinfo['seasons']['season'] ?? $priceinfo['seasons'] ?? [];
+        $seasonsRoot = TypeCoerce::toStringMap($priceinfo['seasons'] ?? []);
+        $seasons = $seasonsRoot['season'] ?? $priceinfo['seasons'] ?? [];
 
         if (empty($seasons) || !is_array($seasons)) {
             return 0;
@@ -406,15 +415,18 @@ class PriceComputeCommand extends AbstractCronCommand
 
         // Also check within seasons
         $seasons = $priceinfo['seasons'] ?? [];
-        if (isset($seasons['season'])) {
-            $seasons = $seasons['season'];
+        $seasonsMap = TypeCoerce::toStringMap($seasons);
+        if (isset($seasonsMap['season'])) {
+            $seasons = $seasonsMap['season'];
         }
-        if (isset($seasons['IdSeason'])) {
-            $seasons = [$seasons];
+        $seasonsMap = TypeCoerce::toStringMap($seasons);
+        if (isset($seasonsMap['IdSeason'])) {
+            $seasons = [$seasonsMap];
         }
         if (is_array($seasons)) {
             foreach ($seasons as $season) {
-                if (!empty($season['EarlyBooking']) || !empty($season['early_booking'])) {
+                $seasonMap = TypeCoerce::toStringMap($season);
+                if (!empty($seasonMap['EarlyBooking']) || !empty($seasonMap['early_booking'])) {
                     return true;
                 }
             }

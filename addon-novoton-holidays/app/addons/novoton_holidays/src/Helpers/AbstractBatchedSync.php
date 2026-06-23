@@ -30,6 +30,7 @@ use Tygh\Addons\NovotonHolidays\NovotonApi;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Services\Container;
 use Tygh\Addons\NovotonHolidays\Services\PathResolver;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 abstract class AbstractBatchedSync implements SyncInterface
 {
@@ -343,12 +344,17 @@ abstract class AbstractBatchedSync implements SyncInterface
 
         if ($currentState['status'] === 'in_progress') {
             if ($this->state->isStale()) {
-                $this->logger->output("Stale state detected (no activity since {$currentState['last_run_at']}). Clearing and starting fresh.");
+                $lastRunAt = TypeCoerce::toString($currentState['last_run_at'] ?? '');
+                $this->logger->output("Stale state detected (no activity since {$lastRunAt}). Clearing and starting fresh.");
                 $this->state->clear();
             } elseif ($currentState['processed'] < $currentState['total']) {
                 $status = $this->state->getStatus();
-                $this->logger->output("Resuming {$status['sync_type']} sync...");
-                $this->logger->output("Progress: {$status['processed']}/{$status['total']} ({$status['percent']}%)");
+                $syncType = TypeCoerce::toString($status['sync_type'] ?? '');
+                $processed = TypeCoerce::toString($status['processed'] ?? '');
+                $total = TypeCoerce::toString($status['total'] ?? '');
+                $percent = TypeCoerce::toString($status['percent'] ?? '');
+                $this->logger->output("Resuming {$syncType} sync...");
+                $this->logger->output("Progress: {$processed}/{$total} ({$percent}%)");
                 return $this->resumeSync();
             }
         }
@@ -405,8 +411,10 @@ abstract class AbstractBatchedSync implements SyncInterface
         $errorsThisRun = 0;
 
         $status = $this->state->getStatus();
-        $offset = $status['processed'];
-        $total = $status['total'];
+        $offset = TypeCoerce::toInt($status['processed'] ?? 0);
+        $total = TypeCoerce::toInt($status['total'] ?? 0);
+        $statusSynced = TypeCoerce::toInt($status['synced'] ?? 0);
+        $statusErrors = TypeCoerce::toInt($status['errors'] ?? 0);
 
         while ($offset < $total) {
             // Check time and memory limits before batch
@@ -435,36 +443,38 @@ abstract class AbstractBatchedSync implements SyncInterface
             $batchErrorIds = [];
 
             foreach ($batch as $itemId) {
+                $item = TypeCoerce::toString($itemId);
+
                 // Check limits within batch
                 if ($this->isLimitReached()) {
                     // Save accumulated batch progress before breaking
                     if ($batchProcessed > 0) {
-                        $this->state->updateProgress($offset, $status['synced'] + $syncedThisRun, $status['errors'] + $errorsThisRun, $batchErrorIds);
+                        $this->state->updateProgress($offset, $statusSynced + $syncedThisRun, $statusErrors + $errorsThisRun, $batchErrorIds);
                     }
                     break 2;
                 }
 
                 $itemStart = hrtime(true);
-                $result = $this->processItem($itemId);
+                $result = $this->processItem($item);
                 $itemDurationMs = (int)((hrtime(true) - $itemStart) / 1_000_000);
 
                 // Warn about slow items
                 if ($itemDurationMs > $this->itemTimeoutWarning * 1000) {
                     $secs = round($itemDurationMs / 1000, 1);
-                    $this->logger->output("Warning: item {$itemId} took {$secs}s (threshold: {$this->itemTimeoutWarning}s)");
+                    $this->logger->output("Warning: item {$item} took {$secs}s (threshold: {$this->itemTimeoutWarning}s)");
                 }
 
                 $offset++;
                 $processedThisRun++;
                 $batchProcessed++;
 
-                if ($result['success']) {
+                if (TypeCoerce::toBool($result['success'] ?? false)) {
                     $syncedThisRun++;
                     $batchSynced++;
                 } else {
                     $errorsThisRun++;
                     $batchErrors++;
-                    $batchErrorIds[] = (string)$itemId;
+                    $batchErrorIds[] = $item;
                 }
 
                 // Small delay to avoid API rate limits
@@ -472,7 +482,7 @@ abstract class AbstractBatchedSync implements SyncInterface
             }
 
             // Save state once per batch instead of per item
-            $this->state->updateProgress($offset, $status['synced'] + $syncedThisRun, $status['errors'] + $errorsThisRun, $batchErrorIds);
+            $this->state->updateProgress($offset, $statusSynced + $syncedThisRun, $statusErrors + $errorsThisRun, $batchErrorIds);
 
             // Progress output
             $this->logger->outputProgress($offset, $total);
@@ -525,7 +535,7 @@ abstract class AbstractBatchedSync implements SyncInterface
             return;
         }
 
-        $errorIds = array_values(array_unique(array_map('strval', $state['error_ids'] ?? [])));
+        $errorIds = array_values(array_unique(TypeCoerce::toStringList($state['error_ids'] ?? [])));
 
         if (empty($errorIds)) {
             $state['retry_done'] = true;
@@ -551,7 +561,7 @@ abstract class AbstractBatchedSync implements SyncInterface
                 $recoveredIds[] = $retryId;
                 $this->logger->output("  [{$retryId}] retry OK");
             } else {
-                $msg = (string) ($result['message'] ?? '');
+                $msg = TypeCoerce::toString($result['message'] ?? '');
                 $this->logger->output("  [{$retryId}] retry failed" . ($msg !== '' ? ": {$msg}" : ''));
             }
         }
@@ -560,10 +570,10 @@ abstract class AbstractBatchedSync implements SyncInterface
         // then patch in the retry outcome.
         $recoveredCount = count($recoveredIds);
         $freshState = $this->state->load();
-        $freshState['synced'] = (int) ($freshState['synced'] ?? 0) + $recoveredCount;
-        $freshState['errors'] = max(0, (int) ($freshState['errors'] ?? 0) - $recoveredCount);
+        $freshState['synced'] = TypeCoerce::toInt($freshState['synced'] ?? 0) + $recoveredCount;
+        $freshState['errors'] = max(0, TypeCoerce::toInt($freshState['errors'] ?? 0) - $recoveredCount);
         $freshState['error_ids'] = array_values(array_diff(
-            $freshState['error_ids'] ?? [],
+            TypeCoerce::toStringList($freshState['error_ids'] ?? []),
             $recoveredIds,
         ));
         $freshState['retry_done'] = true;
@@ -597,7 +607,8 @@ abstract class AbstractBatchedSync implements SyncInterface
         $this->logger->outputSummary();
 
         // Send email report
-        $countries = $state['metadata']['countries'] ?? [];
+        $metadata = TypeCoerce::toStringMap($state['metadata'] ?? []);
+        $countries = TypeCoerce::toStringList($metadata['countries'] ?? []);
         $this->logger->sendEmailReport([], implode(', ', $countries));
 
         // Clear state file
@@ -626,8 +637,8 @@ abstract class AbstractBatchedSync implements SyncInterface
             $syncLogRepo = Container::getInstance()->syncLogRepository();
             $lastSync = $syncLogRepo->getLastSync($this->getSyncName());
 
-            if ($lastSync) {
-                $notes = json_decode($lastSync['notes'] ?? '{}', true);
+            if (is_array($lastSync) && $lastSync !== []) {
+                $notes = TypeCoerce::toStringMap(json_decode(TypeCoerce::toString($lastSync['notes'] ?? '{}'), true));
                 $status['last_sync'] = $lastSync['sync_date'];
                 $status['last_sync_type'] = $notes['sync_type'] ?? 'unknown';
                 $status['last_total'] = $lastSync['products_total'];

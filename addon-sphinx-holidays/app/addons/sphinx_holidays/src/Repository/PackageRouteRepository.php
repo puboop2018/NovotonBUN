@@ -38,10 +38,10 @@ class PackageRouteRepository
     public function upsert(array $row): void
     {
         $existing = $this->findByUniqueKey(
-            $row['transport_type'],
-            (int) $row['departure_id'],
-            (int) $row['arrival_id'],
-            (int) $row['duration'],
+            TypeCoerce::toString($row['transport_type'] ?? ''),
+            TypeCoerce::toInt($row['departure_id'] ?? 0),
+            TypeCoerce::toInt($row['arrival_id'] ?? 0),
+            TypeCoerce::toInt($row['duration'] ?? 0),
         );
 
         if ($existing !== null) {

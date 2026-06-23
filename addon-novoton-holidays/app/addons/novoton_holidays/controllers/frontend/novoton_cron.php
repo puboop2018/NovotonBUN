@@ -13,11 +13,13 @@ use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Helpers\SyncLogger;
 use Tygh\Addons\NovotonHolidays\Helpers\CronHelper;
 use Tygh\Addons\NovotonHolidays\Cron\CronDispatcher;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
 // Authentication
-$provided_access_key = $_REQUEST['access_key'] ?? '';
+$provided_access_key = RequestCoerce::string($_REQUEST, 'access_key');
 if (!CronHelper::validateAccessKey($provided_access_key)) {
     $storedKey = ConfigProvider::getCronAccessKey();
     if (empty($storedKey)) {
@@ -37,7 +39,7 @@ if (function_exists('fn_novoton_holidays_seed_seo_defaults')) {
     fn_novoton_holidays_seed_seo_defaults();
 }
 
-$mode = preg_replace('/[^a-zA-Z0-9_]/', '', $_REQUEST['mode'] ?? 'resinfo');
+$mode = TypeCoerce::toString(preg_replace('/[^a-zA-Z0-9_]/', '', RequestCoerce::string($_REQUEST, 'mode', 'resinfo')));
 
 header('Content-Type: text/plain; charset=utf-8');
 
@@ -57,8 +59,8 @@ try {
             $logger->output("  {$m} - {$desc}");
         }
     } else {
-        $result = $dispatcher->dispatch($mode, $_REQUEST);
-        $logger->complete($result['success'] ?? true);
+        $result = $dispatcher->dispatch($mode, TypeCoerce::toStringMap($_REQUEST));
+        $logger->complete(TypeCoerce::toBool($result['success'] ?? true));
     }
 
 } catch (\Exception $e) {

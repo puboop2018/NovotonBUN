@@ -89,12 +89,14 @@ declare(strict_types=1);
 
 use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
 use Tygh\Addons\SphinxHolidays\Cron\CronDispatcher;
+use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
 // ── Authentication ──
 
-$providedKey = $_REQUEST['access_key'] ?? '';
+$providedKey = RequestCoerce::string($_REQUEST, 'access_key');
 $storedKey = ConfigProvider::getCronAccessKey();
 
 header('Content-Type: text/plain; charset=utf-8');
@@ -124,7 +126,7 @@ if (function_exists('fn_sphinx_holidays_seed_seo_defaults')) {
 
 // ── Parse mode ──
 
-$mode = (string) preg_replace('/[^a-z0-9_]/', '', strtolower($_REQUEST['cron_mode'] ?? 'destinations'));
+$mode = (string) preg_replace('/[^a-z0-9_]/', '', strtolower(RequestCoerce::string($_REQUEST, 'cron_mode', 'destinations')));
 
 // ── Dispatch ──
 
@@ -144,32 +146,32 @@ try {
             echo "  {$m} - {$desc}\n";
         }
     } else {
-        $result = $dispatcher->dispatch($mode, $_REQUEST);
+        $result = $dispatcher->dispatch($mode, TypeCoerce::toStringMap($_REQUEST));
 
-        $success = $result['success'] ?? false;
-        $busy = $result['busy'] ?? false;
+        $success = TypeCoerce::toBool($result['success'] ?? false);
+        $busy = TypeCoerce::toBool($result['busy'] ?? false);
 
         if ($busy) {
-            echo "\n[" . date('Y-m-d H:i:s') . "] " . ($result['message'] ?? "Mode '{$mode}' is already running.") . "\n";
+            echo "\n[" . date('Y-m-d H:i:s') . "] " . TypeCoerce::toString($result['message'] ?? "Mode '{$mode}' is already running.") . "\n";
         } else {
             echo "\n[" . date('Y-m-d H:i:s') . "] Cron job " . ($success ? 'completed successfully' : 'finished with errors') . ".\n";
         }
 
         if (!empty($result['error'])) {
-            echo "Error: " . $result['error'] . "\n";
+            echo "Error: " . TypeCoerce::toString($result['error']) . "\n";
         }
 
         if (!empty($result['stats'])) {
-            $s = $result['stats'];
-            echo "Stats: " . ($s['synced'] ?? $s['added'] ?? 0) . "/" . ($s['total'] ?? 0) . " synced";
-            if (($s['skipped'] ?? 0) > 0) {
-                echo ", {$s['skipped']} skipped";
+            $s = TypeCoerce::toStringMap($result['stats']);
+            echo "Stats: " . TypeCoerce::toInt($s['synced'] ?? $s['added'] ?? 0) . "/" . TypeCoerce::toInt($s['total'] ?? 0) . " synced";
+            if (TypeCoerce::toInt($s['skipped'] ?? 0) > 0) {
+                echo ", " . TypeCoerce::toInt($s['skipped'] ?? 0) . " skipped";
             }
-            if (($s['failed'] ?? 0) > 0) {
-                echo ", {$s['failed']} failed";
+            if (TypeCoerce::toInt($s['failed'] ?? 0) > 0) {
+                echo ", " . TypeCoerce::toInt($s['failed'] ?? 0) . " failed";
             }
-            if (($s['duration_ms'] ?? 0) > 0) {
-                echo " (" . round($s['duration_ms'] / 1000, 1) . "s)";
+            if (TypeCoerce::toFloat($s['duration_ms'] ?? 0) > 0) {
+                echo " (" . round(TypeCoerce::toFloat($s['duration_ms'] ?? 0) / 1000, 1) . "s)";
             }
             echo "\n";
         }

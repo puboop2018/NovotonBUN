@@ -11,6 +11,7 @@ declare(strict_types=1);
  * @since 1.0.0
  */
 
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Services\GuestDataService;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
@@ -26,39 +27,45 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
  */
 function fn_travel_core_get_order_info(&$order, $additional_data): void
 {
-    if (empty($order['products'])) {
+    if (empty($order['products']) || !is_array($order['products'])) {
         return;
     }
 
     $date_format = \Tygh\Registry::get('settings.Appearance.date_format') ?: '%d %b %Y';
 
     foreach ($order['products'] as &$product) {
+        if (!is_array($product)) {
+            continue;
+        }
         // Support both new and legacy booking flags
-        if (empty($product['extra']['travel_booking'])) {
+        $extra = TypeCoerce::toStringMap($product['extra'] ?? null);
+        if (empty($extra['travel_booking'])) {
             continue;
         }
 
-        $check_in  = $product['extra']['check_in']  ?? '';
-        $check_out = $product['extra']['check_out'] ?? '';
+        $check_in  = TypeCoerce::toString($extra['check_in']  ?? '');
+        $check_out = TypeCoerce::toString($extra['check_out'] ?? '');
 
         // Formatted dates
         $ci_ts = !empty($check_in)  ? strtotime($check_in)  : false;
         $co_ts = !empty($check_out) ? strtotime($check_out) : false;
         if ($ci_ts !== false) {
-            $product['extra']['check_in_formatted']  = fn_date_format($ci_ts, $date_format);
+            $extra['check_in_formatted']  = fn_date_format($ci_ts, $date_format);
         }
         if ($co_ts !== false) {
-            $product['extra']['check_out_formatted'] = fn_date_format($co_ts, $date_format);
+            $extra['check_out_formatted'] = fn_date_format($co_ts, $date_format);
         }
 
         // Format guests_data for display
-        $guests_data = $product['extra']['guests_data'] ?? null;
+        $guests_data = $extra['guests_data'] ?? null;
         if (!empty($guests_data)) {
-            $holder_name = $product['extra']['holder_name'] ?? '';
+            $holder_name = TypeCoerce::toString($extra['holder_name'] ?? '');
             $formatted = GuestDataService::formatGuestsForOrderDisplay($guests_data, $holder_name);
             if (!empty($formatted)) {
-                $product['extra']['guests_data'] = $formatted;
+                $extra['guests_data'] = $formatted;
             }
         }
+
+        $product['extra'] = $extra;
     }
 }

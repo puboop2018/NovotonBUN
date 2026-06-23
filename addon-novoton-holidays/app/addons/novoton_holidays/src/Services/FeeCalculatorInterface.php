@@ -19,7 +19,7 @@ interface FeeCalculatorInterface
     public function calculateFees(array $occupancy, string $checkIn, int $nights, string $roomId, string $boardId): array;
 
     /**
-     * @return array<string, mixed>
+     * @return array<string>
      */
     public function collectSeasonPriceAgeTypes(string $roomId, string $boardId): array;
 }

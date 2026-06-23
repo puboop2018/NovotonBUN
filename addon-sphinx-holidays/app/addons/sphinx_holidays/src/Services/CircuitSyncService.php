@@ -7,6 +7,7 @@ namespace Tygh\Addons\SphinxHolidays\Services;
 use Tygh\Addons\SphinxHolidays\Contracts\CircuitSyncServiceInterface;
 use Tygh\Addons\SphinxHolidays\Repository\CircuitRepository;
 use Tygh\Addons\SphinxHolidays\SphinxApi;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 /**
  * Fetches circuits from the Sphinx static API and syncs them into the local DB.
@@ -77,15 +78,15 @@ class CircuitSyncService extends AbstractSyncService implements CircuitSyncServi
             }
 
             foreach ($items as $raw) {
-                $normalized = $this->normalizeCircuit($raw);
+                $normalized = $this->normalizeCircuit(TypeCoerce::toStringMap($raw));
                 if ($normalized === null) {
-                    $stats['failed']++;
+                    $stats['failed'] = TypeCoerce::toInt($stats['failed']) + 1;
                     continue;
                 }
 
                 // Client-side filtering: skip circuits outside sync targets
                 $circuitDestIds = !empty($normalized['destination_ids'])
-                    ? json_decode($normalized['destination_ids'], true) ?: []
+                    ? TypeCoerce::toIntList(json_decode(TypeCoerce::toString($normalized['destination_ids']), true) ?: [])
                     : [];
                 if (!empty($circuitDestIds) && empty(array_intersect($circuitDestIds, $allowedDestIds))) {
                     $filtered++;
@@ -93,26 +94,30 @@ class CircuitSyncService extends AbstractSyncService implements CircuitSyncServi
                 }
 
                 $allCircuits[] = $normalized;
-                $stats['total']++;
+                $stats['total'] = TypeCoerce::toInt($stats['total']) + 1;
             }
 
-            if (!$this->hasMorePages($response, $page, self::PER_PAGE, $stats['total'] + $stats['failed'] + $filtered)) {
+            if (!$this->hasMorePages($response, $page, self::PER_PAGE, TypeCoerce::toInt($stats['total']) + TypeCoerce::toInt($stats['failed']) + $filtered)) {
                 break;
             }
             $page++;
         }
 
         if (!empty($allCircuits)) {
-            $this->output("Upserting {$stats['total']} circuits...");
+            $total = TypeCoerce::toInt($stats['total']);
+            $this->output("Upserting {$total} circuits...");
             $batches = array_chunk($allCircuits, self::UPSERT_BATCH_SIZE);
             foreach ($batches as $batch) {
-                $stats['synced'] += $this->upsertBatch($batch);
+                $stats['synced'] = TypeCoerce::toInt($stats['synced']) + $this->upsertBatch($batch);
             }
         }
 
         $stats['success'] = true;
         $filterMsg = $filtered > 0 ? ", {$filtered} filtered (outside sync targets)" : '';
-        $this->output("Circuit sync complete: {$stats['synced']}/{$stats['total']} synced, {$stats['failed']} failed{$filterMsg}.");
+        $synced = TypeCoerce::toInt($stats['synced']);
+        $total = TypeCoerce::toInt($stats['total']);
+        $failed = TypeCoerce::toInt($stats['failed']);
+        $this->output("Circuit sync complete: {$synced}/{$total} synced, {$failed} failed{$filterMsg}.");
 
         return $stats;
     }
@@ -123,12 +128,12 @@ class CircuitSyncService extends AbstractSyncService implements CircuitSyncServi
      */
     private function normalizeCircuit(array $raw): ?array
     {
-        $id = (int) ($raw['id'] ?? 0);
+        $id = TypeCoerce::toInt($raw['id'] ?? 0);
         if ($id <= 0) {
             return null;
         }
 
-        $name = (string) ($raw['name'] ?? $raw['title'] ?? '');
+        $name = TypeCoerce::toString($raw['name'] ?? $raw['title'] ?? '');
         if ($name === '') {
             return null;
         }
@@ -136,44 +141,47 @@ class CircuitSyncService extends AbstractSyncService implements CircuitSyncServi
         $destinations = $raw['destinations'] ?? $raw['destinatons'] ?? [];
         $destIds = [];
         $destNames = [];
-        foreach ($destinations as $dest) {
+        foreach (TypeCoerce::toRowList($destinations) as $dest) {
             if (isset($dest['id'])) {
-                $destIds[] = (int) $dest['id'];
+                $destIds[] = TypeCoerce::toInt($dest['id']);
             }
             if (isset($dest['name'])) {
-                $destNames[] = $dest['name'];
+                $destNames[] = TypeCoerce::toString($dest['name']);
             }
         }
 
         $departures = $raw['departures'] ?? [];
         $depIds = [];
         $depNames = [];
-        foreach ($departures as $dep) {
+        foreach (TypeCoerce::toRowList($departures) as $dep) {
             if (isset($dep['id'])) {
-                $depIds[] = (int) $dep['id'];
+                $depIds[] = TypeCoerce::toInt($dep['id']);
             }
             if (isset($dep['name'])) {
-                $depNames[] = $dep['name'];
+                $depNames[] = TypeCoerce::toString($dep['name']);
             }
         }
+
+        $duration = TypeCoerce::toStringMap($raw['duration'] ?? []);
+        $pricing = TypeCoerce::toStringMap($raw['pricing'] ?? []);
 
         return [
             'circuit_id' => $id,
             'name' => $name,
-            'summary' => (string) ($raw['summary'] ?? ''),
-            'description' => (string) ($raw['description'] ?? ''),
-            'duration_days' => (int) ($raw['duration']['days'] ?? $raw['duration_days'] ?? 0),
-            'duration_nights' => (int) ($raw['duration']['nights'] ?? $raw['duration_nights'] ?? 0),
-            'transport_type' => (string) ($raw['transport_type'] ?? ''),
+            'summary' => TypeCoerce::toString($raw['summary'] ?? ''),
+            'description' => TypeCoerce::toString($raw['description'] ?? ''),
+            'duration_days' => TypeCoerce::toInt($duration['days'] ?? $raw['duration_days'] ?? 0),
+            'duration_nights' => TypeCoerce::toInt($duration['nights'] ?? $raw['duration_nights'] ?? 0),
+            'transport_type' => TypeCoerce::toString($raw['transport_type'] ?? ''),
             'destination_ids' => !empty($destIds) ? json_encode($destIds) : null,
             'destination_names' => !empty($destNames) ? implode(', ', $destNames) : null,
             'departure_ids' => !empty($depIds) ? json_encode($depIds) : null,
             'departure_names' => !empty($depNames) ? implode(', ', $depNames) : null,
-            'image_url' => (string) ($raw['image'] ?? $raw['image_url'] ?? ''),
+            'image_url' => TypeCoerce::toString($raw['image'] ?? $raw['image_url'] ?? ''),
             'itinerary_json' => !empty($raw['itinerary']) ? json_encode($raw['itinerary']) : null,
             'tags_json' => !empty($raw['tags']) ? json_encode($raw['tags']) : null,
-            'min_price' => isset($raw['pricing']['selling_price']) ? (float) $raw['pricing']['selling_price'] : null,
-            'currency' => (string) ($raw['pricing']['currency'] ?? 'EUR'),
+            'min_price' => isset($pricing['selling_price']) ? TypeCoerce::toFloat($pricing['selling_price']) : null,
+            'currency' => TypeCoerce::toString($pricing['currency'] ?? 'EUR'),
             'sync_status' => 'active',
             'last_synced_at' => date('Y-m-d H:i:s'),
         ];
@@ -187,7 +195,7 @@ class CircuitSyncService extends AbstractSyncService implements CircuitSyncServi
         $repo = new CircuitRepository();
         $affected = 0;
         foreach ($batch as $row) {
-            $repo->upsert((int) $row['circuit_id'], $row);
+            $repo->upsert(TypeCoerce::toInt($row['circuit_id']), $row);
             $affected++;
         }
         return $affected;

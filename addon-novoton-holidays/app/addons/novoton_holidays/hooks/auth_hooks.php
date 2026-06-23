@@ -15,6 +15,7 @@ declare(strict_types=1);
  */
 
 use Tygh\Addons\NovotonHolidays\Services\Container;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
@@ -33,7 +34,7 @@ function fn_novoton_holidays_user_login_post($user_data, $auth): void
         return;
     }
 
-    $user_id    = (int)($auth['user_id']);
+    $user_id    = TypeCoerce::toInt($auth['user_id']);
     $session_id = session_id();
     $repo       = Container::getInstance()->bookingRepository();
 
@@ -53,7 +54,7 @@ function fn_novoton_holidays_user_login_post($user_data, $auth): void
 
     // Link by email (repository syncs to travel_bookings automatically)
     if (!empty($user_data['email'])) {
-        $updated_by_email = $repo->linkToUserByEmail($user_id, $user_data['email']);
+        $updated_by_email = $repo->linkToUserByEmail($user_id, TypeCoerce::toString($user_data['email']));
 
         if ($updated_by_email > 0) {
             fn_log_event('general', 'runtime', [
@@ -85,7 +86,7 @@ function fn_novoton_holidays_create_user_post($user_id, $user_data, $auth): void
     $repo    = Container::getInstance()->bookingRepository();
 
     // Link by email
-    $updated = $repo->linkToUserByEmail($user_id, $user_data['email']);
+    $updated = $repo->linkToUserByEmail($user_id, TypeCoerce::toString($user_data['email']));
 
     // Link by current session
     $session_id = session_id();

@@ -46,7 +46,7 @@ class AdultOnlyDetector
         }
 
         foreach (self::PATTERNS as $pattern) {
-            if (preg_match($pattern, $hotelName)) {
+            if (preg_match($pattern, $hotelName) === 1) {
                 return true;
             }
         }

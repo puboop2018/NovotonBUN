@@ -61,7 +61,14 @@ try {
     // the hotel_id in the search session meta; because we search by destination
     // the API can return the whole destination, so drop other hotels' offers
     // before commission/slimming. No-op when the API already filtered by hotel.
-    $searchMeta = TypeCoerce::toStringMap(Tygh::$app['session']['sphinx_search_' . $searchId] ?? null);
+    // CS-Cart's session is an ArrayAccess container object; a plain (non-reference)
+    // local binds the same object handle, so offset reads/writes below operate on
+    // the live session exactly as direct `Tygh::$app['session'][...]` access would.
+    $session = Tygh::$app['session'];
+    if (!is_array($session) && !$session instanceof \ArrayAccess) {
+        $session = [];
+    }
+    $searchMeta = TypeCoerce::toStringMap($session['sphinx_search_' . $searchId] ?? null);
     $filterHotelId = TypeCoerce::toString($searchMeta['filter_hotel_id'] ?? '');
     if ($filterHotelId !== '' && !empty($results)) {
         $results = array_values(array_filter(
@@ -167,7 +174,7 @@ try {
     // so a concurrent visitor can never read a half-filled set as authoritative.
     // The client renders offers as they arrive but keeps polling to the end to
     // drive this completion. docs/adr/0001-availability-early-render-and-metrics.md
-    $accumulated = TypeCoerce::toRowList(Tygh::$app['session']['sphinx_results_' . $searchId] ?? null);
+    $accumulated = TypeCoerce::toRowList($session['sphinx_results_' . $searchId] ?? null);
     $priorCount = count($accumulated);
     $accumulated = array_merge($accumulated, $slimResults);
     $offerCount = count($accumulated);
@@ -205,17 +212,17 @@ try {
     }
 
     if ($terminal) {
-        unset(Tygh::$app['session']['sphinx_results_' . $searchId]);
-        unset(Tygh::$app['session']['sphinx_search_' . $searchId]);
+        unset($session['sphinx_results_' . $searchId]);
+        unset($session['sphinx_search_' . $searchId]);
     } else {
-        Tygh::$app['session']['sphinx_results_' . $searchId] = $accumulated;
+        $session['sphinx_results_' . $searchId] = $accumulated;
         // Persist the incremented poll index for the next poll's metrics. Write
         // the whole meta back — the Session container returns values by copy, so
         // a nested write would not stick.
-        $meta = Tygh::$app['session']['sphinx_search_' . $searchId] ?? [];
+        $meta = $session['sphinx_search_' . $searchId] ?? [];
         if (is_array($meta)) {
             $meta['poll_index'] = $pollIndex;
-            Tygh::$app['session']['sphinx_search_' . $searchId] = $meta;
+            $session['sphinx_search_' . $searchId] = $meta;
         }
     }
 

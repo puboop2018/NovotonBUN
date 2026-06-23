@@ -442,7 +442,7 @@ class HotelRepository implements HotelRepositoryInterface
     #[\Override]
     public function getCountriesWithPriceCounts(): array
     {
-        return array_values($this->reporting->getCountriesWithPriceCounts());
+        return $this->reporting->getCountriesWithPriceCounts();
     }
 
     /**
@@ -466,7 +466,7 @@ class HotelRepository implements HotelRepositoryInterface
     #[\Override]
     public function getResortStatsByCountry(string $country): array
     {
-        return array_values($this->reporting->getResortStatsByCountry($country));
+        return $this->reporting->getResortStatsByCountry($country);
     }
 
     #[\Override]

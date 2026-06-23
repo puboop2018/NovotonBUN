@@ -11,6 +11,7 @@ use Tygh\Addons\NovotonHolidays\NovotonHttpClient;
 use Tygh\Addons\NovotonHolidays\NovotonXmlParser;
 use Tygh\Addons\NovotonHolidays\Services\CacheServiceInterface;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Services\CommissionCalculator;
 
 class AvailabilityApiClient extends ApiClientBase implements AvailabilityApiClientInterface
@@ -35,7 +36,7 @@ class AvailabilityApiClient extends ApiClientBase implements AvailabilityApiClie
     /**
      * 4. hotel_quota - Free allotments for all rooms
      *
-     * @return array<string, mixed> Associative array of room_id => quota value
+     * @return array<string, string> Associative array of room_id => quota value
      */
     #[\Override]
     public function getHotelQuotaAll(string $hotelId, string $checkIn, string $checkOut): array
@@ -45,7 +46,11 @@ class AvailabilityApiClient extends ApiClientBase implements AvailabilityApiClie
 
         $cached = $this->getFromCache(Constants::API_FUNCTION_HOTEL_QUOTA, $cacheKey);
         if ($cached !== null) {
-            return $cached;
+            $cachedMap = [];
+            foreach (TypeCoerce::toStringMap($cached) as $roomId => $quota) {
+                $cachedMap[$roomId] = TypeCoerce::toString($quota);
+            }
+            return $cachedMap;
         }
 
         $xml = $this->buildHotelQuotaXml($hotelId, '', $checkIn, $checkOut);
@@ -122,7 +127,7 @@ class AvailabilityApiClient extends ApiClientBase implements AvailabilityApiClie
      */
     private function buildHotelQuotaXml(string $hotelId, string $roomId, string $checkIn, string $checkOut, string $roomType = ''): string
     {
-        $roomTypeXml = $roomType ? '<IdRoomType>' . htmlspecialchars($roomType) . '</IdRoomType>' : '';
+        $roomTypeXml = $roomType !== '' && $roomType !== '0' ? '<IdRoomType>' . htmlspecialchars($roomType) . '</IdRoomType>' : '';
 
         return $this->xmlHeader() . '
         <hotel_quota>
@@ -142,16 +147,17 @@ class AvailabilityApiClient extends ApiClientBase implements AvailabilityApiClie
      */
     private function buildSearchXml(array $params): string
     {
-        $adultsXml = $this->buildAdultAgesXml((int) ($params['adults'] ?? 2), $params['adult_ages'] ?? []);
+        $adultAges = $params['adult_ages'] ?? [];
+        $adultsXml = $this->buildAdultAgesXml(TypeCoerce::toInt($params['adults'] ?? 2), is_array($adultAges) ? $adultAges : []);
 
         return $this->xmlHeader() . '
         <frmsearch>
             ' . $this->xmlCredentials() . '
-            <Country>' . $this->xmlCdata(strtoupper($params['country'] ?? '')) . '</Country>
-            <City>' . $this->xmlCdata(strtoupper($params['city'] ?? '')) . '</City>
-            <Hotel>' . $this->xmlCdata(strtoupper($params['hotel'] ?? '')) . '</Hotel>
-            <Arr1>' . htmlspecialchars($params['check_in'] ?? '') . '</Arr1>
-            <Dep1>' . htmlspecialchars($params['check_out'] ?? '') . '</Dep1>
+            <Country>' . $this->xmlCdata(strtoupper(TypeCoerce::toString($params['country'] ?? ''))) . '</Country>
+            <City>' . $this->xmlCdata(strtoupper(TypeCoerce::toString($params['city'] ?? ''))) . '</City>
+            <Hotel>' . $this->xmlCdata(strtoupper(TypeCoerce::toString($params['hotel'] ?? ''))) . '</Hotel>
+            <Arr1>' . htmlspecialchars(TypeCoerce::toString($params['check_in'] ?? '')) . '</Arr1>
+            <Dep1>' . htmlspecialchars(TypeCoerce::toString($params['check_out'] ?? '')) . '</Dep1>
             <OfferType>hotel</OfferType>
             <Adt>' . $adultsXml . '</Adt>
             <Currency>EUR</Currency>
@@ -214,7 +220,7 @@ class AvailabilityApiClient extends ApiClientBase implements AvailabilityApiClie
         $results = [];
 
         foreach ($rawResponses as $key => $raw) {
-            if ($raw === false) {
+            if (!is_string($raw)) {
                 $results[$key] = [];
                 continue;
             }
@@ -239,7 +245,7 @@ class AvailabilityApiClient extends ApiClientBase implements AvailabilityApiClie
     private function parseSearchResults($result, $params): array
     {
         $results = [];
-        if (!$result) {
+        if (!(bool) $result) {
             return $results;
         }
 
@@ -281,7 +287,7 @@ class AvailabilityApiClient extends ApiClientBase implements AvailabilityApiClie
             ];
         }
 
-        if (empty($results) && $result) {
+        if (empty($results) && (bool) $result) {
             $data = json_decode((string) json_encode($result), true);
             if (is_array($data)) {
                 $this->extractOffersRecursive($data, $results, $params);
@@ -303,10 +309,10 @@ class AvailabilityApiClient extends ApiClientBase implements AvailabilityApiClie
         }
 
         if (isset($data['Price']) || isset($data['price'])) {
-            $price = (float) ($data['Price'] ?? $data['price'] ?? 0);
+            $price = TypeCoerce::toFloat($data['Price'] ?? $data['price'] ?? 0);
             if ($price > 0) {
-                $nights = (int) ($data['Nights'] ?? $data['nights'] ?? 7);
-                $boardCode = $data['IdBoard'] ?? $data['Board'] ?? 'AI';
+                $nights = TypeCoerce::toInt($data['Nights'] ?? $data['nights'] ?? 7);
+                $boardCode = TypeCoerce::toString($data['IdBoard'] ?? $data['Board'] ?? 'AI');
                 $results[] = [
                     'room_id' => $data['IdRoom'] ?? $data['Room'] ?? 'ROOM',
                     'room_name' => $data['Room'] ?? $data['IdRoom'] ?? 'Room',
@@ -318,7 +324,7 @@ class AvailabilityApiClient extends ApiClientBase implements AvailabilityApiClie
                     'total_price' => $this->commissionCalculator->apply($price),
                     'price_per_night' => round($this->commissionCalculator->apply($price) / max($nights, 1), 2),
                     'currency' => ConfigProvider::getApiCurrency(),
-                    'availability' => (int) ($data['Availability'] ?? $data['Avail'] ?? 1),
+                    'availability' => TypeCoerce::toInt($data['Availability'] ?? $data['Avail'] ?? 1),
                 ];
             }
         }

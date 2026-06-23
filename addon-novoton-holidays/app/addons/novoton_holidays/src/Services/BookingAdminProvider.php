@@ -7,6 +7,7 @@ namespace Tygh\Addons\NovotonHolidays\Services;
 use Tygh\Addons\NovotonHolidays\Repository\BookingRepository;
 use Tygh\Addons\NovotonHolidays\Repository\BookingRepositoryInterface;
 use Tygh\Addons\TravelCore\Contracts\BookingAdminProviderInterface;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 /**
  * Novoton implementation of BookingAdminProviderInterface.
@@ -39,11 +40,11 @@ class BookingAdminProvider implements BookingAdminProviderInterface
 
         // Provider reference: Novoton invoice ID
         $display['provider_ref'] = !empty($booking['novoton_invoice_id'])
-            ? 'NT ' . $booking['novoton_invoice_id']
+            ? 'NT ' . TypeCoerce::toString($booking['novoton_invoice_id'])
             : '';
 
         // Status label with Novoton-specific styling
-        $novotonStatus = $booking['novoton_status'] ?? '';
+        $novotonStatus = TypeCoerce::toString($booking['novoton_status'] ?? '');
         $display['novoton_status'] = $novotonStatus;
         $display['novoton_invoice_id'] = $booking['novoton_invoice_id'] ?? '';
         $display['novoton_confirm_id'] = $booking['novoton_confirm_id'] ?? '';
@@ -55,7 +56,7 @@ class BookingAdminProvider implements BookingAdminProviderInterface
             'WT' => '<span class="label label-info">WT</span>',
             'RQ' => '<span class="label label-primary">RQ</span>',
         ];
-        $display['status_label'] = $statusLabels[$novotonStatus] ?? '<span class="label">' . htmlspecialchars($booking['status'] ?? '') . '</span>';
+        $display['status_label'] = $statusLabels[$novotonStatus] ?? '<span class="label">' . htmlspecialchars(TypeCoerce::toString($booking['status'] ?? '')) . '</span>';
 
         // Price info
         if (!empty($booking['api_price'])) {
@@ -65,7 +66,7 @@ class BookingAdminProvider implements BookingAdminProviderInterface
         return $display;
     }
 
-    /** @return array<string, mixed> */
+    /** @return array{changed: bool, old_status: string, new_status: string, error: string|null} */
     public function checkStatus(string $providerBookingId): array
     {
         $bookingId = (int) $providerBookingId;
@@ -74,7 +75,7 @@ class BookingAdminProvider implements BookingAdminProviderInterface
         }
 
         $booking = $this->bookingRepo->findById($bookingId);
-        $oldStatus = $booking['novoton_status'] ?? $booking['status'] ?? '';
+        $oldStatus = TypeCoerce::toString($booking['novoton_status'] ?? $booking['status'] ?? '');
 
         if (function_exists('fn_novoton_holidays_check_reservation_status')) {
             fn_novoton_holidays_check_reservation_status($bookingId);
@@ -84,7 +85,7 @@ class BookingAdminProvider implements BookingAdminProviderInterface
 
         BookingRepository::invalidateCache($bookingId);
         $updatedBooking = $this->bookingRepo->findById($bookingId);
-        $newStatus = $updatedBooking['novoton_status'] ?? $updatedBooking['status'] ?? '';
+        $newStatus = TypeCoerce::toString($updatedBooking['novoton_status'] ?? $updatedBooking['status'] ?? '');
 
         return [
             'changed' => $oldStatus !== $newStatus,
@@ -95,15 +96,14 @@ class BookingAdminProvider implements BookingAdminProviderInterface
     }
 
     /**
-     * @return array<string, mixed>
      * @param array<string, mixed> $booking
-     * @return list<array{name: string, label: string, url: string, method: string, css_class: string, icon: string}>
+     * @return list<array<string, mixed>>
      */
     public function getAvailableActions(array $booking): array
     {
         $actions = [];
-        $providerBookingId = $booking['provider_booking_id'] ?? '';
-        $display = $booking['provider_display'] ?? [];
+        $providerBookingId = TypeCoerce::toString($booking['provider_booking_id'] ?? '');
+        $display = TypeCoerce::toStringMap($booking['provider_display'] ?? []);
         $novotonStatus = $display['novoton_status'] ?? '';
 
         // Check Status action for ASK bookings
@@ -145,9 +145,10 @@ class BookingAdminProvider implements BookingAdminProviderInterface
     }
 
     /**
-     * @return array<string, mixed>
      * @param array<string, mixed> $request
+     * @return array{redirect: string, notification?: array{type: string, title: string, message: string}}
      */
+    #[\Override]
     public function handleAction(string $action, array $request): array
     {
         switch ($action) {
@@ -169,21 +170,20 @@ class BookingAdminProvider implements BookingAdminProviderInterface
             default:
                 return [
                     'redirect' => 'travel_bookings.manage',
-                    'notification' => ['type' => 'W', 'title' => __('warning'), 'message' => "Unknown Novoton action: {$action}"],
+                    'notification' => ['type' => 'W', 'title' => TypeCoerce::toString(__('warning')), 'message' => "Unknown Novoton action: {$action}"],
                 ];
         }
     }
 
     /**
-     * @return array<string, mixed>
      * @param array<string, mixed> $booking
      * @return list<array{name: string, label: string, dispatch: string, ajax: bool}>
      */
     public function getProviderTabs(array $booking): array
     {
         $tabs = [];
-        $bookingId = $booking['provider_booking_id'] ?? $booking['booking_id'] ?? '';
-        $display = $booking['provider_display'] ?? [];
+        $bookingId = TypeCoerce::toString($booking['provider_booking_id'] ?? $booking['booking_id'] ?? '');
+        $display = TypeCoerce::toStringMap($booking['provider_display'] ?? []);
         $novotonStatus = $display['novoton_status'] ?? '';
 
         // Alternatives tab for ST/RQ bookings or if alternatives were previously requested
@@ -218,52 +218,54 @@ class BookingAdminProvider implements BookingAdminProviderInterface
     }
 
     /**
-     * @return array<string, mixed>
      * @param array<string, mixed> $request
+     * @return array{redirect: string, notification?: array{type: string, title: string, message: string}}
      */
     private function handleResinfo(array $request): array
     {
-        $bookingId = (int) ($request['booking_id'] ?? 0);
+        $bookingId = TypeCoerce::toInt($request['booking_id'] ?? 0);
         if ($bookingId > 0) {
             fn_novoton_holidays_check_reservation_status($bookingId);
         }
 
-        $returnUrl = $this->validateReturnUrl((string) ($request['return_url'] ?? ''));
+        $returnUrl = $this->validateReturnUrl(TypeCoerce::toString($request['return_url'] ?? ''));
 
         return [
             'redirect' => $returnUrl !== '' ? $returnUrl : 'travel_bookings.manage',
-            'notification' => ['type' => 'N', 'title' => __('notice'), 'message' => __('novoton_holidays.status_checked')],
+            'notification' => ['type' => 'N', 'title' => TypeCoerce::toString(__('notice')), 'message' => TypeCoerce::toString(__('novoton_holidays.status_checked'))],
         ];
     }
 
     /**
-     * @return array<string, mixed>
      * @param array<string, mixed> $request
+     * @return array{redirect: string, notification?: array{type: string, title: string, message: string}}
      */
     private function handleRequestAlternatives(array $request): array
     {
-        $bookingId = (int) ($request['booking_id'] ?? 0);
+        $bookingId = TypeCoerce::toInt($request['booking_id'] ?? 0);
 
         if ($bookingId > 0) {
             $result = fn_novoton_holidays_request_alternatives($bookingId);
 
             if (!empty($result['success'])) {
                 return [
-                    'redirect' => $this->validateReturnUrl((string) ($request['return_url'] ?? '')) ?: 'travel_bookings.manage',
-                    'notification' => ['type' => 'N', 'title' => __('notice'), 'message' => __('novoton_holidays.alternatives_found', ['[count]' => 1])],
+                    'redirect' => $this->validateReturnUrl(TypeCoerce::toString($request['return_url'] ?? '')) ?: 'travel_bookings.manage',
+                    'notification' => ['type' => 'N', 'title' => TypeCoerce::toString(__('notice')), 'message' => TypeCoerce::toString(__('novoton_holidays.alternatives_found', ['[count]' => 1]))],
                 ];
             }
 
             return [
-                'redirect' => $this->validateReturnUrl((string) ($request['return_url'] ?? '')) ?: 'travel_bookings.manage',
-                'notification' => ['type' => 'W', 'title' => __('warning'), 'message' => __('novoton_holidays.no_alternatives')],
+                'redirect' => $this->validateReturnUrl(TypeCoerce::toString($request['return_url'] ?? '')) ?: 'travel_bookings.manage',
+                'notification' => ['type' => 'W', 'title' => TypeCoerce::toString(__('warning')), 'message' => TypeCoerce::toString(__('novoton_holidays.no_alternatives'))],
             ];
         }
 
         return ['redirect' => 'travel_bookings.manage'];
     }
 
-    /** @return array<string, mixed> */
+    /**
+     * @return array{redirect: string, notification?: array{type: string, title: string, message: string}}
+     */
     private function handleCheckAllStatus(): array
     {
         $results = fn_novoton_holidays_cron_resinfo();
@@ -272,16 +274,18 @@ class BookingAdminProvider implements BookingAdminProviderInterface
             'redirect' => 'travel_bookings.manage&provider=novoton',
             'notification' => [
                 'type' => 'N',
-                'title' => __('notice'),
-                'message' => __('novoton_holidays.bulk_status_checked', [
+                'title' => TypeCoerce::toString(__('notice')),
+                'message' => TypeCoerce::toString(__('novoton_holidays.bulk_status_checked', [
                     '[checked]' => $results['checked'] ?? 0,
                     '[changed]' => $results['changed'] ?? 0,
-                ]),
+                ])),
             ],
         ];
     }
 
-    /** @return array<string, mixed> */
+    /**
+     * @return array{redirect: string, notification?: array{type: string, title: string, message: string}}
+     */
     private function handleCleanupOrphans(): array
     {
         $bookingRepo = Container::getInstance()->bookingRepository();
@@ -291,25 +295,25 @@ class BookingAdminProvider implements BookingAdminProviderInterface
             $bookingRepo->deleteOrphans(24);
             return [
                 'redirect' => 'travel_bookings.manage&provider=novoton',
-                'notification' => ['type' => 'N', 'title' => __('notice'), 'message' => "Cleaned up {$count} orphan booking(s) older than 24 hours."],
+                'notification' => ['type' => 'N', 'title' => TypeCoerce::toString(__('notice')), 'message' => "Cleaned up {$count} orphan booking(s) older than 24 hours."],
             ];
         }
 
         return [
             'redirect' => 'travel_bookings.manage&provider=novoton',
-            'notification' => ['type' => 'N', 'title' => __('notice'), 'message' => 'No orphan bookings to clean up.'],
+            'notification' => ['type' => 'N', 'title' => TypeCoerce::toString(__('notice')), 'message' => 'No orphan bookings to clean up.'],
         ];
     }
 
     /**
-     * @return array<string, mixed>
      * @param array<string, mixed> $request
+     * @return array{redirect: string, notification?: array{type: string, title: string, message: string}}
      */
     private function handleUpdateNovotonId(array $request): array
     {
-        $bookingId = (int) ($request['booking_id'] ?? 0);
+        $bookingId = TypeCoerce::toInt($request['booking_id'] ?? 0);
         $novotonInvoiceId = isset($request['novoton_invoice_id'])
-            ? preg_replace('/[^a-zA-Z0-9\-_]/', '', trim($request['novoton_invoice_id']))
+            ? preg_replace('/[^a-zA-Z0-9_-]/', '', TypeCoerce::toString($request['novoton_invoice_id']))
             : '';
 
         if ($bookingId > 0) {
@@ -323,7 +327,7 @@ class BookingAdminProvider implements BookingAdminProviderInterface
 
             return [
                 'redirect' => 'travel_bookings.view&booking_id=' . $bookingId,
-                'notification' => ['type' => 'N', 'title' => __('notice'), 'message' => 'Novoton ID updated'],
+                'notification' => ['type' => 'N', 'title' => TypeCoerce::toString(__('notice')), 'message' => 'Novoton ID updated'],
             ];
         }
 

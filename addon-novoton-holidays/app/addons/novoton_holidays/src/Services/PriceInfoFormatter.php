@@ -231,10 +231,10 @@ class PriceInfoFormatter
         $position = null;
         $type = $idAge;
 
-        if (preg_match('/^(\d+)\s*(ST|ND|RD|TH)\s+(.+)$/i', $idAge, $m)) {
+        if (preg_match('/^(\d+)\s*(ST|ND|RD|TH)\s+(.+)$/i', $idAge, $m) === 1) {
             $position = (int) $m[1];
             $type = trim($m[3]);
-        } elseif (preg_match('/^(\d+)(ST|ND|RD|TH)(.+)$/i', $idAge, $m)) {
+        } elseif (preg_match('/^(\d+)(ST|ND|RD|TH)(.+)$/i', $idAge, $m) === 1) {
             // No space variant: "1STCHD 2-11,99" or "2NDADULT"
             $position = (int) $m[1];
             $type = trim($m[3]);
@@ -319,10 +319,10 @@ class PriceInfoFormatter
         $toAge = 17;
 
         // "2-11,99", "0-1.99", "12-17" — extract numeric range with optional decimal
-        if (preg_match('/(\d+)\s*-\s*(\d+)[,.](\d+)/', $type, $m)) {
+        if (preg_match('/(\d+)\s*-\s*(\d+)[,.](\d+)/', $type, $m) === 1) {
             $fromAge = (int) $m[1];
             $toAge = (int) $m[2] + (int) $m[3] / 10 ** strlen($m[3]);
-        } elseif (preg_match('/(\d+)\s*-\s*(\d+)/', $type, $m)) {
+        } elseif (preg_match('/(\d+)\s*-\s*(\d+)/', $type, $m) === 1) {
             $fromAge = (int) $m[1];
             $toAge = (int) $m[2];
         }
@@ -363,7 +363,7 @@ class PriceInfoFormatter
         }
 
         foreach ($seasonAgeTypes as $spAge) {
-            $spNorm = strtoupper(trim((string) preg_replace('/\s+/', ' ', str_replace(',', '.', (string) $spAge))));
+            $spNorm = strtoupper(trim((string) preg_replace('/\s+/', ' ', str_replace(',', '.', self::toScalar($spAge)))));
             if ($feeNorm === $spNorm) {
                 return true;
             }

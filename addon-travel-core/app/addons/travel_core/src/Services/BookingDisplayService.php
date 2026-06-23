@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\TravelCore\Services;
 
 use Tygh\Addons\TravelCore\Contracts\BookingDisplayServiceInterface;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Helpers\ValidationHelpers;
 
 /**
@@ -47,8 +48,8 @@ class BookingDisplayService implements BookingDisplayServiceInterface
         $checkOutStr = is_string($extra['check_out'] ?? null) ? $extra['check_out'] : '';
         $check_in_ts = !empty($checkInStr) ? strtotime($checkInStr) : false;
         $check_out_ts = !empty($checkOutStr) ? strtotime($checkOutStr) : false;
-        $check_in_fmt = ($check_in_ts !== false) ? fn_date_format($check_in_ts, $date_format) : '';
-        $check_out_fmt = ($check_out_ts !== false) ? fn_date_format($check_out_ts, $date_format) : '';
+        $check_in_fmt = ($check_in_ts !== false) ? TypeCoerce::toString(fn_date_format($check_in_ts, $date_format)) : '';
+        $check_out_fmt = ($check_out_ts !== false) ? TypeCoerce::toString(fn_date_format($check_out_ts, $date_format)) : '';
 
         $num_rooms = ValidationHelpers::toInt($extra['num_rooms'] ?? 1);
         $rooms_data = $extra['rooms_data'] ?? [];
@@ -109,7 +110,7 @@ class BookingDisplayService implements BookingDisplayServiceInterface
         $nights = ValidationHelpers::toInt($extra['nights'] ?? 7);
         $product['product_options_value'][] = [
             'option_name' => __($langPrefix . '.dates'),
-            'value' => $check_in_fmt . ' → ' . $check_out_fmt . ' (' . $nights . ' ' . __($langPrefix . '.nights') . ')',
+            'value' => $check_in_fmt . ' → ' . $check_out_fmt . ' (' . $nights . ' ' . TypeCoerce::toString(__($langPrefix . '.nights')) . ')',
         ];
 
         // Room info
@@ -202,7 +203,7 @@ class BookingDisplayService implements BookingDisplayServiceInterface
                 $has_different = true;
             }
             if ($formatter !== null) {
-                $room_types[] = $formatter($room);
+                $room_types[] = TypeCoerce::toString($formatter($room));
             } else {
                 $room_types[] = ValidationHelpers::toString($room['room_name'] ?? $room['room_id'] ?? $defaultName);
             }
@@ -232,7 +233,7 @@ class BookingDisplayService implements BookingDisplayServiceInterface
             }
             $boardId = ValidationHelpers::toString($room['board_id'] ?? '');
             $boardName = ValidationHelpers::toString($room['board_name'] ?? '');
-            $board = !empty($boardName) ? $boardName : ($formatter !== null && !empty($boardId) ? $formatter($boardId) : $boardId);
+            $board = !empty($boardName) ? $boardName : ($formatter !== null && !empty($boardId) ? TypeCoerce::toString($formatter($boardId)) : $boardId);
             if (!empty($board)) {
                 if ($first === null) {
                     $first = $board;

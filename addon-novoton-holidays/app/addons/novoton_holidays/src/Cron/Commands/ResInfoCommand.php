@@ -7,6 +7,7 @@ namespace Tygh\Addons\NovotonHolidays\Cron\Commands;
 use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\Cron\AbstractCronCommand;
 use Tygh\Addons\NovotonHolidays\Services\Container;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\TravelConstants;
 
 class ResInfoCommand extends AbstractCronCommand
@@ -46,7 +47,9 @@ class ResInfoCommand extends AbstractCronCommand
             $this->output('');
 
             foreach ($ask_bookings as $booking) {
-                $this->output("Booking #{$booking['booking_id']} (Order #{$booking['order_id']})...");
+                $bookingId = TypeCoerce::toString($booking['booking_id']);
+                $orderId = TypeCoerce::toString($booking['order_id']);
+                $this->output("Booking #{$bookingId} (Order #{$orderId})...");
 
                 $reservation_id = $booking['novoton_confirm_id'] ?: ($booking['novoton_res_num'] ?? '');
 
@@ -55,9 +58,9 @@ class ResInfoCommand extends AbstractCronCommand
                     continue;
                 }
 
-                $response = $this->api->reservations()->getReservationInfo($reservation_id);
+                $response = $this->api->reservations()->getReservationInfo(TypeCoerce::toString($reservation_id));
 
-                if (!$response || !isset($response->Status)) {
+                if (!isset($response->Status)) {
                     $this->output('  No response from API');
                     continue;
                 }
@@ -65,7 +68,7 @@ class ResInfoCommand extends AbstractCronCommand
                 $new_status = strtolower(Constants::normalizeApiStatus((string)$response->Status));
 
                 if ($new_status === TravelConstants::STATUS_CONFIRMED || $new_status === strtolower(Constants::NOVOTON_STATUS_CONFIRMED)) {
-                    $repo->update((int) $booking['booking_id'], [
+                    $repo->update(TypeCoerce::toInt($booking['booking_id']), [
                         'status' => TravelConstants::STATUS_CONFIRMED,
                         'novoton_status' => Constants::NOVOTON_STATUS_CONFIRMED,
                         'last_status_check' => date('Y-m-d H:i:s'),
@@ -74,7 +77,7 @@ class ResInfoCommand extends AbstractCronCommand
                     $this->output('  -> Updated to CONFIRMED');
                     $updated++;
                 } elseif ($new_status === TravelConstants::STATUS_CANCELLED || $new_status === strtolower(Constants::NOVOTON_STATUS_CANCELLED) || $new_status === 'rejected') {
-                    $repo->update((int) $booking['booking_id'], [
+                    $repo->update(TypeCoerce::toInt($booking['booking_id']), [
                         'status' => TravelConstants::STATUS_CANCELLED,
                         'novoton_status' => Constants::NOVOTON_STATUS_CANCELLED,
                         'last_status_check' => date('Y-m-d H:i:s'),
@@ -83,7 +86,7 @@ class ResInfoCommand extends AbstractCronCommand
                     $this->output('  -> Updated to CANCELLED');
                     $updated++;
                 } else {
-                    $repo->update((int) $booking['booking_id'], [
+                    $repo->update(TypeCoerce::toInt($booking['booking_id']), [
                         'last_status_check' => date('Y-m-d H:i:s'),
                     ]);
                     $this->output('  -> Status unchanged: ' . (string)$response->Status);

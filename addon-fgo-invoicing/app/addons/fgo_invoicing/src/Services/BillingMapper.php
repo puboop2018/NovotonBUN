@@ -216,7 +216,6 @@ final class BillingMapper
             return null;
         }
         $key = match ($field) {
-            'sku' => 'product_code',
             'ean13' => 'ean_13',
             'isbn' => 'isbn',
             'upc' => 'upc',
@@ -262,7 +261,6 @@ final class BillingMapper
         $mode = ConfigProvider::shippingTaxVat();
         $vat = match ($mode) {
             'vat_zero' => new VatRate(0),
-            'vat_included' => $this->dominantProductVat($o),
             default => $this->dominantProductVat($o),
         };
 

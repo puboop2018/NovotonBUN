@@ -29,6 +29,7 @@ use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
 use Tygh\Addons\NovotonHolidays\Exceptions\NovotonException;
 use Tygh\Addons\NovotonHolidays\Helpers\BookingRoomAssembler;
 use Tygh\Addons\NovotonHolidays\Repository\BookingRepositoryInterface;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
 use Tygh\Addons\TravelCore\TravelConstants;
 
@@ -74,20 +75,15 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
         $commission = ConfigProvider::getCommission();
         $disableApi = ConfigProvider::isApiDisabled();
         $debugLogging = ConfigProvider::isDebugLogging();
-        $orderComment = trim((string) ($cart['notes'] ?? ''));
+        $orderComment = trim(PriceInfoFormatter::toScalar($cart['notes'] ?? ''));
 
-        $cartProducts = is_array($cart['products'] ?? null) ? $cart['products'] : [];
+        $cartProducts = TypeCoerce::toRowList($cart['products']);
         foreach ($cartProducts as $product) {
-            if (!is_array($product)) {
-                continue;
-            }
-            /** @var array<string, mixed> $extra */
-            $extra = is_array($product['extra'] ?? null) ? $product['extra'] : [];
+            $extra = TypeCoerce::toStringMap($product['extra'] ?? null);
             if (empty($extra['novoton_booking'])) {
                 continue;
             }
 
-            /** @var array<string, mixed> $bookingData */
             $bookingData = $extra;
             $originalBookingId = PriceInfoFormatter::toInt($bookingData['novoton_booking_id'] ?? 0);
 
@@ -295,8 +291,8 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
         }
 
         // Numeric casts
-        $bookingData['total_price'] = (float) $bookingData['total_price'];
-        $bookingData['base_price'] = (float) ($bookingData['base_price'] ?? 0);
+        $bookingData['total_price'] = PriceInfoFormatter::toFloat($bookingData['total_price']);
+        $bookingData['base_price'] = PriceInfoFormatter::toFloat($bookingData['base_price'] ?? 0);
 
         // Structured JSON fields — prefer already-parsed arrays from hydrated cache
         if (!empty($dbBooking['rooms_data'])) {
@@ -400,7 +396,7 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
             'hotel_id' => PriceInfoFormatter::toScalar($bookingData['hotel_id'] ?? ''),
             'hotel_name' => PriceInfoFormatter::toScalar($bookingData['hotel_name'] ?? ''),
             'package_name' => PriceInfoFormatter::toScalar($group['package_name'] ?? ''),
-            'room_id' => implode(', ', array_column($groupRooms, 'room_id')),
+            'room_id' => implode(', ', TypeCoerce::toStringList(array_column($groupRooms, 'room_id'))),
             'room_type' => PriceInfoFormatter::toScalar($firstGroupRoom['room_type_display'] ?? $firstGroupRoom['room_name'] ?? ''),
             'board_id' => PriceInfoFormatter::toScalar($firstGroupRoom['board_id'] ?? $bookingData['board_id'] ?? ''),
             'board_name' => PriceInfoFormatter::toScalar($firstGroupRoom['board_name'] ?? $bookingData['board_name'] ?? ''),
@@ -414,7 +410,7 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
             'room_number' => $groupNum,
             'total_rooms' => $totalGroups,
             'rooms_data' => json_encode($groupRooms),
-            'guest_name' => implode(', ', array_column($allGuests, 'name')),
+            'guest_name' => implode(', ', TypeCoerce::toStringList(array_column($allGuests, 'name'))),
             'holder_name' => $firstGuestName,
             'guests_data' => json_encode($allGuests),
             'base_price' => $totalApiPrice,
@@ -461,7 +457,7 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
             PriceInfoFormatter::toScalar($record['check_out'] ?? ''),
         );
 
-        if ($existingId) {
+        if ($existingId !== null && $existingId !== 0) {
             $this->bookingRepo->update($existingId, $record);
             return $existingId;
         }
@@ -494,41 +490,39 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
         try {
             $response = $this->reservations->createReservation($apiData);
 
-            if ($response) {
-                $novotonId = (string) ($response->IdNum ?? '');
-                $novotonStatus = Constants::normalizeApiStatus((string) ($response->Status ?? ''));
-                $novotonPrice = (string) ($response->Price ?? '');
+            $novotonId = (string) ($response->IdNum ?? '');
+            $novotonStatus = Constants::normalizeApiStatus((string) ($response->Status ?? ''));
+            $novotonPrice = (string) ($response->Price ?? '');
 
-                $update = [
-                    'novoton_invoice_id' => $novotonId,
-                    'novoton_status' => $novotonStatus,
-                    'api_price' => !empty($novotonPrice) ? (float) $novotonPrice : $totalApiPrice,
-                    'api_response' => json_encode([
-                        'IdNum' => $novotonId,
-                        'Price' => $novotonPrice,
-                        'Currency' => (string) ($response->Currency ?? 'EUR'),
-                        'Quota' => (string) ($response->Quota ?? ''),
-                        'Status' => $novotonStatus,
-                    ]),
-                ];
+            $update = [
+                'novoton_invoice_id' => $novotonId,
+                'novoton_status' => $novotonStatus,
+                'api_price' => !empty($novotonPrice) ? (float) $novotonPrice : $totalApiPrice,
+                'api_response' => json_encode([
+                    'IdNum' => $novotonId,
+                    'Price' => $novotonPrice,
+                    'Currency' => (string) ($response->Currency ?? 'EUR'),
+                    'Quota' => (string) ($response->Quota ?? ''),
+                    'Status' => $novotonStatus,
+                ]),
+            ];
 
-                // Map API status to internal status via centralized constant
-                $statusMap = Constants::NOVOTON_STATUS_TO_INTERNAL;
-                if (isset($statusMap[$novotonStatus])) {
-                    $update['status'] = $statusMap[$novotonStatus];
-                }
+            // Map API status to internal status via centralized constant
+            $statusMap = Constants::NOVOTON_STATUS_TO_INTERNAL;
+            if (isset($statusMap[$novotonStatus])) {
+                $update['status'] = $statusMap[$novotonStatus];
+            }
 
-                $this->bookingRepo->update($bookingId, $update);
+            $this->bookingRepo->update($bookingId, $update);
 
-                if ($debug) {
-                    fn_log_event('general', 'runtime', [
-                        'message' => 'Novoton Booking - API Response',
-                        'order_id' => $orderId,
-                        'booking_id' => $bookingId,
-                        'novoton_id' => $novotonId,
-                        'status' => $novotonStatus,
-                    ]);
-                }
+            if ($debug) {
+                fn_log_event('general', 'runtime', [
+                    'message' => 'Novoton Booking - API Response',
+                    'order_id' => $orderId,
+                    'booking_id' => $bookingId,
+                    'novoton_id' => $novotonId,
+                    'status' => $novotonStatus,
+                ]);
             }
         } catch (ApiException $e) {
             $this->bookingRepo->update($bookingId, [

@@ -26,6 +26,7 @@ namespace Tygh\Addons\NovotonHolidays\Helpers;
 use Tygh\Addons\NovotonHolidays\Api\NovotonNormalizer;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Services\FeatureMapper as NovotonFeatureMapper;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Services\FeatureMapper as CoreFeatureMapper;
 use Tygh\Addons\TravelCore\Services\TravelGroupResolver;
 
@@ -86,7 +87,7 @@ class BatchedHotelFacilitiesSyncV2 extends AbstractBatchedSync
             return 'full';
         }
 
-        $timeSince = time() - strtotime($lastSync);
+        $timeSince = time() - strtotime(TypeCoerce::toString($lastSync));
 
         if ($timeSince > $this->fullSyncInterval) {
             $days = round($timeSince / 86400);
@@ -96,12 +97,12 @@ class BatchedHotelFacilitiesSyncV2 extends AbstractBatchedSync
 
         // Check for hotels that never had facilities synced
         $countries = ConfigProvider::getSelectedCountries();
-        $unsynced = (int) db_get_field(
+        $unsynced = TypeCoerce::toInt(db_get_field(
             'SELECT COUNT(*) FROM ?:novoton_hotels h
              LEFT JOIN ?:novoton_hotel_facilities hf ON h.hotel_id = hf.hotel_id
              WHERE h.country IN (?a) AND hf.hotel_id IS NULL',
             $countries,
-        );
+        ));
 
         if ($unsynced > 0) {
             $this->logger->output("{$unsynced} hotels have no facilities. Starting incremental sync.");
@@ -113,7 +114,7 @@ class BatchedHotelFacilitiesSyncV2 extends AbstractBatchedSync
 
     /**
      * @param array<string, mixed> $options
-     * @return array<string, mixed>
+     * @return list<string>
      */
     #[\Override]
     protected function getItemsToSync(string $syncType, array $options): array
@@ -121,44 +122,45 @@ class BatchedHotelFacilitiesSyncV2 extends AbstractBatchedSync
         $countries = ConfigProvider::getSelectedCountries();
 
         if ($syncType === 'full') {
-            return db_get_fields(
+            return TypeCoerce::toStringList(db_get_fields(
                 'SELECT hotel_id FROM ?:novoton_hotels
                  WHERE country IN (?a)
                  ORDER BY hotel_name',
                 $countries,
-            );
+            ));
         }
 
         // Incremental — only hotels without any facilities
-        return db_get_fields(
+        return TypeCoerce::toStringList(db_get_fields(
             'SELECT h.hotel_id FROM ?:novoton_hotels h
              LEFT JOIN ?:novoton_hotel_facilities hf ON h.hotel_id = hf.hotel_id
              WHERE h.country IN (?a) AND hf.hotel_id IS NULL
              ORDER BY h.hotel_name',
             $countries,
-        );
+        ));
     }
 
     /**
      * Pre-fetch hotel names for the whole batch in one query.
      * Avoids an N+1 lookup inside the processItem() output line.
      *
-     * @param array<int, string|int> $batch
+     * @param array<int|string, mixed> $batch
      */
     #[\Override]
     protected function preBatch(array $batch): void
     {
-        $hotelIds = array_values(array_map('strval', $batch));
+        $hotelIds = TypeCoerce::toStringList($batch);
         if (empty($hotelIds)) {
             $this->hotelNameCache = [];
             return;
         }
 
-        $this->hotelNameCache = db_get_hash_single_array(
+        $cache = TypeCoerce::toStringMap(db_get_hash_single_array(
             'SELECT hotel_id, hotel_name FROM ?:novoton_hotels WHERE hotel_id IN (?a)',
             ['hotel_id', 'hotel_name'],
             $hotelIds,
-        );
+        ));
+        $this->hotelNameCache = array_map(static fn ($name): string => TypeCoerce::toString($name), $cache);
     }
 
     /**
@@ -191,10 +193,10 @@ class BatchedHotelFacilitiesSyncV2 extends AbstractBatchedSync
             ];
         }
 
-        $count = (int) db_get_field(
+        $count = TypeCoerce::toInt(db_get_field(
             'SELECT COUNT(*) FROM ?:novoton_hotel_facilities WHERE hotel_id = ?s',
             $hotelId,
-        );
+        ));
 
         // Re-derive travel groups if the hotel has a linked CS-Cart product.
         $this->refreshTravelGroups($hotelId);
@@ -218,20 +220,20 @@ class BatchedHotelFacilitiesSyncV2 extends AbstractBatchedSync
      */
     private function refreshTravelGroups(string $hotelId): void
     {
-        $hotel = db_get_row(
+        $hotel = TypeCoerce::toStringMap(db_get_row(
             'SELECT product_id, is_adults_only FROM ?:novoton_hotels WHERE hotel_id = ?s',
             $hotelId,
-        );
+        ));
 
-        $productId = (int) ($hotel['product_id'] ?? 0);
+        $productId = TypeCoerce::toInt($hotel['product_id'] ?? 0);
         if ($productId <= 0) {
             return;
         }
 
-        $facilityIds = db_get_fields(
+        $facilityIds = TypeCoerce::toList(db_get_fields(
             'SELECT facility_id FROM ?:novoton_hotel_facilities WHERE hotel_id = ?s',
             $hotelId,
-        );
+        ));
 
         $normalizer = new NovotonNormalizer();
         $resolvedCodes = [];
@@ -239,8 +241,8 @@ class BatchedHotelFacilitiesSyncV2 extends AbstractBatchedSync
             $code = $normalizer->normalizeFacilityCode($fid);
             if ($code !== null) {
                 $mapping = CoreFeatureMapper::resolveFacility('novoton', $code);
-                if ($mapping && !empty($mapping['canonical_code'])) {
-                    $resolvedCodes[] = $mapping['canonical_code'];
+                if ($mapping !== null && !empty($mapping['canonical_code'])) {
+                    $resolvedCodes[] = TypeCoerce::toString($mapping['canonical_code']);
                 }
             }
         }

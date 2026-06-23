@@ -6,6 +6,7 @@ namespace Tygh\Addons\NovotonHolidays\Cron\Commands;
 
 use Tygh\Addons\NovotonHolidays\Cron\AbstractCronCommand;
 use Tygh\Addons\NovotonHolidays\Services\PriceInfoService;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 /**
  * Cron command: Recompute calendar_prices_raw for hotels
@@ -53,7 +54,7 @@ class CalendarPricesCommand extends AbstractCronCommand
         // Single hotel mode
         $singleHotel = $this->getParam('hotel_id', '');
         if (!empty($singleHotel)) {
-            return $this->recomputeSingle((string) $singleHotel);
+            return $this->recomputeSingle(TypeCoerce::toString($singleHotel));
         }
 
         $staleOnly = !empty($this->params['stale_only']);
@@ -76,7 +77,7 @@ class CalendarPricesCommand extends AbstractCronCommand
             );
         }
 
-        $total = count($hotel_ids);
+        $total = count(TypeCoerce::toList($hotel_ids));
         $this->output("Hotels to process: {$total}");
         $this->output('');
 
@@ -88,13 +89,14 @@ class CalendarPricesCommand extends AbstractCronCommand
         $processed = 0;
         $errors = 0;
 
-        foreach ($hotel_ids as $hid) {
+        foreach (TypeCoerce::toList($hotel_ids) as $hid) {
+            $hidStr = TypeCoerce::toString($hid);
             try {
-                PriceInfoService::precomputeCalendarPrices((string) $hid);
+                PriceInfoService::precomputeCalendarPrices($hidStr);
                 $processed++;
             } catch (\Throwable $e) {
                 $errors++;
-                $this->output("  ERROR [{$hid}]: " . $e->getMessage());
+                $this->output("  ERROR [{$hidStr}]: " . $e->getMessage());
             }
 
             // Progress every 100 hotels

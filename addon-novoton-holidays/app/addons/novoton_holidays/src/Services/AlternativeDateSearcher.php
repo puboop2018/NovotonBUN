@@ -14,6 +14,8 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Services;
 
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+
 class AlternativeDateSearcher implements AlternativeDateSearcherInterface
 {
     /** Maximum total API calls across all dates/rooms/boards to prevent runaway loops */
@@ -88,7 +90,7 @@ class AlternativeDateSearcher implements AlternativeDateSearcherInterface
         $this->log('Alternative dates to try: ' . implode(', ', array_slice($altDates, 0, 5)) . '...');
 
         $api = fn_novoton_holidays_get_api();
-        if (!$api) {
+        if ($api === null) {
             return ['results' => [], 'check_in' => '', 'check_out' => ''];
         }
         // Bind the pricing sub-client once so every call inside this method
@@ -103,8 +105,8 @@ class AlternativeDateSearcher implements AlternativeDateSearcherInterface
                 continue;
             }
             /** @var object{IdRoom: string, Room: string}|array<string, mixed> $room */
-            $roomId = is_object($room) ? (string) $room->IdRoom : ($room['IdRoom'] ?? '');
-            $roomName = is_object($room) ? (string) $room->Room : ($room['Room'] ?? '');
+            $roomId = is_object($room) ? (string) $room->IdRoom : TypeCoerce::toString($room['IdRoom'] ?? '');
+            $roomName = is_object($room) ? (string) $room->Room : TypeCoerce::toString($room['Room'] ?? '');
             if (!empty($roomId)) {
                 $roomData[] = ['id' => $roomId, 'name' => $roomName, 'original' => $room];
             }
@@ -172,7 +174,7 @@ class AlternativeDateSearcher implements AlternativeDateSearcherInterface
                 }
 
                 $priceData = $response['data'];
-                if ($priceData && isset($priceData->Price)) {
+                if ((bool) $priceData && isset($priceData->Price)) {
                     $rawPrice = (float) ((string) $priceData->Price);
                     if ($rawPrice > 0) {
                         $rd = $roomData[$ri];
@@ -185,7 +187,7 @@ class AlternativeDateSearcher implements AlternativeDateSearcherInterface
                             'room_id' => $rd['id'],
                             'room_name' => $rd['name'] ?: str_replace(['%2b', '%2B'], '+', $rd['id']),
                             'board_id' => $meta['boardId'],
-                            'board_name' => \Tygh\Addons\TravelCore\ValueObjects\BoardType::toDisplayName($meta['boardId']),
+                            'board_name' => \Tygh\Addons\TravelCore\ValueObjects\BoardType::toDisplayName(TypeCoerce::toString($meta['boardId'])),
                             'price_data' => $priceData,
                             'nights' => $nights,
                             'total_price' => $altPrice,

@@ -21,7 +21,7 @@ use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 
     $cartService = new CartService();
 
-    if ($rateLimited = $cartService->checkRateLimit()) {
+    if (($rateLimited = $cartService->checkRateLimit()) !== null) {
         return $rateLimited;
     }
 
@@ -35,7 +35,7 @@ use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
         return [CONTROLLER_STATUS_REDIRECT, 'sphinx_booking.circuit_search'];
     }
 
-    if ($duplicate = $cartService->checkDuplicate($offer_id)) {
+    if (($duplicate = $cartService->checkDuplicate($offer_id)) !== null) {
         return $duplicate;
     }
 

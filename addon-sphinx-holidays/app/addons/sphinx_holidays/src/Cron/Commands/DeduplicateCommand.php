@@ -38,7 +38,7 @@ class DeduplicateCommand extends AbstractSyncCommand
         $startMs = (int)(microtime(true) * 1000);
 
         $dryRun = (bool) ($params['dry_run'] ?? false);
-        $limit = (int)  ($params['limit'] ?? 0);
+        $limit = TypeCoerce::toInt($params['limit'] ?? 0);
 
         $stats = [
             'groups_processed' => 0,
@@ -71,13 +71,17 @@ class DeduplicateCommand extends AbstractSyncCommand
         $this->output('Found ' . count($groups) . ' duplicate group(s).');
 
         foreach ($groups as $group) {
-            $hotelIds = explode(',', $group['hotel_ids']);
-            $name = $group['name'];
-            $cnt = (int) $group['cnt'];
+            $hotelIds = explode(',', TypeCoerce::toString($group['hotel_ids'] ?? ''));
+            $name = TypeCoerce::toString($group['name'] ?? '');
+            $cnt = TypeCoerce::toInt($group['cnt'] ?? 0);
+            $propertyType = TypeCoerce::toString($group['property_type'] ?? '');
+            $classification = TypeCoerce::toString($group['classification'] ?? '');
+            $regionId = TypeCoerce::toString($group['region_id'] ?? '');
+            $countryCode = TypeCoerce::toString($group['country_code'] ?? '');
 
-            $this->output("--- Group: \"{$name}\" (property_type={$group['property_type']}, "
-                . "class={$group['classification']}, region={$group['region_id']}, "
-                . "country={$group['country_code']}) — {$cnt} hotels: " . implode(', ', $hotelIds));
+            $this->output("--- Group: \"{$name}\" (property_type={$propertyType}, "
+                . "class={$classification}, region={$regionId}, "
+                . "country={$countryCode}) — {$cnt} hotels: " . implode(', ', $hotelIds));
 
             // Load full hotel rows to check product_id
             $hotels = [];
@@ -96,7 +100,7 @@ class DeduplicateCommand extends AbstractSyncCommand
             // Pick canonical: prefer lowest hotel_id with a product_id > 0
             $canonical = null;
             foreach ($hotels as $h) {
-                $pid = (int) ($h['product_id'] ?? 0);
+                $pid = TypeCoerce::toInt($h['product_id'] ?? 0);
                 if ($pid > 0) {
                     $canonical = $h;
                     break;
@@ -106,18 +110,18 @@ class DeduplicateCommand extends AbstractSyncCommand
                 $canonical = $hotels[0];
             }
 
-            $canonicalId = $canonical['hotel_id'];
-            $canonicalProductId = (int) ($canonical['product_id'] ?? 0);
+            $canonicalId = TypeCoerce::toString($canonical['hotel_id'] ?? '');
+            $canonicalProductId = TypeCoerce::toInt($canonical['product_id'] ?? 0);
 
             $this->output("  Canonical: hotel_id={$canonicalId}, product_id={$canonicalProductId}");
 
             foreach ($hotels as $h) {
-                if ($h['hotel_id'] === $canonicalId) {
+                $dupHotelId = TypeCoerce::toString($h['hotel_id'] ?? '');
+                if ($dupHotelId === $canonicalId) {
                     continue;
                 }
 
-                $dupHotelId = TypeCoerce::toString($h['hotel_id'] ?? '');
-                $dupProductId = (int) ($h['product_id'] ?? 0);
+                $dupProductId = TypeCoerce::toInt($h['product_id'] ?? 0);
 
                 // If duplicate has a different product_id and canonical has one — delete orphan product
                 if ($dupProductId > 0 && $dupProductId !== $canonicalProductId && $canonicalProductId > 0) {
@@ -171,13 +175,13 @@ class DeduplicateCommand extends AbstractSyncCommand
      * Find groups of duplicate hotels sharing (name, property_type, classification, region_id, country_code).
      *
      * @param int $limit Max groups to return (0 = unlimited)
-     * @return array<string, mixed> Each row has: name, property_type, classification, region_id, country_code, cnt, hotel_ids
+     * @return list<array<string, mixed>> Each row has: name, property_type, classification, region_id, country_code, cnt, hotel_ids
      */
     private function findDuplicateGroups(int $limit): array
     {
         $limitClause = $limit > 0 ? db_quote(' LIMIT ?i', $limit) : '';
 
-        return db_get_array(
+        return TypeCoerce::toRowList(db_get_array(
             "SELECT name, property_type, classification, region_id, country_code,
                     COUNT(*) as cnt, GROUP_CONCAT(hotel_id ORDER BY hotel_id) as hotel_ids
              FROM ?:sphinx_hotels
@@ -186,6 +190,6 @@ class DeduplicateCommand extends AbstractSyncCommand
              HAVING cnt > 1
              ORDER BY cnt DESC ?p",
             $limitClause,
-        );
+        ));
     }
 }

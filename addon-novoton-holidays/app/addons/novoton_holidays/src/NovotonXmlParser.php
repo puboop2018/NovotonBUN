@@ -39,7 +39,7 @@ class NovotonXmlParser implements XmlParserInterface
 
         // Split around CDATA sections so we only escape bare & in non-CDATA parts.
         // Inside CDATA, & is a valid literal character and must NOT be escaped.
-        $parts = preg_split('/(<!\[CDATA\[.*?\]\]>)/s', $string, -1, PREG_SPLIT_DELIM_CAPTURE);
+        $parts = preg_split('/(<!\[CDATA\[.*?]]>)/s', $string, -1, PREG_SPLIT_DELIM_CAPTURE);
 
         $result = '';
         foreach ($parts ?: [] as $part) {

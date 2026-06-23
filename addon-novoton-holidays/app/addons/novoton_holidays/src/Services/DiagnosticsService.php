@@ -21,6 +21,7 @@ use Tygh\Addons\NovotonHolidays\Exceptions\XmlParsingException;
 use Tygh\Addons\NovotonHolidays\NovotonApi;
 use Tygh\Addons\NovotonHolidays\Repository\FacilityRepository;
 use Tygh\Addons\NovotonHolidays\Repository\HotelPackageRepository;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 class DiagnosticsService implements DiagnosticsServiceInterface
 {
@@ -100,7 +101,7 @@ class DiagnosticsService implements DiagnosticsServiceInterface
             $count = 0;
             $sample = null;
             foreach ($result as $hotel) {
-                if (!$sample) {
+                if (empty($sample)) {
                     $sample = [
                         'id' => (string)($hotel->IdHotel ?? ''),
                         'name' => (string)($hotel->Hotel ?? ''),
@@ -161,7 +162,7 @@ class DiagnosticsService implements DiagnosticsServiceInterface
             $api = $this->getApi();
             $result = $api->hotels()->getHotelList($country);
 
-            if (!$result || !isset($result->Hotel)) {
+            if (empty($result) || !isset($result->Hotel)) {
                 return [
                     'success' => false,
                     'total' => 0,
@@ -234,7 +235,7 @@ class DiagnosticsService implements DiagnosticsServiceInterface
                 'board_id' => $params['board_id'] ?? 'AI',
                 'check_in' => $params['check_in'] ?? date('Y-m-d', strtotime('+' . Constants::DEFAULT_CHECKIN_DAYS_AHEAD . ' days')),
                 'check_out' => $params['check_out'] ?? date('Y-m-d', strtotime('+' . (Constants::DEFAULT_CHECKIN_DAYS_AHEAD + Constants::DEFAULT_STAY_NIGHTS) . ' days')),
-                'adults' => (int) ($params['adults'] ?? 2),
+                'adults' => TypeCoerce::toInt($params['adults'] ?? 2),
                 'children' => 0,
             ];
 
@@ -243,7 +244,7 @@ class DiagnosticsService implements DiagnosticsServiceInterface
 
             $price = 0;
             $priceWithCommission = 0;
-            if ($result && isset($result->Price)) {
+            if (!empty($result) && isset($result->Price)) {
                 $price = (float) $result->Price;
                 $priceWithCommission = $pricing->applyCommission($price);
             }
@@ -284,8 +285,8 @@ class DiagnosticsService implements DiagnosticsServiceInterface
             $searchParams = [
                 'check_in' => $params['check_in'] ?? date('Y-m-d', strtotime('+' . Constants::DEFAULT_CHECKIN_DAYS_AHEAD . ' days')),
                 'check_out' => $params['check_out'] ?? date('Y-m-d', strtotime('+' . (Constants::DEFAULT_CHECKIN_DAYS_AHEAD + Constants::DEFAULT_STAY_NIGHTS) . ' days')),
-                'adults' => (int) ($params['adults'] ?? 2),
-                'children' => (int) ($params['children'] ?? 0),
+                'adults' => TypeCoerce::toInt($params['adults'] ?? 2),
+                'children' => TypeCoerce::toInt($params['children'] ?? 0),
             ];
 
             if (!empty($params['hotel_id'])) {
@@ -335,7 +336,7 @@ class DiagnosticsService implements DiagnosticsServiceInterface
                 'success' => !empty($result['success']),
                 'result' => $result,
                 'facilities' => $facilities,
-                'error' => $result['error'] ?? '',
+                'error' => TypeCoerce::toString($result['error'] ?? ''),
             ];
         } catch (\Exception $e) {
             return [
@@ -355,16 +356,16 @@ class DiagnosticsService implements DiagnosticsServiceInterface
      */
     public function testProduct(string $productCode): array
     {
-        $product = db_get_row(
+        $product = TypeCoerce::toStringMap(db_get_row(
             'SELECT p.product_id, p.product_code, pd.product
              FROM ?:products AS p
              LEFT JOIN ?:product_descriptions AS pd ON p.product_id = pd.product_id AND pd.lang_code = ?s
              WHERE p.product_code = ?s',
             CART_LANGUAGE,
             $productCode,
-        );
+        ));
 
-        if (!$product) {
+        if (empty($product)) {
             return [
                 'success' => false,
                 'product' => null,
@@ -375,7 +376,7 @@ class DiagnosticsService implements DiagnosticsServiceInterface
             ];
         }
 
-        preg_match('/\d+/', $product['product_code'], $matches);
+        preg_match('/\d+/', TypeCoerce::toString($product['product_code'] ?? ''), $matches);
         $hotelId = $matches[0] ?? '';
 
         if (empty($hotelId)) {
@@ -393,7 +394,7 @@ class DiagnosticsService implements DiagnosticsServiceInterface
             $api = $this->getApi();
             $hotelInfo = $api->hotels()->getHotelInfo($hotelId);
 
-            if (!$hotelInfo) {
+            if (empty($hotelInfo)) {
                 return [
                     'success' => false,
                     'product' => $product,
@@ -404,7 +405,7 @@ class DiagnosticsService implements DiagnosticsServiceInterface
                 ];
             }
 
-            $hotelData = json_decode((string) json_encode($hotelInfo), true);
+            $hotelData = TypeCoerce::toStringMap(json_decode((string) json_encode($hotelInfo), true));
 
             // Get DB packages
             $packagesDb = (new HotelPackageRepository())->findByHotelId(
@@ -414,7 +415,10 @@ class DiagnosticsService implements DiagnosticsServiceInterface
             // Extract API packages/rooms/boards
             $apiPackages = [];
             if (isset($hotelData['packages'])) {
-                $pkgs = isset($hotelData['packages']['IdCont']) ? [$hotelData['packages']] : $hotelData['packages'];
+                $packagesRaw = $hotelData['packages'];
+                $pkgs = (is_array($packagesRaw) && isset($packagesRaw['IdCont']))
+                    ? [TypeCoerce::toStringMap($packagesRaw)]
+                    : TypeCoerce::toRowList($packagesRaw);
                 foreach ($pkgs as $pkg) {
                     $apiPackages[] = $pkg['PackageName'] ?? 'N/A';
                 }
@@ -422,7 +426,10 @@ class DiagnosticsService implements DiagnosticsServiceInterface
 
             $apiRooms = [];
             if (isset($hotelData['rooms'])) {
-                $rms = isset($hotelData['rooms']['IdRoom']) ? [$hotelData['rooms']] : $hotelData['rooms'];
+                $roomsRaw = $hotelData['rooms'];
+                $rms = (is_array($roomsRaw) && isset($roomsRaw['IdRoom']))
+                    ? [TypeCoerce::toStringMap($roomsRaw)]
+                    : TypeCoerce::toRowList($roomsRaw);
                 foreach (array_slice($rms, 0, 5) as $room) {
                     $apiRooms[] = [
                         'id' => $room['IdRoom'] ?? 'N/A',
@@ -433,9 +440,12 @@ class DiagnosticsService implements DiagnosticsServiceInterface
 
             $apiBoards = [];
             if (isset($hotelData['board'])) {
-                $bds = isset($hotelData['board']['IdBoard']) ? [$hotelData['board']] : $hotelData['board'];
+                $boardRaw = $hotelData['board'];
+                $bds = (is_array($boardRaw) && isset($boardRaw['IdBoard']))
+                    ? [$boardRaw]
+                    : TypeCoerce::toList($boardRaw);
                 foreach (array_slice($bds, 0, 5) as $board) {
-                    $apiBoards[] = is_array($board) ? ($board['IdBoard'] ?? '') : (string)$board;
+                    $apiBoards[] = is_array($board) ? ($board['IdBoard'] ?? '') : TypeCoerce::toString($board);
                 }
             }
 
@@ -482,6 +492,6 @@ class DiagnosticsService implements DiagnosticsServiceInterface
             return !empty($names) ? implode(', ', $names) : Constants::DEFAULT_COUNTRY;
         }
 
-        return (string)$countries;
+        return TypeCoerce::toString($countries);
     }
 }

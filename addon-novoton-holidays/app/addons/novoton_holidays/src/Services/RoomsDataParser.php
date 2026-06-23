@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Services;
 
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\ValueObjects\RoomType;
 
 /**
@@ -25,7 +26,7 @@ class RoomsDataParser
      * Falls back to a single room from flat booking fields if empty.
      *
      * @param array<string, mixed> $bookingData Form data
-     * @return array<string, mixed> Parsed rooms data
+     * @return list<array<string, mixed>> Parsed rooms data
      */
     public function parseRoomsData(array $bookingData): array
     {
@@ -41,16 +42,16 @@ class RoomsDataParser
         if (empty($roomsData) || !is_array($roomsData)) {
             $roomsData = [[
                 'room_id' => $bookingData['room_id'] ?? '',
-                'room_name' => RoomType::formatRoomLabel($bookingData['room_id'] ?? ''),
+                'room_name' => RoomType::formatRoomLabel(TypeCoerce::toString($bookingData['room_id'] ?? '')),
                 'board_id' => $bookingData['board_id'] ?? 'BB',
-                'adults' => (int) ($bookingData['adults'] ?? 2),
-                'children' => (int) ($bookingData['children'] ?? 0),
+                'adults' => TypeCoerce::toInt($bookingData['adults'] ?? 2),
+                'children' => TypeCoerce::toInt($bookingData['children'] ?? 0),
                 'childrenAges' => $this->parseChildrenAges($bookingData),
-                'price' => (float) ($bookingData['total_price'] ?? 0),
+                'price' => TypeCoerce::toFloat($bookingData['total_price'] ?? 0),
             ]];
         }
 
-        return $roomsData;
+        return TypeCoerce::toRowList($roomsData);
     }
 
     /**
@@ -67,23 +68,23 @@ class RoomsDataParser
         $roomIds = [];
         $roomTypes = [];
 
-        foreach ($roomsData as $room) {
+        foreach (TypeCoerce::toRowList($roomsData) as $room) {
             if (!empty($room['room_id'])) {
-                $roomIds[] = $room['room_id'];
+                $roomIds[] = TypeCoerce::toString($room['room_id']);
             }
             if (!empty($room['room_name'])) {
-                $roomTypes[] = $room['room_name'];
+                $roomTypes[] = TypeCoerce::toString($room['room_name']);
             } elseif (!empty($room['room_type_display'])) {
-                $roomTypes[] = $room['room_type_display'];
+                $roomTypes[] = TypeCoerce::toString($room['room_type_display']);
             } elseif (!empty($room['room_id'])) {
-                $roomTypes[] = RoomType::formatRoomLabel($room['room_id']);
+                $roomTypes[] = RoomType::formatRoomLabel(TypeCoerce::toString($room['room_id']));
             }
         }
 
         // Fallback to bookingData
         if (empty($roomIds) && !empty($bookingData['room_id'])) {
-            $roomIds[] = $bookingData['room_id'];
-            $roomTypes[] = RoomType::formatRoomLabel($bookingData['room_id']);
+            $roomIds[] = TypeCoerce::toString($bookingData['room_id']);
+            $roomTypes[] = RoomType::formatRoomLabel(TypeCoerce::toString($bookingData['room_id']));
         }
 
         return [
@@ -107,15 +108,15 @@ class RoomsDataParser
             'price' => 0,
         ];
 
-        foreach ($roomsData as $room) {
-            $totals['adults'] += (int) ($room['adults'] ?? 0);
-            $totals['children'] += (int) ($room['children'] ?? 0);
-            $totals['price'] += (float) ($room['price'] ?? 0);
+        foreach (TypeCoerce::toRowList($roomsData) as $room) {
+            $totals['adults'] += TypeCoerce::toInt($room['adults'] ?? 0);
+            $totals['children'] += TypeCoerce::toInt($room['children'] ?? 0);
+            $totals['price'] += TypeCoerce::toFloat($room['price'] ?? 0);
 
             if (!empty($room['childrenAges'])) {
-                foreach ($room['childrenAges'] as $age) {
+                foreach (TypeCoerce::toList($room['childrenAges']) as $age) {
                     if ($age !== null && $age !== 'age_needed') {
-                        $totals['ages'][] = (int) $age;
+                        $totals['ages'][] = TypeCoerce::toInt($age);
                     }
                 }
             }
@@ -145,6 +146,6 @@ class RoomsDataParser
             ));
         }
 
-        return (array) $bookingData['children_ages'];
+        return TypeCoerce::toIntList($bookingData['children_ages']);
     }
 }

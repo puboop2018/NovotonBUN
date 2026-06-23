@@ -12,6 +12,7 @@ declare(strict_types=1);
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
 use Tygh\Registry;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 /**
  * Format date using CS-Cart's date format from Admin > Settings > Appearance
@@ -30,12 +31,12 @@ function fn_novoton_holidays_format_date(string|int $date): string
 
     // Convert to timestamp if string
     $timestamp = is_numeric($date) ? (int)$date : strtotime((string)$date);
-    if (!$timestamp) {
+    if ($timestamp === false || $timestamp === 0) {
         return (string)$date;
     }
 
     // Get date format from CS-Cart settings (Admin > Settings > Appearance > Date format)
-    $date_format = Registry::get('settings.Appearance.date_format');
+    $date_format = TypeCoerce::toString(Registry::get('settings.Appearance.date_format'));
 
     // Fallback to DD.MM.YYYY if not set
     if (empty($date_format)) {
@@ -136,7 +137,7 @@ function fn_novoton_holidays_parse_xml_string($xml_string): ?\SimpleXMLElement
 
     // Extract from CDATA if needed
     if (!str_starts_with($xml_string, '<')) {
-        if (preg_match('/<!\[CDATA\[(.*?)\]\]>/s', $xml_string, $matches)) {
+        if (preg_match('/<!\[CDATA\[(.*?)]]>/s', $xml_string, $matches) === 1) {
             $xml_string = $matches[1];
         }
     }
@@ -263,9 +264,9 @@ function fn_novoton_holidays_parse_cancellation_terms($xml_string, $check_in = '
                 
                 // Calculate days before check-in
                 $days_before = 0;
-                if (!empty($tillDate) && $check_in_ts) {
+                if (!empty($tillDate) && TypeCoerce::toBool($check_in_ts)) {
                     $till_ts = strtotime($tillDate);
-                    if ($till_ts) {
+                    if (TypeCoerce::toBool($till_ts)) {
                         $days_before = max(0, ($check_in_ts - $till_ts) / 86400);
                     }
                 }
@@ -279,7 +280,7 @@ function fn_novoton_holidays_parse_cancellation_terms($xml_string, $check_in = '
                 ];
 
                 // Mark as FREE if value is 0
-                if ($value == 0) {
+                if ($value === 0.0) {
                     $term['value'] = 'FREE';
                     $term['is_penalty'] = false;
                 }
@@ -306,7 +307,7 @@ function fn_novoton_holidays_parse_cancellation_terms($xml_string, $check_in = '
                 // Calculate actual date if check_in provided
                 if (!empty($check_in) && $term['days_before'] > 0) {
                     $check_in_ts = strtotime($check_in);
-                    if ($check_in_ts) {
+                    if ($check_in_ts !== false && $check_in_ts !== 0) {
                         $term['till_date'] = date('Y-m-d', (int) strtotime("-{$term['days_before']} days", $check_in_ts));
                     }
                 }
@@ -352,28 +353,35 @@ function fn_novoton_holidays_format_payment_terms_with_amounts($xml_string, $tot
         return '';
     }
 
+    // Narrow loosely-typed inputs at the boundary.
+    $currency_code = TypeCoerce::toString($currency_code);
+    $currency_symbol = TypeCoerce::toString($currency_symbol);
+    $total_price = TypeCoerce::toFloat($total_price);
+    $coefficient = TypeCoerce::toFloat($coefficient);
+
     // Resolve currency symbol from CS-Cart registry if not provided
     if (empty($currency_symbol) && !empty($currency_code)) {
-        $currencies = \Tygh\Registry::get('currencies');
-        if (!empty($currencies[$currency_code]['symbol'])) {
-            $currency_symbol = $currencies[$currency_code]['symbol'];
+        $currencies = TypeCoerce::toStringMap(\Tygh\Registry::get('currencies'));
+        $currency = TypeCoerce::toStringMap($currencies[$currency_code] ?? null);
+        if (!empty($currency['symbol'])) {
+            $currency_symbol = TypeCoerce::toString($currency['symbol']);
         } else {
             $currency_symbol = $currency_code;
         }
         // Also resolve coefficient from registry if still default
-        if ($coefficient == 1.0 && !empty($currencies[$currency_code]['coefficient'])) {
-            $coefficient = (float)$currencies[$currency_code]['coefficient'];
+        if ($coefficient === 1.0 && !empty($currency['coefficient'])) {
+            $coefficient = TypeCoerce::toFloat($currency['coefficient']);
         }
     }
 
     $lines = [];
 
     foreach ($terms as $term) {
-        $percent = isset($term['percent']) ? (float)$term['percent'] : 0;
-        $date = $term['date'] ?? '';
+        $percent = isset($term['percent']) ? TypeCoerce::toFloat($term['percent']) : 0.0;
+        $date = TypeCoerce::toString($term['date'] ?? '');
 
         // Calculate amount from percentage and convert to display currency
-        $amount = ($percent / 100) * (float)$total_price * (float)$coefficient;
+        $amount = ($percent / 100) * $total_price * $coefficient;
 
         // Use consistent price formatting (with sup tag for decimals)
         $formatted_amount = fn_novoton_holidays_format_price($amount, 1.0, $currency_symbol);
@@ -396,7 +404,7 @@ function fn_novoton_holidays_format_payment_terms_with_amounts($xml_string, $tot
         }
     }
 
-    return implode("\n", $lines);
+    return implode("\n", TypeCoerce::toStringList($lines));
 }
 
 /**
@@ -439,8 +447,8 @@ function fn_novoton_holidays_get_free_cancellation_date($xml_string): ?string
     // Find the first term with 0 penalty (free cancellation)
     foreach ($terms as $term) {
         $value = $term['value'] ?? null;
-        $tillDate = $term['till_date'] ?? '';
-        
+        $tillDate = TypeCoerce::toString($term['till_date'] ?? '');
+
         if (($value === 'FREE' || $value === 0 || $value === '0' || $value === 0.0) && !empty($tillDate)) {
             return $tillDate;
         }

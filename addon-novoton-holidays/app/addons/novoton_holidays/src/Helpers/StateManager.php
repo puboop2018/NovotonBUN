@@ -20,6 +20,7 @@ namespace Tygh\Addons\NovotonHolidays\Helpers;
 
 use Tygh\Addons\NovotonHolidays\Services\DirectoryManager;
 use Tygh\Addons\NovotonHolidays\Services\PathResolver;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 class StateManager implements StateManagerInterface
 {
@@ -105,7 +106,7 @@ class StateManager implements StateManagerInterface
                 return $this->restoreFromBackup();
             }
 
-            return array_merge(self::DEFAULT_STATE, $state);
+            return array_merge(self::DEFAULT_STATE, TypeCoerce::toStringMap($state));
         } finally {
             $this->releaseLock();
         }
@@ -206,7 +207,7 @@ class StateManager implements StateManagerInterface
                     : $decoded;
                 if (is_array($state)) {
                     file_put_contents($this->stateFile, $backupContent, LOCK_EX);
-                    return array_merge(self::DEFAULT_STATE, $state);
+                    return array_merge(self::DEFAULT_STATE, TypeCoerce::toStringMap($state));
                 }
             }
         }
@@ -268,7 +269,7 @@ class StateManager implements StateManagerInterface
         $state['errors'] = $errors;
 
         if (!empty($errorIds)) {
-            $state['error_ids'] = array_unique(array_merge($state['error_ids'], $errorIds));
+            $state['error_ids'] = array_unique(array_merge(TypeCoerce::toStringList($state['error_ids']), $errorIds));
         }
 
         $this->save($state);
@@ -288,12 +289,14 @@ class StateManager implements StateManagerInterface
     {
         $state = $this->load();
 
-        $state['processed'] += $processed;
-        $state['synced'] += $synced;
-        $state['errors'] += $errors;
+        $state['processed'] = TypeCoerce::toInt($state['processed'] ?? 0) + $processed;
+        $state['synced'] = TypeCoerce::toInt($state['synced'] ?? 0) + $synced;
+        $state['errors'] = TypeCoerce::toInt($state['errors'] ?? 0) + $errors;
 
         if ($errorId !== null) {
-            $state['error_ids'][] = $errorId;
+            $errorIds = TypeCoerce::toStringList($state['error_ids'] ?? []);
+            $errorIds[] = $errorId;
+            $state['error_ids'] = $errorIds;
         }
 
         $this->save($state);
@@ -313,7 +316,7 @@ class StateManager implements StateManagerInterface
 
         // Calculate duration
         if (!empty($state['started_at'])) {
-            $state['duration_seconds'] = time() - strtotime($state['started_at']);
+            $state['duration_seconds'] = time() - strtotime(TypeCoerce::toString($state['started_at']));
         }
 
         // Clear item_ids to save space (keep other data for reference)
@@ -342,25 +345,29 @@ class StateManager implements StateManagerInterface
         ];
 
         if ($state['status'] === 'in_progress') {
+            $total = TypeCoerce::toInt($state['total'] ?? 0);
+            $processed = TypeCoerce::toInt($state['processed'] ?? 0);
+
             $status['started_at'] = $state['started_at'];
             $status['last_run_at'] = $state['last_run_at'];
 
             // Calculate percent
-            $status['percent'] = $state['total'] > 0
-                ? round($state['processed'] / $state['total'] * 100, 1)
+            $status['percent'] = $total > 0
+                ? round($processed / $total * 100, 1)
                 : 0;
 
             // Calculate remaining
-            $status['remaining'] = $state['total'] - $state['processed'];
+            $remaining = $total - $processed;
+            $status['remaining'] = $remaining;
 
             // Calculate elapsed time
-            $elapsed = time() - strtotime($state['started_at']);
+            $elapsed = time() - strtotime(TypeCoerce::toString($state['started_at']));
             $status['elapsed'] = $this->formatDuration($elapsed);
 
             // Calculate ETA
-            if ($state['processed'] > 0) {
-                $rate = $state['processed'] / max(1, $elapsed);
-                $remaining_seconds = $status['remaining'] / max(0.001, $rate);
+            if ($processed > 0) {
+                $rate = $processed / max(1, $elapsed);
+                $remaining_seconds = $remaining / max(0.001, $rate);
                 $status['eta'] = $this->formatDuration((int)$remaining_seconds);
             } else {
                 $status['eta'] = 'Calculating...';
@@ -368,7 +375,7 @@ class StateManager implements StateManagerInterface
         } elseif ($state['status'] === 'completed') {
             $status['completed_at'] = $state['completed_at'] ?? null;
             $status['duration'] = isset($state['duration_seconds'])
-                ? $this->formatDuration($state['duration_seconds'])
+                ? $this->formatDuration(TypeCoerce::toInt($state['duration_seconds']))
                 : null;
         }
 
@@ -381,18 +388,12 @@ class StateManager implements StateManagerInterface
     }
 
     /**
-     * Get the next batch of item IDs to process
-     *
-     * @param int $batchSize Number of items to get
-     * @return array<string, mixed> Array of item IDs
-     */
-    /**
      * Get the next batch of item IDs to process.
      * If item_ids are stored in state (legacy), uses array_slice.
      * Otherwise returns empty — callers should use DB-based pagination.
      *
      * @param int $batchSize Number of items to get
-     * @return array<string, mixed> Array of item IDs
+     * @return list<mixed> Array of item IDs
      */
     public function getNextBatch(int $batchSize): array
     {
@@ -404,7 +405,7 @@ class StateManager implements StateManagerInterface
 
         // Legacy mode: item_ids stored in state
         if (!empty($state['item_ids'])) {
-            return array_slice($state['item_ids'], $state['processed'], $batchSize);
+            return array_slice(TypeCoerce::toList($state['item_ids']), TypeCoerce::toInt($state['processed'] ?? 0), $batchSize);
         }
 
         // New mode: callers use DB pagination directly
@@ -433,7 +434,7 @@ class StateManager implements StateManagerInterface
             return true; // No timestamp at all — definitely stale
         }
 
-        $ageHours = (time() - strtotime($lastRun)) / 3600;
+        $ageHours = (time() - strtotime(TypeCoerce::toString($lastRun))) / 3600;
         return $ageHours > $maxAgeHours;
     }
 
@@ -467,7 +468,7 @@ class StateManager implements StateManagerInterface
         $lockFile = $this->stateFile . '.lock';
         $this->lockHandle = fopen($lockFile, 'c') ?: null;
 
-        if (!$this->lockHandle) {
+        if ($this->lockHandle === null) {
             return false;
         }
 
@@ -489,7 +490,7 @@ class StateManager implements StateManagerInterface
      */
     public function releaseLock(): void
     {
-        if ($this->lockHandle) {
+        if ($this->lockHandle !== null) {
             flock($this->lockHandle, LOCK_UN);
             fclose($this->lockHandle);
             $this->lockHandle = null;

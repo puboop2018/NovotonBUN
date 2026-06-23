@@ -18,6 +18,14 @@ namespace Tygh\Addons\NovotonHolidays\Services;
 
 class FeeCalculator implements FeeCalculatorInterface
 {
+    /** @var array<int, string> */
+    private const AGE_TYPE_MAP = [
+        1 => 'ADULT',
+        2 => 'CHD 0-1.99',
+        3 => 'CHD 2-11.99',
+        4 => 'CHD 12-17.99',
+    ];
+
     private PriceInfoParser $parser;
 
     private ?\Closure $logger;
@@ -62,7 +70,7 @@ class FeeCalculator implements FeeCalculatorInterface
         }
 
         $handlingResult = $this->calculateHandlingFee($occupancy, $checkIn, $nights, $seasonAgeTypes);
-        $fees['handling_fee'] = $handlingResult['total'];
+        $fees['handling_fee'] = PriceInfoFormatter::toFloat($handlingResult['total']);
         $fees['handling_fee_entries'] = $handlingResult['entries'];
         if ($fees['handling_fee'] > 0) {
             $fees['details'][] = ['type' => 'handling_fee', 'amount' => $fees['handling_fee']];
@@ -104,13 +112,6 @@ class FeeCalculator implements FeeCalculatorInterface
     #[\Override]
     public function collectSeasonPriceAgeTypes(string $roomId, string $boardId): array
     {
-        static $ageTypeMap = [
-            '1' => 'ADULT',
-            '2' => 'CHD 0-1.99',
-            '3' => 'CHD 2-11.99',
-            '4' => 'CHD 12-17.99',
-        ];
-
         $priceinfo = $this->parser->getPriceinfo() ?? [];
         $seasonPrices = $priceinfo['season_price'] ?? [];
         if (!is_array($seasonPrices)) {
@@ -139,9 +140,9 @@ class FeeCalculator implements FeeCalculatorInterface
             if (!empty($row['fAge']) && is_string($row['fAge'])) {
                 $resolvedAge = $row['fAge'];
             } else {
-                $resolvedAge = $ageTypeMap[$rawIdAge] ?? $rawIdAge;
+                $resolvedAge = self::AGE_TYPE_MAP[PriceInfoFormatter::toInt($rawIdAge)] ?? $rawIdAge;
             }
-            $resolvedAge = strtoupper(trim(preg_replace('/\s+/', ' ', $resolvedAge)));
+            $resolvedAge = strtoupper(trim((string) preg_replace('/\s+/', ' ', $resolvedAge)));
             if ($resolvedAge !== '') {
                 $ageTypes[$resolvedAge] = true;
             }
@@ -153,9 +154,9 @@ class FeeCalculator implements FeeCalculatorInterface
     /**
      * Calculate handling_fee
      *
-     * @param array<string, mixed> $seasonAgeTypes Resolved IdAge values from season_price for the booked room/board.
-     *                                             Only handling_fee entries whose IdAge correlates with one of these
-     *                                             are considered.
+     * @param array<string> $seasonAgeTypes Resolved IdAge values from season_price for the booked room/board.
+     *                                      Only handling_fee entries whose IdAge correlates with one of these
+     *                                      are considered.
      * @param array<string, mixed> $occupancy
      * @return array<string, mixed>
      */
@@ -309,7 +310,7 @@ class FeeCalculator implements FeeCalculatorInterface
 
     private function log(string $message, mixed $data = null): void
     {
-        if ($this->logger) {
+        if ($this->logger !== null) {
             ($this->logger)($message, $data);
         }
     }

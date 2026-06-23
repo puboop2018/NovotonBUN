@@ -7,6 +7,7 @@ namespace Tygh\Addons\NovotonHolidays\Cron\Commands;
 use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\Cron\AbstractCronCommand;
 use Tygh\Addons\NovotonHolidays\Services\Container;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 class AlternativesCommand extends AbstractCronCommand
 {
@@ -69,11 +70,13 @@ class AlternativesCommand extends AbstractCronCommand
         $emailed = 0;
 
         foreach ($pending as $request) {
-            $this->output("Checking request #{$request['request_id']} (IdNum: {$request['novoton_request_id']})... ", false);
+            $requestId = TypeCoerce::toInt($request['request_id']);
+            $novotonRequestId = TypeCoerce::toString($request['novoton_request_id']);
+            $this->output("Checking request #{$requestId} (IdNum: {$novotonRequestId})... ", false);
 
-            $response = $this->api->reservations()->getAlternatives($request['novoton_request_id']);
+            $response = $this->api->reservations()->getAlternatives($novotonRequestId);
 
-            if (!$response || !isset($response->alternative)) {
+            if (!(bool) $response || !isset($response->alternative)) {
                 $this->output('no response');
                 usleep(Constants::API_DELAY_MODERATE);
                 continue;
@@ -100,7 +103,7 @@ class AlternativesCommand extends AbstractCronCommand
                 continue;
             }
 
-            $altRepo->markAlternativesFound($request['request_id'], (string) json_encode($alternatives));
+            $altRepo->markAlternativesFound($requestId, (string) json_encode($alternatives));
             $found++;
             $this->output('FOUND ' . count($alternatives) . ' alternatives', false);
 
@@ -109,7 +112,7 @@ class AlternativesCommand extends AbstractCronCommand
                 $sent = $this->sendAlternativeEmail($request, $alternatives);
                 if ($sent) {
                     $emailed++;
-                    $altRepo->markNotified($request['request_id']);
+                    $altRepo->markNotified($requestId);
                     $this->output(' -> Email sent');
                 } else {
                     $this->output(' -> Email FAILED');
@@ -149,11 +152,12 @@ class AlternativesCommand extends AbstractCronCommand
         $this->output('');
 
         foreach ($bookings as $booking) {
-            $this->output("Booking #{$booking['booking_id']}... ", false);
+            $bookingId = TypeCoerce::toInt($booking['booking_id']);
+            $this->output("Booking #{$bookingId}... ", false);
 
             if (!empty($booking['novoton_reservation_id'])) {
-                $this->api->reservations()->getAlternatives($booking['novoton_reservation_id']);
-                $bookingRepo->update((int) $booking['booking_id'], ['alternatives_requested' => 1]);
+                $this->api->reservations()->getAlternatives(TypeCoerce::toString($booking['novoton_reservation_id']));
+                $bookingRepo->update($bookingId, ['alternatives_requested' => 1]);
                 $this->output('checked');
             } else {
                 $this->output('no reservation ID');
@@ -186,17 +190,19 @@ class AlternativesCommand extends AbstractCronCommand
 
         $notified = 0;
         foreach ($requests as $request) {
-            $this->output("Request #{$request['request_id']} ({$request['contact_email']})... ", false);
+            $requestId = TypeCoerce::toInt($request['request_id']);
+            $contactEmail = TypeCoerce::toString($request['contact_email']);
+            $this->output("Request #{$requestId} ({$contactEmail})... ", false);
 
-            $alternatives = json_decode($request['alternatives_data'], true);
+            $alternatives = json_decode(TypeCoerce::toString($request['alternatives_data']), true);
             if (empty($alternatives)) {
                 $this->output('no alternatives data');
                 continue;
             }
 
-            $sent = $this->sendAlternativeEmail($request, $alternatives);
+            $sent = $this->sendAlternativeEmail($request, TypeCoerce::toRowList($alternatives));
             if ($sent) {
-                $altRepo->markNotified($request['request_id']);
+                $altRepo->markNotified($requestId);
                 $notified++;
                 $this->output('SENT');
             } else {
@@ -214,7 +220,7 @@ class AlternativesCommand extends AbstractCronCommand
      */
     private function expireRequests(): array
     {
-        $days = (int)$this->getParam('days', 30);
+        $days = TypeCoerce::toInt($this->getParam('days', 30));
         $this->output("Expiring requests older than {$days} days...");
 
         $altRepo = Container::getInstance()->alternativeRequestRepository();

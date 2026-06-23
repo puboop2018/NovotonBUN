@@ -7,7 +7,7 @@
 
 defined('BOOTSTRAP') or die('Access denied');
 
-/** @var array $schema */
+/** @var array<string, mixed> $schema */
 
 // Shared tab set for all sphinx_holidays pages
 $tabs = [
@@ -52,9 +52,8 @@ $pages = [
     'sphinx_seo_templates.manage',
 ];
 foreach ($pages as $page) {
-    foreach ($tabs as $key => $tab) {
-        $schema[$page][$key] = $tab;
-    }
+    $existing = isset($schema[$page]) && is_array($schema[$page]) ? $schema[$page] : [];
+    $schema[$page] = array_merge($existing, $tabs);
 }
 
 return $schema;

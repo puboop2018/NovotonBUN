@@ -81,7 +81,7 @@ try {
         'children' => $children,
         'children_ages' => $children_ages_str,
         'rooms' => $rooms,
-        'nights' => (strtotime($check_out ?: 'now') && strtotime($check_in ?: 'now'))
+        'nights' => (TypeCoerce::toBool(strtotime($check_out ?: 'now')) && TypeCoerce::toBool(strtotime($check_in ?: 'now')))
             ? (int) round((strtotime($check_out) - strtotime($check_in)) / 86400) : 0,
     ];
 

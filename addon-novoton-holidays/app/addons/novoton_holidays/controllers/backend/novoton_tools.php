@@ -86,11 +86,12 @@ if ($mode === 'export_hotel_features_xml') {
         $result = fn_novoton_holidays_generate_hotel_features_xml();
         ob_end_clean();
 
-        if ($result['success']) {
-            $download_url = fn_url('novoton_holidays.download_hotel_features_xml');
-            fn_set_notification('N', __('notice'), "Hotel features XML generated! Hotels: {$result['count']}<br><a href=\"{$download_url}\" style=\"color:#0057b8;font-weight:600;text-decoration:underline;\">Download novoton_hotel_features.xml</a>");
+        if (TypeCoerce::toBool($result['success'])) {
+            $download_url = TypeCoerce::toString(fn_url('novoton_holidays.download_hotel_features_xml'));
+            $xmlCount = TypeCoerce::toInt($result['count']);
+            fn_set_notification('N', __('notice'), "Hotel features XML generated! Hotels: {$xmlCount}<br><a href=\"{$download_url}\" style=\"color:#0057b8;font-weight:600;text-decoration:underline;\">Download novoton_hotel_features.xml</a>");
         } else {
-            fn_set_notification('E', __('error'), "Failed: " . ($result['error'] ?? 'Unknown error'));
+            fn_set_notification('E', __('error'), "Failed: " . TypeCoerce::toString($result['error'] ?? 'Unknown error'));
         }
     } catch (Exception $e) {
         ob_end_clean();
@@ -105,7 +106,7 @@ if ($mode === 'export_hotel_features_xml') {
  * Download the generated XML file (static filename)
  */
 if ($mode === 'download_hotel_features_xml') {
-    $file_path = fn_get_files_dir_path() . 'novoton_reports/novoton_hotel_features.xml';
+    $file_path = TypeCoerce::toString(fn_get_files_dir_path()) . 'novoton_reports/novoton_hotel_features.xml';
 
     if (!file_exists($file_path)) {
         fn_set_notification('E', __('error'), 'No XML export found. Please generate one first.');
@@ -234,15 +235,12 @@ if ($mode === 'test_hotel_list') {
     $result = $diag->testHotelList($country, $limit);
 
     if (!empty($result['success'])) {
-        $rTotal = PriceInfoFormatter::toInt($result['total'] ?? 0);
+        $rTotal = PriceInfoFormatter::toInt($result['total']);
         echo "<p>Total hotels: {$rTotal}</p>";
         echo '<table border="1" cellpadding="5">';
         echo '<tr><th>ID</th><th>Name</th><th>City</th><th>Stars</th><th>Type</th></tr>';
-        $rHotels = is_array($result['hotels'] ?? null) ? $result['hotels'] : [];
+        $rHotels = $result['hotels'];
         foreach ($rHotels as $hotel) {
-            if (!is_array($hotel)) {
-                continue;
-            }
             echo '<tr>';
             echo '<td>' . htmlspecialchars(PriceInfoFormatter::toScalar($hotel['id'] ?? '')) . '</td>';
             echo '<td>' . htmlspecialchars(PriceInfoFormatter::toScalar($hotel['name'] ?? '')) . '</td>';
@@ -377,10 +375,10 @@ if ($mode === 'test_search') {
             foreach ($result['results'] as $item) {
                 if ($count >= 20) break;
                 echo '<tr>';
-                echo '<td>' . htmlspecialchars($item['hotel_name'] ?? $item['hotel_id'] ?? '') . '</td>';
-                echo '<td>' . htmlspecialchars($item['room_id'] ?? '') . '</td>';
-                echo '<td>' . htmlspecialchars($item['board_id'] ?? '') . '</td>';
-                echo '<td>&euro;' . number_format($item['price'] ?? 0, 2) . '</td>';
+                echo '<td>' . htmlspecialchars(PriceInfoFormatter::toScalar($item['hotel_name'] ?? $item['hotel_id'] ?? '')) . '</td>';
+                echo '<td>' . htmlspecialchars(PriceInfoFormatter::toScalar($item['room_id'] ?? '')) . '</td>';
+                echo '<td>' . htmlspecialchars(PriceInfoFormatter::toScalar($item['board_id'] ?? '')) . '</td>';
+                echo '<td>&euro;' . number_format(PriceInfoFormatter::toFloat($item['price'] ?? 0), 2) . '</td>';
                 echo '</tr>';
                 $count++;
             }
@@ -411,9 +409,9 @@ if ($mode === 'test_facilities') {
 
     if ($result['success']) {
         echo '<p style="color:green">Success!</p>';
-        echo '<p>Total: ' . ($result['result']['total'] ?? 0) . '</p>';
-        echo '<p>Added: ' . ($result['result']['added'] ?? 0) . '</p>';
-        echo '<p>Updated: ' . ($result['result']['updated'] ?? 0) . '</p>';
+        echo '<p>Total: ' . TypeCoerce::toString($result['result']['total'] ?? 0) . '</p>';
+        echo '<p>Added: ' . TypeCoerce::toString($result['result']['added'] ?? 0) . '</p>';
+        echo '<p>Updated: ' . TypeCoerce::toString($result['result']['updated'] ?? 0) . '</p>';
     } else {
         echo '<p style="color:red">Failed: ' . htmlspecialchars($result['error'] ?: 'Unknown error') . '</p>';
     }
@@ -423,9 +421,9 @@ if ($mode === 'test_facilities') {
     echo '<tr><th>ID</th><th>Name (EN)</th><th>Name (RO)</th></tr>';
     foreach ($result['facilities'] as $f) {
         echo '<tr>';
-        echo '<td>' . htmlspecialchars((string)$f['facility_id']) . '</td>';
-        echo '<td>' . htmlspecialchars($f['facility_name_en']) . '</td>';
-        echo '<td>' . htmlspecialchars($f['facility_name_ro']) . '</td>';
+        echo '<td>' . htmlspecialchars(TypeCoerce::toString($f['facility_id'])) . '</td>';
+        echo '<td>' . htmlspecialchars(PriceInfoFormatter::toScalar($f['facility_name_en'])) . '</td>';
+        echo '<td>' . htmlspecialchars(PriceInfoFormatter::toScalar($f['facility_name_ro'])) . '</td>';
         echo '</tr>';
     }
     echo '</table>';
@@ -651,7 +649,7 @@ if ($mode === 'get_hotel_features_csv') {
         exit;
     }
 
-    $export_dir = fn_get_files_dir_path() . 'novoton_exports/';
+    $export_dir = TypeCoerce::toString(fn_get_files_dir_path()) . 'novoton_exports/';
     $file_path = $export_dir . 'hotel_features_import.csv';
 
     if (!file_exists($file_path)) {

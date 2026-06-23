@@ -15,11 +15,13 @@ declare(strict_types=1);
 
 use Tygh\Registry;
 use Tygh\Addons\NovotonHolidays\Helpers\CronHelper;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
 // Authentication via access_key
-$provided_key = $_REQUEST['access_key'] ?? '';
+$provided_key = RequestCoerce::string($_REQUEST, 'access_key');
 if (!CronHelper::validateAccessKey($provided_key)) {
     header('HTTP/1.1 403 Forbidden');
     header('Content-Type: text/plain; charset=utf-8');
@@ -31,9 +33,9 @@ if (!CronHelper::validateAccessKey($provided_key)) {
  * Mode: hotel_features_xml
  * Generate and serve hotel features XML on-the-fly
  */
-if ($mode == 'hotel_features_xml') {
+if ($mode === 'hotel_features_xml') {
     // Ensure the generation function is available
-    $func_file = Registry::get('config.dir.addons') . 'novoton_holidays/functions/email.php';
+    $func_file = TypeCoerce::toString(Registry::get('config.dir.addons')) . 'novoton_holidays/functions/email.php';
     if (!function_exists('fn_novoton_holidays_generate_hotel_features_xml') && file_exists($func_file)) {
         require_once($func_file);
     }
@@ -51,17 +53,17 @@ if ($mode == 'hotel_features_xml') {
     $result = fn_novoton_holidays_generate_hotel_features_xml();
     ob_end_clean();
 
-    if (!$result['success'] || empty($result['file_path']) || !file_exists($result['file_path'])) {
+    if (!TypeCoerce::toBool($result['success']) || empty($result['file_path']) || !file_exists(TypeCoerce::toString($result['file_path']))) {
         header('HTTP/1.1 500 Internal Server Error');
         header('Content-Type: text/plain; charset=utf-8');
-        echo 'Failed to generate XML: ' . ($result['error'] ?? 'Unknown error');
+        echo 'Failed to generate XML: ' . TypeCoerce::toString($result['error'] ?? 'Unknown error');
         exit;
     }
 
     header('Content-Type: application/xml; charset=utf-8');
-    header('Content-Length: ' . filesize($result['file_path']));
+    header('Content-Length: ' . filesize(TypeCoerce::toString($result['file_path'])));
     header('Cache-Control: no-cache, must-revalidate');
-    readfile($result['file_path']);
+    readfile(TypeCoerce::toString($result['file_path']));
     exit;
 }
 

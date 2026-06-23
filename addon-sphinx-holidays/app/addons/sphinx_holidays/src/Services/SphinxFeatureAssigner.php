@@ -6,6 +6,7 @@ namespace Tygh\Addons\SphinxHolidays\Services;
 
 use Tygh\Addons\SphinxHolidays\Api\SphinxNormalizer;
 use Tygh\Addons\SphinxHolidays\Contracts\SphinxFeatureAssignerInterface;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Services\FeatureMapper;
 use Tygh\Addons\TravelCore\Services\TravelGroupResolver;
 use Tygh\Addons\TravelCore\Traits\CsCartFeatureAssignment;
@@ -30,7 +31,7 @@ class SphinxFeatureAssigner implements SphinxFeatureAssignerInterface
     /** @var array<string, int> featureId:variantName → variant_id cache */
     private array $locationVariantCache = [];
 
-    /** @var list<array{id: string, name: string, mapping: mixed}>|null Cached resolved facility data for current hotel */
+    /** @var list<array{id: string, name: string, mapping: array<string, mixed>|null}>|null Cached resolved facility data for current hotel */
     private ?array $resolvedFacilitiesCache = null;
 
     /** @var string|null Hash of the facilities_json that was cached */
@@ -90,9 +91,9 @@ class SphinxFeatureAssigner implements SphinxFeatureAssignerInterface
         }
 
         $mapping = FeatureMapper::resolve(self::API_SOURCE, $featureType, $rawValue);
-        $variantId = $mapping ? (int) ($mapping['cscart_variant_id'] ?? 0) : 0;
+        $variantId = $mapping !== null ? TypeCoerce::toInt($mapping['cscart_variant_id'] ?? 0) : 0;
 
-        if ($variantId <= 0 && $mapping && $autoCreate) {
+        if ($variantId <= 0 && $mapping !== null && $autoCreate) {
             $variantId = $this->autoCreateVariant($featureId, $mapping);
         }
 
@@ -147,11 +148,11 @@ class SphinxFeatureAssigner implements SphinxFeatureAssignerInterface
         $wantedVariants = [];
         foreach ($codes as $code) {
             $mapping = FeatureMapper::resolve(self::API_SOURCE, $featureType, $code);
-            if (!$mapping) {
+            if ($mapping === null) {
                 continue;
             }
 
-            $variantId = (int) ($mapping['cscart_variant_id'] ?? 0);
+            $variantId = TypeCoerce::toInt($mapping['cscart_variant_id'] ?? 0);
             if ($variantId <= 0 && $autoCreate) {
                 $variantId = $this->autoCreateVariant($featureId, $mapping);
             }
@@ -191,8 +192,8 @@ class SphinxFeatureAssigner implements SphinxFeatureAssignerInterface
         }
 
         $resolved = [];
-        foreach ($facilities as $facility) {
-            $facilityId = (string) ($facility['id'] ?? '');
+        foreach (TypeCoerce::toRowList($facilities) as $facility) {
+            $facilityId = TypeCoerce::toString($facility['id'] ?? '');
             if ($facilityId === '') {
                 continue;
             }
@@ -200,7 +201,7 @@ class SphinxFeatureAssigner implements SphinxFeatureAssignerInterface
             $mapping = FeatureMapper::resolveFacility(self::API_SOURCE, $facilityId);
             $resolved[] = [
                 'id' => $facilityId,
-                'name' => (string) ($facility['name'] ?? ''),
+                'name' => TypeCoerce::toString($facility['name'] ?? ''),
                 'mapping' => $mapping,
             ];
         }
@@ -245,19 +246,19 @@ class SphinxFeatureAssigner implements SphinxFeatureAssignerInterface
      */
     private function assignRegion(int $productId, array $hotel): void
     {
-        $regionId = (string) ($hotel['region_id'] ?? '');
+        $regionId = TypeCoerce::toString($hotel['region_id'] ?? '');
         if ($regionId === '' || $regionId === '0') {
             return;
         }
 
         // Resolve through FeatureMapper (seeded from Destination Whitelist)
         $mapping = FeatureMapper::resolve(self::API_SOURCE, 'region', $regionId);
-        if (!$mapping) {
-            FeatureMapper::handleUnmapped(self::API_SOURCE, 'region', $regionId, $hotel['region_name'] ?? '');
+        if ($mapping === null) {
+            FeatureMapper::handleUnmapped(self::API_SOURCE, 'region', $regionId, TypeCoerce::toString($hotel['region_name'] ?? ''));
             return;
         }
 
-        $featureId = (int) ($mapping['cscart_feature_id'] ?? 0);
+        $featureId = TypeCoerce::toInt($mapping['cscart_feature_id'] ?? 0);
         if ($featureId <= 0) {
             $featureId = $this->getFeatureId('region');
         }
@@ -265,7 +266,7 @@ class SphinxFeatureAssigner implements SphinxFeatureAssignerInterface
             return;
         }
 
-        $variantId = (int) ($mapping['cscart_variant_id'] ?? 0);
+        $variantId = TypeCoerce::toInt($mapping['cscart_variant_id'] ?? 0);
         if ($variantId <= 0) {
             $variantId = $this->autoCreateVariant($featureId, $mapping);
         }
@@ -280,7 +281,8 @@ class SphinxFeatureAssigner implements SphinxFeatureAssignerInterface
      */
     private function assignCity(int $productId, array $hotel): void
     {
-        $this->assignLocationFeature($productId, 'city', $hotel['destination_name'] ?? null);
+        $destinationName = $hotel['destination_name'] ?? null;
+        $this->assignLocationFeature($productId, 'city', $destinationName === null ? null : TypeCoerce::toString($destinationName));
     }
 
     /**
@@ -298,7 +300,7 @@ class SphinxFeatureAssigner implements SphinxFeatureAssignerInterface
             return;
         }
 
-        $this->collectAndSyncCheckboxFeature($productId, 'board', $boards);
+        $this->collectAndSyncCheckboxFeature($productId, 'board', TypeCoerce::toStringList($boards));
     }
 
     /**
@@ -323,14 +325,14 @@ class SphinxFeatureAssigner implements SphinxFeatureAssignerInterface
         foreach ($resolved as $entry) {
             $mapping = $entry['mapping'];
 
-            if (!$mapping) {
+            if ($mapping === null) {
                 FeatureMapper::handleUnmapped(self::API_SOURCE, 'hotel_facility', $entry['id'], $entry['name']);
                 $unmapped[] = $entry['id'] . ':' . $entry['name'];
                 continue;
             }
 
-            $featureId = (int) ($mapping['cscart_feature_id'] ?? 0);
-            $variantId = (int) ($mapping['cscart_variant_id'] ?? 0);
+            $featureId = TypeCoerce::toInt($mapping['cscart_feature_id'] ?? 0);
+            $variantId = TypeCoerce::toInt($mapping['cscart_variant_id'] ?? 0);
 
             if ($featureId <= 0) {
                 $unmapped[] = $entry['id'] . ':' . $entry['name'];
@@ -339,14 +341,14 @@ class SphinxFeatureAssigner implements SphinxFeatureAssignerInterface
 
             if ($variantId <= 0) {
                 // Only auto-create if at least one sibling has a variant
-                $hasMappedSibling = (int) db_get_field(
+                $hasMappedSibling = TypeCoerce::toInt(db_get_field(
                     "SELECT COUNT(*) FROM ?:travel_feature_map
                      WHERE feature_type IN ('hotel_facility', 'room_facility', 'beach_access')
                        AND cscart_feature_id = ?i
                        AND cscart_variant_id IS NOT NULL AND cscart_variant_id > 0
                      LIMIT 1",
                     $featureId,
-                );
+                ));
                 if ($hasMappedSibling > 0) {
                     $variantId = $this->autoCreateVariant($featureId, $mapping);
                 }
@@ -407,8 +409,9 @@ class SphinxFeatureAssigner implements SphinxFeatureAssignerInterface
         $codes = [];
 
         foreach ($resolved as $entry) {
-            if ($entry['mapping'] && !empty($entry['mapping']['canonical_code'])) {
-                $codes[] = $entry['mapping']['canonical_code'];
+            $mapping = $entry['mapping'];
+            if ($mapping !== null && !empty($mapping['canonical_code'])) {
+                $codes[] = TypeCoerce::toString($mapping['canonical_code']);
             }
         }
 
@@ -428,7 +431,7 @@ class SphinxFeatureAssigner implements SphinxFeatureAssignerInterface
             return $this->locationVariantCache[$cacheKey];
         }
 
-        $variantId = (int) db_get_field(
+        $variantId = TypeCoerce::toInt(db_get_field(
             'SELECT pf.variant_id FROM ?:product_feature_variant_descriptions pf
              WHERE pf.variant = ?s AND pf.lang_code = ?s
              AND pf.variant_id IN (SELECT variant_id FROM ?:product_feature_variants WHERE feature_id = ?i)
@@ -436,7 +439,7 @@ class SphinxFeatureAssigner implements SphinxFeatureAssignerInterface
             $name,
             CART_LANGUAGE,
             $featureId,
-        );
+        ));
 
         if ($variantId <= 0) {
             $variantId = $this->createVariant($featureId, $name, $name);
@@ -460,8 +463,8 @@ class SphinxFeatureAssigner implements SphinxFeatureAssignerInterface
      */
     private function autoCreateVariant(int $featureId, array $mapping): int
     {
-        $nameEn = $mapping['display_name_en'] ?? $mapping['canonical_code'] ?? '';
-        $nameRo = $mapping['display_name_ro'] ?? $nameEn;
+        $nameEn = TypeCoerce::toString($mapping['display_name_en'] ?? $mapping['canonical_code'] ?? '');
+        $nameRo = TypeCoerce::toString($mapping['display_name_ro'] ?? $nameEn);
 
         $variantId = $this->createVariant($featureId, $nameEn, $nameRo);
 
@@ -469,7 +472,7 @@ class SphinxFeatureAssigner implements SphinxFeatureAssignerInterface
             db_query(
                 'UPDATE ?:travel_feature_map SET cscart_variant_id = ?i WHERE map_id = ?i',
                 $variantId,
-                (int) $mapping['map_id'],
+                TypeCoerce::toInt($mapping['map_id']),
             );
             FeatureMapper::clearCache();
         }

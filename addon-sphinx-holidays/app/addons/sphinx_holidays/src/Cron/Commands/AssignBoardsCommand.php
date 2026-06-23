@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\SphinxHolidays\Cron\Commands;
 
 use Tygh\Addons\SphinxHolidays\Services\Container;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Helpers\ValidationHelpers;
 use Tygh\Addons\TravelCore\Services\FeatureMapper;
 use Tygh\Addons\TravelCore\Services\TravelCoreConfig;
@@ -193,7 +194,7 @@ class AssignBoardsCommand extends AbstractSyncCommand
                     $state['assigned'] = ValidationHelpers::toInt($state['assigned'] ?? 0) + 1;
                 } catch (\Throwable $e) {
                     $state['errors'] = ValidationHelpers::toInt($state['errors'] ?? 0) + 1;
-                    $sErrors = ValidationHelpers::toInt($state['errors'] ?? 0);
+                    $sErrors = $state['errors'];
                     if ($sErrors <= 10) {
                         $hotelIdStr = ValidationHelpers::toString($hotel['hotel_id'] ?? '');
                         $this->output("  [ERROR] Hotel {$hotelIdStr}: " . $e->getMessage());
@@ -212,7 +213,8 @@ class AssignBoardsCommand extends AbstractSyncCommand
             // Progress output
             if ($offset % 200 === 0) {
                 $pct = round($offset / $total * 100, 1);
-                $this->output("  {$offset}/{$total} ({$pct}%) — {$state['assigned']} assigned");
+                $assignedCount = ValidationHelpers::toInt($state['assigned'] ?? 0);
+                $this->output("  {$offset}/{$total} ({$pct}%) — {$assignedCount} assigned");
             }
         }
 
@@ -252,7 +254,7 @@ class AssignBoardsCommand extends AbstractSyncCommand
     private function completeSync(array $state): array
     {
         $durationSeconds = !empty($state['started_at'])
-            ? time() - strtotime($state['started_at'])
+            ? time() - ValidationHelpers::toInt(strtotime(ValidationHelpers::toString($state['started_at'])))
             : 0;
 
         // Clear FeatureMapper cache
@@ -269,11 +271,15 @@ class AssignBoardsCommand extends AbstractSyncCommand
             $state['started_at'],
         );
 
+        $processedCount = ValidationHelpers::toInt($state['processed'] ?? 0);
+        $assignedCount = ValidationHelpers::toInt($state['assigned'] ?? 0);
+        $errorsCount = ValidationHelpers::toInt($state['errors'] ?? 0);
+
         $this->output('');
         $this->output('Board Assignment Complete:');
-        $this->output("  Hotels processed: {$state['processed']}");
-        $this->output("  Features assigned: {$state['assigned']}");
-        $this->output("  Errors: {$state['errors']}");
+        $this->output("  Hotels processed: {$processedCount}");
+        $this->output("  Features assigned: {$assignedCount}");
+        $this->output("  Errors: {$errorsCount}");
         $this->output('  Duration: ' . $this->formatDuration($durationSeconds));
 
         $this->clearState();
@@ -301,27 +307,37 @@ class AssignBoardsCommand extends AbstractSyncCommand
         if ($state['status'] === 'idle') {
             $this->output('Board Assignment Status: idle (no assignment in progress)');
 
-            $lastRun = db_get_row(
+            $lastRunRow = TypeCoerce::toStringMap(db_get_row(
                 "SELECT * FROM ?:sphinx_sync_log WHERE sync_type = 'assign_boards' ORDER BY started_at DESC LIMIT 1",
-            );
-            if (!empty($lastRun)) {
-                $this->output("  Last run: {$lastRun['started_at']} — {$lastRun['items_synced']} features assigned");
+            ));
+            if (!empty($lastRunRow)) {
+                $lastStartedAt = ValidationHelpers::toString($lastRunRow['started_at'] ?? '');
+                $lastItemsSynced = ValidationHelpers::toInt($lastRunRow['items_synced'] ?? 0);
+                $this->output("  Last run: {$lastStartedAt} — {$lastItemsSynced} features assigned");
             }
 
             return ['success' => true, 'status' => 'idle'];
         }
 
-        $pct = $state['total'] > 0 ? round($state['processed'] / $state['total'] * 100, 1) : 0;
-        $remaining = $state['total'] - $state['processed'];
+        $total = ValidationHelpers::toInt($state['total'] ?? 0);
+        $processed = ValidationHelpers::toInt($state['processed'] ?? 0);
+        $assigned = ValidationHelpers::toInt($state['assigned'] ?? 0);
+        $errors = ValidationHelpers::toInt($state['errors'] ?? 0);
+        $status = ValidationHelpers::toString($state['status'] ?? '');
+        $startedAt = ValidationHelpers::toString($state['started_at'] ?? '');
+        $lastRunAt = ValidationHelpers::toString($state['last_run_at'] ?? '');
+
+        $pct = $total > 0 ? round($processed / $total * 100, 1) : 0;
+        $remaining = $total - $processed;
 
         $this->output('Board Assignment Status:');
-        $this->output("  Status: {$state['status']}");
-        $this->output("  Progress: {$state['processed']}/{$state['total']} ({$pct}%)");
+        $this->output("  Status: {$status}");
+        $this->output("  Progress: {$processed}/{$total} ({$pct}%)");
         $this->output("  Remaining: {$remaining} hotels");
-        $this->output("  Assigned: {$state['assigned']}");
-        $this->output("  Errors: {$state['errors']}");
-        $this->output("  Started: {$state['started_at']}");
-        $this->output("  Last activity: {$state['last_run_at']}");
+        $this->output("  Assigned: {$assigned}");
+        $this->output("  Errors: {$errors}");
+        $this->output("  Started: {$startedAt}");
+        $this->output("  Last activity: {$lastRunAt}");
 
         if ($this->isStale($state)) {
             $this->output('  WARNING: State appears stale (no activity for 6+ hours). Run with reset=1 to clear.');

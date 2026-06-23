@@ -18,6 +18,7 @@ use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Services\HotelAvailabilitySearcher;
 use Tygh\Addons\NovotonHolidays\Services\AlternativeDateSearcher;
 use Tygh\Addons\NovotonHolidays\Services\Container;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 try {
 
@@ -26,7 +27,7 @@ try {
 
     // ── 1. Validate & normalize input ────────────────────────────────
     $security     = _nvt_get_security_service();
-    $searchParams = $security->validateSearchParams($_REQUEST);
+    $searchParams = $security->validateSearchParams(TypeCoerce::toStringMap($_REQUEST));
 
     $normalizer = $container->searchParameterNormalizer();
     $query      = $normalizer->normalizeAsDto($searchParams);
@@ -65,8 +66,8 @@ try {
                 $query->totalAdults,
                 $query->childrenAges,
                 $query->flexDays,
-                $rooms,
-                $boardTypes
+                TypeCoerce::toStringMap($rooms),
+                TypeCoerce::toStringMap($boardTypes)
             );
             $debugLog = array_merge($debugLog, $altSearcher->getDebugLog());
         }
@@ -76,7 +77,7 @@ try {
         // entirely in PHP — zero Smarty involvement, zero scope chain traversal.
         // This prevents the 256MB OOM at Data.php:265 that occurs when Smarty 5
         // traverses the view's accumulated scope during {include} or fetch().
-        $view = \Tygh\Tygh::$app['view'];
+        $view = fn_novoton_holidays_get_view();
         $view->assign('booking_engine_html', fn_travel_core_render_booking_engine([
             'provider'        => 'novoton',
             'search_dispatch' => 'novoton_booking.search',
@@ -91,7 +92,7 @@ try {
             $searchResult,
             $altResult,
             $searchParams,
-            $debugLog
+            TypeCoerce::toStringMap($debugLog)
         );
 
     } else {
@@ -127,7 +128,7 @@ try {
     $formatter->assignDefaults();
 
     if (ConfigProvider::isDebugMode()) {
-        \Tygh\Tygh::$app['view']->assign('novoton_debug', [
+        fn_novoton_holidays_get_view()->assign('novoton_debug', [
             '=== SEARCH ERROR ===',
             $e->getMessage(),
             $e->getFile() . ':' . $e->getLine(),

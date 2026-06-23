@@ -23,7 +23,7 @@ interface CronDispatcherInterface
      *
      * @param string $mode The cron mode to execute
      * @param array<string, mixed> $params Additional parameters from CLI or HTTP
-     * @return array{success: bool, error?: string, message?: string} Result from the command
+     * @return array<string, mixed> Result from the command (shape varies by mode: success, plus mode-specific keys)
      */
     public function dispatch(string $mode, array $params = []): array;
 

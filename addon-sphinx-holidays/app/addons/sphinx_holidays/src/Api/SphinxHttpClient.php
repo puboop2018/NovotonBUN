@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays\Api;
 
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+
 /**
  * HTTP client for the Sphinx REST API.
  *
@@ -229,7 +231,7 @@ class SphinxHttpClient
             // instance so getLastError() reflects only the call that just ran.
             $this->lastError = '';
 
-            return $decoded;
+            return TypeCoerce::toStringMap($decoded);
         }
 
         // All retries exhausted

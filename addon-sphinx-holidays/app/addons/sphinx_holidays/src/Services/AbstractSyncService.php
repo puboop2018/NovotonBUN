@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\SphinxHolidays\Services;
 
 use Tygh\Addons\SphinxHolidays\SphinxApi;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 /**
  * Base class for Sphinx sync services.
@@ -72,7 +73,7 @@ abstract class AbstractSyncService
         $stats['rate_limit'] = $httpClient->getRateLimitState();
         $stats['rate_limit_hits'] = $httpClient->getRateLimitHitCount();
 
-        $this->logComplete($logId, $stats['success'] ? 'completed' : 'failed', $stats);
+        $this->logComplete($logId, TypeCoerce::toBool($stats['success']) ? 'completed' : 'failed', $stats);
 
         /** @var array{success: bool, total: int, synced: int, skipped: int, failed: int, duration_ms: int, error: string, sync_mode: string} $stats */
         return $stats;
@@ -123,13 +124,14 @@ abstract class AbstractSyncService
      */
     protected function hasMorePages(array $response, int $currentPage, int $perPage, int $fetchedSoFar): bool
     {
-        $lastPage = $response['last_page'] ?? $response['meta']['last_page'] ?? null;
-        if ($lastPage !== null && $currentPage >= (int) $lastPage) {
+        $meta = TypeCoerce::toStringMap($response['meta'] ?? []);
+        $lastPage = $response['last_page'] ?? $meta['last_page'] ?? null;
+        if ($lastPage !== null && $currentPage >= TypeCoerce::toInt($lastPage)) {
             return false;
         }
 
-        $totalItems = $response['total'] ?? $response['meta']['total'] ?? null;
-        if ($totalItems !== null && $fetchedSoFar >= (int) $totalItems) {
+        $totalItems = $response['total'] ?? $meta['total'] ?? null;
+        if ($totalItems !== null && $fetchedSoFar >= TypeCoerce::toInt($totalItems)) {
             return false;
         }
 
@@ -155,7 +157,7 @@ abstract class AbstractSyncService
             $syncType,
         );
 
-        return (int) db_get_field('SELECT LAST_INSERT_ID()');
+        return TypeCoerce::toInt(db_get_field('SELECT LAST_INSERT_ID()'));
     }
 
     /**

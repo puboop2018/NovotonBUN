@@ -170,11 +170,11 @@ class DateHelper
      */
     public static function parseDate(string $date): ?string
     {
-        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $date) === 1) {
             return $date;
         }
 
-        if (preg_match('/^(\d{2})[\/.](\d{2})[\/.](\d{4})$/', $date, $m)) {
+        if (preg_match('/^(\d{2})[\/.](\d{2})[\/.](\d{4})$/', $date, $m) === 1) {
             return $m[3] . '-' . $m[2] . '-' . $m[1];
         }
 

@@ -35,6 +35,7 @@ namespace Tygh\Addons\NovotonHolidays\Helpers;
 use SimpleXMLElement;
 use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 class BatchedPriceInfoSyncV2 extends AbstractBatchedSync
 {
@@ -101,7 +102,7 @@ class BatchedPriceInfoSyncV2 extends AbstractBatchedSync
         // Programmatic callers can override stale_hours via run() options.
         // The cron command sets it via the setter instead; either path works.
         if (!empty($options['stale_hours'])) {
-            $this->setStaleHours((int) $options['stale_hours']);
+            $this->setStaleHours(TypeCoerce::toInt($options['stale_hours']));
         }
 
         if (!empty($options['force_full'])) {
@@ -120,7 +121,7 @@ class BatchedPriceInfoSyncV2 extends AbstractBatchedSync
             return 'full';
         }
 
-        $timeSinceFull = time() - strtotime($lastFullSync);
+        $timeSinceFull = time() - strtotime(TypeCoerce::toString($lastFullSync));
 
         if ($timeSinceFull > $this->fullSyncInterval) {
             $days = round($timeSinceFull / 86400);
@@ -129,11 +130,11 @@ class BatchedPriceInfoSyncV2 extends AbstractBatchedSync
         }
 
         // Incremental branch: count stale packages.
-        $staleCount = (int) db_get_field(
+        $staleCount = TypeCoerce::toInt(db_get_field(
             'SELECT COUNT(*) FROM ?:novoton_hotel_packages
              WHERE synced_at IS NULL OR synced_at < DATE_SUB(NOW(), INTERVAL ?i HOUR)',
             $this->staleHours,
-        );
+        ));
 
         if ($staleCount > 0) {
             $this->logger->output("Found {$staleCount} stale packages (older than {$this->staleHours}h).");
@@ -145,7 +146,7 @@ class BatchedPriceInfoSyncV2 extends AbstractBatchedSync
 
     /**
      * @param array<string, mixed> $options
-     * @return array<string, mixed>
+     * @return list<string>
      */
     #[\Override]
     protected function getItemsToSync(string $syncType, array $options): array
@@ -176,8 +177,9 @@ class BatchedPriceInfoSyncV2 extends AbstractBatchedSync
 
         // Encode composite (hotel_id, package_id) as "hotelId/packageId" string.
         return array_map(
-            static fn (array $row): string => $row['hotel_id'] . '/' . $row['package_id'],
-            $rows,
+            static fn (array $row): string => TypeCoerce::toString($row['hotel_id'] ?? '')
+                . '/' . TypeCoerce::toString($row['package_id'] ?? ''),
+            TypeCoerce::toRowList($rows),
         );
     }
 
@@ -188,7 +190,7 @@ class BatchedPriceInfoSyncV2 extends AbstractBatchedSync
      * package_id) pairs — we preserve that exact pattern here to keep
      * the SQL equivalent. Results are cached keyed by "hotelId/packageId".
      *
-     * @param array<int, string|int> $batch
+     * @param array<int|string, mixed> $batch
      */
     #[\Override]
     protected function preBatch(array $batch): void
@@ -202,7 +204,7 @@ class BatchedPriceInfoSyncV2 extends AbstractBatchedSync
         $whereParts = [];
         $whereParams = [];
         foreach ($batch as $itemId) {
-            [$hotelId, $packageId] = $this->splitItemId((string) $itemId);
+            [$hotelId, $packageId] = $this->splitItemId(TypeCoerce::toString($itemId));
             if ($hotelId === '' || $packageId === '') {
                 continue;
             }
@@ -220,9 +222,9 @@ class BatchedPriceInfoSyncV2 extends AbstractBatchedSync
             ...$whereParams,
         );
 
-        foreach ($rows as $row) {
-            $key = $row['hotel_id'] . '/' . $row['package_id'];
-            $this->packageNameCache[$key] = (string) ($row['package_name'] ?? '');
+        foreach (TypeCoerce::toRowList($rows) as $row) {
+            $key = TypeCoerce::toString($row['hotel_id'] ?? '') . '/' . TypeCoerce::toString($row['package_id'] ?? '');
+            $this->packageNameCache[$key] = TypeCoerce::toString($row['package_name'] ?? '');
         }
     }
 
@@ -267,7 +269,7 @@ class BatchedPriceInfoSyncV2 extends AbstractBatchedSync
             return ['success' => false, 'message' => $e->getMessage(), 'data' => null];
         }
 
-        if (!$priceInfo) {
+        if (empty($priceInfo)) {
             $this->logger->output('API returned empty');
             return ['success' => false, 'message' => 'api_returned_empty', 'data' => null];
         }

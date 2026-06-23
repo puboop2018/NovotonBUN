@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\SphinxHolidays\Api;
 
 use Tygh\Addons\TravelCore\Contracts\ProviderNormalizerInterface;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\TravelConstants;
 
 /**
@@ -77,7 +78,7 @@ class SphinxNormalizer implements ProviderNormalizerInterface
             return null;
         }
 
-        $stars = (int) $rawValue;
+        $stars = TypeCoerce::toInt($rawValue);
         return ($stars >= 1 && $stars <= 5) ? (string) $stars : null;
     }
 
@@ -204,7 +205,6 @@ class SphinxNormalizer implements ProviderNormalizerInterface
     {
         return match (strtolower($sphinxStatus)) {
             'confirmed' => TravelConstants::STATUS_CONFIRMED,
-            'pending', 'on_hold' => TravelConstants::STATUS_PENDING,
             'cancelled', 'canceled' => TravelConstants::STATUS_CANCELLED,
             'rejected', 'failed' => TravelConstants::STATUS_FAILED,
             default => TravelConstants::STATUS_PENDING,

@@ -8,7 +8,7 @@
 
 defined('BOOTSTRAP') or die('Access denied');
 
-/** @var array $schema */
+/** @var array<string, mixed> $schema */
 
 // Shared tab set for all travel_core admin pages
 $tabs = [
@@ -45,9 +45,8 @@ $pages = [
 ];
 
 foreach ($pages as $page) {
-    foreach ($tabs as $key => $tab) {
-        $schema[$page][$key] = $tab;
-    }
+    $existing = isset($schema[$page]) && is_array($schema[$page]) ? $schema[$page] : [];
+    $schema[$page] = array_merge($existing, $tabs);
 }
 
 return $schema;

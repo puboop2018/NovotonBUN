@@ -18,6 +18,7 @@ use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\Services\Container;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Services\PriceInfoFormatter;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
@@ -179,8 +180,7 @@ function fn_novoton_holidays_get_orders_post($params, &$orders): void
         return;
     }
 
-    /** @var list<int> $order_ids */
-    $order_ids = array_values(array_map('intval', array_column($orders, 'order_id')));
+    $order_ids = TypeCoerce::toIntList(array_column($orders, 'order_id'));
     if (empty($order_ids)) {
         return;
     }
@@ -279,7 +279,7 @@ function fn_novoton_holidays_get_order_info(&$order, $additional_data): void
 
         // [1] Hotel location
         if (!empty($hotel_id) && empty($extra['city']) && isset($hotels_cache[$hotel_id])) {
-            $loc = is_array($hotels_cache[$hotel_id]) ? $hotels_cache[$hotel_id] : [];
+            $loc = $hotels_cache[$hotel_id];
             $extra['city']    = PriceInfoFormatter::toScalar($loc['city']    ?? '');
             $extra['region']  = PriceInfoFormatter::toScalar($loc['region']  ?? '');
             $extra['country'] = PriceInfoFormatter::toScalar($loc['country'] ?? '');
@@ -374,9 +374,10 @@ function fn_novoton_holidays_get_order_info(&$order, $additional_data): void
         _nvt_format_order_guests($product);
 
         if ($debugMode && defined('AREA') && AREA === 'A') {
-            $payment_set    = !empty($product['extra']['terms_of_payment_formatted'])      ? 'YES' : 'NO';
-            $payment_amounts = !empty($product['extra']['terms_of_payment_with_amounts'])   ? 'YES' : 'NO';
-            $cancel_set     = !empty($product['extra']['terms_of_cancellation_formatted']) ? 'YES' : 'NO';
+            $dbgExtra = TypeCoerce::toStringMap($product['extra'] ?? null);
+            $payment_set    = !empty($dbgExtra['terms_of_payment_formatted'])      ? 'YES' : 'NO';
+            $payment_amounts = !empty($dbgExtra['terms_of_payment_with_amounts'])   ? 'YES' : 'NO';
+            $cancel_set     = !empty($dbgExtra['terms_of_cancellation_formatted']) ? 'YES' : 'NO';
             fn_set_notification('N', 'DEBUG', "terms_of_payment_formatted: {$payment_set}, with_amounts: {$payment_amounts}, cancellation: {$cancel_set}");
         }
     }
@@ -389,18 +390,15 @@ function fn_novoton_holidays_get_order_info(&$order, $additional_data): void
         $repo = Container::getInstance()->bookingRepository();
         $bookings = $repo->findByOrderId(PriceInfoFormatter::toInt($order['order_id']));
 
+        $dispOrderId = PriceInfoFormatter::toScalar($order['order_id']);
         foreach ($bookings as $booking) {
-            if (!is_array($booking)) {
-                continue;
-            }
             if (PriceInfoFormatter::toScalar($booking['status'] ?? '') === TravelConstants::STATUS_FAILED) {
                 $hotelName = PriceInfoFormatter::toScalar($booking['hotel_name'] ?? '');
-                $dispOrderId = PriceInfoFormatter::toScalar($order['order_id'] ?? '');
                 fn_set_notification('W', __('warning'),
                     __('novoton_holidays.booking_api_failed', [
                         '[hotel]' => $hotelName,
                         '[order_id]' => $dispOrderId,
-                        '[default]' => 'Novoton booking failed for hotel "' . $hotelName . '" in order #' . $order['order_id'] . '. The API submission did not succeed. Please check and resubmit manually.',
+                        '[default]' => 'Novoton booking failed for hotel "' . $hotelName . '" in order #' . $dispOrderId . '. The API submission did not succeed. Please check and resubmit manually.',
                     ])
                 );
                 break; // One notification per order is enough
@@ -443,7 +441,7 @@ function _nvt_enrich_order_product_terms(
         if ($booking_id > 0) {
             $repo = Container::getInstance()->bookingRepository();
             $terms = $repo->getTerms($booking_id);
-            if (!empty($terms) && is_array($terms)) {
+            if (!empty($terms)) {
                 $payment_raw  = PriceInfoFormatter::toScalar($terms['terms_of_payment_raw'] ?? '');
                 $cancel_raw   = PriceInfoFormatter::toScalar($terms['terms_of_cancellation_raw'] ?? '');
                 $payment_text = PriceInfoFormatter::toScalar($terms['terms_of_payment_formatted'] ?? '');

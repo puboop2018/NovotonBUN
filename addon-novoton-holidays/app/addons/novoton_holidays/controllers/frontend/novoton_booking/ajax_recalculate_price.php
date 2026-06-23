@@ -11,6 +11,7 @@ use Tygh\Registry;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Services\PriceInfoFormatter;
 use Tygh\Addons\TravelCore\Services\CurrencyService;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
     // Scoped error handler: log warnings to CS-Cart log, prevent any output.
     // This replaces the old blanket error_reporting(0) — real errors are still
@@ -38,7 +39,7 @@ use Tygh\Addons\TravelCore\Services\CurrencyService;
         // Registry may not be available in edge cases; debug stays disabled
     }
 
-    $debug_log = function($msg, $data = null) use (&$debug_enabled, &$debug_messages) {
+    $debug_log = function(string $msg, $data = null) use (&$debug_enabled, &$debug_messages) {
         if (!$debug_enabled) return;
         $entry = date('H:i:s') . ' ' . $msg;
         if ($data !== null) {
@@ -52,7 +53,7 @@ use Tygh\Addons\TravelCore\Services\CurrencyService;
     $debug_log('=== NEW PRICE RECALCULATION REQUEST ===');
 
     // Helper function to send JSON response and exit
-    $sendJson = function($response) use (&$debug_enabled, &$debug_messages, &$_nvt_caught_warnings) {
+    $sendJson = function(array $response) use (&$debug_enabled, &$debug_messages, &$_nvt_caught_warnings) {
         // Include debug log in response when debug is enabled
         if ($debug_enabled && !empty($debug_messages)) {
             $response['_debug'] = $debug_messages;
@@ -116,22 +117,19 @@ use Tygh\Addons\TravelCore\Services\CurrencyService;
     }
 
     // Validate check_in is a valid date format (YYYY-MM-DD)
-    if ($check_in && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $check_in)) {
+    if ($check_in !== '' && preg_match('/^\d{4}-\d{2}-\d{2}$/', $check_in) !== 1) {
         $debug_log('ERROR: Invalid check_in format', $check_in);
         $sendJson(['success' => false, 'message' => 'Invalid check-in date format']);
     }
 
     // A73s: Ensure children_ages is an array of integers within valid range
-    if (!is_array($children_ages)) {
-        $children_ages = [];
-    } else {
-        $children_ages = array_map('intval', array_values($children_ages));
-        // Filter to valid child ages (0-17), max 10 children
-        $children_ages = array_filter($children_ages, function($age) {
-            return $age >= 0 && $age <= 17;
-        });
-        $children_ages = array_slice(array_values($children_ages), 0, 10);
-    }
+    // ($children_ages is already narrowed to an array above.)
+    $children_ages = array_map(static fn ($age): int => intval(TypeCoerce::toString($age)), array_values($children_ages));
+    // Filter to valid child ages (0-17), max 10 children
+    $children_ages = array_filter($children_ages, function($age) {
+        return $age >= 0 && $age <= 17;
+    });
+    $children_ages = array_slice(array_values($children_ages), 0, 10);
 
     $debug_log('Parsed children_ages', $children_ages);
 
@@ -146,7 +144,7 @@ use Tygh\Addons\TravelCore\Services\CurrencyService;
     
     // Get API instance
     $api = fn_novoton_holidays_get_api();
-    if (!$api) {
+    if ($api === null) {
         $debug_log('ERROR: API not available');
         $sendJson(['success' => false, 'message' => 'API not available']);
     }
@@ -183,7 +181,7 @@ use Tygh\Addons\TravelCore\Services\CurrencyService;
         $debug_log('API Last Response (first 2000 chars)', substr($rawResponse, 0, 2000));
 
         // Direct Price element — filter by board_id to avoid reading a different board's price
-        if ($response && isset($response->Price)) {
+        if ($response instanceof \SimpleXMLElement && isset($response->Price)) {
             $minMatch = fn_novoton_min_price_from_xml($response, $room_id_decoded, $board_id);
             if ($minMatch !== null && $minMatch['price'] > 0) {
                 $new_price    = $minMatch['price'];
@@ -215,7 +213,7 @@ use Tygh\Addons\TravelCore\Services\CurrencyService;
 
             $debug_log('Fallback API Last Response (first 2000 chars)', substr($api->getLastResponse(), 0, 2000));
 
-            if (!$response) {
+            if (!($response instanceof \SimpleXMLElement)) {
                 $debug_log('ERROR: No response from API');
                 $sendJson([
                     'success' => false,
@@ -310,7 +308,7 @@ use Tygh\Addons\TravelCore\Services\CurrencyService;
         }
 
         // Apply commission so displayed price matches customer-facing price
-        $new_price = $pricing->applyCommission($new_price);
+        $new_price = $pricing->applyCommission(TypeCoerce::toFloat($new_price));
 
         // Price stays in API currency (EUR); formatter applies display coefficient for rendering
 
@@ -318,7 +316,7 @@ use Tygh\Addons\TravelCore\Services\CurrencyService;
         $room_changed = false;
         $original_room = $room_id_decoded;
         if (!empty($matched_room) && !empty($original_room)) {
-            $room_changed = (strcasecmp(trim($matched_room), trim($original_room)) !== 0);
+            $room_changed = (strcasecmp(trim(TypeCoerce::toString($matched_room)), trim($original_room)) !== 0);
         }
 
         $debug_log('Room change check', [

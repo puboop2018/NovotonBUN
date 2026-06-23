@@ -3,6 +3,8 @@
  * Sphinx Holidays - Admin permissions schema
  */
 
+/** @var array<string, mixed> $schema */
+
 $schema['sphinx_holidays'] = [
     'permissions' => ['GET', 'POST'],
 ];

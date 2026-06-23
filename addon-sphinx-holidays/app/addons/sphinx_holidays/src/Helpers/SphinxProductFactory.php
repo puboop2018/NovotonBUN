@@ -48,10 +48,14 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
     public function loadValidCountryCodes(): void
     {
         if (empty($this->validCountryCodes)) {
-            $this->validCountryCodes = db_get_hash_single_array(
+            $codes = [];
+            foreach (TypeCoerce::toStringMap(db_get_hash_single_array(
                 "SELECT code, code FROM ?:countries WHERE status = 'A'",
                 ['code', 'code'],
-            );
+            )) as $code => $value) {
+                $codes[$code] = TypeCoerce::toString($value);
+            }
+            $this->validCountryCodes = $codes;
         }
     }
 
@@ -59,7 +63,7 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
      * {@inheritdoc}
      * @param array<string, mixed> $hotel
      * @param array<string, mixed> $hierarchy
-     * @return array<string, mixed>
+     * @return array{status: string, product_id: int, reason: string}
      */
     #[\Override]
     public function createFromHotel(array $hotel, array $hierarchy): array
@@ -82,10 +86,10 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
         $productCode = $cc . $hotelId;
 
         // Check if product already exists (re-run after partial failure)
-        $existingProductId = (int) db_get_field(
+        $existingProductId = TypeCoerce::toInt(db_get_field(
             'SELECT product_id FROM ?:products WHERE product_code = ?s',
             $productCode,
-        );
+        ));
         if ($existingProductId > 0) {
             $this->hotelRepo->linkToProduct($hotelId, $existingProductId);
             return ['status' => 'linked', 'product_id' => $existingProductId, 'reason' => 'existing'];
@@ -111,14 +115,14 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
         }
         $categoryId = $this->categoryCache[$cacheKey];
 
-        if (!$categoryId) {
+        if ($categoryId === 0) {
             $this->skipRepo->markSkipped($hotelId, 'category_failed');
             return ['status' => 'failed', 'product_id' => 0, 'reason' => "category: {$countryName} under root {$rootCategoryId}"];
         }
 
         // Skip hotels without description if setting is enabled
         if (ConfigProvider::shouldSkipNoDescription()) {
-            $description = trim((string) ($hotel['description'] ?? ''));
+            $description = TypeCoerce::toString($hotel['description'] ?? '');
             if ($description === '') {
                 $this->skipRepo->markSkipped($hotelId, 'no_description');
                 return ['status' => 'skipped', 'product_id' => 0, 'reason' => 'no description'];
@@ -127,7 +131,7 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
 
         // Skip hotels without star classification (0 stars) if setting is enabled
         if (ConfigProvider::shouldSkipUnratedHotels()) {
-            $classification = (int) ($hotel['classification'] ?? 0);
+            $classification = TypeCoerce::toInt($hotel['classification'] ?? 0);
             if ($classification < 1 || $classification > 5) {
                 $this->skipRepo->markSkipped($hotelId, 'unrated');
                 return ['status' => 'skipped', 'product_id' => 0, 'reason' => 'no star classification'];
@@ -136,18 +140,18 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
 
         // Deduplicate: same hotel can appear under different IDs from different suppliers.
         // Three-tier detection — each tier checks if a duplicate already has a CS-Cart product.
-        $destId = (int) ($hotel['destination_id'] ?? 0);
-        $lat = (float) ($hotel['latitude'] ?? 0);
-        $lng = (float) ($hotel['longitude'] ?? 0);
-        $regionId = (int) ($hotel['region_id'] ?? 0);
-        $propType = (string) ($hotel['property_type'] ?? 'hotel');
-        $classif = (int) ($hotel['classification'] ?? 0);
+        $destId = TypeCoerce::toInt($hotel['destination_id'] ?? 0);
+        $lat = TypeCoerce::toFloat($hotel['latitude'] ?? 0);
+        $lng = TypeCoerce::toFloat($hotel['longitude'] ?? 0);
+        $regionId = TypeCoerce::toInt($hotel['region_id'] ?? 0);
+        $propType = TypeCoerce::toString($hotel['property_type'] ?? 'hotel');
+        $classif = TypeCoerce::toInt($hotel['classification'] ?? 0);
 
         $dupeProductId = 0;
 
         // Tier 1: name + property_type + classification + region_id + country_code
         if ($regionId > 0) {
-            $dupeProductId = (int) db_get_field(
+            $dupeProductId = TypeCoerce::toInt(db_get_field(
                 'SELECT product_id FROM ?:sphinx_hotels
                  WHERE name = ?s AND property_type = ?s AND classification = ?i
                    AND region_id = ?i AND country_code = ?s
@@ -159,12 +163,12 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
                 $regionId,
                 $cc,
                 $hotelId,
-            );
+            ));
         }
 
         // Tier 2: name + coordinates with ROUND(,3) tolerance (~110m)
         if ($dupeProductId === 0 && $lat !== 0.0 && $lng !== 0.0) {
-            $dupeProductId = (int) db_get_field(
+            $dupeProductId = TypeCoerce::toInt(db_get_field(
                 'SELECT product_id FROM ?:sphinx_hotels
                  WHERE name = ?s
                    AND ROUND(latitude, 3) = ROUND(?d, 3) AND ROUND(longitude, 3) = ROUND(?d, 3)
@@ -174,12 +178,12 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
                 $lat,
                 $lng,
                 $hotelId,
-            );
+            ));
         }
 
         // Tier 3: name + property_type + classification + destination_id (fallback)
         if ($dupeProductId === 0 && $destId > 0) {
-            $dupeProductId = (int) db_get_field(
+            $dupeProductId = TypeCoerce::toInt(db_get_field(
                 'SELECT product_id FROM ?:sphinx_hotels
                  WHERE name = ?s AND property_type = ?s AND classification = ?i
                    AND destination_id = ?i
@@ -190,7 +194,7 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
                 $classif,
                 $destId,
                 $hotelId,
-            );
+            ));
         }
 
         if ($dupeProductId > 0) {
@@ -214,15 +218,15 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
         ], $seoFields);
 
         $configuredLanguages = ConfigProvider::getProductLanguages();
-        $primaryLang = !empty($configuredLanguages) ? reset($configuredLanguages) : CART_LANGUAGE;
+        $primaryLang = TypeCoerce::toString(!empty($configuredLanguages) ? reset($configuredLanguages) : CART_LANGUAGE);
 
         $productName = $productData['product'] ?? '';
         if (!is_string($productName) || trim($productName) === '') {
             $productData['product'] = $hotel['name'];
         }
 
-        $productId = (int) fn_update_product($productData, 0, $primaryLang);
-        if (!$productId) {
+        $productId = TypeCoerce::toInt(fn_update_product($productData, 0, $primaryLang));
+        if ($productId === 0) {
             fn_log_event('general', 'runtime', [
                 'message' => 'Sphinx: fn_update_product() returned 0 — product not created',
                 'hotel_id' => $hotelId,
@@ -288,7 +292,7 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
     public function resolveCountryName(array $hotel, array $hierarchy): string
     {
         $countryName = ($hierarchy['country'] ?? '') ?: ($hotel['country_name'] ?? '');
-        return $countryName ?: ($hotel['country_code'] ?? '');
+        return TypeCoerce::toString($countryName ?: ($hotel['country_code'] ?? ''));
     }
 
     /**
@@ -300,8 +304,8 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
      */
     public static function buildPlaceholders(array $hotel, array $hierarchy = []): array
     {
-        $cityName = ($hierarchy['city'] ?? '') ?: ($hotel['destination_name'] ?? '');
-        $countryName = ($hierarchy['country'] ?? '') ?: ($hotel['country_name'] ?? '');
+        $cityName = TypeCoerce::toString(($hierarchy['city'] ?? '') ?: ($hotel['destination_name'] ?? ''));
+        $countryName = TypeCoerce::toString(($hierarchy['country'] ?? '') ?: ($hotel['country_name'] ?? ''));
 
         // Extract facility names from JSON
         $facilities = [];
@@ -309,7 +313,7 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
             $facilitiesData = is_string($hotel['facilities_json']) ? json_decode($hotel['facilities_json'], true) : $hotel['facilities_json'];
             if (is_array($facilitiesData)) {
                 foreach ($facilitiesData as $f) {
-                    $name = is_array($f) ? ($f['name'] ?? $f['title'] ?? '') : (string) $f;
+                    $name = is_array($f) ? TypeCoerce::toString($f['name'] ?? $f['title'] ?? '') : TypeCoerce::toString($f);
                     if ($name !== '') {
                         $facilities[] = $name;
                     }
@@ -322,30 +326,30 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
         if (!empty($hotel['boards_json'])) {
             $boardsData = is_string($hotel['boards_json']) ? json_decode($hotel['boards_json'], true) : $hotel['boards_json'];
             if (is_array($boardsData)) {
-                $boards = array_map('strval', $boardsData);
+                $boards = TypeCoerce::toStringList($boardsData);
             }
         }
 
         return [
-            'name' => $hotel['name'] ?? '',
-            'classification' => $hotel['classification'] ?? '',
-            'stars_emoji' => fn_travel_core_build_star_emoji((int) ($hotel['classification'] ?? 0)),
+            'name' => TypeCoerce::toString($hotel['name'] ?? ''),
+            'classification' => TypeCoerce::toString($hotel['classification'] ?? ''),
+            'stars_emoji' => fn_travel_core_build_star_emoji(TypeCoerce::toInt($hotel['classification'] ?? 0)),
             'city' => $cityName,
             'country' => $countryName,
-            'region' => $hotel['region_name'] ?? '',
-            'property_type' => $hotel['property_type'] ?? 'hotel',
-            'description' => $hotel['description'] ?? '',
-            'rating' => $hotel['rating'] ?? '',
+            'region' => TypeCoerce::toString($hotel['region_name'] ?? ''),
+            'property_type' => TypeCoerce::toString($hotel['property_type'] ?? 'hotel'),
+            'description' => TypeCoerce::toString($hotel['description'] ?? ''),
+            'rating' => TypeCoerce::toString($hotel['rating'] ?? ''),
             'facilities' => $facilities,
             'boards' => $boards,
             'board_types' => $boards,
-            'latitude' => $hotel['latitude'] ?? '',
-            'longitude' => $hotel['longitude'] ?? '',
-            'image_url' => $hotel['image_url'] ?? '',
-            'address' => $hotel['address'] ?? '',
-            'phone' => $hotel['phone'] ?? '',
-            'email' => $hotel['email'] ?? '',
-            'website' => $hotel['website'] ?? '',
+            'latitude' => TypeCoerce::toString($hotel['latitude'] ?? ''),
+            'longitude' => TypeCoerce::toString($hotel['longitude'] ?? ''),
+            'image_url' => TypeCoerce::toString($hotel['image_url'] ?? ''),
+            'address' => TypeCoerce::toString($hotel['address'] ?? ''),
+            'phone' => TypeCoerce::toString($hotel['phone'] ?? ''),
+            'email' => TypeCoerce::toString($hotel['email'] ?? ''),
+            'website' => TypeCoerce::toString($hotel['website'] ?? ''),
             'year' => date('Y'),
         ];
     }

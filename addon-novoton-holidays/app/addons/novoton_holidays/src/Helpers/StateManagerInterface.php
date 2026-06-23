@@ -85,7 +85,7 @@ interface StateManagerInterface
     /**
      * Get the next batch of item IDs to process.
      *
-     * @return array<string, mixed> Array of item IDs
+     * @return list<mixed> Array of item IDs
      */
     public function getNextBatch(int $batchSize): array;
 

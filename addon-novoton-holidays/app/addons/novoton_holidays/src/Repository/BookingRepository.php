@@ -118,7 +118,7 @@ class BookingRepository implements BookingRepositoryInterface
 
         // guests_data — always normalize to canonical keyed format
         if (!empty($booking['guests_data'])) {
-            $booking['guests_data_parsed'] = (new GuestDataNormalizer())->normalize($booking['guests_data']);
+            $booking['guests_data_parsed'] = (new GuestDataNormalizer())->normalize(TypeCoerce::toStringMap($booking['guests_data']));
         } else {
             $booking['guests_data_parsed'] = [];
         }
@@ -367,7 +367,7 @@ class BookingRepository implements BookingRepositoryInterface
                AND created_at < DATE_SUB(NOW(), INTERVAL ?i HOUR)',
             $hours,
         );
-        return (int) $affected;
+        return TypeCoerce::toInt($affected);
     }
 
     /**
@@ -379,11 +379,11 @@ class BookingRepository implements BookingRepositoryInterface
      */
     public function linkToUserBySession(int $user_id, string $session_id): int
     {
-        $affected = (int) db_query(
+        $affected = TypeCoerce::toInt(db_query(
             'UPDATE ?:novoton_bookings SET user_id = ?i WHERE session_id = ?s AND user_id = 0 AND order_id = 0',
             $user_id,
             $session_id,
-        );
+        ));
 
         if ($affected > 0) {
             // Mirror the new owner onto travel_bookings for these bookings
@@ -413,11 +413,11 @@ class BookingRepository implements BookingRepositoryInterface
             $email,
         ));
 
-        $affected = (int) db_query(
+        $affected = TypeCoerce::toInt(db_query(
             'UPDATE ?:novoton_bookings SET user_id = ?i WHERE guest_email = ?s AND user_id = 0',
             $user_id,
             $email,
-        );
+        ));
 
         if ($affected > 0) {
             $this->syncRepo->assignUser($user_id, $id_strings);
@@ -440,7 +440,7 @@ class BookingRepository implements BookingRepositoryInterface
         ));
         $this->syncRepo->deleteByBookingIds($id_strings);
 
-        return (int) db_query('DELETE FROM ?:novoton_bookings WHERE product_id = ?i', $product_id);
+        return TypeCoerce::toInt(db_query('DELETE FROM ?:novoton_bookings WHERE product_id = ?i', $product_id));
     }
 
     /**

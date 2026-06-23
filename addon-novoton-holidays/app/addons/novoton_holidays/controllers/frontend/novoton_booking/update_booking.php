@@ -24,10 +24,18 @@ use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
     }
 
     // Verify booking ownership before allowing update
-    /** @var array<string, mixed> $auth */
-    $auth = is_array(Tygh::$app['session']['auth'] ?? null) ? Tygh::$app['session']['auth'] : [];
+    // CS-Cart's session is an ArrayAccess container object; a plain (non-reference)
+    // local binds the same object handle, so offset reads below operate on the
+    // live session exactly as direct `Tygh::$app['session'][...]` access would.
+    $session = Tygh::$app['session'];
+    if (!is_array($session) && !$session instanceof \ArrayAccess) {
+        $session = [];
+    }
+    $auth = TypeCoerce::toStringMap($session['auth'] ?? null);
     $current_user_id = PriceInfoFormatter::toInt($auth['user_id'] ?? 0);
-    $current_session_id = TypeCoerce::toString(Tygh::$app['session']->getID());
+    $current_session_id = (is_object($session) && method_exists($session, 'getID'))
+        ? TypeCoerce::toString($session->getID())
+        : '';
 
     $ownershipRepo = _nvt_booking_ownership_repo();
     $ownership_check = $ownershipRepo->checkOwnership($booking_id, $current_user_id, $current_session_id);
@@ -42,11 +50,11 @@ use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
     }
 
     // Process guest information — sanitize via SecurityService
-    $guests = is_array($bookingData['guests'] ?? null) ? $security->sanitizeGuestData($bookingData['guests']) : [];
+    $guests = is_array($bookingData['guests'] ?? null) ? $security->sanitizeGuestData(TypeCoerce::toStringMap($bookingData['guests'])) : [];
     $raw_contact = is_array($bookingData['contact'] ?? null) ? $bookingData['contact'] : [];
     $contact = [
         'email' => filter_var(trim(PriceInfoFormatter::toScalar($raw_contact['email'] ?? '')), FILTER_SANITIZE_EMAIL),
-        'phone' => preg_replace('/[^\d\s\+\-\(\)]/', '', trim(PriceInfoFormatter::toScalar($raw_contact['phone'] ?? ''))),
+        'phone' => preg_replace('/[^\d\s+()-]/', '', trim(PriceInfoFormatter::toScalar($raw_contact['phone'] ?? ''))),
     ];
     // Get check-in date for age validation
     /** @var array<string, mixed>|null $existing_for_checkin */
@@ -60,7 +68,7 @@ use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
     }
     
     // Extract parsed data
-    $guests_data = $parsed_guests['guests_data'];
+    $guests_data = TypeCoerce::toStringMap($parsed_guests['guests_data'] ?? []);
     $guest_names = $parsed_guests['guest_names'];
     $guest_list = $parsed_guests['guest_list'];
     $holder_name = $parsed_guests['holder_name'];
@@ -72,7 +80,7 @@ use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
         ? $existing_for_checkin
         : _nvt_booking_repo()->findById($booking_id);
 
-    if (empty($existing_booking) || !is_array($existing_booking)) {
+    if (empty($existing_booking)) {
         fn_set_notification('E', __('error'), __('novoton_holidays.invalid_booking_data'));
         return [CONTROLLER_STATUS_REDIRECT, 'checkout.cart'];
     }
@@ -119,7 +127,7 @@ use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
                 $room_num = (is_int($room_idx) ? $room_idx : 0) + 1;
                 $room_guests = [];
                 foreach ($api_guests as $guest) {
-                    if (isset($guest['room']) && $guest['room'] === $room_num) {
+                    if ($guest['room'] === $room_num) {
                         $room_guests[] = $guest;
                     }
                 }
@@ -156,7 +164,17 @@ use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
 
     // Update cart item if cart_id provided
     if (!empty($cart_id)) {
+        // Narrow the session array once so the reference binds below see a
+        // typed array shape (CS-Cart's reference-based cart flow needs live
+        // refs into Tygh::$app['session'] for fn_save_cart_content /
+        // fn_calculate_cart_content to persist their mutations).
+        $session = is_array(Tygh::$app['session'] ?? null) ? Tygh::$app['session'] : [];
+        $session['cart'] = is_array($session['cart'] ?? null) ? $session['cart'] : [];
+        $session['auth'] = is_array($session['auth'] ?? null) ? $session['auth'] : [];
+        Tygh::$app['session'] = $session;
+
         $cart = &Tygh::$app['session']['cart'];
+        $cart['products'] = is_array($cart['products'] ?? null) ? $cart['products'] : [];
 
         // Find the cart item — try exact cart_id first, then fall back to
         // searching by booking_id (handles cases where cart was rebuilt
@@ -166,7 +184,7 @@ use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
             $target_cart_id = $cart_id;
         } else {
             // Fallback: find cart item by novoton_booking_id
-            $cartProducts = is_array($cart['products'] ?? null) ? $cart['products'] : [];
+            $cartProducts = $cart['products'];
             foreach ($cartProducts as $cid => $item) {
                 if (!is_array($item)) {
                     continue;
@@ -180,18 +198,27 @@ use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
         }
 
         if ($target_cart_id !== null) {
-            $cart['products'][$target_cart_id]['extra']['guest_names'] = $guest_list;
-            $cart['products'][$target_cart_id]['extra']['holder_name'] = $holder_name;
-            $cart['products'][$target_cart_id]['extra']['guests_data'] = (new GuestDataNormalizer())->toJson($guests_data);
-            $cart['products'][$target_cart_id]['extra']['contact_email'] = $contact['email'] ?: '';
-            $cart['products'][$target_cart_id]['extra']['contact_phone'] = $contact['phone'] ?? '';
+            // Bind a live reference into the target product's extra bag so the
+            // mutations below persist on the session cart, then ensure the
+            // nested 'extra' slot is an array before writing keyed values.
+            $target_product = &$cart['products'][$target_cart_id];
+            if (!is_array($target_product)) {
+                $target_product = [];
+            }
+            $target_product['extra'] = is_array($target_product['extra'] ?? null) ? $target_product['extra'] : [];
+            $target_extra = &$target_product['extra'];
+            $target_extra['guest_names'] = $guest_list;
+            $target_extra['holder_name'] = $holder_name;
+            $target_extra['guests_data'] = (new GuestDataNormalizer())->toJson($guests_data);
+            $target_extra['contact_email'] = $contact['email'] ?: '';
+            $target_extra['contact_phone'] = $contact['phone'] ?? '';
+            unset($target_product, $target_extra);
 
             // Persist extras to DB BEFORE recalculating — fn_calculate_cart_content()
             // reloads product data from the stored cart, which would overwrite the
             // extras we just set if they haven't been saved first.
             $auth = &Tygh::$app['session']['auth'];
-            $authArr = is_array($auth) ? $auth : [];
-            $authUserId = PriceInfoFormatter::toInt($authArr['user_id'] ?? 0);
+            $authUserId = PriceInfoFormatter::toInt($auth['user_id'] ?? 0);
             fn_save_cart_content($cart, $authUserId);
 
             // Now recalculate (reloads extras from DB — our saved values survive)

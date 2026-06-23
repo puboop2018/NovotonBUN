@@ -7,6 +7,7 @@ namespace Tygh\Addons\SphinxHolidays\Services;
 use Tygh\Addons\SphinxHolidays\Contracts\DestinationSyncServiceInterface;
 use Tygh\Addons\SphinxHolidays\Repository\DestinationRepository;
 use Tygh\Addons\SphinxHolidays\SphinxApi;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Helpers\ValidationHelpers;
 
 /**
@@ -104,7 +105,7 @@ class DestinationSyncService extends AbstractSyncService implements DestinationS
                 if (!is_array($item)) {
                     continue;
                 }
-                $normalized = $this->normalizeDestination($item);
+                $normalized = $this->normalizeDestination(TypeCoerce::toStringMap($item));
                 if ($normalized !== null) {
                     $pageBatch[] = $normalized;
                     $stats['total'] = ValidationHelpers::toInt($stats['total'] ?? 0) + 1;

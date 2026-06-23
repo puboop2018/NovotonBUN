@@ -16,8 +16,24 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Services;
 
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+
 class PriceInfoCalculator
 {
+    /**
+     * Maps numeric IdAge codes to their human-readable age-type labels.
+     *
+     * Numeric-string keys are normalised to int array keys by PHP.
+     *
+     * @var array<int, string>
+     */
+    private const array AGE_TYPE_MAP = [
+        '1' => 'ADULT',
+        '2' => 'CHD 0-1.99',
+        '3' => 'CHD 2-11.99',
+        '4' => 'CHD 12-17.99',
+    ];
+
     private float $commission;
 
     private PriceInfoParser $parser;
@@ -40,12 +56,15 @@ class PriceInfoCalculator
     public function calculateBasePrice(array $occupancy, array $seasonsByNight, string $roomId, string $boardId, int $nights): array
     {
         $priceinfo = $this->parser->getPriceinfo() ?? [];
-        $seasonPrices = $priceinfo['season_price'] ?? [];
-        if (!is_array($seasonPrices)) {
-            $seasonPrices = [];
+        $rawSeasonPrices = $priceinfo['season_price'] ?? [];
+        if (!is_array($rawSeasonPrices)) {
+            $rawSeasonPrices = [];
         }
-        if (isset($seasonPrices['IdRoom'])) {
-            $seasonPrices = [$seasonPrices];
+        if (isset($rawSeasonPrices['IdRoom'])) {
+            // Single season_price row → normalise to a one-element row list.
+            $seasonPrices = [TypeCoerce::toStringMap($rawSeasonPrices)];
+        } else {
+            $seasonPrices = TypeCoerce::toRowList($rawSeasonPrices);
         }
 
         $total = 0.0;
@@ -72,9 +91,6 @@ class PriceInfoCalculator
         }
 
         foreach ($seasonsByNight as $nightIdx => $nightInfo) {
-            if (!is_array($nightInfo)) {
-                continue;
-            }
             $nightTotal = 0.0;
             $seasonNum = PriceInfoFormatter::toInt($nightInfo['season'] ?? 1);
             $priceKey = 'Price' . $seasonNum;
@@ -88,7 +104,7 @@ class PriceInfoCalculator
                 $adultAccType = PriceInfoFormatter::toScalar($adult['acc_type'] ?? '');
                 $row = $this->findSeasonPriceRow($seasonPrices, $roomId, $boardId, $adultAgeType, $adultAccType, $nights);
 
-                if ($row) {
+                if ($row !== null) {
                     $isRoomPrice = PriceInfoFormatter::toScalar($row['RoomPrice'] ?? 'No') === 'Yes';
                     $isExtraBed = str_contains(strtolower($adultAccType), 'extra');
 
@@ -149,17 +165,17 @@ class PriceInfoCalculator
                     $ageTypeBy1Ad = $childAgeType . ' BY 1 AD';
                     $row = $this->findSeasonPriceRow($seasonPrices, $roomId, $boardId, $ageTypeBy1Ad, $childAccType, $nights);
 
-                    if (!$row) {
+                    if ($row === null) {
                         $ageTypeBy1AdLower = $childAgeType . ' by 1 ad';
                         $row = $this->findSeasonPriceRow($seasonPrices, $roomId, $boardId, $ageTypeBy1AdLower, $childAccType, $nights);
                     }
                 }
 
-                if (!$row) {
+                if ($row === null) {
                     $row = $this->findSeasonPriceRow($seasonPrices, $roomId, $boardId, $childAgeType, $childAccType, $nights);
                 }
 
-                if ($row) {
+                if ($row !== null) {
                     $childRoomPrice = PriceInfoFormatter::toScalar($row['RoomPrice'] ?? 'No') === 'Yes';
                     $isExtraBed = str_contains(strtolower($childAccType), 'extra');
 
@@ -230,15 +246,12 @@ class PriceInfoCalculator
 
     /**
      * Find the base code row for percentage calculations
-     * @param array<string, mixed> $seasonPrices
+     * @param list<array<string, mixed>> $seasonPrices
      * @return array<string, mixed>|null
      */
     public function findBaseCodeRow(array $seasonPrices, string $roomId, string $boardId): ?array
     {
         foreach ($seasonPrices as $row) {
-            if (!is_array($row)) {
-                continue;
-            }
             $rowRoom = PriceInfoFormatter::toScalar($row['IdRoom'] ?? '');
             $rowBoard = PriceInfoFormatter::toScalar($row['IdBoard'] ?? '');
             $code = PriceInfoFormatter::toScalar($row['Code'] ?? '');
@@ -255,24 +268,14 @@ class PriceInfoCalculator
      *
      * Uses exact matching for all fields (room, board, age type, acc type).
      * When multiple rows match, picks the most specific (largest FromDays).
-     * @param array<string, mixed> $seasonPrices
+     * @param list<array<string, mixed>> $seasonPrices
      * @return array<string, mixed>|null
      */
     public function findSeasonPriceRow(array $seasonPrices, string $roomId, string $boardId, string $ageType, string $accType, int $nights): ?array
     {
-        static $ageTypeMap = [
-            '1' => 'ADULT',
-            '2' => 'CHD 0-1.99',
-            '3' => 'CHD 2-11.99',
-            '4' => 'CHD 12-17.99',
-        ];
-
         $candidates = [];
 
         foreach ($seasonPrices as $row) {
-            if (!is_array($row)) {
-                continue;
-            }
             $rowRoom = PriceInfoFormatter::toScalar($row['IdRoom'] ?? '');
             $rowBoard = PriceInfoFormatter::toScalar($row['IdBoard'] ?? '');
             $rowAcc = PriceInfoFormatter::toScalar($row['IdAcc'] ?? '');
@@ -281,7 +284,7 @@ class PriceInfoCalculator
                 $rowAge = $row['fAge'];
             } else {
                 $rawIdAge = PriceInfoFormatter::toScalar($row['IdAge'] ?? '');
-                $rowAge = $ageTypeMap[$rawIdAge] ?? $rawIdAge;
+                $rowAge = self::AGE_TYPE_MAP[PriceInfoFormatter::toInt($rawIdAge)] ?? $rawIdAge;
             }
 
             if ($rowAcc === '') {
@@ -325,8 +328,7 @@ class PriceInfoCalculator
 
         usort($candidates, fn ($a, $b): int => $b['fromDays'] <=> $a['fromDays']);
 
-        /** @var array<string, mixed> */
-        return is_array($candidates[0]['row'] ?? null) ? $candidates[0]['row'] : [];
+        return $candidates[0]['row'];
     }
 
     /**
@@ -407,7 +409,7 @@ class PriceInfoCalculator
 
             if ($baseRef !== '' && isset($codeIndex[$baseRef])) {
                 $baseRow = $this->findBestBaseRow(
-                    $codeIndex[$baseRef],
+                    TypeCoerce::toRowList($codeIndex[$baseRef]),
                     PriceInfoFormatter::toScalar($row['IdRoom'] ?? ''),
                     PriceInfoFormatter::toScalar($row['IdBoard'] ?? ''),
                 );
@@ -469,7 +471,7 @@ class PriceInfoCalculator
 
     private function log(string $message, mixed $data = null): void
     {
-        if ($this->logger) {
+        if ($this->logger !== null) {
             ($this->logger)($message, $data);
         }
     }

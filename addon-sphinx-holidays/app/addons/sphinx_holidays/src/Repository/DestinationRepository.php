@@ -41,9 +41,6 @@ class DestinationRepository
 
         $affected = 0;
         foreach ($destinations as $dest) {
-            if (!is_array($dest)) {
-                continue;
-            }
             $id = TypeCoerce::toInt($dest['destination_id'] ?? 0);
             if ($id <= 0) {
                 continue;
@@ -290,7 +287,7 @@ class DestinationRepository
      * all 200k+ rows in a single query. ~80 bytes/row × 200k ≈ 16 MB.
      *
      * @param array<string> $columns Columns to select (must include destination_id)
-     * @param callable $mapper fn(array $row): array — transforms each row into the stored value
+     * @param callable(array<string, mixed>): array<string, mixed> $mapper transforms each row into the stored value
      * @return array<int, array<string, mixed>> Keyed by destination_id
      */
     private function loadChunked(array $columns, callable $mapper): array
@@ -495,10 +492,10 @@ class DestinationRepository
      */
     public function countCitiesByCountry(string $countryCode): int
     {
-        return (int) db_get_field(
+        return TypeCoerce::toInt(db_get_field(
             "SELECT COUNT(*) FROM ?:sphinx_destinations WHERE country_code = ?s AND type IN ('city','destination')",
             $countryCode,
-        );
+        ));
     }
 
     /**

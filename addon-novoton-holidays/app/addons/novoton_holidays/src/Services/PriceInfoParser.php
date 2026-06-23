@@ -349,7 +349,7 @@ class PriceInfoParser
 
     private function log(string $message, mixed $data = null): void
     {
-        if ($this->logger) {
+        if ($this->logger !== null) {
             ($this->logger)($message, $data);
         }
     }

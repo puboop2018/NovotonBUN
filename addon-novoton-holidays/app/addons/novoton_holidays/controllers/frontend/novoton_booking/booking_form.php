@@ -186,7 +186,7 @@ use Tygh\Addons\TravelCore\Services\CurrencyService;
         $hotel_stars = str_repeat('★', PriceInfoFormatter::toInt($hotel_info['star_rating']));
     } elseif (!empty($hotelName)) {
         // Try to extract stars from hotel name (e.g. "Hotel Name ****")
-        if (preg_match('/(\*+)/', $hotelName, $matches)) {
+        if (preg_match('/(\*+)/', $hotelName, $matches) === 1) {
             $hotel_stars = $matches[1];
         }
     }
@@ -228,7 +228,7 @@ use Tygh\Addons\TravelCore\Services\CurrencyService;
             $rooms_db = isset($roomsRaw['IdRoom']) ? [$roomsRaw] : TypeCoerce::toRowList($hotelData['rooms']);
             foreach ($rooms_db as $r) {
                 $rid = TypeCoerce::toString($r['IdRoom'] ?? $r['id'] ?? '');
-                if ($rid) $room_limits[$rid] = $r;
+                if ($rid !== '' && $rid !== '0') $room_limits[$rid] = $r;
             }
         }
     }
@@ -236,9 +236,9 @@ use Tygh\Addons\TravelCore\Services\CurrencyService;
     // If not in DB, fetch from API
     if (empty($age_categories) || empty($room_limits)) {
         $api = fn_novoton_holidays_get_api();
-        if ($api) {
-            $hotelInfoResponse = $api->hotels()->getHotelInfo($booking['hotel_id']);
-            if ($hotelInfoResponse && isset($hotelInfoResponse->hotels->hotel)) {
+        if ($api !== null) {
+            $hotelInfoResponse = $api->hotels()->getHotelInfo(TypeCoerce::toString($booking['hotel_id']));
+            if ((bool) $hotelInfoResponse && isset($hotelInfoResponse->hotels->hotel)) {
                 $h = $hotelInfoResponse->hotels->hotel;
                 
                 // Parse age categories
@@ -310,7 +310,9 @@ use Tygh\Addons\TravelCore\Services\CurrencyService;
     $view->assign('hotel_stars', $hotel_stars);
     $view->assign('package_name', $package_name);
     $view->assign('hotel_all_packages', $all_packages);
-    $view->assign('auth', TypeCoerce::toStringMap(Tygh::$app['session']['auth'] ?? []));
+    $session = Tygh::$app['session'];
+    $sessionAuth = (is_array($session) || $session instanceof \ArrayAccess) ? ($session['auth'] ?? []) : [];
+    $view->assign('auth', TypeCoerce::toStringMap($sessionAuth));
 
     // Calendar prices: per-date approximate total for the cheapest room
     // Uses guest count to calculate realistic per-night totals

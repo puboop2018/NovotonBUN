@@ -89,7 +89,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             return [CONTROLLER_STATUS_DENIED];
         }
 
-        $excluded = isset($_POST['excluded_resorts']) ? $_POST['excluded_resorts'] : [];
+        $excluded = $_POST['excluded_resorts'] ?? [];
 
         $clean_excluded = [];
         if (is_array($excluded)) {
@@ -486,7 +486,7 @@ if ($mode === 'view_hotel') {
     $hotelRepo = Container::getInstance()->hotelRepository();
     $hotel = $hotelRepo->findById($hotel_id);
 
-    if (!$hotel) {
+    if (empty($hotel)) {
         fn_set_notification('E', __('error'), 'Hotel not found');
         return [CONTROLLER_STATUS_REDIRECT, 'novoton_holidays.hotels'];
     }

@@ -121,9 +121,6 @@ class SyncImagesCommand extends AbstractSyncCommand
             $stats['total'] += count($hotels);
 
             foreach ($hotels as $hotel) {
-                if (!is_array($hotel)) {
-                    continue;
-                }
                 $hotelId = TypeCoerce::toString($hotel['hotel_id'] ?? '');
                 $productId = TypeCoerce::toInt($hotel['product_id'] ?? 0);
                 $imagesJson = TypeCoerce::toString($hotel['images_json'] ?? '');
@@ -275,8 +272,6 @@ class SyncImagesCommand extends AbstractSyncCommand
             $limitClause,
         );
 
-        /** @var array<string, mixed>[] $result */
-        $result = is_array($rows) ? $rows : [];
-        return $result;
+        return TypeCoerce::toRowList($rows);
     }
 }

@@ -18,7 +18,7 @@ interface CartServiceInterface
      * Check rate limit for the current user/session.
      * Returns a controller redirect tuple if the limit is exceeded, or null.
      *
-     * @return array<string, mixed>|null
+     * @return array<int, mixed>|null
      */
     public function checkRateLimit(string $errorRedirect = 'index.index'): ?array;
 
@@ -26,7 +26,7 @@ interface CartServiceInterface
      * Check for an existing pending booking with the same offer_id.
      * Returns a redirect array if a duplicate is found, null otherwise.
      *
-     * @return array<string, mixed>|null
+     * @return array<int, mixed>|null
      */
     public function checkDuplicate(string $offerId, string $redirectUrl = 'checkout.cart'): ?array;
 

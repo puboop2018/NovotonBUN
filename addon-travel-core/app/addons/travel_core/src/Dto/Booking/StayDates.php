@@ -45,7 +45,7 @@ final readonly class StayDates
     {
         $in = strtotime($checkIn);
         $out = strtotime($checkOut);
-        if (!$in || !$out || $out <= $in) {
+        if (!TypeCoerce::toBool($in) || !TypeCoerce::toBool($out) || $out <= $in) {
             return 0;
         }
         return (int) (($out - $in) / 86400);

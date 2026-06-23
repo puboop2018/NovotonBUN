@@ -21,6 +21,7 @@ declare(strict_types=1);
 use Tygh\Addons\NovotonHolidays\Helpers\JsonDecoder;
 use Tygh\Addons\NovotonHolidays\Services\Container;
 use Tygh\Addons\NovotonHolidays\Services\PriceInfoFormatter;
+use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Registry;
 
@@ -39,7 +40,8 @@ use Tygh\Addons\TravelCore\TravelConstants;
  */
 function fn_novoton_holidays_get_cart_product_data_post(&$product, $cart, $auth): void
 {
-    if (!empty($product['extra']['novoton_booking'])) {
+    $extra = TypeCoerce::toStringMap($product['extra'] ?? null);
+    if (!empty($extra['novoton_booking'])) {
         fn_novoton_holidays_add_booking_display_data($product);
     }
 }
@@ -75,9 +77,6 @@ function fn_novoton_holidays_calculate_cart_items(&$cart, &$cart_products, $auth
     // Group by product_id
     $bookings_by_product = [];
     foreach ($all_bookings as $booking) {
-        if (!is_array($booking)) {
-            continue;
-        }
         $bProdId = PriceInfoFormatter::toScalar($booking['product_id'] ?? '');
         $bookings_by_product[$bProdId][] = $booking;
     }
@@ -107,10 +106,6 @@ function fn_novoton_holidays_calculate_cart_items(&$cart, &$cart_products, $auth
         }
 
         foreach ($bookings_by_product[$product_id] as $booking) {
-            if (!is_array($booking)) {
-                continue;
-            }
-            /** @var array<string, mixed> $booking */
             $bookingId = PriceInfoFormatter::toInt($booking['booking_id'] ?? 0);
             if (in_array($bookingId, $used_booking_ids, true)) {
                 continue;
@@ -151,9 +146,11 @@ function fn_novoton_holidays_calculate_cart_items_post(&$cart, &$cart_products, 
  */
 function fn_novoton_holidays_checkout_pre_dispatch(array &$cart, array &$auth, ?int $storefront_id = null): void
 {
+    $view = fn_novoton_holidays_get_view();
+
     if (fn_novoton_holidays_is_debug()) {
-        \Tygh\Tygh::$app['view']->assign('novoton_checkout_debug', true);
-        \Tygh\Tygh::$app['view']->assign('novoton_debug_cart_products', $cart['products'] ?? []);
+        $view->assign('novoton_checkout_debug', true);
+        $view->assign('novoton_debug_cart_products', $cart['products'] ?? []);
     }
 
     // Pass any pending price change alerts to the checkout template.
@@ -161,7 +158,7 @@ function fn_novoton_holidays_checkout_pre_dispatch(array &$cart, array &$auth, ?
     $detector = Container::getInstance()->priceChangeDetector();
     $alerts = $detector->peekAlerts();
     if (!empty($alerts)) {
-        \Tygh\Tygh::$app['view']->assign('novoton_price_change_alerts', $alerts);
+        $view->assign('novoton_price_change_alerts', $alerts);
     }
 }
 
@@ -175,7 +172,10 @@ function fn_novoton_holidays_dispatch_before_display(): void
     // Explicit registration ensures Smarty 5 finds the modifier even if
     // auto-discovery of smarty_modifier_* functions is disabled.
     try {
-        \Tygh\Tygh::$app['view']->registerPlugin('modifier', 'json_decode', 'smarty_modifier_json_decode');
+        $view = fn_novoton_holidays_get_view();
+        if (method_exists($view, 'registerPlugin')) {
+            $view->registerPlugin('modifier', 'json_decode', 'smarty_modifier_json_decode');
+        }
     } catch (\Throwable $e) {
         // Silently ignore if already registered or view not available
     }
@@ -183,7 +183,7 @@ function fn_novoton_holidays_dispatch_before_display(): void
         fn_novoton_holidays_register_smarty_modifiers();
     }
 
-    $dispatch = $_REQUEST['dispatch'] ?? '';
+    $dispatch = RequestCoerce::string($_REQUEST, 'dispatch');
 
     // Meta variable null-safety for our frontend controllers only.
     // Admin pages do not render meta.tpl and must not receive array-typed
@@ -205,7 +205,7 @@ function fn_novoton_holidays_dispatch_before_display(): void
         }
 
         if ($needs_css) {
-            $styles = Registry::get('runtime.styles') ?: [];
+            $styles = TypeCoerce::toList(Registry::get('runtime.styles') ?: []);
             $css_path = 'addons/novoton_holidays/styles.css';
             if (!in_array($css_path, $styles)) {
                 $styles[] = $css_path;
@@ -273,7 +273,7 @@ function _nvt_inject_booking_into_cart_product(
     $extra['holder_name'] = PriceInfoFormatter::toScalar($booking['holder_name'] ?? '');
     $extra['guest_names'] = PriceInfoFormatter::toScalar($booking['guest_name'] ?? '');
     $extra['guests_data'] = class_exists(\Tygh\Addons\TravelCore\Services\GuestDataNormalizer::class)
-        ? (new \Tygh\Addons\TravelCore\Services\GuestDataNormalizer())->toJson($booking['guests_data'] ?? '')
+        ? (new \Tygh\Addons\TravelCore\Services\GuestDataNormalizer())->toJson(TypeCoerce::toString($booking['guests_data'] ?? ''))
         : PriceInfoFormatter::toScalar($booking['guests_data'] ?? '');
     $extra['total_price'] = PriceInfoFormatter::toFloat($booking['total_price'] ?? 0);
     $extra['package_name'] = PriceInfoFormatter::toScalar($booking['package_name'] ?? '');
@@ -289,8 +289,10 @@ function _nvt_inject_booking_into_cart_product(
     $product['extra'] = $extra;
 
     // Sync back to cart session
-    if (isset($cart['products'][$cart_id]) && is_array($cart['products'][$cart_id])) {
-        $cart['products'][$cart_id]['extra'] = $extra;
+    if (is_array($cart['products'] ?? null) && isset($cart['products'][$cart_id]) && is_array($cart['products'][$cart_id])) {
+        $cartProduct = $cart['products'][$cart_id];
+        $cartProduct['extra'] = $extra;
+        $cart['products'][$cart_id] = $cartProduct;
     }
 }
 
@@ -309,13 +311,15 @@ function fn_novoton_holidays_add_booking_display_data(array &$product, ?array $c
     /** @var array<string, mixed> $bdExtra */
     $bdExtra = is_array($product['extra'] ?? null) ? $product['extra'] : [];
     $board_id = PriceInfoFormatter::toScalar($bdExtra['board_id'] ?? '');
-    $product['extra']['board_name'] = fn_novoton_holidays_format_board_name($board_id);
+    $bdExtra['board_name'] = fn_novoton_holidays_format_board_name($board_id);
 
     $room_id = PriceInfoFormatter::toScalar($bdExtra['room_id'] ?? '');
     $room_type = PriceInfoFormatter::toScalar($bdExtra['room_type'] ?? '');
-    $product['extra']['room_type_display'] = fn_novoton_holidays_format_room_type($room_id, $room_type);
-    $product['extra']['room_name'] = PriceInfoFormatter::toScalar($bdExtra['room_name'] ?? '')
+    $bdExtra['room_type_display'] = fn_novoton_holidays_format_room_type($room_id, $room_type);
+    $bdExtra['room_name'] = PriceInfoFormatter::toScalar($bdExtra['room_name'] ?? '')
         ?: str_replace(['%2b', '%2B'], '+', $room_id);
+
+    $product['extra'] = $bdExtra;
 
     if (class_exists(\Tygh\Addons\TravelCore\Services\BookingDisplayService::class)) {
         \Tygh\Addons\TravelCore\Services\BookingDisplayService::addBookingDisplayData($product, $cart, [
@@ -339,6 +343,9 @@ function fn_novoton_holidays_add_booking_display_data(array &$product, ?array $c
 function _nvt_ensure_meta_variables(): void
 {
     $view = \Tygh\Tygh::$app['view'];
+    if (!is_object($view) || !method_exists($view, 'getTemplateVars') || !method_exists($view, 'assign')) {
+        return;
+    }
 
     $default_title = __('novoton_holidays.search_results') ?: 'Search Results';
 

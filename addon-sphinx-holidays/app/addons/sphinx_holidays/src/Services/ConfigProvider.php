@@ -6,6 +6,7 @@ namespace Tygh\Addons\SphinxHolidays\Services;
 
 use Tygh\Addons\SphinxHolidays\Contracts\ConfigProviderInterface;
 use Tygh\Addons\SphinxHolidays\Repository\DestinationWhitelistRepository;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Services\AbstractConfigProvider;
 use Tygh\Registry;
 
@@ -28,12 +29,12 @@ class ConfigProvider extends AbstractConfigProvider implements ConfigProviderInt
 
     public static function getApiBaseUrl(): string
     {
-        return rtrim((string) self::getSetting('api_base_url'), '/');
+        return rtrim(TypeCoerce::toString(self::getSetting('api_base_url')), '/');
     }
 
     public static function getApiKey(): string
     {
-        return (string) self::getSetting('api_key');
+        return TypeCoerce::toString(self::getSetting('api_key'));
     }
 
     public static function isApiCacheEnabled(): bool
@@ -43,12 +44,12 @@ class ConfigProvider extends AbstractConfigProvider implements ConfigProviderInt
 
     public static function getCacheTtlSearch(): int
     {
-        return max(0, (int) self::getSetting('cache_ttl_search', 900));
+        return max(0, TypeCoerce::toInt(self::getSetting('cache_ttl_search', 900)));
     }
 
     public static function getDefaultCurrency(): string
     {
-        return (string) self::getSetting('default_currency', 'EUR');
+        return TypeCoerce::toString(self::getSetting('default_currency', 'EUR'));
     }
 
     /** @return array<string, string> Currency code => display symbol */
@@ -62,22 +63,22 @@ class ConfigProvider extends AbstractConfigProvider implements ConfigProviderInt
 
     public static function getIgnoreDomains(): string
     {
-        return (string) self::getSetting('ignore_domains', '');
+        return TypeCoerce::toString(self::getSetting('ignore_domains', ''));
     }
 
     public static function getSearchPollInterval(): int
     {
-        return max(1, (int) self::getSetting('search_poll_interval', 2));
+        return max(1, TypeCoerce::toInt(self::getSetting('search_poll_interval', 2)));
     }
 
     public static function getSearchMaxPolls(): int
     {
-        return max(1, (int) self::getSetting('search_max_polls', 30));
+        return max(1, TypeCoerce::toInt(self::getSetting('search_max_polls', 30)));
     }
 
     public static function getCommission(): float
     {
-        return (float) self::getSetting('commission', 0);
+        return TypeCoerce::toFloat(self::getSetting('commission', 0));
     }
 
     public static function shouldRoundPrices(): bool
@@ -87,7 +88,7 @@ class ConfigProvider extends AbstractConfigProvider implements ConfigProviderInt
 
     public static function getHotelsCategoryId(): int
     {
-        return (int) self::getSetting('hotels_category_id', 0);
+        return TypeCoerce::toInt(self::getSetting('hotels_category_id', 0));
     }
 
     /** CS-Cart runtime company context — 1 in single-store mode. */
@@ -99,42 +100,42 @@ class ConfigProvider extends AbstractConfigProvider implements ConfigProviderInt
 
     public static function getPackagesCategoryId(): int
     {
-        return (int) self::getSetting('packages_category_id', 0);
+        return TypeCoerce::toInt(self::getSetting('packages_category_id', 0));
     }
 
     public static function getCircuitsCategoryId(): int
     {
-        return (int) self::getSetting('circuits_category_id', 0);
+        return TypeCoerce::toInt(self::getSetting('circuits_category_id', 0));
     }
 
     public static function getExperiencesCategoryId(): int
     {
-        return (int) self::getSetting('experiences_category_id', 0);
+        return TypeCoerce::toInt(self::getSetting('experiences_category_id', 0));
     }
 
     public static function getMaxRetries(): int
     {
-        return max(0, (int) self::getSetting('api_max_retries', 3));
+        return max(0, TypeCoerce::toInt(self::getSetting('api_max_retries', 3)));
     }
 
     public static function getRetryDelayMs(): int
     {
-        return max(0, (int) self::getSetting('api_retry_delay_ms', 500));
+        return max(0, TypeCoerce::toInt(self::getSetting('api_retry_delay_ms', 500)));
     }
 
     public static function getRetryMultiplier(): float
     {
-        return max(1.0, (float) self::getSetting('api_retry_multiplier', 2));
+        return max(1.0, TypeCoerce::toFloat(self::getSetting('api_retry_multiplier', 2)));
     }
 
     public static function getCircuitBreakerThreshold(): int
     {
-        return max(1, (int) self::getSetting('circuit_breaker_threshold', 5));
+        return max(1, TypeCoerce::toInt(self::getSetting('circuit_breaker_threshold', 5)));
     }
 
     public static function getCircuitBreakerTimeout(): int
     {
-        return max(1, (int) self::getSetting('circuit_breaker_timeout', 60));
+        return max(1, TypeCoerce::toInt(self::getSetting('circuit_breaker_timeout', 60)));
     }
 
     public static function isDebugLogging(): bool
@@ -155,7 +156,7 @@ class ConfigProvider extends AbstractConfigProvider implements ConfigProviderInt
 
     public static function getCronAccessKey(): string
     {
-        return (string) self::getSetting('cron_access_key');
+        return TypeCoerce::toString(self::getSetting('cron_access_key'));
     }
 
     /**
@@ -163,12 +164,12 @@ class ConfigProvider extends AbstractConfigProvider implements ConfigProviderInt
      */
     public static function getProductCodePrefix(): string
     {
-        return (string) self::getSetting('product_code_prefix', 'SPX');
+        return TypeCoerce::toString(self::getSetting('product_code_prefix', 'SPX'));
     }
 
     public static function getDefaultProductQuantity(): int
     {
-        return max(0, (int) self::getSetting('default_product_quantity', 777));
+        return max(0, TypeCoerce::toInt(self::getSetting('default_product_quantity', 777)));
     }
 
     /**
@@ -218,10 +219,10 @@ class ConfigProvider extends AbstractConfigProvider implements ConfigProviderInt
 
         // CS-Cart may return an array (multiple checkboxes) or a comma-separated string
         if (is_array($value)) {
-            return array_values(array_filter(array_map('trim', $value)));
+            return array_values(array_filter(TypeCoerce::toStringList($value)));
         }
 
-        $value = (string) $value;
+        $value = TypeCoerce::toString($value);
         if (empty($value)) {
             return [];
         }
@@ -231,7 +232,7 @@ class ConfigProvider extends AbstractConfigProvider implements ConfigProviderInt
     /**
      * Get selected country codes for hotel sync filtering.
      *
-     * @return string[] Uppercase country codes (e.g. ['GR', 'BG', 'TR'])
+     * @return list<string> Uppercase country codes (e.g. ['GR', 'BG', 'TR'])
      */
     public static function getSelectedCountryCodes(): array
     {
@@ -253,11 +254,11 @@ class ConfigProvider extends AbstractConfigProvider implements ConfigProviderInt
         }
 
         // Sphinx keys have format: digits|alphanumeric (e.g. 51|q3s6ZrK7...)
-        if (!preg_match('/^\d+\|[a-zA-Z0-9]+$/', $key)) {
+        if (preg_match('/^\d+\|[a-zA-Z0-9]+$/', $key) !== 1) {
             return false;
         }
 
-        if (!filter_var($url, FILTER_VALIDATE_URL) || !str_starts_with($url, 'https://')) {
+        if (filter_var($url, FILTER_VALIDATE_URL) === false || !str_starts_with($url, 'https://')) {
             return false;
         }
 
@@ -272,13 +273,13 @@ class ConfigProvider extends AbstractConfigProvider implements ConfigProviderInt
      * Used by circuit, experience, and package route sync services
      * for client-side filtering.
      *
-     * @return int[] Destination IDs allowed by sync targets (empty = nothing configured)
+     * @return list<int> Destination IDs allowed by sync targets (empty = nothing configured)
      */
     public static function getAllowedDestinationIds(): array
     {
         static $cached = null;
         if ($cached !== null) {
-            return $cached;
+            return TypeCoerce::toIntList($cached);
         }
 
         self::migrateFromLegacySetting();
@@ -290,7 +291,7 @@ class ConfigProvider extends AbstractConfigProvider implements ConfigProviderInt
             $cached = [];
         }
 
-        return $cached;
+        return TypeCoerce::toIntList($cached);
     }
 
     /**
@@ -301,7 +302,7 @@ class ConfigProvider extends AbstractConfigProvider implements ConfigProviderInt
      * explicitly listed destinations.
      *
      * @param list<array<string, mixed>> $entries Rows from sphinx_destination_whitelist
-     * @return int[] Deduplicated destination IDs
+     * @return list<int> Deduplicated destination IDs
      */
     private static function resolveWhitelistEntries(array $entries): array
     {
@@ -310,7 +311,7 @@ class ConfigProvider extends AbstractConfigProvider implements ConfigProviderInt
 
         // Collect all destination IDs and identify which need country expansion
         foreach ($entries as $entry) {
-            $destId = (int) $entry['destination_id'];
+            $destId = TypeCoerce::toInt($entry['destination_id']);
             $allIds[] = $destId;
 
             if ($entry['selection_type'] === 'all') {
@@ -353,7 +354,7 @@ class ConfigProvider extends AbstractConfigProvider implements ConfigProviderInt
             return; // Whitelist already has data, no migration needed
         }
 
-        $val = (string) self::getSetting('selected_destinations', '');
+        $val = TypeCoerce::toString(self::getSetting('selected_destinations', ''));
         $tokens = array_filter(array_map('trim', explode(',', $val)));
         if (empty($tokens)) {
             return;

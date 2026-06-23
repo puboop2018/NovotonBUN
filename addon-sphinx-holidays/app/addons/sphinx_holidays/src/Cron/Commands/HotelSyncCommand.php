@@ -54,13 +54,13 @@ class HotelSyncCommand extends AbstractSyncCommand
         // Allow CLI override: country=GR or country=GR,BG
         $countryCodes = [];
         if (!empty($params['country'])) {
-            $countryCodes = array_filter(array_map(fn ($c) => strtoupper(trim($c)), explode(',', $params['country'])));
+            $countryCodes = array_filter(array_map(fn ($c) => strtoupper(trim($c)), explode(',', TypeCoerce::toString($params['country']))));
         }
 
         // Allow CLI override: destination_ids=1234,5678
         $destinationIds = [];
         if (!empty($params['destination_ids'])) {
-            $destinationIds = array_map('intval', array_filter(explode(',', $params['destination_ids'])));
+            $destinationIds = array_map('intval', array_filter(explode(',', TypeCoerce::toString($params['destination_ids']))));
         }
 
         if (empty($countryCodes) && empty($destinationIds)) {

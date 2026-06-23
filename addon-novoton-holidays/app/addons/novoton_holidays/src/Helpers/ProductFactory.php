@@ -18,6 +18,7 @@ use Tygh\Addons\NovotonHolidays\Api\Contracts\HotelApiClientInterface;
 use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 class ProductFactory implements ProductFactoryInterface
 {
@@ -38,8 +39,8 @@ class ProductFactory implements ProductFactoryInterface
      */
     public function createFromHotel(array $hotel, HotelApiClientInterface $api, int $categoryId): ?int
     {
-        $hotelId = $hotel['hotel_id'];
-        $hotelName = $hotel['hotel_name'] ?? '';
+        $hotelId = TypeCoerce::toString($hotel['hotel_id'] ?? '');
+        $hotelName = TypeCoerce::toString($hotel['hotel_name'] ?? '');
 
         $productCode = $this->dbHelper->getProductCode($hotelId);
 
@@ -55,19 +56,21 @@ class ProductFactory implements ProductFactoryInterface
                 $existingProductId,
                 $hotelId,
             );
-            return (int)$existingProductId;
+            return TypeCoerce::toInt($existingProductId);
         }
 
         // Format display name (Title Case + append property type for short names)
-        $displayName = function_exists('fn_novoton_holidays_format_hotel_display_name')
-            ? fn_novoton_holidays_format_hotel_display_name($hotelName)
-            : $hotelName;
+        $displayName = TypeCoerce::toString(
+            function_exists('fn_novoton_holidays_format_hotel_display_name')
+                ? fn_novoton_holidays_format_hotel_display_name($hotelName)
+                : $hotelName,
+        );
 
         // Fetch description
         $description = '';
         try {
             $descResponse = $api->getHotelDescription($hotelId, 'UK');
-            if ($descResponse && isset($descResponse->Description)) {
+            if (isset($descResponse->Description)) {
                 $description = (string)$descResponse->Description;
             }
         } catch (ApiException $e) {
@@ -95,9 +98,9 @@ class ProductFactory implements ProductFactoryInterface
             $productData['product'] = $displayName;
         }
 
-        $productId = fn_update_product($productData, 0, CART_LANGUAGE);
+        $productId = TypeCoerce::toInt(fn_update_product($productData, 0, CART_LANGUAGE));
 
-        if (!$productId) {
+        if ($productId === 0) {
             return null;
         }
 
@@ -133,7 +136,7 @@ class ProductFactory implements ProductFactoryInterface
         try {
             $imagesResponse = $api->getHotelImages($hotelId);
 
-            if (!$imagesResponse || !isset($imagesResponse->url)) {
+            if (!isset($imagesResponse->url)) {
                 return 0;
             }
 
@@ -190,36 +193,36 @@ class ProductFactory implements ProductFactoryInterface
      * @param array<string, mixed> $hotel Hotel row from novoton_hotels table
      * @param string $displayName Formatted display name (Title Case, with property type)
      * @param string $description API description text
-     * @return array<string, string|array<string, mixed>> Key => value map (keys without braces)
+     * @return array<string, string|list<string>> Key => value map (keys without braces)
      */
     public static function buildNovotonPlaceholders(array $hotel, string $displayName, string $description = ''): array
     {
         // Load facility names from DB
         $facilities = [];
         if (!empty($hotel['hotel_id'])) {
-            $facilities = db_get_fields(
+            $facilities = TypeCoerce::toStringList(db_get_fields(
                 "SELECT f.facility_name_en FROM ?:novoton_hotel_facilities hf
                  JOIN ?:novoton_facilities f ON f.facility_id = hf.facility_id
                  WHERE hf.hotel_id = ?s AND f.facility_name_en != ''
                  LIMIT 5",
-                $hotel['hotel_id'],
-            ) ?: [];
+                TypeCoerce::toString($hotel['hotel_id']),
+            ));
         }
 
         return [
             'name' => $displayName,
-            'raw_name' => $hotel['hotel_name'] ?? '',
-            'city' => $hotel['city'] ?? '',
-            'country' => $hotel['country'] ?? '',
-            'region' => $hotel['region'] ?? '',
-            'star_rating' => $hotel['star_rating'] ?? '',
-            'hotel_type' => $hotel['hotel_type'] ?? '',
-            'property_type' => $hotel['property_type'] ?? 'hotel',
+            'raw_name' => TypeCoerce::toString($hotel['hotel_name'] ?? ''),
+            'city' => TypeCoerce::toString($hotel['city'] ?? ''),
+            'country' => TypeCoerce::toString($hotel['country'] ?? ''),
+            'region' => TypeCoerce::toString($hotel['region'] ?? ''),
+            'star_rating' => TypeCoerce::toString($hotel['star_rating'] ?? ''),
+            'hotel_type' => TypeCoerce::toString($hotel['hotel_type'] ?? ''),
+            'property_type' => TypeCoerce::toString($hotel['property_type'] ?? 'hotel'),
             'year' => date('Y'),
             'description' => $description,
             'facilities' => $facilities,
-            'latitude' => $hotel['latitude'] ?? '',
-            'longitude' => $hotel['longitude'] ?? '',
+            'latitude' => TypeCoerce::toString($hotel['latitude'] ?? ''),
+            'longitude' => TypeCoerce::toString($hotel['longitude'] ?? ''),
         ];
     }
 }

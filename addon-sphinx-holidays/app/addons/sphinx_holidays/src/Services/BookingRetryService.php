@@ -7,6 +7,7 @@ namespace Tygh\Addons\SphinxHolidays\Services;
 use Tygh\Addons\SphinxHolidays\Contracts\BookingRetryServiceInterface;
 use Tygh\Addons\SphinxHolidays\Repository\SphinxBookingRepository;
 use Tygh\Addons\SphinxHolidays\SphinxApi;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\TravelConstants;
 
 /**
@@ -44,12 +45,12 @@ class BookingRetryService implements BookingRetryServiceInterface
             return ['success' => false, 'message' => 'Only failed bookings can be retried', 'booking_ref' => null];
         }
 
-        $offerId = $booking['offer_id'] ?? '';
+        $offerId = TypeCoerce::toString($booking['offer_id'] ?? '');
         if (empty($offerId)) {
             return ['success' => false, 'message' => 'No offer ID stored — cannot retry', 'booking_ref' => null];
         }
 
-        $bookingType = $booking['room_type'] ?? 'hotel';
+        $bookingType = TypeCoerce::toString($booking['room_type'] ?? 'hotel');
         // Normalize: room_type stores 'circuit', 'experience', or 'package' for non-hotel bookings
         if (!in_array($bookingType, ['circuit', 'experience', 'package'], true)) {
             $bookingType = 'hotel';
@@ -59,16 +60,18 @@ class BookingRetryService implements BookingRetryServiceInterface
         if ($bookingType === 'hotel' || $bookingType === 'package') {
             try {
                 if ($bookingType === 'package') {
-                    $verifyResult = $this->api->verifyPackageOffer($offerId);
+                    $verifyResult = TypeCoerce::toStringMap($this->api->verifyPackageOffer($offerId));
                     // Normalize package verify response
                     if (!empty($verifyResult['data'])) {
-                        $verifyResult = ['available' => !($verifyResult['data']['must_verify'] ?? true)];
+                        $data = TypeCoerce::toStringMap($verifyResult['data']);
+                        $verifyResult = ['available' => !(bool) ($data['must_verify'] ?? true)];
                     }
                 } else {
-                    $verifyResult = $this->api->verifyHotelOffer($offerId);
+                    $verifyResult = TypeCoerce::toStringMap($this->api->verifyHotelOffer($offerId));
                     // Normalize hotel verify response: {data: {must_verify, pricing: {selling_price}}}
                     if (!empty($verifyResult['data'])) {
-                        $verifyResult = ['available' => !($verifyResult['data']['must_verify'] ?? true)];
+                        $data = TypeCoerce::toStringMap($verifyResult['data']);
+                        $verifyResult = ['available' => !(bool) ($data['must_verify'] ?? true)];
                     }
                 }
             } catch (\Throwable $e) {
@@ -87,20 +90,21 @@ class BookingRetryService implements BookingRetryServiceInterface
         try {
             $guestsData = [];
             if (!empty($booking['guests_data'])) {
-                $guestsData = is_string($booking['guests_data'])
+                $rawGuests = is_string($booking['guests_data'])
                     ? json_decode($booking['guests_data'], true)
                     : $booking['guests_data'];
+                $guestsData = TypeCoerce::toStringMap($rawGuests);
             }
 
-            $price = (float)($booking['total_price'] ?? 0);
-            $currency = $booking['currency'] ?? 'EUR';
+            $price = TypeCoerce::toFloat($booking['total_price'] ?? 0);
+            $currency = TypeCoerce::toString($booking['currency'] ?? 'EUR');
 
             $bookResult = $this->submitBooking($bookingType, $offerId, $price, $currency, $booking, $guestsData);
 
             if (!empty($bookResult['booking_reference'])) {
                 $this->repo->updateApiResponse(
                     $bookingId,
-                    $bookResult['booking_reference'],
+                    TypeCoerce::toString($bookResult['booking_reference']),
                     (string) json_encode($bookResult),
                 );
             }
@@ -109,15 +113,19 @@ class BookingRetryService implements BookingRetryServiceInterface
                 'status' => TravelConstants::STATUS_CONFIRMED,
             ]);
 
+            $bookingRef = isset($bookResult['booking_reference'])
+                ? TypeCoerce::toString($bookResult['booking_reference'])
+                : null;
+
             fn_log_event('general', 'runtime', [
                 'message' => "Sphinx booking #{$bookingId} retry succeeded",
-                'booking_ref' => $bookResult['booking_reference'] ?? '',
+                'booking_ref' => $bookingRef ?? '',
             ]);
 
             return [
                 'success' => true,
                 'message' => 'Booking retry successful',
-                'booking_ref' => $bookResult['booking_reference'] ?? null,
+                'booking_ref' => $bookingRef,
             ];
         } catch (\Throwable $e) {
             $this->repo->update($bookingId, [
@@ -152,7 +160,7 @@ class BookingRetryService implements BookingRetryServiceInterface
             'occupancy' => $occupancy,
         ];
         if (!empty($booking['order_id'])) {
-            $payload['reference_code'] = (string) $booking['order_id'];
+            $payload['reference_code'] = TypeCoerce::toString($booking['order_id']);
         }
 
         $result = match ($type) {

@@ -7,6 +7,7 @@ namespace Tygh\Addons\NovotonHolidays\Api;
 use Tygh\Addons\NovotonHolidays\Api\Contracts\HotelApiClientInterface;
 use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\Exceptions\XmlParsingException;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 class HotelApiClient extends ApiClientBase implements HotelApiClientInterface
 {
@@ -57,8 +58,8 @@ class HotelApiClient extends ApiClientBase implements HotelApiClientInterface
     /**
      * 2b. hotelinfo batch - fetch multiple hotels in parallel using curl_multi
      *
-     * @param array<string, mixed> $hotelIds Array of hotel IDs
-     * @return array<string, mixed> hotel_id => SimpleXMLElement|false
+     * @param array<string> $hotelIds Array of hotel IDs
+     * @return array<string, \SimpleXMLElement|false> hotel_id => SimpleXMLElement|false
      */
     #[\Override]
     public function getHotelInfoBatch(array $hotelIds, string $lang = 'UK', int $concurrency = 5): array
@@ -85,7 +86,7 @@ class HotelApiClient extends ApiClientBase implements HotelApiClientInterface
                 $results[$hotelId] = false;
             } else {
                 try {
-                    $results[$hotelId] = $this->xmlParser->cleanAndParse($raw);
+                    $results[$hotelId] = $this->xmlParser->cleanAndParse(is_string($raw) ? $raw : TypeCoerce::toString($raw));
                 } catch (XmlParsingException $e) {
                     fn_log_event('general', 'runtime', ['message' => "Novoton: hotel info parse error for {$hotelId}: " . $e->getMessage()]);
                     $results[$hotelId] = false;

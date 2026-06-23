@@ -34,7 +34,7 @@ class OffersUpdateCommand extends AbstractCronCommand
         $this->output('Checking for new/updated offers (offers_update API)...');
         $this->output('');
 
-        $country = strtoupper($this->getParam('country', Constants::DEFAULT_COUNTRY));
+        $country = strtoupper(TypeCoerce::toString($this->getParam('country', Constants::DEFAULT_COUNTRY)));
 
         $syncRepo = Container::getInstance()->syncLogRepository();
         $last_import = $syncRepo->getLastSyncDate('product_import');
@@ -52,14 +52,14 @@ class OffersUpdateCommand extends AbstractCronCommand
 
         $response = $this->api->destinations()->getOffersUpdate($last_import, $country);
 
-        if (!$response || !isset($response->Offer)) {
+        if (!(bool) $response || !isset($response->Offer)) {
             $this->output('No new offers found.');
             return ['success' => true, 'stats' => ['new_hotels' => 0, 'added_to_cart' => 0]];
         }
 
-        /** @var mixed $offerRaw */
-        $offerRaw = $response->Offer;
-        $offers = is_array($offerRaw) ? $offerRaw : [$offerRaw];
+        // SimpleXMLElement::__get always yields a SimpleXMLElement (never a PHP
+        // array), so the offers are always wrapped in a single-element list.
+        $offers = [$response->Offer];
         $this->output('Found ' . count($offers) . ' offers to check.');
         $this->output('');
 
@@ -87,7 +87,7 @@ class OffersUpdateCommand extends AbstractCronCommand
             if ($existingDto === null) {
                 $this->output('NEW HOTEL - ', false);
                 $hotel_info = $this->api->hotels()->getHotelInfo($hotel_id);
-                if ($hotel_info) {
+                if ((bool) $hotel_info) {
                     $hotel_data = [
                         'hotel_id' => $hotel_id,
                         'hotel_name' => (string)($hotel_info->Hotel ?? $hotel_name),
@@ -121,13 +121,13 @@ class OffersUpdateCommand extends AbstractCronCommand
             // Check CS-Cart core products table
             $existing_product = db_get_field('SELECT product_id FROM ?:products WHERE product_code = ?s', $product_code);
             if ($existing_product) {
-                $hotelRepo->linkToProduct($hotel_id, (int)$existing_product);
+                $hotelRepo->linkToProduct($hotel_id, TypeCoerce::toInt($existing_product));
                 $this->output('linked');
                 continue;
             }
 
             $category_id = \Tygh\Addons\NovotonHolidays\Services\ConfigProvider::getCategoryForCountry($country);
-            if (!$category_id) {
+            if ($category_id === 0) {
                 $category_path = str_replace('{country}', $country, \Tygh\Addons\NovotonHolidays\Constants::PRODUCT_CATEGORY_TEMPLATE);
                 $category_id = fn_novoton_holidays_get_or_create_category($category_path);
             }
@@ -137,7 +137,7 @@ class OffersUpdateCommand extends AbstractCronCommand
             $description = '';
             try {
                 $desc = $this->api->hotels()->getHotelDescription($hotel_id, 'UK');
-                if ($desc && isset($desc->Description)) {
+                if ((bool) $desc && isset($desc->Description)) {
                     $description = (string)$desc->Description;
                 }
             } catch (\Exception $e) {
@@ -175,10 +175,11 @@ class OffersUpdateCommand extends AbstractCronCommand
 
             $product_id = fn_update_product($product_data, 0, CART_LANGUAGE);
             if ($product_id) {
-                $hotelRepo->linkToProduct($hotel_id, TypeCoerce::toInt($product_id));
-                $this->attachImages($hotel_id, $product_id, $image_base_url);
+                $productId = TypeCoerce::toInt($product_id);
+                $hotelRepo->linkToProduct($hotel_id, $productId);
+                $this->attachImages($hotel_id, $productId, $image_base_url);
                 $added_to_cart++;
-                $this->output("ADDED (ID: {$product_id})");
+                $this->output("ADDED (ID: {$productId})");
             } else {
                 $this->output('FAILED');
             }
@@ -210,7 +211,7 @@ class OffersUpdateCommand extends AbstractCronCommand
     {
         try {
             $images = $this->api->hotels()->getHotelImages($hotelId);
-            if ($images && isset($images->url)) {
+            if ((bool) $images && isset($images->url)) {
                 $count = 0;
                 foreach ($images->url as $url) {
                     $image_url = $baseUrl . str_replace(' ', '%20', (string)$url);
@@ -265,7 +266,7 @@ class OffersUpdateCommand extends AbstractCronCommand
             'country' => $hotel['country'] ?? '',
             'region' => $hotel['region'] ?? '',
             'star_rating' => $hotel['star_rating'] ?? '',
-            'stars_emoji' => fn_travel_core_build_star_emoji((int) ($hotel['star_rating'] ?? 0)),
+            'stars_emoji' => fn_travel_core_build_star_emoji(TypeCoerce::toInt($hotel['star_rating'] ?? 0)),
             'hotel_type' => $hotel['hotel_type'] ?? '',
             'property_type' => $hotel['property_type'] ?? 'hotel',
             'year' => date('Y'),

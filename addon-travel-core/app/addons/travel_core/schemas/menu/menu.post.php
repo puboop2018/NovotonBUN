@@ -8,7 +8,11 @@
 
 defined('BOOTSTRAP') or die('Access denied');
 
-/** @var array $schema */
+/** @var array<string, mixed> $schema */
+
+if (!isset($schema['central']) || !is_array($schema['central'])) {
+    $schema['central'] = [];
+}
 
 $schema['central']['travel_core'] = [
     'title' => __('travel_core.admin_menu_travel'),

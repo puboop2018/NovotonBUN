@@ -19,6 +19,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\NovotonHolidays\Services;
 
 use Tygh\Addons\NovotonHolidays\Repository\BookingReportingRepositoryInterface;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
 use Tygh\Addons\TravelCore\TravelConstants;
 use Tygh\Addons\TravelCore\ValueObjects\BoardType;
@@ -39,7 +40,7 @@ class BookingQueryService implements BookingQueryServiceInterface
 
     /**
      * Get booking statistics
-     * @return array<string, mixed>
+     * @return array{total: int, pending: int, confirmed: int, cancelled: int, with_orders: int, orphans: int}
      */
     #[\Override]
     public function getStats(): array
@@ -80,7 +81,7 @@ class BookingQueryService implements BookingQueryServiceInterface
     /**
      * Execute the unified bookings query with filters.
      * @param array<string, mixed> $params
-     * @return array<string, mixed>
+     * @return list<array<string, mixed>>
      */
     private function queryUnifiedBookings(array $params): array
     {
@@ -110,7 +111,7 @@ class BookingQueryService implements BookingQueryServiceInterface
 
         $where_clause = !empty($conditions) ? 'WHERE ' . implode(' AND ', $conditions) : '';
 
-        return db_get_array(
+        return TypeCoerce::toRowList(db_get_array(
             "SELECT nb.*,
                     nh.hotel_name, nh.city AS hotel_city, nh.region AS hotel_region, nh.country AS hotel_country,
                     o.status AS order_status, o.timestamp AS order_timestamp,
@@ -121,7 +122,7 @@ class BookingQueryService implements BookingQueryServiceInterface
              LEFT JOIN ?:orders o ON nb.order_id = o.order_id
              {$where_clause}
              ORDER BY nb.order_id DESC, nb.booking_id DESC",
-        );
+        ));
     }
 
     /**
@@ -177,7 +178,7 @@ class BookingQueryService implements BookingQueryServiceInterface
             'api_response' => $nb['api_response'] ?? null,
             'alternatives_data' => $nb['alternatives_data'] ?? null,
             'order_status' => $nb['order_status'] ?? '',
-            'created_at' => $nb['created_at'] ?? (!empty($nb['order_timestamp']) ? date('Y-m-d H:i:s', (int)$nb['order_timestamp']) : ''),
+            'created_at' => $nb['created_at'] ?? (!empty($nb['order_timestamp']) ? date('Y-m-d H:i:s', TypeCoerce::toInt($nb['order_timestamp'])) : ''),
             '_source' => ($nb['order_id'] > 0) ? 'novoton_bookings' : 'orphan',
         ];
     }
@@ -197,9 +198,9 @@ class BookingQueryService implements BookingQueryServiceInterface
         if (!empty($rooms_data) && is_array($rooms_data)) {
             $room_types = [];
             $board_names = [];
-            foreach ($rooms_data as $room) {
+            foreach (TypeCoerce::toRowList($rooms_data) as $room) {
                 $room_display = $room['room_type_display'] ?? $room['room_name'] ?? $room['room_id'] ?? 'Room';
-                $room_display = str_replace(['%2b', '%2B'], '+', $room_display);
+                $room_display = str_replace(['%2b', '%2B'], '+', TypeCoerce::toString($room_display));
                 $room_types[] = $room_display;
                 if (!empty($room['board_name'])) {
                     $board_names[] = $room['board_name'];
@@ -208,8 +209,8 @@ class BookingQueryService implements BookingQueryServiceInterface
             $booking['room_types_list'] = implode(', ', $room_types);
             $booking['board_display'] = !empty($board_names) ? $board_names[0] : $booking['board_name'];
         } else {
-            $booking['room_types_list'] = $booking['room_type'] ?: RoomType::formatRoomLabel($booking['room_id']);
-            $booking['board_display'] = $booking['board_name'] ?: BoardType::toDisplayName($booking['board_id']);
+            $booking['room_types_list'] = $booking['room_type'] ?: RoomType::formatRoomLabel(TypeCoerce::toString($booking['room_id']));
+            $booking['board_display'] = $booking['board_name'] ?: BoardType::toDisplayName(TypeCoerce::toString($booking['board_id']));
         }
     }
 
@@ -224,14 +225,14 @@ class BookingQueryService implements BookingQueryServiceInterface
             return;
         }
 
-        $guests_data = $this->guestDataNormalizer->normalize($nb['guests_data']);
+        $guests_data = $this->guestDataNormalizer->normalize(TypeCoerce::toString($nb['guests_data']));
         if (empty($guests_data)) {
             return;
         }
 
         $by_room = [];
-        foreach ($guests_data as $guest) {
-            $room_num = $guest['room'] ?? 1;
+        foreach (TypeCoerce::toRowList($guests_data) as $guest) {
+            $room_num = TypeCoerce::toInt($guest['room'] ?? 1);
             if (!isset($by_room[$room_num])) {
                 $by_room[$room_num] = [];
             }

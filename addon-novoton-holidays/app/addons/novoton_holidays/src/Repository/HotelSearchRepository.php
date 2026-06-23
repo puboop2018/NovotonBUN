@@ -372,10 +372,10 @@ class HotelSearchRepository implements HotelSearchRepositoryInterface
             $conditions[] = "has_room_price = 'Y' AND last_price_check IS NOT NULL";
         }
         if (!empty($filters['stars'])) {
-            $conditions[] = db_quote('star_rating = ?i', (int) $filters['stars']);
+            $conditions[] = db_quote('star_rating = ?i', TypeCoerce::toInt($filters['stars']));
         }
         if (!empty($filters['star_rating'])) {
-            $conditions[] = db_quote('star_rating = ?i', (int) $filters['star_rating']);
+            $conditions[] = db_quote('star_rating = ?i', TypeCoerce::toInt($filters['star_rating']));
         }
 
         return !empty($conditions) ? 'WHERE ' . implode(' AND ', $conditions) : '';

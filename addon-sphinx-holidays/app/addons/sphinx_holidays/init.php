@@ -9,12 +9,13 @@ declare(strict_types=1);
  ***************************************************************************/
 
 use Tygh\Registry;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
 // Addon version constant
 if (!defined('SPHINX_HOLIDAYS_VERSION')) {
-    $__sv = Registry::get('addons.sphinx_holidays.version') ?: '0.0.0';
+    $__sv = TypeCoerce::toString(Registry::get('addons.sphinx_holidays.version') ?: '0.0.0');
     define('SPHINX_HOLIDAYS_VERSION', preg_replace('/-.*$/', '', $__sv));
     unset($__sv);
 }

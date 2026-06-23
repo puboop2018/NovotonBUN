@@ -47,7 +47,7 @@ trait OutputWriterTrait
     {
         $formatted = $message . ($newline ? "\n" : '');
 
-        if ($this->output_callback) {
+        if ($this->output_callback !== null) {
             call_user_func($this->output_callback, $formatted);
         } else {
             echo $formatted;

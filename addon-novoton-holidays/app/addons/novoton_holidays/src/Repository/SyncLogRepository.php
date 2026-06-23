@@ -129,7 +129,7 @@ class SyncLogRepository implements SyncLogRepositoryInterface
     {
         // In CS-Cart, db_query returns affected rows count for DELETE
         $affected = db_query('DELETE FROM ?:novoton_sync_log WHERE sync_date < DATE_SUB(NOW(), INTERVAL ?i DAY)', $days);
-        return (int) $affected;
+        return TypeCoerce::toInt($affected);
     }
 
     /**
@@ -198,7 +198,7 @@ class SyncLogRepository implements SyncLogRepositoryInterface
         if ($threshold_id <= 0) {
             return 0;
         }
-        return (int) db_query('DELETE FROM ?:novoton_sync_log WHERE log_id < ?i', $threshold_id);
+        return TypeCoerce::toInt(db_query('DELETE FROM ?:novoton_sync_log WHERE log_id < ?i', $threshold_id));
     }
 
     /**

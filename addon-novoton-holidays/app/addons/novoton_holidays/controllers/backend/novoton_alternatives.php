@@ -29,9 +29,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($request_id > 0) {
             $request = $altRequestRepo->findById($request_id);
-            $request = $request ? fn_novoton_holidays_decrypt_request_pii($request) : $request;
+            $request = !empty($request) ? fn_novoton_holidays_decrypt_request_pii($request) : $request;
 
-            if ($request && !empty($request['novoton_request_id'])) {
+            if (!empty($request) && !empty($request['novoton_request_id'])) {
                 // Load API
                 $src_dir = TypeCoerce::toString(Registry::get('config.dir.addons')) . 'novoton_holidays/src/';
                 if (file_exists($src_dir . 'NovotonApi.php')) {
@@ -41,8 +41,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $api = _nvt_api();
                 $novotonReqId = TypeCoerce::toString($request['novoton_request_id']);
                 $response = $api->reservations()->getAlternatives($novotonReqId);
-                
-                if ($response && isset($response->alternative)) {
+
+                if ((bool) $response && isset($response->alternative)) {
                     $alternatives = [];
                     foreach ($response->alternative as $alt) {
                         $alternatives[] = [
@@ -80,9 +80,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($request_id > 0) {
             $request = $altRequestRepo->findById($request_id);
-            $request = $request ? fn_novoton_holidays_decrypt_request_pii($request) : $request;
+            $request = !empty($request) ? fn_novoton_holidays_decrypt_request_pii($request) : $request;
 
-            if ($request && !empty($request['alternatives_data'])) {
+            if (!empty($request) && !empty($request['alternatives_data'])) {
                 $alternatives = json_decode(TypeCoerce::toString($request['alternatives_data']), true);
 
                 if (!empty($alternatives)) {
@@ -150,7 +150,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $novotonReqId = TypeCoerce::toString($request['novoton_request_id']);
                 $response = $api->reservations()->getAlternatives($novotonReqId);
 
-                if ($response && isset($response->alternative)) {
+                if ((bool) $response && isset($response->alternative)) {
                     $alternatives = [];
                     foreach ($response->alternative as $alt) {
                         $alternatives[] = [
@@ -250,9 +250,9 @@ if ($mode === 'view') {
 
     if ($request_id > 0) {
         $request = $altRequestRepo->findById($request_id);
-        $request = $request ? fn_novoton_holidays_decrypt_request_pii($request) : $request;
+        $request = !empty($request) ? fn_novoton_holidays_decrypt_request_pii($request) : $request;
 
-        if ($request) {
+        if (!empty($request)) {
             if (!empty($request['alternatives_data'])) {
                 $request['alternatives'] = json_decode(TypeCoerce::toString($request['alternatives_data']), true);
             }

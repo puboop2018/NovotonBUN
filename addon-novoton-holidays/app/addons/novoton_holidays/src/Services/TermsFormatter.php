@@ -16,6 +16,8 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Services;
 
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+
 class TermsFormatter
 {
     /**
@@ -35,11 +37,11 @@ class TermsFormatter
         $lines = [];
 
         foreach ($terms as $term) {
-            $percent = isset($term['percent']) ? number_format($term['percent'], 0) : '0';
+            $percent = isset($term['percent']) ? number_format(TypeCoerce::toFloat($term['percent']), 0) : '0';
             $date = $term['date'] ?? '';
 
             if (!empty($date)) {
-                $formattedDate = self::formatDate($date);
+                $formattedDate = self::formatDate(TypeCoerce::toString($date));
                 $lines[] = __('novoton_holidays.payment_percent_until', [
                     '[percent]' => $percent,
                     '[date]' => $formattedDate,
@@ -51,7 +53,7 @@ class TermsFormatter
             }
         }
 
-        return implode("\n", $lines);
+        return implode("\n", TypeCoerce::toStringList($lines));
     }
 
     /**
@@ -78,28 +80,28 @@ class TermsFormatter
             $tillDate = $term['till_date'] ?? '';
             $isLast = ($idx === count($terms) - 1);
 
-            if ($value === 'FREE' || (float) $value === 0.0) {
+            if ($value === 'FREE' || TypeCoerce::toFloat($value) === 0.0) {
                 if (!empty($tillDate)) {
-                    $lines[] = __('novoton_holidays.cancel_free_before', ['[date]' => self::formatDate($tillDate)]);
+                    $lines[] = __('novoton_holidays.cancel_free_before', ['[date]' => self::formatDate(TypeCoerce::toString($tillDate))]);
                 } else {
                     $lines[] = __('novoton_holidays.cancel_free');
                 }
                 $prevTillDate = $tillDate;
-            } elseif ($isLast && $type === 'Percent' && (float) $value >= 100) {
+            } elseif ($isLast && $type === 'Percent' && TypeCoerce::toFloat($value) >= 100) {
                 $lines[] = __('novoton_holidays.cancel_no_show');
             } else {
                 $penaltyStr = '';
                 if ($type === 'Over Nights' || $type === 'Overnights') {
-                    $nights = (int) $value;
+                    $nights = TypeCoerce::toInt($value);
                     $penaltyStr = __('novoton_holidays.cancel_nights_penalty', ['[nights]' => $nights]);
                 } else {
-                    $percent = number_format((float) $value, 0);
+                    $percent = number_format(TypeCoerce::toFloat($value), 0);
                     $penaltyStr = __('novoton_holidays.cancel_percent_penalty', ['[percent]' => $percent]);
                 }
 
                 if (!empty($prevTillDate) && !empty($tillDate)) {
-                    $fromStr = self::formatDate((int) strtotime($prevTillDate . ' +1 day'));
-                    $toStr = self::formatDate($tillDate);
+                    $fromStr = self::formatDate((int) strtotime(TypeCoerce::toString($prevTillDate) . ' +1 day'));
+                    $toStr = self::formatDate(TypeCoerce::toString($tillDate));
                     $lines[] = __('novoton_holidays.cancel_between_dates', [
                         '[from]' => $fromStr,
                         '[to]' => $toStr,
@@ -107,18 +109,18 @@ class TermsFormatter
                     ]);
                 } elseif (!empty($tillDate)) {
                     $lines[] = __('novoton_holidays.cancel_until_date', [
-                        '[date]' => self::formatDate($tillDate),
+                        '[date]' => self::formatDate(TypeCoerce::toString($tillDate)),
                         '[penalty]' => $penaltyStr,
                     ]);
                 } else {
-                    $lines[] = ucfirst($penaltyStr);
+                    $lines[] = ucfirst(TypeCoerce::toString($penaltyStr));
                 }
 
                 $prevTillDate = $tillDate;
             }
         }
 
-        return implode("\n", $lines);
+        return implode("\n", TypeCoerce::toStringList($lines));
     }
 
     /**
@@ -134,7 +136,7 @@ class TermsFormatter
         }
 
         $timestamp = is_numeric($date) ? (int) $date : strtotime((string) $date);
-        if (!$timestamp) {
+        if (empty($timestamp)) {
             return (string) $date;
         }
 
@@ -246,9 +248,9 @@ class TermsFormatter
                     $type = (string) ($rule['Type'] ?? $rule['type'] ?? 'Percent');
 
                     $daysBefore = 0;
-                    if (!empty($tillDate) && $checkInTs) {
+                    if (!empty($tillDate) && !empty($checkInTs)) {
                         $tillTs = strtotime($tillDate);
-                        if ($tillTs) {
+                        if (!empty($tillTs)) {
                             $daysBefore = max(0, ($checkInTs - $tillTs) / 86400);
                         }
                     }
@@ -261,7 +263,7 @@ class TermsFormatter
                         'is_penalty' => ($value > 0),
                     ];
 
-                    if ($value == 0) {
+                    if ($value === 0.0) {
                         $term['value'] = 'FREE';
                         $term['is_penalty'] = false;
                     }
@@ -283,7 +285,7 @@ class TermsFormatter
 
                     if (!empty($checkIn) && $term['days_before'] > 0) {
                         $checkInTs = strtotime($checkIn);
-                        if ($checkInTs) {
+                        if (!empty($checkInTs)) {
                             $term['till_date'] = date('Y-m-d', (int) strtotime("-{$term['days_before']} days", $checkInTs));
                         }
                     }
@@ -316,7 +318,7 @@ class TermsFormatter
         $xmlString = trim($xmlString);
 
         if (!str_starts_with($xmlString, '<')) {
-            if (preg_match('/<!\[CDATA\[(.*?)\]\]>/s', $xmlString, $matches)) {
+            if (preg_match('/<!\[CDATA\[(.*?)]]>/s', $xmlString, $matches) === 1) {
                 $xmlString = $matches[1];
             }
         }

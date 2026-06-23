@@ -11,6 +11,8 @@ declare(strict_types=1);
  * @since 1.0.0
  */
 
+use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Helpers\ValidationHelpers;
 use Tygh\Addons\TravelCore\Services\BookingDisplayService;
 use Tygh\Addons\TravelCore\Services\TravelProviderRegistry;
@@ -31,7 +33,8 @@ if (!defined('BOOTSTRAP')) {
  */
 function fn_travel_core_get_cart_product_data_post(&$product, $cart, $auth): void
 {
-    if (!empty($product['extra']['travel_booking'])) {
+    $extra = TypeCoerce::toStringMap($product['extra'] ?? null);
+    if (!empty($extra['travel_booking'])) {
         BookingDisplayService::addBookingDisplayData($product);
     }
 }
@@ -59,9 +62,16 @@ function fn_travel_core_calculate_cart_items_post(&$cart, &$cart_products, $auth
         if (!empty($roomsDataRaw) && is_string($roomsDataRaw)) {
             $decoded = json_decode($roomsDataRaw, true);
             if (is_array($decoded)) {
-                $product['extra']['rooms_data'] = $decoded;
-                if (isset($cart['products'][$cart_id])) {
-                    $cart['products'][$cart_id]['extra']['rooms_data'] = $decoded;
+                $pExtra['rooms_data'] = $decoded;
+                $product['extra'] = $pExtra;
+                $cartProductsList = $cart['products'] ?? null;
+                if (is_array($cartProductsList) && isset($cartProductsList[$cart_id])) {
+                    $cartRow = TypeCoerce::toStringMap($cartProductsList[$cart_id]);
+                    $cartExtra = TypeCoerce::toStringMap($cartRow['extra'] ?? null);
+                    $cartExtra['rooms_data'] = $decoded;
+                    $cartRow['extra'] = $cartExtra;
+                    $cartProductsList[$cart_id] = $cartRow;
+                    $cart['products'] = $cartProductsList;
                 }
             }
         }
@@ -77,13 +87,13 @@ function fn_travel_core_dispatch_before_display(): void
         return;
     }
 
-    $dispatch = $_REQUEST['dispatch'] ?? '';
+    $dispatch = RequestCoerce::string($_REQUEST, 'dispatch');
 
     // ── CSS loading for booking-related pages ──
     $booking_pages = ['travel_', 'novoton_', 'sphinx_', 'products.', 'checkout', 'cart'];
     foreach ($booking_pages as $prefix) {
         if (str_starts_with($dispatch, $prefix)) {
-            $styles = Registry::get('runtime.styles') ?: [];
+            $styles = TypeCoerce::toList(Registry::get('runtime.styles'));
             $css_path = 'addons/travel_core/styles.css';
             if (!in_array($css_path, $styles)) {
                 $styles[] = $css_path;
@@ -108,16 +118,18 @@ function fn_travel_core_dispatch_before_display(): void
         $hotelSeoData = TravelProviderRegistry::resolveProductOwner($productId, $productCode);
         if ($productCode !== '' && $hotelSeoData !== null) {
             $view = \Tygh\Tygh::$app['view'];
-            $view->assign('travel_booking_product_id', $productId);
-            $view->assign('travel_booking_product_code', $productCode);
+            if ($view instanceof \Smarty) {
+                $view->assign('travel_booking_product_id', $productId);
+                $view->assign('travel_booking_product_code', $productCode);
 
-            // Register the React scripts via CS-Cart's inline script mechanism
-            $cacheVer = defined('TRAVEL_CACHE_VER') ? TRAVEL_CACHE_VER : '1';
-            $baseUrl = Registry::get('config.current_location');
-            $view->assign('travel_booking_scripts', [
-                $baseUrl . '/js/addons/travel_core/react-vendor.js?v=' . $cacheVer,
-                $baseUrl . '/js/addons/travel_core/react19-bundle.js?v=' . $cacheVer,
-            ]);
+                // Register the React scripts via CS-Cart's inline script mechanism
+                $cacheVer = TypeCoerce::toString(defined('TRAVEL_CACHE_VER') ? TRAVEL_CACHE_VER : '1');
+                $baseUrl = TypeCoerce::toString(Registry::get('config.current_location'));
+                $view->assign('travel_booking_scripts', [
+                    $baseUrl . '/js/addons/travel_core/react-vendor.js?v=' . $cacheVer,
+                    $baseUrl . '/js/addons/travel_core/react19-bundle.js?v=' . $cacheVer,
+                ]);
+            }
         }
 
         _travel_core_prepare_hotel_seo_data($productId);
@@ -151,14 +163,13 @@ function _travel_core_prepare_hotel_seo_data(int $productId): void
     }
 
     // Load product descriptions for page_title and meta_description
-    /** @var array<string, mixed> $productDesc */
-    $productDesc = db_get_row(
+    $productDescRaw = db_get_row(
         'SELECT page_title, meta_description, full_description FROM ?:product_descriptions WHERE product_id = ?i AND lang_code = ?s',
         $productId,
         CART_LANGUAGE,
     );
 
-    $productDesc = is_array($productDesc) ? $productDesc : [];
+    $productDesc = is_array($productDescRaw) ? $productDescRaw : [];
 
     // Build JSON-LD schema
     $schema = [
@@ -214,11 +225,13 @@ function _travel_core_prepare_hotel_seo_data(int $productId): void
     // runs BEFORE template rendering starts (unlike gather_additional_product_data_post
     // which runs DURING rendering and causes the Data.php:265 crash).
     $view = \Tygh\Tygh::$app['view'];
-    $view->assign('travel_hotel_schema_json', json_encode($schema, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
-    $view->assign('travel_og_title', $productDesc['page_title'] ?? $hotel->name);
-    $view->assign('travel_og_description', $productDesc['meta_description'] ?? '');
-    $view->assign('travel_og_image', $hotel->imageUrl ?? '');
-    $view->assign('travel_og_type', 'hotel');
+    if ($view instanceof \Smarty) {
+        $view->assign('travel_hotel_schema_json', json_encode($schema, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+        $view->assign('travel_og_title', $productDesc['page_title'] ?? $hotel->name);
+        $view->assign('travel_og_description', $productDesc['meta_description'] ?? '');
+        $view->assign('travel_og_image', $hotel->imageUrl ?? '');
+        $view->assign('travel_og_type', 'hotel');
+    }
 }
 
 /**
@@ -265,12 +278,14 @@ function _travel_core_render_debug(string $dispatch): void
 
         // Check Smarty variables assigned
         $view = \Tygh\Tygh::$app['view'];
-        $tplVars = $view->getTemplateVars();
+        $tplVars = (is_object($view) && method_exists($view, 'getTemplateVars'))
+            ? TypeCoerce::toStringMap($view->getTemplateVars())
+            : [];
         $debug['smarty_vars'] = [
             'travel_booking_product_id' => $tplVars['travel_booking_product_id'] ?? 'NOT SET',
             'travel_booking_product_code' => $tplVars['travel_booking_product_code'] ?? 'NOT SET',
-            'travel_booking_scripts' => isset($tplVars['travel_booking_scripts']) ? 'SET (' . count($tplVars['travel_booking_scripts']) . ' scripts)' : 'NOT SET',
-            'travel_hotel_schema_json' => isset($tplVars['travel_hotel_schema_json']) ? 'SET (' . strlen($tplVars['travel_hotel_schema_json']) . ' chars)' : 'NOT SET',
+            'travel_booking_scripts' => isset($tplVars['travel_booking_scripts']) ? 'SET (' . count(TypeCoerce::toList($tplVars['travel_booking_scripts'])) . ' scripts)' : 'NOT SET',
+            'travel_hotel_schema_json' => isset($tplVars['travel_hotel_schema_json']) ? 'SET (' . strlen(TypeCoerce::toString($tplVars['travel_hotel_schema_json'])) . ' chars)' : 'NOT SET',
         ];
     }
 
@@ -283,7 +298,7 @@ function _travel_core_render_debug(string $dispatch): void
         'js/addons/travel_core/dob-validation.js',
         'js/addons/travel_core/booking-form-validation.js',
     ];
-    $docRoot = rtrim(\Tygh\Registry::get('config.dir.root') ?? $_SERVER['DOCUMENT_ROOT'], '/');
+    $docRoot = rtrim(TypeCoerce::toString(\Tygh\Registry::get('config.dir.root') ?? $_SERVER['DOCUMENT_ROOT']), '/');
     foreach ($jsFiles as $jsFile) {
         $fullPath = $docRoot . '/' . $jsFile;
         $debug['js_files'][$jsFile] = file_exists($fullPath)
@@ -326,8 +341,10 @@ function _travel_core_render_debug(string $dispatch): void
     // ── Render debug output as HTML comment + visible panel ──
     $view = \Tygh\Tygh::$app['view'];
     $debugJson = json_encode($debug, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-    $view->assign('travel_debug_output', $debugJson);
-    $view->assign('travel_debug_enabled', true);
+    if ($view instanceof \Smarty) {
+        $view->assign('travel_debug_output', $debugJson);
+        $view->assign('travel_debug_enabled', true);
+    }
 
     // Also log to CS-Cart log
     fn_log_event('general', 'runtime', [

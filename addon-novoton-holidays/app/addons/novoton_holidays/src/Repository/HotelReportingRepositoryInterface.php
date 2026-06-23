@@ -46,7 +46,7 @@ interface HotelReportingRepositoryInterface
     /**
      * Get countries with a count of hotels that have active prices.
      *
-     * @return array<int, array{country: string, cnt: int}>
+     * @return list<array<string, mixed>>
      */
     public function getCountriesWithPriceCounts(): array;
 
@@ -63,7 +63,7 @@ interface HotelReportingRepositoryInterface
     /**
      * Resort statistics (total hotels, hotels-with-prices) per city.
      *
-     * @return array<int, array{city: string, hotel_count: int, with_prices: int}>
+     * @return list<array<string, mixed>>
      */
     public function getResortStatsByCountry(string $country): array;
 

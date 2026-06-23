@@ -15,6 +15,7 @@ declare(strict_types=1);
 
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Services\Container;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
@@ -44,7 +45,7 @@ function fn_novoton_holidays_get_products_post(&$products, $params = [], $lang_c
         $hotel_ids = [];
         foreach ($products as $product) {
             if (!empty($product['product_code']) && _nvt_is_hotel_product($product, $addon_settings)) {
-                $hotel_id = _nvt_extract_hotel_id($product['product_code']);
+                $hotel_id = _nvt_extract_hotel_id(TypeCoerce::toString($product['product_code']));
                 if (!empty($hotel_id)) {
                     $hotel_ids[] = $hotel_id;
                 }
@@ -110,10 +111,6 @@ function fn_novoton_holidays_gather_additional_product_data_post(&$product, $aut
  */
 function fn_novoton_holidays_get_product_data_post(&$product_data, $auth, $preview, $lang_code): void
 {
-    if (empty($product_data)) {
-        return;
-    }
-
     // No-op: hotel detection and data enrichment are handled entirely in
     // gather_additional_product_data_post. We no longer assign addon-specific
     // keys to $product_data here to avoid polluting Smarty's $product scope
@@ -167,10 +164,10 @@ function fn_novoton_holidays_get_product_tabs_post($product_id, &$tabs): void
 
     // Guard: skip during addon uninstall or if products table is being dropped
     try {
-        $code = (string) db_get_field(
+        $code = TypeCoerce::toString(db_get_field(
             "SELECT product_code FROM ?:products WHERE product_id = ?i",
             $product_id
-        );
+        ));
     } catch (\Throwable $e) {
         return;
     }
@@ -181,7 +178,8 @@ function fn_novoton_holidays_get_product_tabs_post($product_id, &$tabs): void
 
     // Not a Novoton product — hide the Novoton-owned tab
     foreach ($tabs as $key => $tab) {
-        if (($tab['addon'] ?? '') === 'novoton_holidays') {
+        $tabData = TypeCoerce::toStringMap($tab);
+        if (($tabData['addon'] ?? '') === 'novoton_holidays') {
             unset($tabs[$key]);
         }
     }
@@ -204,11 +202,12 @@ function _nvt_is_hotel_product(array $product, array $addon_settings): bool
         return false;
     }
 
-    $prefixes = explode(',', $addon_settings['product_code_prefixes']);
+    $product_code = TypeCoerce::toString($product['product_code']);
+    $prefixes = explode(',', TypeCoerce::toString($addon_settings['product_code_prefixes']));
 
     foreach ($prefixes as $prefix) {
         $prefix = trim($prefix);
-        if (!empty($prefix) && str_starts_with($product['product_code'], $prefix)) {
+        if (!empty($prefix) && str_starts_with($product_code, $prefix)) {
             return true;
         }
     }

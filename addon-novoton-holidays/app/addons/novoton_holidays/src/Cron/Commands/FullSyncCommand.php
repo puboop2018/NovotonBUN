@@ -6,6 +6,7 @@ namespace Tygh\Addons\NovotonHolidays\Cron\Commands;
 
 use Tygh\Addons\NovotonHolidays\Cron\AbstractCronCommand;
 use Tygh\Addons\NovotonHolidays\PriceInfoSync;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 class FullSyncCommand extends AbstractCronCommand
 {
@@ -58,10 +59,10 @@ class FullSyncCommand extends AbstractCronCommand
 
         $this->output('');
         $this->output('=== SYNC COMPLETED ===');
-        $this->output('Total products: ' . $stats['total']);
-        $this->output('Updated: ' . count($stats['updated']));
-        $this->output('Failed: ' . count($stats['failed']));
-        $this->output('No data: ' . count($stats['no_data']));
+        $this->output('Total products: ' . TypeCoerce::toString($stats['total']));
+        $this->output('Updated: ' . count(TypeCoerce::toList($stats['updated'])));
+        $this->output('Failed: ' . count(TypeCoerce::toList($stats['failed'])));
+        $this->output('No data: ' . count(TypeCoerce::toList($stats['no_data'])));
         $this->output('======================');
         $this->output('');
 

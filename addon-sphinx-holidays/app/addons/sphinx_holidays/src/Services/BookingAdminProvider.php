@@ -6,6 +6,7 @@ namespace Tygh\Addons\SphinxHolidays\Services;
 
 use Tygh\Addons\SphinxHolidays\Repository\SphinxBookingRepository;
 use Tygh\Addons\TravelCore\Contracts\BookingAdminProviderInterface;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\TravelConstants;
 
 /**
@@ -59,21 +60,21 @@ class BookingAdminProvider implements BookingAdminProviderInterface
 
         // Payment terms & cancellation fees
         if (!empty($booking['payment_terms_json'])) {
-            $terms = json_decode($booking['payment_terms_json'], true);
+            $terms = json_decode(TypeCoerce::toString($booking['payment_terms_json']), true);
             if (is_array($terms)) {
                 $display['payment_terms'] = $terms;
             }
         }
 
         if (!empty($booking['cancellation_fees_json'])) {
-            $fees = json_decode($booking['cancellation_fees_json'], true);
+            $fees = json_decode(TypeCoerce::toString($booking['cancellation_fees_json']), true);
             if (is_array($fees)) {
                 $display['cancellation_fees'] = $fees;
             }
         }
 
         // Status label with Sphinx-specific styling
-        $status = $booking['status'] ?? '';
+        $status = TypeCoerce::toString($booking['status'] ?? '');
         $statusLabels = [
             TravelConstants::STATUS_CONFIRMED => '<span class="label label-success">Confirmed</span>',
             TravelConstants::STATUS_PENDING => '<span class="label label-warning">Pending</span>',
@@ -86,7 +87,7 @@ class BookingAdminProvider implements BookingAdminProviderInterface
     }
 
     /**
-     * @return array<string, mixed>
+     * @return array{changed: bool, old_status: string, new_status: string, error: string|null}
      */
     #[\Override]
     public function checkStatus(string $providerBookingId): array
@@ -144,7 +145,7 @@ class BookingAdminProvider implements BookingAdminProviderInterface
 
     /**
      * @param array<string, mixed> $request
-     * @return array<string, mixed>
+     * @return array{redirect: string, notification?: array{type: string, title: string, message: string}}
      */
     #[\Override]
     public function handleAction(string $action, array $request): array
@@ -152,7 +153,11 @@ class BookingAdminProvider implements BookingAdminProviderInterface
         // Sphinx has no provider-specific POST actions yet
         return [
             'redirect' => 'travel_bookings.manage',
-            'notification' => ['type' => 'W', 'title' => __('warning'), 'message' => "Unknown Sphinx action: {$action}"],
+            'notification' => [
+                'type' => 'W',
+                'title' => TypeCoerce::toString(__('warning')),
+                'message' => "Unknown Sphinx action: {$action}",
+            ],
         ];
     }
 
