@@ -269,9 +269,31 @@ jobs:
                addon-sphinx-holidays/app/addons/sphinx_holidays/src \
                -name '*.php' -print0 | xargs -0 -n 50 php -l
 
+  # ── ESLint (frontend JS / JSX) ──
+  # Lints the addons' standalone JS (addon-*/js) and the React booking-engine
+  # source (addon-*/react-src/src). JS embedded in Smarty .tpl templates is out
+  # of scope (ESLint can't parse Smarty) — Qodana covers that.
+  eslint:
+    name: ESLint (JS/JSX)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Run ESLint
+        run: npx eslint .
+
   # ── Qodana (JetBrains static analysis) ──
   # Gated behind the rest of the gauntlet via `needs`, so Qodana runs only
-  # AFTER PHPStan/Psalm/PHPCS/php-cs-fixer/Rector/PHPMD/PHPUnit/Lint have all
+  # AFTER PHPStan / php-cs-fixer / Rector / PHPUnit / Lint / ESLint have all
   # passed — it is the final quality gate, not a parallel one. (If any of those
   # fail, this job is skipped.) The optional, usually-skipped integration job is
   # intentionally not a dependency, so its skip can't propagate here.
@@ -285,6 +307,7 @@ jobs:
       - phpunit-travel-core
       - phpunit-sphinx
       - lint
+      - eslint
     runs-on: ubuntu-latest
     permissions:
       contents: write

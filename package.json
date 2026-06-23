@@ -1,0 +1,16 @@
+{
+    "name": "novotonbun-frontend-lint",
+    "description": "Frontend (JS/JSX) linting for the NovotonBUN addons. Dev-only tooling, never deployed.",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "lint": "eslint .",
+        "lint:fix": "eslint . --fix"
+    },
+    "devDependencies": {
+        "@eslint/js": "^9.16.0",
+        "eslint": "^9.16.0",
+        "eslint-plugin-react": "^7.37.0",
+        "globals": "^15.13.0"
+    }
+}
