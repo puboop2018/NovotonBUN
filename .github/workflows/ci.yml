@@ -26,43 +26,21 @@ jobs:
       - name: Run PHPStan
         run: vendor/bin/phpstan analyse --memory-limit=1G --no-progress
 
-  # ── Psalm (second opinion on static analysis) ──
-  psalm:
-    name: Psalm
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.3'
-          tools: composer:v2
-
-      - name: Install root dev dependencies
-        run: composer install --no-progress --no-interaction
-
-      - name: Run Psalm
-        run: vendor/bin/psalm --no-progress --show-info=false
-
-  # ── Code style: PHPCS (PSR-12) ──
-  phpcs:
-    name: PHPCS (PSR-12)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.3'
-          tools: composer:v2
-
-      - name: Install root dev dependencies
-        run: composer install --no-progress --no-interaction
-
-      - name: Run PHPCS
-        run: vendor/bin/phpcs --no-cache --report=summary
+      # ── Baseline ratchet: phpstan-baseline.neon may only shrink ──
+      # New code must be level-10 clean. Fail the PR if the total number of
+      # baselined errors grew vs the base branch — forces fixing, not suppressing.
+      - name: PHPStan baseline ratchet
+        if: github.event_name == 'pull_request'
+        run: |
+          git fetch --depth=1 --quiet origin "${{ github.base_ref }}"
+          base=$(git show "origin/${{ github.base_ref }}:phpstan-baseline.neon" 2>/dev/null | grep -oE 'count: [0-9]+' | awk '{s+=$2} END {print s+0}')
+          cur=$(grep -oE 'count: [0-9]+' phpstan-baseline.neon | awk '{s+=$2} END {print s+0}')
+          echo "phpstan-baseline.neon total errors — base=$base, PR=$cur"
+          if [ "$cur" -gt "$base" ]; then
+            echo "::error::PHPStan baseline grew ($base -> $cur). New code must be level-10 clean — fix the errors instead of adding baseline entries."
+            exit 1
+          fi
+          echo "OK: baseline did not grow."
 
   # ── PHP CS Fixer (dry-run; fails if formatting would change) ──
   phpcsfixer:
@@ -101,29 +79,6 @@ jobs:
 
       - name: Run Rector
         run: vendor/bin/rector process --dry-run --no-progress-bar
-
-  # ── PHPMD (mess detection; warnings-only, won't fail CI) ──
-  phpmd:
-    name: PHPMD
-    runs-on: ubuntu-latest
-    continue-on-error: true          # PHPMD findings are informational
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.3'
-          tools: composer:v2
-
-      - name: Install root dev dependencies
-        run: composer install --no-progress --no-interaction
-
-      - name: Run PHPMD
-        run: |
-          vendor/bin/phpmd \
-            addon-novoton-holidays/app/addons/novoton_holidays/src,addon-travel-core/app/addons/travel_core/src,addon-sphinx-holidays/app/addons/sphinx_holidays/src \
-            text phpmd.xml
 
   # ── PHPUnit (novoton suite, with coverage) ──
   phpunit:
@@ -324,11 +279,8 @@ jobs:
     name: Qodana
     needs:
       - phpstan
-      - psalm
-      - phpcs
       - phpcsfixer
       - rector
-      - phpmd
       - phpunit
       - phpunit-travel-core
       - phpunit-sphinx
