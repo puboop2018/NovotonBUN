@@ -32,11 +32,15 @@ class HotelAvailabilitySearcher implements HotelAvailabilitySearcherInterface
     /** Pure hotelinfo-XML parsing (rooms, board types, room-type map). */
     private readonly HotelInfoExtractor $hotelInfoExtractor;
 
+    /** Pure result shaping (max capacity, children-ages cleanup, empty envelope). */
+    private readonly AvailabilityResultNormalizer $resultNormalizer;
+
     public function __construct(SearchServiceInterface $searchService, bool $debug = false, ?HotelInfoExtractor $hotelInfoExtractor = null)
     {
         $this->searchService = $searchService;
         $this->debug = $debug;
         $this->hotelInfoExtractor = $hotelInfoExtractor ?? new HotelInfoExtractor();
+        $this->resultNormalizer = new AvailabilityResultNormalizer();
     }
 
     // =====================================================================
@@ -87,7 +91,7 @@ class HotelAvailabilitySearcher implements HotelAvailabilitySearcherInterface
         $this->logHotelInfo($hotelInfo);
 
         if ($hotelInfo === null || !isset($hotelInfo->rooms)) {
-            return $this->emptyResult();
+            return $this->resultNormalizer->emptyResult();
         }
 
         // ── Rooms / boards / packages from XML ──────────────────────
@@ -114,7 +118,7 @@ class HotelAvailabilitySearcher implements HotelAvailabilitySearcherInterface
                     ['[default]' => 'API is temporarily unavailable. Please try again later.'],
                 ),
             );
-            return $this->emptyResult();
+            return $this->resultNormalizer->emptyResult();
         }
 
         // ── Single vs multi-room dispatch ────────────────────────────
@@ -217,7 +221,7 @@ class HotelAvailabilitySearcher implements HotelAvailabilitySearcherInterface
             $roomChildrenCount = PriceInfoFormatter::toInt($roomOccupancy['children'] ?? 0);
             /** @var list<mixed> $rawChildrenAges */
             $rawChildrenAges = is_array($roomOccupancy['childrenAges'] ?? null) ? $roomOccupancy['childrenAges'] : [];
-            $roomChildrenAges = $this->cleanChildrenAges($rawChildrenAges);
+            $roomChildrenAges = $this->resultNormalizer->cleanChildrenAges($rawChildrenAges);
 
             $this->log("--- Room #{$roomNum}: {$roomAdults} adults, {$roomChildrenCount} children ---");
             if (!empty($roomChildrenAges)) {
@@ -303,7 +307,7 @@ class HotelAvailabilitySearcher implements HotelAvailabilitySearcherInterface
             'is_multi_room' => true,
             'multi_room_total_options' => $totalOptions,
             'no_availability' => ($totalOptions === 0),
-            'max_room_capacity' => $this->calculateMaxCapacity($firstResults),
+            'max_room_capacity' => $this->resultNormalizer->calculateMaxCapacity($firstResults),
             'early_booking_discounts' => $earlyBookingDiscounts,
             'early_booking_range' => $discountRange,
         ];
@@ -336,7 +340,7 @@ class HotelAvailabilitySearcher implements HotelAvailabilitySearcherInterface
         if (empty($singleRoomChildren) && is_array($firstRoom) && !empty($firstRoom['childrenAges'])) {
             /** @var list<mixed> $rawAges0 */
             $rawAges0 = is_array($firstRoom['childrenAges']) ? $firstRoom['childrenAges'] : [];
-            $singleRoomChildren = $this->cleanChildrenAges($rawAges0);
+            $singleRoomChildren = $this->resultNormalizer->cleanChildrenAges($rawAges0);
         }
 
         $this->log('=== SINGLE ROOM SEARCH MODE ===');
@@ -411,83 +415,9 @@ class HotelAvailabilitySearcher implements HotelAvailabilitySearcherInterface
             'is_multi_room' => false,
             'multi_room_total_options' => 0,
             'no_availability' => empty($results),
-            'max_room_capacity' => $this->calculateMaxCapacity($results),
+            'max_room_capacity' => $this->resultNormalizer->calculateMaxCapacity($results),
             'early_booking_discounts' => $earlyBookingDiscounts,
             'early_booking_range' => SearchService::getDiscountRange($earlyBookingDiscounts),
-        ];
-    }
-
-    // =====================================================================
-    // Utility helpers
-    // =====================================================================
-
-    /**
-     * @return array<string, int>
-     * @param list<array<string, mixed>> $results
-     */
-    private function calculateMaxCapacity(array $results): array
-    {
-        $maxAdults = 0;
-        $maxChildren = 0;
-
-        foreach ($results as $result) {
-            $roomId = PriceInfoFormatter::toScalar($result['room_id']);
-            if (preg_match('/(\d+)\+(\d+)/', $roomId, $m) === 1) {
-                $maxAdults = max($maxAdults, (int) $m[1]);
-                $maxChildren = max($maxChildren, (int) $m[2]);
-            }
-        }
-
-        if ($maxAdults === 0) {
-            $maxAdults = 2;
-            $maxChildren = 2;
-        }
-
-        return [
-            'adults' => $maxAdults,
-            'children' => $maxChildren,
-            'total' => $maxAdults + $maxChildren,
-        ];
-    }
-
-    /**
-     * @param list<mixed> $raw
-     * @return list<int>
-     */
-    private function cleanChildrenAges(array $raw): array
-    {
-        $clean = [];
-        foreach ($raw as $age) {
-            if ($age !== null && $age !== '' && $age !== 'age_needed') {
-                $clean[] = PriceInfoFormatter::toInt($age);
-            }
-        }
-        return $clean;
-    }
-
-    /**
-     * @return array{
-     *   results: list<array<string, mixed>>,
-     *   all_room_results: array<int, list<array<string, mixed>>>,
-     *   is_multi_room: bool,
-     *   multi_room_total_options: int,
-     *   no_availability: bool,
-     *   max_room_capacity: array<string, int>,
-     *   early_booking_discounts: list<array<string, mixed>>,
-     *   early_booking_range: array<string, mixed>
-     * }
-     */
-    private function emptyResult(): array
-    {
-        return [
-            'results' => [],
-            'all_room_results' => [],
-            'is_multi_room' => false,
-            'multi_room_total_options' => 0,
-            'no_availability' => true,
-            'max_room_capacity' => ['adults' => 2, 'children' => 2, 'total' => 4],
-            'early_booking_discounts' => [],
-            'early_booking_range' => [],
         ];
     }
 
