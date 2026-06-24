@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\TravelCore\Traits;
 
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+
 /**
  * Shared CS-Cart product feature assignment methods.
  *
@@ -29,10 +31,8 @@ trait CsCartFeatureAssignment
     private function getActiveLanguages(): array
     {
         if ($this->activeLanguages === null) {
-            $this->activeLanguages = db_get_fields("SELECT lang_code FROM ?:languages WHERE status = 'A'");
-            if (empty($this->activeLanguages)) {
-                $this->activeLanguages = ['en'];
-            }
+            $langCodes = TypeCoerce::toStringList(db_get_fields("SELECT lang_code FROM ?:languages WHERE status = 'A'"));
+            $this->activeLanguages = $langCodes === [] ? ['en'] : $langCodes;
         }
 
         return $this->activeLanguages;
@@ -45,13 +45,13 @@ trait CsCartFeatureAssignment
     private function assignSelectBoxValue(int $productId, int $featureId, int $variantId): bool
     {
         // Skip if already correct
-        $existing = db_get_field(
+        $existing = TypeCoerce::toInt(db_get_field(
             "SELECT variant_id FROM ?:product_features_values WHERE feature_id = ?i AND product_id = ?i AND lang_code = 'en'",
             $featureId,
             $productId,
-        );
+        ));
 
-        if ((int) $existing === $variantId) {
+        if ($existing === $variantId) {
             return true;
         }
 
@@ -130,7 +130,7 @@ trait CsCartFeatureAssignment
     {
         $wantedVariantIds = array_unique(array_filter($wantedVariantIds));
 
-        $currentVariants = array_map('intval', db_get_fields(
+        $currentVariants = TypeCoerce::toIntList(db_get_fields(
             "SELECT variant_id FROM ?:product_features_values
              WHERE feature_id = ?i AND product_id = ?i AND lang_code = 'en'",
             $featureId,
@@ -172,10 +172,10 @@ trait CsCartFeatureAssignment
             $nameRo = $nameEn;
         }
 
-        $variantId = (int) db_query(
+        $variantId = TypeCoerce::toInt(db_query(
             'INSERT INTO ?:product_feature_variants ?e',
             ['feature_id' => $featureId, 'position' => $position],
-        );
+        ));
 
         if ($variantId <= 0) {
             return 0;

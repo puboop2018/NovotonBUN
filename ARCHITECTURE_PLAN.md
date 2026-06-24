@@ -46,14 +46,21 @@ fat interface wholesale into core would pollute core and sphinx could never impl
    | `Container` / `SyncLogRepository` | DI + sync logging re-implemented per addon | Lift a shared `SyncLogRepositoryInterface` (+ base impl) into core; keep provider-specific table names behind a small config hook. |
    | `CacheService` (novoton 582 vs sphinx 90) | 6× size gap | **✅ Done:** added a minimal instance contract `TravelCore\Contracts\CacheServiceInterface` (`get`/`set`/`delete`/`cleanup`); novoton's interface now **extends** it and keeps `clear`/`remember`/`getStats` as extras. Sphinx's cache stays as-is **by design** — it is a *static*, search-result-only API and a static API cannot implement an instance contract; forcing the conversion would add risk for no real sharing. |
 
-### 3.2 — PHPStan baseline paydown 🔜 (representative increment landed)
-**Baseline today:** ~1,754 suppressed message-blocks (was 1,759). Level 10, all three
-addons analysed in one run, `reportUnmatchedIgnoredErrors: false`.
+### 3.2 — PHPStan baseline paydown ✅ (baseline fully paid down — 0 entries)
+**Baseline today:** **0** suppressed message-blocks (was ~1,759 at level 10). Level 10,
+all three addons analysed in one run, `reportUnmatchedIgnoredErrors: false`. With an
+empty baseline the invariant is now self-enforcing: any new type error fails the build
+outright, no ratchet required.
 
-**Representative increment landed:** standardised the five `linkToProduct` call sites
-across `AddProductsCommand`, `OffersUpdateCommand`, and `AdminCronService` on
-`TypeCoerce`/`PriceInfoFormatter` coercion, and **removed the 5 now-stale baseline
-entries**. This is the exact pattern to repeat.
+**How it was driven to zero:** repeated the boundary-coercion pattern below across the
+hotspots — coerce `db_*` / `json_decode` / `$_REQUEST` `mixed` at the boundary with
+`TypeCoerce` / `RequestCoerce`, shape return types, then delete each cleaned file's
+baseline blocks. The final 15 entries were a single shared seam: the
+`CsCartFeatureAssignment` trait (used by novoton `FeatureMapper`, sphinx
+`SphinxFeatureAssigner`, travel_core `VariantResolver`) leaked `mixed` from
+`db_get_fields()`/`db_get_field()`/`db_query()` into typed ids/languages; coercing those
+four call sites with `TypeCoerce::toIntList`/`toStringList`/`toInt` cleared all three
+using-classes at once.
 
 **🔜 The repeatable pattern (highest-leverage first):**
 1. Pick one file with the most `argument.type` / `mixed` baseline entries
