@@ -35,12 +35,16 @@ class HotelAvailabilitySearcher implements HotelAvailabilitySearcherInterface
     /** Pure result shaping (max capacity, children-ages cleanup, empty envelope). */
     private readonly AvailabilityResultNormalizer $resultNormalizer;
 
+    /** Multi-room parallel search + aggregation. */
+    private readonly MultiRoomSearchBatcher $multiRoomBatcher;
+
     public function __construct(SearchServiceInterface $searchService, bool $debug = false, ?HotelInfoExtractor $hotelInfoExtractor = null)
     {
         $this->searchService = $searchService;
         $this->debug = $debug;
         $this->hotelInfoExtractor = $hotelInfoExtractor ?? new HotelInfoExtractor();
         $this->resultNormalizer = new AvailabilityResultNormalizer();
+        $this->multiRoomBatcher = new MultiRoomSearchBatcher($this->searchService, $this->resultNormalizer);
     }
 
     // =====================================================================
@@ -123,7 +127,7 @@ class HotelAvailabilitySearcher implements HotelAvailabilitySearcherInterface
 
         // ── Single vs multi-room dispatch ────────────────────────────
         if ($numRooms > 1 && count($roomsData) > 1) {
-            return $this->searchMultiRoom(
+            return $this->multiRoomBatcher->search(
                 $api,
                 $hotelId,
                 $checkIn,
@@ -132,7 +136,9 @@ class HotelAvailabilitySearcher implements HotelAvailabilitySearcherInterface
                 $mealPlan,
                 $roomsData,
                 $roomTypeMap,
-                $rooms,
+                function (string $message): void {
+                    $this->log($message);
+                },
             );
         }
 
@@ -183,134 +189,6 @@ class HotelAvailabilitySearcher implements HotelAvailabilitySearcherInterface
             return [];
         }
         return $this->hotelInfoExtractor->extractBoardTypes($hotelInfo, $mealPlan);
-    }
-
-    // =====================================================================
-    // Multi-room search
-    // =====================================================================
-
-    /**
-     * @param array<string, mixed> $roomsData
-     * @param array<string, mixed> $roomTypeMap
-     * @param list<\SimpleXMLElement> $rooms
-     * @return array{results: list<array<string, mixed>>, all_room_results: array<int, list<array<string, mixed>>>, is_multi_room: bool, multi_room_total_options: int, no_availability: bool, max_room_capacity: array<string, int>, early_booking_discounts: list<array<string, mixed>>, early_booking_range: array<string, mixed>}
-     */
-    private function searchMultiRoom(
-        NovotonApiKitInterface $api,
-        string $hotelId,
-        string $checkIn,
-        string $checkOut,
-        int $nights,
-        string $mealPlan,
-        array $roomsData,
-        array $roomTypeMap,
-        array $rooms,
-    ): array {
-        $this->log('=== MULTI-ROOM SEARCH MODE ===');
-        $this->log('Sending ' . count($roomsData) . ' room requests in parallel via curl_multi');
-
-        // Build all room requests upfront for batch execution
-        $batchRequests = [];
-        $roomMeta = []; // roomKey => occupancy metadata
-
-        foreach ($roomsData as $roomIdx => $roomOccupancy) {
-            $roomNum = PriceInfoFormatter::toInt($roomIdx) + 1;
-            /** @var array<string, mixed> $roomOccupancy */
-            $roomOccupancy = is_array($roomOccupancy) ? $roomOccupancy : [];
-            $roomAdults = PriceInfoFormatter::toInt($roomOccupancy['adults'] ?? 2);
-            $roomChildrenCount = PriceInfoFormatter::toInt($roomOccupancy['children'] ?? 0);
-            /** @var list<mixed> $rawChildrenAges */
-            $rawChildrenAges = is_array($roomOccupancy['childrenAges'] ?? null) ? $roomOccupancy['childrenAges'] : [];
-            $roomChildrenAges = $this->resultNormalizer->cleanChildrenAges($rawChildrenAges);
-
-            $this->log("--- Room #{$roomNum}: {$roomAdults} adults, {$roomChildrenCount} children ---");
-            if (!empty($roomChildrenAges)) {
-                $this->log('Children ages: ' . implode(', ', $roomChildrenAges));
-            }
-
-            $roomKey = "room_{$roomNum}";
-            $batchRequests[$roomKey] = [
-                'hotel_id' => $hotelId,
-                'room_id' => '',
-                'board_id' => '',
-                'star_rating' => '',
-                'check_in' => $checkIn,
-                'check_out' => $checkOut,
-                'adults' => $roomAdults,
-                'children' => $roomChildrenAges,
-            ];
-            $roomMeta[$roomKey] = [
-                'roomNum' => $roomNum,
-                'occupancy' => "{$roomAdults} adults"
-                    . ($roomChildrenCount > 0 ? ", {$roomChildrenCount} children" : ''),
-            ];
-        }
-
-        // Execute ALL room requests in parallel via curl_multi
-        $batchResponses = $api->pricing()->getRoomPriceBatch($batchRequests, count($batchRequests));
-
-        // Process batch results
-        $allRoomResults = [];
-        foreach ($batchResponses as $roomKey => $response) {
-            $meta = $roomMeta[$roomKey] ?? null;
-            if ($meta === null) {
-                continue;
-            }
-            $roomNum = $meta['roomNum'];
-            $occupancyStr = $meta['occupancy'];
-            $roomResults = [];
-
-            $priceData = $response['data'];
-            $rawXml = $response['rawXml'];
-
-            if ($priceData !== false && !empty($rawXml)) {
-                $this->log("  Room #{$roomNum}: API response received (parsing...)");
-                $roomResults = $this->searchService->parseRoomPriceResponse(
-                    $rawXml,
-                    $nights,
-                    $checkIn,
-                    $checkOut,
-                    $mealPlan,
-                    [],
-                    $roomTypeMap,
-                    $roomNum,
-                    $occupancyStr,
-                );
-            } else {
-                $this->log("  Room #{$roomNum}: No response or empty data");
-            }
-
-            $allRoomResults[$roomNum] = $roomResults;
-            $this->log('  Found ' . count($roomResults) . " options for Room #{$roomNum}");
-        }
-
-        // Ensure all room numbers are present (in order)
-        ksort($allRoomResults);
-
-        // ── Aggregate results ────────────────────────────────────────
-        $totalOptions = 0;
-        $firstResults = [];
-        foreach ($allRoomResults as $rr) {
-            $totalOptions += count($rr);
-            if (empty($firstResults) && !empty($rr)) {
-                $firstResults = $rr;
-            }
-        }
-
-        // Early booking discounts
-        $earlyBookingDiscounts = SearchService::getEarlyBookingDiscounts($hotelId, $checkIn, $checkOut);
-        $discountRange = SearchService::getDiscountRange($earlyBookingDiscounts);
-
-        return [
-            'results' => $firstResults,
-            'all_room_results' => $allRoomResults,
-            'is_multi_room' => true,
-            'multi_room_total_options' => $totalOptions,
-            'no_availability' => ($totalOptions === 0),
-            'max_room_capacity' => $this->resultNormalizer->calculateMaxCapacity($firstResults),
-            'early_booking_discounts' => $earlyBookingDiscounts,
-            'early_booking_range' => $discountRange,
-        ];
     }
 
     // =====================================================================
