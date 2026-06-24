@@ -10,7 +10,6 @@ declare(strict_types=1);
  */
 
 use Tygh\Registry;
-use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\NovotonHolidays\Services\SecurityServiceInterface;
 use Tygh\Addons\TravelCore\TravelConstants;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;

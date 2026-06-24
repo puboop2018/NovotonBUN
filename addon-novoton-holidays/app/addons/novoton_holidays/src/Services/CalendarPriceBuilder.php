@@ -148,7 +148,7 @@ class CalendarPriceBuilder
                     }
                     $current->modify('+1 day');
                 }
-            } catch (\Exception $e) {
+            } catch (\Exception) {
                 continue;
             }
         }
@@ -210,7 +210,6 @@ class CalendarPriceBuilder
             // Resolve age type — same logic as PriceInfoCalculator. The numeric
             // IdAge codes 1-4 map to canonical age-type labels; anything else
             // (already a label) passes through unchanged.
-            $rowAge = '';
             if (!empty($fAge)) {
                 $rowAge = strtoupper(trim($fAge));
             } else {
@@ -250,7 +249,7 @@ class CalendarPriceBuilder
         // For each season, find the cheapest room total
         $result = [];
 
-        foreach ($roomRows as $roomId => $rows) {
+        foreach ($roomRows as $rows) {
             // Use the first matching row for this room (most general)
             $row = $rows[0];
             $isRoomPrice = strtoupper($this->toScalarSafe($row['RoomPrice'] ?? 'No')) === 'YES';

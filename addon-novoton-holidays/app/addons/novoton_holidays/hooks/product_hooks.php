@@ -55,7 +55,7 @@ function fn_novoton_holidays_get_products_post(&$products, $params = [], $lang_c
         if (!empty($hotel_ids)) {
             fn_novoton_holidays_prefetch_hotel_data($hotel_ids);
         }
-    } catch (\Throwable $e) {
+    } catch (\Throwable) {
         // Prefetch is optional — don't crash
     }
 }
@@ -136,7 +136,7 @@ function fn_novoton_holidays_delete_product_post($product_id, $product_deleted):
 
         $hotelRepo = Container::getInstance()->hotelRepository();
         $hotelRepo->unlinkProduct($product_id);
-    } catch (\Throwable $e) {
+    } catch (\Throwable) {
         // Silently fail — tables are being dropped during uninstall anyway
     }
 }
@@ -168,7 +168,7 @@ function fn_novoton_holidays_get_product_tabs_post($product_id, &$tabs): void
             "SELECT product_code FROM ?:products WHERE product_id = ?i",
             $product_id
         ));
-    } catch (\Throwable $e) {
+    } catch (\Throwable) {
         return;
     }
 

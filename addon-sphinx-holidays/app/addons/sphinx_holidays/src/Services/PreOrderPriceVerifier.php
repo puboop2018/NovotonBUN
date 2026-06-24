@@ -59,7 +59,7 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
             if ($api === null) {
                 try {
                     $api = Container::getApi();
-                } catch (\Throwable $e) {
+                } catch (\Throwable) {
                     fn_log_event('general', 'runtime', [
                         'message' => 'Sphinx PreOrderPriceVerifier: API unavailable, skipping',
                     ]);

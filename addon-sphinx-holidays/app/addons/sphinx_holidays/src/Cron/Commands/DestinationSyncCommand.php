@@ -80,7 +80,6 @@ class DestinationSyncCommand extends AbstractSyncCommand
             if ($this->isStale($state)) {
                 $this->output('Stale state detected (no activity since ' . ValidationHelpers::toString($state['last_run_at'] ?? '') . '). Clearing and starting fresh.');
                 $this->clearState();
-                $state = self::DEFAULT_STATE;
             } else {
                 // Resume from where we left off
                 $this->output('Resuming destination sync from page ' . ValidationHelpers::toInt($state['next_page'] ?? 1) . ' (' . ValidationHelpers::toInt($state['synced'] ?? 0) . ' synced so far)...');

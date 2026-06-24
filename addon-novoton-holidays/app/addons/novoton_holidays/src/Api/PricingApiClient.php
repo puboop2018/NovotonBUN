@@ -145,7 +145,7 @@ class PricingApiClient extends ApiClientBase implements PricingApiClientInterfac
                         'rawXml' => $cachedXml,
                     ];
                     continue;
-                } catch (XmlParsingException $e) {
+                } catch (XmlParsingException) {
                     // Cached data corrupted, fall through to API call
                 }
             }
@@ -187,7 +187,7 @@ class PricingApiClient extends ApiClientBase implements PricingApiClientInterfac
                         $cacheKey = $this->buildCacheKey(Constants::API_FUNCTION_ROOM_PRICE, $cacheParams);
                         $this->saveToCache(Constants::API_FUNCTION_ROOM_PRICE, $cacheKey, $cleaned);
                     }
-                } catch (\Exception $e) {
+                } catch (\Exception) {
                     $results[$key] = ['data' => false, 'rawXml' => ''];
                 }
             }
@@ -244,7 +244,7 @@ class PricingApiClient extends ApiClientBase implements PricingApiClientInterfac
                 $this->lastResponse = $cachedXml;
                 try {
                     return $this->xmlParser->parse($cachedXml);
-                } catch (XmlParsingException $e) {
+                } catch (XmlParsingException) {
                     // Cached data corrupted, fall through
                 }
             }

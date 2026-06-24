@@ -266,7 +266,6 @@ class ExtrasFeeCalculator
                 }
             }
 
-            $personCount = 1;
             if (!empty($idAge)) {
                 $personCount = PriceInfoFormatter::countMatchingPersons($occupancy, $idAge);
                 if ($personCount === 0) {

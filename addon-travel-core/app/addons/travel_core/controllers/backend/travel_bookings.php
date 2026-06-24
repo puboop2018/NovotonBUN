@@ -19,7 +19,6 @@ declare(strict_types=1);
  */
 
 use Tygh\Tygh;
-use Tygh\Registry;
 use Tygh\Addons\TravelCore\TravelConstants;
 use Tygh\Addons\TravelCore\Services\TravelProviderRegistry;
 use Tygh\Addons\TravelCore\Repository\TravelBookingRepository;

@@ -30,8 +30,6 @@ declare(strict_types=1);
  */
 
 use Tygh\Registry;
-use Tygh\Tygh;
-use Tygh\Addons\NovotonHolidays\Services\RoomPriceService;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
@@ -127,7 +125,7 @@ function _nvt_get_cached_hotel_info($hotel_id, $force = false) {
             if (is_string($cached)) {
                 try {
                     return simplexml_load_string($cached, 'SimpleXMLElement', LIBXML_NOCDATA | LIBXML_NONET) ?: null;
-                } catch (Exception $e) {
+                } catch (Exception) {
                     // Cache corrupted, fetch fresh
                 }
             }

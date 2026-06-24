@@ -20,7 +20,6 @@ declare(strict_types=1);
  */
 
 use Tygh\Addons\SphinxHolidays\Services\Container;
-use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Registry;
 use Tygh\Settings;

@@ -10,7 +10,6 @@ declare(strict_types=1);
  ***************************************************************************/
 
 use Tygh\Registry;
-use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 if (!defined('BOOTSTRAP')) {
     exit('Access denied');

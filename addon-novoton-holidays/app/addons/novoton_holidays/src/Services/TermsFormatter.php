@@ -90,7 +90,6 @@ class TermsFormatter
             } elseif ($isLast && $type === 'Percent' && TypeCoerce::toFloat($value) >= 100) {
                 $lines[] = __('novoton_holidays.cancel_no_show');
             } else {
-                $penaltyStr = '';
                 if ($type === 'Over Nights' || $type === 'Overnights') {
                     $nights = TypeCoerce::toInt($value);
                     $penaltyStr = __('novoton_holidays.cancel_nights_penalty', ['[nights]' => $nights]);

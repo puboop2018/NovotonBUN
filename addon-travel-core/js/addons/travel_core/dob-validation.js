@@ -62,7 +62,7 @@
         if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
             return new Date(value + 'T00:00:00');
         }
-        var parts = value.split(/[\/\.]/);
+        var parts = value.split(/[\/.]/);
         if (parts.length === 3) {
             return new Date(parts[2], parts[1] - 1, parts[0]);
         }

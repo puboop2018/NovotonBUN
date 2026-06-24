@@ -379,9 +379,7 @@ function fn_novoton_holidays_generate_hotel_features_csv(): array
             fn_log_event('general', 'runtime', 'Feature mapper initialization failed: ' . $e->getMessage());
         }
 
-        $starHeaderRo = $featureMapper !== null ? ($featureMapper->getFeatureName(\Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_PROPERTY_RATING, 'ro') ?? 'Stele') : 'Stele';
         $starHeaderEn = $featureMapper !== null ? ($featureMapper->getFeatureName(\Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_PROPERTY_RATING, 'en') ?? 'Stars') : 'Stars';
-        $boardHeaderRo = $featureMapper !== null ? ($featureMapper->getFeatureName(\Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_MEALS, 'ro') ?? 'Tip Masa') : 'Tip Masa';
         $boardHeaderEn = $featureMapper !== null ? ($featureMapper->getFeatureName(\Tygh\Addons\NovotonHolidays\Constants::FEATURE_TYPE_MEALS, 'en') ?? 'Board Type') : 'Board Type';
 
         // CSV header (use EN feature names as column headers)
@@ -532,10 +530,9 @@ function fn_novoton_holidays_generate_hotel_features_xml(): array
         }
 
         // Resolve feature mapper for dynamic display names
-        $featureMapper = null;
         try {
             $container = \Tygh\Addons\NovotonHolidays\Services\Container::getInstance();
-            $featureMapper = $container->featureMapper();
+            $container->featureMapper();
         } catch (\Exception $e) {
             fn_log_event('general', 'runtime', 'Feature mapper initialization failed: ' . $e->getMessage());
         }

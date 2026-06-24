@@ -229,7 +229,7 @@ class AvailabilityApiClient extends ApiClientBase implements AvailabilityApiClie
                 $cleaned = $this->xmlParser->clean($raw);
                 $parsed = $this->xmlParser->parse($cleaned);
                 $results[$key] = $this->parseSearchResults($parsed, $paramsList[$key]);
-            } catch (\Exception $e) {
+            } catch (\Exception) {
                 $results[$key] = [];
             }
         }

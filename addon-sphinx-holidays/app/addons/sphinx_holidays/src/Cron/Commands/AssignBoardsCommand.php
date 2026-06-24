@@ -100,7 +100,6 @@ class AssignBoardsCommand extends AbstractSyncCommand
             if ($this->isStale($state)) {
                 $this->output('Stale state detected (no activity since ' . ValidationHelpers::toString($state['last_run_at'] ?? '') . '). Clearing and starting fresh.');
                 $this->clearState();
-                $state = self::DEFAULT_STATE;
             } else {
                 // Resume
                 $sTotal = ValidationHelpers::toInt($state['total'] ?? 0);

@@ -793,7 +793,7 @@ function fn_sphinx_holidays_place_order_post(&$order_id, &$action, &$order_statu
 
     $repo = \Tygh\Addons\SphinxHolidays\Services\Container::getBookingRepository();
 
-    foreach ($cart['products'] as $cart_id => $product) {
+    foreach ($cart['products'] as $product) {
         if (empty($product['extra']['sphinx_booking']) || empty($product['extra']['travel_booking_id'])) {
             continue;
         }
@@ -869,7 +869,7 @@ function fn_sphinx_holidays_calculate_cart_items(&$cart, &$cart_products, &$auth
         return;
     }
 
-    foreach ($cart['products'] as $cart_id => &$product) {
+    foreach ($cart['products'] as &$product) {
         if (!empty($product['extra']['sphinx_booking']) && !empty($product['stored_price'])) {
             $product['price'] = $product['base_price'] ?? $product['price'];
         }

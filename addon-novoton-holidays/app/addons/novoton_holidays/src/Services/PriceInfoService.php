@@ -232,7 +232,7 @@ class PriceInfoService implements PriceInfoServiceInterface
         // a PHP warning or throws. Either way we fall back to an empty price map.
         try {
             $rawJson = $this->hotelRepo->getCalendarPricesRaw($hotelId);
-        } catch (\Throwable $e) {
+        } catch (\Throwable) {
             $rawJson = null;
         }
 
@@ -294,7 +294,7 @@ class PriceInfoService implements PriceInfoServiceInterface
             $hotelRepo = new HotelRepository();
             $json = !empty($rawPrices) ? json_encode($rawPrices, JSON_UNESCAPED_UNICODE) : null;
             $hotelRepo->setCalendarPricesRaw($hotelId, $json ?: null);
-        } catch (\Throwable $e) {
+        } catch (\Throwable) {
             // Column doesn't exist yet — skip silently
         }
     }
