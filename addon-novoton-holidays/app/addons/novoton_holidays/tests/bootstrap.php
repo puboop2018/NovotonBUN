@@ -66,6 +66,15 @@ if (!function_exists('fn_csrf_validate_request')) {
     }
 }
 
+if (!function_exists('fn_get_order_info')) {
+    /** @return array<string, mixed> */
+    function fn_get_order_info(int $order_id): array
+    {
+        $fn = \Tygh\Addons\NovotonHolidays\Tests\Support\DbStub::$getOrderInfo;
+        return $fn !== null ? $fn($order_id) : [];
+    }
+}
+
 // db_* helpers route through DbStub when a closure is configured. Defaults
 // (null / [] / 0) match the original bare stubs, so tests that don't touch the
 // DB keep working unchanged.
