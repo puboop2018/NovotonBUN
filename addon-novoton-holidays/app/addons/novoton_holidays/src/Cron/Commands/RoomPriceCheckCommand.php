@@ -66,6 +66,11 @@ class RoomPriceCheckCommand extends AbstractCronCommand
         $withoutPricesCount = 0;
         $invalidCount = 0;
 
+        // Accumulate priced hotels by country for the grouped summary printed at
+        // the end. Reuses the country already fetched in getHotelsForSync() above.
+        /** @var array<string, list<string>> $pricedByCountry */
+        $pricedByCountry = [];
+
         foreach ($hotels as $idx => $hotel) {
             // Mirror the admin "Check Prices" call (novoton_prices.php): bypass the
             // price cache so we always hit the live API, and do NOT pass
@@ -103,7 +108,12 @@ class RoomPriceCheckCommand extends AbstractCronCommand
                 $withPricesIds[] = $hotel['hotel_id'];
                 $hotelId = TypeCoerce::toString($hotel['hotel_id']);
                 $hotelName = TypeCoerce::toString($hotel['hotel_name']);
-                $this->output("NVT-{$hotelId} | {$hotelName} - has prices");
+                $hotelCountry = strtoupper(TypeCoerce::toString($hotel['country'] ?? ''));
+                if ($hotelCountry === '') {
+                    $hotelCountry = 'UNKNOWN';
+                }
+                $this->output("NVT-{$hotelId} | {$hotelName} | {$hotelCountry} - has prices");
+                $pricedByCountry[$hotelCountry][] = "NVT-{$hotelId} | {$hotelName}";
             } else {
                 $withoutPricesIds[] = $hotel['hotel_id'];
                 if ($invalid) {
@@ -136,12 +146,46 @@ class RoomPriceCheckCommand extends AbstractCronCommand
         $this->output("  of which invalid API response: {$invalidCount}");
         $this->output('Total checked: ' . ($withPricesCount + $withoutPricesCount));
 
+        // Grouped-by-country summary of the priced hotels (alphabetical).
+        foreach (self::formatCountryGroups($pricedByCountry) as $line) {
+            $this->output($line);
+        }
+
         $stats = [
             'with_prices' => $withPricesCount,
             'without_prices' => $withoutPricesCount,
             'invalid' => $invalidCount,
+            'by_country' => array_map(static fn (array $hotels): int => count($hotels), $pricedByCountry),
         ];
         $this->logComplete('room_price', $stats);
         return ['success' => true, 'stats' => $stats];
+    }
+
+    /**
+     * Build the "grouped by country" output lines for hotels that have prices.
+     *
+     * Pure (no I/O) so it is unit-testable without driving the live API loop.
+     * Countries are listed alphabetically; each carries its hotel count.
+     *
+     * @param array<string, list<string>> $pricedByCountry country => ["NVT-{id} | {name}", …]
+     * @return list<string> Output lines (empty when there are no priced hotels).
+     */
+    public static function formatCountryGroups(array $pricedByCountry): array
+    {
+        if ($pricedByCountry === []) {
+            return [];
+        }
+
+        ksort($pricedByCountry);
+
+        $lines = ['', '=== Hotels WITH prices — grouped by country ==='];
+        foreach ($pricedByCountry as $country => $hotels) {
+            $lines[] = "{$country} (" . count($hotels) . '):';
+            foreach ($hotels as $hotel) {
+                $lines[] = "  {$hotel}";
+            }
+        }
+
+        return $lines;
     }
 }
