@@ -78,24 +78,32 @@ invariant is what keeps new code clean.
 `controllers/backend/novoton_hotels.php` → `Api/PricingApiClient.php` →
 `Api/AvailabilityApiClient.php` → remaining controllers. *Effort: ongoing, ~1 controller/session.*
 
-### 3.3 — God-class decomposition 🔜 (representative increment landed)
-**Representative increment landed:** extracted the pure priceinfo-response shaping
-concern (`extractPricesFromPriceInfo` / `formatPriceInfo` / `groupPricesByRoom`,
-~90 LOC) out of `PriceInfoService` (808 LOC) into a new stateless, unit-tested
-`PriceInfoShaper` collaborator (+10 tests). Behaviour-preserving; PriceInfoService
-now delegates. This is the template: **find a pure, cohesive seam → move it →
-delegate → add tests.**
+### 3.3 — God-class decomposition ✅ (essentially complete)
+**Template used throughout:** find a pure, cohesive seam → move it to a collaborator
+→ delegate → add unit tests. One collaborator per commit, behaviour-preserving,
+verified by the full suite + a clean PHPStan run. Never change behaviour and
+structure in the same step.
 
-**🔜 Remaining god classes (extract collaborators incrementally, not rewrites):**
-| Class | LOC | Suggested first extractions |
+**✅ Landed — every former god-class is now well under the ~600-LOC line, each with
+its extracted, unit-tested collaborators:**
+| Former god-class | LOC then → now | Extracted collaborators |
 |---|---|---|
-| `BookingSubmissionService` | 876 | `BookingRoomsGuestsResolver` (resolveRoomsAndGuests / resolveGuestsData / groupRoomsByPackage / buildGroupGuestsAndRooms / extractGuestName, ~260 LOC); then `ApiBookingRequestBuilder` (buildApiBookingRequest); then `BookingRecordBuilder` (buildBookingRecord / persist). |
-| `BookingRepository` | 862 | Split read-model queries (`findForAdminList` / `findWithOrderDetails` / `findAllForExport` / ownership) into a `BookingQueryRepository`; keep CRUD + travel_bookings sync here. |
-| `PriceInfoService` | ~720 (post-3.3) | Next seam: calendar-price assembly (`getCalendarPrices`, the largest method) → `CalendarPriceBuilder`. |
-| `novoton_price_compare.php` controller | 1,101 | Move the large inline HTML into a `.tpl`; extract data assembly into a `PriceComparePresenter` service. Highest visual payoff, but verify rendering manually. |
+| `BookingSubmissionService` | 876 → 412 | `BookingRoomsGuestsResolver`, `ApiBookingRequestBuilder`, `BookingRecordBuilder` |
+| `BookingRepository` | 862 → 518 | `BookingSyncRepository`, `BookingQueryRepository` (read-model split; thin delegators keep `BookingRepositoryInterface` + all callers unchanged) |
+| `PriceInfoService` | 808 → 341 | `PriceInfoShaper`, `CalendarPriceBuilder` |
+| `PriceInfoParser` | 657 → 356 | `OccupancyStructureBuilder`, `AgeBandResolver` |
+| `HotelAvailabilitySearcher` | 659 → 401 | `AvailabilityResultNormalizer`, `MultiRoomSearchBatcher` |
+| sphinx `HotelRepository` | 824 → 570 | `HotelStatsRepository`, `HotelSearchRepository`, `HotelLinkingRepository` (+ adopts the core contract) |
+| sphinx `HotelSyncService` | 749 → 455 | normalize / probe seams extracted |
 
-**Method:** one collaborator per commit, each with its own unit tests, each verified
-by the full suite + clean PHPStan. Never change behaviour and structure in the same step.
+**🔜 Deferred tail (low priority, by design):**
+- `sphinx DiagnoseSearchCommand` (648 LOC) — the only class still over ~600, but it is
+  a cron-only diagnostic. Extract 3–4 private stage helpers from `execute()` when
+  convenient: low risk, low reward, no UI surface.
+- `novoton_price_compare.php` controller (1,101 LOC) — the largest remaining file and
+  highest visual payoff, but it is inline-HTML: move the markup into a `.tpl` + a
+  `PriceComparePresenter`, and **verify rendering manually on devx** before merge.
+  Held until that verification is possible.
 
 ### 3.4 — Misleading "deprecated/legacy" markers ✅
 - `PriceInfoFormatter::toScalar/toInt/toFloat`: the `@deprecated 3.3.0` tags were
@@ -116,8 +124,9 @@ by the full suite + clean PHPStan. Never change behaviour and structure in the s
 2. **§3.1 core consolidation** — `ConfigProvider` boilerplate, then `SyncLogRepository`,
    then `SecurityService` shared validators. *(medium)*
 3. **§3.1 sphinx hotel-repo convergence** onto the core contract. *(medium)*
-4. **§3.3 collaborator extractions** — `BookingSubmissionService` first, one seam/commit. *(medium)*
-5. **§3.3 price_compare controller** template/presenter split. *(needs manual render verification)*
+4. **§3.3 collaborator extractions** — ✅ done (BookingSubmissionService, BookingRepository,
+   PriceInfoService/Parser, HotelAvailabilitySearcher, sphinx HotelRepository/SyncService).
+5. **§3.3 price_compare controller** template/presenter split. 🔜 *deferred — needs manual render verification on devx.*
 
 Each step: behaviour-preserving, test-backed, PHPStan-clean, reviewable in isolation.
 Do **not** batch multiple god-class extractions or a baseline rewrite into one PR.
