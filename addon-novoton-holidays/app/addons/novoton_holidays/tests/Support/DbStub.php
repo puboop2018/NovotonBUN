@@ -33,6 +33,9 @@ final class DbStub
     /** @var (callable(string, array<int, string>, mixed...): array<string, mixed>)|null */
     public static $getHashSingleArray = null;
 
+    /** @var (callable(int): array<string, mixed>)|null */
+    public static $getOrderInfo = null;
+
     public static function reset(): void
     {
         self::$getField = null;
@@ -41,5 +44,6 @@ final class DbStub
         self::$getFields = null;
         self::$query = null;
         self::$getHashSingleArray = null;
+        self::$getOrderInfo = null;
     }
 }
