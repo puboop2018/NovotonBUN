@@ -73,7 +73,7 @@ class ProductFactory implements ProductFactoryInterface
             if (isset($descResponse->Description)) {
                 $description = (string)$descResponse->Description;
             }
-        } catch (ApiException $e) {
+        } catch (ApiException) {
             // Ignore description fetch errors
         }
 
@@ -119,7 +119,7 @@ class ProductFactory implements ProductFactoryInterface
             if (function_exists('fn_novoton_holidays_sync_hotel_facilities')) {
                 fn_novoton_holidays_sync_hotel_facilities($hotelId);
             }
-        } catch (\Exception $e) {
+        } catch (\Exception) {
             // Ignore facility sync errors
         }
 
@@ -157,7 +157,7 @@ class ProductFactory implements ProductFactoryInterface
             }
 
             return $imgCount;
-        } catch (ApiException $e) {
+        } catch (ApiException) {
             return 0;
         }
     }

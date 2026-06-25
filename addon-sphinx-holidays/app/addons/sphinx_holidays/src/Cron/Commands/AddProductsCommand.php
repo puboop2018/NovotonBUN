@@ -89,7 +89,6 @@ class AddProductsCommand extends AbstractSyncCommand
                 $lastRunAt = ValidationHelpers::toString($state['last_run_at'] ?? '');
                 $this->output("Stale state detected (no activity since {$lastRunAt}). Clearing and starting fresh.");
                 $this->clearState();
-                $state = self::DEFAULT_STATE;
             } else {
                 // Resume — findUnlinked() naturally skips already-linked hotels
                 $addedSoFar = ValidationHelpers::toInt($state['added'] ?? 0);

@@ -424,7 +424,7 @@ class HotelSyncService extends AbstractSyncService implements HotelSyncServiceIn
             // Fetch single hotel from API
             try {
                 $raw = $this->api->getHotel($hotelId);
-            } catch (\Throwable $e) {
+            } catch (\Throwable) {
                 $stats['errors']++;
                 continue;
             }

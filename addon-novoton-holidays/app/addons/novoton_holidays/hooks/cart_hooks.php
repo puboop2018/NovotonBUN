@@ -176,7 +176,7 @@ function fn_novoton_holidays_dispatch_before_display(): void
         if (method_exists($view, 'registerPlugin')) {
             $view->registerPlugin('modifier', 'json_decode', 'smarty_modifier_json_decode');
         }
-    } catch (\Throwable $e) {
+    } catch (\Throwable) {
         // Silently ignore if already registered or view not available
     }
     if (function_exists('fn_novoton_holidays_register_smarty_modifiers')) {

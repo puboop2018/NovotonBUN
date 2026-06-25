@@ -210,8 +210,6 @@ class FeeCalculator implements FeeCalculatorInterface
                 }
             }
 
-            $price = 0;
-            $tierUsed = '';
             if ($toDays === null && $fromDays === null) {
                 $price = $price1;
                 $tierUsed = "Price1 (no thresholds provided by API, nights={$nights})";
@@ -227,8 +225,6 @@ class FeeCalculator implements FeeCalculatorInterface
                     . ($toDays ?? 'n/a') . ' and fromDays=' . ($fromDays ?? 'n/a') . ')';
             }
 
-            $count = 1;
-            $countMethod = '';
             $feeIdAge = PriceInfoFormatter::feeKey($idAge);
             if (!empty($feeIdAge)) {
                 if (!empty($seasonAgeSet)) {

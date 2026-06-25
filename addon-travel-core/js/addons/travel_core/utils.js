@@ -66,7 +66,7 @@ window.TravelUtils = (function() {
         if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
             return new Date(dateStr + 'T00:00:00');
         }
-        const parts = dateStr.split(/[\/\.]/);
+        const parts = dateStr.split(/[\/.]/);
         if (parts.length === 3) {
             return new Date(parts[2], parts[1] - 1, parts[0]);
         }

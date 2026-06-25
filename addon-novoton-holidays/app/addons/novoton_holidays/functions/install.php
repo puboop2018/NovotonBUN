@@ -470,7 +470,6 @@ function fn_novoton_holidays_setup_db(): void
 
     // ── Feature type rename: star_rating → property_rating, board → meals ──
     // Updates existing data in hotel_feature_mappings and addon settings
-    $mappingsTable = $resolve('?:hotel_feature_mappings');
     $hasOldStarRating = TypeCoerce::toInt(db_get_field(
         "SELECT COUNT(*) FROM ?:hotel_feature_mappings WHERE feature_type = 'star_rating'"
     ));

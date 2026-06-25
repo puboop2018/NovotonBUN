@@ -438,8 +438,6 @@ abstract class AbstractBatchedSync implements SyncInterface
 
             // Accumulate counters per batch to avoid per-item file I/O
             $batchProcessed = 0;
-            $batchSynced = 0;
-            $batchErrors = 0;
             $batchErrorIds = [];
 
             foreach ($batch as $itemId) {
@@ -470,10 +468,8 @@ abstract class AbstractBatchedSync implements SyncInterface
 
                 if (TypeCoerce::toBool($result['success'] ?? false)) {
                     $syncedThisRun++;
-                    $batchSynced++;
                 } else {
                     $errorsThisRun++;
-                    $batchErrors++;
                     $batchErrorIds[] = $item;
                 }
 

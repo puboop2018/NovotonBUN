@@ -543,7 +543,7 @@ class GuestDataService implements GuestDataServiceInterface
                             ));
                             return false;
                         }
-                    } catch (\Exception $e) {
+                    } catch (\Exception) {
                         $birthday = '';
                     }
                 }
@@ -640,7 +640,7 @@ class GuestDataService implements GuestDataServiceInterface
             try {
                 $dobDate = new \DateTime($birthday);
                 return $dobDate->diff(new \DateTime())->y;
-            } catch (\Exception $e) {
+            } catch (\Exception) {
                 // Invalid date — use fallback
             }
         }

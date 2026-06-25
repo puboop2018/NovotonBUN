@@ -94,7 +94,7 @@ class RoomPriceCheckCommand extends AbstractCronCommand
                     // from a valid response that simply carries no <Price> nodes.
                     $invalid = true;
                 }
-            } catch (\Exception $e) {
+            } catch (\Exception) {
                 // API failure for this hotel — treat as no price
                 $invalid = true;
             }

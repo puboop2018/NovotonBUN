@@ -49,7 +49,6 @@ class SearchParameterNormalizer
         $checkIn = $this->resolveCheckIn($searchParams);
         $nights = $this->resolveNights($searchParams, $checkIn);
 
-        $adults = !empty($searchParams['adults']) ? TypeCoerce::toInt($searchParams['adults']) : 2;
         $flexDays = !empty($searchParams['flex_days']) ? TypeCoerce::toInt($searchParams['flex_days']) : 0;
 
         // ── Multi-room data ──────────────────────────────────────────
@@ -144,7 +143,7 @@ class SearchParameterNormalizer
                     $d2 = new \DateTime(TypeCoerce::toString($params['check_out']));
                     $nights = $d1->diff($d2)->days;
                     return $nights >= 1 ? $nights : 7;
-                } catch (\Exception $e) {
+                } catch (\Exception) {
                     return 7;
                 }
             }

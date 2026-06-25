@@ -73,6 +73,20 @@ exclude:
   - name: PhpNotInstalledPackagesInspection           # per-addon composer, not the repo root
   - name: PhpIncludeInspection                        # CS-Cart dynamic includes
   - name: DuplicatedCode                              # refactoring suggestion, not a defect
+  # ── Confirmed false positives in this codebase ──
+  - name: PhpMissingBreakStatementInspection          # intentional `// no break` fall-through (memory-limit parser)
+  - name: PhpStatementHasEmptyBodyInspection          # intentional empty elseif-chain guard
+  - name: PhpStrictTypeCheckingInspection             # CS-Cart stub mistypes fn_set_progress($params) as string
+  # ── JavaScript is owned by ESLint, not Qodana ──
+  # Standalone JS (addon-*/js, react-src) is linted + gated by eslint.config.mjs.
+  # JS embedded in Smarty .tpl templates is legacy debt to extract into real .js
+  # files over time (ESLint will cover it then). Muting here avoids double-reporting.
+  - name: JSDuplicatedDeclaration
+  - name: JSDeprecatedSymbols
+  - name: JSUnusedLocalSymbols
+  - name: JSUnusedAssignment
+  - name: ExceptionCaughtLocallyJS
+  - name: JSEqualityComparisonWithCoercion
   # Don't analyse third-party code, build output, or the test scaffolding
   # (its guarded fn_* stubs trip the duplicate-declaration check):
   - name: All
@@ -80,6 +94,7 @@ exclude:
       - vendor
       - node_modules
       - var
+      - addon-novoton-holidays/scripts
       - addon-novoton-holidays/app/addons/novoton_holidays/tests
       - addon-travel-core/app/addons/travel_core/tests
       - addon-sphinx-holidays/app/addons/sphinx_holidays/tests

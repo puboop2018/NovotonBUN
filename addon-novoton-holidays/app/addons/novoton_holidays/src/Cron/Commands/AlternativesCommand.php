@@ -258,7 +258,7 @@ class AlternativesCommand extends AbstractCronCommand
                 'template_code' => 'novoton_alternatives_available',
                 'tpl' => 'addons/novoton_holidays/email/alternatives_available.tpl',
             ], 'A');
-        } catch (\Exception $e) {
+        } catch (\Exception) {
             return false;
         }
     }

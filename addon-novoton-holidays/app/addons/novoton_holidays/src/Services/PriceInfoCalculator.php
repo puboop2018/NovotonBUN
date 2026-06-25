@@ -279,7 +279,6 @@ class PriceInfoCalculator
             $rowRoom = PriceInfoFormatter::toScalar($row['IdRoom'] ?? '');
             $rowBoard = PriceInfoFormatter::toScalar($row['IdBoard'] ?? '');
             $rowAcc = PriceInfoFormatter::toScalar($row['IdAcc'] ?? '');
-            $rowAge = '';
             if (!empty($row['fAge']) && is_string($row['fAge'])) {
                 $rowAge = $row['fAge'];
             } else {

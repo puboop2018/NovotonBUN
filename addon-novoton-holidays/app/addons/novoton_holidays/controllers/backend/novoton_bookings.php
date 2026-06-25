@@ -13,7 +13,6 @@ declare(strict_types=1);
  */
 
 use Tygh\Tygh;
-use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
 use Tygh\Addons\TravelCore\Services\TravelProviderRegistry;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Helpers\RequestCoerce;

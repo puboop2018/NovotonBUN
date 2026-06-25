@@ -858,7 +858,7 @@ function fn_travel_core_attach_product_image(int $productId, string $tempFile, s
 
     try {
         $imageInfo = getimagesize($tempFile);
-    } catch (\Throwable $e) {
+    } catch (\Throwable) {
         $imageInfo = false;
     }
 

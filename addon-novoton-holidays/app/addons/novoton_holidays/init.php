@@ -9,7 +9,6 @@ declare(strict_types=1);
  ***************************************************************************/
 
 use Tygh\Registry;
-use Tygh\Addons\NovotonHolidays\Constants;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
@@ -91,7 +90,7 @@ function smarty_modifier_novoton_format_room_type($room_id)
             return $room_id;
         }
         return \Tygh\Addons\TravelCore\ValueObjects\RoomType::formatRoomLabel($room_id);
-    } catch (\Throwable $e) {
+    } catch (\Throwable) {
         return is_string($room_id) ? $room_id : '';
     }
 }
@@ -106,7 +105,7 @@ function smarty_modifier_novoton_format_board($board_id)
             return is_string($board_id) ? $board_id : '';
         }
         return \Tygh\Addons\TravelCore\ValueObjects\BoardType::toDisplayName($board_id);
-    } catch (\Throwable $e) {
+    } catch (\Throwable) {
         return is_string($board_id) ? $board_id : '';
     }
 }
@@ -145,7 +144,7 @@ function smarty_modifier_novoton_trace($value, $label = '')
                 . (string) $label . PHP_EOL;
             @file_put_contents($file, $line, FILE_APPEND);
         }
-    } catch (\Throwable $e) {
+    } catch (\Throwable) {
         // A diagnostic must never crash the page it is diagnosing.
     }
 
@@ -175,7 +174,7 @@ function fn_novoton_holidays_register_smarty_modifiers()
                 $registered = true;
             }
         }
-    } catch (\Throwable $e) {
+    } catch (\Throwable) {
         // Registration failed — auto-discovery will still work
     }
 }
