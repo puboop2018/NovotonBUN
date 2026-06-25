@@ -25,21 +25,6 @@ class BookingRepository implements BookingRepositoryInterface
     use RowNarrowingTrait;
 
     /**
-     * Columns selected for listing queries (excludes large JSON/text fields:
-     * rooms_data, guests_data, api_request, api_response, alternatives_data,
-     * notes, terms_of_payment_raw/formatted, terms_of_cancellation_raw/formatted).
-     */
-    private const string LIST_COLUMNS = 'booking_id, order_id, product_id, user_id,
-        session_id, novoton_confirm_id, novoton_invoice_id, novoton_res_num,
-        novoton_status, hotel_id, hotel_name, package_id, package_name,
-        room_id, room_type, board_id, board_name, item_id,
-        check_in, check_out, nights, adults, children, children_ages,
-        num_rooms, room_number, total_rooms, guest_name, guest_email, guest_phone,
-        holder_name, base_price, extras_price, total_price, api_price,
-        currency, status, alternatives_requested, last_status_check,
-        created_at, updated_at';
-
-    /**
      * Request-scoped memo cache for hydrated bookings.
      * Prevents the same booking's rooms_data/guests_data from being
      * decoded 2-3 times within a single request cycle.
@@ -49,15 +34,19 @@ class BookingRepository implements BookingRepositoryInterface
     private static array $hydratedCache = [];
 
     private readonly BookingSyncRepositoryInterface $syncRepo;
+    private readonly BookingQueryRepository $queryRepo;
 
     /**
      * @param BookingSyncRepositoryInterface|null $syncRepo Mirror writer for the
      *                                                      shared travel_bookings table; defaults to the concrete repository
      *                                                      so existing `new BookingRepository()` call sites keep working.
+     * @param BookingQueryRepository|null $queryRepo Read-model query collaborator
+     *                                               (list/reporting reads); defaults to the concrete repository.
      */
-    public function __construct(?BookingSyncRepositoryInterface $syncRepo = null)
+    public function __construct(?BookingSyncRepositoryInterface $syncRepo = null, ?BookingQueryRepository $queryRepo = null)
     {
         $this->syncRepo = $syncRepo ?? new BookingSyncRepository();
+        $this->queryRepo = $queryRepo ?? new BookingQueryRepository();
     }
 
     /**
@@ -144,7 +133,7 @@ class BookingRepository implements BookingRepositoryInterface
      */
     public function findByOrderId(int $order_id): array
     {
-        return self::asRowList(db_get_array('SELECT * FROM ?:novoton_bookings WHERE order_id = ?i ORDER BY booking_id', $order_id));
+        return $this->queryRepo->findByOrderId($order_id);
     }
 
     /**
@@ -153,11 +142,7 @@ class BookingRepository implements BookingRepositoryInterface
      */
     public function findByUserId(int $user_id, int $limit = 100): array
     {
-        return self::asRowList(db_get_array(
-            'SELECT ' . self::LIST_COLUMNS . ' FROM ?:novoton_bookings WHERE user_id = ?i ORDER BY created_at DESC LIMIT ?i',
-            $user_id,
-            $limit,
-        ));
+        return $this->queryRepo->findByUserId($user_id, $limit);
     }
 
     /**
@@ -166,10 +151,7 @@ class BookingRepository implements BookingRepositoryInterface
      */
     public function findBySessionId(string $session_id): array
     {
-        return self::asRowList(db_get_array(
-            'SELECT ' . self::LIST_COLUMNS . ' FROM ?:novoton_bookings WHERE session_id = ?s AND order_id = 0 ORDER BY created_at DESC LIMIT 50',
-            $session_id,
-        ));
+        return $this->queryRepo->findBySessionId($session_id);
     }
 
     /**
@@ -178,11 +160,7 @@ class BookingRepository implements BookingRepositoryInterface
      */
     public function findByHotelId(string $hotel_id, int $limit = 100): array
     {
-        return self::asRowList(db_get_array(
-            'SELECT ' . self::LIST_COLUMNS . ' FROM ?:novoton_bookings WHERE hotel_id = ?s ORDER BY check_in DESC LIMIT ?i',
-            $hotel_id,
-            $limit,
-        ));
+        return $this->queryRepo->findByHotelId($hotel_id, $limit);
     }
 
     /**
@@ -191,11 +169,7 @@ class BookingRepository implements BookingRepositoryInterface
      */
     public function findPending(int $limit = 500): array
     {
-        return self::asRowList(db_get_array(
-            'SELECT ' . self::LIST_COLUMNS . ' FROM ?:novoton_bookings WHERE status = ?s ORDER BY created_at DESC LIMIT ?i',
-            TravelConstants::STATUS_PENDING,
-            $limit,
-        ));
+        return $this->queryRepo->findPending($limit);
     }
 
     /**
@@ -204,12 +178,7 @@ class BookingRepository implements BookingRepositoryInterface
      */
     public function findWithReservationId(int $limit = 1000): array
     {
-        return self::asRowList(db_get_array(
-            'SELECT ' . self::LIST_COLUMNS . ", novoton_reservation_id FROM ?:novoton_bookings
-             WHERE novoton_reservation_id IS NOT NULL AND novoton_reservation_id != ''
-             ORDER BY created_at DESC LIMIT ?i",
-            $limit,
-        ));
+        return $this->queryRepo->findWithReservationId($limit);
     }
 
     /**
@@ -479,17 +448,7 @@ class BookingRepository implements BookingRepositoryInterface
      */
     public function findByOrderIds(array $order_ids): array
     {
-        if (empty($order_ids)) {
-            return [];
-        }
-        return self::asRowList(db_get_array(
-            'SELECT booking_id, order_id, hotel_id, hotel_name, room_type, board_id,
-                    check_in, check_out, nights, adults, children, total_price,
-                    currency, status, novoton_status, novoton_confirm_id
-             FROM ?:novoton_bookings
-             WHERE order_id IN (?n)',
-            $order_ids,
-        ));
+        return $this->queryRepo->findByOrderIds($order_ids);
     }
 
     /**
@@ -534,14 +493,7 @@ class BookingRepository implements BookingRepositoryInterface
      */
     public function findByNovotonStatus(string $novoton_status, array $statuses, int $limit = 50): array
     {
-        return self::asRowList(db_get_array(
-            'SELECT * FROM ?:novoton_bookings
-             WHERE novoton_status = ?s AND status IN (?a)
-             ORDER BY created_at DESC LIMIT ?i',
-            $novoton_status,
-            $statuses,
-            $limit,
-        ));
+        return $this->queryRepo->findByNovotonStatus($novoton_status, $statuses, $limit);
     }
 
     /**
@@ -550,13 +502,7 @@ class BookingRepository implements BookingRepositoryInterface
      */
     public function findRqWithoutAlternatives(int $limit = 50): array
     {
-        return self::asRowList(db_get_array(
-            'SELECT * FROM ?:novoton_bookings
-             WHERE novoton_status = ?s AND alternatives_requested = 0
-             ORDER BY created_at ASC LIMIT ?i',
-            Constants::NOVOTON_STATUS_ALTERNATIVES_PENDING,
-            $limit,
-        ));
+        return $this->queryRepo->findRqWithoutAlternatives($limit);
     }
 
     /**
