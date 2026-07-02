@@ -124,9 +124,11 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
                 ]);
             }
 
-            // 4-6. Process each group inside a DB transaction
-            db_query('START TRANSACTION');
-
+            // 4-6. Process each group. Each booking record is persisted by its
+            // own atomic repository write; there is deliberately NO transaction
+            // spanning the API calls — a remote reservation cannot be undone by a
+            // DB ROLLBACK, and keeping a transaction open across the network round
+            // trip would lock the booking rows for the entire API call.
             try {
                 $groupNum = 0;
 
@@ -193,12 +195,9 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
                     );
                 }
 
-                db_query('COMMIT');
             } catch (ApiException $e) {
-                db_query('ROLLBACK');
-
-                // ROLLBACK undoes the failed status set inside submitAndRecordBooking().
-                // Re-apply failed status OUTSIDE the transaction so it persists.
+                // Per-group booking rows are already committed by their own atomic
+                // writes; flag the parent booking failed so the error is visible.
                 if ($originalBookingId > 0) {
                     $this->bookingRepo->update($originalBookingId, [
                         'status' => TravelConstants::STATUS_FAILED,
@@ -208,15 +207,13 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
                 }
 
                 fn_log_event('general', 'runtime', [
-                    'message' => 'Novoton Booking transaction rolled back (API error)',
+                    'message' => 'Novoton Booking submission failed (API error)',
                     'order_id' => $orderId,
                     'api_function' => $e->getApiFunction(),
                     'http_code' => $e->getHttpCode(),
                     'error' => $e->getMessage(),
                 ]);
             } catch (NovotonException $e) {
-                db_query('ROLLBACK');
-
                 if ($originalBookingId > 0) {
                     $this->bookingRepo->update($originalBookingId, [
                         'status' => TravelConstants::STATUS_FAILED,
@@ -226,14 +223,12 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
                 }
 
                 fn_log_event('general', 'runtime', [
-                    'message' => 'Novoton Booking transaction rolled back',
+                    'message' => 'Novoton Booking submission failed',
                     'order_id' => $orderId,
                     'context' => $e->getContext(),
                     'error' => $e->getMessage(),
                 ]);
             } catch (\Throwable $e) {
-                db_query('ROLLBACK');
-
                 if ($originalBookingId > 0) {
                     $this->bookingRepo->update($originalBookingId, [
                         'status' => TravelConstants::STATUS_FAILED,
@@ -243,7 +238,7 @@ class BookingSubmissionService implements BookingSubmissionServiceInterface
                 }
 
                 fn_log_event('general', 'runtime', [
-                    'message' => 'Novoton Booking transaction rolled back (unexpected)',
+                    'message' => 'Novoton Booking submission failed (unexpected)',
                     'order_id' => $orderId,
                     'error' => $e->getMessage(),
                 ]);

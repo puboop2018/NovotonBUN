@@ -33,6 +33,9 @@ class BookingRepository implements BookingRepositoryInterface
      */
     private static array $hydratedCache = [];
 
+    /** @var int Nesting depth of withTransaction() calls (0 = no active transaction). */
+    private static int $txDepth = 0;
+
     private readonly BookingSyncRepositoryInterface $syncRepo;
     private readonly BookingQueryRepository $queryRepo;
 
@@ -214,21 +217,15 @@ class BookingRepository implements BookingRepositoryInterface
     {
         $data = self::filterNullValues($data);
 
-        db_query('START TRANSACTION');
-        try {
+        return $this->withTransaction(function () use ($data): int {
             $booking_id = TypeCoerce::toInt(db_query('INSERT INTO ?:novoton_bookings ?e', $data));
 
             if ($booking_id > 0) {
                 $this->syncRepo->upsertFromBooking($booking_id, $data);
             }
 
-            db_query('COMMIT');
-        } catch (\Throwable $e) {
-            db_query('ROLLBACK');
-            throw $e;
-        }
-
-        return $booking_id;
+            return $booking_id;
+        });
     }
 
     /**
@@ -239,8 +236,7 @@ class BookingRepository implements BookingRepositoryInterface
     {
         $data = self::filterNullValues($data);
 
-        db_query('START TRANSACTION');
-        try {
+        return $this->withTransaction(function () use ($booking_id, $data): bool {
             // db_query() returns affected rows for UPDATE. A return of 0 means
             // "query succeeded but no rows changed" (data identical) — NOT failure.
             // We only fail if the booking doesn't exist at all.
@@ -248,13 +244,8 @@ class BookingRepository implements BookingRepositoryInterface
 
             $this->syncRepo->applyBookingUpdate($booking_id, $data);
 
-            db_query('COMMIT');
-        } catch (\Throwable $e) {
-            db_query('ROLLBACK');
-            throw $e;
-        }
-
-        return true;
+            return true;
+        });
     }
 
     /**
@@ -309,17 +300,48 @@ class BookingRepository implements BookingRepositoryInterface
      */
     public function delete(int $booking_id): bool
     {
-        db_query('START TRANSACTION');
-        try {
+        return $this->withTransaction(function () use ($booking_id): bool {
             $this->syncRepo->deleteByBookingId($booking_id);
-            $result = (bool) db_query('DELETE FROM ?:novoton_bookings WHERE booking_id = ?i', $booking_id);
+            return (bool) db_query('DELETE FROM ?:novoton_bookings WHERE booking_id = ?i', $booking_id);
+        });
+    }
+
+    /**
+     * Run $callback inside a DB transaction. Nesting-aware: only the outermost
+     * call issues START/COMMIT, so a nested call cannot implicitly COMMIT the
+     * outer transaction (MySQL has no true nested transactions) and a failure at
+     * any depth rolls the whole unit back. Guards against the class of bug where
+     * a caller wraps create()/update()/delete() in its own transaction and
+     * silently loses atomicity.
+     *
+     * @template T
+     * @param callable(): T $callback
+     * @return T
+     */
+    private function withTransaction(callable $callback): mixed
+    {
+        if (self::$txDepth > 0) {
+            // An outer withTransaction() already owns the active transaction — join it.
+            self::$txDepth++;
+            try {
+                return $callback();
+            } finally {
+                self::$txDepth--;
+            }
+        }
+
+        db_query('START TRANSACTION');
+        self::$txDepth = 1;
+        try {
+            $result = $callback();
             db_query('COMMIT');
+            return $result;
         } catch (\Throwable $e) {
             db_query('ROLLBACK');
             throw $e;
+        } finally {
+            self::$txDepth = 0;
         }
-
-        return $result;
     }
 
     /**
