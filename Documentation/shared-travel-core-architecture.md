@@ -1523,3 +1523,27 @@ design/backend/mail/templates/addons/
 - Old CSS classes (`.novoton-*`) get backward-compat aliases via `styles.css`
 - Old `novoton_bookings` table data migrated to `travel_bookings` with `provider='novoton'`
 - Old controller routes (`novoton_booking.search`) redirect to shared routes
+
+## 16. Referential Integrity Model (decided 2026-07-01, audit H3/H4)
+
+One rule, applied to both providers:
+
+**FKs (`ON DELETE CASCADE`) only for true child data that must die with its
+parent. No FKs for historical records or cross-aggregate references — those are
+denormalized snapshots keyed by stable external ids, kept consistent by hooks
+and cleanup crons.**
+
+| Relationship | Mechanism | Why |
+|---|---|---|
+| `novoton_hotel_packages` / `novoton_hotel_facilities` → `novoton_hotels` | FK `CASCADE` | Pure child data; meaningless without the hotel. |
+| `novoton_bookings` / `novoton_alternative_requests` → hotels | **No FK** (was `RESTRICT`, dropped) | Historical records that must outlive the hotel; they denormalize `hotel_name`, dates, prices. `hotel_id` is the stable Novoton `IdHotel`, so the join is restored automatically when a hotel is re-synced. `RESTRICT` made booked hotels undeletable and broke delete-then-reinsert reconciliation. Reads must LEFT JOIN hotels (see `BookingQueryService`). |
+| `*_hotels.product_id` → `?:products` | **No FK**; `delete_product_post` hook (novoton) / `CleanupCommand` orphan-unlink (sphinx) | CS-Cart core owns products; an FK into a core table is fragile across core upgrades. |
+| `sphinx_destination_whitelist.destination_id` → `sphinx_destinations` | **No FK, no auto-cleanup — intentional** | The whitelist is *admin configuration*; entries must survive a destination table re-import. Auto-deleting "orphans" during a re-sync would destroy the admin's whitelist. |
+| Sphinx tables generally | **No FKs by design** | Consistency via sync upserts + `CleanupCommand` (orphan bookings, stale logs, expired cache, orphan product links). |
+
+Consequences for new code:
+- Never add a `RESTRICT` FK to a table that accumulates history.
+- Any query joining history → master data must use `LEFT JOIN` and render from
+  the denormalized columns when the master row is absent.
+- Adding an FK to an *existing* table requires an orphan-cleanup migration
+  first (`ADD CONSTRAINT` fails on violating rows) — prefer the cron model.

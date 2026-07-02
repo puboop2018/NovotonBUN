@@ -549,7 +549,42 @@ function fn_novoton_holidays_setup_db(): void
         @db_query("ALTER TABLE ?:novoton_cache CHANGE `created_at_new` `created_at` INT UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Unix timestamp'");
     }
 
+    // ── Drop legacy RESTRICT FKs from historical tables ──
+    // novoton_bookings and novoton_alternative_requests are self-contained
+    // historical records (they denormalize hotel_name, dates, prices) keyed by
+    // the stable Novoton IdHotel. The former ON DELETE RESTRICT constraints made
+    // any hotel with history undeletable, which broke delete-then-reinsert sync
+    // reconciliation. No FK belongs here: history must outlive the hotel master
+    // row, and because hotel_id is the stable external id, the join is restored
+    // automatically when the hotel is re-synced.
+    $legacy_fks = [
+        '?:novoton_bookings'             => 'fk_nb_hotel_id',
+        '?:novoton_alternative_requests' => 'fk_nar_hotel_id',
+    ];
+
+    foreach ($legacy_fks as $table => $constraint) {
+        $fk_exists = db_get_field(
+            "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS
+             WHERE TABLE_SCHEMA = DATABASE()
+             AND TABLE_NAME = ?s AND CONSTRAINT_NAME = ?s AND CONSTRAINT_TYPE = 'FOREIGN KEY'",
+            $resolve($table), $constraint
+        );
+        if ($fk_exists) {
+            try {
+                db_query("ALTER TABLE {$table} DROP FOREIGN KEY `{$constraint}`");
+            } catch (\Throwable $e) {
+                fn_log_event('general', 'runtime', [
+                    'message' => "Novoton setup_db: failed to drop legacy FK {$constraint} on {$table}: " . $e->getMessage(),
+                ]);
+            }
+        }
+    }
+
     // ── Foreign key constraints (idempotent — only adds if missing) ──
+    // Policy: CASCADE FKs only for true child data that must die with its
+    // parent (packages, facilities). Historical / cross-aggregate references
+    // (bookings, alternative requests, product links) carry NO FK — see the
+    // legacy-drop block above.
     $foreign_keys = [
         [
             'table'       => '?:novoton_hotel_packages',
@@ -574,22 +609,6 @@ function fn_novoton_holidays_setup_db(): void
             'ref_table'   => '?:novoton_facilities',
             'ref_column'  => 'facility_id',
             'on_delete'   => 'CASCADE',
-        ],
-        [
-            'table'       => '?:novoton_bookings',
-            'constraint'  => 'fk_nb_hotel_id',
-            'column'      => 'hotel_id',
-            'ref_table'   => '?:novoton_hotels',
-            'ref_column'  => 'hotel_id',
-            'on_delete'   => 'RESTRICT',
-        ],
-        [
-            'table'       => '?:novoton_alternative_requests',
-            'constraint'  => 'fk_nar_hotel_id',
-            'column'      => 'hotel_id',
-            'ref_table'   => '?:novoton_hotels',
-            'ref_column'  => 'hotel_id',
-            'on_delete'   => 'RESTRICT',
         ],
     ];
 
