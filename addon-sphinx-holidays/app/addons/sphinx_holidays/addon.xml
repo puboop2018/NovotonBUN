@@ -284,7 +284,8 @@
                 KEY `idx_classification` (`classification`),
                 KEY `idx_sync_status` (`sync_status`),
                 KEY `idx_sync_product` (`sync_status`, `product_id`),
-                KEY `idx_sync_country` (`sync_status`, `country_code`)
+                KEY `idx_sync_country` (`sync_status`, `country_code`),
+                KEY `idx_country_sync_synced` (`country_code`, `sync_status`, `last_synced_at`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
         </item>
 
@@ -537,6 +538,14 @@
                 ADD COLUMN `product_needs_update` ENUM('Y','N') DEFAULT 'N'
                 COMMENT 'Set to Y when API data differs from CS-Cart product'
                 AFTER `images_json`;
+        </item>
+        <!-- Upgrade: composite index for markInactiveBefore's stale-detection UPDATE
+             (WHERE country_code = ? AND sync_status = 'active' AND last_synced_at < ?);
+             without it every full-country sync range-scans and row-locks all active
+             hotels in the country -->
+        <item for="upgrade">
+            ALTER TABLE `?:sphinx_hotels`
+                ADD KEY `idx_country_sync_synced` (`country_code`, `sync_status`, `last_synced_at`);
         </item>
         <!-- Destination whitelist table for sync target UI -->
         <item>

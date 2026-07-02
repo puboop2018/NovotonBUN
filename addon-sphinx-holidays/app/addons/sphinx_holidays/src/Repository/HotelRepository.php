@@ -47,10 +47,24 @@ class HotelRepository implements HotelRepositoryInterface
     }
 
     /**
-     * Upsert a batch of hotels (INSERT ... ON DUPLICATE KEY UPDATE).
+     * Rows per multi-row upsert statement. Matches the sync services' own batch
+     * size, and keeps each statement's payload safely under max_allowed_packet
+     * even with large description/JSON columns.
+     */
+    private const UPSERT_CHUNK_SIZE = 100;
+
+    /** Placeholder tuple for one hotel row of the multi-row upsert (26 bound values). */
+    private const UPSERT_ROW_PLACEHOLDERS = '(?s, ?s, ?i, ?s, ?i, ?s, ?i, ?s, ?s, ?s, ?d, ?d, '
+        . "?s, ?s, ?s, ?s, ?s, ?s, ?s, ?s, ?s, ?s, ?d, ?i, 'active', ?s)";
+
+    /**
+     * Upsert a batch of hotels (multi-row INSERT ... ON DUPLICATE KEY UPDATE).
+     *
+     * One statement per UPSERT_CHUNK_SIZE rows instead of one per hotel — at
+     * full-sync scale (100k+ hotels) the per-row form was 100k round-trips.
      *
      * @param list<array<string, mixed>> $hotels Array of hotel rows
-     * @return int Number of rows affected
+     * @return int Number of rows submitted (invalid rows without hotel_id are skipped)
      */
     public function upsertBatch(array $hotels): int
     {
@@ -58,10 +72,51 @@ class HotelRepository implements HotelRepositoryInterface
             return 0;
         }
 
-        $affected = 0;
-        foreach ($hotels as $hotel) {
-            $hotelId = TypeCoerce::toString($hotel['hotel_id'] ?? '');
-            if ($hotelId === '') {
+        $now = date('Y-m-d H:i:s');
+        $submitted = 0;
+
+        foreach (array_chunk($hotels, self::UPSERT_CHUNK_SIZE) as $chunk) {
+            $tuples = [];
+            $params = [];
+
+            foreach ($chunk as $hotel) {
+                $hotelId = TypeCoerce::toString($hotel['hotel_id'] ?? '');
+                if ($hotelId === '') {
+                    continue;
+                }
+
+                $tuples[] = self::UPSERT_ROW_PLACEHOLDERS;
+                array_push(
+                    $params,
+                    $hotelId,
+                    TypeCoerce::toString($hotel['name'] ?? ''),
+                    TypeCoerce::toInt($hotel['classification'] ?? 0),
+                    TypeCoerce::toString($hotel['property_type'] ?? 'hotel'),
+                    TypeCoerce::toInt($hotel['destination_id'] ?? 0),
+                    TypeCoerce::toString($hotel['destination_name'] ?? ''),
+                    TypeCoerce::toInt($hotel['region_id'] ?? 0),
+                    TypeCoerce::toString($hotel['region_name'] ?? ''),
+                    TypeCoerce::toString($hotel['country_code'] ?? ''),
+                    TypeCoerce::toString($hotel['country_name'] ?? ''),
+                    TypeCoerce::toFloat($hotel['latitude'] ?? 0),
+                    TypeCoerce::toFloat($hotel['longitude'] ?? 0),
+                    TypeCoerce::toString($hotel['address'] ?? ''),
+                    TypeCoerce::toString($hotel['phone'] ?? ''),
+                    TypeCoerce::toString($hotel['email'] ?? ''),
+                    TypeCoerce::toString($hotel['website'] ?? ''),
+                    TypeCoerce::toString($hotel['description'] ?? ''),
+                    TypeCoerce::toString($hotel['short_description'] ?? ''),
+                    TypeCoerce::toString($hotel['image_url'] ?? ''),
+                    TypeCoerce::toString($hotel['images_json'] ?? '[]'),
+                    TypeCoerce::toString($hotel['facilities_json'] ?? '[]'),
+                    TypeCoerce::toString($hotel['is_adults_only'] ?? 'N'),
+                    TypeCoerce::toFloat($hotel['rating'] ?? 0),
+                    TypeCoerce::toInt($hotel['rating_count'] ?? 0),
+                    $now,
+                );
+            }
+
+            if ($tuples === []) {
                 continue;
             }
 
@@ -75,14 +130,7 @@ class HotelRepository implements HotelRepositoryInterface
                      images_json, facilities_json, is_adults_only,
                      rating, rating_count,
                      sync_status, last_synced_at)
-                 VALUES (?s, ?s, ?i, ?s,
-                     ?i, ?s, ?i, ?s,
-                     ?s, ?s, ?d, ?d,
-                     ?s, ?s, ?s, ?s,
-                     ?s, ?s, ?s,
-                     ?s, ?s, ?s,
-                     ?d, ?i,
-                     'active', ?s)
+                 VALUES " . implode(', ', $tuples) . "
                  AS new_row
                  ON DUPLICATE KEY UPDATE
                     name = new_row.name,
@@ -126,37 +174,13 @@ class HotelRepository implements HotelRepositoryInterface
                         ),
                         'Y', ?:sphinx_hotels.product_needs_update
                     )",
-                $hotelId,
-                TypeCoerce::toString($hotel['name'] ?? ''),
-                TypeCoerce::toInt($hotel['classification'] ?? 0),
-                TypeCoerce::toString($hotel['property_type'] ?? 'hotel'),
-                TypeCoerce::toInt($hotel['destination_id'] ?? 0),
-                TypeCoerce::toString($hotel['destination_name'] ?? ''),
-                TypeCoerce::toInt($hotel['region_id'] ?? 0),
-                TypeCoerce::toString($hotel['region_name'] ?? ''),
-                TypeCoerce::toString($hotel['country_code'] ?? ''),
-                TypeCoerce::toString($hotel['country_name'] ?? ''),
-                TypeCoerce::toFloat($hotel['latitude'] ?? 0),
-                TypeCoerce::toFloat($hotel['longitude'] ?? 0),
-                TypeCoerce::toString($hotel['address'] ?? ''),
-                TypeCoerce::toString($hotel['phone'] ?? ''),
-                TypeCoerce::toString($hotel['email'] ?? ''),
-                TypeCoerce::toString($hotel['website'] ?? ''),
-                TypeCoerce::toString($hotel['description'] ?? ''),
-                TypeCoerce::toString($hotel['short_description'] ?? ''),
-                TypeCoerce::toString($hotel['image_url'] ?? ''),
-                TypeCoerce::toString($hotel['images_json'] ?? '[]'),
-                TypeCoerce::toString($hotel['facilities_json'] ?? '[]'),
-                TypeCoerce::toString($hotel['is_adults_only'] ?? 'N'),
-                TypeCoerce::toFloat($hotel['rating'] ?? 0),
-                TypeCoerce::toInt($hotel['rating_count'] ?? 0),
-                date('Y-m-d H:i:s'),
+                ...$params,
             );
 
-            $affected++;
+            $submitted += count($tuples);
         }
 
-        return $affected;
+        return $submitted;
     }
 
     /**
