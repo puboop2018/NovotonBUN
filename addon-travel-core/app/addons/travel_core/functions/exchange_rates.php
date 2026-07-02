@@ -180,6 +180,11 @@ function fn_travel_core_update_cscart_currencies($coefficients): array
 {
     $results = [];
 
+    // Validate first (reads outside the transaction): a currency that is not
+    // installed in the store is a soft skip, not a failure of the whole batch.
+    /** @var array<string, array{old: mixed, new: float}> $pending */
+    $pending = [];
+
     foreach ($coefficients as $currency_code => $coefficient) {
         $currency = db_get_row(
             "SELECT * FROM ?:currencies WHERE currency_code = ?s",
@@ -205,36 +210,63 @@ function fn_travel_core_update_cscart_currencies($coefficients): array
             continue;
         }
 
-        $old_coefficient = $currency['coefficient'] ?? null;
-        $coefficientFloat = TypeCoerce::toFloat($coefficient);
-
-        db_query(
-            "UPDATE ?:currencies SET coefficient = ?d WHERE currency_code = ?s",
-            round($coefficientFloat, 5),
-            $currency_code
-        );
-
-        $stored = TypeCoerce::toFloat(db_get_field(
-            "SELECT coefficient FROM ?:currencies WHERE currency_code = ?s",
-            $currency_code
-        ));
-
-        if (abs($stored - $coefficientFloat) > 0.001) {
-            fn_log_event('general', 'runtime', [
-                'message' => sprintf(
-                    'WARNING: Currency coefficient mismatch after update for %s: expected %s, got %s',
-                    $currency_code,
-                    $coefficientFloat,
-                    $stored
-                )
-            ]);
-        }
-
-        $results[$currency_code] = [
-            'success' => true,
-            'old_rate' => $old_coefficient,
-            'new_rate' => $stored
+        $pending[$currency_code] = [
+            'old' => $currency['coefficient'] ?? null,
+            'new' => TypeCoerce::toFloat($coefficient),
         ];
+    }
+
+    // Apply all coefficient updates atomically. Customer-facing prices must not
+    // mix old and new rates, so a mid-batch failure — including a verify-readback
+    // mismatch — rolls the WHOLE batch back and leaves every rate unchanged.
+    if ($pending !== []) {
+        db_query('START TRANSACTION');
+        try {
+            foreach ($pending as $currency_code => $update) {
+                db_query(
+                    "UPDATE ?:currencies SET coefficient = ?d WHERE currency_code = ?s",
+                    round($update['new'], 5),
+                    $currency_code
+                );
+
+                $stored = TypeCoerce::toFloat(db_get_field(
+                    "SELECT coefficient FROM ?:currencies WHERE currency_code = ?s",
+                    $currency_code
+                ));
+
+                if (abs($stored - $update['new']) > 0.001) {
+                    throw new \RuntimeException(sprintf(
+                        'Currency coefficient mismatch after update for %s: expected %s, got %s',
+                        $currency_code,
+                        $update['new'],
+                        $stored
+                    ));
+                }
+
+                $results[$currency_code] = [
+                    'success' => true,
+                    'old_rate' => $update['old'],
+                    'new_rate' => $stored
+                ];
+            }
+
+            db_query('COMMIT');
+        } catch (\Throwable $e) {
+            db_query('ROLLBACK');
+
+            fn_log_event('general', 'runtime', [
+                'message' => 'Currency coefficient update rolled back — no rates were changed: ' . $e->getMessage(),
+            ]);
+
+            foreach ($pending as $currency_code => $update) {
+                $results[$currency_code] = [
+                    'success' => false,
+                    'rolled_back' => true,
+                    'error' => 'Rolled back: ' . $e->getMessage(),
+                    'old_rate' => $update['old'],
+                ];
+            }
+        }
     }
 
     if (function_exists('fn_clear_cache')) {
@@ -305,6 +337,20 @@ function fn_travel_core_update_exchange_rates(float $commission = 0.0, bool $ret
     // Step 4: Update CS-Cart currencies
     $updates = fn_travel_core_update_cscart_currencies($coefficients);
     $result['updates'] = $updates;
+
+    // A rolled-back batch means NO rate changed — report failure, not success.
+    // ('Currency not found' entries stay soft skips: a store without e.g. GBP
+    // installed is a valid configuration, not an error.)
+    $rolled_back = array_filter(
+        $updates,
+        static fn ($u): bool => is_array($u) && !empty($u['rolled_back'])
+    );
+    if ($rolled_back !== []) {
+        $result['message'] = 'Currency coefficient update was rolled back — rates unchanged';
+        // Still notify provider addons so the failure lands in their sync logs.
+        fn_set_hook('travel_core_exchange_rates_updated', $result);
+        return $return_details ? $result : false;
+    }
 
     $result['success'] = true;
     $result['message'] = 'Exchange rates updated successfully';
