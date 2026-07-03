@@ -1,0 +1,141 @@
+# Fresh Install — Travel Addons (travel_core, novoton_holidays, sphinx_holidays)
+
+Checklist for installing the travel addons into a CS-Cart store from scratch.
+On a fresh install the `addon.xml` CREATE TABLEs produce the **complete,
+current schema** — no upgrade items or migrations need to be applied.
+
+## 1. Requirements
+
+| Requirement | Value | Why / how to check |
+|---|---|---|
+| CS-Cart | 4.20.1 | the version the addons are developed and tested against |
+| PHP | **8.3+** | typed class constants, readonly properties (`composer.json` requires `^8.3`) |
+| Database | **MySQL 8.0.19+** — *not MariaDB* | the sync upserts use the `INSERT … AS new_row` alias, which MariaDB does not support. Check with `SELECT VERSION();`. XAMPP ships MariaDB by default — do not install onto it. |
+| Theme | `responsive` or `nova_theme` | the addons ship design files for both |
+
+## 2. Deploy the addon files
+
+Copy (rsync) each addon's trees into the CS-Cart root, preserving paths:
+
+```
+addon-<name>/app/addons/<addon>/   → <cscart>/app/addons/<addon>/
+addon-<name>/design/…              → <cscart>/design/…
+addon-<name>/js/…                  → <cscart>/js/…
+```
+
+Deploy from **merged main** including the 2026-07 fixes — older code recreates
+the removed `RESTRICT` foreign keys (booked hotels become undeletable) and
+lacks the booking-atomicity and sync-performance fixes.
+
+## 3. Install order (strict)
+
+Install from **Admin → Add-ons → Manage add-ons**, in this order:
+
+1. **Travel Core** (`travel_core`) — shared foundation; the others declare a
+   dependency on it
+2. **Novoton Holidays** (`novoton_holidays`)
+3. **Sphinx Holidays** (`sphinx_holidays`)
+
+Installation runs the CREATE TABLEs and each addon's post-install setup
+(novoton's `setup_db()` creates its CASCADE FKs and seeds feature aliases;
+SEO defaults seed on first admin load).
+
+**Uninstall order (reverse-ish): novoton → sphinx → travel_core.**
+⚠️ Uninstalling **drops all addon tables** — hotels, packages, prices,
+**bookings** — irreversibly. The novoton setting `delete_products_on_uninstall`
+decides whether the CS-Cart products created for hotels are also deleted
+(default `N`: products remain; re-linking after a reinstall relies on the
+sync's product-code dedup).
+
+## 4. Configure (nothing works until these are set)
+
+### travel_core (Settings → Travel Core)
+- `cron_access_key` — random secret for the cron URLs
+- Exchange-rate commission (applied on top of BNR rates for RON/USD/GBP)
+
+### novoton_holidays
+- **API**: `api_url`, `api_id`, `api_user` / `api_password` (+ `api_key` where
+  applicable). Leave `allow_insecure_api` off.
+- `commission` — markup applied to API prices
+- `api_currency` — normally `EUR`
+- `cron_access_key`, `cron_batch_size`, `cron_max_execution_time`
+- `enable_preorder_price_check` — keep **on** (re-verifies price at checkout)
+- **Feature mapping**: create/select the CS-Cart product features (property
+  rating, meals, hotel/room facilities, resort, property type) and set their
+  feature IDs in the addon settings, then review **Admin → Travel →
+  Feature mappings**. Board/room/star aliases are seeded automatically at
+  install.
+- Leave `disable_api_submission` **off** in production (on = bookings are
+  saved locally and never sent to Novoton — test mode).
+
+### sphinx_holidays
+- **API** credentials and endpoint
+- `cron_access_key`
+- Search settings: `cache_ttl_search`, `search_poll_interval`,
+  `search_max_polls`, `default_currency`
+- `require_immediate_availability` — decide the availability gate policy
+- **Destination whitelist**: after the destination sync (next section), pick
+  the destinations to sell in the sphinx admin — hotels sync only for
+  whitelisted destinations.
+
+Clear the cache after configuring (**Admin → Settings → Clear cache**, or
+delete `var/cache/`).
+
+## 5. Initial data sync (order matters)
+
+Cron URL format (also runnable via CLI `php cron.php …` where provided):
+
+```
+index.php?dispatch=travel_cron.run&access_key=KEY&cron_mode=exchange_rates
+index.php?dispatch=sphinx_cron.run&access_key=KEY&mode=<mode>
+index.php?dispatch=novoton_cron.run&access_key=KEY&mode=<mode>
+```
+
+Calling a cron endpoint **without a mode prints its list of available modes**
+— use that as the authoritative reference.
+
+1. **travel_core**: `exchange_rates` — BNR rates for RON display prices.
+   Schedule daily thereafter.
+2. **sphinx**, in order:
+   `destinations` → *(configure the destination whitelist in admin)* →
+   `hotels` → `add_products` → `sync_images` / `process_image_queue` →
+   `discover_boards` → `assign_boards`.
+   (`full` chains the main steps; `cleanup` is the recurring janitor;
+   `diagnose_*` modes are read-only health checks.)
+3. **novoton**: hotel/resort sync → price computation → product creation, per
+   the mode list the cron prints. The backend dashboard (**Admin → Novoton**)
+   shows sync status and provides manual triggers.
+
+Schedule the recurring jobs (typical: exchange rates + price refresh daily,
+hotel sync weekly, `cleanup` daily) via real cron on the server.
+
+## 6. Storefront checks after install
+
+- **Default search must stay the default search.** The header Search block is
+  core CS-Cart; the addons never touch it. If you place the homepage booking
+  widget, add it as its **own block** (template *Novoton: Homepage Booking
+  Search* / *Sphinx booking engine*) — do **not** set it as the Search
+  block's template, or the product search box disappears.
+- Hotel product page renders the React booking engine (calendar, occupancy,
+  live price).
+- Add to cart → checkout completes; the booking row appears in the addon's
+  bookings admin with the API confirmation (or a clear failure status).
+- Currency switcher shows sane RON/EUR prices (exchange-rate cron ran).
+
+## 7. Developer verification (optional but recommended)
+
+```bash
+composer install && composer check          # PHPStan L10 + cs-fixer + rector + unit suites
+docker compose -f docker-compose.test.yml up -d db   # CS-Cart test DB (MySQL 8)
+cd addon-novoton-holidays/app/addons/novoton_holidays
+DB_DSN='mysql:host=127.0.0.1;port=3307;dbname=cscart' DB_USER=cscart DB_PASS=cscart \
+  vendor/bin/phpunit -c phpunit-integration.xml       # incl. booking write-path tests
+```
+
+## 8. Future schema changes (post-install rule)
+
+Every schema change must land in **both** places: the `addon.xml`
+CREATE TABLE (fresh installs) **and** an upgrade item / `setup_db()` step
+(installed sites) — and applying deltas to installed environments is an
+explicit deploy-checklist step until a migration runner exists
+(see `AUDIT_2026-07-01.md`, roadmap item #2).
