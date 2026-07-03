@@ -10,7 +10,7 @@ current schema** — no upgrade items or migrations need to be applied.
 |---|---|---|
 | CS-Cart | 4.20.1 | the version the addons are developed and tested against |
 | PHP | **8.3+** | typed class constants, readonly properties (`composer.json` requires `^8.3`) |
-| Database | **MySQL 8.0.19+** — *not MariaDB* | the sync upserts use the `INSERT … AS new_row` alias, which MariaDB does not support. Check with `SELECT VERSION();`. XAMPP ships MariaDB by default — do not install onto it. |
+| Database | **MySQL 8.0+ or MariaDB 10.6+** | all upserts use the portable `VALUES(col)` form (converted 2026-07-03; the earlier MySQL-only `AS new_row` alias is gone). Change-detection upserts proven on MariaDB 10.11. Check with `SELECT VERSION();`. |
 | Theme | `responsive` or `nova_theme` | the addons ship design files for both |
 
 ## 2. Deploy the addon files

@@ -63,6 +63,10 @@ class HotelRepository implements HotelRepositoryInterface
      * One statement per UPSERT_CHUNK_SIZE rows instead of one per hotel — at
      * full-sync scale (100k+ hotels) the per-row form was 100k round-trips.
      *
+     * Uses the VALUES(col) form (not the MySQL-8-only "AS alias" syntax) so the
+     * upsert runs on both MySQL and MariaDB; MySQL 8 flags VALUES() in ON
+     * DUPLICATE KEY UPDATE as deprecated but keeps it working.
+     *
      * @param list<array<string, mixed>> $hotels Array of hotel rows
      * @return int Number of rows submitted (invalid rows without hotel_id are skipped)
      */
@@ -131,49 +135,52 @@ class HotelRepository implements HotelRepositoryInterface
                      rating, rating_count,
                      sync_status, last_synced_at)
                  VALUES ' . implode(', ', $tuples) . "
-                 AS new_row
                  ON DUPLICATE KEY UPDATE
-                    name = new_row.name,
-                    classification = new_row.classification,
-                    property_type = new_row.property_type,
-                    destination_id = new_row.destination_id,
-                    destination_name = new_row.destination_name,
-                    region_id = new_row.region_id,
-                    region_name = new_row.region_name,
-                    country_code = new_row.country_code,
-                    country_name = new_row.country_name,
-                    latitude = new_row.latitude,
-                    longitude = new_row.longitude,
-                    address = new_row.address,
-                    phone = new_row.phone,
-                    email = new_row.email,
-                    website = new_row.website,
-                    description = new_row.description,
-                    short_description = new_row.short_description,
-                    image_url = new_row.image_url,
-                    images_json = new_row.images_json,
-                    facilities_json = new_row.facilities_json,
-                    is_adults_only = new_row.is_adults_only,
-                    rating = new_row.rating,
-                    rating_count = new_row.rating_count,
-                    sync_status = 'active',
-                    last_synced_at = new_row.last_synced_at,
+                    /* Change-detection FIRST: ON DUPLICATE KEY UPDATE assignments
+                       run left to right, so these IF()s must read the OLD column
+                       values before the plain assignments below overwrite them
+                       (otherwise old == new always and detection never fires). */
                     product_skip_reason = IF(
-                        ?:sphinx_hotels.destination_name != new_row.destination_name
-                        OR ?:sphinx_hotels.country_name != new_row.country_name
-                        OR ?:sphinx_hotels.country_code != new_row.country_code,
+                        ?:sphinx_hotels.destination_name != VALUES(destination_name)
+                        OR ?:sphinx_hotels.country_name != VALUES(country_name)
+                        OR ?:sphinx_hotels.country_code != VALUES(country_code),
                         NULL, ?:sphinx_hotels.product_skip_reason
                     ),
                     product_needs_update = IF(
                         ?:sphinx_hotels.product_id IS NOT NULL AND ?:sphinx_hotels.product_id > 0 AND (
-                            ?:sphinx_hotels.name != new_row.name
-                            OR ?:sphinx_hotels.description != new_row.description
-                            OR ?:sphinx_hotels.short_description != new_row.short_description
-                            OR ?:sphinx_hotels.classification != new_row.classification
-                            OR ?:sphinx_hotels.image_url != new_row.image_url
+                            ?:sphinx_hotels.name != VALUES(name)
+                            OR ?:sphinx_hotels.description != VALUES(description)
+                            OR ?:sphinx_hotels.short_description != VALUES(short_description)
+                            OR ?:sphinx_hotels.classification != VALUES(classification)
+                            OR ?:sphinx_hotels.image_url != VALUES(image_url)
                         ),
                         'Y', ?:sphinx_hotels.product_needs_update
-                    )",
+                    ),
+                    name = VALUES(name),
+                    classification = VALUES(classification),
+                    property_type = VALUES(property_type),
+                    destination_id = VALUES(destination_id),
+                    destination_name = VALUES(destination_name),
+                    region_id = VALUES(region_id),
+                    region_name = VALUES(region_name),
+                    country_code = VALUES(country_code),
+                    country_name = VALUES(country_name),
+                    latitude = VALUES(latitude),
+                    longitude = VALUES(longitude),
+                    address = VALUES(address),
+                    phone = VALUES(phone),
+                    email = VALUES(email),
+                    website = VALUES(website),
+                    description = VALUES(description),
+                    short_description = VALUES(short_description),
+                    image_url = VALUES(image_url),
+                    images_json = VALUES(images_json),
+                    facilities_json = VALUES(facilities_json),
+                    is_adults_only = VALUES(is_adults_only),
+                    rating = VALUES(rating),
+                    rating_count = VALUES(rating_count),
+                    sync_status = 'active',
+                    last_synced_at = VALUES(last_synced_at)",
                 ...$params,
             );
 

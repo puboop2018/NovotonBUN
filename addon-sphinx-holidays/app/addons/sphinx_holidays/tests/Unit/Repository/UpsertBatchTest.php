@@ -60,7 +60,9 @@ class UpsertBatchTest extends TestCase
         $query = $this->calls[0]['query'];
         self::assertSame(3, substr_count($query, '(?s, ?s, ?i,'), 'expected one VALUES tuple per hotel');
         self::assertStringContainsString('ON DUPLICATE KEY UPDATE', $query);
-        self::assertStringContainsString('AS new_row', $query);
+        // Portable VALUES(col) form — the MySQL-8-only "AS alias" syntax breaks MariaDB.
+        self::assertStringContainsString('name = VALUES(name)', $query);
+        self::assertStringNotContainsString('AS new_row', $query);
 
         $params = $this->calls[0]['params'];
         self::assertCount(3 * self::HOTEL_PARAMS_PER_ROW, $params);
