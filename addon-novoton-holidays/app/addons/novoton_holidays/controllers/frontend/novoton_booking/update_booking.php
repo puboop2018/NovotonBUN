@@ -60,19 +60,19 @@ use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
     /** @var array<string, mixed>|null $existing_for_checkin */
     $existing_for_checkin = _nvt_booking_repo()->findById($booking_id);
     $check_in_for_validation = is_array($existing_for_checkin) ? PriceInfoFormatter::toScalar($existing_for_checkin['check_in'] ?? '') : '';
-    
+
     // Parse and validate guests (returns false if validation fails)
     $parsed_guests = \Tygh\Addons\TravelCore\Services\GuestDataService::parseAndValidateGuests($guests, $check_in_for_validation, 'novoton');
     if ($parsed_guests === false) {
         return [CONTROLLER_STATUS_REDIRECT, "novoton_booking.edit_booking?booking_id={$booking_id}&cart_id={$cart_id}"];
     }
-    
+
     // Extract parsed data
     $guests_data = TypeCoerce::toStringMap($parsed_guests['guests_data'] ?? []);
     $guest_names = $parsed_guests['guest_names'];
     $guest_list = $parsed_guests['guest_list'];
     $holder_name = $parsed_guests['holder_name'];
-    
+
     // Update booking record
     // First get existing booking data to rebuild api_request - use cached value if same booking
     /** @var array<string, mixed>|null $existing_booking */
@@ -114,7 +114,7 @@ use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
         'remark' => '',
         'comment' => ''
     ];
-    
+
     // If multi-room, parse rooms_data and add rooms to api_request
     if (!empty($existing_booking['rooms_data'])) {
         $rooms_data = json_decode(PriceInfoFormatter::toScalar($existing_booking['rooms_data']), true);
@@ -140,7 +140,7 @@ use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
             $api_request['rooms'] = $api_rooms;
         }
     }
-    
+
     // Route through repository to sync travel_bookings
     try {
         _nvt_booking_repo()->update($booking_id, [
@@ -226,7 +226,7 @@ use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
             fn_save_cart_content($cart, $authUserId);
         }
     }
-    
+
     fn_set_notification('N', __('success'), __('novoton_holidays.booking_updated'));
-    
+
     return [CONTROLLER_STATUS_REDIRECT, 'checkout.cart'];

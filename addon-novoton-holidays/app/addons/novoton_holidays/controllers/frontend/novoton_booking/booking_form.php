@@ -49,25 +49,25 @@ use Tygh\Addons\TravelCore\Services\CurrencyService;
         }
         unset($room);
     }
-    
+
     // For multi-room, derive room_id from rooms_data if not directly provided
     if ($is_multi_room && empty($bookingData['room_id']) && is_array($rooms_data[0] ?? null) && !empty($rooms_data[0]['room_id'])) {
         $bookingData['room_id'] = PriceInfoFormatter::toScalar($rooms_data[0]['room_id']);
         $bookingData['board_id'] = PriceInfoFormatter::toScalar($rooms_data[0]['board_id'] ?? 'AI');
     }
-    
+
     // Validate required data
     if (empty($bookingData['hotel_id']) || empty($bookingData['check_in']) || empty($bookingData['check_out'])) {
         fn_set_notification('E', __('error'), TypeCoerce::toString(__('novoton_holidays.invalid_booking_data')) . ' (missing hotel_id, check_in, or check_out)');
         return [CONTROLLER_STATUS_REDIRECT, 'index.index'];
     }
-    
+
     // For non-multi-room, room_id is required
     if (!$is_multi_room && empty($bookingData['room_id'])) {
         fn_set_notification('E', __('error'), TypeCoerce::toString(__('novoton_holidays.invalid_booking_data')) . ' (missing room_id)');
         return [CONTROLLER_STATUS_REDIRECT, 'index.index'];
     }
-    
+
     // Get product and hotel info
     $prefix = ConfigProvider::getFirstProductCodePrefix();
     $bdHotelId = PriceInfoFormatter::toScalar($bookingData['hotel_id']);
@@ -121,13 +121,13 @@ use Tygh\Addons\TravelCore\Services\CurrencyService;
         'num_rooms' => PriceInfoFormatter::toInt($bookingData['num_rooms'] ?? 1),
         'rooms_data' => []
     ];
-    
+
     // Reuse rooms_data already parsed and room_id-fixed at top of controller
     if (!empty($rooms_data)) {
         $booking['rooms_data'] = $rooms_data;
         $booking['num_rooms'] = count($rooms_data);
     }
-    
+
     // If no rooms_data, create default based on adults/children
     if (empty($booking['rooms_data'])) {
         $children_ages_arr = [];
@@ -155,14 +155,14 @@ use Tygh\Addons\TravelCore\Services\CurrencyService;
             ]
         ];
     }
-    
+
     // Parse children ages if string (for legacy support)
     $children_ages_array = [];
     if (!empty($booking['children_ages'])) {
         $children_ages_array = array_map('intval', array_filter(explode(',', $booking['children_ages']), function($v) { return $v !== ''; }));
     }
     $booking['children_ages_array'] = $children_ages_array;
-    
+
     // Get package name - only from passed parameters (tied to specific room/price)
     $package_name = '';
 
@@ -190,7 +190,7 @@ use Tygh\Addons\TravelCore\Services\CurrencyService;
             $hotel_stars = $matches[1];
         }
     }
-    
+
     // V3: Get all packages from novoton_hotel_packages table
     $all_packages = [];
     $packageRepo = \Tygh\Addons\NovotonHolidays\Services\Container::getInstance()->hotelPackageRepository();
@@ -232,7 +232,7 @@ use Tygh\Addons\TravelCore\Services\CurrencyService;
             }
         }
     }
-    
+
     // If not in DB, fetch from API
     if (empty($age_categories) || empty($room_limits)) {
         $api = fn_novoton_holidays_get_api();
@@ -240,7 +240,7 @@ use Tygh\Addons\TravelCore\Services\CurrencyService;
             $hotelInfoResponse = $api->hotels()->getHotelInfo(TypeCoerce::toString($booking['hotel_id']));
             if ((bool) $hotelInfoResponse && isset($hotelInfoResponse->hotels->hotel)) {
                 $h = $hotelInfoResponse->hotels->hotel;
-                
+
                 // Parse age categories
                 if (isset($h->age)) {
                     $ages = isset($h->age->IdAge) ? [$h->age] : $h->age;
@@ -254,7 +254,7 @@ use Tygh\Addons\TravelCore\Services\CurrencyService;
                         $age_categories[] = $age_data;
                     }
                 }
-                
+
                 // Parse room limits
                 if (isset($h->rooms)) {
                     $rooms = isset($h->rooms->IdRoom) ? [$h->rooms] : $h->rooms;
@@ -271,13 +271,13 @@ use Tygh\Addons\TravelCore\Services\CurrencyService;
                         ];
                     }
                 }
-                
+
                 // V3: Age and room data is already stored in hotel_data JSON via hotelinfo sync
                 // No separate caching needed - data will be fetched fresh from API or hotel_data
             }
         }
     }
-    
+
     // Add age categories and room limits to booking data for JavaScript
     $booking['age_categories'] = $age_categories;
     $current_room_id = $booking['room_id'];
@@ -288,7 +288,7 @@ use Tygh\Addons\TravelCore\Services\CurrencyService;
         'rb' => 2,
         'eb' => 2
     ];
-    
+
     // Assign to view
     /** @var \Smarty $view */
     $view = Tygh::$app['view'];

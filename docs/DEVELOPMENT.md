@@ -40,7 +40,8 @@ ls .git/hooks/pre-commit   # verify
 composer stan          # PHPStan
 composer psalm         # Psalm
 composer cs            # PHPCS style check
-composer fix:dry       # Show PHP CS Fixer diff (no changes written)
+composer fix:dry       # Show PHP CS Fixer diff, both configs (no changes written)
+composer fix:proc:dry  # Procedural-files config only (controllers/functions/hooks)
 composer md            # PHPMD findings
 composer test          # PHPUnit
 
@@ -64,9 +65,8 @@ composer check:all     # + phpmd
 ## Pipeline rules
 
 ### PHPStan (level 10 — maximum)
-- Current baseline: ~4,100 errors (tracked in `phpstan-baseline.neon`)
-- **New code must pass level 10 clean** — no additions to the baseline
-- Each baseline regeneration should reduce the error count
+- Current baseline: **0 errors** (`phpstan-baseline.neon` is empty — fully paid down)
+- **All code must pass level 10 clean** — any new error fails the build outright
 
 ### Psalm (level 5)
 - Current baseline: 0 errors (zero at levels 8, 7, 6, 5)
@@ -118,7 +118,12 @@ Runs on every `push` (any branch) and `pull_request` to `main`:
 | PHP CS Fixer       | yes       | `vendor/bin/php-cs-fixer fix --dry-run`   |
 | PHPMD              | no        | `vendor/bin/phpmd`                        |
 | PHPUnit (novoton)  | yes       | `vendor/bin/phpunit`                      |
-| PHP Lint           | yes       | `php -l` on all `src/*.php`               |
+| PHP Lint           | yes       | `php -l` on the whole addon trees (excl. vendor) |
+
+PHP CS Fixer runs **two configs**: `.php-cs-fixer.dist.php` (full ruleset, `src/` +
+tests) and `.php-cs-fixer.procedural.php` (conservative imports/whitespace-only
+pass over `controllers/`, `functions/`, `hooks/`, and addon-root `func.php`/
+`init.php` — CS-Cart procedural conventions make full PSR-12 too noisy there).
 
 ## Fixing common issues
 

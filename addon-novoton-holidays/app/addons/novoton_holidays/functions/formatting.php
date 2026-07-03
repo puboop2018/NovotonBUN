@@ -180,10 +180,10 @@ function fn_novoton_holidays_parse_payment_terms($xml_string): array
         if ($xml === null) {
             return [];
         }
-        
+
         // Try Novoton format first: <Percent tillDate="...">value</Percent>
         $percentRules = $xml->xpath('//Percent') ?: [];
-        
+
         if (!empty($percentRules)) {
             foreach ($percentRules as $rule) {
                 $percent = (int)round((float)(string)$rule);
@@ -242,7 +242,7 @@ function fn_novoton_holidays_parse_cancellation_terms($xml_string, $check_in = '
     if (empty($xml_string)) {
         return [];
     }
-    
+
     $terms = [];
 
     try {
@@ -253,15 +253,15 @@ function fn_novoton_holidays_parse_cancellation_terms($xml_string, $check_in = '
 
         // Try Novoton format first: <Penalty tillDate="..." Type="...">value</Penalty>
         $penaltyRules = $xml->xpath('//Penalty') ?: [];
-        
+
         if (!empty($penaltyRules)) {
             $check_in_ts = !empty($check_in) ? strtotime($check_in) : 0;
-            
+
             foreach ($penaltyRules as $rule) {
                 $value = (float)(string)$rule;
                 $tillDate = (string)($rule['tillDate'] ?? $rule['TillDate'] ?? '');
                 $type = (string)($rule['Type'] ?? $rule['type'] ?? 'Percent');
-                
+
                 // Calculate days before check-in
                 $days_before = 0;
                 if (!empty($tillDate) && TypeCoerce::toBool($check_in_ts)) {
@@ -284,10 +284,10 @@ function fn_novoton_holidays_parse_cancellation_terms($xml_string, $check_in = '
                     $term['value'] = 'FREE';
                     $term['is_penalty'] = false;
                 }
-                
+
                 $terms[] = $term;
             }
-            
+
             // Sort by till_date ascending (earliest first)
             usort($terms, function($a, $b) {
                 return strcmp($a['till_date'], $b['till_date']);
@@ -295,7 +295,7 @@ function fn_novoton_holidays_parse_cancellation_terms($xml_string, $check_in = '
         } else {
             // Fallback: Try generic CancelRule format
             $cancelRules = $xml->xpath('//CancelRule') ?: $xml->xpath('//cancelRule') ?: [];
-            
+
             foreach ($cancelRules as $rule) {
                 $term = [
                     'days_before' => (int)($rule['DaysBefore'] ?? $rule['daysBefore'] ?? $rule['Days'] ?? 0),
@@ -303,7 +303,7 @@ function fn_novoton_holidays_parse_cancellation_terms($xml_string, $check_in = '
                     'type' => (string)($rule['Type'] ?? $rule['type'] ?? 'Percent'),
                     'is_penalty' => true,
                 ];
-                
+
                 // Calculate actual date if check_in provided
                 if (!empty($check_in) && $term['days_before'] > 0) {
                     $check_in_ts = strtotime($check_in);
@@ -311,18 +311,18 @@ function fn_novoton_holidays_parse_cancellation_terms($xml_string, $check_in = '
                         $term['till_date'] = date('Y-m-d', (int) strtotime("-{$term['days_before']} days", $check_in_ts));
                     }
                 }
-                
+
                 if ($term['days_before'] > 0 || $term['value'] > 0) {
                     $terms[] = $term;
                 }
             }
-            
+
             // Sort by days_before descending (earliest deadlines first)
             usort($terms, function($a, $b) {
                 return $b['days_before'] - $a['days_before'];
             });
         }
-        
+
     } catch (\Exception $e) {
         fn_log_event('general', 'runtime', ['message' => 'Novoton: cancellation terms parse error: ' . $e->getMessage()]);
     }
@@ -439,11 +439,11 @@ function fn_novoton_holidays_format_cancellation_terms($xml_string, $check_in = 
 function fn_novoton_holidays_get_free_cancellation_date($xml_string): ?string
 {
     $terms = fn_novoton_holidays_parse_cancellation_terms($xml_string);
-    
+
     if (empty($terms)) {
         return null;
     }
-    
+
     // Find the first term with 0 penalty (free cancellation)
     foreach ($terms as $term) {
         $value = $term['value'] ?? null;
@@ -453,7 +453,7 @@ function fn_novoton_holidays_get_free_cancellation_date($xml_string): ?string
             return $tillDate;
         }
     }
-    
+
     return null;
 }
 
@@ -538,7 +538,7 @@ function fn_novoton_holidays_build_hotel_title($hotel_name, $city, $country, $ye
     // Apply the same display-name formatting used for product names.
     // This is idempotent: names that already contain a type keyword pass through unchanged.
     $hotel_name = fn_novoton_holidays_format_hotel_display_name(trim($hotel_name));
-    
+
     // Build location part
     $location_parts = [];
     if (!empty($city)) {
@@ -547,9 +547,9 @@ function fn_novoton_holidays_build_hotel_title($hotel_name, $city, $country, $ye
     if (!empty($country)) {
         $location_parts[] = ucwords(strtolower(trim($country)));
     }
-    
+
     $location = implode(', ', $location_parts);
-    
+
     // Build full title
     $title = $hotel_name;
     if (!empty($location)) {
@@ -558,7 +558,7 @@ function fn_novoton_holidays_build_hotel_title($hotel_name, $city, $country, $ye
     if (!empty($year)) {
         $title .= ' ' . $year;
     }
-    
+
     return $title;
 }
 
@@ -579,12 +579,12 @@ function fn_novoton_holidays_xml_to_array($xml): array
         }
         libxml_clear_errors();
     }
-    
+
     $result = [];
-    
+
     foreach ($xml->children() as $key => $value) {
         $arr = fn_novoton_holidays_xml_to_array($value);
-        
+
         if (isset($result[$key])) {
             if (!is_array($result[$key]) || !isset($result[$key][0])) {
                 $result[$key] = [$result[$key]];
@@ -594,12 +594,12 @@ function fn_novoton_holidays_xml_to_array($xml): array
             $result[$key] = count($arr) > 0 ? $arr : (string)$value;
         }
     }
-    
+
     // Include attributes
     foreach ($xml->attributes() as $key => $value) {
         $result['@' . $key] = (string)$value;
     }
-    
+
     return $result;
 }
 

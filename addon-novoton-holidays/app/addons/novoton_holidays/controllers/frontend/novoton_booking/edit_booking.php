@@ -100,7 +100,7 @@ use Tygh\Addons\NovotonHolidays\Helpers\JsonDecoder;
     $rawGuestsData = $booking_record['guests_data'] ?? '';
     $guestsInput = is_array($rawGuestsData) ? TypeCoerce::toStringMap($rawGuestsData) : TypeCoerce::toString($rawGuestsData);
     $guests_data = (new GuestDataNormalizer())->normalize($guestsInput);
-    
+
     // Ensure dob field is in DD/MM/YYYY format for each guest (template expects this format)
     foreach ($guests_data as $key => &$guest) {
         if (!is_array($guest)) {
@@ -115,7 +115,7 @@ use Tygh\Addons\NovotonHolidays\Helpers\JsonDecoder;
         }
     }
     unset($guest);
-    
+
     $booking = [
         'hotel_id' => $brHotelId,
         'room_id' => PriceInfoFormatter::toScalar($booking_record['room_id'] ?? ''),
@@ -132,7 +132,7 @@ use Tygh\Addons\NovotonHolidays\Helpers\JsonDecoder;
         'rooms_data' => $rooms_data,
         'guests_data' => $guests_data,
     ];
-    
+
     // Ensure rooms_data is not empty for single room bookings
     if (empty($booking['rooms_data'])) {
         // Parse children ages
@@ -140,7 +140,7 @@ use Tygh\Addons\NovotonHolidays\Helpers\JsonDecoder;
         if (!empty($booking['children_ages'])) {
             $children_ages_arr = array_map('intval', array_filter(explode(',', $booking['children_ages']), function($v) { return $v !== ''; }));
         }
-        
+
         // Create default rooms_data
         $brRoomId = PriceInfoFormatter::toScalar($booking_record['room_id'] ?? '');
         $brBoardId = PriceInfoFormatter::toScalar($booking_record['board_id'] ?? '');
@@ -158,14 +158,14 @@ use Tygh\Addons\NovotonHolidays\Helpers\JsonDecoder;
             ]
         ];
     }
-    
+
     // Parse children ages
     $children_ages_array = [];
     if (!empty($booking['children_ages'])) {
         $children_ages_array = array_map('intval', array_filter(explode(',', $booking['children_ages']), function($v) { return $v !== ''; }));
     }
     $booking['children_ages_array'] = $children_ages_array;
-    
+
     // Get package name
     $package_name = PriceInfoFormatter::toScalar($booking_record['package_name'] ?? '');
     if (empty($package_name) && !empty($brHotelId)) {
@@ -195,7 +195,7 @@ use Tygh\Addons\NovotonHolidays\Helpers\JsonDecoder;
             ];
         }
     }
-    
+
     // Assign to view
     /** @var \Smarty $view */
     $view = Tygh::$app['view'];
@@ -227,6 +227,6 @@ use Tygh\Addons\NovotonHolidays\Helpers\JsonDecoder;
     $view->assign('page_title', $page_title);
     Registry::set('navigation.dynamic.page_title', $page_title);
     fn_add_breadcrumb($page_title);
-    
+
     // Use booking_form template for edit mode
     // Template will be rendered automatically by CS-Cart

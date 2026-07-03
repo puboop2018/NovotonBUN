@@ -121,7 +121,7 @@ class HotelRepository implements HotelRepositoryInterface
             }
 
             db_query(
-                "INSERT INTO ?:sphinx_hotels
+                'INSERT INTO ?:sphinx_hotels
                     (hotel_id, name, classification, property_type,
                      destination_id, destination_name, region_id, region_name,
                      country_code, country_name, latitude, longitude,
@@ -130,7 +130,7 @@ class HotelRepository implements HotelRepositoryInterface
                      images_json, facilities_json, is_adults_only,
                      rating, rating_count,
                      sync_status, last_synced_at)
-                 VALUES " . implode(', ', $tuples) . "
+                 VALUES ' . implode(', ', $tuples) . "
                  AS new_row
                  ON DUPLICATE KEY UPDATE
                     name = new_row.name,

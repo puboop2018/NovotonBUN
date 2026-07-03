@@ -59,7 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             'currency' => (string)($alt->Currency ?? 'EUR')
                         ];
                     }
-                    
+
                     $altRequestRepo->markAlternativesFound($request_id, (string) json_encode($alternatives));
 
                     fn_set_notification('N', __('notice'), __('novoton_holidays.alternatives_found', ['[count]' => count($alternatives)]));
@@ -70,10 +70,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 fn_set_notification('E', __('error'), __('novoton_holidays.no_novoton_request_id'));
             }
         }
-        
+
         return [CONTROLLER_STATUS_REDIRECT, 'novoton_alternatives.manage'];
     }
-    
+
     // Notify customer about alternatives
     if ($mode === 'notify_customer') {
         $request_id = RequestCoerce::int($_REQUEST, 'request_id');
@@ -104,7 +104,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         'template_code' => 'novoton_alternatives_available',
                         'tpl' => 'addons/novoton_holidays/email/alternatives_available.tpl'
                     ], 'A');
-                    
+
                     if ($result) {
                         $altRequestRepo->markNotified($request_id);
                         fn_set_notification('N', __('notice'), __('novoton_holidays.customer_notified'));
@@ -114,26 +114,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
         }
-        
+
         return [CONTROLLER_STATUS_REDIRECT, 'novoton_alternatives.manage'];
     }
-    
+
     // Delete request
     if ($mode === 'delete') {
         $request_id = RequestCoerce::int($_REQUEST, 'request_id');
-        
+
         if ($request_id > 0) {
             $altRequestRepo->delete($request_id);
             fn_set_notification('N', __('notice'), __('novoton_holidays.request_deleted'));
         }
-        
+
         return [CONTROLLER_STATUS_REDIRECT, 'novoton_alternatives.manage'];
     }
-    
+
     // Bulk check all pending requests
     if ($mode === 'check_all_pending') {
         $pending = $altRequestRepo->findPendingOlderThan(0);
-        
+
         if (!empty($pending)) {
             $src_dir = TypeCoerce::toString(Registry::get('config.dir.addons')) . 'novoton_holidays/src/';
             if (file_exists($src_dir . 'NovotonApi.php')) {
@@ -163,43 +163,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             'total' => (string)($alt->Total ?? '')
                         ];
                     }
-                    
+
                     if (!empty($alternatives)) {
                         $altRequestRepo->markAlternativesFound(TypeCoerce::toInt($request['request_id'] ?? 0), (string) json_encode($alternatives));
                         $found++;
                     }
                 }
-                
+
                 usleep(\Tygh\Addons\NovotonHolidays\Constants::API_DELAY_MODERATE);
             }
-            
+
             fn_set_notification('N', __('notice'), __('novoton_holidays.bulk_check_complete', ['[checked]' => count($pending), '[found]' => $found]));
         } else {
             fn_set_notification('I', __('information'), __('novoton_holidays.no_pending_requests'));
         }
-        
+
         return [CONTROLLER_STATUS_REDIRECT, 'novoton_alternatives.manage'];
     }
 }
 
 // View/manage alternative requests
 if ($mode === 'manage') {
-    
+
     $items_per_page = TypeCoerce::toInt(Registry::get('settings.Appearance.admin_elements_per_page')) ?: 30;
     $page = RequestCoerce::int($_REQUEST, 'page', 1);
 
     // Filters
     $status_filter = htmlspecialchars(RequestCoerce::string($_REQUEST, 'status'), ENT_QUOTES, 'UTF-8');
     $search_email = htmlspecialchars(RequestCoerce::string($_REQUEST, 'email'), ENT_QUOTES, 'UTF-8');
-    
+
     $where = [];
     $params = [];
-    
+
     if (!empty($status_filter)) {
         $where[] = "status = ?s";
         $params[] = $status_filter;
     }
-    
+
     // Note: contact_email is AES-256 encrypted since v2.9.0.
     // LIKE search no longer works on encrypted values. For new encrypted rows
     // we must decrypt in PHP. For backward compat with pre-encryption rows,
@@ -214,7 +214,7 @@ if ($mode === 'manage') {
     // Get requests with pagination
     $offset = ($page - 1) * $items_per_page;
     $requests = $altRequestRepo->findFiltered($where_sql, $params, $items_per_page, $offset);
-    
+
     // Decrypt PII and decode alternatives data
     $requests = fn_novoton_holidays_decrypt_requests_pii($requests);
 
@@ -234,7 +234,7 @@ if ($mode === 'manage') {
 
     // Get status counts for tabs
     $status_counts = $altRequestRepo->getStatusCounts();
-    
+
     $view->assign('requests', $requests);
     $view->assign('status_counts', $status_counts);
     $view->assign('status_filter', $status_filter);

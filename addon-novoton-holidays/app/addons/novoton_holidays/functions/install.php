@@ -47,17 +47,17 @@ function fn_novoton_holidays_uninstall(): bool
         db_query("DELETE FROM ?:product_tabs WHERE tab_id IN (?n)", $tab_ids);
         db_query("DELETE FROM ?:product_tabs_descriptions WHERE tab_id IN (?n)", $tab_ids);
     }
-    
+
     // Clean up block manager blocks
     db_query("DELETE FROM ?:bm_blocks WHERE type LIKE 'novoton%'");
-    
+
     // Remove email templates
     db_query("DELETE FROM ?:template_emails WHERE addon = ?s", 'novoton_holidays');
-    
+
     // OPTIONAL: Delete products that were created by the addon
     $addon_settings = TypeCoerce::toStringMap(Registry::get('addons.novoton_holidays'));
     $delete_products = ($addon_settings['delete_products_on_uninstall'] ?? 'N') === 'Y';
-    
+
     if ($delete_products) {
         $addon_product_ids = TypeCoerce::toList(db_get_fields(
             "SELECT product_id FROM ?:novoton_hotels WHERE product_id > 0"
@@ -73,7 +73,7 @@ function fn_novoton_holidays_uninstall(): bool
             ]);
         }
     }
-    
+
     // Remove addon language variables
     db_query("DELETE FROM ?:language_values WHERE name LIKE 'novoton_holidays.%'");
 
@@ -107,7 +107,7 @@ function fn_novoton_holidays_uninstall(): bool
     db_query("DROP TABLE IF EXISTS ?:novoton_hotel_packages");
     // Hotels table last (other tables may reference it)
     db_query("DROP TABLE IF EXISTS ?:novoton_hotels");
-    
+
     return true;
 }
 
@@ -122,7 +122,7 @@ function fn_novoton_holidays_fix_tab_name(?int $tab_id = null): bool
     if (empty($tab_id)) {
         $tab_id = db_get_field("SELECT tab_id FROM ?:product_tabs WHERE addon = ?s", 'novoton_holidays');
     }
-    
+
     if ($tab_id) {
         $languages = TypeCoerce::toRowList(db_get_array("SELECT lang_code FROM ?:languages WHERE status = 'A'"));
         foreach ($languages as $lang) {
@@ -146,7 +146,7 @@ function fn_novoton_holidays_fix_tab_name(?int $tab_id = null): bool
 
         return true;
     }
-    
+
     return false;
 }
 
@@ -160,7 +160,7 @@ function fn_novoton_holidays_post_install(): bool
 {
     // Find the tab created by CS-Cart
     $tab_id = db_get_field("SELECT tab_id FROM ?:product_tabs WHERE addon = ?s", 'novoton_holidays');
-    
+
     if ($tab_id) {
         $languages = TypeCoerce::toRowList(db_get_array("SELECT lang_code FROM ?:languages WHERE status = 'A'"));
 
@@ -173,7 +173,7 @@ function fn_novoton_holidays_post_install(): bool
             );
         }
     }
-    
+
     // Verify Theme Editor preset files exist (shipped with addon package)
     fn_novoton_holidays_create_theme_presets();
 

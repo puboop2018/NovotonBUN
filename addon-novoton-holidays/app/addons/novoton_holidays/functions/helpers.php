@@ -183,7 +183,7 @@ function fn_novoton_holidays_set_dynamic_page_meta(string $pageTitle): void
 function fn_novoton_holidays_get_api(): ?NovotonApi
 {
     static $api = null;
-    
+
     if ($api === null) {
         $src_dir = TypeCoerce::toString(Registry::get('config.dir.addons')) . 'novoton_holidays/src/';
 

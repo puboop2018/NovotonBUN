@@ -331,9 +331,9 @@ function fn_novoton_holidays_cleanup_old_reports($dir, $days = 7): void
     if (!is_dir($dir)) {
         return;
     }
-    
+
     $cutoff = time() - ($days * 86400);
-    
+
     foreach (glob($dir . '*.csv') ?: [] as $file) {
         if (filemtime($file) < $cutoff) {
             unlink($file);
@@ -354,7 +354,7 @@ function fn_novoton_holidays_generate_hotel_features_csv(): array
         'count' => 0,
         'error' => ''
     ];
-    
+
     try {
         // V3: Get all hotels with products (hotel_data is audit/cache only — use parsed fields)
         $hotels = db_get_array(
@@ -477,7 +477,7 @@ function fn_novoton_holidays_generate_hotel_features_csv(): array
 
         $file_path = $dir . $filename;
         $csv_content = implode("\n", $csv_lines);
-        
+
         if (file_put_contents($file_path, $csv_content) > 0) {
             $result['success'] = true;
             $result['file_path'] = $file_path;
@@ -485,11 +485,11 @@ function fn_novoton_holidays_generate_hotel_features_csv(): array
         } else {
             $result['error'] = 'Failed to write CSV file';
         }
-        
+
     } catch (\Exception $e) {
         $result['error'] = $e->getMessage();
     }
-    
+
     return $result;
 }
 

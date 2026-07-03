@@ -35,21 +35,21 @@ if ($mode === 'cron_update') {
     if (empty($provided_key) || !hash_equals($stored_key, $provided_key)) {
         exit('ERROR: Invalid or missing API key.');
     }
-    
+
     // Start output
     header('Content-Type: text/plain; charset=utf-8');
-    
+
     echo "========================================\n";
     echo "NOVOTON HOLIDAYS - CRON PRICE UPDATE\n";
     echo "========================================\n";
     echo "Started: " . date('Y-m-d H:i:s') . "\n\n";
-    
+
     // Get all products with Novoton prefix
     $prefixes_setting = TypeCoerce::toString($addon_settings['product_code_prefixes'] ?? '');
     $prefixes = $prefixes_setting !== ''
         ? explode(',', $prefixes_setting)
         : array('NVT');
-    
+
     $prefix_conditions = array();
     foreach ($prefixes as $prefix) {
         $prefix = trim($prefix);
@@ -57,14 +57,14 @@ if ($mode === 'cron_update') {
             $prefix_conditions[] = db_quote("product_code LIKE ?l", $prefix . '%');
         }
     }
-    
+
     if (empty($prefix_conditions)) {
         echo "ERROR: No product code prefixes configured.\n";
         exit;
     }
-    
+
     $condition = '(' . implode(' OR ', $prefix_conditions) . ')';
-    
+
     $products = TypeCoerce::toRowList(db_get_array(
         "SELECT p.product_id, p.product_code, pd.product
          FROM ?:products AS p
@@ -79,16 +79,16 @@ if ($mode === 'cron_update') {
         echo "No products found.\n";
         exit;
     }
-    
+
     echo "Found " . count($products) . " products to update.\n\n";
-    
+
     $stats = array(
         'updated' => 0,
         'failed' => 0,
         'no_data' => 0,
         'missing' => 0
     );
-    
+
     // Load func.php if needed
     if (!function_exists('fn_novoton_holidays_update_product_prices')) {
         $func_file = TypeCoerce::toString(Registry::get('config.dir.addons')) . 'novoton_holidays/func.php';
@@ -96,7 +96,7 @@ if ($mode === 'cron_update') {
             require_once($func_file);
         }
     }
-    
+
     // Update each product
     foreach ($products as $index => $product) {
         $num = $index + 1;
@@ -105,7 +105,7 @@ if ($mode === 'cron_update') {
 
         if (function_exists('fn_novoton_holidays_update_product_prices')) {
             $result = fn_novoton_holidays_update_product_prices(TypeCoerce::toInt($product['product_id'] ?? 0));
-            
+
             if ($result === true) {
                 echo "Good\n";
                 $stats['updated']++;
@@ -123,11 +123,11 @@ if ($mode === 'cron_update') {
             echo "ERROR\n";
             $stats['failed']++;
         }
-        
+
         // Small delay
         usleep(\Tygh\Addons\NovotonHolidays\Constants::API_DELAY_NORMAL);
     }
-    
+
     echo "\n========================================\n";
     echo "SUMMARY\n";
     echo "========================================\n";
@@ -137,7 +137,7 @@ if ($mode === 'cron_update') {
     echo "Missing:     " . $stats['missing'] . "\n";
     echo "========================================\n";
     echo "Completed: " . date('Y-m-d H:i:s') . "\n";
-    
+
     // Log to database
     $syncLogRepo = \Tygh\Addons\NovotonHolidays\Services\Container::getInstance()->syncLogRepository();
     $syncLogRepo->create('cron_price_update', [
@@ -146,7 +146,7 @@ if ($mode === 'cron_update') {
         'failed' => $stats['failed'],
         'status' => 'completed',
     ]);
-    
+
     exit;
 }
 
@@ -172,9 +172,9 @@ if ($mode === 'cron_export_hotel_features') {
     }
 
     echo "=== NOVOTON Hotel Features CSV Export - " . date('Y-m-d H:i:s') . " ===\n";
-    
+
     $result = fn_novoton_holidays_generate_hotel_features_csv();
-    
+
     if ($result['success']) {
         echo "Status: SUCCESS\n";
         echo "File: {$result['file_path']}\n";
@@ -185,7 +185,7 @@ if ($mode === 'cron_export_hotel_features') {
         echo "Status: FAILED\n";
         echo "Error: {$result['error']}\n";
     }
-    
+
     exit;
 }
 
@@ -208,7 +208,7 @@ if ($mode === 'get_hotel_features_csv') {
 
     $export_dir = TypeCoerce::toString(fn_get_files_dir_path()) . 'novoton_exports/';
     $file_path = $export_dir . 'hotel_features_import.csv';
-    
+
     if (!file_exists($file_path)) {
         header('HTTP/1.1 404 Not Found');
         header('Content-Type: text/plain');
@@ -216,7 +216,7 @@ if ($mode === 'get_hotel_features_csv') {
         echo "index.php?dispatch=novoton_holidays.cron_export_hotel_features&access_key=YOUR_ACCESS_KEY";
         exit;
     }
-    
+
     header('Content-Type: text/csv; charset=utf-8');
     header('Content-Disposition: attachment; filename="hotel_features_import.csv"');
     header('Content-Length: ' . filesize($file_path));
