@@ -110,20 +110,30 @@ File: `.github/workflows/ci.yml`
 
 Runs on every `push` (any branch) and `pull_request` to `main`:
 
-| Job                | Fails CI? | What it runs                              |
-|--------------------|-----------|-------------------------------------------|
-| PHPStan (L10)      | yes       | `vendor/bin/phpstan analyse`              |
-| Psalm              | yes       | `vendor/bin/psalm`                        |
-| PHPCS (PSR-12)     | yes       | `vendor/bin/phpcs`                        |
-| PHP CS Fixer       | yes       | `vendor/bin/php-cs-fixer fix --dry-run`   |
-| PHPMD              | no        | `vendor/bin/phpmd`                        |
-| PHPUnit (novoton)  | yes       | `vendor/bin/phpunit`                      |
-| PHP Lint           | yes       | `php -l` on the whole addon trees (excl. vendor) |
+| Job                       | Fails CI? | What it runs                                              |
+|---------------------------|-----------|-----------------------------------------------------------|
+| PHPStan (L10 + ratchet)   | yes       | `vendor/bin/phpstan analyse` + baseline-may-only-shrink check |
+| PHP CS Fixer (dry-run)    | yes       | both configs: `.php-cs-fixer.dist.php` and `.php-cs-fixer.procedural.php` |
+| Rector (dry-run)          | yes       | `vendor/bin/rector process --dry-run`                     |
+| PHPUnit ×3                | yes       | novoton (with coverage artifact), travel_core, sphinx     |
+| PHPUnit integration       | no        | novoton DB-backed suite — runs only when `INTEGRATION_TESTDB_READY=true` |
+| PHP Lint                  | yes       | `php -l` on the whole addon trees (excl. vendor)          |
+| ESLint (JS/JSX)           | yes       | `npx eslint .` (addon JS + `react-src`)                   |
+| Qodana                    | scan errors only | `JetBrains/qodana-action` → Qodana Cloud (`QODANA_TOKEN_*` secret) |
+
+**Qodana is the final gate**: its `needs` list makes it run only after PHPStan,
+CS Fixer, Rector, all PHPUnit suites, Lint, and ESLint have passed. Findings are
+published to Qodana Cloud / PR annotations (profile + muted inspections live in
+`qodana.yaml`); the job itself only fails on scan errors — no `fail-threshold`
+is set, so findings are informational by design.
 
 PHP CS Fixer runs **two configs**: `.php-cs-fixer.dist.php` (full ruleset, `src/` +
 tests) and `.php-cs-fixer.procedural.php` (conservative imports/whitespace-only
 pass over `controllers/`, `functions/`, `hooks/`, and addon-root `func.php`/
 `init.php` — CS-Cart procedural conventions make full PSR-12 too noisy there).
+
+(Psalm, PHPCS, and PHPMD are **local/pre-commit tools** — available via
+`composer psalm` / `composer cs` / `composer md` and GrumPHP — they are not CI jobs.)
 
 ## Fixing common issues
 
