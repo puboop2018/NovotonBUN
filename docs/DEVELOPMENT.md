@@ -10,13 +10,14 @@ The monorepo uses a layered quality-assurance pipeline:
 
 | Tool                  | Purpose                                | Config file              | Level/Standard     |
 |-----------------------|----------------------------------------|--------------------------|--------------------|
-| PHPStan               | Static analysis                        | `phpstan.neon`           | level 10 (max)     |
-| Psalm                 | Static analysis (second opinion)       | `psalm.xml`              | errorLevel 5       |
-| PHP_CodeSniffer       | Code style (PSR-12)                    | `phpcs.xml`              | PSR-12             |
-| PHP CS Fixer          | Auto-formatter                         | `.php-cs-fixer.dist.php` | PSR-12 + PHP 8.3   |
-| PHPMD                 | Mess detection (unused code, design)   | `phpmd.xml`              | custom subset      |
+| PHPStan               | Static analysis                        | `phpstan.neon`           | level 10 (max), empty baseline |
+| PHP CS Fixer          | Auto-formatter                         | `.php-cs-fixer.dist.php` (src/tests) + `.php-cs-fixer.procedural.php` (controllers/functions/hooks) | PSR-12 + PHP 8.3 / conservative |
+| Rector                | Automated refactoring rules            | `rector.php`             | dry-run gate in CI |
 | GrumPHP               | Pre-commit hook runner                 | `grumphp.yml`            | —                  |
-| PHPUnit               | Tests (novoton addon)                  | `addon-novoton-holidays/…/phpunit.xml` | —        |
+| PHPUnit               | Tests (all four addons)                | `addon-*/app/addons/*/phpunit.xml` (+ novoton `phpunit-integration.xml`) | — |
+| ESLint                | Frontend JS/JSX lint                   | `eslint.config.mjs`      | —                  |
+| Qodana                | JetBrains static analysis (CI final gate → Qodana Cloud) | `qodana.yaml` | qodana.recommended, tuned |
+| Psalm / PHPCS / PHPMD | Binaries installed, **no committed rulesets** — ad-hoc use only | — | not in pipeline |
 
 ## Quick start
 
@@ -37,29 +38,29 @@ ls .git/hooks/pre-commit   # verify
 
 ```bash
 # ── Run one tool ──
-composer stan          # PHPStan
-composer psalm         # Psalm
-composer cs            # PHPCS style check
+composer stan          # PHPStan (level 10)
 composer fix:dry       # Show PHP CS Fixer diff, both configs (no changes written)
 composer fix:proc:dry  # Procedural-files config only (controllers/functions/hooks)
-composer md            # PHPMD findings
-composer test          # PHPUnit
+composer rector:dry    # Rector dry-run (fails on drift)
+composer test          # PHPUnit — all addon suites
+composer test:novoton  # (or test:travel-core / test:sphinx / test:fgo)
 
 # ── Auto-fix ──
-composer cs:fix        # PHPCBF: fix PHPCS violations
-composer fix           # PHP CS Fixer: apply formatter rules
+composer fix           # PHP CS Fixer: apply both configs
+composer rector:fix    # Rector: apply refactoring rules
 
-# ── Pre-commit hook (auto-run on composer install) ──
-composer hooks:install    # Re-install the GrumPHP pre-commit hook
+# ── Pre-commit hook ──
+composer hooks:install    # Install the GrumPHP pre-commit hook (one-time)
 composer hooks:uninstall  # Remove it (e.g. temporary opt-out)
 
-# ── Baselines (after new legitimate legacy warnings) ──
-composer stan:baseline # Regenerate PHPStan baseline
-composer psalm:baseline # Regenerate Psalm baseline
+# ── Baseline ──
+composer stan:baseline # Regenerate PHPStan baseline (should stay empty)
 
 # ── Run the full pipeline ──
-composer check         # stan + psalm + cs + fix:dry + test
-composer check:all     # + phpmd
+composer check         # stan + fix:dry + rector:dry + test
+
+# ── DB-backed integration tests (needs docker-compose.test.yml up) ──
+composer test:integration:novoton
 ```
 
 ## Pipeline rules
@@ -68,34 +69,28 @@ composer check:all     # + phpmd
 - Current baseline: **0 errors** (`phpstan-baseline.neon` is empty — fully paid down)
 - **All code must pass level 10 clean** — any new error fails the build outright
 
-### Psalm (level 5)
-- Current baseline: 0 errors (zero at levels 8, 7, 6, 5)
-- Used as a second opinion — catches what PHPStan misses (immutability, purity)
-
-### PHPCS (PSR-12)
-- Zero errors allowed — CI fails on any PHPCS error
-- Warnings (long lines) are informational only
-- Run `composer cs:fix` to auto-fix formatting
-
 ### PHP CS Fixer
-- Dry-run in CI: fails if `composer fix` would change anything
+- Dry-run in CI (both configs): fails if `composer fix` would change anything
 - Run `composer fix` locally before committing to format your changes
 
-### PHPMD
-- `continue-on-error: true` in CI — findings are informational, not blockers
-- Flagged issues (unused local vars, unused private methods) are real bugs worth fixing
-- Tuned config: excludes complexity metrics (CS-Cart dispatchers are naturally complex)
+### Rector
+- Dry-run in CI: fails if any configured rule (see `rector.php`) would change a file
+- Run `composer rector:fix` to apply
+
+### Qodana
+- Final CI gate (runs after everything else is green); reports to Qodana Cloud
+- Inspection profile + muted framework false-positives live in `qodana.yaml`
+- Findings are informational (no fail-threshold); triage them in the cloud report
 
 ## Pre-commit hook (GrumPHP)
 
-After `composer install`, GrumPHP installs a `.git/hooks/pre-commit` script that runs:
+After `composer install`, GrumPHP installs a `.git/hooks/pre-commit` script that runs
+(see `grumphp.yml`):
 
-1. `php -l` — syntax check
-2. PHPCS on changed files
-3. PHP CS Fixer dry-run on changed files
-4. PHPStan (full run)
-5. Psalm (full run)
-6. `composer validate`
+1. `phplint` — syntax check on changed files
+2. PHP CS Fixer dry-run (`.php-cs-fixer.dist.php`) on changed files
+3. PHPStan (full run, level 10)
+4. `composer validate`
 
 Commits that fail any of these checks are **rejected locally**, before reaching
 the remote. To bypass (not recommended):
@@ -132,8 +127,11 @@ tests) and `.php-cs-fixer.procedural.php` (conservative imports/whitespace-only
 pass over `controllers/`, `functions/`, `hooks/`, and addon-root `func.php`/
 `init.php` — CS-Cart procedural conventions make full PSR-12 too noisy there).
 
-(Psalm, PHPCS, and PHPMD are **local/pre-commit tools** — available via
-`composer psalm` / `composer cs` / `composer md` and GrumPHP — they are not CI jobs.)
+(Psalm, PHPCS, and PHPMD are **not CI jobs**. Their binaries ship in `vendor/bin`,
+but no project rulesets (`psalm.xml`/`phpcs.xml`/`phpmd.xml`) or composer scripts
+are committed — run them ad-hoc if needed. The GrumPHP pre-commit hook
+(`grumphp.yml`) runs: phplint, PHP CS Fixer (dist config), PHPStan, and
+`composer validate` on changed files.)
 
 ## Fixing common issues
 
@@ -145,15 +143,15 @@ in novoton, `ValidationHelpers::toString/toFloat/toInt` in travel_core).
 Run `composer fix` to apply the formatter's suggestions. Review the diff and
 commit.
 
-### "PHPCS error: …"
-Run `composer cs:fix` to auto-fix. For issues PHPCBF can't fix, see the sniff
-name in parentheses (e.g. `PSR12.Classes.ClassDeclaration.ExtendsLine`) and
-consult the [PSR-12 spec](https://www.php-fig.org/psr/psr-12/).
+### "Rector would change this file"
+Run `composer rector:fix`, review the diff, and commit. If a rule misfires on
+CS-Cart idioms, exclude the path/rule in `rector.php` instead of hand-fighting it.
 
-### "Psalm UndefinedFunction: fn_…"
-This is expected — CS-Cart's global `fn_*` and `db_*` functions are
-suppressed in `psalm.xml`. If you get this error for a *new* function, add
-it to the `UndefinedFunction` handler.
+### "Qodana flags an undefined CS-Cart symbol"
+Framework symbols (`Tygh\…`, `fn_*`, `db_*`, AREA-style constants) live outside
+this repo; those inspections are already muted in `qodana.yaml`. If a new
+false-positive class appears, add the inspection id there — don't sprinkle
+suppression comments in code.
 
 ### GrumPHP is too slow / blocks my commit
 Individual tasks can be disabled in `grumphp.yml`. Alternatively, use
