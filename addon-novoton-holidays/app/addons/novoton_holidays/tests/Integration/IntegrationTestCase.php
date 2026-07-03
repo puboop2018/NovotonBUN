@@ -28,14 +28,35 @@ abstract class IntegrationTestCase extends TestCase
     {
         parent::setUp();
         $this->db()->beginTransaction();
+        // Tell the nesting-aware BookingRepository::withTransaction() that a
+        // caller-owned transaction is active, so repository writes JOIN this
+        // test transaction instead of issuing their own START TRANSACTION —
+        // which in MySQL would implicitly COMMIT ours and break the rollback
+        // isolation. This mirrors production semantics where an orchestrator
+        // owns the transaction and repository calls nest inside it.
+        self::setBookingTxDepth(1);
     }
 
     protected function tearDown(): void
     {
+        self::setBookingTxDepth(0);
         if ($this->db()->inTransaction()) {
             $this->db()->rollBack();
         }
         parent::tearDown();
+    }
+
+    /**
+     * Set BookingRepository's transaction-nesting depth. Tests that need the
+     * repository to OWN its transaction (e.g. to prove real ROLLBACK behaviour)
+     * may set 0 and restore 1 afterwards — see BookingWritePathIntegrationTest.
+     */
+    protected static function setBookingTxDepth(int $depth): void
+    {
+        (new \ReflectionProperty(
+            \Tygh\Addons\NovotonHolidays\Repository\BookingRepository::class,
+            'txDepth',
+        ))->setValue(null, $depth);
     }
 
     /**
