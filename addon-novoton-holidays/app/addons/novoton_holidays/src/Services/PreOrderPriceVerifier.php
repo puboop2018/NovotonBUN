@@ -27,8 +27,10 @@ declare(strict_types=1);
 namespace Tygh\Addons\NovotonHolidays\Services;
 
 use Tygh\Addons\TravelCore\Contracts\PreOrderPriceVerifierInterface;
+use Tygh\Addons\TravelCore\Enums\PriceComparisonOutcome;
 use Tygh\Addons\TravelCore\Helpers\SessionAccessor;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+use Tygh\Addons\TravelCore\Services\PriceComparisonPolicy;
 
 class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
 {
@@ -276,12 +278,16 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
             ],
         );
 
+        // Shared "No Surprises" policy — novoton's historical knobs:
+        // configurable alert threshold, no match epsilon, percent of API price.
+        $comparison = (new PriceComparisonPolicy($threshold))->compare($formPrice, $apiPrice);
+
         // Case 1: Form price is LOWER than API price → CORRECT (never block)
         // Same behaviour as the add_to_cart price floor: silently upgrade to
         // the API price so the customer can complete their order.
-        if ($formPrice < $apiPrice) {
-            $difference = round($apiPrice - $formPrice, 2);
-            $percentLower = $apiPrice > 0 ? round(($difference / $apiPrice) * 100, 1) : 0;
+        if ($comparison->outcome === PriceComparisonOutcome::CorrectUp) {
+            $difference = round($comparison->difference, 2);
+            $percentLower = round($comparison->percentDelta, 1);
 
             fn_log_event('general', 'runtime', [
                 'message' => 'PreOrderPriceVerifier: CORRECTED — form price below API price, upgrading cart',
@@ -333,10 +339,10 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
 
         // Case 2: Form price is HIGHER than API price by more than threshold%
         if ($apiPrice > 0) {
-            $difference = round($formPrice - $apiPrice, 2);
-            $percentHigher = round(($difference / $apiPrice) * 100, 1);
+            $difference = round($comparison->difference, 2);
+            $percentHigher = round($comparison->percentDelta, 1);
 
-            if ($percentHigher > $threshold) {
+            if ($comparison->outcome === PriceComparisonOutcome::AboveThreshold) {
                 fn_log_event('general', 'runtime', [
                     'message' => 'PreOrderPriceVerifier: ALERT — form price significantly above API price',
                     'hotel_id' => $hotelId,
