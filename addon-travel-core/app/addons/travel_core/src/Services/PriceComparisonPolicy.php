@@ -26,10 +26,21 @@ use Tygh\Addons\TravelCore\Enums\PriceDeltaBase;
  */
 final readonly class PriceComparisonPolicy
 {
+    /**
+     * @param float $alertThresholdPercent overpayment percent above which admins are alerted
+     * @param float $matchEpsilon absolute difference treated as float noise (a match)
+     * @param PriceDeltaBase $percentBase denominator for the percent
+     * @param float $alertFloorAbs minimum absolute overpayment for a percent-based alert
+     *                             (stops percent-only false alarms on cheap items)
+     * @param float|null $bigOverageAbs absolute overpayment that alerts regardless of percent
+     *                                  (catches large drifts on expensive items); null disables
+     */
     public function __construct(
         private float $alertThresholdPercent,
         private float $matchEpsilon = 0.0,
         private PriceDeltaBase $percentBase = PriceDeltaBase::Api,
+        private float $alertFloorAbs = 0.0,
+        private ?float $bigOverageAbs = null,
     ) {
     }
 
@@ -55,7 +66,11 @@ final readonly class PriceComparisonPolicy
             return new PriceComparison(PriceComparisonOutcome::CorrectUp, $difference, $percentDelta);
         }
 
-        if ($percentDelta > $this->alertThresholdPercent) {
+        if ($this->bigOverageAbs !== null && $difference >= $this->bigOverageAbs) {
+            return new PriceComparison(PriceComparisonOutcome::AboveThreshold, $difference, $percentDelta);
+        }
+
+        if ($percentDelta > $this->alertThresholdPercent && $difference >= $this->alertFloorAbs) {
             return new PriceComparison(PriceComparisonOutcome::AboveThreshold, $difference, $percentDelta);
         }
 

@@ -52,6 +52,11 @@ sync's product-code dedup).
 ### travel_core (Settings → Travel Core)
 - `cron_access_key` — random secret for the cron URLs
 - Exchange-rate commission (applied on top of BNR rates for RON/USD/GBP)
+- **Checkout price guard** (ONE policy for all providers): `checkout_alert_percent`
+  (default 20), `checkout_alert_floor` (€5), `checkout_big_overage` (€100),
+  `checkout_absorb_increase` (€0 — increases above this correct the cart and
+  ask the customer to re-confirm; up to it, the merchant absorbs the difference).
+  Novoton's old `price_higher_threshold` setting is superseded and ignored.
 
 ### novoton_holidays
 - **API**: `api_url`, `api_id`, `api_user` / `api_password` (+ `api_key` where

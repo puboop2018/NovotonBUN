@@ -766,11 +766,28 @@ function fn_sphinx_holidays_pre_place_order(&$cart, &$allow, &$product_groups): 
                 continue;
             }
             $newPrice = (float)$correction['api_price'];
+            // Keep the old price for "Old vs New" display before overwriting
+            $cart['products'][$cartId]['extra']['price_before_correction'] = $cart['products'][$cartId]['price'] ?? null;
             $cart['products'][$cartId]['price'] = $newPrice;
             $cart['products'][$cartId]['base_price'] = $newPrice;
             $cart['products'][$cartId]['original_price'] = $newPrice;
             $cart['products'][$cartId]['extra']['total_price'] = $newPrice;
         }
+    }
+
+    // A correction exceeded the absorb allowance: the cart now shows the new
+    // price — block this click so the customer re-confirms the updated total
+    // (same policy as novoton; EU CRD: the amount charged must be the amount
+    // shown at the order button).
+    if (!empty($result['reconfirm'])) {
+        fn_set_notification(
+            'W',
+            __('travel_core.price_change', ['[default]' => 'Price update']),
+            __('travel_core.price_changed_reconfirm', [
+                '[default]' => 'The price of a booking in your cart has changed. Please review the updated total and place your order again.',
+            ]),
+        );
+        $allow = false;
     }
 }
 

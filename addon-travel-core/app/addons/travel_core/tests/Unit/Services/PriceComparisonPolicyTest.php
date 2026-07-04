@@ -32,6 +32,13 @@ final class PriceComparisonPolicyTest extends TestCase
         return new PriceComparisonPolicy(20.0, 0.01, PriceDeltaBase::Form);
     }
 
+    private static function unified(): PriceComparisonPolicy
+    {
+        // the CheckoutPriceGuard defaults now shared by all providers:
+        // 20% of API price, 0.01 epsilon, €5 alert floor, €100 big-overage
+        return new PriceComparisonPolicy(20.0, 0.01, PriceDeltaBase::Api, 5.0, 100.0);
+    }
+
     /** @return array<string, array{PriceComparisonPolicy, float, float, PriceComparisonOutcome}> */
     public static function outcomes(): array
     {
@@ -51,6 +58,13 @@ final class PriceComparisonPolicyTest extends TestCase
             'sphinx: above api within 20% of form'              => [self::sphinx(), 130.00, 115.00, PriceComparisonOutcome::Match],
             'sphinx: above api beyond 20% of form'              => [self::sphinx(), 150.00, 115.00, PriceComparisonOutcome::AboveThreshold],
             'sphinx: api price missing → no action'             => [self::sphinx(), 115.00, 0.0, PriceComparisonOutcome::Match],
+            // ── unified configuration (floor + big-overage) ──
+            'unified: big percent but under €5 floor stays quiet' => [self::unified(), 5.00, 4.00, PriceComparisonOutcome::Match],
+            'unified: big percent and over the floor alerts'      => [self::unified(), 48.50, 40.00, PriceComparisonOutcome::AboveThreshold],
+            'unified: small percent but €300 overage alerts'      => [self::unified(), 5300.00, 5000.00, PriceComparisonOutcome::AboveThreshold],
+            'unified: small percent, under big-overage, quiet'    => [self::unified(), 5090.00, 5000.00, PriceComparisonOutcome::Match],
+            'unified: sub-cent float noise is a match'            => [self::unified(), 114.995, 115.00, PriceComparisonOutcome::Match],
+            'unified: below api beyond noise corrects up'         => [self::unified(), 100.00, 115.00, PriceComparisonOutcome::CorrectUp],
         ];
     }
 

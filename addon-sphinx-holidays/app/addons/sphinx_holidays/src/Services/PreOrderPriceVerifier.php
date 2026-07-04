@@ -17,16 +17,15 @@ namespace Tygh\Addons\SphinxHolidays\Services;
 
 use Tygh\Addons\TravelCore\Contracts\PreOrderPriceVerifierInterface;
 use Tygh\Addons\TravelCore\Enums\PriceComparisonOutcome;
-use Tygh\Addons\TravelCore\Enums\PriceDeltaBase;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
-use Tygh\Addons\TravelCore\Services\PriceComparisonPolicy;
+use Tygh\Addons\TravelCore\Services\CheckoutPriceGuard;
 
 class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
 {
     /**
      * {@inheritdoc}
      * @param array<string, mixed> $cart
-     * @return array{allow: bool, corrections: array<string, mixed>, notifications: array<int, array<string, mixed>>, unavailable: array<string, mixed>}
+     * @return array{allow: bool, corrections: array<string, mixed>, notifications: array<int, array<string, mixed>>, unavailable: array<string, mixed>, reconfirm: bool}
      */
     #[\Override]
     public function verify(array $cart): array
@@ -36,6 +35,7 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
             'corrections' => [],
             'notifications' => [],
             'unavailable' => [],  // Cart IDs of unavailable Sphinx offers (to be removed by caller)
+            'reconfirm' => false, // a correction exceeded the absorb allowance — hook must block for re-confirmation
         ];
 
         if (empty($cart['products'])) {
@@ -105,10 +105,9 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
 
             $apiPrice = Container::getCartService()->applyCommission($apiPrice);
 
-            // Shared "No Surprises" policy — sphinx's historical knobs:
-            // 20% alert threshold, 0.01 match epsilon, percent of form price.
-            $comparison = (new PriceComparisonPolicy(20.0, 0.01, PriceDeltaBase::Form))
-                ->compare($formPrice, $apiPrice);
+            // Shared "No Surprises" policy — identical knobs for all providers,
+            // configured in travel_core settings (CheckoutPriceGuard).
+            $comparison = CheckoutPriceGuard::policy()->compare($formPrice, $apiPrice);
 
             if ($comparison->outcome === PriceComparisonOutcome::Match) {
                 continue; // Prices match
@@ -125,7 +124,23 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
             ];
 
             if ($comparison->outcome === PriceComparisonOutcome::CorrectUp) {
-                // Form price is lower than API — correct upward, never block
+                // Small increase within the absorb allowance: honour the price
+                // the customer was shown — the merchant absorbs the difference.
+                if ($comparison->difference <= CheckoutPriceGuard::absorbIncrease()) {
+                    fn_log_event('general', 'runtime', [
+                        'message' => 'Sphinx PreOrderPriceVerifier: ABSORBED — increase within allowance, honouring shown price',
+                        'offer_id' => $offerId,
+                        'form_price' => $formPrice,
+                        'api_price' => $apiPrice,
+                    ]);
+
+                    $notificationData['type'] = 'price_absorbed';
+                    $result['notifications'][] = $notificationData;
+                    continue;
+                }
+
+                // Form price is lower than API — correct upward, never block;
+                // the hook blocks this click so the customer re-confirms.
                 fn_log_event('general', 'runtime', [
                     'message' => 'Sphinx PreOrderPriceVerifier: correcting price upward',
                     'offer_id' => $offerId,
@@ -138,6 +153,7 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
                     'api_price_raw' => TypeCoerce::toFloat($verifyResult['price'] ?? 0),
                 ];
                 $result['notifications'][] = $notificationData;
+                $result['reconfirm'] = true;
             } else {
                 // AboveThreshold: form price significantly higher — notify admin but allow
                 fn_log_event('general', 'runtime', [

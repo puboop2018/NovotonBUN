@@ -30,7 +30,7 @@ use Tygh\Addons\TravelCore\Contracts\PreOrderPriceVerifierInterface;
 use Tygh\Addons\TravelCore\Enums\PriceComparisonOutcome;
 use Tygh\Addons\TravelCore\Helpers\SessionAccessor;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
-use Tygh\Addons\TravelCore\Services\PriceComparisonPolicy;
+use Tygh\Addons\TravelCore\Services\CheckoutPriceGuard;
 
 class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
 {
@@ -45,10 +45,12 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
      * Verify all Novoton booking products in the cart against live API prices.
      *
      * @param array<string, mixed> $cart CS-Cart cart array
-     * @return array{allow: bool, corrections: array<string, array<string, mixed>>, notifications: list<array<string, mixed>>}
-     *                                                                                                                         - allow: always true (we correct, never block)
-     *                                                                                                                         - corrections: cart_id => ['api_price' => float, 'api_price_raw' => float]
-     *                                                                                                                         - notifications: list of discrepancy data for admin emails
+     * @return array{allow: bool, corrections: array<string, array<string, mixed>>, notifications: list<array<string, mixed>>, reconfirm: bool}
+     *                                                                                                                                          - allow: always true (correction/blocking policy is applied by the hook)
+     *                                                                                                                                          - corrections: cart_id => ['api_price' => float, 'api_price_raw' => float]
+     *                                                                                                                                          - notifications: list of discrepancy data for admin emails
+     *                                                                                                                                          - reconfirm: a correction exceeded the absorb allowance — the hook must
+     *                                                                                                                                          block this order click so the customer re-confirms the new total
      */
     public function verify(array $cart): array
     {
@@ -56,6 +58,7 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
             'allow' => true,
             'corrections' => [],
             'notifications' => [],
+            'reconfirm' => false,
         ];
 
         if (!ConfigProvider::isPreorderPriceCheckEnabled()) {
@@ -66,7 +69,6 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
             return $result;
         }
 
-        $threshold = ConfigProvider::getPriceHigherThreshold();
         $cacheTtl = ConfigProvider::getPreorderCacheTtl();
         $debug = ConfigProvider::isDebugLogging();
 
@@ -160,13 +162,16 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
                 $formPrice,
                 $apiPriceWithCommission,
                 $rawApiPrice,
-                $threshold,
                 $extra,
                 $cartId,
             );
 
             if (!empty($checkResult['correction'])) {
                 $result['corrections'][(string) $cartId] = $checkResult['correction'];
+            }
+
+            if (!empty($checkResult['reconfirm'])) {
+                $result['reconfirm'] = true;
             }
 
             if (!empty($checkResult['notification'])) {
@@ -227,13 +232,12 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
      *
      * @param array<string, mixed> $extra
      * @param string $cartId
-     * @return array{allow: bool, correction: array<string, mixed>|null, notification: array<string, mixed>|null, type: string}
+     * @return array{allow: bool, correction: array<string, mixed>|null, notification: array<string, mixed>|null, type: string, reconfirm: bool}
      */
     private function comparePrice(
         float $formPrice,
         float $apiPrice,
         float $rawApiPrice,
-        float $threshold,
         array $extra,
         $cartId,
     ): array {
@@ -278,16 +282,39 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
             ],
         );
 
-        // Shared "No Surprises" policy — novoton's historical knobs:
-        // configurable alert threshold, no match epsilon, percent of API price.
-        $comparison = (new PriceComparisonPolicy($threshold))->compare($formPrice, $apiPrice);
+        // Shared "No Surprises" policy — identical knobs for all providers,
+        // configured in travel_core settings (CheckoutPriceGuard).
+        $comparison = CheckoutPriceGuard::policy()->compare($formPrice, $apiPrice);
 
         // Case 1: Form price is LOWER than API price → CORRECT (never block)
-        // Same behaviour as the add_to_cart price floor: silently upgrade to
-        // the API price so the customer can complete their order.
         if ($comparison->outcome === PriceComparisonOutcome::CorrectUp) {
             $difference = round($comparison->difference, 2);
             $percentLower = round($comparison->percentDelta, 1);
+
+            // Small increase within the absorb allowance: honour the price the
+            // customer was shown — the merchant absorbs the difference.
+            if ($comparison->difference <= CheckoutPriceGuard::absorbIncrease()) {
+                fn_log_event('general', 'runtime', [
+                    'message' => 'PreOrderPriceVerifier: ABSORBED — increase within allowance, honouring shown price',
+                    'hotel_id' => $hotelId,
+                    'room_id' => $roomId,
+                    'form_price' => $formPrice,
+                    'api_price' => $apiPrice,
+                    'difference' => $difference,
+                ]);
+
+                $notificationData['difference'] = $difference;
+                $notificationData['percent'] = $percentLower;
+                $notificationData['type'] = 'price_absorbed';
+
+                return [
+                    'allow' => true,
+                    'type' => 'price_absorbed',
+                    'correction' => null,
+                    'notification' => $notificationData,
+                    'reconfirm' => false,
+                ];
+            }
 
             fn_log_event('general', 'runtime', [
                 'message' => 'PreOrderPriceVerifier: CORRECTED — form price below API price, upgrading cart',
@@ -334,6 +361,10 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
                     'api_price_raw' => $rawApiPrice,
                 ],
                 'notification' => $notificationData,
+                // Beyond the absorb allowance: the hook blocks this click so the
+                // customer re-confirms the corrected total (EU CRD: the amount
+                // charged must be the amount shown at the order button).
+                'reconfirm' => true,
             ];
         }
 
@@ -351,7 +382,7 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
                     'api_price' => $apiPrice,
                     'difference' => $difference,
                     'percent_higher' => $percentHigher,
-                    'threshold' => $threshold,
+                    'threshold' => CheckoutPriceGuard::alertPercent(),
                 ]);
 
                 $notificationData['difference'] = $difference;
@@ -372,6 +403,7 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
                     'type' => 'price_higher',
                     'correction' => null,
                     'notification' => $notificationData,
+                    'reconfirm' => false,
                 ];
             }
 
@@ -394,6 +426,7 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
             'type' => 'ok',
             'correction' => null,
             'notification' => null,
+            'reconfirm' => false,
         ];
     }
 
