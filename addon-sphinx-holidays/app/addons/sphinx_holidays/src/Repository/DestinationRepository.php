@@ -39,44 +39,64 @@ class DestinationRepository
             return 0;
         }
 
-        $affected = 0;
-        foreach ($destinations as $dest) {
-            $id = TypeCoerce::toInt($dest['destination_id'] ?? 0);
-            if ($id <= 0) {
+        $now = date('Y-m-d H:i:s');
+        $submitted = 0;
+
+        // Multi-row upsert: one statement per chunk instead of one per
+        // destination — a full destination sync (~200k rows) was 200k
+        // round-trips in the per-row form. Rows are small (10 scalar
+        // columns), so 500 per statement stays far below max_allowed_packet.
+        foreach (array_chunk($destinations, 500) as $chunk) {
+            $tuples = [];
+            $params = [];
+
+            foreach ($chunk as $dest) {
+                $id = TypeCoerce::toInt($dest['destination_id'] ?? 0);
+                if ($id <= 0) {
+                    continue;
+                }
+
+                $tuples[] = '(?i, ?s, ?s, ?i, ?s, ?i, ?d, ?d, ?i, ?s)';
+                array_push(
+                    $params,
+                    $id,
+                    TypeCoerce::toString($dest['name'] ?? ''),
+                    TypeCoerce::toString($dest['type'] ?? 'destination'),
+                    TypeCoerce::toInt($dest['parent_id'] ?? 0),
+                    TypeCoerce::toString($dest['country_code'] ?? ''),
+                    TypeCoerce::toInt($dest['geoname_id'] ?? 0),
+                    TypeCoerce::toFloat($dest['latitude'] ?? 0),
+                    TypeCoerce::toFloat($dest['longitude'] ?? 0),
+                    TypeCoerce::toInt($dest['hotel_count'] ?? 0),
+                    $now,
+                );
+            }
+
+            if ($tuples === []) {
                 continue;
             }
 
             db_query(
                 'INSERT INTO ?:sphinx_destinations
                     (destination_id, name, type, parent_id, country_code, geoname_id, latitude, longitude, hotel_count, last_synced_at)
-                 VALUES (?i, ?s, ?s, ?i, ?s, ?i, ?d, ?d, ?i, ?s)
-                 AS new_row
+                 VALUES ' . implode(', ', $tuples) . '
                  ON DUPLICATE KEY UPDATE
-                    name = new_row.name,
-                    type = new_row.type,
-                    parent_id = new_row.parent_id,
-                    country_code = new_row.country_code,
-                    geoname_id = new_row.geoname_id,
-                    latitude = new_row.latitude,
-                    longitude = new_row.longitude,
-                    hotel_count = new_row.hotel_count,
-                    last_synced_at = new_row.last_synced_at',
-                $id,
-                TypeCoerce::toString($dest['name'] ?? ''),
-                TypeCoerce::toString($dest['type'] ?? 'destination'),
-                TypeCoerce::toInt($dest['parent_id'] ?? 0),
-                TypeCoerce::toString($dest['country_code'] ?? ''),
-                TypeCoerce::toInt($dest['geoname_id'] ?? 0),
-                TypeCoerce::toFloat($dest['latitude'] ?? 0),
-                TypeCoerce::toFloat($dest['longitude'] ?? 0),
-                TypeCoerce::toInt($dest['hotel_count'] ?? 0),
-                date('Y-m-d H:i:s'),
+                    name = VALUES(name),
+                    type = VALUES(type),
+                    parent_id = VALUES(parent_id),
+                    country_code = VALUES(country_code),
+                    geoname_id = VALUES(geoname_id),
+                    latitude = VALUES(latitude),
+                    longitude = VALUES(longitude),
+                    hotel_count = VALUES(hotel_count),
+                    last_synced_at = VALUES(last_synced_at)',
+                ...$params,
             );
 
-            $affected++;
+            $submitted += count($tuples);
         }
 
-        return $affected;
+        return $submitted;
     }
 
     /**

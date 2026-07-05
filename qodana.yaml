@@ -33,6 +33,12 @@ exclude:
   # Style opinions that conflict with our PHPCS / php-cs-fixer config:
   - name: PhpUnnecessaryCurlyVarSyntaxInspection   # "{$var}" interpolation is the house style
   - name: PhpFullyQualifiedNameUsageInspection     # deliberate \Tygh\… FQNs in procedural files
+  # External-ESLint bridge inspection: JS linting is owned by the dedicated
+  # ESLint CI job (npm ci + `npx eslint .` with eslint.config.mjs). The Qodana
+  # container has no node_modules, so this inspection can only emit one false
+  # "Install the 'eslint' package" error per JS file (21 of the 22 findings in
+  # report qJ4Bjx). Qodana's own JS inspections stay enabled.
+  - name: Eslint
   # ── Notice-level inspections muted ──────────────────────────────────────────
   # Either owned by PHPStan L10 (type/dead-code correctness) or conflicting with
   # this codebase's pragmatic, procedural CS-Cart style. Muting them keeps the

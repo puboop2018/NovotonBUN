@@ -21,7 +21,7 @@ final class Constants
     // Addon info
     public const string ADDON_ID = 'novoton_holidays';
     public const string VERSION = '3.2.0';
-    
+
     // ========== Booking Status ==========
     // Shared statuses are in TravelConstants (STATUS_PENDING, STATUS_CONFIRMED, etc.)
     // Use \Tygh\Addons\TravelCore\TravelConstants::STATUS_* for those.
@@ -72,46 +72,46 @@ final class Constants
     {
         return self::NOVOTON_API_WIRE_MAP[$status] ?? $status;
     }
-    
+
     // ========== Availability Status ==========
-    
+
     public const string AVAIL_OK = 'Good';
     public const string AVAIL_RQ = 'RQ';           // On Request
     public const string AVAIL_STOP = 'STOP';       // Stop Sale
     public const string AVAIL_NA = 'NA';           // Not Available
-    
+
     // ========== Age Types ==========
-    
+
     public const string AGE_ADULT = 'ADULT';
     public const string AGE_CHILD = 'CHILD';
     public const string AGE_INFANT = 'INFANT';
-    
+
     // ========== Accommodation Types ==========
-    
+
     public const string ACC_REGULAR = 'REGULAR';
     public const string ACC_SINGLE = 'SINGLE';
     public const string ACC_EXTRA_BED = 'EXTRA_BED';
-    
+
     // ========== Currency ==========
     // Shared currency constants are in TravelConstants (CURRENCY_EUR, CURRENCY_USD, etc.)
-    
+
     // ========== External URLs ==========
 
     public const string IMAGE_BASE_URL = 'https://booking.allinclusive.bg';
 
     // ========== Limits ==========
     // Shared limits are in TravelConstants (MAX_ADULTS, MAX_CHILDREN, etc.)
-    
+
     // ========== Cache TTL (seconds) ==========
     // ONLY for live API calls - static data uses database storage
-    
+
     public const int CACHE_TTL_ROOM_PRICE = 300;        // 5 minutes (live booking prices)
     public const int CACHE_TTL_AVAILABILITY = 180;      // 3 minutes (live availability)
     public const int CACHE_TTL_SEARCH = 300;            // 5 minutes (search results)
-    
+
     // Note: hotel_list, hotel_info, priceinfo are NOT cached
     // They are stored in database and synced via cron jobs
-    
+
     // ========== API Functions ==========
     // Names match the Novoton XML API function identifiers exactly.
     // See Novoton API docs: each constant = the <function> value sent in the URL.
@@ -152,7 +152,7 @@ final class Constants
 
     // --- Commission ---
     public const string API_FUNCTION_KICKBACK          = 'kickback_RS';        // 24. Commission/kickback info
-    
+
     // ========== Database Tables (V3 Architecture) ==========
 
     public const string TABLE_HOTELS           = 'novoton_hotels';
@@ -165,7 +165,7 @@ final class Constants
     public const string TABLE_CACHE            = 'novoton_cache';
     public const string TABLE_ALTERNATIVE_REQUESTS = 'novoton_alternative_requests';
     public const string TABLE_FEATURE_MAPPINGS = 'hotel_feature_mappings';   // Provider → CS-Cart feature mapping hub
-    
+
     // ========== Feature Types (Mapping Hub) ==========
     // Used as `feature_type` column in hotel_feature_mappings table.
 
@@ -218,7 +218,7 @@ final class Constants
     ];
 
     // ========== Countries ==========
-    
+
     public const array COUNTRIES = [
         'ALBANIA',
         'BULGARIA',
@@ -233,7 +233,7 @@ final class Constants
         'UNITED ARAB EMIRATES',
         'UNITED KINGDOM',
     ];
-    
+
     public const string DEFAULT_COUNTRY = 'BULGARIA';
 
     // ========== Hidden Resorts ==========
@@ -243,17 +243,17 @@ final class Constants
     public const array HIDDEN_RESORTS = [
         'GIFT VOUCHER',
     ];
-    
+
     // ========== Languages ==========
-    
+
     public const string LANG_EN = 'UK';
     public const string LANG_BG = 'BG';
     public const string LANG_RO = 'RO';
-    
+
     public const string DEFAULT_LANG = self::LANG_EN;
-    
+
     // ========== Error Codes ==========
-    
+
     public const string ERROR_INVALID_DATA = 'E001';
     public const string ERROR_API_FAILURE = 'E002';
     public const string ERROR_NOT_AVAILABLE = 'E003';
@@ -261,7 +261,7 @@ final class Constants
     public const string ERROR_BOOKING_FAILED = 'E005';
     public const string ERROR_RATE_LIMITED = 'E006';
     public const string ERROR_UNAUTHORIZED = 'E007';
-    
+
     // ========== Board (Meal Plan) Mapping ==========
     // Maps user-facing board codes to Novoton API board type identifiers.
     // Single source of truth — replaces scattered $boardMapping arrays.
@@ -282,7 +282,7 @@ final class Constants
     public const int DEFAULT_ADULT_AGE = 33;
     public const string DEFAULT_ISO_NATIONAL = 'RO';
     public const string DEFAULT_CREATED_BY = 'CS-Cart';
-    
+
     // ========== Debug / Logging Settings Keys ==========
 
     /** Registry key for verbose service logging (default Y) */
@@ -371,7 +371,7 @@ final class Constants
 
     public const string CACHE_DIR = 'var/cache/novoton/';
     public const string LOG_DIR = 'var/log/';
-    
+
     // Prevent instantiation
     private function __construct() {}
 }

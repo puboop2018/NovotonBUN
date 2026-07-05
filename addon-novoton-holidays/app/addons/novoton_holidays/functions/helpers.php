@@ -183,7 +183,7 @@ function fn_novoton_holidays_set_dynamic_page_meta(string $pageTitle): void
 function fn_novoton_holidays_get_api(): ?NovotonApi
 {
     static $api = null;
-    
+
     if ($api === null) {
         $src_dir = TypeCoerce::toString(Registry::get('config.dir.addons')) . 'novoton_holidays/src/';
 
@@ -298,12 +298,12 @@ function fn_novoton_holidays_update_product_prices($product_id): bool|string
             db_query(
                 "INSERT INTO ?:novoton_hotel_packages
                  (hotel_id, package_id, package_name, priceinfo_data, needs_price_compute, synced_at)
-                 VALUES (?s, ?s, ?s, ?s, 'Y', ?s) AS new_row
+                 VALUES (?s, ?s, ?s, ?s, 'Y', ?s)
                  ON DUPLICATE KEY UPDATE
-                 package_name = new_row.package_name,
-                 priceinfo_data = new_row.priceinfo_data,
+                 package_name = VALUES(package_name),
+                 priceinfo_data = VALUES(priceinfo_data),
                  needs_price_compute = 'Y',
-                 synced_at = new_row.synced_at",
+                 synced_at = VALUES(synced_at)",
                 (string) $hotel_id,
                 (string) $packageId,
                 (string) $packageName,

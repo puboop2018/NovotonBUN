@@ -36,13 +36,13 @@ if ($mode === 'update_prices') {
     if (!fn_check_permissions('manage_catalog', 'update', 'admin')) {
         return [CONTROLLER_STATUS_DENIED];
     }
-    
+
     $product_id = RequestCoerce::int($_REQUEST, 'product_id');
 
     if ($product_id > 0) {
         // Update single product
         $result = fn_novoton_holidays_update_product_prices($product_id);
-        
+
         if ($result === true) {
             fn_set_notification('N', __('notice'), 'Price updated successfully');
         } elseif ($result === 'no_data') {
@@ -50,27 +50,27 @@ if ($mode === 'update_prices') {
         } else {
             fn_set_notification('E', __('error'), 'Failed to update price');
         }
-        
+
         return [CONTROLLER_STATUS_REDIRECT, 'products.update&product_id=' . $product_id];
     }
-    
+
     // Batch update
     fn_novoton_holidays_stream_page_open('Updating Product Prices');
     echo '<div class="log">';
-    
+
     $limit = RequestCoerce::int($_REQUEST, 'limit', 50);
-    
+
     // Get hotels with products
     $hotelRepo = Container::getInstance()->hotelRepository();
     $hotels = $hotelRepo->findWithProductsSortedByStaleness($limit);
-    
+
     echo "Updating prices for " . count($hotels) . " products...<br><br>\n";
     flush();
-    
+
     $updated = 0;
     $failed = 0;
     $no_data = 0;
-    
+
     foreach ($hotels as $hotel) {
         $hotelProductId = TypeCoerce::toInt($hotel['product_id'] ?? 0);
         $hotelName = TypeCoerce::toString($hotel['hotel_name'] ?? '');
@@ -86,17 +86,17 @@ if ($mode === 'update_prices') {
             echo "<span class='error'>✗ " . htmlspecialchars($hotelName) . "</span><br>\n";
             $failed++;
         }
-        
+
         if ($updated > 0 && $updated % 10 === 0) {
             flush();
         }
     }
-    
+
     echo "<br><strong>Summary:</strong><br>";
     echo "Updated: {$updated}<br>";
     echo "No data: {$no_data}<br>";
     echo "Failed: {$failed}<br>";
-    
+
     echo '</div>';
     fn_novoton_holidays_stream_page_close();
     exit;
@@ -608,7 +608,7 @@ if ($mode === 'room_price') {
     if (!fn_check_permissions('manage_catalog', 'update', 'admin')) {
         return [CONTROLLER_STATUS_DENIED];
     }
-    
+
     $hotel_id = RequestCoerce::string($_REQUEST, 'hotel_id');
     $check_in = RequestCoerce::string($_REQUEST, 'check_in', date('Y-m-d', strtotime('+' . Constants::DEFAULT_CHECKIN_DAYS_AHEAD . ' days')));
     $check_out = RequestCoerce::string($_REQUEST, 'check_out', date('Y-m-d', strtotime('+' . (Constants::DEFAULT_CHECKIN_DAYS_AHEAD + Constants::DEFAULT_STAY_NIGHTS) . ' days')));
@@ -651,12 +651,12 @@ if ($mode === 'download_active_prices_csv') {
     if (!fn_check_permissions('manage_catalog', 'view', 'admin')) {
         return [CONTROLLER_STATUS_DENIED];
     }
-    
+
     $country = (string) preg_replace('/[^A-Z]/', '', strtoupper(RequestCoerce::string($_REQUEST, 'country', 'BULGARIA')));
 
     $hotelRepo = Container::getInstance()->hotelRepository();
     $hotels = $hotelRepo->findWithPricesForExport($country);
-    
+
     $csv = "Hotel ID;Hotel Name;City;Hotel Type;Product ID;Last Check\n";
 
     foreach ($hotels as $hotel) {
@@ -669,7 +669,7 @@ if ($mode === 'download_active_prices_csv') {
             TypeCoerce::toString($hotel['last_price_check'] ?? '')
         ]) . "\n";
     }
-    
+
     header('Content-Type: text/csv; charset=utf-8');
     header('Content-Disposition: attachment; filename="novoton_active_prices_' . strtolower($country) . '_' . date('Y-m-d') . '.csv"');
     echo $csv;
@@ -690,26 +690,26 @@ if ($mode === 'cron_offers_update') {
         echo 'Invalid access key';
         exit;
     }
-    
+
     header('Content-Type: text/plain; charset=utf-8');
-    
+
     echo "=== NOVOTON OFFERS UPDATE ===\n";
     echo "Started: " . date('Y-m-d H:i:s') . "\n\n";
-    
+
     try {
         $api = new NovotonApi();
         $hotelRepo = Container::getInstance()->hotelRepository();
         $syncLogRepo = Container::getInstance()->syncLogRepository();
-        
+
         $updated = 0;
         $errors = 0;
         $start_time = time();
-        
+
         // Get hotels that need price update
         $hotels = $hotelRepo->findNeedingPriceUpdate(24, 100);
-        
+
         echo "Processing " . count($hotels) . " hotels\n\n";
-        
+
         foreach ($hotels as $hotel) {
             $hotelProductId = TypeCoerce::toInt($hotel['product_id'] ?? 0);
             $hotelName = TypeCoerce::toString($hotel['hotel_name'] ?? '');
@@ -747,6 +747,6 @@ if ($mode === 'cron_offers_update') {
     } catch (\Throwable $e) {
         echo "ERROR: " . $e->getMessage() . "\n";
     }
-    
+
     exit;
 }

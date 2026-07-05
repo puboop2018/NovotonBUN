@@ -236,7 +236,7 @@ function fn_novoton_holidays_cron_resinfo(): array
     }
 
     $countries = fn_novoton_holidays_parse_countries();
-    
+
     $result = [
         'success' => true,
         'synced' => 0,
@@ -245,17 +245,17 @@ function fn_novoton_holidays_cron_resinfo(): array
         'errors' => 0,
         'countries' => []
     ];
-    
+
     foreach ($countries as $country) {
         $country = trim($country);
         if (empty($country)) continue;
-        
+
         try {
             $hotels = $api->hotels()->getHotelList($country);
-            
+
             if (!empty($hotels)) {
                 $country_stats = ['synced' => 0, 'added' => 0, 'updated' => 0];
-                
+
                 $hotelRepo = _nvt_hotel_repo();
                 foreach ($hotels as $hotel) {
                     $hotel_id = (string)($hotel['HotelId'] ?? $hotel['hotelId'] ?? '');
@@ -273,19 +273,19 @@ function fn_novoton_holidays_cron_resinfo(): array
                     $hotelRepo->upsert($hotel_data);
                     $country_stats['synced']++;
                 }
-                
+
                 $result['synced'] += $country_stats['synced'];
                 $result['added'] += $country_stats['added'];
                 $result['updated'] += $country_stats['updated'];
                 $result['countries'][$country] = $country_stats;
             }
-            
+
         } catch (\Exception $e) {
             $result['errors']++;
             $result['countries'][$country] = ['error' => $e->getMessage()];
         }
     }
-    
+
     // Log sync via repository (column names must match addon.xml schema)
     $syncRepo = _nvt_sync_log_repo();
     $syncRepo->create('resinfo', [
@@ -295,6 +295,6 @@ function fn_novoton_holidays_cron_resinfo(): array
         'status'  => 'completed',
         'details' => $result['countries'],
     ]);
-    
+
     return $result;
 }

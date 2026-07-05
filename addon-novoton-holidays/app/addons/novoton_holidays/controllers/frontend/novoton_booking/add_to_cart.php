@@ -57,7 +57,7 @@ use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
         fn_set_notification('E', __('error'), __('novoton_holidays.invalid_booking_data'));
         return [CONTROLLER_STATUS_REDIRECT, 'index.index'];
     }
-    
+
     // Get product ID from hotel ID
     $prefix = ConfigProvider::getFirstProductCodePrefix();
     $bdHotelId = TypeCoerce::toString($bookingData['hotel_id'] ?? '');
@@ -77,7 +77,7 @@ use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
         fn_set_notification('E', __('error'), __('novoton_holidays.product_not_found'));
         return [CONTROLLER_STATUS_REDIRECT, 'index.index'];
     }
-    
+
     // Get hotel info using repository
     $hotel_info = _nvt_hotel_repo()->findById($bdHotelId);
 
@@ -123,7 +123,7 @@ use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
         _nvt_hotel_repo()->upsert($hotel_data);
         $hotel_info = _nvt_hotel_repo()->findById($bdHotelId);
     }
-    
+
     // Process guest information — sanitize via SecurityService
     $rawGuests = TypeCoerce::toStringMap($bookingData['guests'] ?? null);
     $guests = $rawGuests !== [] ? $security->sanitizeGuestData($rawGuests) : [];
@@ -162,7 +162,7 @@ use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
 
     // Get total price (from form or recalculate)
     $total_price = TypeCoerce::toFloat($bookingData['total_price'] ?? 0);
-    
+
     // Always call API to get terms and verify price (Option A: fetch terms at checkout)
     // IMPORTANT: Include children ages for correct price calculation
     $priceParams = [
@@ -175,7 +175,7 @@ use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
         'adults' => TypeCoerce::toInt($bookingData['adults'] ?? 2),
         'children' => $all_child_ages  // Include children ages from guest form
     ];
-    
+
     $api = fn_novoton_holidays_get_api();
     $priceData = $api !== null ? $api->pricing()->getRoomPrice($priceParams) : null;
 
@@ -329,12 +329,12 @@ use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
     if (isset($priceData->Important)) {
         $important = (string)$priceData->Important;
     }
-    
+
     if ($total_price <= 0) {
         fn_set_notification('E', __('error'), __('novoton_holidays.price_unavailable'));
         return [CONTROLLER_STATUS_REDIRECT, 'products.view?product_id=' . $product_id];
     }
-    
+
     // Calculate nights using DateTime::diff (DST-safe)
     $nights = TypeCoerce::toInt($bookingData['nights'] ?? 0);
     $check_in = TypeCoerce::toString($bookingData['check_in'] ?? '');
@@ -381,7 +381,7 @@ use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
         }
         unset($rm);
     }
-    
+
     // If rooms_data is still empty, create default with complete info
     $room_id_str = TypeCoerce::toString($bookingData['room_id']);
     if (empty($rooms_data)) {
@@ -452,7 +452,7 @@ use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
         }
     }
     unset($room);
-    
+
     // Check if similar booking already exists (same hotel, dates, holder, no order yet)
     // This prevents duplicates from form resubmissions
     $bookingRepo = _nvt_booking_repo();
@@ -503,10 +503,10 @@ use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
     if ($total_children === 0) {
         $total_children = TypeCoerce::toInt($bookingData['children'] ?? 0);
     }
-    
+
     $room_id_column = implode(', ', $room_ids_for_db);
     $room_type_column = implode(', ', $room_types_for_db);
-    
+
     if ($existing_booking_id > 0) {
         // Update existing booking instead of creating new one
         $booking_record = [
@@ -579,7 +579,7 @@ use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
         // A79: Use BookingRepository for create
         $booking_id = _nvt_booking_repo()->create($booking_record);
     }
-    
+
     // travel_bookings sync is handled by BookingRepository::create()/update() above
 
     // Add to cart with booking details
@@ -624,10 +624,10 @@ use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
             'currency' => ConfigProvider::getApiCurrency(),
         ]
     ];
-    
+
     // Set the price directly (override product price)
     $product['price'] = $total_price;
-    
+
     // Add to cart
     // Narrow the session array once so the reference binds below see a
     // typed array shape (CS-Cart's reference-based cart flow needs live
@@ -669,7 +669,7 @@ use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
         'extra' => $product['extra'],
         'stored_price' => 'Y'  // Important: use our calculated price
     ];
-    
+
     // Recalculate cart
     fn_calculate_cart_content($cart, $auth, 'S', true, 'F', true);
     fn_save_cart_content($cart, $auth['user_id'] ?? 0);
@@ -701,5 +701,5 @@ use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
     }
 
     fn_set_notification('N', __('notice'), __('novoton_holidays.added_to_cart'));
-    
+
     return [CONTROLLER_STATUS_REDIRECT, 'checkout.cart'];

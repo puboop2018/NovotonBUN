@@ -155,16 +155,11 @@ class ConfigProvider extends AbstractConfigProvider
 
     // ── Price Discrepancy Settings ──
 
-    /**
-     * Threshold percentage for "form price higher than API price" alerts.
-     * If the form price exceeds the API price by more than this %, the order
-     * is still allowed but an admin email notification is sent.
-     * Default: 55%.
-     */
-    public static function getPriceHigherThreshold(): float
-    {
-        return max(0.0, TypeCoerce::toFloat(self::settings()['price_higher_threshold'] ?? 55));
-    }
+    // NOTE: the "price higher than API" alert threshold moved to travel_core's
+    // shared checkout price guard (TravelCore\Services\CheckoutPriceGuard,
+    // setting `checkout_alert_percent`) so novoton and sphinx share ONE policy.
+    // The former novoton-only `price_higher_threshold` setting + getter were
+    // removed here to avoid a dead, misleading dial in the admin UI.
 
     /**
      * TTL (seconds) for the session-cached API price ("Silent Sync").

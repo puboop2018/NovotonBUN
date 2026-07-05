@@ -33,8 +33,16 @@
         "stan": "phpstan analyse --memory-limit=1G",
         "stan:baseline": "phpstan analyse --memory-limit=1G --generate-baseline=phpstan-baseline.neon --allow-empty-baseline",
 
-        "fix": "php-cs-fixer fix",
-        "fix:dry": "php-cs-fixer fix --dry-run --diff",
+        "fix": [
+            "php-cs-fixer fix",
+            "@fix:proc"
+        ],
+        "fix:dry": [
+            "php-cs-fixer fix --dry-run --diff",
+            "@fix:proc:dry"
+        ],
+        "fix:proc": "php-cs-fixer fix --config=.php-cs-fixer.procedural.php",
+        "fix:proc:dry": "php-cs-fixer fix --config=.php-cs-fixer.procedural.php --dry-run --diff",
 
         "rector:dry": "rector process --dry-run --no-progress-bar",
         "rector:fix": "rector process --no-progress-bar",
@@ -62,8 +70,10 @@
     "scripts-descriptions": {
         "stan":          "PHPStan static analysis (level 10)",
         "stan:baseline": "Regenerate PHPStan baseline from current errors",
-        "fix":           "PHP CS Fixer — auto-format code",
-        "fix:dry":       "PHP CS Fixer — show what would change (dry run)",
+        "fix":           "PHP CS Fixer — auto-format code (src + procedural configs)",
+        "fix:dry":       "PHP CS Fixer — show what would change (dry run, both configs)",
+        "fix:proc":      "PHP CS Fixer — conservative pass on controllers/functions/hooks (imports + whitespace only)",
+        "fix:proc:dry":  "PHP CS Fixer — procedural pass dry run (what CI enforces)",
         "rector:dry":    "Rector — show what would change (dry run, fails on drift)",
         "rector:fix":    "Rector — apply refactoring rules (see rector.php)",
         "test:novoton":     "PHPUnit tests for the novoton_holidays addon",

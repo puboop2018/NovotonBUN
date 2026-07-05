@@ -45,7 +45,7 @@ if ($mode === 'sync_facilities') {
     if (!fn_check_permissions('manage_catalog', 'update', 'admin')) {
         return [CONTROLLER_STATUS_DENIED];
     }
-    
+
     $result = fn_novoton_holidays_sync_facilities_list();
 
     if (TypeCoerce::toBool($result['success'])) {
@@ -55,7 +55,7 @@ if ($mode === 'sync_facilities') {
     } else {
         fn_set_notification('E', __('error'), $result['error'] ?? 'Sync failed');
     }
-    
+
     return [CONTROLLER_STATUS_REDIRECT, 'novoton_holidays.list_facilities'];
 }
 
@@ -301,4 +301,3 @@ if ($mode === 'check_packages') {
     fn_novoton_holidays_stream_page_close();
     exit;
 }
-

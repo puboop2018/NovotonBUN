@@ -41,12 +41,14 @@ use Tygh\Addons\TravelCore\TravelConstants;
  *   - Form price > API price by > threshold% → ALLOW order, send admin notification + email
  *   - Prices match → ALLOW order silently
  *
- * We never block the order. If the price has increased, we silently update
- * the cart to the correct API price (same as the add_to_cart price floor).
- * The customer's order proceeds without interruption; admin is notified.
+ * If the price increased within the absorb allowance, the customer pays the
+ * price they were shown (merchant absorbs the difference). Beyond it, the cart
+ * is corrected to the live API price and THIS order click is blocked so the
+ * customer reviews and re-confirms the new total (EU CRD: the amount charged
+ * must be the amount shown at the order button). Admin is notified either way.
  *
  * @param array<string, mixed> $cart
- * @param string $allow
+ * @param bool $allow
  * @param array<string, mixed> $product_groups
  */
 function fn_novoton_holidays_pre_place_order(&$cart, &$allow, &$product_groups): void
@@ -83,6 +85,19 @@ function fn_novoton_holidays_pre_place_order(&$cart, &$allow, &$product_groups):
     // Send email notifications for any price discrepancies (lower OR higher)
     foreach ($result['notifications'] as $notification) {
         fn_novoton_holidays_send_price_discrepancy_email($notification);
+    }
+
+    // A correction exceeded the absorb allowance: the cart now shows the new
+    // price — block this click so the customer re-confirms the updated total.
+    if (!empty($result['reconfirm'])) {
+        fn_set_notification(
+            'W',
+            __('travel_core.price_change', ['[default]' => 'Price update']),
+            __('travel_core.price_changed_reconfirm', [
+                '[default]' => 'The price of a booking in your cart has changed. Please review the updated total and place your order again.',
+            ]),
+        );
+        $allow = false;
     }
 }
 

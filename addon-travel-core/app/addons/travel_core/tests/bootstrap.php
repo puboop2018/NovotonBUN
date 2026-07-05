@@ -87,6 +87,14 @@ if (!function_exists('db_query')) {
     }
 }
 
+if (!function_exists('db_get_row')) {
+    function db_get_row(string $query, ...$params)
+    {
+        $fn = \Tygh\Addons\TravelCore\Tests\Support\DbStub::$getRow;
+        return $fn !== null ? $fn($query, ...$params) : [];
+    }
+}
+
 if (!function_exists('db_get_array')) {
     function db_get_array(string $query, ...$params)
     {
@@ -116,6 +124,9 @@ if (!class_exists(\Tygh\Registry::class)) {
         }
         public static function set(string $key, $value): void {
             self::$data[$key] = $value;
+        }
+        public static function del(string $key): void {
+            unset(self::$data[$key]);
         }
     }
     ');

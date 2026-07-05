@@ -61,6 +61,12 @@ jobs:
       - name: Run PHP CS Fixer
         run: vendor/bin/php-cs-fixer fix --dry-run --diff --using-cache=no
 
+      # Conservative pass (imports + whitespace only) over the procedural
+      # CS-Cart files the main config deliberately skips — controllers/,
+      # functions/, hooks/, addon-root func.php/init.php (audit M6).
+      - name: Run PHP CS Fixer (procedural files)
+        run: vendor/bin/php-cs-fixer fix --config=.php-cs-fixer.procedural.php --dry-run --diff --using-cache=no
+
   # ── Rector (dry-run; fails if any configured rule would change a file) ──
   rector:
     name: Rector (dry-run)
@@ -263,11 +269,13 @@ jobs:
           php-version: '8.3'
 
       - name: Lint all PHP files
+        # Whole addon trees (controllers, functions, hooks, schemas, root
+        # func.php/init.php, src, tests) — not just src/ (audit M6).
         run: |
-          find addon-novoton-holidays/app/addons/novoton_holidays/src \
-               addon-travel-core/app/addons/travel_core/src \
-               addon-sphinx-holidays/app/addons/sphinx_holidays/src \
-               -name '*.php' -print0 | xargs -0 -n 50 php -l
+          find addon-novoton-holidays/app/addons/novoton_holidays \
+               addon-travel-core/app/addons/travel_core \
+               addon-sphinx-holidays/app/addons/sphinx_holidays \
+               -path '*/vendor' -prune -o -name '*.php' -print0 | xargs -0 -n 50 php -l
 
   # ── ESLint (frontend JS / JSX) ──
   # Lints the addons' standalone JS (addon-*/js) and the React booking-engine

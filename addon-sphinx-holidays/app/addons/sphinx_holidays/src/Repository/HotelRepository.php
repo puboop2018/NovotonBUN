@@ -47,10 +47,28 @@ class HotelRepository implements HotelRepositoryInterface
     }
 
     /**
-     * Upsert a batch of hotels (INSERT ... ON DUPLICATE KEY UPDATE).
+     * Rows per multi-row upsert statement. Matches the sync services' own batch
+     * size, and keeps each statement's payload safely under max_allowed_packet
+     * even with large description/JSON columns.
+     */
+    private const UPSERT_CHUNK_SIZE = 100;
+
+    /** Placeholder tuple for one hotel row of the multi-row upsert (26 bound values). */
+    private const UPSERT_ROW_PLACEHOLDERS = '(?s, ?s, ?i, ?s, ?i, ?s, ?i, ?s, ?s, ?s, ?d, ?d, '
+        . "?s, ?s, ?s, ?s, ?s, ?s, ?s, ?s, ?s, ?s, ?d, ?i, 'active', ?s)";
+
+    /**
+     * Upsert a batch of hotels (multi-row INSERT ... ON DUPLICATE KEY UPDATE).
+     *
+     * One statement per UPSERT_CHUNK_SIZE rows instead of one per hotel — at
+     * full-sync scale (100k+ hotels) the per-row form was 100k round-trips.
+     *
+     * Uses the VALUES(col) form (not the MySQL-8-only "AS alias" syntax) so the
+     * upsert runs on both MySQL and MariaDB; MySQL 8 flags VALUES() in ON
+     * DUPLICATE KEY UPDATE as deprecated but keeps it working.
      *
      * @param list<array<string, mixed>> $hotels Array of hotel rows
-     * @return int Number of rows affected
+     * @return int Number of rows submitted (invalid rows without hotel_id are skipped)
      */
     public function upsertBatch(array $hotels): int
     {
@@ -58,15 +76,56 @@ class HotelRepository implements HotelRepositoryInterface
             return 0;
         }
 
-        $affected = 0;
-        foreach ($hotels as $hotel) {
-            $hotelId = TypeCoerce::toString($hotel['hotel_id'] ?? '');
-            if ($hotelId === '') {
+        $now = date('Y-m-d H:i:s');
+        $submitted = 0;
+
+        foreach (array_chunk($hotels, self::UPSERT_CHUNK_SIZE) as $chunk) {
+            $tuples = [];
+            $params = [];
+
+            foreach ($chunk as $hotel) {
+                $hotelId = TypeCoerce::toString($hotel['hotel_id'] ?? '');
+                if ($hotelId === '') {
+                    continue;
+                }
+
+                $tuples[] = self::UPSERT_ROW_PLACEHOLDERS;
+                array_push(
+                    $params,
+                    $hotelId,
+                    TypeCoerce::toString($hotel['name'] ?? ''),
+                    TypeCoerce::toInt($hotel['classification'] ?? 0),
+                    TypeCoerce::toString($hotel['property_type'] ?? 'hotel'),
+                    TypeCoerce::toInt($hotel['destination_id'] ?? 0),
+                    TypeCoerce::toString($hotel['destination_name'] ?? ''),
+                    TypeCoerce::toInt($hotel['region_id'] ?? 0),
+                    TypeCoerce::toString($hotel['region_name'] ?? ''),
+                    TypeCoerce::toString($hotel['country_code'] ?? ''),
+                    TypeCoerce::toString($hotel['country_name'] ?? ''),
+                    TypeCoerce::toFloat($hotel['latitude'] ?? 0),
+                    TypeCoerce::toFloat($hotel['longitude'] ?? 0),
+                    TypeCoerce::toString($hotel['address'] ?? ''),
+                    TypeCoerce::toString($hotel['phone'] ?? ''),
+                    TypeCoerce::toString($hotel['email'] ?? ''),
+                    TypeCoerce::toString($hotel['website'] ?? ''),
+                    TypeCoerce::toString($hotel['description'] ?? ''),
+                    TypeCoerce::toString($hotel['short_description'] ?? ''),
+                    TypeCoerce::toString($hotel['image_url'] ?? ''),
+                    TypeCoerce::toString($hotel['images_json'] ?? '[]'),
+                    TypeCoerce::toString($hotel['facilities_json'] ?? '[]'),
+                    TypeCoerce::toString($hotel['is_adults_only'] ?? 'N'),
+                    TypeCoerce::toFloat($hotel['rating'] ?? 0),
+                    TypeCoerce::toInt($hotel['rating_count'] ?? 0),
+                    $now,
+                );
+            }
+
+            if ($tuples === []) {
                 continue;
             }
 
             db_query(
-                "INSERT INTO ?:sphinx_hotels
+                'INSERT INTO ?:sphinx_hotels
                     (hotel_id, name, classification, property_type,
                      destination_id, destination_name, region_id, region_name,
                      country_code, country_name, latitude, longitude,
@@ -75,88 +134,60 @@ class HotelRepository implements HotelRepositoryInterface
                      images_json, facilities_json, is_adults_only,
                      rating, rating_count,
                      sync_status, last_synced_at)
-                 VALUES (?s, ?s, ?i, ?s,
-                     ?i, ?s, ?i, ?s,
-                     ?s, ?s, ?d, ?d,
-                     ?s, ?s, ?s, ?s,
-                     ?s, ?s, ?s,
-                     ?s, ?s, ?s,
-                     ?d, ?i,
-                     'active', ?s)
-                 AS new_row
+                 VALUES ' . implode(', ', $tuples) . "
                  ON DUPLICATE KEY UPDATE
-                    name = new_row.name,
-                    classification = new_row.classification,
-                    property_type = new_row.property_type,
-                    destination_id = new_row.destination_id,
-                    destination_name = new_row.destination_name,
-                    region_id = new_row.region_id,
-                    region_name = new_row.region_name,
-                    country_code = new_row.country_code,
-                    country_name = new_row.country_name,
-                    latitude = new_row.latitude,
-                    longitude = new_row.longitude,
-                    address = new_row.address,
-                    phone = new_row.phone,
-                    email = new_row.email,
-                    website = new_row.website,
-                    description = new_row.description,
-                    short_description = new_row.short_description,
-                    image_url = new_row.image_url,
-                    images_json = new_row.images_json,
-                    facilities_json = new_row.facilities_json,
-                    is_adults_only = new_row.is_adults_only,
-                    rating = new_row.rating,
-                    rating_count = new_row.rating_count,
-                    sync_status = 'active',
-                    last_synced_at = new_row.last_synced_at,
+                    /* Change-detection FIRST: ON DUPLICATE KEY UPDATE assignments
+                       run left to right, so these IF()s must read the OLD column
+                       values before the plain assignments below overwrite them
+                       (otherwise old == new always and detection never fires). */
                     product_skip_reason = IF(
-                        ?:sphinx_hotels.destination_name != new_row.destination_name
-                        OR ?:sphinx_hotels.country_name != new_row.country_name
-                        OR ?:sphinx_hotels.country_code != new_row.country_code,
+                        ?:sphinx_hotels.destination_name != VALUES(destination_name)
+                        OR ?:sphinx_hotels.country_name != VALUES(country_name)
+                        OR ?:sphinx_hotels.country_code != VALUES(country_code),
                         NULL, ?:sphinx_hotels.product_skip_reason
                     ),
                     product_needs_update = IF(
                         ?:sphinx_hotels.product_id IS NOT NULL AND ?:sphinx_hotels.product_id > 0 AND (
-                            ?:sphinx_hotels.name != new_row.name
-                            OR ?:sphinx_hotels.description != new_row.description
-                            OR ?:sphinx_hotels.short_description != new_row.short_description
-                            OR ?:sphinx_hotels.classification != new_row.classification
-                            OR ?:sphinx_hotels.image_url != new_row.image_url
+                            ?:sphinx_hotels.name != VALUES(name)
+                            OR ?:sphinx_hotels.description != VALUES(description)
+                            OR ?:sphinx_hotels.short_description != VALUES(short_description)
+                            OR ?:sphinx_hotels.classification != VALUES(classification)
+                            OR ?:sphinx_hotels.image_url != VALUES(image_url)
                         ),
                         'Y', ?:sphinx_hotels.product_needs_update
-                    )",
-                $hotelId,
-                TypeCoerce::toString($hotel['name'] ?? ''),
-                TypeCoerce::toInt($hotel['classification'] ?? 0),
-                TypeCoerce::toString($hotel['property_type'] ?? 'hotel'),
-                TypeCoerce::toInt($hotel['destination_id'] ?? 0),
-                TypeCoerce::toString($hotel['destination_name'] ?? ''),
-                TypeCoerce::toInt($hotel['region_id'] ?? 0),
-                TypeCoerce::toString($hotel['region_name'] ?? ''),
-                TypeCoerce::toString($hotel['country_code'] ?? ''),
-                TypeCoerce::toString($hotel['country_name'] ?? ''),
-                TypeCoerce::toFloat($hotel['latitude'] ?? 0),
-                TypeCoerce::toFloat($hotel['longitude'] ?? 0),
-                TypeCoerce::toString($hotel['address'] ?? ''),
-                TypeCoerce::toString($hotel['phone'] ?? ''),
-                TypeCoerce::toString($hotel['email'] ?? ''),
-                TypeCoerce::toString($hotel['website'] ?? ''),
-                TypeCoerce::toString($hotel['description'] ?? ''),
-                TypeCoerce::toString($hotel['short_description'] ?? ''),
-                TypeCoerce::toString($hotel['image_url'] ?? ''),
-                TypeCoerce::toString($hotel['images_json'] ?? '[]'),
-                TypeCoerce::toString($hotel['facilities_json'] ?? '[]'),
-                TypeCoerce::toString($hotel['is_adults_only'] ?? 'N'),
-                TypeCoerce::toFloat($hotel['rating'] ?? 0),
-                TypeCoerce::toInt($hotel['rating_count'] ?? 0),
-                date('Y-m-d H:i:s'),
+                    ),
+                    name = VALUES(name),
+                    classification = VALUES(classification),
+                    property_type = VALUES(property_type),
+                    destination_id = VALUES(destination_id),
+                    destination_name = VALUES(destination_name),
+                    region_id = VALUES(region_id),
+                    region_name = VALUES(region_name),
+                    country_code = VALUES(country_code),
+                    country_name = VALUES(country_name),
+                    latitude = VALUES(latitude),
+                    longitude = VALUES(longitude),
+                    address = VALUES(address),
+                    phone = VALUES(phone),
+                    email = VALUES(email),
+                    website = VALUES(website),
+                    description = VALUES(description),
+                    short_description = VALUES(short_description),
+                    image_url = VALUES(image_url),
+                    images_json = VALUES(images_json),
+                    facilities_json = VALUES(facilities_json),
+                    is_adults_only = VALUES(is_adults_only),
+                    rating = VALUES(rating),
+                    rating_count = VALUES(rating_count),
+                    sync_status = 'active',
+                    last_synced_at = VALUES(last_synced_at)",
+                ...$params,
             );
 
-            $affected++;
+            $submitted += count($tuples);
         }
 
-        return $affected;
+        return $submitted;
     }
 
     /**

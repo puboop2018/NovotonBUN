@@ -536,8 +536,8 @@ function fn_novoton_holidays_sync_resorts_list(string $country = \Tygh\Addons\No
             // Atomic upsert — avoids race condition between SELECT and INSERT/UPDATE
             $affected = TypeCoerce::toInt(db_query(
                 "INSERT INTO ?:novoton_resorts (resort_name, country, synced_at)
-                 VALUES (?s, ?s, ?s) AS new_row
-                 ON DUPLICATE KEY UPDATE synced_at = new_row.synced_at",
+                 VALUES (?s, ?s, ?s)
+                 ON DUPLICATE KEY UPDATE synced_at = VALUES(synced_at)",
                 $name, $country, $now
             ));
             // affected_rows = 1 for INSERT, 2 for UPDATE (MySQL convention)
@@ -581,30 +581,30 @@ function fn_novoton_holidays_sync_facilities_list(): array
         'updated' => 0,
         'total' => 0
     ];
-    
+
     try {
         $response = $api->hotels()->listFacilities();
-        
+
         if (empty($response)) {
             return ['success' => false, 'error' => 'Empty API response'];
         }
-        
+
         $facilities = $response->xpath('//facility') ?: $response->xpath('//Facility') ?: [];
 
         foreach ($facilities as $facility) {
             $facility_id = (int)($facility->IdFacility ?? $facility->Id ?? $facility['Id'] ?? 0);
             $name_en = (string)($facility->FacilityName ?? $facility->Name ?? $facility['Name'] ?? $facility);
             $name_ro = $name_en;
-            
+
             if ($facility_id <= 0) continue;
-            
+
             $result['total']++;
-            
+
             // Atomic upsert — avoids race condition between SELECT and INSERT/UPDATE
             $affected = TypeCoerce::toInt(db_query(
                 "INSERT INTO ?:novoton_facilities (facility_id, facility_name_en, facility_name_ro)
-                 VALUES (?i, ?s, ?s) AS new_row
-                 ON DUPLICATE KEY UPDATE facility_name_en = new_row.facility_name_en",
+                 VALUES (?i, ?s, ?s)
+                 ON DUPLICATE KEY UPDATE facility_name_en = VALUES(facility_name_en)",
                 $facility_id, $name_en, $name_ro
             ));
             if ($affected === 1) {
@@ -613,11 +613,11 @@ function fn_novoton_holidays_sync_facilities_list(): array
                 $result['updated']++;
             }
         }
-        
+
     } catch (\Exception $e) {
         return ['success' => false, 'error' => $e->getMessage()];
     }
-    
+
     return $result;
 }
 

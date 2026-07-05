@@ -420,7 +420,7 @@ class BatchedHotelInfoSyncV2 extends AbstractBatchedSync
                 }
                 $sql = 'INSERT INTO ?:novoton_hotel_packages (hotel_id, package_id, package_name, created_at) VALUES '
                     . implode(', ', $values)
-                    . ' AS new_row ON DUPLICATE KEY UPDATE package_name = new_row.package_name';
+                    . ' ON DUPLICATE KEY UPDATE package_name = VALUES(package_name)';
                 db_query($sql, ...$params);
             }
 

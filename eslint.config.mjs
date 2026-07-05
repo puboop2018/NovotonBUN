@@ -8,7 +8,6 @@
 // to the real Qodana JS findings: dead vars/functions, `==` coercion, `var`
 // redeclarations, redundant assignments. `no-undef` is OFF because these files
 // rely on dozens of CS-Cart / jQuery runtime globals.
-import js from '@eslint/js';
 import globals from 'globals';
 import react from 'eslint-plugin-react';
 

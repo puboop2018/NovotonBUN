@@ -83,7 +83,7 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
     $debug_log('Raw input', $input);
     $debug_log('Decoded data', $data);
-    
+
     if (empty($data) || !is_array($data)) {
         $debug_log('ERROR: Invalid request data');
         $sendJson(['success' => false, 'message' => 'Invalid request data']);
@@ -138,17 +138,17 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
         $debug_log('ERROR: Missing required fields');
         $sendJson(['success' => false, 'message' => 'Missing required fields']);
     }
-    
+
     // Calculate check-out date
     $check_out = date('Y-m-d', (int) strtotime($check_in . ' + ' . $nights . ' days'));
-    
+
     // Get API instance
     $api = fn_novoton_holidays_get_api();
     if ($api === null) {
         $debug_log('ERROR: API not available');
         $sendJson(['success' => false, 'message' => 'API not available']);
     }
-    
+
     try {
         $new_price = 0;
         $price_found = false;

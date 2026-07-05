@@ -16,14 +16,16 @@ declare(strict_types=1);
 namespace Tygh\Addons\SphinxHolidays\Services;
 
 use Tygh\Addons\TravelCore\Contracts\PreOrderPriceVerifierInterface;
+use Tygh\Addons\TravelCore\Enums\PriceComparisonOutcome;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+use Tygh\Addons\TravelCore\Services\CheckoutPriceGuard;
 
 class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
 {
     /**
      * {@inheritdoc}
      * @param array<string, mixed> $cart
-     * @return array{allow: bool, corrections: array<string, mixed>, notifications: array<int, array<string, mixed>>, unavailable: array<string, mixed>}
+     * @return array{allow: bool, corrections: array<string, mixed>, notifications: array<int, array<string, mixed>>, unavailable: array<string, mixed>, reconfirm: bool}
      */
     #[\Override]
     public function verify(array $cart): array
@@ -33,6 +35,7 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
             'corrections' => [],
             'notifications' => [],
             'unavailable' => [],  // Cart IDs of unavailable Sphinx offers (to be removed by caller)
+            'reconfirm' => false, // a correction exceeded the absorb allowance — hook must block for re-confirmation
         ];
 
         if (empty($cart['products'])) {
@@ -102,11 +105,11 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
 
             $apiPrice = Container::getCartService()->applyCommission($apiPrice);
 
-            // Compare prices
-            $diff = abs($formPrice - $apiPrice);
-            $threshold = $formPrice > 0 ? ($diff / $formPrice) * 100 : 0;
+            // Shared "No Surprises" policy — identical knobs for all providers,
+            // configured in travel_core settings (CheckoutPriceGuard).
+            $comparison = CheckoutPriceGuard::policy()->compare($formPrice, $apiPrice);
 
-            if ($diff < 0.01) {
+            if ($comparison->outcome === PriceComparisonOutcome::Match) {
                 continue; // Prices match
             }
 
@@ -117,11 +120,27 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
                 'form_price' => $formPrice,
                 'api_price' => $apiPrice,
                 'cart_id' => (string)$cartId,
-                'type' => $formPrice < $apiPrice ? 'price_lower' : 'price_higher',
+                'type' => $comparison->outcome === PriceComparisonOutcome::CorrectUp ? 'price_lower' : 'price_higher',
             ];
 
-            // If form price is lower than API, correct upward
-            if ($formPrice < $apiPrice) {
+            if ($comparison->outcome === PriceComparisonOutcome::CorrectUp) {
+                // Small increase within the absorb allowance: honour the price
+                // the customer was shown — the merchant absorbs the difference.
+                if ($comparison->difference <= CheckoutPriceGuard::absorbIncrease()) {
+                    fn_log_event('general', 'runtime', [
+                        'message' => 'Sphinx PreOrderPriceVerifier: ABSORBED — increase within allowance, honouring shown price',
+                        'offer_id' => $offerId,
+                        'form_price' => $formPrice,
+                        'api_price' => $apiPrice,
+                    ]);
+
+                    $notificationData['type'] = 'price_absorbed';
+                    $result['notifications'][] = $notificationData;
+                    continue;
+                }
+
+                // Form price is lower than API — correct upward, never block;
+                // the hook blocks this click so the customer re-confirms.
                 fn_log_event('general', 'runtime', [
                     'message' => 'Sphinx PreOrderPriceVerifier: correcting price upward',
                     'offer_id' => $offerId,
@@ -134,10 +153,11 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
                     'api_price_raw' => TypeCoerce::toFloat($verifyResult['price'] ?? 0),
                 ];
                 $result['notifications'][] = $notificationData;
-            } elseif ($threshold > 20) {
-                // Form price significantly higher — notify admin but allow
+                $result['reconfirm'] = true;
+            } else {
+                // AboveThreshold: form price significantly higher — notify admin but allow
                 fn_log_event('general', 'runtime', [
-                    'message' => 'Sphinx PreOrderPriceVerifier: form price above API by ' . round($threshold, 1) . '%',
+                    'message' => 'Sphinx PreOrderPriceVerifier: form price above API by ' . round($comparison->percentDelta, 1) . '%',
                     'offer_id' => $offerId,
                     'form_price' => $formPrice,
                     'api_price' => $apiPrice,

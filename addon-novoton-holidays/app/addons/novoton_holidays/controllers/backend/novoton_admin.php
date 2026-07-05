@@ -21,11 +21,11 @@ if (fn_allowed_for('MULTIVENDOR') || (defined('RESTRICTED_ADMIN') && RESTRICTED_
 
 // Update prices manually
 if ($mode === 'update_prices') {
-    
+
     if (!empty($_REQUEST['single_product']) && !empty($_REQUEST['product_id'])) {
         // Update single product
         $productId = RequestCoerce::int($_REQUEST, 'product_id');
-        
+
         $sync = new PriceInfoSync();
         $stats = [
             'total' => 1,
@@ -34,28 +34,28 @@ if ($mode === 'update_prices') {
             'no_data' => [],
             'missing' => []
         ];
-        
+
         $success = $sync->syncProductPrices($productId, $stats);
-        
+
         if ($success) {
             fn_set_notification('N', __('notice'), __('novoton_holidays.product_updated_successfully'));
         } else {
             fn_set_notification('W', __('warning'), __('novoton_holidays.product_update_failed'));
         }
-        
+
         return [CONTROLLER_STATUS_REDIRECT, 'products.update?product_id=' . $productId];
-        
+
     } else {
         // Update all products - use progress bar
-        
+
         Registry::set('runtime.controller', 'novoton_admin');
         Registry::set('runtime.mode', 'update_prices_progress');
-        
+
         // Start the sync process
         fn_set_progress('init', __('novoton_holidays.updating_prices'));
-        
+
         $sync = new PriceInfoSync();
-        
+
         try {
             $stats = $sync->syncAllProducts();
 
@@ -69,14 +69,14 @@ if ($mode === 'update_prices') {
             $message .= count($updatedList) . ' ' . TypeCoerce::toString(__('novoton_holidays.updated')) . ', ';
             $message .= count($failedList) . ' ' . TypeCoerce::toString(__('novoton_holidays.failed')) . ', ';
             $message .= count($noDataList) . ' ' . TypeCoerce::toString(__('novoton_holidays.no_data'));
-            
+
             fn_set_notification('N', __('notice'), $message);
-            
+
         } catch (Exception $e) {
             fn_set_progress('error', $e->getMessage());
             fn_set_notification('E', __('error'), TypeCoerce::toString(__('novoton_holidays.sync_failed')) . ': ' . $e->getMessage());
         }
-        
+
         return [CONTROLLER_STATUS_REDIRECT, 'addons.update?addon=novoton_holidays&selected_section=sync'];
     }
 }
@@ -163,7 +163,7 @@ if ($mode === 'booking_details') {
 
 // Download log file
 if ($mode === 'download_log') {
-    
+
     $logFile = RequestCoerce::string($_REQUEST, 'log_file');
 
     // Security: Sanitize filename to prevent path traversal
@@ -181,12 +181,12 @@ if ($mode === 'download_log') {
     // Security: Verify the resolved path is within the expected directory
     $realLogPath = realpath($logPath);
     $expectedDir = realpath($filesDir . 'novoton_logs/');
-    
+
     if ($realLogPath === false || $expectedDir === false || !str_starts_with($realLogPath, $expectedDir)) {
         fn_set_notification('E', __('error'), __('novoton_holidays.log_file_not_found'));
         return [CONTROLLER_STATUS_REDIRECT, 'novoton_admin.sync_logs'];
     }
-    
+
     if (file_exists($realLogPath)) {
         header('Content-Type: text/plain');
         header('Content-Disposition: attachment; filename="' . $logFile . '"');
@@ -201,13 +201,13 @@ if ($mode === 'download_log') {
 
 // Export bookings
 if ($mode === 'export_bookings') {
-    
+
     $reportingRepo = Container::getInstance()->bookingReportingRepository();
     $bookings = $reportingRepo->findAllForExport();
-    
+
     // Create CSV
     $csv = "Booking ID,Order ID,Hotel Name,Room Type,Check-in,Check-out,Adults,Children,Price,Currency,Status,Email,Created\n";
-    
+
     foreach ($bookings as $booking) {
         $num_children = TypeCoerce::toInt($booking['children'] ?? 0);
         $csv .= implode(',', [
@@ -226,7 +226,7 @@ if ($mode === 'export_bookings') {
             TypeCoerce::toString($booking['created_at'] ?? '')
         ]) . "\n";
     }
-    
+
     header('Content-Type: text/csv');
     header('Content-Disposition: attachment; filename="novoton_bookings_' . date('Y-m-d') . '.csv"');
     echo $csv;
@@ -235,9 +235,9 @@ if ($mode === 'export_bookings') {
 
 // Test API connection
 if ($mode === 'test_api') {
-    
+
     $api = _nvt_api();
-    
+
     try {
         $resorts = $api->destinations()->getResortList('BULGARIA');
 
@@ -249,7 +249,7 @@ if ($mode === 'test_api') {
     } catch (Exception $e) {
         fn_set_notification('E', __('error'), TypeCoerce::toString(__('novoton_holidays.api_connection_failed')) . ': ' . $e->getMessage());
     }
-    
+
     return [CONTROLLER_STATUS_REDIRECT, 'addons.update?addon=novoton_holidays&selected_section=api'];
 }
 
@@ -258,7 +258,7 @@ if ($mode === 'test_api') {
 // ================================================
 if ($mode === 'run_cron') {
     header('Content-Type: application/json');
-    
+
     // Accept 'cron_mode' or legacy 'task' parameter for the cron job to run
     $cron_mode_raw = RequestCoerce::string($_REQUEST, 'cron_mode') ?: RequestCoerce::string($_REQUEST, 'task');
     // Sanitize: only alphanumeric and underscores
@@ -269,12 +269,12 @@ if ($mode === 'run_cron') {
         'resinfo', 'alternative_rs', 'alternative_rs_bookings', 'notify_alternatives',
         'cleanup', 'expire_requests'
     ];
-    
+
     if (!in_array($cron_mode, $allowed_modes, true)) {
         echo json_encode(['success' => false, 'error' => 'Invalid cron mode']);
         exit;
     }
-    
+
     // Build parameters
     $params = ['mode' => $cron_mode];
     $reqCountry = RequestCoerce::string($_REQUEST, 'country');
@@ -289,7 +289,7 @@ if ($mode === 'run_cron') {
     if (!empty($reqDays)) {
         $params['days'] = $reqDays;
     }
-    
+
     // Capture output via callback instead of ob_start(). Declared before the
     // try so the catch block can still reference it after an early failure.
     $outputLines = [];
@@ -384,4 +384,3 @@ if ($mode === 'run_cron') {
 
     exit;
 }
-

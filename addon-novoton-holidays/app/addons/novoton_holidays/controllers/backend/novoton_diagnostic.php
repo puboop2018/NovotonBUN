@@ -213,20 +213,20 @@ if ($mode === 'health') {
 }
 
 if ($mode === 'check') {
-    
+
     header('Content-Type: text/plain; charset=utf-8');
-    
+
     echo "========================================\n";
     echo "NOVOTON HOLIDAYS DIAGNOSTIC\n";
     echo "========================================\n";
     echo "Time: " . date('Y-m-d H:i:s') . "\n\n";
-    
+
     $addon_dir = TypeCoerce::toString(Registry::get('config.dir.addons')) . 'novoton_holidays/';
-    
+
     // 1. FILE CHECK
     echo "1. FILE CHECK\n";
     echo "-------------------\n";
-    
+
     $files = array('addon.xml', 'init.php', 'hooks.php', 'func.php', 'cron.php');
     foreach ($files as $file) {
         $path = $addon_dir . $file;
@@ -239,11 +239,11 @@ if ($mode === 'check') {
         }
     }
     echo "\n";
-    
+
     // 2. FUNCTION CHECK
     echo "2. HOOK FUNCTIONS\n";
     echo "-------------------\n";
-    
+
     $functions = array(
         'fn_novoton_holidays_get_product_tabs_post',
         'fn_novoton_holidays_get_product_data_post',
@@ -251,7 +251,7 @@ if ($mode === 'check') {
         'fn_novoton_holidays_place_order_post',
         'fn_novoton_holidays_get_orders_post'
     );
-    
+
     foreach ($functions as $func) {
         /** @var string $funcName */
         $funcName = $func;
@@ -266,11 +266,11 @@ if ($mode === 'check') {
         }
     }
     echo "\n";
-    
+
     // 3. INIT.PHP CHECK
     echo "3. INIT.PHP ANALYSIS\n";
     echo "-------------------\n";
-    
+
     $init_file = $addon_dir . 'init.php';
     if (file_exists($init_file)) {
         $init_content = (string) file_get_contents($init_file);
@@ -287,7 +287,7 @@ if ($mode === 'check') {
                 echo "     - $hook\n";
             }
         }
-        
+
         // Check for view access
         if (str_contains($init_content, "['view']") || str_contains($init_content, '->view')) {
             echo "[WARNING] init.php accesses view - this can cause errors!\n";
@@ -296,15 +296,15 @@ if ($mode === 'check') {
         echo "[ERROR] init.php not found!\n";
     }
     echo "\n";
-    
+
     // 4. HOOKS.PHP CHECK
     echo "4. HOOKS.PHP ANALYSIS\n";
     echo "-------------------\n";
-    
+
     $hooks_file = $addon_dir . 'hooks.php';
     if (file_exists($hooks_file)) {
         echo "[Good] hooks.php exists\n";
-        
+
         $hooks_content = (string) file_get_contents($hooks_file);
         echo "     Size: " . strlen($hooks_content) . " bytes\n";
 
@@ -313,7 +313,7 @@ if ($mode === 'check') {
             $found = str_contains($hooks_content, "function $func");
             echo "     " . ($found ? "[Good]" : "[MISSING]") . " $func defined\n";
         }
-        
+
         // Check for syntax errors
         exec("php -l " . escapeshellarg($hooks_file) . " 2>&1", $output, $return);
         $syntax_ok = str_contains(implode('', $output ?: []), 'No syntax errors');
@@ -326,11 +326,11 @@ if ($mode === 'check') {
         echo "     Expected at: $hooks_file\n";
     }
     echo "\n";
-    
+
     // 5. DATABASE CHECK
     echo "5. DATABASE STATUS\n";
     echo "-------------------\n";
-    
+
     $addon = db_get_row("SELECT * FROM ?:addons WHERE addon = ?s", \Tygh\Addons\NovotonHolidays\Constants::ADDON_ID);
     $addonRow = TypeCoerce::toStringMap($addon);
     $addonStatus = TypeCoerce::toString($addonRow['status'] ?? '');
@@ -342,7 +342,7 @@ if ($mode === 'check') {
     } else {
         echo "[ERROR] Addon not found in database\n";
     }
-    
+
     // Check tables (V3 architecture)
     $tables = array('novoton_hotels', 'novoton_hotel_packages', 'novoton_bookings', 'novoton_sync_log');
     foreach ($tables as $table) {
@@ -350,26 +350,26 @@ if ($mode === 'check') {
         echo ($exists ? "[Good]" : "[MISSING]") . " Table: $table\n";
     }
     echo "\n";
-    
+
     // 6. RECOMMENDATIONS
     echo "6. RECOMMENDATIONS\n";
     echo "-------------------\n";
-    
+
     $issues = 0;
-    
+
     if (!file_exists($hooks_file)) {
         $issues++;
         echo "??  HIGH: Upload hooks.php file\n";
         echo "   ? Download hooks_complete.php and rename to hooks.php\n\n";
     }
-    
+
     if (file_exists($hooks_file) && !function_exists('fn_novoton_holidays_get_product_tabs_post')) {
         $issues++;
         echo "??  HIGH: Hook functions not loaded\n";
         echo "   ? Add this to init.php (after BOOTSTRAP check):\n";
         echo "   require_once(__DIR__ . '/hooks.php');\n\n";
     }
-    
+
     if (file_exists($init_file)) {
         $init_content = (string) file_get_contents($init_file);
         if (str_contains($init_content, "['view']")) {
@@ -378,13 +378,13 @@ if ($mode === 'check') {
             echo "   ? Wrap view access in: if (Tygh\Tygh::\$app->has('view')) { ... }\n\n";
         }
     }
-    
+
     if ($addon && $addonStatus !== 'A') {
         $issues++;
         echo "??  MEDIUM: Addon is disabled\n";
         echo "   ? Enable it in Add-ons ? Manage add-ons\n\n";
     }
-    
+
     if ($issues === 0) {
         echo "? No critical issues found!\n";
         echo "   If you're still having problems:\n";
@@ -394,11 +394,11 @@ if ($mode === 'check') {
     } else {
         echo "\nFound $issues issue(s). Fix them in order shown above.\n";
     }
-    
+
     echo "\n========================================\n";
     echo "END OF DIAGNOSTIC\n";
     echo "========================================\n";
-    
+
     exit;
 }
 // Alias 'test' to 'check' for backward compatibility

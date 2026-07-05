@@ -20,6 +20,9 @@ final class DbStub
     /** @var (callable(string, mixed...): mixed)|null */
     public static $getField = null;
 
+    /** @var (callable(string, mixed...): array<string, mixed>)|null */
+    public static $getRow = null;
+
     /** @var (callable(string, mixed...): list<array<string, mixed>>)|null */
     public static $getArray = null;
 
@@ -32,6 +35,7 @@ final class DbStub
     public static function reset(): void
     {
         self::$getField = null;
+        self::$getRow = null;
         self::$getArray = null;
         self::$getFields = null;
         self::$query = null;
