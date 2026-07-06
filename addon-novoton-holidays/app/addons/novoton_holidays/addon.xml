@@ -195,28 +195,18 @@
                         <variants/>
                     </item>
 
-                    <!-- Display Header -->
+                    <!-- Display Header
+                         (show_booking_form + booking_form_position moved to
+                         travel_core — the shared injection owns them for both
+                         provider addons) -->
                     <item id="display_header">
                         <type>header</type>
-                        <variants/>
-                    </item>
-                    <item id="show_booking_form">
-                        <type>checkbox</type>
-                        <default_value>Y</default_value>
                         <variants/>
                     </item>
                     <item id="show_calendar_prices">
                         <type>checkbox</type>
                         <default_value>Y</default_value>
                         <variants/>
-                    </item>
-                    <item id="booking_form_position">
-                        <type>selectbox</type>
-                        <default_value>before_tabs</default_value>
-                        <variants>
-                            <item id="before_tabs"></item>
-                            <item id="after_description"></item>
-                        </variants>
                     </item>
                     
                     <!-- Other Header -->
@@ -379,19 +369,10 @@
         </sections>
     </settings>
 
-    <!-- Block templates registration -->
-    <block_templates>
-        <templates>
-            <item>
-                <template>blocks/static_templates/addons/novoton_holidays/booking_engine.tpl</template>
-                <name>Novoton: Booking Form</name>
-            </item>
-            <item>
-                <template>blocks/static_templates/addons/novoton_holidays/homepage_booking.tpl</template>
-                <name>Novoton: Homepage Booking Search</name>
-            </item>
-        </templates>
-    </block_templates>
+    <!-- NOTE: no <block_templates> here on purpose. The booking widgets are
+         dedicated block types (schemas/block_manager/blocks.post.php), NOT
+         shared static templates: registering them in the shared pool made
+         them selectable as the core Search block's template. -->
 
     <queries>
         <!-- ============================================================= -->

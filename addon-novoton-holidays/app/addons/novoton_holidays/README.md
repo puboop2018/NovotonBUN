@@ -763,9 +763,8 @@ app/addons/novoton_holidays/
 │       └── Commands/         # Individual cron commands
 │
 └── schemas/                  # CS-Cart schemas
-    ├── block_manager/
+    ├── block_manager/         # Dedicated booking block types
     ├── permissions/           # Admin permissions
-    ├── static_templates/      # Block templates
     └── theme_editor/          # Visual editor schemas
 ```
 

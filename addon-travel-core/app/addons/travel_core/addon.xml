@@ -160,6 +160,27 @@
                         <default_value>0</default_value>
                         <variants/>
                     </item>
+
+                    <!-- Product-page booking form display: ONE policy for all
+                         provider addons (novoton + sphinx) — consumed by the
+                         shared dispatch_before_display injection -->
+                    <item id="display_header">
+                        <type>header</type>
+                        <variants/>
+                    </item>
+                    <item id="show_booking_form">
+                        <type>checkbox</type>
+                        <default_value>Y</default_value>
+                        <variants/>
+                    </item>
+                    <item id="booking_form_position">
+                        <type>selectbox</type>
+                        <default_value>before_tabs</default_value>
+                        <variants>
+                            <item id="before_tabs"></item>
+                            <item id="after_description"></item>
+                        </variants>
+                    </item>
                 </items>
             </section>
         </sections>

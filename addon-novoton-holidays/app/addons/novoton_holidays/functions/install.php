@@ -48,8 +48,16 @@ function fn_novoton_holidays_uninstall(): bool
         db_query("DELETE FROM ?:product_tabs_descriptions WHERE tab_id IN (?n)", $tab_ids);
     }
 
-    // Clean up block manager blocks
-    db_query("DELETE FROM ?:bm_blocks WHERE type LIKE 'novoton%'");
+    // Clean up block manager blocks (dedicated types novoton_homepage_booking /
+    // novoton_booking_engine) together with their descriptions and layout placements
+    $novoton_block_ids = TypeCoerce::toList(db_get_fields(
+        "SELECT block_id FROM ?:bm_blocks WHERE type LIKE 'novoton%'"
+    ));
+    if (!empty($novoton_block_ids)) {
+        db_query("DELETE FROM ?:bm_blocks_descriptions WHERE block_id IN (?n)", $novoton_block_ids);
+        db_query("DELETE FROM ?:bm_snapping WHERE block_id IN (?n)", $novoton_block_ids);
+        db_query("DELETE FROM ?:bm_blocks WHERE block_id IN (?n)", $novoton_block_ids);
+    }
 
     // Remove email templates
     db_query("DELETE FROM ?:template_emails WHERE addon = ?s", 'novoton_holidays');
@@ -481,6 +489,17 @@ function fn_novoton_holidays_setup_db(): void
     ));
     if ($hasOldBoard > 0) {
         @db_query("UPDATE ?:hotel_feature_mappings SET feature_type = 'meals' WHERE feature_type = 'board'");
+    }
+
+    // Remove settings moved to travel_core (shared display controls for all
+    // provider addons). Fresh installs never create them; existing installs
+    // stop showing the dead controls after upgrade/reinstall.
+    $movedToTravelCore = ['show_booking_form', 'booking_form_position'];
+    foreach ($movedToTravelCore as $movedName) {
+        @db_query(
+            "DELETE FROM ?:settings_objects WHERE name = ?s AND section_id IN (SELECT section_id FROM ?:settings_sections WHERE name = 'novoton_holidays')",
+            $movedName
+        );
     }
 
     // Migrate addon settings keys: feature_id_star_rating → feature_id_property_rating, feature_id_board → feature_id_meals

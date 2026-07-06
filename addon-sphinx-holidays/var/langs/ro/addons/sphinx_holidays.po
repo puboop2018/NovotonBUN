@@ -303,3 +303,31 @@ msgstr "Șablon descriere completă (opțional)"
 msgctxt "SettingsTooltips::sphinx_holidays::seo_full_description"
 msgid "Optional template to wrap or replace the API description. Leave empty to use the raw API description as-is."
 msgstr "Șablon opțional pentru a înfășura sau înlocui descrierea API. Lăsați gol pentru a folosi descrierea API în forma originală."
+
+msgctxt "Languages::block_sphinx_booking_engine"
+msgid "Sphinx: Booking Form"
+msgstr "Sphinx: Formular Rezervare"
+
+msgctxt "Languages::block_sphinx_best_deals"
+msgid "Sphinx: Best Deals"
+msgstr "Sphinx: Cele mai bune oferte"
+
+msgctxt "Languages::deals_type"
+msgid "Deals type"
+msgstr "Tip oferte"
+
+msgctxt "Languages::deals_limit"
+msgid "Number of deals"
+msgstr "Număr de oferte"
+
+msgctxt "Languages::destination_id"
+msgid "Destination ID (0 = all destinations)"
+msgstr "ID destinație (0 = toate destinațiile)"
+
+msgctxt "Languages::sphinx_deals_hotels"
+msgid "Hotels"
+msgstr "Hoteluri"
+
+msgctxt "Languages::sphinx_deals_packages"
+msgid "Packages"
+msgstr "Pachete"

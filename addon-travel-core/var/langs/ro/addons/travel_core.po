@@ -599,3 +599,27 @@ msgstr "Moștenit din temă"
 msgctxt "Languages::travel_core.appearance_preview"
 msgid "Live Preview"
 msgstr "Previzualizare"
+
+msgctxt "SettingsOptions::travel_core::display_header"
+msgid "Display Settings"
+msgstr "Setări Afișare"
+
+msgctxt "SettingsOptions::travel_core::show_booking_form"
+msgid "Show Booking Form on Product Pages"
+msgstr "Afișare Formular Rezervare pe Paginile Produselor"
+
+msgctxt "SettingsTooltips::travel_core::show_booking_form"
+msgid "Automatically display the booking search form on hotel product pages (applies to all provider addons)"
+msgstr "Afișare automată a formularului de căutare rezervări pe paginile produselor hoteliere (valabil pentru toate addon-urile furnizor)"
+
+msgctxt "SettingsOptions::travel_core::booking_form_position"
+msgid "Booking Form Position"
+msgstr "Poziția Formularului de Rezervare"
+
+msgctxt "SettingsVariants::travel_core::booking_form_position::before_tabs"
+msgid "Before Tabs"
+msgstr "Înainte de Tab-uri"
+
+msgctxt "SettingsVariants::travel_core::booking_form_position::after_description"
+msgid "After Description"
+msgstr "După Descriere"

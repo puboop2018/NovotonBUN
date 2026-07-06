@@ -74,4 +74,16 @@ final class TravelCoreConfig
         $value = Registry::get('addons.travel_core.feature_id_' . $key);
         return is_numeric($value) ? (int) $value : 0;
     }
+
+    /**
+     * Whether the booking form is injected on hotel product pages — the ONE
+     * switch for all provider addons (novoton + sphinx). Defaults to true
+     * when the setting is missing so the form never silently disappears.
+     * Its sibling `booking_form_position` is read directly in the hook
+     * templates via `$addons.travel_core.booking_form_position`.
+     */
+    public static function isShowBookingForm(): bool
+    {
+        return Registry::get('addons.travel_core.show_booking_form') !== 'N';
+    }
 }
