@@ -577,6 +577,23 @@
                 KEY `idx_hotel_product` (`hotel_id`, `product_id`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
         </item>
+
+        <!-- Uninstall SQL fallback: guarantees teardown of Sphinx-owned data
+             even when the PHP uninstall hook (fn_sphinx_holidays_uninstall)
+             does not run. Guarded cross-addon cleanup (travel_api_alias,
+             travel_feature_map) stays in the PHP function. -->
+        <item for="uninstall">DELETE FROM ?:bm_blocks WHERE type IN ('sphinx_booking_engine', 'sphinx_best_deals')</item>
+        <item for="uninstall">DELETE FROM ?:language_values WHERE name LIKE 'sphinx_holidays.%'</item>
+        <item for="uninstall">DROP TABLE IF EXISTS `?:sphinx_image_sync_queue`</item>
+        <item for="uninstall">DROP TABLE IF EXISTS `?:sphinx_destination_whitelist`</item>
+        <item for="uninstall">DROP TABLE IF EXISTS `?:sphinx_cache`</item>
+        <item for="uninstall">DROP TABLE IF EXISTS `?:sphinx_sync_log`</item>
+        <item for="uninstall">DROP TABLE IF EXISTS `?:sphinx_bookings`</item>
+        <item for="uninstall">DROP TABLE IF EXISTS `?:sphinx_package_routes`</item>
+        <item for="uninstall">DROP TABLE IF EXISTS `?:sphinx_experiences`</item>
+        <item for="uninstall">DROP TABLE IF EXISTS `?:sphinx_circuits`</item>
+        <item for="uninstall">DROP TABLE IF EXISTS `?:sphinx_destinations`</item>
+        <item for="uninstall">DROP TABLE IF EXISTS `?:sphinx_hotels`</item>
     </queries>
 
     <language_variables>

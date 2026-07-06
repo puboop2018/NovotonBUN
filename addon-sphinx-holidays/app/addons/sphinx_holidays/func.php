@@ -159,6 +159,19 @@ function fn_sphinx_holidays_uninstall(): bool
         $tablePrefix . 'travel_api_alias'
     );
     if ($aliasTableExists) {
+        // Region feature-map rows seeded by fn_sphinx_holidays_seed_region_mappings:
+        // join-scoped to sphinx's own aliases (must run BEFORE the alias delete)
+        $featureMapExists = db_get_field(
+            "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?s",
+            $tablePrefix . 'travel_feature_map'
+        );
+        if ($featureMapExists) {
+            db_query(
+                "DELETE fm FROM ?:travel_feature_map fm
+                 JOIN ?:travel_api_alias a ON a.map_id = fm.map_id AND a.api_source = 'sphinx'
+                 WHERE fm.feature_type = 'region'"
+            );
+        }
         db_query("DELETE FROM ?:travel_api_alias WHERE api_source = 'sphinx'");
     }
 
@@ -177,6 +190,7 @@ function fn_sphinx_holidays_uninstall(): bool
     }
 
     // Drop Sphinx-specific tables (order matters for FK constraints)
+    db_query("DROP TABLE IF EXISTS ?:sphinx_image_sync_queue");
     db_query("DROP TABLE IF EXISTS ?:sphinx_destination_whitelist");
     db_query("DROP TABLE IF EXISTS ?:sphinx_cache");
     db_query("DROP TABLE IF EXISTS ?:sphinx_sync_log");
