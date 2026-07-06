@@ -269,6 +269,17 @@
                 KEY `idx_check_in` (`check_in`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
         </item>
+
+        <!-- Uninstall SQL fallback: guarantees teardown of travel_core's data
+             even when the PHP uninstall hook (fn_travel_core_uninstall) does
+             not run. The provider-still-active veto lives in the PHP function,
+             which CS-Cart invokes BEFORE these queries — a vetoed uninstall
+             never reaches them. -->
+        <item for="uninstall">DELETE FROM ?:language_values WHERE name LIKE 'travel_core.%'</item>
+        <item for="uninstall">DROP TABLE IF EXISTS `?:travel_api_alias`</item>
+        <item for="uninstall">DROP TABLE IF EXISTS `?:travel_unmapped_values`</item>
+        <item for="uninstall">DROP TABLE IF EXISTS `?:travel_bookings`</item>
+        <item for="uninstall">DROP TABLE IF EXISTS `?:travel_feature_map`</item>
     </queries>
 
     <language_variables>

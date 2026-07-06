@@ -47,6 +47,13 @@ decides whether the CS-Cart products created for hotels are also deleted
 (default `N`: products remain; re-linking after a reinstall relies on the
 sync's product-code dedup).
 
+Table teardown is expressed twice per addon — in the PHP uninstall function
+**and** as `addon.xml` uninstall SQL — so tables are removed even if the PHP
+hook fails to run (a `UninstallCompletenessTest` per addon enforces this). If
+an **older** deployment's uninstall leaked `cscart_sphinx_*` tables, drop them
+manually (all ten, including `sphinx_image_sync_queue`) and delete the
+`sphinx_holidays.%` language values and `api_source='sphinx'` alias rows.
+
 ## 4. Configure (nothing works until these are set)
 
 ### travel_core (Settings → Travel Core)
