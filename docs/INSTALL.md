@@ -57,6 +57,10 @@ sync's product-code dedup).
   `checkout_absorb_increase` (€0 — increases above this correct the cart and
   ask the customer to re-confirm; up to it, the merchant absorbs the difference).
   Novoton's old `price_higher_threshold` setting is superseded and ignored.
+- **Display settings** (ONE policy for all providers' product pages):
+  `show_booking_form` (default on — kill-switch for the injected booking form)
+  and `booking_form_position` (*Before Tabs* default / *After Description*).
+  These moved here from novoton, where they previously had no effect.
 
 ### novoton_holidays
 - **API**: `api_url`, `api_id`, `api_user` / `api_password` (+ `api_key` where

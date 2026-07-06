@@ -491,6 +491,17 @@ function fn_novoton_holidays_setup_db(): void
         @db_query("UPDATE ?:hotel_feature_mappings SET feature_type = 'meals' WHERE feature_type = 'board'");
     }
 
+    // Remove settings moved to travel_core (shared display controls for all
+    // provider addons). Fresh installs never create them; existing installs
+    // stop showing the dead controls after upgrade/reinstall.
+    $movedToTravelCore = ['show_booking_form', 'booking_form_position'];
+    foreach ($movedToTravelCore as $movedName) {
+        @db_query(
+            "DELETE FROM ?:settings_objects WHERE name = ?s AND section_id IN (SELECT section_id FROM ?:settings_sections WHERE name = 'novoton_holidays')",
+            $movedName
+        );
+    }
+
     // Migrate addon settings keys: feature_id_star_rating → feature_id_property_rating, feature_id_board → feature_id_meals
     $settingRenames = [
         'feature_id_star_rating' => 'feature_id_property_rating',

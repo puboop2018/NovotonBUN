@@ -2153,10 +2153,6 @@ msgctxt "SettingsOptions::novoton_holidays::api_id"
 msgid "API ID"
 msgstr "ID API"
 
-msgctxt "SettingsOptions::novoton_holidays::booking_form_position"
-msgid "Booking Form Position"
-msgstr "Poziția Formularului de Rezervare"
-
 msgctxt "SettingsOptions::novoton_holidays::cron_access_key"
 msgid "Cron Access Key"
 msgstr "Cheie Acces Cron"
@@ -2201,10 +2197,6 @@ msgctxt "SettingsOptions::novoton_holidays::products_header"
 msgid "Product Settings"
 msgstr "Setări Produse"
 
-msgctxt "SettingsOptions::novoton_holidays::show_booking_form"
-msgid "Show Booking Form on Product Pages"
-msgstr "Afișare Formular Rezervare pe Paginile Produselor"
-
 msgctxt "SettingsTooltips::novoton_holidays::api_id"
 msgid "Your Novoton API ID for authentication"
 msgstr "ID-ul API Novoton pentru autentificare"
@@ -2229,21 +2221,9 @@ msgctxt "SettingsTooltips::novoton_holidays::selected_countries"
 msgid "Select countries to sync hotels from. Hold Ctrl/Cmd to select multiple."
 msgstr "Selectați țările din care să sincronizați hotelurile. Țineți Ctrl/Cmd pentru selecție multiplă."
 
-msgctxt "SettingsTooltips::novoton_holidays::show_booking_form"
-msgid "Automatically display the booking search form on hotel product pages"
-msgstr "Afișare automată a formularului de căutare rezervări pe paginile produselor hoteliere"
-
 msgctxt "SettingsTooltips::novoton_holidays::test_booking"
 msgid "When enabled, all reservations will be marked as test and will not be processed by Novoton"
 msgstr "Când este activat, toate rezervările vor fi marcate ca test și nu vor fi procesate de Novoton"
-
-msgctxt "SettingsVariants::novoton_holidays::booking_form_position::after_description"
-msgid "After Description"
-msgstr "După Descriere"
-
-msgctxt "SettingsVariants::novoton_holidays::booking_form_position::before_tabs"
-msgid "Before Tabs"
-msgstr "Înainte de Tab-uri"
 
 msgctxt "SettingsVariants::novoton_holidays::selected_countries::ALBANIA"
 msgid "Albania"

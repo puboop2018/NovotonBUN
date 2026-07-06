@@ -332,14 +332,6 @@ msgctxt "SettingsTooltips::novoton_holidays::send_cron_report_email"
 msgid "When enabled, a summary report email is sent to the administrator after cron jobs run (sync, price check, import, etc.). Disable to stop these notifications."
 msgstr "When enabled, a summary report email is sent to the administrator after cron jobs run (sync, price check, import, etc.). Disable to stop these notifications."
 
-msgctxt "SettingsOptions::novoton_holidays::show_booking_form"
-msgid "Show Booking Form on Product Pages"
-msgstr "Show Booking Form on Product Pages"
-
-msgctxt "SettingsTooltips::novoton_holidays::show_booking_form"
-msgid "Automatically display the booking search form on hotel product pages"
-msgstr "Automatically display the booking search form on hotel product pages"
-
 msgctxt "SettingsOptions::novoton_holidays::show_calendar_prices"
 msgid "Show Calendar Prices"
 msgstr "Show Calendar Prices"
@@ -351,18 +343,6 @@ msgstr "Display approximate per-night prices on calendar date cells in the booki
 msgctxt "Languages::novoton_holidays.calendar_price_footer"
 msgid "Approximate prices in %s for a 1-night stay"
 msgstr "Approximate prices in %s for a 1-night stay"
-
-msgctxt "SettingsOptions::novoton_holidays::booking_form_position"
-msgid "Booking Form Position"
-msgstr "Booking Form Position"
-
-msgctxt "SettingsVariants::novoton_holidays::booking_form_position::after_description"
-msgid "After Description"
-msgstr "After Description"
-
-msgctxt "SettingsVariants::novoton_holidays::booking_form_position::before_tabs"
-msgid "Before Tabs"
-msgstr "Before Tabs"
 
 msgctxt "Languages::product_tabs.novoton_hotel_prices"
 msgid "Hotel Prices"

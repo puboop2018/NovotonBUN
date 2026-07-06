@@ -1,11 +1,18 @@
 {*
- * Travel Core: JSON-LD + debug panel for hotel product pages.
+ * Travel Core: booking form (after-description position) + JSON-LD + debug
+ * panel for hotel product pages.
  *
- * The booking form itself is now in product_tabs.pre.tpl (before tabs).
- * This hook handles JSON-LD structured data and the debug panel only.
+ * The booking form renders here only when the shared travel_core setting
+ * booking_form_position is 'after_description'; the default before-tabs
+ * position is handled by product_tabs.pre.tpl. Mount markup lives in
+ * components/booking_form_mount.tpl.
  *}
 
 <!-- [travel_core] product_detail_bottom.post.tpl LOADED -->
+
+{if $addons.travel_core.booking_form_position == 'after_description'}
+    {include file="addons/travel_core/components/booking_form_mount.tpl"}
+{/if}
 
 {* ── DEBUG PANEL (only with ?travel_debug=1) ── *}
 {if $travel_debug_enabled && $travel_debug_output}

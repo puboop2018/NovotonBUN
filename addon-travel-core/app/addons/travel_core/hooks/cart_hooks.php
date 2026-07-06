@@ -15,6 +15,7 @@ use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Helpers\ValidationHelpers;
 use Tygh\Addons\TravelCore\Services\BookingDisplayService;
+use Tygh\Addons\TravelCore\Services\TravelCoreConfig;
 use Tygh\Addons\TravelCore\Services\TravelProviderRegistry;
 use Tygh\Registry;
 
@@ -116,7 +117,9 @@ function fn_travel_core_dispatch_before_display(): void
         ));
 
         $hotelSeoData = TravelProviderRegistry::resolveProductOwner($productId, $productCode);
-        if ($productCode !== '' && $hotelSeoData !== null) {
+        // Shared display switch (travel_core setting, all providers): when off,
+        // no mount div and no React bundles — SEO data below stays unaffected.
+        if ($productCode !== '' && $hotelSeoData !== null && TravelCoreConfig::isShowBookingForm()) {
             $view = \Tygh\Tygh::$app['view'];
             if ($view instanceof \Smarty) {
                 $view->assign('travel_booking_product_id', $productId);
