@@ -117,10 +117,12 @@ hotel sync weekly, `cleanup` daily) via real cron on the server.
 ## 6. Storefront checks after install
 
 - **Default search must stay the default search.** The header Search block is
-  core CS-Cart; the addons never touch it. If you place the homepage booking
-  widget, add it as its **own block** (template *Novoton: Homepage Booking
-  Search* / *Sphinx booking engine*) — do **not** set it as the Search
-  block's template, or the product search box disappears.
+  core CS-Cart; the addons never touch it. The booking widgets are **dedicated
+  block types** — in Block Manager → Add block they appear as *Novoton:
+  Homepage Booking Search*, *Novoton: Booking Form*, *Sphinx: Booking Form*
+  and *Sphinx: Best Deals*. They can no longer be selected as the Search
+  block's template (that hijack is what previously made the product search
+  box disappear).
 - Hotel product page renders the React booking engine (calendar, occupancy,
   live price).
 - Add to cart → checkout completes; the booking row appears in the addon's

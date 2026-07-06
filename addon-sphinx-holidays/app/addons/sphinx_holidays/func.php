@@ -165,6 +165,17 @@ function fn_sphinx_holidays_uninstall(): bool
     // Remove language variables
     db_query("DELETE FROM ?:language_values WHERE name LIKE 'sphinx_holidays.%'");
 
+    // Clean up block manager blocks (dedicated types sphinx_booking_engine /
+    // sphinx_best_deals) together with their descriptions and layout placements
+    $sphinx_block_ids = db_get_fields(
+        "SELECT block_id FROM ?:bm_blocks WHERE type IN ('sphinx_booking_engine', 'sphinx_best_deals')"
+    );
+    if (!empty($sphinx_block_ids)) {
+        db_query("DELETE FROM ?:bm_blocks_descriptions WHERE block_id IN (?n)", $sphinx_block_ids);
+        db_query("DELETE FROM ?:bm_snapping WHERE block_id IN (?n)", $sphinx_block_ids);
+        db_query("DELETE FROM ?:bm_blocks WHERE block_id IN (?n)", $sphinx_block_ids);
+    }
+
     // Drop Sphinx-specific tables (order matters for FK constraints)
     db_query("DROP TABLE IF EXISTS ?:sphinx_destination_whitelist");
     db_query("DROP TABLE IF EXISTS ?:sphinx_cache");

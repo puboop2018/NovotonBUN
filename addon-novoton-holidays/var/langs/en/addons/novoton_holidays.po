@@ -760,11 +760,11 @@ msgctxt "Languages::novoton_holidays.free_cancellation"
 msgid "Free Cancellation"
 msgstr "Free Cancellation"
 
-msgctxt "Languages::block_novoton_holidays_booking_engine"
+msgctxt "Languages::block_novoton_booking_engine"
 msgid "Novoton: Booking Form"
 msgstr "Novoton: Booking Form"
 
-msgctxt "Languages::block_novoton_holidays_homepage_booking"
+msgctxt "Languages::block_novoton_homepage_booking"
 msgid "Novoton: Homepage Booking Search"
 msgstr "Novoton: Homepage Booking Search"
 

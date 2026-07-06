@@ -379,19 +379,10 @@
         </sections>
     </settings>
 
-    <!-- Block templates registration -->
-    <block_templates>
-        <templates>
-            <item>
-                <template>blocks/static_templates/addons/novoton_holidays/booking_engine.tpl</template>
-                <name>Novoton: Booking Form</name>
-            </item>
-            <item>
-                <template>blocks/static_templates/addons/novoton_holidays/homepage_booking.tpl</template>
-                <name>Novoton: Homepage Booking Search</name>
-            </item>
-        </templates>
-    </block_templates>
+    <!-- NOTE: no <block_templates> here on purpose. The booking widgets are
+         dedicated block types (schemas/block_manager/blocks.post.php), NOT
+         shared static templates: registering them in the shared pool made
+         them selectable as the core Search block's template. -->
 
     <queries>
         <!-- ============================================================= -->

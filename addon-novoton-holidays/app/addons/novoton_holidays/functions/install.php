@@ -48,8 +48,16 @@ function fn_novoton_holidays_uninstall(): bool
         db_query("DELETE FROM ?:product_tabs_descriptions WHERE tab_id IN (?n)", $tab_ids);
     }
 
-    // Clean up block manager blocks
-    db_query("DELETE FROM ?:bm_blocks WHERE type LIKE 'novoton%'");
+    // Clean up block manager blocks (dedicated types novoton_homepage_booking /
+    // novoton_booking_engine) together with their descriptions and layout placements
+    $novoton_block_ids = TypeCoerce::toList(db_get_fields(
+        "SELECT block_id FROM ?:bm_blocks WHERE type LIKE 'novoton%'"
+    ));
+    if (!empty($novoton_block_ids)) {
+        db_query("DELETE FROM ?:bm_blocks_descriptions WHERE block_id IN (?n)", $novoton_block_ids);
+        db_query("DELETE FROM ?:bm_snapping WHERE block_id IN (?n)", $novoton_block_ids);
+        db_query("DELETE FROM ?:bm_blocks WHERE block_id IN (?n)", $novoton_block_ids);
+    }
 
     // Remove email templates
     db_query("DELETE FROM ?:template_emails WHERE addon = ?s", 'novoton_holidays');

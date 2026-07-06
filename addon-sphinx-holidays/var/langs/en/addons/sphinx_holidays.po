@@ -303,3 +303,31 @@ msgstr "Full description template (optional)"
 msgctxt "SettingsTooltips::sphinx_holidays::seo_full_description"
 msgid "Optional template to wrap or replace the API description. Leave empty to use the raw API description as-is."
 msgstr "Optional template to wrap or replace the API description. Leave empty to use the raw API description as-is."
+
+msgctxt "Languages::block_sphinx_booking_engine"
+msgid "Sphinx: Booking Form"
+msgstr "Sphinx: Booking Form"
+
+msgctxt "Languages::block_sphinx_best_deals"
+msgid "Sphinx: Best Deals"
+msgstr "Sphinx: Best Deals"
+
+msgctxt "Languages::deals_type"
+msgid "Deals type"
+msgstr "Deals type"
+
+msgctxt "Languages::deals_limit"
+msgid "Number of deals"
+msgstr "Number of deals"
+
+msgctxt "Languages::destination_id"
+msgid "Destination ID (0 = all destinations)"
+msgstr "Destination ID (0 = all destinations)"
+
+msgctxt "Languages::sphinx_deals_hotels"
+msgid "Hotels"
+msgstr "Hotels"
+
+msgctxt "Languages::sphinx_deals_packages"
+msgid "Packages"
+msgstr "Packages"
