@@ -15,6 +15,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays\Services;
 
+use Tygh\Addons\SphinxHolidays\Helpers\OfferAvailability;
 use Tygh\Addons\TravelCore\Contracts\PreOrderPriceVerifierInterface;
 use Tygh\Addons\TravelCore\Enums\PriceComparisonOutcome;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
@@ -83,7 +84,12 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
 
             // If offer is no longer available, mark for removal instead of blocking the entire order.
             // This allows mixed-provider carts (Novoton + Sphinx) to proceed with the available items.
-            if (empty($verifyResult) || !(bool) ($verifyResult['available'] ?? false)) {
+            // Tolerant availability semantics (verify responses may carry an explicit
+            // `available`, a `confirmation`, or just a priced offer) — OfferAvailability.
+            if (!OfferAvailability::isVerifiedAvailable(
+                $verifyResult === [] ? null : $verifyResult,
+                ConfigProvider::shouldRequireImmediateAvailability(),
+            )) {
                 fn_log_event('general', 'runtime', [
                     'message' => 'Sphinx PreOrderPriceVerifier: offer unavailable — marking for removal',
                     'offer_id' => $offerId,
@@ -97,8 +103,9 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
                 continue;
             }
 
-            // Re-calculate price with commission
-            $apiPrice = TypeCoerce::toFloat($verifyResult['price'] ?? 0);
+            // Re-calculate price with commission (shared price chain: price /
+            // selling_price / pricing.selling_price)
+            $apiPrice = OfferAvailability::extractPrice($verifyResult);
             if ($apiPrice <= 0) {
                 continue;
             }

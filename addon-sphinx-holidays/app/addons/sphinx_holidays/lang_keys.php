@@ -294,4 +294,223 @@ return [
         'en' => 'night',
         'ro' => 'noapte',
     ],
+
+    // ── Storefront booking & catalog runtime keys (previously missing:
+    //    rendered as raw `_sphinx_holidays.*` labels) ──
+    'sphinx_holidays.add_to_cart_btn' => [
+        'en' => 'Add to Cart',
+        'ro' => 'Adaugă în coș',
+    ],
+    'sphinx_holidays.added_to_cart' => [
+        'en' => 'Hotel booking added to cart.',
+        'ro' => 'Rezervarea hotelului a fost adăugată în coș.',
+    ],
+    'sphinx_holidays.additional_services' => [
+        'en' => 'Additional Services',
+        'ro' => 'Servicii adiționale',
+    ],
+    'sphinx_holidays.addon_name' => [
+        'en' => 'Sphinx Holidays',
+        'ro' => 'Sphinx Holidays',
+    ],
+    'sphinx_holidays.booking_data_missing' => [
+        'en' => 'Booking data not available. Please search again.',
+        'ro' => 'Datele rezervării nu sunt disponibile. Vă rugăm căutați din nou.',
+    ],
+    'sphinx_holidays.booking_error' => [
+        'en' => 'An error occurred. Please try again.',
+        'ro' => 'A apărut o eroare. Vă rugăm încercați din nou.',
+    ],
+    'sphinx_holidays.bus_transport' => [
+        'en' => 'Bus transport',
+        'ro' => 'Transport cu autocarul',
+    ],
+    'sphinx_holidays.check_availability' => [
+        'en' => 'Check Availability',
+        'ro' => 'Verifică disponibilitatea',
+    ],
+    'sphinx_holidays.circuit_added_to_cart' => [
+        'en' => 'Circuit booking added to cart.',
+        'ro' => 'Rezervarea circuitului a fost adăugată în coș.',
+    ],
+    'sphinx_holidays.circuits_found' => [
+        'en' => 'Circuits found',
+        'ro' => 'Circuite găsite',
+    ],
+    'sphinx_holidays.cron_key_not_set' => [
+        'en' => 'Cron key not set',
+        'ro' => 'Cheia cron nu este setată',
+    ],
+    'sphinx_holidays.date' => [
+        'en' => 'Date',
+        'ro' => 'Data',
+    ],
+    'sphinx_holidays.departure' => [
+        'en' => 'Departure',
+        'ro' => 'Plecare',
+    ],
+    'sphinx_holidays.departure_from' => [
+        'en' => 'Departure from',
+        'ro' => 'Plecare din',
+    ],
+    'sphinx_holidays.duplicate_booking' => [
+        'en' => 'A booking for this offer is already pending.',
+        'ro' => 'O rezervare pentru această ofertă este deja în curs.',
+    ],
+    'sphinx_holidays.experience_added_to_cart' => [
+        'en' => 'Experience booking added to cart.',
+        'ro' => 'Rezervarea experienței a fost adăugată în coș.',
+    ],
+    'sphinx_holidays.experiences_found' => [
+        'en' => 'Experiences found',
+        'ro' => 'Experiențe găsite',
+    ],
+    'sphinx_holidays.flight_info' => [
+        'en' => 'Flight Information',
+        'ro' => 'Informații zbor',
+    ],
+    'sphinx_holidays.from' => [
+        'en' => 'from',
+        'ro' => 'de la',
+    ],
+    'sphinx_holidays.get_quote' => [
+        'en' => 'Get Quote',
+        'ro' => 'Cere ofertă',
+    ],
+    'sphinx_holidays.hours' => [
+        'en' => 'hours',
+        'ro' => 'ore',
+    ],
+    'sphinx_holidays.inbound' => [
+        'en' => 'Return',
+        'ro' => 'Retur',
+    ],
+    'sphinx_holidays.included' => [
+        'en' => 'Included',
+        'ro' => 'Inclus',
+    ],
+    'sphinx_holidays.instant_confirmation' => [
+        'en' => 'Instant confirmation',
+        'ro' => 'Confirmare instantă',
+    ],
+    'sphinx_holidays.invalid_circuit' => [
+        'en' => 'Invalid circuit selection.',
+        'ro' => 'Selecție circuit invalidă.',
+    ],
+    'sphinx_holidays.invalid_experience' => [
+        'en' => 'Invalid experience selection.',
+        'ro' => 'Selecție experiență invalidă.',
+    ],
+    'sphinx_holidays.invalid_offer' => [
+        'en' => 'Invalid offer selected.',
+        'ro' => 'Ofertă selectată invalidă.',
+    ],
+    'sphinx_holidays.loading_deals' => [
+        'en' => 'Loading deals...',
+        'ro' => 'Se încarcă ofertele...',
+    ],
+    'sphinx_holidays.mandatory' => [
+        'en' => 'Mandatory',
+        'ro' => 'Obligatoriu',
+    ],
+    'sphinx_holidays.meal' => [
+        'en' => 'Meal',
+        'ro' => 'Masă',
+    ],
+    'sphinx_holidays.next_dates' => [
+        'en' => 'Next dates',
+        'ro' => 'Următoarele date',
+    ],
+    'sphinx_holidays.no_circuit_quotes' => [
+        'en' => 'No quotes available for this circuit. Please try different dates.',
+        'ro' => 'Nu există oferte pentru acest circuit. Încercați alte date.',
+    ],
+    'sphinx_holidays.no_circuits_found' => [
+        'en' => 'No circuits found. Please try different filters.',
+        'ro' => 'Nu s-au găsit circuite. Încercați alte filtre.',
+    ],
+    'sphinx_holidays.no_deals_available' => [
+        'en' => 'No deals available at this time.',
+        'ro' => 'Nu există oferte disponibile momentan.',
+    ],
+    'sphinx_holidays.no_experience_quotes' => [
+        'en' => 'No quotes available for this experience. Please try a different date.',
+        'ro' => 'Nu există oferte pentru această experiență. Încercați o altă dată.',
+    ],
+    'sphinx_holidays.no_experiences_found' => [
+        'en' => 'No experiences found. Please try different filters.',
+        'ro' => 'Nu s-au găsit experiențe. Încercați alte filtre.',
+    ],
+    'sphinx_holidays.no_packages_found' => [
+        'en' => 'No packages found for your search criteria. Please try different dates or destination.',
+        'ro' => 'Nu s-au găsit pachete pentru criteriile dvs. Încercați alte date sau altă destinație.',
+    ],
+    'sphinx_holidays.not_included' => [
+        'en' => 'Not Included',
+        'ro' => 'Neinclus',
+    ],
+    'sphinx_holidays.offer_no_longer_available' => [
+        'en' => 'This offer is no longer available. Please search again.',
+        'ro' => 'Această ofertă nu mai este disponibilă. Vă rugăm căutați din nou.',
+    ],
+    'sphinx_holidays.offer_unavailable' => [
+        'en' => 'This offer is no longer available.',
+        'ro' => 'Această ofertă nu mai este disponibilă.',
+    ],
+    'sphinx_holidays.outbound' => [
+        'en' => 'Outbound',
+        'ro' => 'Dus',
+    ],
+    'sphinx_holidays.package_added_to_cart' => [
+        'en' => 'Package booking added to cart.',
+        'ro' => 'Rezervarea pachetului a fost adăugată în coș.',
+    ],
+    'sphinx_holidays.packages_found' => [
+        'en' => 'Packages found',
+        'ro' => 'Pachete găsite',
+    ],
+    'sphinx_holidays.participant_details' => [
+        'en' => 'Participant Details',
+        'ro' => 'Detalii participanți',
+    ],
+    'sphinx_holidays.participants' => [
+        'en' => 'Participants',
+        'ro' => 'Participanți',
+    ],
+    'sphinx_holidays.price_unavailable' => [
+        'en' => 'Price not available.',
+        'ro' => 'Prețul nu este disponibil.',
+    ],
+    'sphinx_holidays.product_not_found' => [
+        'en' => 'Experience product not found.',
+        'ro' => 'Produsul nu a fost găsit.',
+    ],
+    'sphinx_holidays.rate_limit_exceeded' => [
+        'en' => 'Too many booking requests. Please try again later.',
+        'ro' => 'Prea multe cereri de rezervare. Încercați mai târziu.',
+    ],
+    'sphinx_holidays.return' => [
+        'en' => 'Return',
+        'ro' => 'Retur',
+    ],
+    'sphinx_holidays.searching_please_wait' => [
+        'en' => 'Searching for live offers…',
+        'ro' => 'Căutăm oferte în timp real…',
+    ],
+    'sphinx_holidays.total_price' => [
+        'en' => 'Total price',
+        'ro' => 'Preț total',
+    ],
+    'sphinx_holidays.transfers' => [
+        'en' => 'Transfers',
+        'ro' => 'Transferuri',
+    ],
+    'sphinx_holidays.transport' => [
+        'en' => 'Transport',
+        'ro' => 'Transport',
+    ],
+    'sphinx_holidays.whitelist_save_failed' => [
+        'en' => 'Whitelist save failed',
+        'ro' => 'Salvarea whitelist-ului a eșuat',
+    ],
 ];
