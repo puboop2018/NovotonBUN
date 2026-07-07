@@ -35,6 +35,32 @@
         <div id="price-loading-indicator" style="display: none;"><i class="icon-refresh"></i></div>
     </div>
 
+    {* Payment & cancellation terms (from the verified offer; hidden when the API sends none) *}
+    {if $sphinx_booking_data.payment_terms || $sphinx_booking_data.cancellation_fees}
+    <div class="sphinx-booking-terms" style="margin-bottom: 20px; padding: 15px; background: #fffdf5; border: 1px solid #f0e6c8; border-radius: 8px; font-size: 13px;">
+        {if $sphinx_booking_data.payment_terms}
+        <div style="margin-bottom: {if $sphinx_booking_data.cancellation_fees}12px{else}0{/if};">
+            <strong>{__("sphinx_holidays.payment_terms")|default:"Payment terms"}</strong>
+            <ul style="margin: 6px 0 0 18px; padding: 0;">
+                {foreach $sphinx_booking_data.payment_terms as $_sx_term}
+                <li>{$_sx_term|escape:html}</li>
+                {/foreach}
+            </ul>
+        </div>
+        {/if}
+        {if $sphinx_booking_data.cancellation_fees}
+        <div>
+            <strong>{__("sphinx_holidays.cancellation_policy")|default:"Cancellation policy"}</strong>
+            <ul style="margin: 6px 0 0 18px; padding: 0;">
+                {foreach $sphinx_booking_data.cancellation_fees as $_sx_fee}
+                <li>{$_sx_fee|escape:html}</li>
+                {/foreach}
+            </ul>
+        </div>
+        {/if}
+    </div>
+    {/if}
+
     {* Guest entry form *}
     <form action="{"sphinx_booking.add_to_cart"|fn_url}" method="post" id="sphinx-booking-form">
         <input type="hidden" name="security_hash" value="{$security_hash}" />

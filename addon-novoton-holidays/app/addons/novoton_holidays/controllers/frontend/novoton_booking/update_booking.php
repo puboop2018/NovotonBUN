@@ -164,16 +164,14 @@ use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
 
     // Update cart item if cart_id provided
     if (!empty($cart_id)) {
-        // Narrow the session array once so the reference binds below see a
-        // typed array shape (CS-Cart's reference-based cart flow needs live
-        // refs into Tygh::$app['session'] for fn_save_cart_content /
-        // fn_calculate_cart_content to persist their mutations).
-        $session = is_array(Tygh::$app['session'] ?? null) ? Tygh::$app['session'] : [];
-        $session['cart'] = is_array($session['cart'] ?? null) ? $session['cart'] : [];
-        $session['auth'] = is_array($session['auth'] ?? null) ? $session['auth'] : [];
-        Tygh::$app['session'] = $session;
-
-        $cart = &Tygh::$app['session']['cart'];
+        // By-ref bind into $_SESSION — the authoritative session store (see
+        // travel_core SessionAccessor). Never assign to Tygh::$app['session']:
+        // it is a frozen Pimple service and offsetSet throws
+        // FrozenServiceException. Narrowing happens THROUGH the reference.
+        $cart = &$_SESSION['cart'];
+        if (!is_array($cart)) {
+            $cart = [];
+        }
         $cart['products'] = is_array($cart['products'] ?? null) ? $cart['products'] : [];
 
         // Find the cart item — try exact cart_id first, then fall back to
@@ -217,7 +215,10 @@ use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
             // Persist extras to DB BEFORE recalculating — fn_calculate_cart_content()
             // reloads product data from the stored cart, which would overwrite the
             // extras we just set if they haven't been saved first.
-            $auth = &Tygh::$app['session']['auth'];
+            $auth = &$_SESSION['auth'];
+            if (!is_array($auth)) {
+                $auth = [];
+            }
             $authUserId = PriceInfoFormatter::toInt($auth['user_id'] ?? 0);
             fn_save_cart_content($cart, $authUserId);
 

@@ -23,6 +23,7 @@ if (!defined('BOOTSTRAP')) {
 use Tygh\Addons\SphinxHolidays\Helpers\OfferAvailability;
 use Tygh\Addons\SphinxHolidays\Helpers\SearchMetrics;
 use Tygh\Addons\SphinxHolidays\Helpers\SearchOfferNormalizer;
+use Tygh\Addons\SphinxHolidays\Services\AlternativeDateProber;
 use Tygh\Addons\SphinxHolidays\Services\CacheService;
 use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
 use Tygh\Addons\SphinxHolidays\Services\Container;
@@ -201,6 +202,46 @@ try {
         ]);
     }
 
+    // Terminal poll with zero offers for a specific hotel: probe nearby date
+    // windows so the no-results panel can offer "try these dates instead"
+    // links (novoton's alternative-dates UX). Cached briefly per
+    // hotel+dates so page refreshes don't re-probe the API.
+    $alternatives = [];
+    if ($terminal && $offerCount === 0 && $filterHotelId !== '') {
+        $altDestinationId = TypeCoerce::toInt($searchMeta['destination_id'] ?? 0);
+        $altCheckIn = TypeCoerce::toString($searchMeta['check_in'] ?? '');
+        $altNights = TypeCoerce::toInt($searchMeta['nights'] ?? 0);
+        $altAdults = TypeCoerce::toInt($searchMeta['adults'] ?? 2);
+
+        if ($altDestinationId > 0 && $altCheckIn !== '' && $altNights > 0) {
+            $altCacheKey = 'alt:v1:' . md5((string) json_encode([
+                $altDestinationId, $filterHotelId, $altCheckIn, $altNights, $altAdults,
+            ]));
+            $cachedAlts = CacheService::get($altCacheKey);
+            if (is_array($cachedAlts)) {
+                $alternatives = TypeCoerce::toRowList($cachedAlts['alternatives'] ?? []);
+            } else {
+                try {
+                    $prober = new AlternativeDateProber($api);
+                    $currencyForAlts = ConfigProvider::getDefaultCurrency();
+                    foreach ($prober->probe($altDestinationId, $filterHotelId, $altCheckIn, $altNights, $altAdults, $currencyForAlts) as $alt) {
+                        $alternatives[] = [
+                            'check_in' => $alt['check_in'],
+                            'check_out' => $alt['check_out'],
+                            'price' => round($cartService->applyCommission($alt['price']), 2),
+                            'currency' => $currencyForAlts,
+                        ];
+                    }
+                } catch (\Throwable $altError) {
+                    fn_log_event('general', 'runtime', [
+                        'message' => 'Sphinx alternative-date probe failed: ' . $altError->getMessage(),
+                    ]);
+                }
+                CacheService::set($altCacheKey, ['alternatives' => $alternatives], 600);
+            }
+        }
+    }
+
     // Never cache an empty set, so a hotel with no availability is not cached as
     // "no offers". `complete` marks the entry as the full, authoritative set.
     if ($terminal && !empty($accumulated) && !empty($searchMeta['cache_key']) && !empty($searchMeta['cache_ttl'])) {
@@ -230,6 +271,7 @@ try {
         'status' => $status,
         'results' => $slimResults,
         'next_cursor' => $nextCursor,
+        'alternatives' => $alternatives,
     ]);
     exit;
 } catch (\Throwable $e) {

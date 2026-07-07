@@ -105,6 +105,54 @@ class HotelAvailabilityGateTest extends TestCase
         $this->assertSame(0, $stats['availability_errors']);
     }
 
+    /**
+     * The probe is multi-window: a hotel with inventory only in a later
+     * window (e.g. summer-only availability missing from the +14d probe)
+     * must NOT be flagged no_availability.
+     */
+    public function testHotelAvailableOnlyInLaterWindowIsNotMarked(): void
+    {
+        $this->skip->method('findAvailabilityGateCandidates')->willReturn([
+            ['hotel_id' => 'H1', 'destination_id' => 5, 'product_skip_reason' => ''],
+        ]);
+        $calls = 0;
+        $this->api->method('searchHotels')->willReturnCallback(function () use (&$calls): array {
+            $calls++;
+            // Window 1: nothing. Window 2: H1 has an immediate offer.
+            return $calls === 1
+                ? ['results' => []]
+                : ['results' => [['confirmation' => 'immediate', 'hotel_id' => 'H1']]];
+        });
+
+        $this->skip->expects($this->once())->method('markSkippedBatch')
+            ->with([], 'no_availability')->willReturn(0);
+        $this->skip->expects($this->once())->method('clearSkipReasonBatch')
+            ->with([], 'no_availability')->willReturn(0);
+
+        $stats = $this->gate()->apply('GR', [5], [], $this->sink());
+
+        $this->assertGreaterThanOrEqual(2, $calls, 'later windows must be probed');
+        $this->assertSame(0, $stats['availability_gated']);
+    }
+
+    public function testStopsProbingFurtherWindowsOnceAllCandidatesAvailable(): void
+    {
+        $this->skip->method('findAvailabilityGateCandidates')->willReturn([
+            ['hotel_id' => 'H1', 'destination_id' => 5, 'product_skip_reason' => ''],
+        ]);
+        $calls = 0;
+        $this->api->method('searchHotels')->willReturnCallback(function () use (&$calls): array {
+            $calls++;
+            return ['results' => [['confirmation' => 'immediate', 'hotel_id' => 'H1']]];
+        });
+        $this->skip->method('markSkippedBatch')->willReturn(0);
+        $this->skip->method('clearSkipReasonBatch')->willReturn(0);
+
+        $this->gate()->apply('GR', [5], [], $this->sink());
+
+        $this->assertSame(1, $calls, 'all candidates available after window 1 — remaining windows skipped');
+    }
+
     public function testSearchRequestCarriesDestinationAndCurrency(): void
     {
         $this->skip->method('findAvailabilityGateCandidates')->willReturn([
@@ -163,7 +211,8 @@ class HotelAvailabilityGateTest extends TestCase
         $stats = $this->gate()->apply('GR', [5], [], $this->sink());
 
         $this->assertSame(0, $stats['availability_probed']);
-        $this->assertSame(1, $stats['availability_errors']);
+        // One error per probe window (the destination is retried for each).
+        $this->assertSame(3, $stats['availability_errors']);
     }
 
     public function testPollPathCollectsFromCursor(): void

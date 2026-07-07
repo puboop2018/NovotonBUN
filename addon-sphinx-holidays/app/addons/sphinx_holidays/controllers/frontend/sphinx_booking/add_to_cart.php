@@ -131,6 +131,18 @@ use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
         'rooms_data'    => json_encode($rooms_data, JSON_UNESCAPED_UNICODE),
     ];
 
+    // Payment & cancellation terms from the verify response: raw JSON on the
+    // booking row (the orders sync later overwrites with authoritative data)
+    // and formatted display lines in the cart extras for order pages.
+    $payment_terms_raw = TypeCoerce::toList($verifyResult['payment_terms'] ?? []);
+    $cancellation_fees_raw = TypeCoerce::toList($verifyResult['cancellation_fees'] ?? []);
+    if ($payment_terms_raw !== []) {
+        $booking_record['payment_terms_json'] = json_encode($payment_terms_raw, JSON_UNESCAPED_UNICODE);
+    }
+    if ($cancellation_fees_raw !== []) {
+        $booking_record['cancellation_fees_json'] = json_encode($cancellation_fees_raw, JSON_UNESCAPED_UNICODE);
+    }
+
     $booking_id = $cartService->upsertBooking(
         $booking_record, $hotel_id, $check_in, $check_out, TypeCoerce::toString($parsed_guests['holder_name'])
     );
@@ -149,6 +161,8 @@ use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
         'guests_data' => json_encode($parsed_guests['guests_data'], JSON_UNESCAPED_UNICODE),
         'contact_email' => TypeCoerce::toString($contact['email'] ?? ''), 'contact_phone' => TypeCoerce::toString($contact['phone'] ?? ''),
         'total_price' => $total_price, 'currency' => $currency,
+        'payment_terms' => \Tygh\Addons\SphinxHolidays\Services\TermsFormatter::lines($payment_terms_raw),
+        'cancellation_fees' => \Tygh\Addons\SphinxHolidays\Services\TermsFormatter::lines($cancellation_fees_raw),
     ];
 
     return $cartService->addToCartAndRedirect(

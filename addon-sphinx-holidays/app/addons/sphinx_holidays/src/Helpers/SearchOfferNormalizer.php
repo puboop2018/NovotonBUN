@@ -41,9 +41,12 @@ class SearchOfferNormalizer
     {
         $pricing = TypeCoerce::toStringMap($offer['pricing'] ?? null);
 
+        // Price sources, in order: legacy flat `price`, the live results
+        // endpoint's TOP-LEVEL `selling_price` (observed in production
+        // payloads), then the nested `pricing.selling_price` shape.
         $price = array_key_exists('price', $offer)
             ? TypeCoerce::toFloat($offer['price'])
-            : TypeCoerce::toFloat($pricing['selling_price'] ?? 0);
+            : TypeCoerce::toFloat($offer['selling_price'] ?? $pricing['selling_price'] ?? 0);
 
         $currency = TypeCoerce::toString(
             $offer['currency'] ?? $pricing['currency'] ?? '',
@@ -70,8 +73,10 @@ class SearchOfferNormalizer
             $offer['destination'] ?? $offer['destination_name'] ?? '',
         );
         $flat['room_name'] = $roomName;
+        // meal_type is the live results endpoint's key (e.g. "ULTRA ALL
+        // INCLUSIVE"); board_name/meal_type_name are the legacy/nested names.
         $flat['board_name'] = TypeCoerce::toString(
-            $offer['board_name'] ?? $offer['meal_type_name'] ?? '',
+            $offer['board_name'] ?? $offer['meal_type_name'] ?? $offer['meal_type'] ?? '',
         );
         $flat['price'] = $price;
         $flat['currency'] = $currency;

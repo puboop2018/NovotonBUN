@@ -274,6 +274,7 @@
                 `rating`            DECIMAL(3,1) DEFAULT NULL COMMENT 'Guest rating (e.g. 8.5)',
                 `rating_count`      INT UNSIGNED DEFAULT NULL,
                 `sync_status`       ENUM('active','inactive','error') DEFAULT 'active',
+                `calendar_prices_raw` JSON DEFAULT NULL COMMENT 'Per-date raw from-prices for the booking calendar (calendar_prices cron)',
                 `last_synced_at`    DATETIME DEFAULT NULL,
                 `created_at`        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 `updated_at`        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -417,6 +418,8 @@
                 `status`            VARCHAR(30) DEFAULT 'pending',
                 `api_booking_ref`   VARCHAR(100) DEFAULT NULL COMMENT 'Booking reference from Sphinx API',
                 `api_response`      JSON DEFAULT NULL COMMENT 'Full API response JSON',
+                `payment_terms_json` JSON DEFAULT NULL COMMENT 'Payment terms from API (verify / orders sync)',
+                `cancellation_fees_json` JSON DEFAULT NULL COMMENT 'Cancellation fees from API (verify / orders sync)',
                 `created_at`        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 `updated_at`        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                 KEY `idx_order_id` (`order_id`),
@@ -576,6 +579,29 @@
                 KEY `idx_status` (`status`),
                 KEY `idx_hotel_product` (`hotel_id`, `product_id`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        </item>
+
+        <!-- Upgrade: per-date calendar prices storage (calendar_prices cron) -->
+        <item for="upgrade">
+            ALTER TABLE `?:sphinx_hotels`
+                ADD COLUMN `calendar_prices_raw` JSON DEFAULT NULL
+                COMMENT 'Per-date raw from-prices for the booking calendar (calendar_prices cron)'
+                AFTER `sync_status`;
+        </item>
+
+        <!-- Upgrade: terms columns on sphinx_bookings — OrderStatusSyncService and
+             BookingAdminProvider already referenced them; they never existed. -->
+        <item for="upgrade">
+            ALTER TABLE `?:sphinx_bookings`
+                ADD COLUMN `payment_terms_json` JSON DEFAULT NULL
+                COMMENT 'Payment terms from API (verify / orders sync)'
+                AFTER `api_response`;
+        </item>
+        <item for="upgrade">
+            ALTER TABLE `?:sphinx_bookings`
+                ADD COLUMN `cancellation_fees_json` JSON DEFAULT NULL
+                COMMENT 'Cancellation fees from API (verify / orders sync)'
+                AFTER `payment_terms_json`;
         </item>
 
         <!-- Uninstall SQL fallback: guarantees teardown of Sphinx-owned data

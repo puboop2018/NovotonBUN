@@ -42,22 +42,38 @@ unset($_sphinx_param);
 
 //=============================================================================
 // MODE DISPATCHER
+//
+// CS-Cart has NO automatic per-mode subdirectory include — this allowlist IS
+// the routing. Every mode file in sphinx_booking/ MUST be listed here or the
+// mode 404s ("Page Not Found") even though the file exists. Regression: only
+// 4 of 15 modes were routed, so search_poll 404ed on every poll and each
+// availability search ended in "no hotels found" without ever fetching
+// results. ControllerModeRoutingTest enforces file ↔ allowlist parity.
 //=============================================================================
 
 $_sphinx_mode_dir = __DIR__ . '/sphinx_booking';
 
-if ($mode === 'search') {
-    $__sphinx_result = include($_sphinx_mode_dir . '/search.php');
-    if ($__sphinx_result !== 1) return $__sphinx_result;
+$_sphinx_modes = [
+    'search',
+    'search_poll',
+    'booking_form',
+    'add_to_cart',
+    'ajax_recalculate_price',
+    'cache_deals',
+    'circuit_search',
+    'circuit_booking_form',
+    'circuit_add_to_cart',
+    'experience_search',
+    'experience_booking_form',
+    'experience_add_to_cart',
+    'package_search',
+    'package_booking_form',
+    'package_add_to_cart',
+];
 
-} elseif ($mode === 'booking_form') {
-    $__sphinx_result = include($_sphinx_mode_dir . '/booking_form.php');
-    if ($__sphinx_result !== 1) return $__sphinx_result;
-
-} elseif ($mode === 'add_to_cart') {
-    $__sphinx_result = include($_sphinx_mode_dir . '/add_to_cart.php');
-    if ($__sphinx_result !== 1) return $__sphinx_result;
-
-} elseif ($mode === 'ajax_recalculate_price') {
-    include($_sphinx_mode_dir . '/ajax_recalculate_price.php');
+if (in_array($mode, $_sphinx_modes, true)) {
+    $__sphinx_result = include $_sphinx_mode_dir . '/' . $mode . '.php';
+    if ($__sphinx_result !== 1) {
+        return $__sphinx_result;
+    }
 }

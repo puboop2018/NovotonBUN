@@ -135,8 +135,11 @@
        Visible immediately only when a server-side search already finished empty
        (completed/error); hidden while pending/idle or when offers exist. *}
     {assign var="_sx_show_empty" value=(!$sphinx_search_results && ($sphinx_search_status == 'completed' || $sphinx_search_status == 'error'))}
-    <div class="sphinx-no-results" id="sphinx-no-results"{if !$_sx_show_empty} style="display: none;"{/if}>
+    <div class="sphinx-no-results" id="sphinx-no-results"{if !$_sx_show_empty} style="display: none;"{/if}
+         data-alt-heading="{__("sphinx_holidays.try_nearby_dates")|default:"Try nearby dates:"|escape:html}"
+         data-alt-from="{__("sphinx_holidays.alt_from")|default:"from"|escape:html}">
         <p>{__("sphinx_holidays.no_results")|default:"No availability for the selected dates. Please try different dates."}</p>
+        <div id="sphinx-alt-dates" style="display: none; margin-top: 12px;"></div>
     </div>
 
 </div>
@@ -179,6 +182,7 @@ window.__sphinxConfig = {
     var revealed = false;
     var cursor = null;
     var pollCount = 0;
+    var lastAlternatives = [];
     var cfg = window.__sphinxConfig || {};
     var maxPolls = cfg.maxPolls || 30;
     var pollInterval = cfg.pollInterval || 250;
@@ -267,10 +271,39 @@ window.__sphinxConfig = {
         if (skeleton) skeleton.style.display = 'none';
     }
 
+    function formatAltDate(iso) {
+        var p = (iso || '').split('-');
+        return p.length === 3 ? p[2] + '.' + p[1] : iso;
+    }
+
+    function renderAlternatives() {
+        var box = document.getElementById('sphinx-alt-dates');
+        if (!box || !noResults || !lastAlternatives.length) return;
+        var heading = noResults.getAttribute('data-alt-heading') || 'Try nearby dates:';
+        var fromLabel = noResults.getAttribute('data-alt-from') || 'from';
+        var html = '<strong>' + heading + '</strong><div style="margin-top:8px; display:flex; flex-wrap:wrap; gap:8px;">';
+        for (var i = 0; i < lastAlternatives.length; i++) {
+            var alt = lastAlternatives[i];
+            if (!alt || !alt.check_in || !alt.check_out) continue;
+            var link = new URL(window.location.href);
+            link.searchParams.set('check_in', alt.check_in);
+            link.searchParams.set('check_out', alt.check_out);
+            var label = formatAltDate(alt.check_in) + ' – ' + formatAltDate(alt.check_out);
+            if (alt.price > 0) {
+                label += ' · ' + fromLabel + ' ' + Number(alt.price).toFixed(0) + ' ' + (alt.currency === 'EUR' ? '€' : (alt.currency || ''));
+            }
+            html += '<a class="ty-btn" href="' + link.toString() + '" style="padding:6px 12px;">' + label + '</a>';
+        }
+        html += '</div>';
+        box.innerHTML = html;
+        box.style.display = '';
+    }
+
     function finish() {
         if (skeleton) skeleton.style.display = 'none';
         if (accumulated === 0 && noResults) {
             noResults.style.display = '';
+            renderAlternatives();
         }
     }
 
@@ -291,6 +324,9 @@ window.__sphinxConfig = {
                 if (data.status === 'error') {
                     finish();
                     return;
+                }
+                if (data.alternatives && data.alternatives.length) {
+                    lastAlternatives = data.alternatives;
                 }
                 appendResults(data.results || []);
 
