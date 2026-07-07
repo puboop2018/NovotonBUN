@@ -121,6 +121,11 @@ Calling a cron endpoint **without a mode prints its list of available modes**
 3. **novoton**: hotel/resort sync → price computation → product creation, per
    the mode list the cron prints. The backend dashboard (**Admin → Novoton**)
    shows sync status and provides manual triggers.
+   - **Hotel names** are written **only** by `hotel_list` (from the API
+     `<Hotel>` element, empty fallback); `hotel_info`/`facilities` never
+     backfill them. A hotel that shows `(unnamed)` in the facilities cron
+     output genuinely has no name yet — re-run `hotel_list` once the API
+     returns one. (Run `hotel_list` before `hotel_facilities_batched`.)
 
 Schedule the recurring jobs (typical: exchange rates + price refresh daily,
 hotel sync weekly, `cleanup` daily) via real cron on the server.

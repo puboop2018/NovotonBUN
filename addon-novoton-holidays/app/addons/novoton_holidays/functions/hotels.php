@@ -171,8 +171,11 @@ function fn_novoton_holidays_prefetch_hotel_data(array $hotel_ids): void
         return;
     }
 
-    // Batch query 1: all hotel rows
-    $hotels = TypeCoerce::toStringMap(db_get_hash_array(
+    // Batch query 1: all hotel rows.
+    // toArrayMap, NOT toStringMap: db_get_hash_array keys by the numeric
+    // hotel_id (int array keys); toStringMap would drop them all and defeat
+    // this prefetch (silent N+1 fallback in fn_novoton_holidays_get_hotel_data).
+    $hotels = TypeCoerce::toArrayMap(db_get_hash_array(
         "SELECT * FROM ?:novoton_hotels WHERE hotel_id IN (?a)",
         'hotel_id',
         $missing

@@ -197,6 +197,35 @@ class TypeCoerceTest extends TestCase
         $this->assertSame([], TypeCoerce::toStringMap(null));
     }
 
+    // ── toArrayMap (key-preserving counterpart of toStringMap) ────────────────
+
+    /**
+     * The whole reason toArrayMap exists: db hashes keyed by a numeric id
+     * (e.g. hotel_id) arrive with INTEGER keys, and toStringMap would drop
+     * them all — emptying the map. toArrayMap must preserve them.
+     */
+    public function testToArrayMapPreservesIntegerKeys(): void
+    {
+        $this->assertSame(
+            [4684 => 'EDART', 4504 => 'ALBA'],
+            TypeCoerce::toArrayMap([4684 => 'EDART', 4504 => 'ALBA']),
+        );
+    }
+
+    public function testToArrayMapPreservesStringKeys(): void
+    {
+        $this->assertSame(
+            ['NVT4684' => 'EDART'],
+            TypeCoerce::toArrayMap(['NVT4684' => 'EDART']),
+        );
+    }
+
+    public function testToArrayMapFromNonArrayReturnsEmpty(): void
+    {
+        $this->assertSame([], TypeCoerce::toArrayMap('x'));
+        $this->assertSame([], TypeCoerce::toArrayMap(null));
+    }
+
     // ── toStringList ─────────────────────────────────────────────────────────
 
     public function testToStringListCoercesEntries(): void

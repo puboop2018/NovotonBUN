@@ -143,6 +143,23 @@ final class TypeCoerce
     }
 
     /**
+     * Coerce a mixed value into an array, PRESERVING every key.
+     *
+     * The key-preserving counterpart to {@see self::toStringMap()}. Use this
+     * for hashes keyed by a database id (e.g. `db_get_hash_single_array()`
+     * keyed by a numeric `hotel_id`): PHP stores numeric-string array keys as
+     * integers, and `toStringMap()` would silently DROP them (its
+     * `is_string($key)` filter), emptying the whole map. This keeps them.
+     * Non-arrays return `[]`; values are left untouched (callers coerce them).
+     *
+     * @return array<array-key, mixed>
+     */
+    public static function toArrayMap(mixed $value): array
+    {
+        return is_array($value) ? $value : [];
+    }
+
+    /**
      * Coerce a mixed value into a list of strings (e.g. `db_get_fields()` output).
      *
      * Non-arrays return `[]`. Each entry is passed through {@see self::toString()}.

@@ -247,13 +247,16 @@ class BatchedHotelInfoSyncV2 extends AbstractBatchedSync
         ));
 
         // 1. Hotel metadata (hotel_name, product_id) keyed by hotel_id.
-        $hotelRows = TypeCoerce::toStringMap(db_get_hash_array(
+        //    toArrayMap, NOT toStringMap: db_get_hash_array keys by the numeric
+        //    hotel_id (int array keys), which toStringMap would drop — leaving
+        //    hotelMap empty and silently disabling adults-only-from-name below.
+        $hotelRows = TypeCoerce::toArrayMap(db_get_hash_array(
             'SELECT hotel_id, hotel_name, product_id FROM ?:novoton_hotels WHERE hotel_id IN (?a)',
             'hotel_id',
             $hotelIds,
         ));
         foreach ($hotelRows as $hid => $row) {
-            $this->hotelMap[$hid] = TypeCoerce::toStringMap($row);
+            $this->hotelMap[(string) $hid] = TypeCoerce::toStringMap($row);
         }
 
         // 2. Product code -> product_id map for unlinked hotels only.
