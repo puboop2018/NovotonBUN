@@ -347,6 +347,11 @@ try {
         'cache_key' => $cacheEnabled && $cacheTtl > 0 ? CacheService::buildSearchKey($cacheParams) : '',
         'cache_ttl' => $cacheTtl,
         'filter_hotel_id' => $hotel_id,
+        // For the alternative-date probe on terminal-empty polls:
+        'destination_id' => TypeCoerce::toInt($searchParams['destination_id'] ?? 0),
+        'check_in' => $check_in,
+        'nights' => TypeCoerce::toInt($templateParams['nights']),
+        'adults' => $adults,
         // P0b metrics: search start + poll counter, read back by search_poll to
         // time first-offer/complete. docs/adr/0001-availability-early-render-and-metrics.md
         'started_at_ms' => $requestStartedMs,

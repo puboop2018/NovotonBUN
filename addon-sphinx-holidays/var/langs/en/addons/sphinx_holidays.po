@@ -343,3 +343,11 @@ msgstr "Cancellation policy"
 msgctxt "Languages::sphinx_holidays.terms_heading"
 msgid "Payment & cancellation terms"
 msgstr "Payment & cancellation terms"
+
+msgctxt "Languages::sphinx_holidays.try_nearby_dates"
+msgid "Try nearby dates:"
+msgstr "Try nearby dates:"
+
+msgctxt "Languages::sphinx_holidays.alt_from"
+msgid "from"
+msgstr "from"
