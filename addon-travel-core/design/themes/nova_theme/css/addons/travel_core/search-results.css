@@ -1,0 +1,208 @@
+/**
+ * Travel Core — shared search-results design system.
+ *
+ * The ONE place the offer-results visual language lives (class contract +
+ * color tokens), shared by every provider addon (novoton, sphinx). Providers
+ * keep their own thin templates/JS renderers and opt in by emitting these
+ * classes — a class-based contract is the only artifact both Smarty and JS
+ * render paths can share.
+ *
+ * Scoped under .travel-search-results-page (a wrapper both providers emit)
+ * so these rules out-specify theme defaults without !important wars.
+ */
+
+.travel-search-results-page {
+    /* Design tokens — previously referenced inline as undefined --nvt-* vars
+       with hex fallbacks; defined here once, reconciling both vocabularies. */
+    --nvt-primary: #003580;
+    --nvt-price-color: #003580;
+    --nvt-btn-primary-bg: #0071c2;
+    --nvt-btn-primary-hover: #005a9e;
+    --nvt-success: #28a745;
+    --nvt-danger: #dc3545;
+    --nvt-stars: #f5a623;
+    --nvt-border: #e0e0e0;
+    --nvt-text: #1a1a1a;
+    --nvt-text-muted: #666;
+    --nvt-card-bg: #fff;
+}
+
+/* ── Hotel header ─────────────────────────────────────────────────────── */
+.travel-search-results-page .travel-hotel-header {
+    background: var(--nvt-card-bg);
+    padding: 18px 20px;
+    border: 1px solid var(--nvt-border);
+    border-radius: 8px;
+    margin-bottom: 12px;
+}
+.travel-search-results-page .travel-hotel-header h1,
+.travel-search-results-page .travel-hotel-header h2 {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--nvt-primary);
+}
+.travel-search-results-page .travel-hotel-stars {
+    color: var(--nvt-stars);
+    margin-left: 6px;
+    letter-spacing: 1px;
+}
+.travel-search-results-page .travel-hotel-location {
+    margin: 5px 0 0;
+    font-size: 14px;
+    color: var(--nvt-text-muted);
+}
+
+/* ── Availability badge ("N oferte") ──────────────────────────────────── */
+.travel-search-results-page .travel-availability-badge {
+    display: inline-block;
+    background: var(--nvt-success);
+    color: #fff;
+    padding: 7px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 600;
+    margin: 10px 0;
+}
+
+/* ── Offer card (3 zones: hotel / details / price+action) ─────────────── */
+.travel-search-results-page .travel-offer-card {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    background: var(--nvt-card-bg);
+    border: 1px solid var(--nvt-border);
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin-bottom: 12px;
+}
+.travel-search-results-page .travel-offer-hotel {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 2;
+    min-width: 0;
+}
+.travel-search-results-page .travel-offer-image {
+    width: 110px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 6px;
+    flex-shrink: 0;
+}
+.travel-search-results-page .travel-offer-hotel-name {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--nvt-primary);
+}
+.travel-search-results-page .travel-offer-location {
+    display: block;
+    font-size: 13px;
+    color: var(--nvt-text-muted);
+}
+.travel-search-results-page .travel-offer-details {
+    flex: 2;
+    min-width: 0;
+    font-size: 14px;
+    color: var(--nvt-text);
+}
+.travel-search-results-page .travel-offer-room {
+    font-weight: 600;
+}
+.travel-search-results-page .travel-offer-board {
+    color: var(--nvt-text-muted);
+    margin-top: 2px;
+}
+.travel-search-results-page .travel-offer-dates {
+    font-size: 13px;
+    color: var(--nvt-text-muted);
+    margin-top: 4px;
+}
+.travel-search-results-page .travel-offer-badge--instant {
+    display: inline-block;
+    background: rgba(40, 167, 69, 0.12);
+    color: var(--nvt-success);
+    border: 1px solid rgba(40, 167, 69, 0.4);
+    border-radius: 12px;
+    padding: 2px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-top: 6px;
+}
+
+/* ── Price + action zone ──────────────────────────────────────────────── */
+.travel-search-results-page .travel-offer-price-action {
+    flex: 1;
+    min-width: 190px;
+    text-align: right;
+}
+.travel-search-results-page .travel-offer-price {
+    margin-bottom: 10px;
+}
+.travel-search-results-page .travel-price-amount {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--nvt-price-color);
+}
+.travel-search-results-page .travel-price-currency {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--nvt-price-color);
+}
+.travel-search-results-page .travel-price-per-night,
+.travel-search-results-page .travel-price-includes {
+    display: block;
+    font-size: 12px;
+    color: var(--nvt-text-muted);
+    margin-top: 2px;
+}
+.travel-search-results-page .travel-offer-book-btn {
+    display: inline-block;
+    background: var(--nvt-btn-primary-bg);
+    color: #fff;
+    padding: 12px 26px;
+    border-radius: 6px;
+    font-size: 15px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background 0.15s ease;
+}
+.travel-search-results-page .travel-offer-book-btn:hover,
+.travel-search-results-page .travel-offer-book-btn:focus {
+    background: var(--nvt-btn-primary-hover);
+    color: #fff;
+    text-decoration: none;
+}
+
+/* ── Terms panels (booking form / future search use) ──────────────────── */
+.travel-search-results-page .travel-terms-panels {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 16px;
+    margin-top: 16px;
+}
+.travel-search-results-page .travel-terms-panel {
+    background: var(--nvt-card-bg);
+    border: 1px solid var(--nvt-border);
+    border-radius: 8px;
+    padding: 16px 20px;
+    font-size: 13px;
+}
+
+/* ── Responsive: stack the card zones on small screens ────────────────── */
+@media (max-width: 767px) {
+    .travel-search-results-page .travel-offer-card {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+    }
+    .travel-search-results-page .travel-offer-price-action {
+        text-align: left;
+        min-width: 0;
+    }
+    .travel-search-results-page .travel-offer-book-btn {
+        display: block;
+        text-align: center;
+    }
+}

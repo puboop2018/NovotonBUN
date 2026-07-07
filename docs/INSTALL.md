@@ -156,6 +156,10 @@ hotel sync weekly, `cleanup` daily) via real cron on the server.
   box disappear).
 - Hotel product page renders the React booking engine (calendar, occupancy,
   live price).
+- Search-results pages share travel_core's design system
+  (`css/addons/travel_core/search-results.css` — offer cards, badges, tokens).
+  Sphinx renders with it natively; novoton's template still carries its own
+  legacy styling until migrated (planned follow-up).
 - Add to cart → checkout completes; the booking row appears in the addon's
   bookings admin with the API confirmation (or a clear failure status).
 - Currency switcher shows sane RON/EUR prices (exchange-rate cron ran).

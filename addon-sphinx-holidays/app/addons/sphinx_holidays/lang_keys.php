@@ -513,4 +513,8 @@ return [
         'en' => 'Whitelist save failed',
         'ro' => 'Salvarea whitelist-ului a eșuat',
     ],
+    'sphinx_holidays.includes_taxes' => [
+        'en' => 'Includes taxes and commissions',
+        'ro' => 'Include taxe și comisioane',
+    ],
 ];

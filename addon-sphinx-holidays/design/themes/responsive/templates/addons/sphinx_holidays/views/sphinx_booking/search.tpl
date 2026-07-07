@@ -14,15 +14,15 @@
      data-search-id="{$sphinx_search_id|escape:html}"
      data-search-status="{$sphinx_search_status|default:'idle'}">
 
-    {* ===== HOTEL HEADER — which hotel this search is for (mirrors novoton) ===== *}
+    {* ===== HOTEL HEADER — styled by travel_core's shared search-results.css ===== *}
     {if $sphinx_hotel_name}
-        <div class="sphinx-hotel-header" style="background: #fff; padding: 18px 20px; border: 1px solid #e0e0e0; border-radius: 8px 8px 0 0; border-bottom: none;">
-            <h1 class="sphinx-hotel-header-name" style="margin: 0; font-size: 22px; font-weight: 600; color: #003580;">
+        <div class="travel-hotel-header sphinx-hotel-header">
+            <h1 class="sphinx-hotel-header-name">
                 {$sphinx_hotel_name|escape:html}
-                {if $sphinx_hotel_stars}<span class="sphinx-stars" style="color: #f5a623;">{"★"|str_repeat:$sphinx_hotel_stars}</span>{/if}
+                {if $sphinx_hotel_stars}<span class="travel-hotel-stars sphinx-stars">{"★"|str_repeat:$sphinx_hotel_stars}</span>{/if}
             </h1>
             {if $sphinx_hotel_location}
-                <p class="sphinx-hotel-header-location" style="margin: 5px 0 0; font-size: 14px; color: #666;">{$sphinx_hotel_location|escape:html}</p>
+                <p class="travel-hotel-location sphinx-hotel-header-location">{$sphinx_hotel_location|escape:html}</p>
             {/if}
         </div>
     {/if}
@@ -45,7 +45,7 @@
             {/if}
         </div>
         {foreach from=[1,2,3] item=i}
-            <div class="sphinx-offer-card sphinx-skeleton-card">
+            <div class="travel-offer-card sphinx-offer-card sphinx-skeleton-card">
                 <div class="sphinx-offer-hotel">
                     <div class="sphinx-skeleton-img"></div>
                     <div class="sphinx-offer-hotel-info">
@@ -67,61 +67,65 @@
     {* Results container *}
     <div class="sphinx-results-container" id="sphinx-results-container">
         {if $sphinx_search_results}
-            <h2 class="sphinx-results-title" id="sphinx-results-title">
-                {__("sphinx_holidays.search_results", ["[count]" => $sphinx_search_results|count])|default:"`$sphinx_search_results|count` results found"}
-            </h2>
+            <div class="travel-availability-badge sphinx-results-title" id="sphinx-results-title">
+                ✓ {__("sphinx_holidays.search_results", ["[count]" => $sphinx_search_results|count])|default:"`$sphinx_search_results|count` results found"}
+            </div>
         {else}
-            <h2 class="sphinx-results-title" id="sphinx-results-title" style="display: none;">
-                <span id="sphinx-results-count">0</span> {__("sphinx_holidays.results_found")|default:"results found"}
-            </h2>
+            <div class="travel-availability-badge sphinx-results-title" id="sphinx-results-title" style="display: none;">
+                ✓ <span id="sphinx-results-count">0</span> {__("sphinx_holidays.results_found")|default:"results found"}
+            </div>
         {/if}
 
         {foreach from=$sphinx_search_results item=result name=results}
-            <div class="sphinx-offer-card" data-offer-id="{$result.offer_id|default:''}">
+            <div class="travel-offer-card sphinx-offer-card" data-offer-id="{$result.offer_id|default:''}">
 
                 {* Hotel info *}
-                <div class="sphinx-offer-hotel">
+                <div class="travel-offer-hotel sphinx-offer-hotel">
                     {if $result.hotel_image}
-                        <img src="{$result.hotel_image}" alt="{$result.hotel_name|escape:html}" class="sphinx-offer-image" loading="lazy">
+                        <img src="{$result.hotel_image}" alt="{$result.hotel_name|escape:html}" class="travel-offer-image sphinx-offer-image" loading="lazy">
                     {/if}
                     <div class="sphinx-offer-hotel-info">
-                        <h3 class="sphinx-offer-hotel-name">{$result.hotel_name|escape:html}</h3>
+                        <h3 class="travel-offer-hotel-name sphinx-offer-hotel-name">{$result.hotel_name|escape:html}</h3>
                         {if $result.star_rating}
-                            <span class="sphinx-stars">{"★"|str_repeat:$result.star_rating}</span>
+                            <span class="travel-hotel-stars sphinx-stars">{"★"|str_repeat:$result.star_rating}</span>
                         {/if}
                         {if $result.destination}
-                            <span class="sphinx-offer-location">{$result.destination|escape:html}</span>
+                            <span class="travel-offer-location sphinx-offer-location">{$result.destination|escape:html}</span>
                         {/if}
                     </div>
                 </div>
 
                 {* Offer details *}
-                <div class="sphinx-offer-details">
-                    <div class="sphinx-offer-room">
-                        <strong>{$result.room_name|default:$result.room_type|escape:html}</strong>
+                <div class="travel-offer-details sphinx-offer-details">
+                    <div class="travel-offer-room sphinx-offer-room">
+                        {$result.room_name|default:$result.room_type|escape:html}
                     </div>
-                    <div class="sphinx-offer-board">
+                    <div class="travel-offer-board sphinx-offer-board">
                         {$result.board_name|default:$result.board_type|escape:html}
                     </div>
-                    <div class="sphinx-offer-dates">
+                    <div class="travel-offer-dates sphinx-offer-dates">
                         {$sphinx_search_params.check_in|date_format:"%d.%m.%Y"} - {$sphinx_search_params.check_out|date_format:"%d.%m.%Y"}
                         ({$sphinx_search_params.nights} {__("travel_core.nights")|default:"nights"})
                     </div>
+                    {if $result.confirmation == 'immediate'}
+                        <span class="travel-offer-badge--instant">✓ {__("sphinx_holidays.instant_confirmation")|default:"Instant confirmation"}</span>
+                    {/if}
                 </div>
 
                 {* Price and action *}
-                <div class="sphinx-offer-price-action">
-                    <div class="sphinx-offer-price">
-                        <span class="sphinx-price-amount">{$result.price|number_format:2:",":"."}</span>
-                        <span class="sphinx-price-currency">{$sphinx_search_params.currency|default:'EUR'}</span>
+                <div class="travel-offer-price-action sphinx-offer-price-action">
+                    <div class="travel-offer-price sphinx-offer-price">
+                        <span class="travel-price-amount sphinx-price-amount">{$result.price|number_format:2:",":"."}</span>
+                        <span class="travel-price-currency sphinx-price-currency">{$sphinx_search_params.currency|default:'EUR'}</span>
                         {if $sphinx_search_params.nights > 0}
-                            <span class="sphinx-price-per-night">
-                                ({($result.price / $sphinx_search_params.nights)|number_format:2:",":"."} / {__("sphinx_holidays.per_night")|default:"night"})
+                            <span class="travel-price-per-night sphinx-price-per-night">
+                                {($result.price / $sphinx_search_params.nights)|number_format:2:",":"."} / {__("sphinx_holidays.per_night")|default:"night"}
                             </span>
                         {/if}
+                        <span class="travel-price-includes">{__("sphinx_holidays.includes_taxes")|default:"Includes taxes and commissions"}</span>
                     </div>
                     <a href="{"sphinx_booking.booking_form?offer_id=`$result.offer_id`&hotel_id=`$result.hotel_id`&product_id=`$result.product_id`&check_in=`$sphinx_search_params.check_in`&check_out=`$sphinx_search_params.check_out`&adults=`$sphinx_search_params.adults`&children=`$sphinx_search_params.children`&children_ages=`$sphinx_search_params.children_ages`&rooms=`$sphinx_search_params.rooms`"|fn_url}"
-                       class="sphinx-offer-book-btn">
+                       class="travel-offer-book-btn sphinx-offer-book-btn">
                         {__("sphinx_holidays.book_now")|default:"Book now"}
                     </a>
                 </div>
@@ -158,7 +162,14 @@ window.__sphinxSearchParams = {
 };
 window.__sphinxConfig = {
     maxPolls: {$sphinx_max_polls|default:30},
-    pollInterval: 250
+    pollInterval: 250,
+    labels: {
+        perNight: "{__("sphinx_holidays.per_night")|default:"night"|escape:javascript}",
+        instantConfirmation: "{__("sphinx_holidays.instant_confirmation")|default:"Instant confirmation"|escape:javascript}",
+        includesTaxes: "{__("sphinx_holidays.includes_taxes")|default:"Includes taxes and commissions"|escape:javascript}",
+        bookNow: "{__("sphinx_holidays.book_now")|default:"Book now"|escape:javascript}",
+        nights: "{__("travel_core.nights")|default:"nights"|escape:javascript}"
+    }
 };
 {literal}
 (function() {
@@ -197,11 +208,12 @@ window.__sphinxConfig = {
         if (result.star_rating) {
             for (var i = 0; i < parseInt(result.star_rating, 10); i++) stars += '★';
         }
+        var labels = cfg.labels || {};
         var price = parseFloat(result.price || 0).toFixed(2).replace('.', ',');
         var perNight = searchParams.nights > 0
-            ? ' <span class="sphinx-price-per-night">(' +
+            ? '<span class="travel-price-per-night sphinx-price-per-night">' +
               (parseFloat(result.price) / searchParams.nights).toFixed(2).replace('.', ',') +
-              ' / night)</span>'
+              ' / ' + (labels.perNight || 'night') + '</span>'
             : '';
 
         var bookingUrl = 'index.php?dispatch=sphinx_booking.booking_form' +
@@ -215,31 +227,42 @@ window.__sphinxConfig = {
             '&children_ages=' + encodeURIComponent(searchParams.children_ages) +
             '&rooms=' + searchParams.rooms;
 
+        var datesLine = searchParams.check_in && searchParams.check_out
+            ? formatAltDate(searchParams.check_in) + '.' + searchParams.check_in.slice(0, 4) +
+              ' - ' + formatAltDate(searchParams.check_out) + '.' + searchParams.check_out.slice(0, 4) +
+              (searchParams.nights > 0 ? ' (' + searchParams.nights + ' ' + (labels.nights || 'nights') + ')' : '')
+            : '';
+
         var card = document.createElement('div');
-        card.className = 'sphinx-offer-card';
+        card.className = 'travel-offer-card sphinx-offer-card';
         card.setAttribute('data-offer-id', result.offer_id || '');
         card.innerHTML =
-            '<div class="sphinx-offer-hotel">' +
+            '<div class="travel-offer-hotel sphinx-offer-hotel">' +
                 (result.hotel_image
-                    ? '<img src="' + result.hotel_image + '" alt="" class="sphinx-offer-image" loading="lazy">'
+                    ? '<img src="' + result.hotel_image + '" alt="" class="travel-offer-image sphinx-offer-image" loading="lazy">'
                     : '') +
                 '<div class="sphinx-offer-hotel-info">' +
-                    '<h3 class="sphinx-offer-hotel-name"></h3>' +
-                    (stars ? '<span class="sphinx-stars">' + stars + '</span>' : '') +
-                    (result.destination ? '<span class="sphinx-offer-location"></span>' : '') +
+                    '<h3 class="travel-offer-hotel-name sphinx-offer-hotel-name"></h3>' +
+                    (stars ? '<span class="travel-hotel-stars sphinx-stars">' + stars + '</span>' : '') +
+                    (result.destination ? '<span class="travel-offer-location sphinx-offer-location"></span>' : '') +
                 '</div>' +
             '</div>' +
-            '<div class="sphinx-offer-details">' +
-                '<div class="sphinx-offer-room"><strong class="sx-room"></strong></div>' +
-                '<div class="sphinx-offer-board sx-board"></div>' +
+            '<div class="travel-offer-details sphinx-offer-details">' +
+                '<div class="travel-offer-room sphinx-offer-room"><span class="sx-room"></span></div>' +
+                '<div class="travel-offer-board sphinx-offer-board sx-board"></div>' +
+                (datesLine ? '<div class="travel-offer-dates sphinx-offer-dates">' + datesLine + '</div>' : '') +
+                (result.confirmation === 'immediate'
+                    ? '<span class="travel-offer-badge--instant">✓ ' + (labels.instantConfirmation || 'Instant confirmation') + '</span>'
+                    : '') +
             '</div>' +
-            '<div class="sphinx-offer-price-action">' +
-                '<div class="sphinx-offer-price">' +
-                    '<span class="sphinx-price-amount">' + price + '</span> ' +
-                    '<span class="sphinx-price-currency">' + (result.currency || searchParams.currency) + '</span>' +
+            '<div class="travel-offer-price-action sphinx-offer-price-action">' +
+                '<div class="travel-offer-price sphinx-offer-price">' +
+                    '<span class="travel-price-amount sphinx-price-amount">' + price + '</span> ' +
+                    '<span class="travel-price-currency sphinx-price-currency">' + (result.currency || searchParams.currency) + '</span>' +
                     perNight +
+                    '<span class="travel-price-includes">' + (labels.includesTaxes || 'Includes taxes and commissions') + '</span>' +
                 '</div>' +
-                '<a href="' + bookingUrl + '" class="sphinx-offer-book-btn">Book now</a>' +
+                '<a href="' + bookingUrl + '" class="travel-offer-book-btn sphinx-offer-book-btn">' + (labels.bookNow || 'Book now') + '</a>' +
             '</div>';
 
         // Set text nodes safely to avoid XSS
