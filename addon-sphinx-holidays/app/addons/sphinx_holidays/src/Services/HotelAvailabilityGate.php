@@ -14,9 +14,10 @@ use Tygh\Addons\TravelCore\Helpers\ValidationHelpers;
  * Gates product-less hotels on immediate availability.
  *
  * For each destination with candidate hotels (no product yet, unflagged or
- * already flagged no_availability), runs one live search and marks hotels with
- * no immediate-confirmation offer as 'no_availability' (so AddProductsCommand
- * skips them), and clears that flag from hotels that have become bookable again.
+ * already flagged no_availability), runs a live search per probe window
+ * (PROBE_WINDOWS_DAYS_AHEAD) and marks hotels with no immediate-confirmation
+ * offer in ANY window as 'no_availability' (so AddProductsCommand skips
+ * them), and clears that flag from hotels that have become bookable again.
  * Linked products and hotels skipped for other reasons are never touched.
  *
  * Marking is scoped to destinations that were probed successfully, so an API
@@ -29,14 +30,17 @@ use Tygh\Addons\TravelCore\Helpers\ValidationHelpers;
  */
 class HotelAvailabilityGate
 {
-    // Availability probe parameters (mirror DiscoverBoardsCommand): a single
-    // search window per destination, far enough out to have inventory loaded.
+    // Availability probe parameters. A hotel counts as available when ANY
+    // probe window yields an immediate-confirmation offer — a single fixed
+    // window (the old +30d-only probe) excluded hotels whose inventory sits
+    // outside that arbitrary week (e.g. summer-only hotels probed in spring).
     private const int NIGHTS = 7;
     private const int ADULTS = 2;
-    private const int DAYS_AHEAD = 30;
+    /** @var list<int> check-in offsets (days from today), each probed for NIGHTS */
+    private const array PROBE_WINDOWS_DAYS_AHEAD = [14, 30, 60];
     private const int POLL_INTERVAL = 3;     // seconds between result polls
-    private const int POLL_DEADLINE = 60;    // hard cap per destination
-    private const int DEST_DELAY_US = 500000; // 500ms between destinations
+    private const int POLL_DEADLINE = 60;    // hard cap per destination+window
+    private const int DEST_DELAY_US = 500000; // 500ms between searches
 
     public function __construct(
         private readonly SphinxApi $api,
@@ -82,61 +86,88 @@ class HotelAvailabilityGate
             count($destIds),
         ));
 
-        // Probe each destination once; collect the set of hotel IDs that have at
-        // least one immediate-confirmation offer, and which destinations answered.
-        $checkIn = date('Y-m-d', strtotime('+' . self::DAYS_AHEAD . ' days'));
-        $checkOut = date('Y-m-d', strtotime('+' . (self::DAYS_AHEAD + self::NIGHTS) . ' days'));
+        // Probe each destination across the probe windows; collect the set of
+        // hotel IDs with at least one immediate-confirmation offer in ANY
+        // window, and which destinations answered at least once.
         $currency = ConfigProvider::getDefaultCurrency();
         $debug = ConfigProvider::isDebugLogging();
+
+        // Per-destination candidate hotel sets, so a destination can stop
+        // probing further windows once every candidate is already available.
+        /** @var array<int, array<string, true>> $candidatesByDest */
+        $candidatesByDest = [];
+        foreach ($candidates as $row) {
+            $hid = TypeCoerce::toString($row['hotel_id'] ?? '');
+            $did = ValidationHelpers::toInt($row['destination_id'] ?? 0);
+            if ($hid !== '' && $did > 0) {
+                $candidatesByDest[$did][$hid] = true;
+            }
+        }
 
         /** @var array<string, true> $availableSet */
         $availableSet = [];
         /** @var array<int, true> $probedDestinations */
         $probedDestinations = [];
         $errors = 0;
+        $stopProbing = false;
         $httpClient = $this->api->getHttpClient();
 
         foreach ($destIds as $destId) {
-            if ($httpClient->isCircuitOpen()) {
-                $output('    Circuit breaker open — stopping availability probe early (unprobed hotels left unchanged)');
+            foreach (self::PROBE_WINDOWS_DAYS_AHEAD as $daysAhead) {
+                if ($httpClient->isCircuitOpen()) {
+                    $output('    Circuit breaker open — stopping availability probe early (unprobed hotels left unchanged)');
+                    $stopProbing = true;
+                    break;
+                }
+
+                $searchResponse = $this->api->searchHotels([
+                    'destination_id' => $destId,
+                    'check_in' => date('Y-m-d', strtotime("+{$daysAhead} days")),
+                    'check_out' => date('Y-m-d', strtotime('+' . ($daysAhead + self::NIGHTS) . ' days')),
+                    'occupancy' => [['adults' => self::ADULTS, 'children_ages' => []]],
+                    'currency' => $currency,
+                ]);
+
+                if (!is_array($searchResponse)) {
+                    $errors++;
+                    if ($errors <= 5) {
+                        $output("    [WARN] availability search failed for destination {$destId} (+{$daysAhead}d window)");
+                    }
+                    usleep($this->destDelayUs);
+                    continue;
+                }
+
+                // Search was accepted → destination counts as probed (zero offers
+                // is a legitimate "no availability" answer, not an error).
+                $probedDestinations[$destId] = true;
+
+                // Inline results (synchronous completion) + cursor-polled results.
+                $availableSet += OfferAvailability::collectImmediateHotelIds(
+                    TypeCoerce::toRowList($searchResponse['results'] ?? $searchResponse['data'] ?? []),
+                );
+                $cursor = TypeCoerce::toString($searchResponse['cursor'] ?? $searchResponse['search_id'] ?? '');
+                if ($cursor !== '') {
+                    $availableSet += $this->pollImmediateHotelIds($cursor);
+                }
+
+                if ($debug) {
+                    $output("    [DEBUG] dest={$destId} +{$daysAhead}d: " . count($availableSet) . ' immediate hotel(s) so far');
+                }
+
+                usleep($this->destDelayUs);
+
+                // All of this destination's candidates already available —
+                // further windows can't change the partition below.
+                if (isset($candidatesByDest[$destId])
+                    && array_diff_key($candidatesByDest[$destId], $availableSet) === []
+                ) {
+                    break;
+                }
+            }
+
+            if ($stopProbing) {
                 break;
             }
-
-            $searchResponse = $this->api->searchHotels([
-                'destination_id' => $destId,
-                'check_in' => $checkIn,
-                'check_out' => $checkOut,
-                'occupancy' => [['adults' => self::ADULTS, 'children_ages' => []]],
-                'currency' => $currency,
-            ]);
-
-            if (!is_array($searchResponse)) {
-                $errors++;
-                if ($errors <= 5) {
-                    $output("    [WARN] availability search failed for destination {$destId}");
-                }
-                usleep($this->destDelayUs);
-                continue;
-            }
-
-            // Search was accepted → destination counts as probed (zero offers is
-            // a legitimate "no availability" answer, not an error).
-            $probedDestinations[$destId] = true;
-
-            // Inline results (synchronous completion) + cursor-polled results.
-            $availableSet += OfferAvailability::collectImmediateHotelIds(
-                TypeCoerce::toRowList($searchResponse['results'] ?? $searchResponse['data'] ?? []),
-            );
-            $cursor = TypeCoerce::toString($searchResponse['cursor'] ?? $searchResponse['search_id'] ?? '');
-            if ($cursor !== '') {
-                $availableSet += $this->pollImmediateHotelIds($cursor);
-            }
-
-            if ($debug) {
-                $output("    [DEBUG] dest={$destId}: " . count($availableSet) . ' immediate hotel(s) so far');
-            }
-
-            usleep($this->destDelayUs);
         }
 
         // Partition candidates into mark / clear operations.

@@ -87,9 +87,17 @@ manually (all ten, including `sphinx_image_sync_queue`) and delete the
 ### sphinx_holidays
 - **API** credentials and endpoint
 - `cron_access_key`
-- Search settings: `cache_ttl_search`, `search_poll_interval`,
-  `search_max_polls`, `default_currency`
-- `require_immediate_availability` — decide the availability gate policy
+- Search settings: `cache_ttl_search`, `search_max_polls`, `default_currency`
+  (`search_poll_interval` currently has no storefront effect — the browser
+  polls on a fixed client-side cadence)
+- `require_immediate_availability` — the availability policy, TWO effects:
+  (a) storefront searches show only immediate-confirmation offers;
+  (b) during the hotels sync, the **availability gate** probes each
+  whitelisted destination across several windows (+14/+30/+60 days, 7 nights,
+  2 adults) and flags hotels with no immediate offer in any window as
+  `product_skip_reason='no_availability'` — `add_products` then skips them,
+  so **only hotels with real availability become products**. The flag clears
+  automatically on a later sync when the hotel becomes bookable.
 - **Destination whitelist**: after the destination sync (next section), pick
   the destinations to sell in the sphinx admin — hotels sync only for
   whitelisted destinations.
