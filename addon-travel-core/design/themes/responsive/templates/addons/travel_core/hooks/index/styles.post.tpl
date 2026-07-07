@@ -22,3 +22,7 @@
 {* Shared search-results design system (offer cards, badges) —
    the class contract every provider's results page renders with *}
 {style src="addons/travel_core/search-results.css"}
+
+{* Shared booking-page design system (summary, guest cards, terms,
+   services, submit) — the class contract provider booking forms use *}
+{style src="addons/travel_core/booking-pages.css"}
