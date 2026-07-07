@@ -155,12 +155,18 @@ class BatchedHotelFacilitiesSyncV2 extends AbstractBatchedSync
             return;
         }
 
-        $cache = TypeCoerce::toStringMap(db_get_hash_single_array(
+        // toArrayMap, NOT toStringMap: db_get_hash_single_array keys by the
+        // numeric hotel_id, which PHP stores as int array keys — toStringMap
+        // would drop every one and empty the cache (all hotels then print "?").
+        $rows = TypeCoerce::toArrayMap(db_get_hash_single_array(
             'SELECT hotel_id, hotel_name FROM ?:novoton_hotels WHERE hotel_id IN (?a)',
             ['hotel_id', 'hotel_name'],
             $hotelIds,
         ));
-        $this->hotelNameCache = array_map(static fn ($name): string => TypeCoerce::toString($name), $cache);
+        $this->hotelNameCache = [];
+        foreach ($rows as $id => $name) {
+            $this->hotelNameCache[(string) $id] = TypeCoerce::toString($name);
+        }
     }
 
     /**
@@ -170,7 +176,8 @@ class BatchedHotelFacilitiesSyncV2 extends AbstractBatchedSync
     protected function processItem($itemId): array
     {
         $hotelId = (string) $itemId;
-        $hotelName = $this->hotelNameCache[$hotelId] ?? '?';
+        $cachedName = $this->hotelNameCache[$hotelId] ?? '';
+        $hotelName = $cachedName !== '' ? $cachedName : '(unnamed)';
         $this->logger->output("[{$hotelId}] {$hotelName} ... ", false);
 
         try {
