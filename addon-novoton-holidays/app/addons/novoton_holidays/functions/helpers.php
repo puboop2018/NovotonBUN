@@ -67,10 +67,11 @@ function fn_novoton_holidays_parse_countries(mixed $selected_countries = null): 
  */
 function fn_novoton_holidays_is_debug(): bool
 {
-    // Debug via URL parameter requires authenticated admin session
+    // Debug via URL parameter requires authenticated admin session.
+    // Read $_SESSION directly — Tygh::$app['session'] is the Session service
+    // OBJECT (toStringMap on it yields [], which silently disabled this check).
     if (!empty($_REQUEST['debug_novoton'])) {
-        $session = TypeCoerce::toStringMap(\Tygh\Tygh::$app['session'] ?? null);
-        $auth = TypeCoerce::toStringMap($session['auth'] ?? null);
+        $auth = TypeCoerce::toStringMap($_SESSION['auth'] ?? null);
         if (!empty($auth['user_id']) && ($auth['area'] ?? '') === 'A') {
             return true;
         }
@@ -98,18 +99,19 @@ function fn_novoton_holidays_is_debug(): bool
  */
 function fn_novoton_holidays_add_to_session_cart(array $product): void
 {
-    // Narrow the session array once so the reference binds below see a
-    // typed array shape (CS-Cart's reference-based cart flow needs live
-    // refs into \Tygh::\$app['session'] for `fn_add_product_to_cart` and
-    // friends to persist their mutations).
-    /** @var array<string, mixed> $session */
-    $session = is_array(\Tygh\Tygh::$app['session'] ?? null) ? \Tygh\Tygh::$app['session'] : [];
-    $session['cart'] = is_array($session['cart'] ?? null) ? $session['cart'] : [];
-    $session['auth'] = is_array($session['auth'] ?? null) ? $session['auth'] : [];
-    \Tygh\Tygh::$app['session'] = $session;
-
-    $cart = &\Tygh\Tygh::$app['session']['cart'];
-    $auth = &\Tygh\Tygh::$app['session']['auth'];
+    // By-ref binds into $_SESSION — the authoritative session store (see
+    // travel_core SessionAccessor). Never assign to \Tygh::$app['session']:
+    // it is a frozen Pimple service and offsetSet throws
+    // FrozenServiceException. Narrowing happens THROUGH the references, so
+    // the initialised arrays land in the live session.
+    $cart = &$_SESSION['cart'];
+    $auth = &$_SESSION['auth'];
+    if (!is_array($cart)) {
+        $cart = [];
+    }
+    if (!is_array($auth)) {
+        $auth = [];
+    }
 
     fn_add_product_to_cart($product, $cart, $auth);
     $userId = is_numeric($auth['user_id'] ?? null) ? (int) $auth['user_id'] : 0;

@@ -628,18 +628,19 @@ use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
     // Set the price directly (override product price)
     $product['price'] = $total_price;
 
-    // Add to cart
-    // Narrow the session array once so the reference binds below see a
-    // typed array shape (CS-Cart's reference-based cart flow needs live
-    // refs into Tygh::$app['session'] for fn_save_cart_content /
-    // fn_calculate_cart_content to persist their mutations).
-    $session = is_array(Tygh::$app['session'] ?? null) ? Tygh::$app['session'] : [];
-    $session['cart'] = is_array($session['cart'] ?? null) ? $session['cart'] : [];
-    $session['auth'] = is_array($session['auth'] ?? null) ? $session['auth'] : [];
-    Tygh::$app['session'] = $session;
-
-    $cart = &Tygh::$app['session']['cart'];
-    $auth = &Tygh::$app['session']['auth'];
+    // Add to cart — by-ref binds into $_SESSION, the authoritative session
+    // store (see travel_core SessionAccessor). Never assign to
+    // Tygh::$app['session']: it is a frozen Pimple service and offsetSet
+    // throws FrozenServiceException. Narrowing happens THROUGH the
+    // references, so the initialised arrays land in the live session.
+    $cart = &$_SESSION['cart'];
+    $auth = &$_SESSION['auth'];
+    if (!is_array($cart)) {
+        $cart = [];
+    }
+    if (!is_array($auth)) {
+        $auth = [];
+    }
 
     // Initialize cart if needed
     if (empty($cart)) {
@@ -688,16 +689,18 @@ use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
             $children_ages,
         ]));
         // Ensure the cache bag is an array before writing the keyed entry
-        // (narrows the session offset for the nested write below).
-        Tygh::$app['session']['novoton_price_cache'] = is_array(Tygh::$app['session']['novoton_price_cache'] ?? null)
-            ? Tygh::$app['session']['novoton_price_cache']
-            : [];
-        Tygh::$app['session']['novoton_price_cache'][$cache_key] = [
+        // ($_SESSION is the authoritative session store — see SessionAccessor).
+        $price_cache = &$_SESSION['novoton_price_cache'];
+        if (!is_array($price_cache)) {
+            $price_cache = [];
+        }
+        $price_cache[$cache_key] = [
             'api_price'     => $api_price,
             'api_price_raw' => $base_price,
             'form_price'    => $total_price,
             'timestamp'     => time(),
         ];
+        unset($price_cache);
     }
 
     fn_set_notification('N', __('notice'), __('novoton_holidays.added_to_cart'));
