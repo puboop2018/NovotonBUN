@@ -66,7 +66,7 @@ if ($mode === 'manage') {
     ];
 
     $view = Tygh::$app['view'];
-    if ($view instanceof \Smarty) {
+    if (is_object($view) && method_exists($view, 'assign')) {
         $view->assign('cron_jobs', $cron_jobs);
         $view->assign('cron_key', $cron_key);
         $view->assign('base_url', $base_url);

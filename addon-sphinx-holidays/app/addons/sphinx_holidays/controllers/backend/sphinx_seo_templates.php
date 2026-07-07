@@ -138,7 +138,7 @@ if ($mode === 'manage' || $mode === '') {
     }
 
     $view = Tygh::$app['view'];
-    if ($view instanceof \Smarty) {
+    if (is_object($view) && method_exists($view, 'assign')) {
         $view->assign('seo_values', $values);
     }
 }

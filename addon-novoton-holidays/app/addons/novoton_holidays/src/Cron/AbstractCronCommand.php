@@ -83,11 +83,24 @@ abstract class AbstractCronCommand extends BaseCommand
     }
 
     /**
+     * Email the admin report for this run, carrying the full collected run
+     * log (the same lines the cron prints) as the email's Details section.
+     * Marks the logger so the controller's completion email is not sent a
+     * second time for the same run.
+     *
      * @param array<string, mixed> $stats
+     * @param string $context Country/scope shown in the email's Country row
+     *                        (empty = "ALL")
      */
     protected function sendReport(string $type, array $stats, string $context = ''): void
     {
-        fn_novoton_holidays_send_import_report_email([], $type, $stats, $context);
+        $detailLog = '';
+        if ($this->logger !== null) {
+            $detailLog = implode("\n", $this->logger->getMessages());
+            $this->logger->markEmailSent();
+        }
+
+        fn_novoton_holidays_send_import_report_email([], $type, $stats, $context, $detailLog);
     }
 
     /**

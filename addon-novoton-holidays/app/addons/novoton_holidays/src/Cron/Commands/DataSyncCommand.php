@@ -87,9 +87,9 @@ class DataSyncCommand extends AbstractCronCommand
         $this->logToSyncTable('resort_list', $totalAdded + $totalUpdated, $totalErrors);
         $this->sendReport('resort_list', [
             'added' => $totalAdded, 'updated' => $totalUpdated,
-            'countries' => count($countries),
+            'errors' => $totalErrors,
             'duration' => $this->getDuration() . 's',
-        ]);
+        ], implode(', ', $countries));
 
         return ['success' => $totalErrors === 0, 'stats' => ['added' => $totalAdded, 'updated' => $totalUpdated]];
     }

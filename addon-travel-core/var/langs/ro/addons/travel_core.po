@@ -623,3 +623,23 @@ msgstr "Înainte de Tab-uri"
 msgctxt "SettingsVariants::travel_core::booking_form_position::after_description"
 msgid "After Description"
 msgstr "După Descriere"
+
+msgctxt "SettingsOptions::travel_core::checkout_guard_header"
+msgid "Checkout price guard (all providers)"
+msgstr "Verificare preț la checkout (toți furnizorii)"
+
+msgctxt "SettingsOptions::travel_core::checkout_alert_percent"
+msgid "Alert admins when the customer would overpay by more than (%)"
+msgstr "Alertează adminii când clientul ar plăti în plus peste (%)"
+
+msgctxt "SettingsOptions::travel_core::checkout_alert_floor"
+msgid "…and by at least (EUR) — stops percent-only false alarms on cheap items"
+msgstr "…și cu cel puțin (EUR) — evită alarmele false procentuale la prețuri mici"
+
+msgctxt "SettingsOptions::travel_core::checkout_big_overage"
+msgid "Always alert when the overpayment exceeds (EUR), regardless of percent"
+msgstr "Alertează întotdeauna când suprapreț depășește (EUR), indiferent de procent"
+
+msgctxt "SettingsOptions::travel_core::checkout_absorb_increase"
+msgid "Absorb price increases up to (EUR) — customer pays the shown price; 0 = always ask the customer to re-confirm"
+msgstr "Absoarbe creșteri de preț până la (EUR) — clientul plătește prețul afișat; 0 = cere mereu reconfirmare"

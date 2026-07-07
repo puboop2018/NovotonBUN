@@ -140,7 +140,7 @@ if ($mode === 'manage') {
     }
 
     $view = Tygh::$app['view'];
-    if ($view instanceof \Smarty) {
+    if (is_object($view) && method_exists($view, 'assign')) {
         $view->assign('color_groups', $color_groups);
     }
 }

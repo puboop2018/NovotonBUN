@@ -802,11 +802,18 @@
 <p style="color: #c00;">There were errors during this job. Check the logs for details.</p>
 {% endif %}
 
+{% if detail_log %}
+<h3>Details</h3>
+<pre style="background: #f5f7fa; border: 1px solid #ddd; border-radius: 4px; padding: 12px; font-size: 12px; line-height: 1.5; white-space: pre-wrap; word-wrap: break-word;">{{ detail_log }}</pre>
+{% endif %}
+
 {% if results_count > 0 %}
 <p>See attached CSV file for detailed results ({{ results_count }} records).</p>
 {% endif %}
 
-<p style="color: #666; font-size: 12px;">Reports stored in: var/files/1/novoton_reports/</p>
+{% if report_file %}
+<p style="color: #666; font-size: 12px;">Report stored in: {{ report_dir }}{{ report_file }}</p>
+{% endif %}
 
 {{ snippet("footer") }}]]></default_template>
                 <addon><![CDATA[novoton_holidays]]></addon>
