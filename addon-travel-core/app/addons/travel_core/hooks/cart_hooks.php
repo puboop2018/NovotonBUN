@@ -121,7 +121,7 @@ function fn_travel_core_dispatch_before_display(): void
         // no mount div and no React bundles — SEO data below stays unaffected.
         if ($productCode !== '' && $hotelSeoData !== null && TravelCoreConfig::isShowBookingForm()) {
             $view = \Tygh\Tygh::$app['view'];
-            if ($view instanceof \Smarty) {
+            if (is_object($view) && method_exists($view, 'assign')) {
                 $view->assign('travel_booking_product_id', $productId);
                 $view->assign('travel_booking_product_code', $productCode);
 
@@ -228,7 +228,7 @@ function _travel_core_prepare_hotel_seo_data(int $productId): void
     // runs BEFORE template rendering starts (unlike gather_additional_product_data_post
     // which runs DURING rendering and causes the Data.php:265 crash).
     $view = \Tygh\Tygh::$app['view'];
-    if ($view instanceof \Smarty) {
+    if (is_object($view) && method_exists($view, 'assign')) {
         $view->assign('travel_hotel_schema_json', json_encode($schema, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
         $view->assign('travel_og_title', $productDesc['page_title'] ?? $hotel->name);
         $view->assign('travel_og_description', $productDesc['meta_description'] ?? '');
@@ -344,7 +344,7 @@ function _travel_core_render_debug(string $dispatch): void
     // ── Render debug output as HTML comment + visible panel ──
     $view = \Tygh\Tygh::$app['view'];
     $debugJson = json_encode($debug, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-    if ($view instanceof \Smarty) {
+    if (is_object($view) && method_exists($view, 'assign')) {
         $view->assign('travel_debug_output', $debugJson);
         $view->assign('travel_debug_enabled', true);
     }

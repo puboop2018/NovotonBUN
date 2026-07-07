@@ -77,4 +77,30 @@ final class AddonSettingsTest extends TestCase
             }
         }
     }
+
+    /**
+     * Every setting (headers included, selectbox variants excluded — those use
+     * SettingsVariants) must have a SettingsOptions label in the EN .po.
+     * Regression: the checkout-guard block shipped labels only as inline
+     * addon.xml vars under the wrong naming scheme and rendered label-less.
+     */
+    public function testEverySettingHasAPoLabel(): void
+    {
+        $addon = self::settingsXml('addon-travel-core/app/addons/travel_core');
+        $po = file_get_contents(
+            dirname(__DIR__, 7) . '/addon-travel-core/var/langs/en/addons/travel_core.po',
+        );
+        self::assertIsString($po);
+
+        $unlabeled = [];
+        // Only items directly under <items> — variant ids live under <variants>
+        foreach ($addon->xpath('//settings//items/item[@id]') ?: [] as $item) {
+            $id = (string) $item['id'];
+            if (!str_contains($po, "SettingsOptions::travel_core::{$id}\"")) {
+                $unlabeled[] = $id;
+            }
+        }
+
+        self::assertSame([], $unlabeled, 'settings without a SettingsOptions label in the EN .po');
+    }
 }

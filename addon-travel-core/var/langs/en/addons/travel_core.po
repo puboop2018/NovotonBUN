@@ -623,3 +623,23 @@ msgstr "Before Tabs"
 msgctxt "SettingsVariants::travel_core::booking_form_position::after_description"
 msgid "After Description"
 msgstr "After Description"
+
+msgctxt "SettingsOptions::travel_core::checkout_guard_header"
+msgid "Checkout price guard (all providers)"
+msgstr "Checkout price guard (all providers)"
+
+msgctxt "SettingsOptions::travel_core::checkout_alert_percent"
+msgid "Alert admins when the customer would overpay by more than (%)"
+msgstr "Alert admins when the customer would overpay by more than (%)"
+
+msgctxt "SettingsOptions::travel_core::checkout_alert_floor"
+msgid "…and by at least (EUR) — stops percent-only false alarms on cheap items"
+msgstr "…and by at least (EUR) — stops percent-only false alarms on cheap items"
+
+msgctxt "SettingsOptions::travel_core::checkout_big_overage"
+msgid "Always alert when the overpayment exceeds (EUR), regardless of percent"
+msgstr "Always alert when the overpayment exceeds (EUR), regardless of percent"
+
+msgctxt "SettingsOptions::travel_core::checkout_absorb_increase"
+msgid "Absorb price increases up to (EUR) — customer pays the shown price; 0 = always ask the customer to re-confirm"
+msgstr "Absorb price increases up to (EUR) — customer pays the shown price; 0 = always ask the customer to re-confirm"
