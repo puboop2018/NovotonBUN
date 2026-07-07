@@ -27,6 +27,12 @@ Deploy from **merged main** including the 2026-07 fixes — older code recreates
 the removed `RESTRICT` foreign keys (booked hotels become undeletable) and
 lacks the booking-atomicity and sync-performance fixes.
 
+⚠️ **Always Clear cache after deploying** (Admin → Settings → Clear cache, or
+delete `var/cache/templates/`): production mode does not recompile templates
+when files change (`compile_check` off), so stale compiled templates keep
+executing — old template bugs (e.g. the admin booking view's
+`{capture}` crash) resurface even though the deployed files are fixed.
+
 ## 3. Install order (strict)
 
 Install from **Admin → Add-ons → Manage add-ons**, in this order:
