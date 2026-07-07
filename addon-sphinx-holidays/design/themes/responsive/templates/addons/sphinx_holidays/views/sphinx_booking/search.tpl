@@ -19,7 +19,7 @@
         <div class="travel-hotel-header sphinx-hotel-header">
             <h1 class="sphinx-hotel-header-name">
                 {$sphinx_hotel_name|escape:html}
-                {if $sphinx_hotel_stars}<span class="travel-hotel-stars sphinx-stars">{"★"|str_repeat:$sphinx_hotel_stars}</span>{/if}
+                {if $sphinx_hotel_stars}<span class="travel-hotel-stars sphinx-stars" role="img" aria-label="{__("sphinx_holidays.stars_rating", ["[rating]" => $sphinx_hotel_stars])|escape:html}">{"★"|str_repeat:$sphinx_hotel_stars}</span>{/if}
             </h1>
             {if $sphinx_hotel_location}
                 <p class="travel-hotel-location sphinx-hotel-header-location">{$sphinx_hotel_location|escape:html}</p>
@@ -32,33 +32,34 @@
         {$booking_engine_html nofilter}
     </div>
 
-    {* Loading skeleton — shown while JS polls for results *}
+    {* Loading skeleton — shown while JS polls for results. Styled by
+       travel_core's search-results.css; display:none is JS-toggled state. *}
     <div class="sphinx-loading-skeleton" style="display: none;">
-        <div class="sphinx-loading-message">
-            <div class="sphinx-spinner"></div>
+        <div class="travel-loading-message sphinx-loading-message">
+            <div class="travel-spinner sphinx-spinner"></div>
             <span>{__("sphinx_holidays.searching_please_wait")|default:"Searching for live offers…"}</span>
             {if $sphinx_from_price}
-                <div class="sphinx-from-price" style="margin-top: 8px; font-size: 15px; color: #003580;">
+                <div class="travel-from-price sphinx-from-price">
                     {__("sphinx_holidays.from")|default:"from"}
                     <strong>{$sphinx_from_price.price|number_format:2:",":"."} {$sphinx_from_price.currency|default:'EUR'|escape:html}</strong>
                 </div>
             {/if}
         </div>
         {foreach from=[1,2,3] item=i}
-            <div class="travel-offer-card sphinx-offer-card sphinx-skeleton-card">
+            <div class="travel-offer-card sphinx-offer-card travel-skeleton-card sphinx-skeleton-card" aria-hidden="true">
                 <div class="sphinx-offer-hotel">
-                    <div class="sphinx-skeleton-img"></div>
+                    <div class="travel-skeleton-img sphinx-skeleton-img"></div>
                     <div class="sphinx-offer-hotel-info">
-                        <div class="sphinx-skeleton-line sphinx-skeleton-title"></div>
-                        <div class="sphinx-skeleton-line sphinx-skeleton-short"></div>
+                        <div class="travel-skeleton-line sphinx-skeleton-line travel-skeleton-title sphinx-skeleton-title"></div>
+                        <div class="travel-skeleton-line sphinx-skeleton-line travel-skeleton-short sphinx-skeleton-short"></div>
                     </div>
                 </div>
                 <div class="sphinx-offer-details">
-                    <div class="sphinx-skeleton-line"></div>
-                    <div class="sphinx-skeleton-line sphinx-skeleton-short"></div>
+                    <div class="travel-skeleton-line sphinx-skeleton-line"></div>
+                    <div class="travel-skeleton-line sphinx-skeleton-line travel-skeleton-short sphinx-skeleton-short"></div>
                 </div>
                 <div class="sphinx-offer-price-action">
-                    <div class="sphinx-skeleton-line sphinx-skeleton-price"></div>
+                    <div class="travel-skeleton-line sphinx-skeleton-line travel-skeleton-price sphinx-skeleton-price"></div>
                 </div>
             </div>
         {/foreach}
@@ -82,12 +83,12 @@
                 {* Hotel info *}
                 <div class="travel-offer-hotel sphinx-offer-hotel">
                     {if $result.hotel_image}
-                        <img src="{$result.hotel_image}" alt="{$result.hotel_name|escape:html}" class="travel-offer-image sphinx-offer-image" loading="lazy">
+                        <img src="{$result.hotel_image}" alt="{$result.hotel_name|escape:html}" class="travel-offer-image sphinx-offer-image" width="110" height="80" loading="lazy">
                     {/if}
                     <div class="sphinx-offer-hotel-info">
                         <h3 class="travel-offer-hotel-name sphinx-offer-hotel-name">{$result.hotel_name|escape:html}</h3>
                         {if $result.star_rating}
-                            <span class="travel-hotel-stars sphinx-stars">{"★"|str_repeat:$result.star_rating}</span>
+                            <span class="travel-hotel-stars sphinx-stars" role="img" aria-label="{__("sphinx_holidays.stars_rating", ["[rating]" => $result.star_rating])|escape:html}">{"★"|str_repeat:$result.star_rating}</span>
                         {/if}
                         {if $result.destination}
                             <span class="travel-offer-location sphinx-offer-location">{$result.destination|escape:html}</span>
@@ -139,11 +140,11 @@
        Visible immediately only when a server-side search already finished empty
        (completed/error); hidden while pending/idle or when offers exist. *}
     {assign var="_sx_show_empty" value=(!$sphinx_search_results && ($sphinx_search_status == 'completed' || $sphinx_search_status == 'error'))}
-    <div class="sphinx-no-results" id="sphinx-no-results"{if !$_sx_show_empty} style="display: none;"{/if}
+    <div class="travel-no-results sphinx-no-results" id="sphinx-no-results"{if !$_sx_show_empty} style="display: none;"{/if}
          data-alt-heading="{__("sphinx_holidays.try_nearby_dates")|default:"Try nearby dates:"|escape:html}"
          data-alt-from="{__("sphinx_holidays.alt_from")|default:"from"|escape:html}">
         <p>{__("sphinx_holidays.no_results")|default:"No availability for the selected dates. Please try different dates."}</p>
-        <div id="sphinx-alt-dates" style="display: none; margin-top: 12px;"></div>
+        <div id="sphinx-alt-dates" class="travel-alt-dates" style="display: none;"></div>
     </div>
 
 </div>
@@ -168,7 +169,8 @@ window.__sphinxConfig = {
         instantConfirmation: "{__("sphinx_holidays.instant_confirmation")|default:"Instant confirmation"|escape:javascript}",
         includesTaxes: "{__("sphinx_holidays.includes_taxes")|default:"Includes taxes and commissions"|escape:javascript}",
         bookNow: "{__("sphinx_holidays.book_now")|default:"Book now"|escape:javascript}",
-        nights: "{__("travel_core.nights")|default:"nights"|escape:javascript}"
+        nights: "{__("travel_core.nights")|default:"nights"|escape:javascript}",
+        starsRating: "{__("sphinx_holidays.stars_rating", ["[rating]" => "%s"])|default:"%s-star rating"|escape:javascript}"
     }
 };
 {literal}
@@ -233,17 +235,21 @@ window.__sphinxConfig = {
               (searchParams.nights > 0 ? ' (' + searchParams.nights + ' ' + (labels.nights || 'nights') + ')' : '')
             : '';
 
+        var starsLabel = stars
+            ? (labels.starsRating || '%s-star rating').replace('%s', String(parseInt(result.star_rating, 10)))
+            : '';
+
         var card = document.createElement('div');
         card.className = 'travel-offer-card sphinx-offer-card';
         card.setAttribute('data-offer-id', result.offer_id || '');
         card.innerHTML =
             '<div class="travel-offer-hotel sphinx-offer-hotel">' +
                 (result.hotel_image
-                    ? '<img src="' + result.hotel_image + '" alt="" class="travel-offer-image sphinx-offer-image" loading="lazy">'
+                    ? '<img src="' + result.hotel_image + '" alt="" class="travel-offer-image sphinx-offer-image" width="110" height="80" loading="lazy">'
                     : '') +
                 '<div class="sphinx-offer-hotel-info">' +
                     '<h3 class="travel-offer-hotel-name sphinx-offer-hotel-name"></h3>' +
-                    (stars ? '<span class="travel-hotel-stars sphinx-stars">' + stars + '</span>' : '') +
+                    (stars ? '<span class="travel-hotel-stars sphinx-stars" role="img" aria-label="' + starsLabel + '">' + stars + '</span>' : '') +
                     (result.destination ? '<span class="travel-offer-location sphinx-offer-location"></span>' : '') +
                 '</div>' +
             '</div>' +
@@ -304,7 +310,7 @@ window.__sphinxConfig = {
         if (!box || !noResults || !lastAlternatives.length) return;
         var heading = noResults.getAttribute('data-alt-heading') || 'Try nearby dates:';
         var fromLabel = noResults.getAttribute('data-alt-from') || 'from';
-        var html = '<strong>' + heading + '</strong><div style="margin-top:8px; display:flex; flex-wrap:wrap; gap:8px;">';
+        var html = '<strong>' + heading + '</strong><div class="travel-alt-date-list">';
         for (var i = 0; i < lastAlternatives.length; i++) {
             var alt = lastAlternatives[i];
             if (!alt || !alt.check_in || !alt.check_out) continue;
@@ -315,7 +321,7 @@ window.__sphinxConfig = {
             if (alt.price > 0) {
                 label += ' · ' + fromLabel + ' ' + Number(alt.price).toFixed(0) + ' ' + (alt.currency === 'EUR' ? '€' : (alt.currency || ''));
             }
-            html += '<a class="ty-btn" href="' + link.toString() + '" style="padding:6px 12px;">' + label + '</a>';
+            html += '<a class="ty-btn travel-alt-date-chip" href="' + link.toString() + '">' + label + '</a>';
         }
         html += '</div>';
         box.innerHTML = html;
@@ -383,49 +389,5 @@ window.__sphinxConfig = {
 {/literal}
 </script>
 
-<style>
-.sphinx-loading-skeleton .sphinx-loading-message {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 16px;
-    background: #f0f4f8;
-    border-radius: 6px;
-    margin-bottom: 20px;
-    color: #555;
-    font-size: 14px;
-}
-.sphinx-spinner {
-    width: 20px;
-    height: 20px;
-    border: 3px solid #cfd8dc;
-    border-top-color: #003580;
-    border-radius: 50%;
-    animation: sphinx-spin 0.8s linear infinite;
-}
-@keyframes sphinx-spin { to { transform: rotate(360deg); } }
-.sphinx-skeleton-card { opacity: 0.6; }
-.sphinx-skeleton-img {
-    width: 120px;
-    height: 80px;
-    background: linear-gradient(90deg, #eee 0%, #f5f5f5 50%, #eee 100%);
-    background-size: 200% 100%;
-    animation: sphinx-shimmer 1.5s infinite;
-    border-radius: 4px;
-}
-.sphinx-skeleton-line {
-    height: 14px;
-    background: linear-gradient(90deg, #eee 0%, #f5f5f5 50%, #eee 100%);
-    background-size: 200% 100%;
-    animation: sphinx-shimmer 1.5s infinite;
-    border-radius: 3px;
-    margin: 6px 0;
-}
-.sphinx-skeleton-title { width: 70%; height: 18px; }
-.sphinx-skeleton-short { width: 40%; }
-.sphinx-skeleton-price { width: 100px; height: 24px; }
-@keyframes sphinx-shimmer {
-    0% { background-position: -200% 0; }
-    100% { background-position: 200% 0; }
-}
-</style>
+{* Loading/skeleton styles live in travel_core's search-results.css
+   (travel-skeleton-*, travel-spinner, travel-loading-message). *}

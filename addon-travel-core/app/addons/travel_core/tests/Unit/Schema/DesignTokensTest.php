@@ -35,10 +35,11 @@ final class DesignTokensTest extends TestCase
         return $content;
     }
 
-    /** Strip // line comments so token names mentioned in prose don't count. */
-    private static function stripLineComments(string $less): string
+    /** Strip // and slash-star comments so token names in prose don't count. */
+    private static function stripLineComments(string $css): string
     {
-        return (string) preg_replace('~//[^\n]*~', '', $less);
+        $css = (string) preg_replace('~/\*.*?\*/~s', '', $css);
+        return (string) preg_replace('~//[^\n]*~', '', $css);
     }
 
     /** @return list<string> custom properties DECLARED (e.g. --nvt-primary) */
@@ -51,7 +52,7 @@ final class DesignTokensTest extends TestCase
     /** @return list<string> custom properties CONSUMED via var(--nvt-…) */
     private static function consumedTokens(string $css): array
     {
-        preg_match_all('~var\(\s*(--nvt-[a-z0-9-]+)~', $css, $m);
+        preg_match_all('~var\(\s*(--nvt-[a-z0-9-]+)~', self::stripLineComments($css), $m);
         return array_values(array_unique($m[1]));
     }
 

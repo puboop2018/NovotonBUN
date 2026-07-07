@@ -100,6 +100,10 @@
 
 // Status  (from theme: @in_stock, @out_of_stock, @links)
 @novoton-success:           @in_stock;
+// Solid success surface for WHITE text (badges). Hardcoded, NOT derived from
+// @in_stock: stock theme greens are too light — white text on them fails
+// WCAG AA (4.5:1). #1e7e34 vs #fff ≈ 5.1:1.
+@novoton-success-strong:    #1e7e34;
 @novoton-warning:           #f0ad4e;   // No theme equivalent — keep hardcoded
 @novoton-danger:            @out_of_stock;
 @novoton-info:              @links;
@@ -187,6 +191,7 @@
     --nvt-success:          ~"@{novoton-success}";
     --nvt-success-light:    ~"@{novoton-success-light}";
     --nvt-success-dark:     ~"@{novoton-success-dark}";
+    --nvt-success-strong:   ~"@{novoton-success-strong}";
     --nvt-warning:          ~"@{novoton-warning}";
     --nvt-warning-light:    ~"@{novoton-warning-light}";
     --nvt-warning-dark:     ~"@{novoton-warning-dark}";
