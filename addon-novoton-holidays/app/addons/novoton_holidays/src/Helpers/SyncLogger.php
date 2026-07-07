@@ -73,6 +73,14 @@ class SyncLogger implements SyncLoggerInterface
     private array $messages = [];
 
     /**
+     * Whether a report email was already sent for this run — set by
+     * sendEmailReport() (and by commands that email through
+     * fn_novoton_holidays_send_import_report_email directly, via
+     * markEmailSent()) so complete() never sends a duplicate.
+     */
+    private bool $emailSent = false;
+
+    /**
      * Statistics for the current sync
      * @var array<string, mixed>
      */
@@ -332,6 +340,10 @@ class SyncLogger implements SyncLoggerInterface
     /**
      * Send email report
      *
+     * Includes the full collected run log (every output() line — the same
+     * text the cron prints to CLI/browser) so the email carries the
+     * per-item detail, not just aggregate counters.
+     *
      * @param array<string, mixed> $results Detailed results for CSV attachment (optional)
      * @param string $country Country or countries
      */
@@ -341,7 +353,33 @@ class SyncLogger implements SyncLoggerInterface
             'duration' => $this->getFormattedDuration(),
         ]);
 
-        return fn_novoton_holidays_send_import_report_email($results, $this->syncType, $summary, $country);
+        $this->emailSent = true;
+
+        return fn_novoton_holidays_send_import_report_email(
+            $results,
+            $this->syncType,
+            $summary,
+            $country,
+            implode("\n", $this->messages),
+        );
+    }
+
+    /**
+     * Record that a report email for this run was sent outside this logger
+     * (commands calling fn_novoton_holidays_send_import_report_email
+     * directly) so complete() does not send a duplicate.
+     */
+    public function markEmailSent(): void
+    {
+        $this->emailSent = true;
+    }
+
+    /**
+     * Whether a report email was already sent for this run.
+     */
+    public function isEmailSent(): bool
+    {
+        return $this->emailSent;
     }
 
     /**
@@ -373,7 +411,7 @@ class SyncLogger implements SyncLoggerInterface
         $logId = $this->logToDatabase($status, $extra);
 
         $emailSent = false;
-        if ($sendEmail) {
+        if ($sendEmail && !$this->emailSent) {
             $emailSent = $this->sendEmailReport([], $country);
         }
 

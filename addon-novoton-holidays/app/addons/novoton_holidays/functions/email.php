@@ -90,13 +90,16 @@ function fn_novoton_holidays_generate_import_csv_report($results, $import_type =
  * Uses the 'novoton_holidays_import_report' email template registered in addon.xml.
  * Works for all cron job types — hotel_list, hotel_info, room_price, etc.
  *
- * @param array<string, mixed>  $summary     Summary statistics: added, updated, skipped, errors, duration, plus any extra keys
- * @param string $import_type Type identifier: hotel_list, hotel_info, room_price, offers_update, add_products, facilities, resinfo, manual
- * @param string $country     Country code or comma-separated list
  * @param array<string, mixed>  $results     Optional detailed results for CSV attachment (empty = no attachment)
+ * @param string $import_type Type identifier: hotel_list, hotel_info, room_price, offers_update, add_products, facilities, resinfo, manual
+ * @param array<string, mixed>  $summary     Summary statistics: added, updated, skipped, errors, duration, plus any extra keys
+ * @param string $country     Country code or comma-separated list (empty = shown as ALL)
+ * @param string $detail_log  Full plain-text run log (the same lines the cron
+ *                            prints) — rendered in the email's Details section
+ *                            and persisted as the per-run report file
  * @return bool Success
  */
-function fn_novoton_holidays_send_import_report_email($results, $import_type, $summary, $country = ''): bool
+function fn_novoton_holidays_send_import_report_email($results, $import_type, $summary, $country = '', $detail_log = ''): bool
 {
     // Respect the admin setting to enable/disable cron report email notifications
     if (!\Tygh\Addons\NovotonHolidays\Services\ConfigProvider::isCronReportEmailEnabled()) {
@@ -137,19 +140,57 @@ function fn_novoton_holidays_send_import_report_email($results, $import_type, $s
 
     $summary = TypeCoerce::toStringMap($summary);
     $results = TypeCoerce::toRowList($results);
+    $detail_log = TypeCoerce::toString($detail_log);
+    $country_label = TypeCoerce::toString($country) ?: 'ALL';
+    $date_label = date('d.m.Y H:i T');
+    $summary_data = [
+        'added'    => $pif::toInt($summary['added'] ?? 0),
+        'updated'  => $pif::toInt($summary['updated'] ?? 0),
+        'skipped'  => $pif::toInt($summary['skipped'] ?? 0),
+        'errors'   => $pif::toInt($summary['errors'] ?? 0),
+        'duration' => $pif::toScalar($summary['duration'] ?? 'N/A'),
+    ];
+
+    $report_dir = TypeCoerce::toString(fn_get_files_dir_path()) . 'novoton_reports/';
+    if (!is_dir($report_dir)) {
+        fn_mkdir($report_dir);
+    }
+    // Directory as shown to the admin (relative to the store root)
+    $report_dir_label = str_replace(
+        rtrim(TypeCoerce::toString(Registry::get('config.dir.root')), '/') . '/',
+        '',
+        $report_dir,
+    );
+
+    // Persist the full run log as the per-run report file — this is what the
+    // email footer points to, so it must exist for EVERY reported run.
+    $report_file = '';
+    if ($detail_log !== '') {
+        $report_file = 'novoton_' . $import_type . '_report_' . date('Y-m-d_H-i-s') . '.txt';
+        $report_content = "Novoton Holidays - {$type_label}\n"
+            . "Country: {$country_label}\n"
+            . "Date: {$date_label}\n"
+            . "Duration: {$summary_data['duration']}\n"
+            . "Added: {$summary_data['added']}, Updated: {$summary_data['updated']}, "
+            . "Skipped: {$summary_data['skipped']}, Errors: {$summary_data['errors']}\n"
+            . "\n"
+            . $detail_log . "\n";
+        if (file_put_contents($report_dir . $report_file, $report_content) === false) {
+            fn_log_event('general', 'runtime', 'Failed to write cron report file: ' . $report_dir . $report_file);
+            $report_file = '';
+        }
+    }
+
     // Prepare data for email template
     $email_data = [
         'import_type_label' => $type_label,
-        'country' => $country ?: 'ALL',
-        'date' => date('d.m.Y H:i T'),
-        'summary' => [
-            'added'    => $pif::toInt($summary['added'] ?? 0),
-            'updated'  => $pif::toInt($summary['updated'] ?? 0),
-            'skipped'  => $pif::toInt($summary['skipped'] ?? 0),
-            'errors'   => $pif::toInt($summary['errors'] ?? 0),
-            'duration' => $pif::toScalar($summary['duration'] ?? 'N/A'),
-        ],
+        'country' => $country_label,
+        'date' => $date_label,
+        'summary' => $summary_data,
         'results_count' => count($results),
+        'detail_log' => $detail_log,
+        'report_dir' => $report_dir_label,
+        'report_file' => $report_file,
     ];
 
     // Generate CSV attachment only if there are detailed results
@@ -158,20 +199,15 @@ function fn_novoton_holidays_send_import_report_email($results, $import_type, $s
         $csv_content = fn_novoton_holidays_generate_import_csv_report($results, $import_type, $summary);
 
         $filename = 'novoton_' . $import_type . '_report_' . date('Y-m-d_H-i-s') . '.csv';
-        $temp_path = TypeCoerce::toString(fn_get_files_dir_path()) . 'novoton_reports/';
 
-        if (!is_dir($temp_path)) {
-            fn_mkdir($temp_path);
-        }
-
-        $file_path = $temp_path . $filename;
-        file_put_contents($file_path, $csv_content);
-
-        if (file_exists($file_path)) {
+        $file_path = $report_dir . $filename;
+        if (file_put_contents($file_path, $csv_content) !== false) {
             $attachments[] = [
                 'path' => $file_path,
                 'name' => $filename,
             ];
+        } else {
+            fn_log_event('general', 'runtime', 'Failed to write cron report CSV: ' . $file_path);
         }
     }
 
@@ -334,7 +370,8 @@ function fn_novoton_holidays_cleanup_old_reports($dir, $days = 7): void
 
     $cutoff = time() - ($days * 86400);
 
-    foreach (glob($dir . '*.csv') ?: [] as $file) {
+    $old_reports = array_merge(glob($dir . '*.csv') ?: [], glob($dir . '*.txt') ?: []);
+    foreach ($old_reports as $file) {
         if (filemtime($file) < $cutoff) {
             unlink($file);
         }
