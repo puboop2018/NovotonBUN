@@ -643,3 +643,27 @@ msgstr "Alertează întotdeauna când suprapreț depășește (EUR), indiferent 
 msgctxt "SettingsOptions::travel_core::checkout_absorb_increase"
 msgid "Absorb price increases up to (EUR) — customer pays the shown price; 0 = always ask the customer to re-confirm"
 msgstr "Absoarbe creșteri de preț până la (EUR) — clientul plătește prețul afișat; 0 = cere mereu reconfirmare"
+
+msgctxt "Languages::theme_editor.travel_primary_color"
+msgid "Travel: Primary color"
+msgstr "Travel: Culoare primară"
+
+msgctxt "Languages::theme_editor.travel_accent_color"
+msgid "Travel: Accent color"
+msgstr "Travel: Culoare accent"
+
+msgctxt "Languages::theme_editor.travel_search_btn_color"
+msgid "Travel: Search button"
+msgstr "Travel: Buton căutare"
+
+msgctxt "Languages::theme_editor.travel_search_btn_hover_color"
+msgid "Travel: Search button (hover)"
+msgstr "Travel: Buton căutare (hover)"
+
+msgctxt "Languages::theme_editor.travel_cal_cheapest_color"
+msgid "Travel: Calendar cheapest price text"
+msgstr "Travel: Text preț minim calendar"
+
+msgctxt "Languages::theme_editor.travel_cal_price_color"
+msgid "Travel: Calendar price text"
+msgstr "Travel: Text preț calendar"

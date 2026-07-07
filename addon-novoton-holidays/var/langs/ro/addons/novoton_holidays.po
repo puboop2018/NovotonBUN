@@ -1568,7 +1568,6 @@ msgctxt "Languages::novoton_holidays.menu.test_alternative_rs"
 msgid "Test alternative_RS"
 msgstr "Test alternative_RS"
 
-
 msgctxt "Languages::novoton_holidays.dob_placeholder"
 msgid "DD/MM/YYYY"
 msgstr "ZZ/LL/AAAA"
@@ -2080,34 +2079,6 @@ msgstr "Important"
 msgctxt "Languages::novoton_holidays.remarks"
 msgid "Remarks"
 msgstr "Observații"
-
-msgctxt "Languages::theme_editor.novoton_primary_color"
-msgid "Novoton: Primary color"
-msgstr "Novoton: Culoare primară"
-
-msgctxt "Languages::theme_editor.novoton_accent_color"
-msgid "Novoton: Accent color"
-msgstr "Novoton: Culoare accent"
-
-msgctxt "Languages::theme_editor.novoton_search_btn_color"
-msgid "Novoton: Search button"
-msgstr "Novoton: Buton căutare"
-
-msgctxt "Languages::theme_editor.novoton_search_btn_hover_color"
-msgid "Novoton: Search button (hover)"
-msgstr "Novoton: Buton căutare (hover)"
-
-msgctxt "Languages::theme_editor.novoton_cal_cheapest_bg"
-msgid "Novoton: Calendar cheapest price background"
-msgstr "Novoton: Fundal preț minim calendar"
-
-msgctxt "Languages::theme_editor.novoton_cal_cheapest_color"
-msgid "Novoton: Calendar cheapest price text"
-msgstr "Novoton: Text preț minim calendar"
-
-msgctxt "Languages::theme_editor.novoton_cal_price_color"
-msgid "Novoton: Calendar price text"
-msgstr "Novoton: Text preț calendar"
 
 msgctxt "Languages::novoton_holidays.nearby_dates_available"
 msgid "Available on nearby dates"

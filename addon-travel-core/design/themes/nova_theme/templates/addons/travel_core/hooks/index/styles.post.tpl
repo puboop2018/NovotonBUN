@@ -8,12 +8,17 @@
  * @since 1.0.0
  *}
 
+{* Design tokens — LESS variables + :root --nvt-* bridge. MUST load first:
+   every stylesheet below (and the provider addons' CSS) consumes these
+   custom properties. Theme Editor color pickers bind to the LESS variables. *}
+{style src="addons/travel_core/styles.less"}
+
 {* Booking engine React component styles *}
 {style src="addons/travel_core/booking-engine.css"}
 
 {* Booking form styles (guest details, DOB, multi-room) *}
 {style src="addons/travel_core/booking-form-react.css"}
 
-{* Shared search-results design system (offer cards, badges, tokens) —
+{* Shared search-results design system (offer cards, badges) —
    the class contract every provider's results page renders with *}
 {style src="addons/travel_core/search-results.css"}
