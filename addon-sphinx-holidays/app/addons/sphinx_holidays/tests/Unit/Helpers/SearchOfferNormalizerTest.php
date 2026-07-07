@@ -121,4 +121,31 @@ class SearchOfferNormalizerTest extends TestCase
         $this->assertSame(842.5, $result[0]['price']);
         $this->assertSame(842.5, $result[1]['price']);
     }
+
+    /**
+     * Real production payload shape from the live /hotels/results endpoint:
+     * TOP-LEVEL selling_price and meal_type (no nested pricing, no
+     * meal_type_name). Regression: these rendered as 0,00 price and a blank
+     * board because only the nested/legacy keys were read.
+     */
+    public function testFlattenReadsLiveFlatPayloadShape(): void
+    {
+        $flat = SearchOfferNormalizer::flatten([
+            'hotel_id' => 61992,
+            'hotel_name' => 'Ozkaymak Falez Otel',
+            'offer_id' => 'e302a15f-ad04-4d57-b7fd-90255cf2393f',
+            'confirmation' => 'immediate',
+            'selling_price' => 987,
+            'currency' => 'EUR',
+            'meal_type' => 'ULTRA ALL INCLUSIVE',
+            'check_in' => '2026-07-14',
+            'check_out' => '2026-07-21',
+        ]);
+
+        $this->assertSame(987.0, $flat['price']);
+        $this->assertSame('EUR', $flat['currency']);
+        $this->assertSame('ULTRA ALL INCLUSIVE', $flat['board_name']);
+        $this->assertSame('61992', $flat['hotel_id']);
+        $this->assertSame('immediate', $flat['confirmation']);
+    }
 }
