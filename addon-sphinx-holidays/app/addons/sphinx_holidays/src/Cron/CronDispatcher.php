@@ -8,6 +8,7 @@ use Tygh\Addons\SphinxHolidays\Cron\Commands\AddProductsCommand;
 use Tygh\Addons\SphinxHolidays\Cron\Commands\AssignBoardsCommand;
 use Tygh\Addons\SphinxHolidays\Cron\Commands\AuditFacilitiesCommand;
 use Tygh\Addons\SphinxHolidays\Cron\Commands\CacheRefreshCommand;
+use Tygh\Addons\SphinxHolidays\Cron\Commands\CalendarPricesCommand;
 use Tygh\Addons\SphinxHolidays\Cron\Commands\CircuitSyncCommand;
 use Tygh\Addons\SphinxHolidays\Cron\Commands\CleanupCommand;
 use Tygh\Addons\SphinxHolidays\Cron\Commands\DeduplicateCommand;
@@ -51,6 +52,7 @@ class CronDispatcher implements CronDispatcherInterface
         'experiences' => ExperienceSyncCommand::class,
         'order_status' => OrderStatusSyncCommand::class,
         'cache_refresh' => CacheRefreshCommand::class,
+        'calendar_prices' => CalendarPricesCommand::class,
         'add_products' => AddProductsCommand::class,
         'discover_boards' => DiscoverBoardsCommand::class,
         'assign_boards' => AssignBoardsCommand::class,

@@ -123,7 +123,8 @@ Calling a cron endpoint **without a mode prints its list of available modes**
 2. **sphinx**, in order:
    `destinations` → *(configure the destination whitelist in admin)* →
    `hotels` → `add_products` → `sync_images` / `process_image_queue` →
-   `discover_boards` → `assign_boards`.
+   `discover_boards` → `assign_boards` → `calendar_prices` (per-date
+   "from" prices for the booking calendar; schedule daily).
    (`full` chains the main steps; `cleanup` is the recurring janitor;
    `diagnose_*` modes are read-only health checks.)
 3. **novoton**: hotel/resort sync → price computation → product creation, per

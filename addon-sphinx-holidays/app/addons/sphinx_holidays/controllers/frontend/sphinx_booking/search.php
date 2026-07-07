@@ -85,12 +85,34 @@ try {
             ? (int) round((strtotime($check_out) - strtotime($check_in)) / 86400) : 0,
     ];
 
+    // Per-date "from" prices for the engine's calendar: raw values built by
+    // the calendar_prices cron, commission applied at render time.
+    $calendar_prices_json = '{}';
+    if ($hotelRow !== null && !empty($hotelRow['calendar_prices_raw'])) {
+        $rawCalendar = json_decode(TypeCoerce::toString($hotelRow['calendar_prices_raw']), true);
+        if (is_array($rawCalendar) && $rawCalendar !== []) {
+            $cartServiceForCalendar = Container::getCartService();
+            $pricedCalendar = [];
+            foreach ($rawCalendar as $calDate => $calPrice) {
+                if (is_numeric($calPrice) && (float) $calPrice > 0) {
+                    $pricedCalendar[(string) $calDate] = round($cartServiceForCalendar->applyCommission((float) $calPrice), 2);
+                }
+            }
+            if ($pricedCalendar !== []) {
+                $encodedCalendar = json_encode($pricedCalendar, JSON_UNESCAPED_UNICODE);
+                $calendar_prices_json = is_string($encodedCalendar) ? $encodedCalendar : '{}';
+            }
+        }
+    }
+
     // Render booking engine first — always needed
     $view->assign('booking_engine_html', fn_travel_core_render_booking_engine([
         'provider' => 'sphinx',
         'search_dispatch' => 'sphinx_booking.search',
         'mode' => 'search',
         'search_params' => $templateParams,
+        'calendar_prices_json' => $calendar_prices_json,
+        'calendar_prices_currency' => ConfigProvider::getDefaultCurrency(),
     ]));
     $view->assign('sphinx_search_params', $templateParams);
     $view->assign('sphinx_hotel_name', $hotel_name);

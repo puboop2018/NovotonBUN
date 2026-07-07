@@ -411,6 +411,21 @@ class HotelRepository implements HotelRepositoryInterface
     }
 
     /**
+     * Persist per-date calendar from-prices (raw API currency, no commission).
+     *
+     * @param array<string, float> $datePrices check-in date => price
+     */
+    public function saveCalendarPrices(string $hotelId, array $datePrices): void
+    {
+        $encoded = json_encode($datePrices, JSON_UNESCAPED_UNICODE);
+        db_query(
+            'UPDATE ?:sphinx_hotels SET calendar_prices_raw = ?s WHERE hotel_id = ?s',
+            is_string($encoded) ? $encoded : '{}',
+            $hotelId,
+        );
+    }
+
+    /**
      * Update boards_json for a batch of hotels.
      *
      * @param array<string, list<string>> $boardsByHotel hotel_id => array of canonical board codes
