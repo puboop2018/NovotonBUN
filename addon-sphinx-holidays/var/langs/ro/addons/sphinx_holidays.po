@@ -331,3 +331,15 @@ msgstr "Hoteluri"
 msgctxt "Languages::sphinx_deals_packages"
 msgid "Packages"
 msgstr "Pachete"
+
+msgctxt "Languages::sphinx_holidays.payment_terms"
+msgid "Payment terms"
+msgstr "Termeni de plată"
+
+msgctxt "Languages::sphinx_holidays.cancellation_policy"
+msgid "Cancellation policy"
+msgstr "Politica de anulare"
+
+msgctxt "Languages::sphinx_holidays.terms_heading"
+msgid "Payment & cancellation terms"
+msgstr "Termeni de plată și anulare"

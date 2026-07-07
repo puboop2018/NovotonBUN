@@ -86,6 +86,10 @@ try {
         'base_price' => $basePrice,
         'currency' => ConfigProvider::getDefaultCurrency(),
         'verified' => true,
+        // Payment & cancellation terms straight from the verify response
+        // (formatted display lines; [] when the API sends none).
+        'payment_terms' => \Tygh\Addons\SphinxHolidays\Services\TermsFormatter::lines($verifyResult['payment_terms'] ?? null),
+        'cancellation_fees' => \Tygh\Addons\SphinxHolidays\Services\TermsFormatter::lines($verifyResult['cancellation_fees'] ?? null),
     ]);
 
     $view->assign('sphinx_provider', 'sphinx');
