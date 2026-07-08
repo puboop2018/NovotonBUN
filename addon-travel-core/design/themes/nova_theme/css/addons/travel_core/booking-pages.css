@@ -18,7 +18,7 @@
 /* ── Booking summary (flat box; --hero = gradient banner) ─────────────── */
 .travel-booking-page .travel-booking-summary,
 .travel-booking-page .sphinx-booking-summary {
-    background: #f5f9fc;
+    background: var(--nvt-surface-info, #f5f9fc);
     padding: 20px;
     border-radius: 8px;
     margin-bottom: 20px;
@@ -77,7 +77,7 @@
 .travel-booking-page .travel-label-chip {
     display: inline-block;
     padding: 2px 8px;
-    background: #e8f5e9;
+    background: var(--nvt-success-light, #e8f5e9);
     color: var(--nvt-success-strong, #1e7e34);
     border-radius: 4px;
     font-size: 12px;
@@ -94,7 +94,7 @@
     text-align: right;
     margin-bottom: 20px;
     padding: 15px;
-    background: #f5f9fc;
+    background: var(--nvt-surface-info, #f5f9fc);
     border-radius: 8px;
 }
 .travel-booking-page .travel-price-total,
@@ -113,8 +113,8 @@
 .travel-booking-page .sphinx-booking-terms {
     margin-bottom: 20px;
     padding: 15px;
-    background: #fffdf5;
-    border: 1px solid #f0e6c8;
+    background: var(--nvt-surface-terms, #fffdf5);
+    border: 1px solid var(--nvt-border-terms, #f0e6c8);
     border-radius: 8px;
     font-size: 13px;
 }
@@ -131,9 +131,9 @@
 .travel-booking-page .travel-room-header,
 .travel-booking-page .sphinx-room-header {
     padding: 10px 15px;
-    background: #e8f0fe;
+    background: var(--nvt-surface-room, #e8f0fe);
     border-radius: 6px 6px 0 0;
-    border: 1px solid #c5d5ea;
+    border: 1px solid var(--nvt-border-room, #c5d5ea);
     border-bottom: none;
 }
 .travel-booking-page * + .travel-room-header,
@@ -150,12 +150,12 @@
     padding: 15px;
     margin-bottom: 10px;
     background: var(--nvt-bg, #fff);
-    border: 1px solid #e0e7ef;
+    border: 1px solid var(--nvt-field-border, #e0e7ef);
     border-radius: 6px;
 }
 .travel-booking-page .guest-entry-child {
-    background: #fffbf0;
-    border-color: #f0e0c0;
+    background: var(--nvt-surface-child, #fffbf0);
+    border-color: var(--nvt-border-child, #f0e0c0);
 }
 .travel-booking-page .travel-guest-label {
     font-weight: 600;
@@ -163,11 +163,11 @@
     color: var(--nvt-primary, #003580);
 }
 .travel-booking-page .travel-guest-label--child {
-    color: #856404;
+    color: var(--nvt-warning-dark, #856404);
 }
 .travel-booking-page .travel-guest-age-note {
     font-weight: normal;
-    color: #999;
+    color: var(--nvt-text-disabled, #999);
 }
 .travel-booking-page .travel-guest-grid {
     display: flex;
@@ -191,7 +191,7 @@
 .travel-booking-page .travel-info-card,
 .travel-booking-page .sphinx-flight-info {
     background: var(--nvt-bg, #fff);
-    border: 1px solid #e0e7ef;
+    border: 1px solid var(--nvt-field-border, #e0e7ef);
     border-radius: 8px;
     padding: 15px;
     margin-bottom: 20px;
@@ -225,18 +225,18 @@
     flex: 1;
     min-width: 250px;
     padding: 15px;
-    background: #f0faf0;
+    background: var(--nvt-surface-included, #f0faf0);
     border-radius: 8px;
 }
 .travel-booking-page .travel-included-panel--negative {
-    background: #fef0f0;
+    background: var(--nvt-surface-excluded, #fef0f0);
 }
 .travel-booking-page .travel-included-panel h4 {
     margin: 0 0 8px;
     color: var(--nvt-success-strong, #2e7d32);
 }
 .travel-booking-page .travel-included-panel--negative h4 {
-    color: #c62828;
+    color: var(--nvt-danger, #c62828);
 }
 .travel-booking-page .travel-included-panel ul {
     margin: 0;
@@ -252,7 +252,7 @@
     padding: 10px 15px;
     margin-bottom: 8px;
     background: var(--nvt-bg, #fff);
-    border: 1px solid #e0e7ef;
+    border: 1px solid var(--nvt-field-border, #e0e7ef);
     border-radius: 6px;
     display: flex;
     align-items: center;
@@ -270,7 +270,7 @@
     color: var(--nvt-price-color, #003580);
 }
 .travel-booking-page .travel-service-mandatory {
-    color: #999;
+    color: var(--nvt-text-disabled, #999);
     font-size: 12px;
 }
 
@@ -279,7 +279,7 @@
 .travel-booking-page .contact-section {
     margin-top: 20px;
     padding: 15px;
-    background: #f5f9fc;
+    background: var(--nvt-surface-info, #f5f9fc);
     border-radius: 6px;
 }
 .travel-booking-page .travel-booking-submit,
@@ -287,32 +287,13 @@
     margin-top: 20px;
     text-align: center;
 }
+/* Box model only — brand-blue color, hover, and focus-visible ring come from
+   the shared .travel-btn--primary contract in booking-engine.css. */
 .travel-booking-page .travel-offer-book-btn,
 .travel-booking-page .sphinx-offer-book-btn {
     display: inline-block;
-    background: var(--nvt-search-btn-bg, #006ce4);
-    color: var(--nvt-search-btn-text, #fff);
     padding: 12px 40px;
-    border: none;
-    border-radius: 6px;
     font-size: 17px;
-    font-weight: 600;
-    text-decoration: none;
-    cursor: pointer;
-    transition: background 0.15s ease;
-}
-.travel-booking-page .travel-offer-book-btn:hover,
-.travel-booking-page .sphinx-offer-book-btn:hover,
-.travel-booking-page .travel-offer-book-btn:focus,
-.travel-booking-page .sphinx-offer-book-btn:focus {
-    background: var(--nvt-search-btn-hover, #0057b8);
-    color: var(--nvt-search-btn-text, #fff);
-    text-decoration: none;
-}
-.travel-booking-page .travel-offer-book-btn:focus-visible,
-.travel-booking-page .sphinx-offer-book-btn:focus-visible {
-    outline: 2px solid var(--nvt-primary, #003580);
-    outline-offset: 2px;
 }
 
 /* ── Responsive ───────────────────────────────────────────────────────── */
