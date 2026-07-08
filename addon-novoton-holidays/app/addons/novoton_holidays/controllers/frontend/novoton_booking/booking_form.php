@@ -289,6 +289,12 @@ use Tygh\Addons\TravelCore\Services\CurrencyService;
         'eb' => 2
     ];
 
+    // Canonical rooms_data JSON for the template's inline JS. Prepared here
+    // because {json_decode(...)} in a template is a Smarty 5 CompilerException
+    // — rooms_data is already normalized to an array above.
+    $roomsDataJson = json_encode($booking['rooms_data'], JSON_UNESCAPED_UNICODE);
+    $booking['rooms_data_json'] = is_string($roomsDataJson) ? $roomsDataJson : '[]';
+
     // Assign to view
     /** @var \Smarty $view */
     $view = Tygh::$app['view'];

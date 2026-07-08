@@ -206,9 +206,17 @@ try {
     $cacheEnabled = ConfigProvider::isApiCacheEnabled();
     $cacheTtl = ConfigProvider::getCacheTtlSearch();
 
+    // refresh=1 (set by the booking form's offer-rejected redirect): the cached
+    // set contained expired offer_ids — evict it and run a live search so the
+    // customer gets bookable offers instead of the same stale cards.
+    $forceRefresh = RequestCoerce::bool($_REQUEST, 'refresh');
+
     if ($cacheEnabled && $cacheTtl > 0) {
         $cacheKey = CacheService::buildSearchKey($cacheParams);
-        $cached = CacheService::get($cacheKey);
+        if ($forceRefresh) {
+            CacheService::delete($cacheKey);
+        }
+        $cached = $forceRefresh ? null : CacheService::get($cacheKey);
         if ($cached !== null) {
             $cachedMap = TypeCoerce::toStringMap($cached);
             $cachedResults = TypeCoerce::toRowList($cachedMap['results'] ?? []);

@@ -73,4 +73,73 @@ class OfferAvailabilityTest extends TestCase
 
         $this->assertSame(['500' => true], OfferAvailability::collectImmediateHotelIds($offers));
     }
+
+    // ── extractPrice (shared price chain) ────────────────────────────────────
+
+    public function testExtractPriceChain(): void
+    {
+        $this->assertSame(100.0, OfferAvailability::extractPrice(['price' => 100]));
+        $this->assertSame(987.0, OfferAvailability::extractPrice(['selling_price' => 987]));
+        $this->assertSame(842.5, OfferAvailability::extractPrice(['pricing' => ['selling_price' => 842.5]]));
+        // flat `price` wins over the other sources
+        $this->assertSame(1.0, OfferAvailability::extractPrice(['price' => 1, 'selling_price' => 2]));
+        $this->assertSame(0.0, OfferAvailability::extractPrice(['price' => 'n/a']));
+        $this->assertSame(0.0, OfferAvailability::extractPrice([]));
+    }
+
+    // ── isVerifiedAvailable (tolerant verify-response semantics) ─────────────
+
+    /**
+     * The live verify response: the offer itself, NO `available` key. The old
+     * `available ?? false` gate rejected every one of these ("offer no longer
+     * available" on each Book-now click).
+     */
+    public function testVerifiedAvailableForLiveOfferShape(): void
+    {
+        $liveOffer = [
+            'hotel_id' => 61992,
+            'offer_id' => 'e302a15f-ad04-4d57-b7fd-90255cf2393f',
+            'confirmation' => 'immediate',
+            'selling_price' => 987,
+            'currency' => 'EUR',
+            'meal_type' => 'ULTRA ALL INCLUSIVE',
+        ];
+
+        $this->assertTrue(OfferAvailability::isVerifiedAvailable($liveOffer, true));
+        $this->assertTrue(OfferAvailability::isVerifiedAvailable($liveOffer, false));
+    }
+
+    public function testVerifiedAvailableHonorsExplicitAvailableKey(): void
+    {
+        $this->assertTrue(OfferAvailability::isVerifiedAvailable(['available' => true], true));
+        $this->assertTrue(OfferAvailability::isVerifiedAvailable(['available' => 'yes'], true));
+        $this->assertTrue(OfferAvailability::isVerifiedAvailable(['available' => '1'], true));
+        // Explicit false wins even when the offer otherwise looks bookable
+        $this->assertFalse(OfferAvailability::isVerifiedAvailable(
+            ['available' => false, 'confirmation' => 'immediate', 'price' => 100],
+            false,
+        ));
+        $this->assertFalse(OfferAvailability::isVerifiedAvailable(['available' => 'false'], false));
+        $this->assertFalse(OfferAvailability::isVerifiedAvailable(['available' => ''], false));
+    }
+
+    public function testVerifiedAvailableConfirmationRespectsImmediateRequirement(): void
+    {
+        $onRequest = ['confirmation' => 'on_request', 'selling_price' => 500];
+
+        $this->assertFalse(OfferAvailability::isVerifiedAvailable($onRequest, true));
+        $this->assertTrue(OfferAvailability::isVerifiedAvailable($onRequest, false));
+    }
+
+    public function testVerifiedAvailableFallsBackToPrice(): void
+    {
+        $this->assertTrue(OfferAvailability::isVerifiedAvailable(['selling_price' => 250], true));
+        $this->assertFalse(OfferAvailability::isVerifiedAvailable(['room_name' => 'DBL'], true));
+    }
+
+    public function testVerifiedAvailableRejectsEmptyResponses(): void
+    {
+        $this->assertFalse(OfferAvailability::isVerifiedAvailable(null, false));
+        $this->assertFalse(OfferAvailability::isVerifiedAvailable([], false));
+    }
 }

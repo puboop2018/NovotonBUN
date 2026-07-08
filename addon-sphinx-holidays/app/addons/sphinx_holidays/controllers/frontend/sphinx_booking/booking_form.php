@@ -33,19 +33,33 @@ try {
     $api = Container::getApi();
     $verifyResult = $api->verifyHotelOffer($offer_id);
 
-    if (empty($verifyResult) || !TypeCoerce::toBool($verifyResult['available'] ?? false)) {
+    if (!\Tygh\Addons\SphinxHolidays\Helpers\OfferAvailability::isVerifiedAvailable(
+        $verifyResult,
+        ConfigProvider::shouldRequireImmediateAvailability(),
+    )) {
+        // Diagnosability: record WHY the offer was rejected (shape drift vs
+        // genuine expiry) — this rejection previously logged nothing.
+        fn_log_event('general', 'runtime', [
+            'message' => 'Sphinx booking_form: offer rejected by verify',
+            'offer_id' => $offer_id,
+            'verify_response' => substr((string) json_encode($verifyResult, JSON_UNESCAPED_UNICODE), 0, 1000),
+        ]);
         fn_set_notification('W', __('warning'),
             __('sphinx_holidays.offer_no_longer_available', ['[default]' => 'This offer is no longer available. Please search again.']));
+        // refresh=1 → the search page bypasses + evicts its cached result set,
+        // so the customer lands on a LIVE re-search instead of the same stale offers.
         return [CONTROLLER_STATUS_REDIRECT, 'sphinx_booking.search?' . http_build_query([
             'hotel_id' => $hotel_id,
+            'product_id' => $product_id,
             'check_in' => RequestCoerce::string($_REQUEST, 'check_in'),
             'check_out' => RequestCoerce::string($_REQUEST, 'check_out'),
             'adults' => RequestCoerce::int($_REQUEST, 'adults', 2),
             'children' => RequestCoerce::int($_REQUEST, 'children'),
+            'refresh' => 1,
         ])];
     }
 
-    $verifiedPrice = TypeCoerce::toFloat($verifyResult['price'] ?? 0);
+    $verifiedPrice = \Tygh\Addons\SphinxHolidays\Helpers\OfferAvailability::extractPrice($verifyResult ?? []);
     $basePrice = $verifiedPrice;
     $verifiedPrice = Container::getCartService()->applyCommission($verifiedPrice);
 

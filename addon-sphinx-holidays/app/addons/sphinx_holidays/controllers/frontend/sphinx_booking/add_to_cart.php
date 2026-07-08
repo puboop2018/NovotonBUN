@@ -43,14 +43,25 @@ use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
         $verifyResult = null;
     }
 
-    if (empty($verifyResult) || !TypeCoerce::toBool($verifyResult['available'] ?? false)) {
+    if (!\Tygh\Addons\SphinxHolidays\Helpers\OfferAvailability::isVerifiedAvailable(
+        $verifyResult,
+        ConfigProvider::shouldRequireImmediateAvailability(),
+    )) {
+        fn_log_event('general', 'runtime', [
+            'message' => 'Sphinx add_to_cart: offer rejected by verify',
+            'offer_id' => $offer_id,
+            'verify_response' => substr((string) json_encode($verifyResult, JSON_UNESCAPED_UNICODE), 0, 1000),
+        ]);
         fn_set_notification('E', __('error'),
             __('sphinx_holidays.offer_no_longer_available', ['[default]' => 'This offer is no longer available.']));
         return [CONTROLLER_STATUS_REDIRECT, 'index.index'];
     }
 
+    // The gate above rejects null/empty responses — narrow for the reads below.
+    $verifyResult = TypeCoerce::toStringMap($verifyResult);
+
     // Price with commission
-    $basePrice = TypeCoerce::toFloat($verifyResult['price'] ?? 0);
+    $basePrice = \Tygh\Addons\SphinxHolidays\Helpers\OfferAvailability::extractPrice($verifyResult);
     $total_price = $cartService->applyCommission($basePrice);
 
     if ($total_price <= 0) {

@@ -27,6 +27,12 @@ Deploy from **merged main** including the 2026-07 fixes — older code recreates
 the removed `RESTRICT` foreign keys (booked hotels become undeletable) and
 lacks the booking-atomicity and sync-performance fixes.
 
+⚠️ **Always Clear cache after deploying** (Admin → Settings → Clear cache, or
+delete `var/cache/templates/`): production mode does not recompile templates
+when files change (`compile_check` off), so stale compiled templates keep
+executing — old template bugs (e.g. the admin booking view's
+`{capture}` crash) resurface even though the deployed files are fixed.
+
 ## 3. Install order (strict)
 
 Install from **Admin → Add-ons → Manage add-ons**, in this order:
@@ -150,6 +156,10 @@ hotel sync weekly, `cleanup` daily) via real cron on the server.
   box disappear).
 - Hotel product page renders the React booking engine (calendar, occupancy,
   live price).
+- Search-results pages share travel_core's design system
+  (`css/addons/travel_core/search-results.css` — offer cards, badges, tokens).
+  Sphinx renders with it natively; novoton's template still carries its own
+  legacy styling until migrated (planned follow-up).
 - Add to cart → checkout completes; the booking row appears in the addon's
   bookings admin with the API confirmation (or a clear failure status).
 - Currency switcher shows sane RON/EUR prices (exchange-rate cron ran).

@@ -41,12 +41,9 @@ class SearchOfferNormalizer
     {
         $pricing = TypeCoerce::toStringMap($offer['pricing'] ?? null);
 
-        // Price sources, in order: legacy flat `price`, the live results
-        // endpoint's TOP-LEVEL `selling_price` (observed in production
-        // payloads), then the nested `pricing.selling_price` shape.
-        $price = array_key_exists('price', $offer)
-            ? TypeCoerce::toFloat($offer['price'])
-            : TypeCoerce::toFloat($offer['selling_price'] ?? $pricing['selling_price'] ?? 0);
+        // Price sources: flat `price`, top-level `selling_price`, or nested
+        // `pricing.selling_price` — shared chain in OfferAvailability.
+        $price = OfferAvailability::extractPrice($offer);
 
         $currency = TypeCoerce::toString(
             $offer['currency'] ?? $pricing['currency'] ?? '',
