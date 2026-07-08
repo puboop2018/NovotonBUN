@@ -4,62 +4,7 @@
  *}
 
 {style src="css/addons/novoton_holidays/styles.css"}
-
-{* Inline critical CSS for booking form — uses CSS custom properties
-   from the :root bridge in styles.less so colors adapt to the active theme. *}
-<style type="text/css">
-/* Novoton Reservation Form - Critical Styles v2.9.0 (theme-aware) */
-.novoton-reservation-form { max-width: 900px; margin: 0 auto; padding: 0 15px; font-family: var(--nvt-font-family, inherit); }
-.novoton-reservation-header { background: linear-gradient(135deg, var(--nvt-primary), var(--nvt-primary-light, #0057b8)) !important; color: #fff !important; padding: 25px !important; border-radius: var(--nvt-radius, 8px) var(--nvt-radius, 8px) 0 0 !important; position: relative; }
-.novoton-reservation-header h1 { margin: 0 !important; font-size: 24px !important; font-weight: 600 !important; color: #ffffff !important; padding-right: 150px; }
-.novoton-reservation-header .hotel-location { font-size: 14px !important; color: rgba(255,255,255,0.9) !important; margin-top: 5px !important; }
-.novoton-reservation-header .availability-badge { position: absolute; top: 25px; right: 25px; background: var(--nvt-success) !important; padding: 8px 16px !important; border-radius: 20px !important; font-size: 14px !important; color: #fff !important; }
-.novoton-reservation-body { background: var(--nvt-bg, #fff) !important; border: 1px solid var(--nvt-border, #ddd) !important; border-top: none !important; border-radius: 0 0 var(--nvt-radius, 8px) var(--nvt-radius, 8px) !important; padding: 0 !important; }
-.booking-details-section { display: flex !important; flex-wrap: wrap !important; border-bottom: 1px solid var(--nvt-border) !important; padding: 0 !important; }
-.booking-image { flex: 0 0 200px !important; padding: 20px !important; }
-.booking-image img { width: 100% !important; border-radius: var(--nvt-radius-sm, 4px) !important; }
-.booking-info { flex: 1 !important; padding: 20px !important; display: grid !important; grid-template-columns: auto 1fr !important; gap: 8px 20px !important; align-items: start !important; }
-.booking-info .info-label { font-weight: 600 !important; color: var(--nvt-primary) !important; font-size: 14px !important; }
-.booking-info .info-value { color: var(--nvt-text) !important; font-size: 14px !important; }
-.booking-info .info-value.highlight { color: var(--nvt-danger) !important; font-weight: 600 !important; }
-.booking-price-box { flex: 0 0 180px !important; padding: 20px !important; text-align: right !important; border-left: 1px solid var(--nvt-border) !important; display: flex; flex-direction: column; justify-content: center; }
-.booking-price-box .price-total { font-size: 32px !important; font-weight: 700 !important; color: var(--nvt-price-color, #003580) !important; line-height: 1.2; }
-.booking-price-box .price-label { font-size: 14px !important; color: var(--nvt-text-light) !important; margin-bottom: 5px; }
-.booking-price-box .price-currency { font-size: 16px !important; color: var(--nvt-text-light) !important; }
-.guest-names-section { padding: 20px !important; border-bottom: 1px solid var(--nvt-border) !important; }
-.guest-names-section h3 { margin: 0 0 20px 0 !important; font-size: 18px !important; color: var(--nvt-text) !important; text-align: center !important; font-weight: 600 !important; }
-.guest-entry { background: var(--nvt-bg-light, #f8f9fa) !important; border-radius: var(--nvt-radius, 8px) !important; padding: 15px 20px !important; margin-bottom: 15px !important; }
-.guest-entry-adult { border-left: 4px solid var(--nvt-primary) !important; }
-.guest-entry-child { border-left: 4px solid var(--nvt-warning) !important; }
-.guest-entry-header { font-weight: 600 !important; color: var(--nvt-primary) !important; margin-bottom: 5px !important; font-size: 16px !important; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.guest-entry-header .holder-tag { background: var(--nvt-primary) !important; color: #fff !important; font-size: 11px !important; padding: 2px 8px !important; border-radius: 10px !important; font-weight: normal !important; }
-.guest-entry-subheader { font-size: 13px !important; color: var(--nvt-text-light) !important; margin-bottom: 12px !important; }
-/* Field row - Last Name and First Name on same line */
-.field-row { display: flex !important; gap: 15px !important; align-items: center !important; flex-wrap: wrap !important; }
-.field-group { flex: 1 1 200px !important; min-width: 150px !important; }
-.field-group label { display: block !important; font-size: 13px !important; color: var(--nvt-text-light) !important; margin-bottom: 4px !important; font-weight: 500 !important; }
-.field-group label .required { color: var(--nvt-danger) !important; margin-left: 2px !important; }
-.field-group input, .field-group select { width: 100% !important; padding: 10px 12px !important; border: 1px solid var(--nvt-border, #ddd) !important; border-radius: var(--nvt-radius-sm, 4px) !important; font-size: 14px !important; box-sizing: border-box !important; }
-.field-group input:focus, .field-group select:focus { border-color: var(--nvt-primary) !important; outline: none !important; box-shadow: 0 0 0 2px var(--nvt-primary-focus, rgba(0,53,128,0.1)) !important; }
-/* Form actions - better UX positioning */
-.form-actions { padding: 20px !important; display: flex !important; justify-content: space-between !important; align-items: center !important; background: var(--nvt-bg-light, #f8f9fa) !important; border-radius: 0 0 var(--nvt-radius, 8px) var(--nvt-radius, 8px) !important; gap: 15px !important; flex-wrap: wrap !important; }
-.btn-back { color: var(--nvt-primary) !important; text-decoration: none !important; font-size: 14px !important; display: inline-flex !important; align-items: center !important; gap: 5px !important; padding: 10px 0 !important; order: 1; }
-.btn-back:hover { text-decoration: underline !important; }
-.btn-submit { background: var(--nvt-btn-primary-bg, #0071c2) !important; color: #fff !important; border: none !important; padding: 14px 36px !important; font-size: 16px !important; font-weight: 600 !important; border-radius: var(--nvt-radius-sm, 4px) !important; cursor: pointer !important; order: 2; }
-.btn-submit:hover { background: var(--nvt-btn-primary-hover, #005fa3) !important; }
-@media (max-width: 768px) {
-    .novoton-reservation-header h1 { padding-right: 0 !important; }
-    .novoton-reservation-header .availability-badge { position: relative !important; top: auto !important; right: auto !important; display: inline-block !important; margin-top: 10px !important; }
-    .booking-details-section { flex-direction: column !important; }
-    .booking-image { flex: none !important; }
-    .booking-price-box { flex: none !important; border-left: none !important; border-top: 1px solid var(--nvt-border) !important; text-align: center !important; }
-    .field-row { flex-direction: column !important; }
-    .field-group { flex: 1 1 100% !important; min-width: 100% !important; }
-    .form-actions { flex-direction: column-reverse !important; text-align: center !important; }
-    .btn-back { order: 2; }
-    .btn-submit { order: 1; width: 100% !important; }
-}
-</style>
+{* Booking-form styles now come from travel_core booking-pages.css (.travel-booking-page classes); the embedded <style> block was removed. *}
 
 {* Helper function to format room type with full name *}
 {function name="format_room_type" room_id=""}
@@ -87,7 +32,7 @@
     {/if}
 {/function}
 
-<div class="novoton-reservation-form">
+<div class="travel-booking-page novoton-reservation-form">
     <form action="{if $is_edit_mode}{fn_url("novoton_booking.update_booking")}{else}{fn_url("novoton_booking.add_to_cart")}{/if}" method="post" id="novoton-booking-form">
         <input type="hidden" name="security_hash" value="{$security_hash}" />
         {if $is_edit_mode}
@@ -117,8 +62,8 @@
         {* Terms are now fetched directly from API at checkout - no need for hidden fields *}
         
         {* Header *}
-        <div class="novoton-reservation-header">
-            <span class="availability-badge" id="availability-badge">
+        <div class="travel-reservation-header">
+            <span class="travel-hero-badge" id="availability-badge">
                 {if $booking_data.is_on_request}
                     {__("novoton_holidays.on_request")}
                 {else}
@@ -126,23 +71,23 @@
                 {/if}
             </span>
             <h1>{$hotel_name|default:'Hotel'} {if $hotel_stars}{$hotel_stars}{/if}</h1>
-            <div class="hotel-location"> {$hotel_city|default:'GOLDEN SANDS'}{if $hotel_region}, {$hotel_region}{/if}, {$hotel_country|default:'BULGARIA'}</div>
+            <div class="travel-hero-location"> {$hotel_city|default:'GOLDEN SANDS'}{if $hotel_region}, {$hotel_region}{/if}, {$hotel_country|default:'BULGARIA'}</div>
         </div>
         
         {* Body *}
-        <div class="novoton-reservation-body">
+        <div class="travel-reservation-body">
             
             {* Booking Details *}
-            <div class="booking-details-section">
+            <div class="travel-detail-row">
                 {if $hotel_image}
-                <div class="booking-image">
+                <div class="travel-detail-image">
                     <img src="{$hotel_image}" alt="{$hotel_name}">
                 </div>
                 {/if}
                 
-                <div class="booking-info">
-                    <span class="info-label">{__("novoton_holidays.package")}:</span>
-                    <span class="info-value">
+                <div class="travel-detail-info travel-info-summary">
+                    <span class="travel-info-key">{__("novoton_holidays.package")}:</span>
+                    <span class="travel-info-val">
                         {if $package_name && $package_name != $hotel_name}
                             {$package_name|replace:'%2b':'+'|replace:'%2B':'+'}
                         {elseif $booking_data.package_name}
@@ -152,24 +97,24 @@
                         {/if}
                     </span>
                     
-                    <span class="info-label">{__("novoton_holidays.check_in")}:</span>
-                    <span class="info-value highlight">{$booking_data.check_in|date_format:$settings.Appearance.date_format}, {$booking_data.check_in|date_format:"%A"}</span>
+                    <span class="travel-info-key">{__("novoton_holidays.check_in")}:</span>
+                    <span class="travel-info-val travel-info-val--highlight">{$booking_data.check_in|date_format:$settings.Appearance.date_format}, {$booking_data.check_in|date_format:"%A"}</span>
                     
-                    <span class="info-label">{__("novoton_holidays.check_out")}:</span>
-                    <span class="info-value highlight">{$booking_data.check_out|date_format:$settings.Appearance.date_format}, {$booking_data.check_out|date_format:"%A"}</span>
+                    <span class="travel-info-key">{__("novoton_holidays.check_out")}:</span>
+                    <span class="travel-info-val travel-info-val--highlight">{$booking_data.check_out|date_format:$settings.Appearance.date_format}, {$booking_data.check_out|date_format:"%A"}</span>
                     
-                    <span class="info-label">{__("novoton_holidays.stay")|default:"Cazare"}:</span>
-                    <span class="info-value">{$booking_data.nights} {if $booking_data.nights == 1}{__("novoton_holidays.night")}{else}{__("novoton_holidays.nights")}{/if}</span>
+                    <span class="travel-info-key">{__("novoton_holidays.stay")|default:"Cazare"}:</span>
+                    <span class="travel-info-val">{$booking_data.nights} {if $booking_data.nights == 1}{__("novoton_holidays.night")}{else}{__("novoton_holidays.nights")}{/if}</span>
                     
                     {* Multi-room type display *}
                     {if $booking_data.num_rooms > 1 && $booking_data.rooms_data}
-                        <span class="info-label">{__("novoton_holidays.rooms")}:</span>
-                        <span class="info-value">{$booking_data.num_rooms} {__("novoton_holidays.rooms")}</span>
+                        <span class="travel-info-key">{__("novoton_holidays.rooms")}:</span>
+                        <span class="travel-info-val">{$booking_data.num_rooms} {__("novoton_holidays.rooms")}</span>
                         
                         {foreach from=$booking_data.rooms_data item=room_info key=room_idx}
                             {$room_num = $room_idx + 1}
-                            <span class="info-label" style="padding-left: 15px;">-> {__("novoton_holidays.room_number")} {$room_num}:</span>
-                            <span class="info-value room-type-full" data-room-num="{$room_num}">
+                            <span class="travel-info-key travel-info-key--sub">-> {__("novoton_holidays.room_number")} {$room_num}:</span>
+                            <span class="travel-info-val room-type-full" data-room-num="{$room_num}">
                                 {if $room_info.room_display}
                                     {$room_info.room_display}
                                 {elseif $room_info.room_name}
@@ -190,8 +135,8 @@
                             </span>
                         {/foreach}
                     {else}
-                        <span class="info-label">{__("novoton_holidays.room_type")}:</span>
-                        <span class="info-value room-type-full">
+                        <span class="travel-info-key">{__("novoton_holidays.room_type")}:</span>
+                        <span class="travel-info-val room-type-full">
                             {if $booking_data.room_type_display}
                                 {$booking_data.room_type_display|replace:'%2b':'+'|replace:'%2B':'+'|replace:' 2 1':' 2 +1'|replace:' 2 2':' 2 +2'|replace:' 3 1':' 3 +1'|replace:' 3 2':' 3 +2'}
                             {elseif $booking_data.rooms_data && $booking_data.rooms_data[0].room_type_display}
@@ -203,8 +148,8 @@
                             {/if}
                         </span>
                         
-                        <span class="info-label">{__("novoton_holidays.board")}:</span>
-                        <span class="info-value">
+                        <span class="travel-info-key">{__("novoton_holidays.board")}:</span>
+                        <span class="travel-info-val">
                             {if $booking_data.board_id == 'AI' || $booking_data.board_id == 'ALL INCL' || $booking_data.board_id == 'ALLINC'}
                                 {__("novoton_holidays.all_inclusive")}
                             {elseif $booking_data.board_id == 'UAI' || $booking_data.board_id == 'ULTRA ALL INCL' || $booking_data.board_id == 'ULTRA ALL INCLUSIVE'}
@@ -225,20 +170,20 @@
                 </div>
                 
                 <div class="booking-price-box">
-                    <div id="price-error-message" role="alert" aria-live="assertive" style="display: none; color: #dc3545; font-size: 12px; margin-bottom: 5px;"></div>
-                    <div class="price-label">{__("novoton_holidays.total")}:</div>
-                    <div class="price-total" id="novoton-total-price" aria-live="polite" aria-atomic="true">{fn_novoton_holidays_format_price($booking_data.total_price|default:0, $novoton_display_coefficient|default:1, $novoton_display_symbol|default:$novoton_display_currency|default:$smarty.const.CART_PRIMARY_CURRENCY) nofilter}</div>
-                    <span id="price-unverified-badge" style="display: none; background: #ffc107; color: #856404; font-size: 11px; padding: 2px 8px; border-radius: 3px; margin-left: 5px; font-weight: 600;">
+                    <div id="price-error-message" class="travel-price-error" style="display: none;"></div>
+                    <div class="travel-price-label">{__("novoton_holidays.total")}:</div>
+                    <div class="price-total" id="novoton-total-price">{fn_novoton_holidays_format_price($booking_data.total_price|default:0, $novoton_display_coefficient|default:1, $novoton_display_symbol|default:$novoton_display_currency|default:$smarty.const.CART_PRIMARY_CURRENCY) nofilter}</div>
+                    <span id="price-unverified-badge" class="travel-price-unverified" style="display: none;">
                         ⚠ {__("novoton_holidays.price_unverified")|default:"neconfirmat"}
                     </span>
-                    <a href="#" id="refresh-price-link" onclick="refreshPrice(); return false;" style="display: none; font-size: 12px; color: #0071c2; margin-top: 5px;">
+                    <a href="#" id="refresh-price-link" class="travel-price-refresh" onclick="refreshPrice(); return false;" style="display: none;">
                         🔄 {__("novoton_holidays.refresh_price")|default:"Actualizează prețul"}
                     </a>
                 </div>
             </div>
             
             {* Guest Names Section - Multi-Room Support with Split Fields *}
-            <div class="guest-names-section">
+            <div class="travel-form-section guest-names-section">
                 <h3>{__("novoton_holidays.enter_booking_details")}</h3>
                 
                 {* Track global guest number *}
@@ -256,11 +201,11 @@
                     
                     {* Room header if multiple rooms *}
                     {if count($booking_data.rooms_data) > 1}
-                    <div class="room-section-header room-card" data-room-num="{$room_num}" style="background: #003580; color: #fff; padding: 12px 15px; margin: 20px -15px 15px; font-weight: 600;">
-                        <span style="font-size: 16px;"> {__("novoton_holidays.room_number")} {$room_num}</span>
-                        <span style="float: right; font-weight: normal; font-size: 14px;">
+                    <div class="travel-room-banner room-section-header room-card" data-room-num="{$room_num}">
+                        <span> {__("novoton_holidays.room_number")} {$room_num}</span>
+                        <span class="travel-room-banner-meta">
                             {$room.adults} {if $room.adults == 1}{__("novoton_holidays.adult")}{else}{__("novoton_holidays.adults")}{/if}{if $room.children > 0}, {$room.children} {if $room.children == 1}{__("novoton_holidays.child")}{else}{__("novoton_holidays.children")}{/if}{/if}
-                            <span class="room-price" style="margin-left: 10px; font-weight: 600;">{fn_novoton_holidays_format_price($room.price|default:0, $novoton_display_coefficient|default:1, $novoton_display_symbol|default:$novoton_display_currency|default:$smarty.const.CART_PRIMARY_CURRENCY) nofilter}</span>
+                            <span class="room-price">{fn_novoton_holidays_format_price($room.price|default:0, $novoton_display_coefficient|default:1, $novoton_display_symbol|default:$novoton_display_currency|default:$smarty.const.CART_PRIMARY_CURRENCY) nofilter}</span>
                         </span>
                     </div>
                     {/if}
@@ -282,36 +227,32 @@
                         {/if}
                         
                         <div class="guest-entry guest-entry-adult">
-                            <div class="guest-entry-header">
+                            <div class="travel-guest-label">
                                 {$guest_num}. {__("novoton_holidays.adult")}
                                 {if $is_first_adult}
-                                    <span class="holder-tag">{__("novoton_holidays.adult_holder")|regex_replace:"/^.*- /":""}
+                                    <span class="travel-holder-tag">{__("novoton_holidays.adult_holder")|regex_replace:"/^.*- /":""}
                                     </span>
                                 {/if}
                                 {if count($booking_data.rooms_data) > 1}
-                                    <small style="color: #666; font-weight: normal;">({__("novoton_holidays.room_number")} {$room_num})</small>
+                                    <small class="travel-muted-note">({__("novoton_holidays.room_number")} {$room_num})</small>
                                 {/if}
                             </div>
-                            <div class="guest-entry-subheader">{__("novoton_holidays.regular_bed")}</div>
+                            <div class="travel-guest-sublabel">{__("novoton_holidays.regular_bed")}</div>
                             
-                            <div class="field-row">
-                                <div class="field-group">
-                                    <label for="guest_r{$room_num}_a{$i}_last">{__("novoton_holidays.last_name")}<span class="required" aria-hidden="true">*</span></label>
-                                    <input type="text"
-                                           id="guest_r{$room_num}_a{$i}_last"
-                                           name="guests[room{$room_num}_adult_{$i}][last_name]"
-                                           required
-                                           aria-required="true"
+                            <div class="travel-guest-grid">
+                                <div class="travel-guest-field">
+                                    <label>{__("novoton_holidays.last_name")}<span class="required">*</span></label>
+                                    <input type="text" 
+                                           name="guests[room{$room_num}_adult_{$i}][last_name]" 
+                                           required 
                                            value="{$prefilled_last_name}"
                                            placeholder="{__('novoton_holidays.last_name')}" />
                                 </div>
-                                <div class="field-group">
-                                    <label for="guest_r{$room_num}_a{$i}_first">{__("novoton_holidays.first_name")}<span class="required" aria-hidden="true">*</span></label>
-                                    <input type="text"
-                                           id="guest_r{$room_num}_a{$i}_first"
-                                           name="guests[room{$room_num}_adult_{$i}][first_name]"
-                                           required
-                                           aria-required="true"
+                                <div class="travel-guest-field">
+                                    <label>{__("novoton_holidays.first_name")}<span class="required">*</span></label>
+                                    <input type="text" 
+                                           name="guests[room{$room_num}_adult_{$i}][first_name]" 
+                                           required 
                                            value="{$prefilled_first_name}"
                                            placeholder="{__('novoton_holidays.first_name')}" />
                                 </div>
@@ -362,52 +303,46 @@
                             {$child_age_at_checkin = $prefilled_age|default:0}
                             
                             <div class="guest-entry guest-entry-child" data-room="{$room_num}" data-child="{$i}" data-original-age="{$child_age_at_checkin}">
-                                <div class="guest-entry-header">
+                                <div class="travel-guest-label">
                                     {$guest_num}. {__("novoton_holidays.child")} {$i}
                                     <span class="child-age-display" id="child_age_display_r{$room_num}_c{$i}">({$child_age_at_checkin} {if $child_age_at_checkin == 1}{__("novoton_holidays.age_label_singular")|default:"an"}{else}{__("novoton_holidays.age_label")|default:"ani"}{/if})</span>
                                     {if count($booking_data.rooms_data) > 1}
-                                        <small style="color: #666; font-weight: normal;">- {__("novoton_holidays.room_number")} {$room_num}</small>
+                                        <small class="travel-muted-note">- {__("novoton_holidays.room_number")} {$room_num}</small>
                                     {/if}
                                 </div>
                                 
                                 {* DOB age info/warning message area *}
-                                <div id="dob_info_r{$room_num}_c{$i}" class="dob-info-message" style="display: none; padding: 8px 12px; margin-bottom: 10px; border-radius: 4px; font-size: 13px;"></div>
+                                <div id="dob_info_r{$room_num}_c{$i}" class="dob-info-message travel-dob-info" style="display: none;"></div>
                                 
                                 {* Row 1: Last Name + First Name (side by side on desktop, stacked on mobile) *}
-                                <div class="field-row field-row-names">
-                                    <div class="field-group">
-                                        <label for="guest_r{$room_num}_c{$i}_last">{__("novoton_holidays.last_name")}<span class="required" aria-hidden="true">*</span></label>
-                                        <input type="text"
-                                               id="guest_r{$room_num}_c{$i}_last"
-                                               name="guests[room{$room_num}_child_{$i}][last_name]"
-                                               required
-                                               aria-required="true"
+                                <div class="travel-guest-grid">
+                                    <div class="travel-guest-field">
+                                        <label>{__("novoton_holidays.last_name")}<span class="required">*</span></label>
+                                        <input type="text" 
+                                               name="guests[room{$room_num}_child_{$i}][last_name]" 
+                                               required 
                                                value="{$prefilled_child_last_name}"
                                                placeholder="{__('novoton_holidays.last_name')}" />
                                     </div>
-                                    <div class="field-group">
-                                        <label for="guest_r{$room_num}_c{$i}_first">{__("novoton_holidays.first_name")}<span class="required" aria-hidden="true">*</span></label>
-                                        <input type="text"
-                                               id="guest_r{$room_num}_c{$i}_first"
-                                               name="guests[room{$room_num}_child_{$i}][first_name]"
-                                               required
-                                               aria-required="true"
+                                    <div class="travel-guest-field">
+                                        <label>{__("novoton_holidays.first_name")}<span class="required">*</span></label>
+                                        <input type="text" 
+                                               name="guests[room{$room_num}_child_{$i}][first_name]" 
+                                               required 
                                                value="{$prefilled_child_first_name}"
                                                placeholder="{__('novoton_holidays.first_name')}" />
                                     </div>
                                 </div>
                                 
                                 {* Row 2: Date of Birth (own row for better visibility) *}
-                                <div class="field-row field-row-dob">
-                                    <div class="field-group field-group-dob">
-                                        <label for="child_dob_r{$room_num}_c{$i}">{__("novoton_holidays.date_of_birth")} <span style="font-weight: normal; color: #666;">(ex: 27/05/2020)</span><span class="required" aria-hidden="true">*</span></label>
-                                        <input type="tel"
-                                               name="guests[room{$room_num}_child_{$i}][dob]"
-                                               id="child_dob_r{$room_num}_c{$i}"
+                                <div class="travel-guest-grid">
+                                    <div class="travel-guest-field travel-guest-field--dob">
+                                        <label>{__("novoton_holidays.date_of_birth")} <span class="travel-muted-note">(ex: 27/05/2020)</span><span class="required">*</span></label>
+                                        <input type="tel" 
+                                               name="guests[room{$room_num}_child_{$i}][dob]" 
+                                               id="child_dob_r{$room_num}_c{$i}" 
                                                class="dob-masked-input"
-                                               required
-                                               aria-required="true"
-                                               aria-describedby="dob_error_r{$room_num}_c{$i}"
+                                               required 
                                                maxlength="10"
                                                inputmode="numeric"
                                                autocomplete="off"
@@ -422,7 +357,7 @@
                                     <input type="hidden" name="guests[room{$room_num}_child_{$i}][type]" id="child_type_r{$room_num}_c{$i}" value="child" />
                                     <input type="hidden" name="guests[room{$room_num}_child_{$i}][room]" value="{$room_num}" />
                                 </div>
-                                <div id="dob_error_r{$room_num}_c{$i}" class="dob-validation-error" role="alert" aria-live="assertive" style="display: none; color: #dc3545; font-size: 12px; margin-top: 5px;"></div>
+                                <div id="dob_error_r{$room_num}_c{$i}" class="dob-validation-error" style="display: none;"></div>
                             </div>
                         {/for}
                     {/if}
@@ -432,18 +367,18 @@
             
             {* Important Info *}
             {if $payment_terms || $cancellation_terms}
-            <div class="important-info-section">
+            <div class="travel-form-section travel-important-info">
                 <h3>{__("novoton_holidays.important_info")}</h3>
                 
                 {if $payment_terms}
-                <div class="info-block">
+                <div class="travel-info-block">
                     <h4>{__("novoton_holidays.terms_of_payment")}</h4>
                     <p>{$payment_terms|nl2br}</p>
                 </div>
                 {/if}
                 
                 {if $cancellation_terms}
-                <div class="info-block">
+                <div class="travel-info-block">
                     <h4>{__("novoton_holidays.cancellation_terms")}</h4>
                     <p>{$cancellation_terms|nl2br}</p>
                 </div>
@@ -452,7 +387,7 @@
             {/if}
             
             {* Form Actions *}
-            <div class="form-actions">
+            <div class="travel-form-actions">
                                 {* Build rooms_data JSON for URL *}
                 {if $booking_data.rooms_data && is_array($booking_data.rooms_data)}
                     {$rooms_data_url = $booking_data.rooms_data|json_encode|escape:'url'}
@@ -461,10 +396,10 @@
                 {else}
                     {$rooms_data_url = ''}
                 {/if}
-                <a href="{fn_url("novoton_booking.search?hotel_id=`$booking_data.hotel_id`&product_id=`$product_id`&check_in=`$booking_data.check_in`&check_out=`$booking_data.check_out`&nights=`$booking_data.nights`&adults=`$booking_data.adults`&children=`$booking_data.children`&children_ages=`$booking_data.children_ages`&rooms=`$booking_data.num_rooms|default:1`&rooms_data=`$rooms_data_url`")}" class="btn-back">
+                <a href="{fn_url("novoton_booking.search?hotel_id=`$booking_data.hotel_id`&product_id=`$product_id`&check_in=`$booking_data.check_in`&check_out=`$booking_data.check_out`&nights=`$booking_data.nights`&adults=`$booking_data.adults`&children=`$booking_data.children`&children_ages=`$booking_data.children_ages`&rooms=`$booking_data.num_rooms|default:1`&rooms_data=`$rooms_data_url`")}" class="travel-btn-back">
                     <- {__("novoton_holidays.back_to_results")}
                 </a>
-                <button type="submit" class="btn-submit" id="booking-submit-btn">
+                <button type="submit" class="travel-btn--primary" id="booking-submit-btn">
                     {if $is_edit_mode}{__("novoton_holidays.update_booking")}{else}{__("novoton_holidays.add_to_cart")}{/if}
                 </button>
             </div>
@@ -782,8 +717,9 @@ function doCollectAndRecalculate(roomNum) {
 
 // A74e: Inline price recalculation to avoid external JS loading issues
 // A74y: Updated to handle per-room recalculation for multi-room bookings
-function triggerPriceRecalculationInline(childrenAges, roomNum) {
+function triggerPriceRecalculationInline(childrenAges, roomNum, isInitialLoad) {
     roomNum = roomNum || 1;
+    isInitialLoad = isInitialLoad || false;
     novotonLog('triggerPriceRecalculationInline called for room ' + roomNum, childrenAges);
     
     if (!window.bookingData) {
@@ -910,8 +846,8 @@ function triggerPriceRecalculationInline(childrenAges, roomNum) {
                 var priceDiff = totalPrice - window.bookingData.currentPrice;
                 window.bookingData.currentPrice = totalPrice;
 
-                // Show price change notification
-                if (Math.abs(priceDiff) > 0.01) {
+                // Show price change notification (skip on initial load — wording is child-age specific)
+                if (!isInitialLoad && Math.abs(priceDiff) > 0.01) {
                     showPriceNotification(priceDiff * coeff);
                 }
             } else {
@@ -928,8 +864,8 @@ function triggerPriceRecalculationInline(childrenAges, roomNum) {
                     novotonLog('Updated hidden total_price to: ' + newPrice.toFixed(2));
                 }
 
-                // Show price change notification (converted to display currency)
-                if (data.price_difference && data.price_difference !== 0) {
+                // Show price change notification (skip on initial load — wording is child-age specific)
+                if (!isInitialLoad && data.price_difference && data.price_difference !== 0) {
                     showPriceNotification(data.price_difference * coeff);
                 }
 
@@ -1045,8 +981,6 @@ function showPriceNotification(difference) {
     if (!notif) {
         notif = document.createElement('div');
         notif.id = 'price-change-notification';
-        notif.setAttribute('role', 'status');
-        notif.setAttribute('aria-live', 'polite');
         notif.style.cssText = 'background:#fff3cd;border-left:4px solid #ffc107;color:#856404;padding:8px 15px;margin:0 0 10px 0;border-radius:4px;font-size:14px;';
         var heading = document.querySelector('.guest-names-section h3');
         if (heading && heading.parentNode) {
@@ -1065,8 +999,6 @@ function showInfoNotice(message) {
     if (!notif) {
         notif = document.createElement('div');
         notif.id = 'price-recalc-notice';
-        notif.setAttribute('role', 'status');
-        notif.setAttribute('aria-live', 'polite');
         notif.style.cssText = 'background:#e7f3ff;border-left:4px solid #0071c2;color:#004085;padding:10px 15px;margin:10px 0;border-radius:4px;font-size:13px;';
         var priceBox = document.querySelector('.booking-price-box');
         if (priceBox && priceBox.parentNode) {
@@ -1098,11 +1030,11 @@ function showRoomChangeModal(data) {
         priceDiffStyle = 'color:#28a745;font-weight:bold;';
     }
     
-    var html = '<div id="room-change-warning" role="dialog" aria-modal="true" aria-labelledby="room-modal-title" style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:10000;display:flex;align-items:center;justify-content:center;">' +
+    var html = '<div id="room-change-warning" style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:10000;display:flex;align-items:center;justify-content:center;">' +
         '<div style="background:#fff;border-radius:12px;padding:25px;max-width:450px;margin:20px;box-shadow:0 10px 40px rgba(0,0,0,0.3);">' +
         '<div style="text-align:center;margin-bottom:20px;">' +
             '<div style="font-size:40px;margin-bottom:10px;"></div>' +
-            '<h3 id="room-modal-title" style="margin:0;color:#856404;font-size:18px;">{__("novoton_holidays.room_changed_title")|default:"Camera s-a modificat"}</h3>' +
+            '<h3 style="margin:0;color:#856404;font-size:18px;">{__("novoton_holidays.room_changed_title")|default:"Camera s-a modificat"}</h3>' +
         '</div>' +
         '<p style="text-align:center;color:#666;margin-bottom:20px;font-size:14px;">{__("novoton_holidays.room_changed_due_to_age")|default:"Camera selectata nu este disponibila pentru varsta copilului introdusa."}</p>' +
         '<div style="background:#fff3cd;border:1px solid #ffc107;border-radius:8px;padding:15px;margin-bottom:20px;">' +
@@ -1133,46 +1065,14 @@ function showRoomChangeModal(data) {
         '</div></div>';
     
     window._roomChangeData = data;
-    window._roomChangeTrigger = document.activeElement;
     var wrapper = document.createElement('div');
     wrapper.innerHTML = html;
     document.body.appendChild(wrapper.firstChild);
-
-    // Focus management: move focus into modal
-    var modal = document.getElementById('room-change-warning');
-    if (modal) {
-        var firstBtn = modal.querySelector('button');
-        if (firstBtn) firstBtn.focus();
-
-        // Close on Escape key
-        modal._escHandler = function(e) {
-            if (e.key === 'Escape') { closeRoomModal(); }
-        };
-        document.addEventListener('keydown', modal._escHandler);
-
-        // Trap focus inside modal
-        modal.addEventListener('keydown', function(e) {
-            if (e.key !== 'Tab') return;
-            var focusable = modal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
-            if (focusable.length === 0) return;
-            var first = focusable[0], last = focusable[focusable.length - 1];
-            if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
-            else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
-        });
-    }
 }
 
 function closeRoomModal() {
     var modal = document.getElementById('room-change-warning');
-    if (modal) {
-        if (modal._escHandler) document.removeEventListener('keydown', modal._escHandler);
-        modal.remove();
-    }
-    // Return focus to the element that triggered the modal
-    if (window._roomChangeTrigger) {
-        window._roomChangeTrigger.focus();
-        window._roomChangeTrigger = null;
-    }
+    if (modal) modal.remove();
 }
 
 function acceptRoomChangeInline() {
@@ -1263,4 +1163,30 @@ function acceptRoomChangeInline() {
     
     setTimeout(function() { if (notif.parentNode) notif.remove(); }, 10000);
 }
+
+// Verify price on initial booking-form load using the actual room/board IDs.
+// The search page uses blank room_id/board_id (one API call for all rooms); the Novoton
+// API can return a different price for that query than for a room-specific query.
+// Calling ajax_recalculate_price here populates the cache with the binding price and
+// updates the hidden total_price field so add_to_cart sees no change.
+document.addEventListener('DOMContentLoaded', function() {
+    if (typeof triggerPriceRecalculationInline !== 'function') return;
+    if (!window.bookingData || !window.bookingData.hotelId) return;
+
+    var isMultiRoom = window.bookingData.numRooms > 1 &&
+                      window.bookingData.roomsData &&
+                      window.bookingData.roomsData.length > 1;
+
+    if (isMultiRoom) {
+        for (var r = 1; r <= window.bookingData.numRooms; r++) {
+            (function(roomNum) {
+                setTimeout(function() {
+                    triggerPriceRecalculationInline([], roomNum, true);
+                }, (roomNum - 1) * 400);
+            })(r);
+        }
+    } else {
+        triggerPriceRecalculationInline([], 1, true);
+    }
+});
 </script>

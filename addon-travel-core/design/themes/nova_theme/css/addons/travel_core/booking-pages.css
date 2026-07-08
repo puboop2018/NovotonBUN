@@ -15,6 +15,157 @@
  * uncustomized markup keeps rendering.
  */
 
+/* ── Reservation shell (novoton booking form: hero header + card body) ── */
+/* A gradient hero header with an absolutely-positioned availability chip,
+   over a bordered white body. Shared so any provider's booking form can use
+   the same shell; lifted out of novoton's embedded <style>. */
+.travel-booking-page .travel-reservation-header {
+    position: relative;
+    background: linear-gradient(135deg, var(--nvt-primary, #003580) 0%, #0056b3 100%);
+    color: #fff;
+    padding: 20px 25px;
+    border-radius: 8px 8px 0 0;
+}
+.travel-booking-page .travel-reservation-header h1 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 600;
+    color: #fff;
+    padding-right: 150px;
+}
+.travel-booking-page .travel-hero-location {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.9);
+    margin-top: 5px;
+}
+.travel-booking-page .travel-hero-badge {
+    position: absolute;
+    top: 25px;
+    right: 25px;
+    background: var(--nvt-success, #28a745);
+    color: #fff;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 600;
+}
+.travel-booking-page .travel-reservation-body {
+    background: var(--nvt-bg, #fff);
+    border: 1px solid var(--nvt-border, #e0e0e0);
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+}
+/* Detail row: image | info grid | price box */
+.travel-booking-page .travel-detail-row {
+    display: flex;
+    flex-wrap: wrap;
+    border-bottom: 1px solid var(--nvt-border, #e0e0e0);
+}
+.travel-booking-page .travel-detail-image {
+    flex: 0 0 200px;
+    padding: 20px;
+}
+.travel-booking-page .travel-detail-image img {
+    width: 100%;
+    border-radius: var(--nvt-radius-sm, 4px);
+}
+.travel-booking-page .travel-detail-info {
+    flex: 1;
+    padding: 20px;
+}
+.travel-booking-page .travel-detail-price {
+    flex: 0 0 180px;
+    padding: 20px;
+    text-align: right;
+    border-left: 1px solid var(--nvt-border, #e0e0e0);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+/* Guest sublabel (small muted line under a guest header, e.g. "regular bed") */
+.travel-booking-page .travel-guest-sublabel {
+    font-size: 13px;
+    color: var(--nvt-text-light, #666);
+    margin-bottom: 12px;
+}
+/* Sections shell + important-info blocks */
+.travel-booking-page .travel-form-section {
+    padding: 20px;
+    border-bottom: 1px solid var(--nvt-border, #e0e0e0);
+}
+.travel-booking-page .travel-form-section > h3 {
+    margin: 0 0 20px;
+    font-size: 18px;
+    color: var(--nvt-text, #1a1a1a);
+    text-align: center;
+    font-weight: 600;
+}
+.travel-booking-page .travel-info-block {
+    margin-bottom: 15px;
+}
+.travel-booking-page .travel-info-block h4 {
+    margin: 0 0 6px;
+    color: var(--nvt-primary, #003580);
+    font-size: 15px;
+}
+/* Form actions bar (back link | submit) */
+.travel-booking-page .travel-form-actions {
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+    background: var(--nvt-bg-light, #f8f9fa);
+    border-radius: 0 0 8px 8px;
+}
+.travel-booking-page .travel-btn-back {
+    color: var(--nvt-primary, #003580);
+    text-decoration: none;
+    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 10px 0;
+}
+.travel-booking-page .travel-btn-back:hover {
+    text-decoration: underline;
+}
+/* Novoton reservation form is width-capped + centred (was in its embedded
+   <style>); scoped to the novoton wrapper so sphinx forms are unaffected. */
+.travel-booking-page.novoton-reservation-form {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 15px;
+}
+/* Room-banner right-hand meta (occupancy + per-room price) */
+.travel-booking-page .travel-room-banner-meta {
+    font-weight: normal;
+    font-size: 14px;
+}
+/* Nested sub-label (indented per-room line in the summary grid) */
+.travel-booking-page .travel-info-key--sub {
+    padding-left: 15px;
+}
+/* Small muted inline note (room number, DOB example) */
+.travel-booking-page .travel-muted-note {
+    color: var(--nvt-text-light, #666);
+    font-weight: normal;
+    font-size: 13px;
+}
+/* DOB age info/warning band + validation error (JS toggles display) */
+.travel-booking-page .travel-dob-info {
+    padding: 8px 12px;
+    margin-bottom: 10px;
+    border-radius: 4px;
+    font-size: 13px;
+}
+.travel-booking-page .dob-validation-error {
+    color: var(--nvt-danger, #dc3545);
+    font-size: 12px;
+    margin-top: 5px;
+}
+
 /* ── Booking summary (flat box; --hero = gradient banner) ─────────────── */
 .travel-booking-page .travel-booking-summary,
 .travel-booking-page .sphinx-booking-summary {
@@ -146,16 +297,97 @@
 }
 
 /* ── Guest cards + field grid ─────────────────────────────────────────── */
+/* Adult/child colour-coding (blue/amber left border) + the "holder" chip and
+   room-header banner were lifted from novoton's booking form so both
+   providers share the richer look. */
 .travel-booking-page .guest-entry {
     padding: 15px;
     margin-bottom: 10px;
     background: var(--nvt-bg, #fff);
     border: 1px solid var(--nvt-field-border, #e0e7ef);
+    border-left: 4px solid var(--nvt-primary, #003580);
     border-radius: 6px;
 }
 .travel-booking-page .guest-entry-child {
     background: var(--nvt-surface-child, #fffbf0);
     border-color: var(--nvt-border-child, #f0e0c0);
+    border-left-color: var(--nvt-warning, #f0ad4e);
+}
+/* "Holder"/main-guest chip on the first adult */
+.travel-booking-page .travel-holder-tag,
+.travel-booking-page .holder-tag {
+    display: inline-block;
+    background: var(--nvt-primary, #003580);
+    color: #fff;
+    font-size: 11px;
+    font-weight: normal;
+    padding: 2px 8px;
+    border-radius: 10px;
+    margin-left: 6px;
+    vertical-align: middle;
+}
+/* Solid room-header banner (multi-room). --hero keeps the gradient variant;
+   this is the flat solid-blue banner novoton used above each room's guests. */
+.travel-booking-page .travel-room-banner {
+    background: var(--nvt-primary, #003580);
+    color: #fff;
+    padding: 12px 15px;
+    margin: 20px 0 15px;
+    border-radius: 6px;
+    font-weight: 600;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+.travel-booking-page .travel-room-banner .travel-room-price {
+    font-weight: 600;
+}
+
+/* Two-column info grid (label / value), from novoton's booking summary */
+.travel-booking-page .travel-info-summary {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 8px 20px;
+    align-items: start;
+}
+.travel-booking-page .travel-info-summary .travel-info-key {
+    font-weight: 600;
+    color: var(--nvt-primary, #003580);
+    font-size: 14px;
+}
+.travel-booking-page .travel-info-summary .travel-info-val {
+    color: var(--nvt-text, #1a1a1a);
+    font-size: 14px;
+}
+.travel-booking-page .travel-info-summary .travel-info-val--highlight {
+    color: var(--nvt-danger, #dc3545);
+    font-weight: 600;
+}
+
+/* Price-box states (unverified badge + refresh link + inline error) */
+.travel-booking-page .travel-price-unverified {
+    display: inline-block;
+    background: var(--nvt-warning, #f0ad4e);
+    color: var(--nvt-warning-dark, #856404);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 3px;
+    margin-left: 5px;
+}
+.travel-booking-page .travel-price-refresh {
+    display: inline-block;
+    font-size: 12px;
+    color: var(--nvt-info, #0071c2);
+    margin-top: 5px;
+    text-decoration: none;
+}
+.travel-booking-page .travel-price-error {
+    color: var(--nvt-danger, #dc3545);
+    font-size: 12px;
+    margin-bottom: 5px;
 }
 .travel-booking-page .travel-guest-label {
     font-weight: 600;
@@ -374,5 +606,35 @@
         width: 100%;
         height: auto;
         max-height: 220px;
+    }
+    /* Reservation shell (novoton booking form) stacks on mobile — replaces
+       the responsive rules that lived in the removed embedded <style>. */
+    .travel-booking-page .travel-detail-row {
+        flex-direction: column;
+    }
+    .travel-booking-page .travel-detail-image,
+    .travel-booking-page .travel-detail-price {
+        flex: none;
+    }
+    .travel-booking-page .travel-detail-price {
+        text-align: center;
+        border-left: none;
+        border-top: 1px solid var(--nvt-border, #e0e0e0);
+    }
+    .travel-booking-page .travel-reservation-header h1 {
+        padding-right: 0;
+    }
+    .travel-booking-page .travel-hero-badge {
+        position: static;
+        display: inline-block;
+        margin-top: 10px;
+    }
+    /* Submit sits above the back link, full-width */
+    .travel-booking-page .travel-form-actions {
+        flex-direction: column-reverse;
+        text-align: center;
+    }
+    .travel-booking-page .travel-form-actions .travel-btn--primary {
+        width: 100%;
     }
 }
