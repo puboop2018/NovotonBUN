@@ -85,6 +85,66 @@ final class SmartyCompatTest extends TestCase
         self::assertSame([], $offenders, 'templates calling json_decode() — prepare the value in PHP instead');
     }
 
+    /**
+     * The migrated booking surfaces (search results + guest-entry form) must
+     * carry NO embedded <style> block and NO inline style= attributes in their
+     * Smarty markup — styling lives in travel_core's shared stylesheets +
+     * novoton-results.css. Both were de-inlined (search.tpl in the results
+     * migration; booking_form.tpl in the booking-form consolidation), removing
+     * an all-!important embedded <style> graveyard. This guards it from
+     * creeping back.
+     *
+     * Excluded from the scan: Smarty comments, and <script>…</script> regions
+     * (their JS builds modal HTML via innerHTML strings — runtime behaviour,
+     * not template CSS). Permitted in markup: style="display:none" — that is
+     * JS-toggled state, not styling.
+     */
+    public function testMigratedBookingSurfacesAreDeInlined(): void
+    {
+        $targets = ['views/novoton_booking/search.tpl', 'views/novoton_booking/booking_form.tpl'];
+        $scanned = 0;
+        $offenders = [];
+
+        foreach (self::designTemplates() as $path) {
+            $norm = str_replace('\\', '/', $path);
+            $isTarget = false;
+            foreach ($targets as $t) {
+                if (str_contains($norm, $t)) {
+                    $isTarget = true;
+                    break;
+                }
+            }
+            if (!$isTarget) {
+                continue;
+            }
+            ++$scanned;
+
+            $source = (string) file_get_contents($path);
+            // Strip Smarty comments and <script> regions before scanning markup.
+            $markup = (string) preg_replace('/\{\*.*?\*\}/s', '', $source);
+            $markup = (string) preg_replace('~<script\b.*?</script>~is', '', $markup);
+
+            if (preg_match('/<style\b/i', $markup)) {
+                $offenders[] = basename($path) . ' :: embedded <style> block';
+            }
+            if (preg_match_all('/\sstyle="([^"]*)"/i', $markup, $m)) {
+                foreach ($m[1] as $decl) {
+                    if (!preg_match('/^\s*display:\s*none;?\s*$/i', $decl)) {
+                        $offenders[] = basename($path) . " :: inline style=\"{$decl}\"";
+                    }
+                }
+            }
+        }
+
+        self::assertSame(4, $scanned, 'expected both migrated surfaces in both themes (responsive + nova)');
+        self::assertSame(
+            [],
+            $offenders,
+            'migrated booking surfaces must be de-inlined — shared classes only; '
+                . 'only display:none state toggles are allowed in markup',
+        );
+    }
+
     /** @return list<string> */
     private static function designTemplates(): array
     {

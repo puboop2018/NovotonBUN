@@ -141,6 +141,47 @@ final class DesignTokensTest extends TestCase
             . json_encode($offenders));
     }
 
+    /**
+     * The primary "book"/"search" button color contract lives in ONE place —
+     * the shared .travel-btn--primary rule in booking-engine.css. The three
+     * button contexts (engine search button, results book button, forms book
+     * button) used to each declare their own background/hover and drifted in
+     * blue shade. Guard: only booking-engine.css may set the button
+     * background; the results/forms rules must be box-model only.
+     */
+    public function testPrimaryButtonColorIsCentralised(): void
+    {
+        $engine = self::read('addon-travel-core/design/themes/responsive/css/addons/travel_core/booking-engine.css');
+        self::assertStringContainsString(
+            '.travel-btn--primary',
+            $engine,
+            'booking-engine.css must define the canonical .travel-btn--primary contract',
+        );
+        self::assertMatchesRegularExpression(
+            '~\.travel-btn--primary[^{]*\{[^}]*--nvt-search-btn-bg~s',
+            $engine,
+            'the shared button contract must set background from --nvt-search-btn-bg',
+        );
+
+        // The per-context book-button rules must NOT re-declare the brand color.
+        foreach (['search-results.css', 'booking-pages.css'] as $sheet) {
+            $css = self::read("addon-travel-core/design/themes/responsive/css/addons/travel_core/$sheet");
+            preg_match_all(
+                '~\.travel-offer-book-btn[^{]*\{([^}]*)\}~s',
+                $css,
+                $blocks,
+            );
+            foreach ($blocks[1] as $body) {
+                self::assertStringNotContainsString(
+                    'search-btn-bg',
+                    $body,
+                    "$sheet: .travel-offer-book-btn must not re-declare the button "
+                        . 'background — it comes from the shared .travel-btn--primary contract',
+                );
+            }
+        }
+    }
+
     public function testNovotonNoLongerEmitsTheBridge(): void
     {
         foreach (self::THEMES as $theme) {

@@ -15,10 +15,161 @@
  * uncustomized markup keeps rendering.
  */
 
+/* ── Reservation shell (novoton booking form: hero header + card body) ── */
+/* A gradient hero header with an absolutely-positioned availability chip,
+   over a bordered white body. Shared so any provider's booking form can use
+   the same shell; lifted out of novoton's embedded <style>. */
+.travel-booking-page .travel-reservation-header {
+    position: relative;
+    background: linear-gradient(135deg, var(--nvt-primary, #003580) 0%, #0056b3 100%);
+    color: #fff;
+    padding: 20px 25px;
+    border-radius: 8px 8px 0 0;
+}
+.travel-booking-page .travel-reservation-header h1 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 600;
+    color: #fff;
+    padding-right: 150px;
+}
+.travel-booking-page .travel-hero-location {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.9);
+    margin-top: 5px;
+}
+.travel-booking-page .travel-hero-badge {
+    position: absolute;
+    top: 25px;
+    right: 25px;
+    background: var(--nvt-success, #28a745);
+    color: #fff;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 600;
+}
+.travel-booking-page .travel-reservation-body {
+    background: var(--nvt-bg, #fff);
+    border: 1px solid var(--nvt-border, #e0e0e0);
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+}
+/* Detail row: image | info grid | price box */
+.travel-booking-page .travel-detail-row {
+    display: flex;
+    flex-wrap: wrap;
+    border-bottom: 1px solid var(--nvt-border, #e0e0e0);
+}
+.travel-booking-page .travel-detail-image {
+    flex: 0 0 200px;
+    padding: 20px;
+}
+.travel-booking-page .travel-detail-image img {
+    width: 100%;
+    border-radius: var(--nvt-radius-sm, 4px);
+}
+.travel-booking-page .travel-detail-info {
+    flex: 1;
+    padding: 20px;
+}
+.travel-booking-page .travel-detail-price {
+    flex: 0 0 180px;
+    padding: 20px;
+    text-align: right;
+    border-left: 1px solid var(--nvt-border, #e0e0e0);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+/* Guest sublabel (small muted line under a guest header, e.g. "regular bed") */
+.travel-booking-page .travel-guest-sublabel {
+    font-size: 13px;
+    color: var(--nvt-text-light, #666);
+    margin-bottom: 12px;
+}
+/* Sections shell + important-info blocks */
+.travel-booking-page .travel-form-section {
+    padding: 20px;
+    border-bottom: 1px solid var(--nvt-border, #e0e0e0);
+}
+.travel-booking-page .travel-form-section > h3 {
+    margin: 0 0 20px;
+    font-size: 18px;
+    color: var(--nvt-text, #1a1a1a);
+    text-align: center;
+    font-weight: 600;
+}
+.travel-booking-page .travel-info-block {
+    margin-bottom: 15px;
+}
+.travel-booking-page .travel-info-block h4 {
+    margin: 0 0 6px;
+    color: var(--nvt-primary, #003580);
+    font-size: 15px;
+}
+/* Form actions bar (back link | submit) */
+.travel-booking-page .travel-form-actions {
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+    background: var(--nvt-bg-light, #f8f9fa);
+    border-radius: 0 0 8px 8px;
+}
+.travel-booking-page .travel-btn-back {
+    color: var(--nvt-primary, #003580);
+    text-decoration: none;
+    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 10px 0;
+}
+.travel-booking-page .travel-btn-back:hover {
+    text-decoration: underline;
+}
+/* Novoton reservation form is width-capped + centred (was in its embedded
+   <style>); scoped to the novoton wrapper so sphinx forms are unaffected. */
+.travel-booking-page.novoton-reservation-form {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 15px;
+}
+/* Room-banner right-hand meta (occupancy + per-room price) */
+.travel-booking-page .travel-room-banner-meta {
+    font-weight: normal;
+    font-size: 14px;
+}
+/* Nested sub-label (indented per-room line in the summary grid) */
+.travel-booking-page .travel-info-key--sub {
+    padding-left: 15px;
+}
+/* Small muted inline note (room number, DOB example) */
+.travel-booking-page .travel-muted-note {
+    color: var(--nvt-text-light, #666);
+    font-weight: normal;
+    font-size: 13px;
+}
+/* DOB age info/warning band + validation error (JS toggles display) */
+.travel-booking-page .travel-dob-info {
+    padding: 8px 12px;
+    margin-bottom: 10px;
+    border-radius: 4px;
+    font-size: 13px;
+}
+.travel-booking-page .dob-validation-error {
+    color: var(--nvt-danger, #dc3545);
+    font-size: 12px;
+    margin-top: 5px;
+}
+
 /* ── Booking summary (flat box; --hero = gradient banner) ─────────────── */
 .travel-booking-page .travel-booking-summary,
 .travel-booking-page .sphinx-booking-summary {
-    background: #f5f9fc;
+    background: var(--nvt-surface-info, #f5f9fc);
     padding: 20px;
     border-radius: 8px;
     margin-bottom: 20px;
@@ -77,7 +228,7 @@
 .travel-booking-page .travel-label-chip {
     display: inline-block;
     padding: 2px 8px;
-    background: #e8f5e9;
+    background: var(--nvt-success-light, #e8f5e9);
     color: var(--nvt-success-strong, #1e7e34);
     border-radius: 4px;
     font-size: 12px;
@@ -94,7 +245,7 @@
     text-align: right;
     margin-bottom: 20px;
     padding: 15px;
-    background: #f5f9fc;
+    background: var(--nvt-surface-info, #f5f9fc);
     border-radius: 8px;
 }
 .travel-booking-page .travel-price-total,
@@ -113,8 +264,8 @@
 .travel-booking-page .sphinx-booking-terms {
     margin-bottom: 20px;
     padding: 15px;
-    background: #fffdf5;
-    border: 1px solid #f0e6c8;
+    background: var(--nvt-surface-terms, #fffdf5);
+    border: 1px solid var(--nvt-border-terms, #f0e6c8);
     border-radius: 8px;
     font-size: 13px;
 }
@@ -131,9 +282,9 @@
 .travel-booking-page .travel-room-header,
 .travel-booking-page .sphinx-room-header {
     padding: 10px 15px;
-    background: #e8f0fe;
+    background: var(--nvt-surface-room, #e8f0fe);
     border-radius: 6px 6px 0 0;
-    border: 1px solid #c5d5ea;
+    border: 1px solid var(--nvt-border-room, #c5d5ea);
     border-bottom: none;
 }
 .travel-booking-page * + .travel-room-header,
@@ -146,16 +297,97 @@
 }
 
 /* ── Guest cards + field grid ─────────────────────────────────────────── */
+/* Adult/child colour-coding (blue/amber left border) + the "holder" chip and
+   room-header banner were lifted from novoton's booking form so both
+   providers share the richer look. */
 .travel-booking-page .guest-entry {
     padding: 15px;
     margin-bottom: 10px;
     background: var(--nvt-bg, #fff);
-    border: 1px solid #e0e7ef;
+    border: 1px solid var(--nvt-field-border, #e0e7ef);
+    border-left: 4px solid var(--nvt-primary, #003580);
     border-radius: 6px;
 }
 .travel-booking-page .guest-entry-child {
-    background: #fffbf0;
-    border-color: #f0e0c0;
+    background: var(--nvt-surface-child, #fffbf0);
+    border-color: var(--nvt-border-child, #f0e0c0);
+    border-left-color: var(--nvt-warning, #f0ad4e);
+}
+/* "Holder"/main-guest chip on the first adult */
+.travel-booking-page .travel-holder-tag,
+.travel-booking-page .holder-tag {
+    display: inline-block;
+    background: var(--nvt-primary, #003580);
+    color: #fff;
+    font-size: 11px;
+    font-weight: normal;
+    padding: 2px 8px;
+    border-radius: 10px;
+    margin-left: 6px;
+    vertical-align: middle;
+}
+/* Solid room-header banner (multi-room). --hero keeps the gradient variant;
+   this is the flat solid-blue banner novoton used above each room's guests. */
+.travel-booking-page .travel-room-banner {
+    background: var(--nvt-primary, #003580);
+    color: #fff;
+    padding: 12px 15px;
+    margin: 20px 0 15px;
+    border-radius: 6px;
+    font-weight: 600;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+.travel-booking-page .travel-room-banner .travel-room-price {
+    font-weight: 600;
+}
+
+/* Two-column info grid (label / value), from novoton's booking summary */
+.travel-booking-page .travel-info-summary {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 8px 20px;
+    align-items: start;
+}
+.travel-booking-page .travel-info-summary .travel-info-key {
+    font-weight: 600;
+    color: var(--nvt-primary, #003580);
+    font-size: 14px;
+}
+.travel-booking-page .travel-info-summary .travel-info-val {
+    color: var(--nvt-text, #1a1a1a);
+    font-size: 14px;
+}
+.travel-booking-page .travel-info-summary .travel-info-val--highlight {
+    color: var(--nvt-danger, #dc3545);
+    font-weight: 600;
+}
+
+/* Price-box states (unverified badge + refresh link + inline error) */
+.travel-booking-page .travel-price-unverified {
+    display: inline-block;
+    background: var(--nvt-warning, #f0ad4e);
+    color: var(--nvt-warning-dark, #856404);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 3px;
+    margin-left: 5px;
+}
+.travel-booking-page .travel-price-refresh {
+    display: inline-block;
+    font-size: 12px;
+    color: var(--nvt-info, #0071c2);
+    margin-top: 5px;
+    text-decoration: none;
+}
+.travel-booking-page .travel-price-error {
+    color: var(--nvt-danger, #dc3545);
+    font-size: 12px;
+    margin-bottom: 5px;
 }
 .travel-booking-page .travel-guest-label {
     font-weight: 600;
@@ -163,11 +395,11 @@
     color: var(--nvt-primary, #003580);
 }
 .travel-booking-page .travel-guest-label--child {
-    color: #856404;
+    color: var(--nvt-warning-dark, #856404);
 }
 .travel-booking-page .travel-guest-age-note {
     font-weight: normal;
-    color: #999;
+    color: var(--nvt-text-disabled, #999);
 }
 .travel-booking-page .travel-guest-grid {
     display: flex;
@@ -187,11 +419,79 @@
     color: var(--nvt-text-light, #666);
 }
 
+/* ── Form controls (inputs, selects, textareas) ───────────────────────── */
+/* The booking forms previously fell back to bare CS-Cart .ty-input-text with
+   no focus ring or error affordance. These add a consistent field look +
+   keyboard focus + invalid state without fighting the theme (no !important). */
+.travel-booking-page input[type="text"],
+.travel-booking-page input[type="email"],
+.travel-booking-page input[type="tel"],
+.travel-booking-page input[type="date"],
+.travel-booking-page input[type="number"],
+.travel-booking-page select,
+.travel-booking-page textarea {
+    width: 100%;
+    box-sizing: border-box;
+    min-height: 44px; /* touch target */
+    padding: 10px 12px;
+    font: inherit;
+    font-size: 14px;
+    color: var(--nvt-text, #1a1a1a);
+    background: var(--nvt-bg, #fff);
+    border: 1px solid var(--nvt-field-border, #e0e7ef);
+    border-radius: var(--nvt-radius-sm, 4px);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.travel-booking-page textarea {
+    min-height: 72px;
+    resize: vertical;
+}
+.travel-booking-page input:focus-visible,
+.travel-booking-page select:focus-visible,
+.travel-booking-page textarea:focus-visible {
+    outline: none;
+    border-color: var(--nvt-primary, #003580);
+    box-shadow: 0 0 0 2px var(--nvt-primary-focus, rgba(0, 53, 128, 0.15));
+}
+/* Fallback for engines that don't scope :focus-visible to form fields */
+.travel-booking-page input:focus,
+.travel-booking-page select:focus,
+.travel-booking-page textarea:focus {
+    border-color: var(--nvt-primary, #003580);
+}
+/* Field labels */
+.travel-booking-page .travel-guest-field > label,
+.travel-booking-page .travel-contact-section label,
+.travel-booking-page .field-group > label {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--nvt-text-light, #666);
+    margin-bottom: 4px;
+}
+/* Invalid / error state (set aria-invalid="true" or add .travel-field-error) */
+.travel-booking-page .travel-field-error,
+.travel-booking-page [aria-invalid="true"] {
+    border-color: var(--nvt-danger, #dc3545);
+    background: var(--nvt-danger-light, #fdecea);
+}
+.travel-booking-page .travel-field-error-message {
+    color: var(--nvt-danger, #dc3545);
+    font-size: 12px;
+    margin-top: 4px;
+}
+/* Required-field asterisk (.travel-required, or legacy .required) */
+.travel-booking-page .travel-required,
+.travel-booking-page .required {
+    color: var(--nvt-danger, #dc3545);
+    margin-left: 2px;
+}
+
 /* ── Info cards (flight / bus / transfers) ────────────────────────────── */
 .travel-booking-page .travel-info-card,
 .travel-booking-page .sphinx-flight-info {
     background: var(--nvt-bg, #fff);
-    border: 1px solid #e0e7ef;
+    border: 1px solid var(--nvt-field-border, #e0e7ef);
     border-radius: 8px;
     padding: 15px;
     margin-bottom: 20px;
@@ -225,18 +525,18 @@
     flex: 1;
     min-width: 250px;
     padding: 15px;
-    background: #f0faf0;
+    background: var(--nvt-surface-included, #f0faf0);
     border-radius: 8px;
 }
 .travel-booking-page .travel-included-panel--negative {
-    background: #fef0f0;
+    background: var(--nvt-surface-excluded, #fef0f0);
 }
 .travel-booking-page .travel-included-panel h4 {
     margin: 0 0 8px;
     color: var(--nvt-success-strong, #2e7d32);
 }
 .travel-booking-page .travel-included-panel--negative h4 {
-    color: #c62828;
+    color: var(--nvt-danger, #c62828);
 }
 .travel-booking-page .travel-included-panel ul {
     margin: 0;
@@ -252,7 +552,7 @@
     padding: 10px 15px;
     margin-bottom: 8px;
     background: var(--nvt-bg, #fff);
-    border: 1px solid #e0e7ef;
+    border: 1px solid var(--nvt-field-border, #e0e7ef);
     border-radius: 6px;
     display: flex;
     align-items: center;
@@ -270,7 +570,7 @@
     color: var(--nvt-price-color, #003580);
 }
 .travel-booking-page .travel-service-mandatory {
-    color: #999;
+    color: var(--nvt-text-disabled, #999);
     font-size: 12px;
 }
 
@@ -279,7 +579,7 @@
 .travel-booking-page .contact-section {
     margin-top: 20px;
     padding: 15px;
-    background: #f5f9fc;
+    background: var(--nvt-surface-info, #f5f9fc);
     border-radius: 6px;
 }
 .travel-booking-page .travel-booking-submit,
@@ -287,32 +587,46 @@
     margin-top: 20px;
     text-align: center;
 }
+/* Box model only — brand-blue color, hover, and focus-visible ring come from
+   the shared .travel-btn--primary contract in booking-engine.css. */
 .travel-booking-page .travel-offer-book-btn,
 .travel-booking-page .sphinx-offer-book-btn {
     display: inline-block;
-    background: var(--nvt-search-btn-bg, #006ce4);
-    color: var(--nvt-search-btn-text, #fff);
     padding: 12px 40px;
-    border: none;
-    border-radius: 6px;
     font-size: 17px;
-    font-weight: 600;
-    text-decoration: none;
-    cursor: pointer;
-    transition: background 0.15s ease;
 }
-.travel-booking-page .travel-offer-book-btn:hover,
-.travel-booking-page .sphinx-offer-book-btn:hover,
-.travel-booking-page .travel-offer-book-btn:focus,
-.travel-booking-page .sphinx-offer-book-btn:focus {
-    background: var(--nvt-search-btn-hover, #0057b8);
-    color: var(--nvt-search-btn-text, #fff);
-    text-decoration: none;
+/* Submit states: disabled (mid-submit / incomplete) + loading spinner.
+   Works on the shared .travel-btn--primary and the form submit buttons. */
+.travel-booking-page .travel-btn--primary:disabled,
+.travel-booking-page .travel-offer-book-btn:disabled,
+.travel-booking-page .sphinx-offer-book-btn:disabled,
+.travel-booking-page .travel-btn--primary.is-disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
 }
-.travel-booking-page .travel-offer-book-btn:focus-visible,
-.travel-booking-page .sphinx-offer-book-btn:focus-visible {
-    outline: 2px solid var(--nvt-primary, #003580);
-    outline-offset: 2px;
+.travel-booking-page .travel-btn--loading {
+    position: relative;
+    color: transparent !important;
+    pointer-events: none;
+}
+.travel-booking-page .travel-btn--loading::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 18px;
+    height: 18px;
+    margin: -9px 0 0 -9px;
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    border-top-color: #fff;
+    border-radius: 50%;
+    /* travel-spin keyframe is defined in search-results.css (loaded first) */
+    animation: travel-spin 0.7s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+    .travel-booking-page .travel-btn--loading::after {
+        animation: none;
+    }
 }
 
 /* ── Responsive ───────────────────────────────────────────────────────── */
@@ -325,5 +639,58 @@
         width: 100%;
         height: auto;
         max-height: 220px;
+    }
+    /* Reservation shell (novoton booking form) stacks on mobile — replaces
+       the responsive rules that lived in the removed embedded <style>. */
+    .travel-booking-page .travel-detail-row {
+        flex-direction: column;
+    }
+    .travel-booking-page .travel-detail-image,
+    .travel-booking-page .travel-detail-price {
+        flex: none;
+    }
+    .travel-booking-page .travel-detail-price {
+        text-align: center;
+        border-left: none;
+        border-top: 1px solid var(--nvt-border, #e0e0e0);
+    }
+    .travel-booking-page .travel-reservation-header h1 {
+        padding-right: 0;
+    }
+    .travel-booking-page .travel-hero-badge {
+        position: static;
+        display: inline-block;
+        margin-top: 10px;
+    }
+    /* Submit sits above the back link, full-width */
+    .travel-booking-page .travel-form-actions {
+        flex-direction: column-reverse;
+        text-align: center;
+    }
+    .travel-booking-page .travel-form-actions .travel-btn--primary {
+        width: 100%;
+    }
+    /* Prevent horizontal overflow at ~320px: the min-width:200/250px flex
+       columns must be allowed to shrink to the viewport. */
+    .travel-booking-page .travel-guest-field,
+    .travel-booking-page .travel-guest-field--dob,
+    .travel-booking-page .travel-info-col,
+    .travel-booking-page .travel-included-panel {
+        flex: 1 1 100%;
+        min-width: 0;
+    }
+    .travel-booking-page .travel-booking-price-col {
+        text-align: left;
+    }
+}
+
+/* Desktop: keep the standalone price box in view while a long guest list
+   scrolls beneath it (sphinx hotel form's price box is a block sibling above
+   the guest section; a no-op where the price sits inside a flex row). */
+@media (min-width: 768px) {
+    .travel-booking-page .travel-price-box {
+        position: sticky;
+        top: 10px;
+        z-index: 1;
     }
 }

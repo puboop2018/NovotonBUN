@@ -214,7 +214,7 @@
                         <div class="guest-entry guest-entry-adult">
                             <div class="travel-guest-label">
                                 {__("travel_core.adult")|default:"Adult"} {$smarty.section.adult.index}
-                                {if $room_idx == 0 && $smarty.section.adult.index == 1} ({__("travel_core.main_guest")|default:"Main Guest"}){/if}
+                                {if $room_idx == 0 && $smarty.section.adult.index == 1} <span class="travel-holder-tag">{__("travel_core.main_guest")|default:"Main Guest"}</span>{/if}
                             </div>
                             <div class="travel-guest-grid">
                                 <div class="travel-guest-field">
@@ -276,7 +276,7 @@
                     <div class="guest-entry guest-entry-adult">
                         <div class="travel-guest-label">
                             {__("travel_core.adult")|default:"Adult"} {$smarty.section.adult.index}
-                            {if $smarty.section.adult.index == 1} ({__("travel_core.main_guest")|default:"Main Guest"}){/if}
+                            {if $smarty.section.adult.index == 1} <span class="travel-holder-tag">{__("travel_core.main_guest")|default:"Main Guest"}</span>{/if}
                         </div>
                         <div class="travel-guest-grid">
                             <div class="travel-guest-field">

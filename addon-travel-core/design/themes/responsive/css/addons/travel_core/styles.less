@@ -113,6 +113,20 @@
 // Subtle hover surface for interactive cells (calendar, lists)
 @novoton-hover-bg:          darken(@novoton-bg, 3%);
 
+// Surface tints for booking-form panels & cards. Token-ised (not raw hex in
+// booking-pages.css) so a future dark-theme :root override can restyle them
+// in one place; the literal defaults preserve the current light-theme look.
+@novoton-surface-info:      #f5f9fc;  // info / booking-summary panel
+@novoton-surface-terms:     #fffdf5;  // payment / cancellation terms panel
+@novoton-border-terms:      #f0e6c8;
+@novoton-surface-room:      #e8f0fe;  // room header / selected-room
+@novoton-border-room:       #c5d5ea;
+@novoton-surface-child:     #fffbf0;  // child guest card
+@novoton-border-child:      #f0e0c0;
+@novoton-surface-included:  #f0faf0;  // "included" services panel
+@novoton-surface-excluded:  #fef0f0;  // "not included" panel
+@novoton-field-border:      #e0e7ef;  // form input border
+
 // Status derived
 @novoton-success-dark:      darken(@novoton-success, 10%);
 @novoton-success-light:     lighten(@novoton-success, 40%);
@@ -220,6 +234,18 @@
     --nvt-card-bg:          ~"@{novoton-bg}";
     --nvt-border:           ~"@{novoton-border}";
     --nvt-hover-bg:         ~"@{novoton-hover-bg}";
+
+    // Surface tints (booking-form panels & cards)
+    --nvt-surface-info:     ~"@{novoton-surface-info}";
+    --nvt-surface-terms:    ~"@{novoton-surface-terms}";
+    --nvt-border-terms:     ~"@{novoton-border-terms}";
+    --nvt-surface-room:     ~"@{novoton-surface-room}";
+    --nvt-border-room:      ~"@{novoton-border-room}";
+    --nvt-surface-child:    ~"@{novoton-surface-child}";
+    --nvt-border-child:     ~"@{novoton-border-child}";
+    --nvt-surface-included: ~"@{novoton-surface-included}";
+    --nvt-surface-excluded: ~"@{novoton-surface-excluded}";
+    --nvt-field-border:     ~"@{novoton-field-border}";
 
     // Calendar
     --nvt-price-color:          ~"@{novoton-price-color}";

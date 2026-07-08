@@ -176,26 +176,66 @@ button.nvt-field-input:active {
 
 /* ---------- Search button ---------- */
 
+/* ── Shared primary button (the ONE brand-blue button contract) ──────────
+   Canonical class: .travel-btn--primary (use it on new markup). The three
+   legacy button contexts — the engine's search button, the results/forms
+   "book" buttons — share this color + focus contract so the brand blue,
+   hover and focus ring can't drift between them (they used to). Each context
+   keeps only its own box model (padding / font-size / display / width) in
+   its own rule below. Loaded first (booking-engine.css) so those later
+   rules never re-declare color. */
+.travel-btn--primary {
+    display: inline-block;
+    padding: 12px 32px;
+    font-size: 16px;
+    text-align: center;
+}
+.travel-btn--primary,
+.nvt-btn-search,
+.travel-search-results-page .travel-offer-book-btn,
+.travel-booking-page .travel-offer-book-btn,
+.travel-booking-page .sphinx-offer-book-btn {
+    background: var(--nvt-search-btn-bg, #006ce4);
+    color: var(--nvt-search-btn-text, #fff);
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+.travel-btn--primary:hover,
+.travel-btn--primary:focus,
+.nvt-btn-search:hover,
+.travel-search-results-page .travel-offer-book-btn:hover,
+.travel-search-results-page .travel-offer-book-btn:focus,
+.travel-booking-page .travel-offer-book-btn:hover,
+.travel-booking-page .sphinx-offer-book-btn:hover,
+.travel-booking-page .travel-offer-book-btn:focus,
+.travel-booking-page .sphinx-offer-book-btn:focus {
+    background: var(--nvt-search-btn-hover, #0057b8);
+    color: var(--nvt-search-btn-text, #fff);
+    text-decoration: none;
+}
+.travel-btn--primary:focus-visible,
+.nvt-btn-search:focus-visible,
+.travel-search-results-page .travel-offer-book-btn:focus-visible,
+.travel-booking-page .travel-offer-book-btn:focus-visible,
+.travel-booking-page .sphinx-offer-book-btn:focus-visible {
+    outline: 2px solid var(--nvt-primary, #003580);
+    outline-offset: 2px;
+}
+
 .nvt-btn-search {
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
     padding: 10px 28px;
-    background: var(--nvt-search-btn-bg, #006ce4);
-    color: var(--nvt-search-btn-text, #fff);
-    border: none;
-    border-radius: 6px;
     font-size: 15px;
-    font-weight: 600;
-    cursor: pointer;
     white-space: nowrap;
     width: 100%;
     height: 100%;
-    transition: background 0.15s;
-}
-.nvt-btn-search:hover {
-    background: var(--nvt-search-btn-hover, #0057b8);
 }
 
 /* ---------- Validation message (tooltip under date field) ---------- */
