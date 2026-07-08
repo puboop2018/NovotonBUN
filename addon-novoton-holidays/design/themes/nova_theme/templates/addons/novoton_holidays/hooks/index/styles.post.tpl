@@ -11,5 +11,11 @@
 {* Main addon styles (LESS - will be compiled by CS-Cart) *}
 {style src="addons/novoton_holidays/styles.less"}
 
-{* Booking engine React component styles (edit this file directly, no build needed) *}
-{style src="addons/novoton_holidays/booking-engine.css"}
+{* Search-results page: novoton-specific classes (multi-room grid, quota
+   states, promos, info modal). The offer cards themselves come from
+   travel_core's shared search-results.css. *}
+{style src="addons/novoton_holidays/novoton-results.css"}
+
+{* NOTE: novoton's own booking-engine.css was deleted — it was a stale fork
+   of travel_core's booking-engine.css and, loaded here, its older rules
+   overrode the shared (newer) stylesheet on this theme. *}

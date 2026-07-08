@@ -32,6 +32,16 @@ delete `var/cache/templates/`): production mode does not recompile templates
 when files change (`compile_check` off), so stale compiled templates keep
 executing — old template bugs (e.g. the admin booking view's
 `{capture}` crash) resurface even though the deployed files are fixed.
+Clearing the cache also recompiles the LESS design tokens.
+
+⚠️ **Deploys must also DELETE removed files** (`rsync --delete`, or remove
+them by hand). The 2026-07 design consolidation deleted these dead/stale
+files, and a copy-only deploy leaves them behind:
+`design/themes/{responsive,nova_theme}/css/addons/novoton_holidays/`
+`booking-engine.css`, `styles.min.css`, `booking-form-react.css`,
+`booking-form-react.min.css` — the stale `booking-engine.css` in particular
+was still loaded on nova_theme and **overrode the shared booking-engine
+styles**; leaving it on the server keeps that bug alive.
 
 ## 3. Install order (strict)
 
@@ -74,6 +84,14 @@ manually (all ten, including `sphinx_image_sync_queue`) and delete the
   `show_booking_form` (default on — kill-switch for the injected booking form)
   and `booking_form_position` (*Before Tabs* default / *After Description*).
   These moved here from novoton, where they previously had no effect.
+- **Brand colors** live in the Theme Editor (Colors section, the "Travel: …"
+  pickers — primary, accent, search button + hover, calendar price colors).
+  The design-token bridge (`css/addons/travel_core/styles.less` → `:root
+  --nvt-*` custom properties) is owned by travel_core and drives the booking
+  engine, results pages and booking forms for ALL providers; chrome/status
+  colors follow the active theme preset automatically. (Moved here from
+  novoton 2026-07; the underlying variable names are unchanged, so colors
+  merchants saved earlier still apply.)
 
 ### novoton_holidays
 - **API**: `api_url`, `api_id`, `api_user` / `api_password` (+ `api_key` where
@@ -156,10 +174,13 @@ hotel sync weekly, `cleanup` daily) via real cron on the server.
   box disappear).
 - Hotel product page renders the React booking engine (calendar, occupancy,
   live price).
-- Search-results pages share travel_core's design system
-  (`css/addons/travel_core/search-results.css` — offer cards, badges, tokens).
-  Sphinx renders with it natively; novoton's template still carries its own
-  legacy styling until migrated (planned follow-up).
+- Search-results pages and booking forms share travel_core's design system:
+  `search-results.css` (offer cards, badges, skeleton), `booking-pages.css`
+  (booking-form summary/guest cards/terms) and the `styles.less` token
+  bridge. BOTH providers render with it — novoton's results migrated onto
+  the shared cards in 2026-07 (its desktop table became the same 3-zone
+  cards sphinx uses; provider-specific bits live in
+  `novoton_holidays/novoton-results.css`).
 - Add to cart → checkout completes; the booking row appears in the addon's
   bookings admin with the API confirmation (or a clear failure status).
 - Currency switcher shows sane RON/EUR prices (exchange-rate cron ran).

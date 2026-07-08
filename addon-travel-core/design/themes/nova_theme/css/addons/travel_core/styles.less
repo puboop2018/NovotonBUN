@@ -1,0 +1,260 @@
+/**
+ * Travel Core - Design Tokens (LESS variables + :root CSS custom properties)
+ *
+ * THE single source of truth for the travel design system's palette, shared
+ * by every provider addon (novoton, sphinx) and every travel_core stylesheet
+ * (booking-engine.css, booking-form-react.css, search-results.css,
+ * booking-pages.css). Loaded site-wide, FIRST, via hooks/index/styles.post.tpl.
+ *
+ * Moved here from novoton_holidays/styles.less (2026-07) so the tokens exist
+ * whichever provider is enabled — previously sphinx-only shops had no token
+ * definitions at all and every var(--nvt-*) fell back to its hardcoded hex.
+ *
+ * NAMING: the LESS variables keep their historical `@novoton-*` names on
+ * purpose — the Theme Editor binds saved merchant colors by variable_name
+ * (see travel_core schemas/theme_editor/schema.post.php), and novoton's
+ * remaining component styles still reference these variables (CS-Cart
+ * compiles all collected LESS in one pass with lazy evaluation, so
+ * cross-file references resolve regardless of load order). Renaming would
+ * silently discard merchants' saved Theme Editor colors.
+ *
+ * Strategy: inherit chrome/status colors from the active theme preset so the
+ * design system automatically adapts when the merchant switches between Blue,
+ * Green, Orange, etc.  Only the brand colors are addon-specific and
+ * customisable via the Theme Editor (schema.post.php).
+ *
+ * @package TravelCore
+ * @since   1.1.0
+ */
+
+// ============================================================================
+// DESIGN TOKENS  (single source of truth for the whole design system)
+//
+// Hybrid approach:
+//   - Brand colors → addon-specific (Theme Editor customisable)
+//   - Chrome (text, surfaces, borders, status, fonts) → inherited from theme
+//
+// When a merchant switches the theme preset (Blue → Green), the design
+// system automatically adapts because these tokens resolve to the active
+// theme's variables at LESS compile time.
+// ============================================================================
+
+// ---------------------------------------------------------------------------
+// 1. ADDON-SPECIFIC  (booking engine brand identity)
+//    These have no theme equivalent; customisable via Theme Editor.
+//    Registered as color pickers in schema.post.php (type: color,
+//    variable_name maps to the LESS variable below).  The values here
+//    are defaults — the Theme Editor overrides them when the admin
+//    picks a custom colour.
+// ---------------------------------------------------------------------------
+@novoton-primary:           #003580;   // Theme Editor → "Travel: Primary color"
+@novoton-accent:            #febb02;   // Theme Editor → "Travel: Accent color"
+@novoton-search-btn-bg:     #006ce4;   // Theme Editor → "Travel: Search button"
+@novoton-search-btn-hover:  #0057b8;   // Theme Editor → "Travel: Search button (hover)"
+
+// Calendar price colors  (Theme Editor customisable)
+@novoton-cal-cheapest-color: #2e7d32;  // Theme Editor → "Travel: Calendar lowest price text"
+@novoton-cal-price-color:    #4B5563;  // Theme Editor → "Travel: Calendar price text"
+
+// Star-rating glyph color (hotel headers on results pages)
+@novoton-stars:             #f5a623;
+
+// Brand derived (computed so they adapt when Theme Editor overrides the base)
+@novoton-primary-light:     lighten(@novoton-primary, 15%);
+@novoton-primary-dark:      darken(@novoton-primary, 15%);
+@novoton-accent-hover:      darken(@novoton-accent, 10%);
+
+// Primary focus ring (10 % opacity of brand)
+@novoton-primary-focus:     fade(@novoton-primary, 10%);
+
+// Primary tint  (very light background, e.g. calendar range, add-room)
+@novoton-primary-tint:      fade(@novoton-primary, 8%);
+
+// ---------------------------------------------------------------------------
+// 2. CHROME & STATUS COLORS  (inherited from the active theme preset)
+//
+//    These map directly to CS-Cart theme variables so the design system
+//    auto-adapts when the merchant switches presets (Blue → Orange → Green).
+//    Variables used here (@font, @base, @content_bg, @in_stock, etc.) are
+//    guaranteed to exist in every CS-Cart theme data file.
+//
+//    DO NOT register these in schema.post.php — they must follow the theme.
+// ---------------------------------------------------------------------------
+
+// Text  (from theme: @font is the main text color)
+@novoton-text:              @font;
+@novoton-text-light:        lighten(@font, 35%);
+@novoton-text-disabled:     lighten(@font, 50%);
+
+// Surfaces  (from theme: @content_bg, @general_bg_color, @base)
+@novoton-bg:                @content_bg;
+@novoton-bg-light:          @general_bg_color;
+@novoton-border:            @base;
+
+// Price  (from theme: @links — matches Links color in Theme Editor)
+@novoton-price-color:       @links;
+
+// Primary action button (from theme: @links — the "Primary button" in Theme Editor)
+@novoton-btn-primary-bg:    @links;
+@novoton-btn-primary-hover: darken(@links, 10%);
+
+// Status  (from theme: @in_stock, @out_of_stock, @links)
+@novoton-success:           @in_stock;
+// Solid success surface for WHITE text (badges). Hardcoded, NOT derived from
+// @in_stock: stock theme greens are too light — white text on them fails
+// WCAG AA (4.5:1). #1e7e34 vs #fff ≈ 5.1:1.
+@novoton-success-strong:    #1e7e34;
+@novoton-warning:           #f0ad4e;   // No theme equivalent — keep hardcoded
+@novoton-danger:            @out_of_stock;
+@novoton-info:              @links;
+@novoton-discount:          #2e7d32;   // Discount / extras promotion label
+@novoton-discount-light:    lighten(@novoton-discount, 50%);
+
+// Subtle hover surface for interactive cells (calendar, lists)
+@novoton-hover-bg:          darken(@novoton-bg, 3%);
+
+// Status derived
+@novoton-success-dark:      darken(@novoton-success, 10%);
+@novoton-success-light:     lighten(@novoton-success, 40%);
+@novoton-warning-dark:      darken(@novoton-warning, 25%);
+@novoton-warning-light:     lighten(@novoton-warning, 35%);
+@novoton-danger-dark:       darken(@novoton-danger, 10%);
+@novoton-danger-light:      lighten(@novoton-danger, 35%);
+@novoton-info-dark:         darken(@novoton-info, 15%);
+@novoton-info-light:        lighten(@novoton-info, 40%);
+
+// Layout  (respects the "Rounded corners" toggle in Theme Editor)
+// When @rounded_corners is false the theme sets baseBorderRadius to 0;
+// the addon follows the same toggle via direct assignment.
+@novoton-radius:            @baseBorderRadius;
+@novoton-radius-sm:         @borderRadiusSmall;
+@novoton-radius-pill:       20px;
+
+// Typography  (from theme: @body_font, @body_font_size)
+@novoton-font-family:       @body_font;
+@novoton-font-size-base:    unit(@body_font_size, px);
+@novoton-font-size-small:   round(@body_font_size * 0.79);
+@novoton-font-size-large:   round(@body_font_size * 1.29);
+
+// ---------------------------------------------------------------------------
+// 3. ADDON-SPECIFIC  (spacing & shadows — no theme equivalents)
+// ---------------------------------------------------------------------------
+@novoton-spacing-xs:  5px;
+@novoton-spacing-sm:  10px;
+@novoton-spacing-md:  15px;
+@novoton-spacing-lg:  20px;
+@novoton-spacing-xl:  30px;
+
+@novoton-shadow:    0 2px 4px rgba(0, 0, 0, 0.1);
+@novoton-shadow-lg: 0 4px 8px rgba(0, 0, 0, 0.15);
+
+// Z-index scale (LESS variables for direct use in components;
+// the :root block below bridges them to CSS custom properties for JS)
+@novoton-z-dropdown:       1000;
+@novoton-z-sticky:         1020;
+@novoton-z-fixed:          1030;
+@novoton-z-modal-backdrop: 1040;
+@novoton-z-modal:          1050;
+@novoton-z-notification:   1060;
+@novoton-z-tooltip:        1070;
+
+// ============================================================================
+// LESS → CSS CUSTOM PROPERTIES BRIDGE
+//
+// React (styles.js) and inline styles can all read these via var(--nvt-*).
+// When the Visual Editor overrides a LESS variable the custom property
+// updates automatically on recompile.
+// ============================================================================
+
+// lessphp (CS-Cart's PHP LESS compiler) does not fully support CSS custom
+// properties.  Bare values inside --custom-prop declarations can trigger
+// "expected color value" errors.  Wrapping every value with ~"@{var}" or
+// ~"literal" forces lessphp to emit the resolved value as an unquoted
+// string, bypassing its broken value-type validation.
+:root {
+    // Brand
+    --nvt-primary:          ~"@{novoton-primary}";
+    --nvt-primary-light:    ~"@{novoton-primary-light}";
+    --nvt-primary-dark:     ~"@{novoton-primary-dark}";
+    --nvt-accent:           ~"@{novoton-accent}";
+    --nvt-accent-hover:     ~"@{novoton-accent-hover}";
+    --nvt-search-btn-bg:    ~"@{novoton-search-btn-bg}";
+    --nvt-search-btn-hover: ~"@{novoton-search-btn-hover}";
+    --nvt-search-btn-text:  #fff;
+    --nvt-stars:            ~"@{novoton-stars}";
+
+    // Primary action button
+    --nvt-btn-primary-bg:   ~"@{novoton-btn-primary-bg}";
+    --nvt-btn-primary-hover:~"@{novoton-btn-primary-hover}";
+
+    // Status
+    --nvt-success:          ~"@{novoton-success}";
+    --nvt-success-light:    ~"@{novoton-success-light}";
+    --nvt-success-dark:     ~"@{novoton-success-dark}";
+    --nvt-success-strong:   ~"@{novoton-success-strong}";
+    --nvt-warning:          ~"@{novoton-warning}";
+    --nvt-warning-light:    ~"@{novoton-warning-light}";
+    --nvt-warning-dark:     ~"@{novoton-warning-dark}";
+    --nvt-danger:           ~"@{novoton-danger}";
+    --nvt-danger-light:     ~"@{novoton-danger-light}";
+    --nvt-danger-dark:      ~"@{novoton-danger-dark}";
+    --nvt-info:             ~"@{novoton-info}";
+    --nvt-info-light:       ~"@{novoton-info-light}";
+    --nvt-info-dark:        ~"@{novoton-info-dark}";
+    --nvt-discount:         ~"@{novoton-discount}";
+    --nvt-discount-light:   ~"@{novoton-discount-light}";
+
+    // Focus & tint
+    --nvt-primary-focus:    ~"@{novoton-primary-focus}";
+    --nvt-primary-tint:     ~"@{novoton-primary-tint}";
+
+    // Text
+    --nvt-text:             ~"@{novoton-text}";
+    --nvt-text-light:       ~"@{novoton-text-light}";
+    --nvt-text-muted:       ~"@{novoton-text-light}";
+    --nvt-text-disabled:    ~"@{novoton-text-disabled}";
+
+    // Surfaces
+    --nvt-bg:               ~"@{novoton-bg}";
+    --nvt-bg-light:         ~"@{novoton-bg-light}";
+    --nvt-card-bg:          ~"@{novoton-bg}";
+    --nvt-border:           ~"@{novoton-border}";
+    --nvt-hover-bg:         ~"@{novoton-hover-bg}";
+
+    // Calendar
+    --nvt-price-color:          ~"@{novoton-price-color}";
+    --nvt-cal-cheapest-color:   ~"@{novoton-cal-cheapest-color}";
+    --nvt-cal-price-color:      ~"@{novoton-cal-price-color}";
+
+    // Layout
+    --nvt-radius:           ~"@{novoton-radius}";
+    --nvt-radius-sm:        ~"@{novoton-radius-sm}";
+    --nvt-radius-pill:      ~"@{novoton-radius-pill}";
+
+    // Typography
+    --nvt-font-family:      ~"@{novoton-font-family}";
+    --nvt-font-size-base:   ~"@{novoton-font-size-base}";
+    --nvt-font-size-small:  ~"@{novoton-font-size-small}";
+    --nvt-font-size-large:  ~"@{novoton-font-size-large}";
+
+    // Shadows
+    --nvt-shadow:           ~"@{novoton-shadow}";
+    --nvt-shadow-lg:        ~"@{novoton-shadow-lg}";
+
+    // Spacing
+    --nvt-spacing-xs:       ~"@{novoton-spacing-xs}";
+    --nvt-spacing-sm:       ~"@{novoton-spacing-sm}";
+    --nvt-spacing-md:       ~"@{novoton-spacing-md}";
+    --nvt-spacing-lg:       ~"@{novoton-spacing-lg}";
+    --nvt-spacing-xl:       ~"@{novoton-spacing-xl}";
+
+    // Z-index scale
+    --nvt-z-dropdown:       ~"@{novoton-z-dropdown}";
+    --nvt-z-popup:          ~"@{novoton-z-dropdown}";
+    --nvt-z-sticky:         ~"@{novoton-z-sticky}";
+    --nvt-z-fixed:          ~"@{novoton-z-fixed}";
+    --nvt-z-modal-backdrop: ~"@{novoton-z-modal-backdrop}";
+    --nvt-z-modal:          ~"@{novoton-z-modal}";
+    --nvt-z-notification:   ~"@{novoton-z-notification}";
+    --nvt-z-tooltip:        ~"@{novoton-z-tooltip}";
+}

@@ -517,4 +517,8 @@ return [
         'en' => 'Includes taxes and commissions',
         'ro' => 'Include taxe și comisioane',
     ],
+    'sphinx_holidays.stars_rating' => [
+        'en' => '[rating]-star rating',
+        'ro' => 'Clasificare [rating] stele',
+    ],
 ];

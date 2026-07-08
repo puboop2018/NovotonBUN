@@ -643,3 +643,27 @@ msgstr "Always alert when the overpayment exceeds (EUR), regardless of percent"
 msgctxt "SettingsOptions::travel_core::checkout_absorb_increase"
 msgid "Absorb price increases up to (EUR) — customer pays the shown price; 0 = always ask the customer to re-confirm"
 msgstr "Absorb price increases up to (EUR) — customer pays the shown price; 0 = always ask the customer to re-confirm"
+
+msgctxt "Languages::theme_editor.travel_primary_color"
+msgid "Travel: Primary color"
+msgstr "Travel: Primary color"
+
+msgctxt "Languages::theme_editor.travel_accent_color"
+msgid "Travel: Accent color"
+msgstr "Travel: Accent color"
+
+msgctxt "Languages::theme_editor.travel_search_btn_color"
+msgid "Travel: Search button"
+msgstr "Travel: Search button"
+
+msgctxt "Languages::theme_editor.travel_search_btn_hover_color"
+msgid "Travel: Search button (hover)"
+msgstr "Travel: Search button (hover)"
+
+msgctxt "Languages::theme_editor.travel_cal_cheapest_color"
+msgid "Travel: Calendar cheapest price text"
+msgstr "Travel: Calendar cheapest price text"
+
+msgctxt "Languages::theme_editor.travel_cal_price_color"
+msgid "Travel: Calendar price text"
+msgstr "Travel: Calendar price text"

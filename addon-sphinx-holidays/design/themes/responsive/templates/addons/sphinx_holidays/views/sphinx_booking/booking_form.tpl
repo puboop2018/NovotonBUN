@@ -3,7 +3,8 @@
  *
  * Displays the guest entry form for a verified Sphinx hotel offer.
  * Uses shared travel_core form components for DOB masking, validation,
- * and multi-room support.
+ * and multi-room support. Styled by travel_core's booking-pages.css
+ * (.travel-booking-page class contract).
  *
  * @package SphinxHolidays
  * @since 1.0.0
@@ -13,12 +14,12 @@
 
 {if $sphinx_booking_data}
 
-<div class="novoton-reservation-form sphinx-booking-form">
+<div class="travel-booking-page sphinx-booking-form">
 
     {* Hotel & booking summary header *}
-    <div class="booking-summary-header" style="background: linear-gradient(135deg, #003580 0%, #0056b3 100%); color: #fff; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-        <h2 style="margin: 0 0 10px;">{$sphinx_booking_data.hotel_name|escape:html}</h2>
-        <div style="display: flex; flex-wrap: wrap; gap: 15px; font-size: 14px;">
+    <div class="travel-booking-summary travel-booking-summary--hero booking-summary-header">
+        <h2>{$sphinx_booking_data.hotel_name|escape:html}</h2>
+        <div class="travel-booking-meta">
             <span><i class="icon-calendar"></i> {$sphinx_booking_data.check_in|date_format:"%d.%m.%Y"} - {$sphinx_booking_data.check_out|date_format:"%d.%m.%Y"}</span>
             <span><i class="icon-moon"></i> {$sphinx_booking_data.nights} {__("travel_core.nights")|default:"nights"}</span>
             <span><i class="icon-home"></i> {$sphinx_booking_data.room_name|escape:html}</span>
@@ -27,9 +28,9 @@
     </div>
 
     {* Price display *}
-    <div class="booking-price-box" style="text-align: right; margin-bottom: 20px; padding: 15px; background: #f5f9fc; border-radius: 8px;">
-        <div style="font-size: 13px; color: #666;">{__("travel_core.total_price")|default:"Total price"}</div>
-        <div class="price-total" aria-live="polite" aria-atomic="true" style="font-size: 28px; font-weight: 700; color: #003580;">
+    <div class="travel-price-box booking-price-box">
+        <div class="travel-price-label">{__("travel_core.total_price")|default:"Total price"}</div>
+        <div class="travel-price-total price-total" aria-live="polite" aria-atomic="true">
             {$sphinx_booking_data.total_price|number_format:2:",":"."} {if $sphinx_booking_data.currency == 'EUR'}€{else}{$sphinx_booking_data.currency}{/if}
         </div>
         <div id="price-loading-indicator" style="display: none;"><i class="icon-refresh"></i></div>
@@ -37,11 +38,11 @@
 
     {* Payment & cancellation terms (from the verified offer; hidden when the API sends none) *}
     {if $sphinx_booking_data.payment_terms || $sphinx_booking_data.cancellation_fees}
-    <div class="sphinx-booking-terms" style="margin-bottom: 20px; padding: 15px; background: #fffdf5; border: 1px solid #f0e6c8; border-radius: 8px; font-size: 13px;">
+    <div class="travel-terms-box sphinx-booking-terms">
         {if $sphinx_booking_data.payment_terms}
-        <div style="margin-bottom: {if $sphinx_booking_data.cancellation_fees}12px{else}0{/if};">
+        <div class="travel-terms-group">
             <strong>{__("sphinx_holidays.payment_terms")|default:"Payment terms"}</strong>
-            <ul style="margin: 6px 0 0 18px; padding: 0;">
+            <ul>
                 {foreach $sphinx_booking_data.payment_terms as $_sx_term}
                 <li>{$_sx_term|escape:html}</li>
                 {/foreach}
@@ -49,9 +50,9 @@
         </div>
         {/if}
         {if $sphinx_booking_data.cancellation_fees}
-        <div>
+        <div class="travel-terms-group">
             <strong>{__("sphinx_holidays.cancellation_policy")|default:"Cancellation policy"}</strong>
-            <ul style="margin: 6px 0 0 18px; padding: 0;">
+            <ul>
                 {foreach $sphinx_booking_data.cancellation_fees as $_sx_fee}
                 <li>{$_sx_fee|escape:html}</li>
                 {/foreach}
@@ -78,15 +79,15 @@
         <input type="hidden" name="rooms_data" value="{$sphinx_booking_data.rooms_data|json_encode|escape:html}">
 
         <div class="guest-names-section">
-            <h3><i class="icon-user"></i> {__("travel_core.guest_details")|default:"Guest Details"}</h3>
+            <h3 class="travel-section-title"><i class="icon-user"></i> {__("travel_core.guest_details")|default:"Guest Details"}</h3>
 
             {foreach $sphinx_booking_data.rooms_data as $room_idx => $room}
                 {assign var="room_num" value=$room_idx+1}
 
                 {* Room header (only shown for multi-room) *}
                 {if $sphinx_booking_data.num_rooms > 1}
-                    <div class="sphinx-room-header" style="margin-top: {if $room_idx > 0}25px{else}0{/if}; padding: 10px 15px; background: #e8f0fe; border-radius: 6px 6px 0 0; border: 1px solid #c5d5ea; border-bottom: none;">
-                        <strong style="color: #003580;">{__("travel_core.room")|default:"Room"} {$room_num}</strong>
+                    <div class="travel-room-header sphinx-room-header">
+                        <strong>{__("travel_core.room")|default:"Room"} {$room_num}</strong>
                         {if $room.room_name} &mdash; {$room.room_name|escape:html}{/if}
                         {if $room.board_name} ({$room.board_name|escape:html}){/if}
                     </div>
@@ -95,13 +96,13 @@
                 {* Generate adult guest fields for this room *}
                 {assign var="room_adults" value=$room.adults|default:$sphinx_booking_data.adults}
                 {section name="adult" start=1 loop=$room_adults+1}
-                    <div class="guest-entry guest-entry-adult" style="padding: 15px; margin-bottom: 10px; background: #fff; border: 1px solid #e0e7ef; border-radius: 6px;">
-                        <div style="font-weight: 600; margin-bottom: 10px; color: #003580;">
+                    <div class="guest-entry guest-entry-adult">
+                        <div class="travel-guest-label">
                             {__("travel_core.adult")|default:"Adult"} {$smarty.section.adult.index}
                             {if $room_idx == 0 && $smarty.section.adult.index == 1} ({__("travel_core.main_guest")|default:"Main Guest"}){/if}
                         </div>
-                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                            <div style="flex: 1; min-width: 200px;">
+                        <div class="travel-guest-grid">
+                            <div class="travel-guest-field">
                                 <label for="sphinx_r{$room_num}_a{$smarty.section.adult.index}_first">{__("travel_core.first_name")|default:"First Name"}</label>
                                 <input type="text" id="sphinx_r{$room_num}_a{$smarty.section.adult.index}_first"
                                        name="guests[room{$room_num}_adult_{$smarty.section.adult.index}][first_name]"
@@ -112,13 +113,13 @@
                                     <input type="hidden" name="guests[room1_adult_1][is_holder]" value="1">
                                 {/if}
                             </div>
-                            <div style="flex: 1; min-width: 200px;">
+                            <div class="travel-guest-field">
                                 <label for="sphinx_r{$room_num}_a{$smarty.section.adult.index}_last">{__("travel_core.last_name")|default:"Last Name"}</label>
                                 <input type="text" id="sphinx_r{$room_num}_a{$smarty.section.adult.index}_last"
                                        name="guests[room{$room_num}_adult_{$smarty.section.adult.index}][last_name]"
                                        class="ty-input-text" required aria-required="true" placeholder="{__("travel_core.last_name")|default:"Last Name"}">
                             </div>
-                            <div style="flex: 0 0 150px;">
+                            <div class="travel-guest-field travel-guest-field--dob">
                                 <label for="sphinx_r{$room_num}_a{$smarty.section.adult.index}_dob">{__("travel_core.date_of_birth")|default:"Date of Birth"}</label>
                                 <input type="text" id="sphinx_r{$room_num}_a{$smarty.section.adult.index}_dob"
                                        name="guests[room{$room_num}_adult_{$smarty.section.adult.index}][dob]"
@@ -136,13 +137,13 @@
                     {assign var="room_child_ages" value=$room.childrenAges|default:[]}
                     {section name="child" start=1 loop=$room_children+1}
                         {assign var="child_age" value=$room_child_ages[$smarty.section.child.index-1]|default:0}
-                        <div class="guest-entry guest-entry-child" data-original-age="{$child_age}" style="padding: 15px; margin-bottom: 10px; background: #fffbf0; border: 1px solid #f0e0c0; border-radius: 6px;">
-                            <div style="font-weight: 600; margin-bottom: 10px; color: #856404;">
+                        <div class="guest-entry guest-entry-child" data-original-age="{$child_age}">
+                            <div class="travel-guest-label travel-guest-label--child">
                                 {__("travel_core.child")|default:"Child"} {$smarty.section.child.index}
-                                <span style="font-weight: normal; color: #999;"> ({$child_age} {__("travel_core.years_old")|default:"years old"})</span>
+                                <span class="travel-guest-age-note"> ({$child_age} {__("travel_core.years_old")|default:"years old"})</span>
                             </div>
-                            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                                <div style="flex: 1; min-width: 200px;">
+                            <div class="travel-guest-grid">
+                                <div class="travel-guest-field">
                                     <label for="sphinx_r{$room_num}_c{$smarty.section.child.index}_first">{__("travel_core.first_name")|default:"First Name"}</label>
                                     <input type="text" id="sphinx_r{$room_num}_c{$smarty.section.child.index}_first"
                                            name="guests[room{$room_num}_child_{$smarty.section.child.index}][first_name]"
@@ -151,13 +152,13 @@
                                     <input type="hidden" name="guests[room{$room_num}_child_{$smarty.section.child.index}][age]" value="{$child_age}">
                                     <input type="hidden" name="guests[room{$room_num}_child_{$smarty.section.child.index}][room]" value="{$room_num}">
                                 </div>
-                                <div style="flex: 1; min-width: 200px;">
+                                <div class="travel-guest-field">
                                     <label for="sphinx_r{$room_num}_c{$smarty.section.child.index}_last">{__("travel_core.last_name")|default:"Last Name"}</label>
                                     <input type="text" id="sphinx_r{$room_num}_c{$smarty.section.child.index}_last"
                                            name="guests[room{$room_num}_child_{$smarty.section.child.index}][last_name]"
                                            class="ty-input-text" required aria-required="true" placeholder="{__("travel_core.last_name")|default:"Last Name"}">
                                 </div>
-                                <div style="flex: 0 0 150px;">
+                                <div class="travel-guest-field travel-guest-field--dob">
                                     <label for="dob_r{$room_num}_c{$smarty.section.child.index}">{__("travel_core.date_of_birth")|default:"Date of Birth"}</label>
                                     <input type="text" id="dob_r{$room_num}_c{$smarty.section.child.index}"
                                            name="guests[room{$room_num}_child_{$smarty.section.child.index}][dob]"
@@ -165,7 +166,7 @@
                                            required aria-required="true"
                                            onkeydown="TravelBooking.handleDobKeydown(event)"
                                            oninput="TravelBooking.applyDobMask(this)">
-                                    <span id="child_age_display_r{$room_num}_c{$smarty.section.child.index}" class="sphinx-age-display" style="font-size: 12px; color: #666;"></span>
+                                    <span id="child_age_display_r{$room_num}_c{$smarty.section.child.index}" class="travel-age-display sphinx-age-display"></span>
                                 </div>
                             </div>
                         </div>
@@ -174,24 +175,12 @@
             {/foreach}
         </div>
 
-        {* Contact info *}
-        <div class="contact-section" style="margin-top: 20px; padding: 15px; background: #f5f9fc; border-radius: 6px;">
-            <h3><i class="icon-envelope"></i> {__("travel_core.contact_info")|default:"Contact Information"}</h3>
-            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                <div style="flex: 1; min-width: 200px;">
-                    <label for="sphinx_contact_email">{__("travel_core.email")|default:"Email"}</label>
-                    <input type="email" id="sphinx_contact_email" name="contact[email]" class="ty-input-text" placeholder="email@example.com">
-                </div>
-                <div style="flex: 1; min-width: 200px;">
-                    <label for="sphinx_contact_phone">{__("travel_core.phone")|default:"Phone"}</label>
-                    <input type="tel" id="sphinx_contact_phone" name="contact[phone]" class="ty-input-text" placeholder="+40...">
-                </div>
-            </div>
-        </div>
+        {* Contact info — shared component (was a hand-copied duplicate) *}
+        {include file="addons/sphinx_holidays/views/sphinx_booking/components/contact_fields.tpl"}
 
         {* Submit *}
-        <div style="margin-top: 20px; text-align: center;">
-            <button type="submit" class="ty-btn ty-btn__primary" style="padding: 12px 40px; font-size: 16px; background: #003580; border: none; border-radius: 6px; color: #fff; cursor: pointer;">
+        <div class="travel-booking-submit sphinx-booking-submit">
+            <button type="submit" class="travel-offer-book-btn sphinx-offer-book-btn">
                 <i class="icon-shopping-cart"></i> {__("sphinx_holidays.add_to_cart_btn")|default:"Add to Cart"}
             </button>
         </div>
@@ -206,5 +195,3 @@
         <a href="{"index.index"|fn_url}" class="ty-btn ty-btn__secondary">{__("travel_core.search")|default:"Search"}</a>
     </div>
 {/if}
-
-
