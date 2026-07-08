@@ -187,6 +187,74 @@
     color: var(--nvt-text-light, #666);
 }
 
+/* ── Form controls (inputs, selects, textareas) ───────────────────────── */
+/* The booking forms previously fell back to bare CS-Cart .ty-input-text with
+   no focus ring or error affordance. These add a consistent field look +
+   keyboard focus + invalid state without fighting the theme (no !important). */
+.travel-booking-page input[type="text"],
+.travel-booking-page input[type="email"],
+.travel-booking-page input[type="tel"],
+.travel-booking-page input[type="date"],
+.travel-booking-page input[type="number"],
+.travel-booking-page select,
+.travel-booking-page textarea {
+    width: 100%;
+    box-sizing: border-box;
+    min-height: 44px; /* touch target */
+    padding: 10px 12px;
+    font: inherit;
+    font-size: 14px;
+    color: var(--nvt-text, #1a1a1a);
+    background: var(--nvt-bg, #fff);
+    border: 1px solid var(--nvt-field-border, #e0e7ef);
+    border-radius: var(--nvt-radius-sm, 4px);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.travel-booking-page textarea {
+    min-height: 72px;
+    resize: vertical;
+}
+.travel-booking-page input:focus-visible,
+.travel-booking-page select:focus-visible,
+.travel-booking-page textarea:focus-visible {
+    outline: none;
+    border-color: var(--nvt-primary, #003580);
+    box-shadow: 0 0 0 2px var(--nvt-primary-focus, rgba(0, 53, 128, 0.15));
+}
+/* Fallback for engines that don't scope :focus-visible to form fields */
+.travel-booking-page input:focus,
+.travel-booking-page select:focus,
+.travel-booking-page textarea:focus {
+    border-color: var(--nvt-primary, #003580);
+}
+/* Field labels */
+.travel-booking-page .travel-guest-field > label,
+.travel-booking-page .travel-contact-section label,
+.travel-booking-page .field-group > label {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--nvt-text-light, #666);
+    margin-bottom: 4px;
+}
+/* Invalid / error state (set aria-invalid="true" or add .travel-field-error) */
+.travel-booking-page .travel-field-error,
+.travel-booking-page [aria-invalid="true"] {
+    border-color: var(--nvt-danger, #dc3545);
+    background: var(--nvt-danger-light, #fdecea);
+}
+.travel-booking-page .travel-field-error-message {
+    color: var(--nvt-danger, #dc3545);
+    font-size: 12px;
+    margin-top: 4px;
+}
+/* Required-field asterisk (.travel-required, or legacy .required) */
+.travel-booking-page .travel-required,
+.travel-booking-page .required {
+    color: var(--nvt-danger, #dc3545);
+    margin-left: 2px;
+}
+
 /* ── Info cards (flight / bus / transfers) ────────────────────────────── */
 .travel-booking-page .travel-info-card,
 .travel-booking-page .sphinx-flight-info {
