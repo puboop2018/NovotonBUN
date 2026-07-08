@@ -176,11 +176,16 @@ hotel sync weekly, `cleanup` daily) via real cron on the server.
   live price).
 - Search-results pages and booking forms share travel_core's design system:
   `search-results.css` (offer cards, badges, skeleton), `booking-pages.css`
-  (booking-form summary/guest cards/terms) and the `styles.less` token
+  (booking-form summary/guest cards/terms/inputs) and the `styles.less` token
   bridge. BOTH providers render with it — novoton's results migrated onto
   the shared cards in 2026-07 (its desktop table became the same 3-zone
   cards sphinx uses; provider-specific bits live in
-  `novoton_holidays/novoton-results.css`).
+  `novoton_holidays/novoton-results.css`), and both providers' booking FORMS
+  followed: the `.travel-booking-page` classes give one look with colour-coded
+  guest cards, keyboard focus rings + required-field indicators on inputs, a
+  single `.travel-btn--primary` button (one brand blue across engine, results
+  and forms), and disabled/loading submit states. novoton's booking form no
+  longer ships an embedded `<style>` block.
 - Add to cart → checkout completes; the booking row appears in the addon's
   bookings admin with the API confirmation (or a clear failure status).
 - Currency switcher shows sane RON/EUR prices (exchange-rate cron ran).

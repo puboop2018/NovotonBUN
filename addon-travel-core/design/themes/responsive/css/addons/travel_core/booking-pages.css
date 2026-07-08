@@ -595,6 +595,39 @@
     padding: 12px 40px;
     font-size: 17px;
 }
+/* Submit states: disabled (mid-submit / incomplete) + loading spinner.
+   Works on the shared .travel-btn--primary and the form submit buttons. */
+.travel-booking-page .travel-btn--primary:disabled,
+.travel-booking-page .travel-offer-book-btn:disabled,
+.travel-booking-page .sphinx-offer-book-btn:disabled,
+.travel-booking-page .travel-btn--primary.is-disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+.travel-booking-page .travel-btn--loading {
+    position: relative;
+    color: transparent !important;
+    pointer-events: none;
+}
+.travel-booking-page .travel-btn--loading::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 18px;
+    height: 18px;
+    margin: -9px 0 0 -9px;
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    border-top-color: #fff;
+    border-radius: 50%;
+    /* travel-spin keyframe is defined in search-results.css (loaded first) */
+    animation: travel-spin 0.7s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+    .travel-booking-page .travel-btn--loading::after {
+        animation: none;
+    }
+}
 
 /* ── Responsive ───────────────────────────────────────────────────────── */
 @media (max-width: 767px) {
@@ -636,5 +669,28 @@
     }
     .travel-booking-page .travel-form-actions .travel-btn--primary {
         width: 100%;
+    }
+    /* Prevent horizontal overflow at ~320px: the min-width:200/250px flex
+       columns must be allowed to shrink to the viewport. */
+    .travel-booking-page .travel-guest-field,
+    .travel-booking-page .travel-guest-field--dob,
+    .travel-booking-page .travel-info-col,
+    .travel-booking-page .travel-included-panel {
+        flex: 1 1 100%;
+        min-width: 0;
+    }
+    .travel-booking-page .travel-booking-price-col {
+        text-align: left;
+    }
+}
+
+/* Desktop: keep the standalone price box in view while a long guest list
+   scrolls beneath it (sphinx hotel form's price box is a block sibling above
+   the guest section; a no-op where the price sits inside a flex row). */
+@media (min-width: 768px) {
+    .travel-booking-page .travel-price-box {
+        position: sticky;
+        top: 10px;
+        z-index: 1;
     }
 }
