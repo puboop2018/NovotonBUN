@@ -351,3 +351,23 @@ msgstr "Încercați date apropiate:"
 msgctxt "Languages::sphinx_holidays.alt_from"
 msgid "from"
 msgstr "de la"
+
+msgctxt "Languages::sphinx_holidays.per_page"
+msgid "Per page"
+msgstr "Pe pagină"
+
+msgctxt "Languages::sphinx_holidays.first_page"
+msgid "First"
+msgstr "Prima"
+
+msgctxt "Languages::sphinx_holidays.prev_page"
+msgid "Previous"
+msgstr "Anterioara"
+
+msgctxt "Languages::sphinx_holidays.next_page"
+msgid "Next"
+msgstr "Următoarea"
+
+msgctxt "Languages::sphinx_holidays.last_page"
+msgid "Last"
+msgstr "Ultima"

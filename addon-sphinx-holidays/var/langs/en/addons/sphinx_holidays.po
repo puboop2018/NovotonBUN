@@ -351,3 +351,23 @@ msgstr "Try nearby dates:"
 msgctxt "Languages::sphinx_holidays.alt_from"
 msgid "from"
 msgstr "from"
+
+msgctxt "Languages::sphinx_holidays.per_page"
+msgid "Per page"
+msgstr "Per page"
+
+msgctxt "Languages::sphinx_holidays.first_page"
+msgid "First"
+msgstr "First"
+
+msgctxt "Languages::sphinx_holidays.prev_page"
+msgid "Previous"
+msgstr "Previous"
+
+msgctxt "Languages::sphinx_holidays.next_page"
+msgid "Next"
+msgstr "Next"
+
+msgctxt "Languages::sphinx_holidays.last_page"
+msgid "Last"
+msgstr "Last"
