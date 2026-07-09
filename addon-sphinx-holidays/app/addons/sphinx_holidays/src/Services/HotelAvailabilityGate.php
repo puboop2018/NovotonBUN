@@ -143,9 +143,9 @@ class HotelAvailabilityGate
 
                 // Inline results (synchronous completion) + cursor-polled results.
                 $availableSet += OfferAvailability::collectImmediateHotelIds(
-                    TypeCoerce::toRowList($searchResponse['results'] ?? $searchResponse['data'] ?? []),
+                    TypeCoerce::toRowList($searchResponse['results'] ?? []),
                 );
-                $cursor = TypeCoerce::toString($searchResponse['cursor'] ?? $searchResponse['search_id'] ?? '');
+                $cursor = TypeCoerce::toString($searchResponse['cursor'] ?? '');
                 if ($cursor !== '') {
                     $availableSet += $this->pollImmediateHotelIds($cursor);
                 }
@@ -236,12 +236,12 @@ class HotelAvailabilityGate
                 break;
             }
 
-            $batch = TypeCoerce::toRowList($response['results'] ?? $response['data'] ?? []);
+            $batch = TypeCoerce::toRowList($response['results'] ?? []);
             if ($batch !== []) {
                 $hotelIds += OfferAvailability::collectImmediateHotelIds($batch);
             }
 
-            $nextCursor = TypeCoerce::toString($response['cursor'] ?? $response['next_cursor'] ?? '');
+            $nextCursor = TypeCoerce::toString($response['cursor'] ?? '');
             if ($nextCursor === '') {
                 break; // cursor:null → definitive end of search
             }

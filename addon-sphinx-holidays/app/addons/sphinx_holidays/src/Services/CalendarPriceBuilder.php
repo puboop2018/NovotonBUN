@@ -77,7 +77,7 @@ class CalendarPriceBuilder
                 continue;
             }
 
-            foreach (TypeCoerce::toRowList($response['data'] ?? []) as $row) {
+            foreach (TypeCoerce::toRowList($response['results'] ?? []) as $row) {
                 $hotelId = self::rowHotelId($row);
                 $price = self::rowPrice($row);
                 if ($hotelId === '' || $price <= 0) {

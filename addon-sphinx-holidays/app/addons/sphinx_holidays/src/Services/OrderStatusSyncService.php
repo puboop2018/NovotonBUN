@@ -88,7 +88,7 @@ class OrderStatusSyncService implements OrderStatusSyncServiceInterface
                     'reference_code' => (string) $orderId,
                 ]);
 
-                $apiData = $apiResponse['data'] ?? null;
+                $apiData = $apiResponse['results'] ?? null;
                 if (empty($apiData)) {
                     $this->output("  Order #{$orderId}: not found in Sphinx API.");
                     continue;
@@ -135,7 +135,7 @@ class OrderStatusSyncService implements OrderStatusSyncServiceInterface
                 'reference_code' => (string) $orderId,
             ]);
 
-            $apiData = $apiResponse['data'] ?? null;
+            $apiData = $apiResponse['results'] ?? null;
             if (empty($apiData)) {
                 return ['changed' => false, 'old_status' => $oldStatus, 'new_status' => '', 'error' => 'Order not found in Sphinx API'];
             }

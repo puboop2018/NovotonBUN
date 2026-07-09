@@ -47,7 +47,7 @@ class CacheEndpointService implements CacheEndpointServiceInterface
             return [];
         }
 
-        $deals = $this->normalizeDeals(TypeCoerce::toRowList($response['results'] ?? $response['hotels'] ?? []));
+        $deals = $this->normalizeDeals(TypeCoerce::toRowList($response['results'] ?? []));
 
         if (!empty($deals)) {
             CacheService::set($cacheKey, $deals, self::DEALS_CACHE_TTL);
@@ -76,7 +76,7 @@ class CacheEndpointService implements CacheEndpointServiceInterface
             return [];
         }
 
-        $deals = $this->normalizeDeals(TypeCoerce::toRowList($response['results'] ?? $response['packages'] ?? []));
+        $deals = $this->normalizeDeals(TypeCoerce::toRowList($response['results'] ?? []));
 
         if (!empty($deals)) {
             CacheService::set($cacheKey, $deals, self::DEALS_CACHE_TTL);

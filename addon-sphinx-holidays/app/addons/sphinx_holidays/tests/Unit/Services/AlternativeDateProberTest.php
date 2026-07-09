@@ -51,7 +51,7 @@ final class AlternativeDateProberTest extends TestCase
             $calls++;
             // Window 2 has no price for our hotel; every other window does.
             return [
-                'data' => [
+                'results' => [
                     ['hotel_id' => 'OTHER', 'price' => 111],
                     ['hotel_id' => 'H61992', 'min_price' => ['price' => $calls === 2 ? 0 : 900 + $calls]],
                 ],

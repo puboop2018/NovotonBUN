@@ -104,7 +104,7 @@ final class ResponseDecoder
      * (`isset($raw['data']) && !isset($raw['id'])`).
      *
      * @param array<array-key, mixed>|null $response
-     * @return array<array-key, mixed>|null
+     * @return array<string, mixed>|null
      */
     public function single(?array $response): ?array
     {
@@ -116,12 +116,11 @@ final class ResponseDecoder
         $data = $response['data'] ?? null;
         if (is_array($data) && $data !== [] && !array_key_exists('id', $response)) {
             $this->record($response, 'single:data');
-            /** @var array<array-key, mixed> $data */
-            return $data;
+            return TypeCoerce::toStringMap($data);
         }
 
         $this->record($response, 'single:flat');
-        return $response;
+        return TypeCoerce::toStringMap($response);
     }
 
     /**

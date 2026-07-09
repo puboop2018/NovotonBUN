@@ -55,7 +55,8 @@ try {
         exit;
     }
 
-    $results = TypeCoerce::toRowList($pollResponse['results'] ?? $pollResponse['data'] ?? []);
+    // Canonical decoded shape: the list is always under `results`.
+    $results = TypeCoerce::toRowList($pollResponse['results'] ?? []);
     $status = TypeCoerce::toString($pollResponse['status'] ?? 'completed');
 
     // Narrow to the requested hotel for product-page searches. search.php stores
@@ -88,13 +89,11 @@ try {
     $pollIndex = TypeCoerce::toInt($searchMeta['poll_index'] ?? 0) + 1;
     $elapsedMs = $startedAtMs > 0 ? (int) round(microtime(true) * 1000) - $startedAtMs : 0;
 
-    // The API paginates via a `cursor` token (older builds used `next_cursor`).
-    $nextCursor = null;
-    if (isset($pollResponse['next_cursor'])) {
-        $nextCursor = TypeCoerce::toString($pollResponse['next_cursor']);
-    } elseif (isset($pollResponse['cursor'])) {
-        $nextCursor = TypeCoerce::toString($pollResponse['cursor']);
-    }
+    // Canonical decoded shape: the continuation token is always under
+    // `cursor` (ResponseDecoder folds next_cursor|cursor|search_id), null
+    // when the search is exhausted.
+    $rawCursor = $pollResponse['cursor'] ?? null;
+    $nextCursor = $rawCursor === null ? null : TypeCoerce::toString($rawCursor);
 
     // Diagnostic: log when the poll completes with zero results, so the
     // CS-Cart event log shows whether the API genuinely has no availability

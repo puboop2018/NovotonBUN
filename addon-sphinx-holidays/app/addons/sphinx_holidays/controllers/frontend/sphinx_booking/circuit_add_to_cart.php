@@ -48,9 +48,6 @@ use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
                 'offer_id' => $offer_id,
                 'service_codes' => $selected_services,
             ]);
-            if (!empty($customized['data'])) {
-                $customized = $customized['data'];
-            }
         } catch (\Throwable $e) {
             fn_log_event('general', 'runtime', ['message' => 'Sphinx circuit customize failed: ' . $e->getMessage()]);
         }

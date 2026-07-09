@@ -85,7 +85,7 @@ class SphinxApi
      */
     public function getDestination(int $id): ?array
     {
-        return $this->client->get("/api/v1/static/destinations/{$id}");
+        return $this->decoder->single($this->client->get("/api/v1/static/destinations/{$id}"));
     }
 
     /**
@@ -113,7 +113,7 @@ class SphinxApi
      */
     public function getHotel(string $id): ?array
     {
-        return $this->client->get("/api/v1/static/hotels/{$id}");
+        return $this->decoder->single($this->client->get("/api/v1/static/hotels/{$id}"));
     }
 
     /**
@@ -160,18 +160,18 @@ class SphinxApi
      */
     public function getCircuitRates(array $params): ?array
     {
-        return $this->client->post('/api/v1/circuits/rates', $params);
+        return $this->decoder->search($this->client->post('/api/v1/circuits/rates', $params));
     }
 
     /**
      * Get a priced quote for a specific circuit departure.
      *
      * @param array<string, mixed> $params {circuit_id, departure_date, occupancy, departure_id?}
-     * @return array<string, mixed>|null
+     * @return list<array<string, mixed>> The decoded list of quotes
      */
-    public function getCircuitQuote(array $params): ?array
+    public function getCircuitQuote(array $params): array
     {
-        return $this->client->post('/api/v1/circuits/quote', $params);
+        return $this->decoder->list($this->client->post('/api/v1/circuits/quote', $params));
     }
 
     /**
@@ -182,7 +182,7 @@ class SphinxApi
      */
     public function customizeCircuit(array $data): ?array
     {
-        return $this->client->post('/api/v1/circuits/customize', $data);
+        return $this->decoder->single($this->client->post('/api/v1/circuits/customize', $data));
     }
 
     /**
@@ -204,18 +204,18 @@ class SphinxApi
      */
     public function getExperienceRates(array $params): ?array
     {
-        return $this->client->post('/api/v1/experiences/rates', $params);
+        return $this->decoder->search($this->client->post('/api/v1/experiences/rates', $params));
     }
 
     /**
      * Get a priced quote for a specific experience departure.
      *
      * @param array<string, mixed> $params {experience_id, departure_date, occupancy}
-     * @return array<string, mixed>|null
+     * @return list<array<string, mixed>> The decoded list of quotes
      */
-    public function getExperienceQuote(array $params): ?array
+    public function getExperienceQuote(array $params): array
     {
-        return $this->client->post('/api/v1/experiences/quote', $params);
+        return $this->decoder->list($this->client->post('/api/v1/experiences/quote', $params));
     }
 
     /**
@@ -378,7 +378,7 @@ class SphinxApi
      */
     public function customizePackage(array $data): ?array
     {
-        return $this->client->post('/api/v1/packages/customize', $data);
+        return $this->decoder->single($this->client->post('/api/v1/packages/customize', $data));
     }
 
     /**
@@ -401,10 +401,10 @@ class SphinxApi
      */
     public function getOrders(int $page = 1, int $perPage = 50, array $filters = []): ?array
     {
-        return $this->client->get('/api/v1/orders', array_merge([
+        return $this->decoder->search($this->client->get('/api/v1/orders', array_merge([
             'page' => $page,
             'per_page' => $perPage,
-        ], $filters));
+        ], $filters)));
     }
 
     /**
@@ -413,7 +413,7 @@ class SphinxApi
      */
     public function getOrder(string $orderId): ?array
     {
-        return $this->client->get("/api/v1/orders/{$orderId}");
+        return $this->decoder->single($this->client->get("/api/v1/orders/{$orderId}"));
     }
 
     // ── Cache ──
@@ -425,7 +425,7 @@ class SphinxApi
      */
     public function cacheHotels(array $params): ?array
     {
-        return $this->client->post('/api/v1/cache/hotels', $params);
+        return $this->decoder->search($this->client->post('/api/v1/cache/hotels', $params));
     }
 
     /**
@@ -435,7 +435,7 @@ class SphinxApi
      */
     public function cachePackages(array $params): ?array
     {
-        return $this->client->post('/api/v1/cache/packages', $params);
+        return $this->decoder->search($this->client->post('/api/v1/cache/packages', $params));
     }
 
     /**

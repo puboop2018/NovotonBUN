@@ -88,7 +88,7 @@ class AlternativeDateProber
                 continue;
             }
 
-            foreach (TypeCoerce::toRowList($response['data'] ?? []) as $row) {
+            foreach (TypeCoerce::toRowList($response['results'] ?? []) as $row) {
                 if (CalendarPriceBuilder::rowHotelId($row) !== $hotelId) {
                     continue;
                 }
