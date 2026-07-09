@@ -233,5 +233,6 @@ fn_register_hooks(
     'calculate_cart_items_post',              // After cart items calculation - for rooms_data
     'user_login_post',                         // Link session bookings to logged-in user
     'create_user_post',                        // Link bookings to newly registered users
-    'checkout_pre_dispatch'                    // Debug info on checkout pages
+    'checkout_pre_dispatch',                   // Debug info on checkout pages
+    'travel_link_order_bookings'               // Backfill: link historical bookings to their orders (Travel Tools reconcile button)
 );

@@ -98,10 +98,7 @@ class BookingRetryService implements BookingRetryServiceInterface
                 $guestsData = TypeCoerce::toStringMap($rawGuests);
             }
 
-            $price = TypeCoerce::toFloat($booking['total_price'] ?? 0);
-            $currency = TypeCoerce::toString($booking['currency'] ?? 'EUR');
-
-            $bookResult = $this->submitBooking($bookingType, $offerId, $price, $currency, $booking, $guestsData);
+            $bookResult = $this->submitBooking($bookingType, $offerId, $booking, $guestsData);
 
             if (!empty($bookResult['booking_reference'])) {
                 $this->repo->updateApiResponse(
@@ -144,26 +141,34 @@ class BookingRetryService implements BookingRetryServiceInterface
 
     /**
      * Dispatch booking to the correct API method based on type.
+     *
+     * Uses the SAME payload the order-placement hook submits
+     * (BookingPayloadFactory) — the previous version built an "occupancy"
+     * via fn_sphinx_holidays_build_*_occupancy helpers that were never
+     * defined anywhere, so every retry fataled into the caller's catch
+     * block and re-marked the booking failed.
+     *
      * @param array<string, mixed> $booking
      * @param array<string, mixed> $guestsData
      * @return array<string, mixed>
      */
-    private function submitBooking(string $type, string $offerId, float $price, string $currency, array $booking, array $guestsData): array
+    private function submitBooking(string $type, string $offerId, array $booking, array $guestsData): array
     {
-        // Experiences use a flat occupancy; everything else uses room-based
-        $occupancy = $type === 'experience'
-            ? \fn_sphinx_holidays_build_flat_occupancy($guestsData)
-            : \fn_sphinx_holidays_build_room_occupancy($guestsData, $booking);
-
-        $payload = [
-            'offer_id' => $offerId,
-            'price' => $price,
-            'currency' => $currency,
-            'occupancy' => $occupancy,
+        // Contact: the booking row is backfilled from the order at placement;
+        // older failed bookings may predate that — fall back to the order.
+        $contact = [
+            'email' => TypeCoerce::toString($booking['guest_email'] ?? ''),
+            'phone' => TypeCoerce::toString($booking['guest_phone'] ?? ''),
         ];
-        if (!empty($booking['order_id'])) {
-            $payload['reference_code'] = TypeCoerce::toString($booking['order_id']);
+        $orderId = TypeCoerce::toInt($booking['order_id'] ?? 0);
+        if ($contact['email'] === '' && $contact['phone'] === '' && $orderId > 0 && function_exists('fn_get_order_info')) {
+            $orderInfo = fn_get_order_info($orderId);
+            $contact = BookingPayloadFactory::contactFromUserData(
+                TypeCoerce::toStringMap(is_array($orderInfo) ? $orderInfo : []),
+            );
         }
+
+        $payload = BookingPayloadFactory::build($offerId, $guestsData, $contact, $orderId);
 
         $result = match ($type) {
             'circuit' => $this->api->bookCircuit($payload),

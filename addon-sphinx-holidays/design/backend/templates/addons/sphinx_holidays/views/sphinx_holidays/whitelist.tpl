@@ -106,6 +106,30 @@
             <div id="wl_hidden_inputs"></div>
 
             </form>
+
+            {* ── Pagination (client-side) ──
+               The country list is a STATEFUL editor: unsaved check/uncheck
+               selections live only in JS `state` until Save. A server-side
+               pager (like countries.manage) reloads the whole page per page
+               and would discard those in-progress edits — so we window the
+               already-rendered list client-side instead. Search, the
+               whitelisted-only filter and the summary panel all keep working
+               across the full set; only what's DISPLAYED is paged. *}
+            <div id="wl_pager" class="wl-pager" style="display:none; align-items:center; gap:8px; margin-top:14px; padding-top:12px; border-top:1px solid #eee; font-size:13px; color:#555;">
+                <button type="button" class="btn btn-small" id="wl_pg_first" title="{__("sphinx_holidays.first_page")}" onclick="wlFirst()">&laquo;</button>
+                <button type="button" class="btn btn-small" id="wl_pg_prev" title="{__("sphinx_holidays.prev_page")}" onclick="wlPrev()">&lsaquo;</button>
+                <span id="wl_pg_info" style="min-width:110px; text-align:center;"></span>
+                <button type="button" class="btn btn-small" id="wl_pg_next" title="{__("sphinx_holidays.next_page")}" onclick="wlNext()">&rsaquo;</button>
+                <button type="button" class="btn btn-small" id="wl_pg_last" title="{__("sphinx_holidays.last_page")}" onclick="wlLast()">&raquo;</button>
+                <label style="margin-left:auto; display:inline-flex; align-items:center; gap:6px; font-size:12px; color:#888;">
+                    {__("sphinx_holidays.per_page")}
+                    <select id="wl_pg_perpage" class="input-small" style="width:auto; margin:0;" onchange="wlSetPerPage(this.value)">
+                        <option value="25">25</option>
+                        <option value="50" selected>50</option>
+                        <option value="100">100</option>
+                    </select>
+                </label>
+            </div>
         </div>
 
         {* ── Right: Summary Panel ── *}
@@ -189,34 +213,89 @@
         applyWhitelistFilter();
     };
 
-    function applyWhitelistFilter() {
-        var countryItems = document.querySelectorAll('.wl-country');
-        var totalCount = countryItems.length;
-        var visibleCount = 0;
+    // ─── Client-side pagination ───
+    // The country list is paged in the browser (see the pager markup note).
+    // applyWhitelistFilter() computes which countries are ELIGIBLE (pass the
+    // current search + whitelisted-only toggle); wlRenderPage() then shows only
+    // the current page's slice of that eligible set and hides the rest.
 
+    window.wlPage = 1;
+    window.wlPerPage = 50;
+    window.wlPageCount = 1;
+    var wlEligible = [];
+
+    function wlComputeEligible() {
         var searchVal = document.getElementById('wl_search').value.toLowerCase().trim();
-
-        countryItems.forEach(function(el) {
+        wlEligible = [];
+        document.querySelectorAll('.wl-country').forEach(function(el) {
             var countryId = parseInt(el.dataset.countryId);
             var isWhitelisted = !!state[countryId];
-
-            if (whitelistFilterActive && !isWhitelisted) {
-                el.style.display = 'none';
-            } else {
-                var name = el.dataset.name || '';
-                if (searchVal && name.indexOf(searchVal) === -1) {
-                    el.style.display = 'none';
-                } else {
-                    el.style.display = '';
-                    visibleCount++;
-                }
-            }
+            var name = el.dataset.name || '';
+            var ok = true;
+            if (whitelistFilterActive && !isWhitelisted) ok = false;
+            if (ok && searchVal && name.indexOf(searchVal) === -1) ok = false;
+            if (ok) wlEligible.push(el);
         });
+    }
+
+    function wlRenderPage() {
+        wlPageCount = Math.max(1, Math.ceil(wlEligible.length / wlPerPage));
+        if (wlPage > wlPageCount) wlPage = wlPageCount;
+        if (wlPage < 1) wlPage = 1;
+
+        var start = (wlPage - 1) * wlPerPage;
+        var end = start + wlPerPage;
+
+        // Hide every country, then reveal only this page's slice of eligibles.
+        document.querySelectorAll('.wl-country').forEach(function(el) { el.style.display = 'none'; });
+        wlEligible.forEach(function(el, idx) {
+            if (idx >= start && idx < end) el.style.display = '';
+        });
+
+        var total = wlEligible.length;
+        var info = document.getElementById('wl_pg_info');
+        if (info) {
+            info.textContent = total === 0
+                ? '0'
+                : ((start + 1) + '–' + Math.min(end, total) + ' / ' + total);
+        }
+        var pager = document.getElementById('wl_pager');
+        if (pager) pager.style.display = total > 0 ? 'flex' : 'none';
+
+        [['wl_pg_first', wlPage <= 1], ['wl_pg_prev', wlPage <= 1],
+         ['wl_pg_next', wlPage >= wlPageCount], ['wl_pg_last', wlPage >= wlPageCount]]
+            .forEach(function(pair) {
+                var b = document.getElementById(pair[0]);
+                if (b) b.disabled = pair[1];
+            });
+    }
+
+    window.wlGotoPage = function(p) {
+        wlPage = p;
+        wlRenderPage();
+        var list = document.getElementById('wl_country_list');
+        if (list) list.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+    window.wlFirst = function() { wlGotoPage(1); };
+    window.wlPrev = function() { wlGotoPage(wlPage - 1); };
+    window.wlNext = function() { wlGotoPage(wlPage + 1); };
+    window.wlLast = function() { wlGotoPage(wlPageCount); };
+    window.wlSetPerPage = function(v) {
+        wlPerPage = parseInt(v, 10) || 50;
+        wlPage = 1;
+        wlRenderPage();
+    };
+
+    function applyWhitelistFilter() {
+        // A filter/search change resets to page 1 over the new eligible set.
+        wlComputeEligible();
+        wlPage = 1;
+        wlRenderPage();
 
         var countEl = document.getElementById('wl_filter_count');
         if (whitelistFilterActive) {
             var whitelistedTotal = Object.keys(state).length;
-            countEl.textContent = whitelistedTotal + ' / ' + totalCount;
+            countEl.textContent = whitelistedTotal + ' / ' + document.querySelectorAll('.wl-country').length;
         } else {
             countEl.textContent = '';
         }
@@ -910,8 +989,9 @@
     {/foreach}
 
     {literal}
-    // Initial summary
+    // Initial summary + first paginated render of the country list.
     updateSummary();
+    applyWhitelistFilter();
     {/literal}
 })();
 </script>

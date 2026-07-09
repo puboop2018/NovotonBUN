@@ -87,8 +87,33 @@ try {
         ));
     }
 
+    // Build the single-room rooms_data the guest-card template iterates over
+    // (the hotel booking form is always one room). Without this the guest-card
+    // {foreach $sphinx_booking_data.rooms_data} loop had nothing to iterate and
+    // rendered ZERO guest name fields. Shape matches the shared guest-cards
+    // markup: adults / children / childrenAges / room_name / board_name / price.
+    $childrenAgesList = [];
+    if ($childrenAges !== '') {
+        foreach (explode(',', $childrenAges) as $ageToken) {
+            $ageToken = trim($ageToken);
+            if ($ageToken !== '') {
+                $childrenAgesList[] = (int) $ageToken;
+            }
+        }
+    }
+    $roomsData = [[
+        'adults'       => $adults,
+        'children'     => $children,
+        'childrenAges' => $childrenAgesList,
+        'room_name'    => $roomName,
+        'board_name'   => $boardName,
+        'price'        => $verifiedPrice,
+    ]];
+
     $view->assign('sphinx_booking_data', [
         'offer_id' => $offer_id,
+        'num_rooms' => 1,
+        'rooms_data' => $roomsData,
         'hotel_id' => $hotel_id,
         'product_id' => $product_id,
         'hotel_name' => $hotelName,

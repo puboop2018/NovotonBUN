@@ -105,4 +105,71 @@ class GuestDataServiceTest extends TestCase
     {
         $this->assertSame([], $this->service->parseGuestsData([]));
     }
+
+    public function testParseAndValidateGuestsRecordsDeclaredAndCheckinAges(): void
+    {
+        // Child born 2019-07-25: 6 at a 2026-07-24 check-in (birthday the day
+        // after), while the form declared 7 — a real mismatch case.
+        $parsed = GuestDataService::parseAndValidateGuests([
+            'room1_adult_1' => ['first_name' => 'Ana', 'last_name' => 'Pop', 'type' => 'adult', 'is_holder' => '1'],
+            'room1_child_1' => ['first_name' => 'Mia', 'last_name' => 'Pop', 'type' => 'child', 'age' => '7', 'dob' => '25/07/2019'],
+        ], '2026-07-24', 'sphinx');
+
+        $this->assertIsArray($parsed);
+        $child = $parsed['guests_data']['room1_child_1'];
+        $this->assertSame(7, $child['declared_age']);
+        $this->assertSame(6, $child['age_at_checkin']);
+
+        // Adults carry the keys too, but both stay null when nothing applies.
+        $adult = $parsed['guests_data']['room1_adult_1'];
+        $this->assertNull($adult['age_at_checkin']);
+        $this->assertNull($adult['declared_age']);
+    }
+
+    public function testFindChildAgeMismatchFlagsDivergentChild(): void
+    {
+        $parsed = GuestDataService::parseAndValidateGuests([
+            'room1_child_1' => ['first_name' => 'Mia', 'last_name' => 'Pop', 'type' => 'child', 'age' => '7', 'dob' => '25/07/2019'],
+        ], '2026-07-24', 'sphinx');
+        $this->assertIsArray($parsed);
+
+        $mismatch = GuestDataService::findChildAgeMismatch($parsed['guests_data']);
+
+        $this->assertNotNull($mismatch);
+        $this->assertSame('room1_child_1', $mismatch['key']);
+        $this->assertSame(7, $mismatch['declared_age']);
+        $this->assertSame(6, $mismatch['age_at_checkin']);
+    }
+
+    public function testFindChildAgeMismatchAcceptsMatchingAndUndeclared(): void
+    {
+        // Born ON check-in day 2019 → exactly 7 at check-in; declared 7 → OK.
+        $matching = GuestDataService::parseAndValidateGuests([
+            'room1_child_1' => ['first_name' => 'Mia', 'last_name' => 'Pop', 'type' => 'child', 'age' => '7', 'dob' => '24/07/2019'],
+        ], '2026-07-24', 'sphinx');
+        $this->assertIsArray($matching);
+        $this->assertNull(GuestDataService::findChildAgeMismatch($matching['guests_data']));
+
+        // No declared age posted → nothing to validate against (must NOT be
+        // treated as declared age 0).
+        $undeclared = GuestDataService::parseAndValidateGuests([
+            'room1_child_1' => ['first_name' => 'Mia', 'last_name' => 'Pop', 'type' => 'child', 'dob' => '24/07/2019'],
+        ], '2026-07-24', 'sphinx');
+        $this->assertIsArray($undeclared);
+        $this->assertNull(GuestDataService::findChildAgeMismatch($undeclared['guests_data']));
+
+        // No DOB → age_at_checkin unknown → skipped.
+        $noDob = GuestDataService::parseAndValidateGuests([
+            'room1_child_1' => ['first_name' => 'Mia', 'last_name' => 'Pop', 'type' => 'child', 'age' => '7'],
+        ], '2026-07-24', 'sphinx');
+        $this->assertIsArray($noDob);
+        $this->assertNull(GuestDataService::findChildAgeMismatch($noDob['guests_data']));
+
+        // Adults never flag, even with DOB + age posted.
+        $adult = GuestDataService::parseAndValidateGuests([
+            'room1_adult_1' => ['first_name' => 'Ana', 'last_name' => 'Pop', 'type' => 'adult', 'age' => '30', 'dob' => '01/01/1990'],
+        ], '2026-07-24', 'sphinx');
+        $this->assertIsArray($adult);
+        $this->assertNull(GuestDataService::findChildAgeMismatch($adult['guests_data']));
+    }
 }

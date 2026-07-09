@@ -532,9 +532,111 @@
     }
 
     // =========================================================================
+    // EXPECTED-AGE GUARD (fixed-price providers)
+    // =========================================================================
+    // Child DOB inputs rendered with data-expected-age carry the age the offer
+    // was SEARCHED/PRICED for (sphinx: price is fixed per searched occupancy —
+    // no live re-pricing). If the typed DOB implies a different age at
+    // check-in, flag the field immediately and hold the form back; the server
+    // enforces the same rule authoritatively in add_to_cart. Novoton's form
+    // does not use data-expected-age (it re-prices on DOB change instead), so
+    // this path is inert there.
+
+    function _parseIsoDate(iso) {
+        if (!iso) return null;
+        var p = String(iso).split('-');
+        if (p.length !== 3) return null;
+        var d = new Date(parseInt(p[0], 10), parseInt(p[1], 10) - 1, parseInt(p[2], 10));
+        return isNaN(d.getTime()) ? null : d;
+    }
+
+    function _ageMismatchMessage(expected, actual) {
+        var t = _getTranslations();
+        var pattern = t.childAgeMismatch ||
+            'The child [guest] will be [actual] years old at check-in, but the offer was priced for age [declared]. The search was re-run with the correct ages — please choose an offer again.';
+        return pattern
+            .replace(/\s*\[guest\]/, '')
+            .replace('[actual]', String(actual))
+            .replace('[declared]', String(expected));
+    }
+
+    function validateExpectedAge(input) {
+        var expectedRaw = input.getAttribute('data-expected-age');
+        if (expectedRaw === null || expectedRaw === '') return true;
+
+        var form = input.form || input.closest('form');
+        var checkInEl = form ? form.querySelector('input[name="check_in"]') : null;
+        var checkIn = _parseIsoDate(checkInEl ? checkInEl.value : '');
+
+        var msgEl = input.parentElement ? input.parentElement.querySelector('.js-age-mismatch-msg') : null;
+        var clear = function () {
+            input.removeAttribute('aria-invalid');
+            if (msgEl) msgEl.remove();
+        };
+
+        var dob = parseDobMasked(input.value);
+        if (!dob || !checkIn) {
+            // Incomplete DOB (still typing) or no check-in on the form —
+            // nothing to judge yet; other validators own format errors.
+            clear();
+            return true;
+        }
+
+        var actual = calculateAgeAtDate(new Date(dob.year, dob.month - 1, dob.day), checkIn);
+        var expected = parseInt(expectedRaw, 10);
+        if (actual === expected) {
+            clear();
+            return true;
+        }
+
+        input.setAttribute('aria-invalid', 'true');
+        if (!msgEl) {
+            msgEl = document.createElement('span');
+            msgEl.className = 'travel-field-error-message js-age-mismatch-msg';
+            msgEl.setAttribute('role', 'alert');
+            input.parentElement.appendChild(msgEl);
+        }
+        msgEl.textContent = _ageMismatchMessage(expected, actual);
+        return false;
+    }
+
+    document.addEventListener('focusout', function (e) {
+        var el = e.target;
+        if (el && el.matches && el.matches('input[data-expected-age]')) {
+            validateExpectedAge(el);
+        }
+    });
+
+    document.addEventListener('input', function (e) {
+        var el = e.target;
+        // Re-judge as soon as the mask is complete so a correction clears the
+        // error without waiting for blur.
+        if (el && el.matches && el.matches('input[data-expected-age]') && el.value.length === 10) {
+            validateExpectedAge(el);
+        }
+    });
+
+    document.addEventListener('submit', function (e) {
+        var form = e.target;
+        if (!form || !form.querySelectorAll) return;
+        var guarded = form.querySelectorAll('input[data-expected-age]');
+        var firstBad = null;
+        for (var i = 0; i < guarded.length; i++) {
+            if (!validateExpectedAge(guarded[i]) && !firstBad) {
+                firstBad = guarded[i];
+            }
+        }
+        if (firstBad) {
+            e.preventDefault();
+            try { firstBad.focus(); } catch (err) {}
+        }
+    });
+
+    // =========================================================================
     // PUBLIC API — namespaced under window.TravelBooking (with Novoton alias)
     // =========================================================================
 
+    window.TravelBooking.validateExpectedAge = validateExpectedAge;
     window.TravelBooking.handleDobKeydown = handleDobKeydown;
     window.TravelBooking.applyDobMask = applyDobMask;
     window.TravelBooking.parseDobMasked = parseDobMasked;

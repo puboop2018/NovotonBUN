@@ -203,12 +203,14 @@
                     {/if}
                 </td>
 
-                {* Provider Reference *}
+                {* Provider Reference — the provider's own API reference/confirmation
+                   number. When the booking is still pending there is none yet, so
+                   show "-". Do NOT fall back to provider_booking_id: that is an
+                   internal per-provider auto-increment, so it rendered an identical,
+                   meaningless "#1" for every provider's first booking. *}
                 <td>
                     {if $booking.provider_display.provider_ref}
                         <small>{$booking.provider_display.provider_ref|escape:html}</small>
-                    {elseif $booking.provider_booking_id}
-                        <small class="muted">#{$booking.provider_booking_id|escape:html}</small>
                     {else}
                         <span class="muted">-</span>
                     {/if}

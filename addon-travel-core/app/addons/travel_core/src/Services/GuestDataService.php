@@ -500,6 +500,17 @@ class GuestDataService implements GuestDataServiceInterface
             $lastName = trim(TypeCoerce::toString($guest['last_name'] ?? ''));
             $name = trim(TypeCoerce::toString($guest['name'] ?? ''));
 
+            // The age the form DECLARED for this guest (for children this is the
+            // age the offer was searched/priced for — the hidden [age] field).
+            // Null when the form posted no age at all: "not declared" must stay
+            // distinguishable from a declared age of 0 (infant).
+            $declaredAge = isset($guest['age']) && $guest['age'] !== ''
+                ? TypeCoerce::toInt($guest['age'])
+                : null;
+            // Age at CHECK-IN derived from the DOB (children only; null when
+            // unknown). Distinct from 'age' below, which is age at today.
+            $childAgeAtCheckin = null;
+
             $birthday = self::parseDob(TypeCoerce::toStringMap($guest));
 
             // Validate DOB: not in future
@@ -525,6 +536,7 @@ class GuestDataService implements GuestDataServiceInterface
                         $dobDate = new \DateTime($birthday);
                         $checkInDate = new \DateTime($checkIn);
                         $ageAtCheckin = $dobDate->diff($checkInDate)->y;
+                        $childAgeAtCheckin = $ageAtCheckin;
 
                         if ($ageAtCheckin >= 18) {
                             if (!empty($provider)) {
@@ -563,7 +575,7 @@ class GuestDataService implements GuestDataServiceInterface
                 }
                 $guestNames[] = $displayName;
 
-                $guestAge = self::calculateAge($birthday, TypeCoerce::toInt($guest['age'] ?? 0));
+                $guestAge = self::calculateAge($birthday, $declaredAge ?? 0);
 
                 $guestsData[$key] = [
                     'name' => $displayName,
@@ -572,6 +584,8 @@ class GuestDataService implements GuestDataServiceInterface
                     'last_name' => $lastName,
                     'type' => $guest['type'] ?? 'adult',
                     'age' => $guestAge,
+                    'declared_age' => $declaredAge,
+                    'age_at_checkin' => $childAgeAtCheckin,
                     'birthday' => $birthday,
                     'dob' => !empty($birthday) ? date('d/m/Y', (int) strtotime($birthday)) : '',
                     'room' => TypeCoerce::toInt($guest['room'] ?? 1),
@@ -580,7 +594,7 @@ class GuestDataService implements GuestDataServiceInterface
             } elseif (!empty($name)) {
                 $guestNames[] = $name;
 
-                $guestAge = self::calculateAge($birthday, TypeCoerce::toInt($guest['age'] ?? 0));
+                $guestAge = self::calculateAge($birthday, $declaredAge ?? 0);
 
                 $guestsData[$key] = [
                     'name' => $name,
@@ -589,6 +603,8 @@ class GuestDataService implements GuestDataServiceInterface
                     'last_name' => '',
                     'type' => $guest['type'] ?? 'adult',
                     'age' => $guestAge,
+                    'declared_age' => $declaredAge,
+                    'age_at_checkin' => $childAgeAtCheckin,
                     'birthday' => $birthday,
                     'dob' => !empty($birthday) ? date('d/m/Y', (int) strtotime($birthday)) : '',
                     'room' => TypeCoerce::toInt($guest['room'] ?? 1),
@@ -612,6 +628,50 @@ class GuestDataService implements GuestDataServiceInterface
             'guest_list' => implode(', ', $guestNames),
             'holder_name' => $holderName,
         ];
+    }
+
+    /**
+     * Find the first child whose DOB-derived age at CHECK-IN differs from the
+     * age the offer was searched/priced for (the declared hidden [age] field).
+     *
+     * Providers whose offer price is fixed per searched occupancy (sphinx)
+     * block the booking on a hit — booking a child on a price calculated for a
+     * different age produces a wrong-price booking or an API rejection.
+     * Providers that re-price live on DOB change (novoton) don't need this.
+     *
+     * Only children with BOTH a declared age and a computed age-at-check-in
+     * are compared; guests missing either are skipped (nothing to validate).
+     *
+     * @param array<string, mixed> $guestsData Parsed guests from parseAndValidateGuests()
+     * @return array{key: string, name: string, declared_age: int, age_at_checkin: int}|null
+     */
+    public static function findChildAgeMismatch(array $guestsData): ?array
+    {
+        foreach ($guestsData as $key => $guest) {
+            if (!is_array($guest) || strtolower(TypeCoerce::toString($guest['type'] ?? '')) !== 'child') {
+                continue;
+            }
+            if (!isset($guest['age_at_checkin']) || !is_numeric($guest['age_at_checkin'])) {
+                continue;
+            }
+            if (!isset($guest['declared_age']) || !is_numeric($guest['declared_age'])) {
+                continue;
+            }
+
+            $declared = TypeCoerce::toInt($guest['declared_age']);
+            $atCheckin = TypeCoerce::toInt($guest['age_at_checkin']);
+
+            if ($declared !== $atCheckin) {
+                return [
+                    'key' => TypeCoerce::toString($key),
+                    'name' => TypeCoerce::toString($guest['name'] ?? ''),
+                    'declared_age' => $declared,
+                    'age_at_checkin' => $atCheckin,
+                ];
+            }
+        }
+
+        return null;
     }
 
     /**

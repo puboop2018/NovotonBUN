@@ -91,6 +91,41 @@ use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
         ])];
     }
 
+    // Price guard: the offer price is fixed for the ages the search ran with.
+    // A child DOB implying a DIFFERENT age at check-in would book a
+    // wrong-price stay (or be rejected by the Sphinx API), so block and
+    // re-run the search with the DOB-corrected ages instead.
+    $guestsMap = TypeCoerce::toStringMap($parsed_guests['guests_data'] ?? []);
+    $ageMismatch = \Tygh\Addons\TravelCore\Services\GuestDataService::findChildAgeMismatch($guestsMap);
+    if ($ageMismatch !== null) {
+        fn_set_notification('E', __('error'), __('travel_core.child_age_mismatch', [
+            '[guest]' => $ageMismatch['name'],
+            '[declared]' => $ageMismatch['declared_age'],
+            '[actual]' => $ageMismatch['age_at_checkin'],
+            '[default]' => 'The child [guest] will be [actual] years old at check-in, but the offer was priced for age [declared]. The search was re-run with the correct ages — please choose an offer again.',
+        ]));
+
+        $correctedAges = [];
+        foreach ($guestsMap as $mismatchGuest) {
+            if (is_array($mismatchGuest) && TypeCoerce::toString($mismatchGuest['type'] ?? '') === 'child') {
+                $correctedAges[] = TypeCoerce::toInt(
+                    $mismatchGuest['age_at_checkin'] ?? $mismatchGuest['declared_age'] ?? $mismatchGuest['age'] ?? 0
+                );
+            }
+        }
+
+        return [CONTROLLER_STATUS_REDIRECT, 'sphinx_booking.search?' . http_build_query([
+            'hotel_id' => $hotel_id,
+            'product_id' => $product_id,
+            'check_in' => $check_in,
+            'check_out' => TypeCoerce::toString($verifyResult['check_out'] ?? $bookingData['check_out'] ?? ''),
+            'adults' => TypeCoerce::toInt($verifyResult['adults'] ?? $bookingData['adults'] ?? 2),
+            'children' => count($correctedAges),
+            'children_ages' => implode(',', $correctedAges),
+            'refresh' => 1,
+        ])];
+    }
+
     // Extract offer details
     $contact     = RequestCoerce::stringMap($_REQUEST, 'contact');
     $hotelName   = TypeCoerce::toString($verifyResult['hotel_name'] ?? '');

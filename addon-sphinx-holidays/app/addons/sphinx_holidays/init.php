@@ -106,5 +106,6 @@ fn_register_hooks(
     'user_login_post',                         // Link session bookings to logged-in user
     'create_user_post',                        // Link bookings to newly registered users
     'get_order_info',                          // Admin notification for failed bookings
-    'travel_core_exchange_rates_updated'       // Log exchange rate sync to sphinx_sync_log
+    'travel_core_exchange_rates_updated',      // Log exchange rate sync to sphinx_sync_log
+    'travel_link_order_bookings'               // Backfill: link historical bookings to their orders (Travel Tools reconcile button)
 );

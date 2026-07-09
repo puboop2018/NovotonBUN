@@ -835,6 +835,14 @@ function fn_sphinx_holidays_place_order_post(&$order_id, &$action, &$order_statu
 
     $repo = \Tygh\Addons\SphinxHolidays\Services\Container::getBookingRepository();
 
+    // Booking contact comes from the ORDER's checkout profile — the guest form
+    // no longer duplicates the email/phone questions. Legacy cart extras
+    // (contact_email/contact_phone, from forms submitted before the removal)
+    // remain as a fallback for in-flight carts only.
+    $orderContact = \Tygh\Addons\SphinxHolidays\Services\BookingPayloadFactory::contactFromUserData(
+        is_array($cart['user_data'] ?? null) ? $cart['user_data'] : []
+    );
+
     foreach ($cart['products'] as $product) {
         if (empty($product['extra']['sphinx_booking']) || empty($product['extra']['travel_booking_id'])) {
             continue;
@@ -843,8 +851,26 @@ function fn_sphinx_holidays_place_order_post(&$order_id, &$action, &$order_statu
         $booking_id = (int)$product['extra']['travel_booking_id'];
         $offer_id = $product['extra']['offer_id'] ?? '';
 
+        $contact = [
+            'email' => $orderContact['email'] !== ''
+                ? $orderContact['email']
+                : \Tygh\Addons\TravelCore\Helpers\TypeCoerce::toString($product['extra']['contact_email'] ?? ''),
+            'phone' => $orderContact['phone'] !== ''
+                ? $orderContact['phone']
+                : \Tygh\Addons\TravelCore\Helpers\TypeCoerce::toString($product['extra']['contact_phone'] ?? ''),
+        ];
+
         // Link booking to order with PENDING status (not confirmed yet — API call hasn't happened)
         $repo->linkToOrder($booking_id, $resolved_order_id, \Tygh\Addons\TravelCore\TravelConstants::STATUS_PENDING);
+
+        // Backfill the booking row so admin views and the retry path see the
+        // same contact the API is given (add_to_cart stores it empty now).
+        if ($contact['email'] !== '' || $contact['phone'] !== '') {
+            $repo->update($booking_id, [
+                'guest_email' => $contact['email'],
+                'guest_phone' => $contact['phone'],
+            ]);
+        }
 
         // Submit booking to Sphinx API
         if (!empty($offer_id)) {
@@ -857,14 +883,23 @@ function fn_sphinx_holidays_place_order_post(&$order_id, &$action, &$order_statu
                         : $product['extra']['guests_data'];
                 }
 
-                $bookResult = $api->bookHotel([
-                    'offer_id' => $offer_id,
-                    'guests' => $guests_data ?: [],
-                    'contact' => [
-                        'email' => $product['extra']['contact_email'] ?? '',
-                        'phone' => $product['extra']['contact_phone'] ?? '',
-                    ],
-                ]);
+                $payload = \Tygh\Addons\SphinxHolidays\Services\BookingPayloadFactory::build(
+                    \Tygh\Addons\TravelCore\Helpers\TypeCoerce::toString($offer_id),
+                    is_array($guests_data) ? $guests_data : [],
+                    $contact,
+                    $resolved_order_id
+                );
+
+                // Dispatch by booking type — packages/circuits/experiences have
+                // their own book endpoints (previously EVERY sphinx product was
+                // sent to bookHotel, so non-hotel bookings hit the wrong one).
+                $booking_type = \Tygh\Addons\TravelCore\Helpers\TypeCoerce::toString($product['extra']['booking_type'] ?? 'hotel');
+                $bookResult = match ($booking_type) {
+                    'circuit' => $api->bookCircuit($payload),
+                    'package' => $api->bookPackage($payload),
+                    'experience' => $api->bookExperience($payload),
+                    default => $api->bookHotel($payload),
+                };
 
                 if (!empty($bookResult['booking_reference'])) {
                     $repo->updateApiResponse(
@@ -892,7 +927,7 @@ function fn_sphinx_holidays_place_order_post(&$order_id, &$action, &$order_statu
                 ]);
 
                 fn_log_event('general', 'runtime', [
-                    'message' => 'Sphinx bookHotel API call failed: ' . $e->getMessage(),
+                    'message' => 'Sphinx book API call failed: ' . $e->getMessage(),
                     'booking_id' => $booking_id,
                     'order_id' => $resolved_order_id,
                 ]);
@@ -945,10 +980,26 @@ function fn_sphinx_holidays_link_order_bookings(int $order_id): int
             $booking_id,
         );
 
-        if ($current_order <= 0) {
-            // Repository update mirrors order_id into the shared
-            // travel_bookings row, so the admin Travel Bookings grid shows
-            // the order link too.
+        // Already linked to a DIFFERENT order — never steal it.
+        if ($current_order > 0 && $current_order !== $order_id) {
+            continue;
+        }
+
+        // Write when the booking is unlinked. Also write when it is already
+        // linked to THIS order but the shared travel_bookings mirror drifted
+        // to a different value (typically 0) — that drift is what shows
+        // "Order ID: -" in the admin grid for an already-linked booking.
+        // linkToOrder() -> update() re-mirrors order_id into travel_bookings.
+        $needs_write = $current_order <= 0;
+        if (!$needs_write) {
+            $mirror_order = (int) db_get_field(
+                "SELECT order_id FROM ?:travel_bookings WHERE provider = 'sphinx' AND provider_booking_id = ?s",
+                (string) $booking_id,
+            );
+            $needs_write = $mirror_order !== $order_id;
+        }
+
+        if ($needs_write) {
             $repo->linkToOrder($booking_id, $order_id);
             $linked++;
         }
@@ -1059,9 +1110,34 @@ function fn_sphinx_holidays_create_user_post($user_id, $user_data, &$auth): void
  */
 function fn_sphinx_holidays_get_order_info(&$order, $additional_data): void
 {
-    // Only show notification in admin panel
+    // Admin only: the per-line "View Booking" link resolved below and the
+    // failed-booking notification are both admin-panel concerns.
     if (!defined('AREA') || AREA !== 'A' || empty($order['order_id'])) {
         return;
+    }
+
+    // Resolve the unified travel_bookings surrogate id for each sphinx booking
+    // product so the admin order-detail block links to travel_bookings.view
+    // with the CORRECT id. extra['travel_booking_id'] holds the sphinx_bookings
+    // PK — a different id-space from the surrogate travel_bookings.view expects
+    // — so linking it directly would open another provider's booking (the same
+    // id-space collision fixed for the "View in provider" grid icon).
+    if (!empty($order['products']) && is_array($order['products'])) {
+        foreach ($order['products'] as &$sxProduct) {
+            if (!is_array($sxProduct)) {
+                continue;
+            }
+            $sxExtra = is_array($sxProduct['extra'] ?? null) ? $sxProduct['extra'] : [];
+            if (empty($sxExtra['sphinx_booking']) || empty($sxExtra['travel_booking_id'])) {
+                continue;
+            }
+            $sxExtra['travel_surrogate_id'] = (int) db_get_field(
+                "SELECT booking_id FROM ?:travel_bookings WHERE provider = 'sphinx' AND provider_booking_id = ?s",
+                (string) $sxExtra['travel_booking_id']
+            );
+            $sxProduct['extra'] = $sxExtra;
+        }
+        unset($sxProduct);
     }
 
     $repo = \Tygh\Addons\SphinxHolidays\Services\Container::getBookingRepository();

@@ -85,6 +85,23 @@ use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
         ])];
     }
 
+    // Price guard: the package offer is priced for the ages the search ran
+    // with — a child DOB implying a different age at check-in books a
+    // wrong-price package. Block and send the customer back to package
+    // search to re-run with the correct ages.
+    $ageMismatch = \Tygh\Addons\TravelCore\Services\GuestDataService::findChildAgeMismatch(
+        TypeCoerce::toStringMap($parsed_guests['guests_data'] ?? [])
+    );
+    if ($ageMismatch !== null) {
+        fn_set_notification('E', __('error'), __('travel_core.child_age_mismatch', [
+            '[guest]' => $ageMismatch['name'],
+            '[declared]' => $ageMismatch['declared_age'],
+            '[actual]' => $ageMismatch['age_at_checkin'],
+            '[default]' => 'The child [guest] will be [actual] years old at check-in, but the offer was priced for age [declared]. The search was re-run with the correct ages — please choose an offer again.',
+        ]));
+        return [CONTROLLER_STATUS_REDIRECT, 'sphinx_booking.package_search'];
+    }
+
     // Extract type-specific
     $contact       = RequestCoerce::stringMap($_REQUEST, 'contact');
     $hotelName     = RequestCoerce::string($_REQUEST, 'hotel_name');

@@ -302,8 +302,8 @@
             {/if}
         </div>
 
-        {* Contact info *}
-        {include file="addons/sphinx_holidays/views/sphinx_booking/components/contact_fields.tpl"}
+        {* Contact (email/phone) is NOT collected here: CS-Cart checkout already
+           collects it, and the booking submission reads it from the order. *}
 
         {* Submit *}
         <div class="travel-booking-submit sphinx-booking-submit">
