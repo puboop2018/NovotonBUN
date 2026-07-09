@@ -348,8 +348,8 @@
                                                autocomplete="off"
                                                placeholder="ZZ/LL/AAAA"
                                                value="{$prefilled_child_dob}"
-                                               onkeydown="handleDobKeydownLocal(event)"
-                                               oninput="applyDobMaskLocal(this)"
+                                               onkeydown="TravelBooking.handleDobKeydown(event)"
+                                               oninput="TravelBooking.applyDobMask(this)"
                                                onblur="validateAndCheckAge('r{$room_num}_c{$i}', {$child_age_at_checkin})" />
                                     </div>
                                     {* Hidden fields *}
@@ -411,54 +411,15 @@
 {* A74e: Include external booking form validation JS *}
 {script src="js/addons/travel_core/booking-form-validation.js"}
 
+{* Client i18n for the booking form — shared travel_core partial (replaces
+   the incremental window.NovotonTranslations.* block); currency/coeff passed
+   for the price-recalculation display. Emits window.TravelTranslations +
+   the NovotonTranslations alias the logic below reads. *}
+{include file="addons/travel_core/components/travel_i18n.tpl"
+         travel_i18n_currency=$novoton_display_symbol
+         travel_i18n_coeff=$novoton_display_coefficient}
+
 <script>
-// A74e: Translation strings for JavaScript (used by external module)
-window.NovotonTranslations = window.NovotonTranslations || {};
-window.NovotonTranslations.currency = '{$novoton_display_symbol|default:$smarty.const.CART_PRIMARY_CURRENCY|escape:"javascript"}';
-window.NovotonTranslations.currencyCoeff = {$novoton_display_coefficient|default:1};
-window.NovotonTranslations.priceIncreased = '{__("novoton_holidays.price_increased")|default:"Price increased"|escape:"javascript"}';
-window.NovotonTranslations.priceDecreased = '{__("novoton_holidays.price_decreased")|default:"Price decreased"|escape:"javascript"}';
-window.NovotonTranslations.priceRecalculating = '{__("novoton_holidays.price_recalculating")|default:"Recalculating price..."|escape:"javascript"}';
-window.NovotonTranslations.priceUpdated = '{__("novoton_holidays.price_updated")|default:"Pretul a fost actualizat:"|escape:"javascript"}';
-window.NovotonTranslations.ageLabel = '{__("novoton_holidays.age_label")|default:"ani"|escape:"javascript"}';
-window.NovotonTranslations.ageLabelSingular = '{__("novoton_holidays.age_label_singular")|default:"an"|escape:"javascript"}';
-window.NovotonTranslations.childMustBeUnder18 = '{__("novoton_holidays.child_must_be_under_18")|default:"Child must be under 18"|escape:"javascript"}';
-window.NovotonTranslations.dobCannotBeFuture = '{__("novoton_holidays.dob_cannot_be_future")|default:"Date of birth cannot be in the future"|escape:"javascript"}';
-window.NovotonTranslations.roomChangedTitle = '{__("novoton_holidays.room_changed_title")|default:"Camera s-a modificat"|escape:"javascript"}';
-window.NovotonTranslations.roomChangedDueToAge = '{__("novoton_holidays.room_changed_due_to_age")|default:"Camera selectata nu este disponibila pentru varsta copilului introdusa."|escape:"javascript"}';
-window.NovotonTranslations.originalRoom = '{__("novoton_holidays.original_room")|default:"Camera selectata"|escape:"javascript"}';
-window.NovotonTranslations.newRoom = '{__("novoton_holidays.new_room")|default:"Camera noua"|escape:"javascript"}';
-window.NovotonTranslations.priceChange = '{__("novoton_holidays.price_change")|default:"Modificare pret"|escape:"javascript"}';
-window.NovotonTranslations.goBackToSearch = '{__("novoton_holidays.go_back_to_search")|default:"Inapoi la cautare"|escape:"javascript"}';
-window.NovotonTranslations.continueWithNewRoom = '{__("novoton_holidays.continue_with_new_room")|default:"Continua cu noua camera"|escape:"javascript"}';
-window.NovotonTranslations.roomUpdated = '{__("novoton_holidays.room_updated")|default:"Camera a fost actualizata:"|escape:"javascript"}';
-window.NovotonTranslations.invalidDobFormat = '{__("novoton_holidays.invalid_dob_format")|default:"Format invalid. Folositi ZZ/LL/AAAA"|escape:"javascript"}';
-window.NovotonTranslations.invalidDay = '{__("novoton_holidays.invalid_day")|default:"Ziua trebuie sa fie intre 1 si 31"|escape:"javascript"}';
-window.NovotonTranslations.invalidMonth = '{__("novoton_holidays.invalid_month")|default:"Luna trebuie sa fie intre 1 si 12"|escape:"javascript"}';
-window.NovotonTranslations.invalidYear = '{__("novoton_holidays.invalid_year")|default:"An invalid"|escape:"javascript"}';
-window.NovotonTranslations.futureDate = '{__("novoton_holidays.future_date")|default:"Data nu poate fi in viitor"|escape:"javascript"}';
-window.NovotonTranslations.notChild = '{__("novoton_holidays.not_child")|default:"La check-in, copilul va avea"|escape:"javascript"}';
-window.NovotonTranslations.yearsOld = '{__("novoton_holidays.years_old")|default:"ani"|escape:"javascript"}';
-window.NovotonTranslations.mustBeUnder18 = '{__("novoton_holidays.must_be_under_18")|default:"Trebuie sa fie sub 18 ani."|escape:"javascript"}';
-window.NovotonTranslations.adult = window.NovotonTranslations.adult || '{__("novoton_holidays.adult")|default:"adult"|escape:"javascript"}';
-window.NovotonTranslations.adults = window.NovotonTranslations.adults || '{__("novoton_holidays.adults")|default:"adults"|escape:"javascript"}';
-window.NovotonTranslations.child = window.NovotonTranslations.child || '{__("novoton_holidays.child")|default:"child"|escape:"javascript"}';
-window.NovotonTranslations.children = window.NovotonTranslations.children || '{__("novoton_holidays.children")|default:"children"|escape:"javascript"}';
-window.NovotonTranslations.yearOld = window.NovotonTranslations.yearOld || '{__("novoton_holidays.year_old")|default:"year old"|escape:"javascript"}';
-window.NovotonTranslations.childLabel = '{__("novoton_holidays.child_label")|default:"Child"|escape:"javascript"}';
-window.NovotonTranslations.ageOfChild = '{__("novoton_holidays.age_of_child")|default:"Age of child"|escape:"javascript"}';
-window.NovotonTranslations.checkInPast = '{__("novoton_holidays.check_in_past")|default:"Check-in date cannot be in the past"|escape:"javascript"}';
-window.NovotonTranslations.includesOnRequest = '{__("novoton_holidays.includes_on_request")|default:"(includes on-request)"|escape:"javascript"}';
-window.NovotonTranslations.of = window.NovotonTranslations.of || '{__("novoton_holidays.of")|default:"of"|escape:"javascript"}';
-window.NovotonTranslations.selected = window.NovotonTranslations.selected || '{__("novoton_holidays.selected")|default:"selected"|escape:"javascript"}';
-window.NovotonTranslations.room = window.NovotonTranslations.room || '{__("novoton_holidays.room")|default:"room"|escape:"javascript"}';
-window.NovotonTranslations.rooms = window.NovotonTranslations.rooms || '{__("novoton_holidays.rooms")|default:"rooms"|escape:"javascript"}';
-window.NovotonTranslations.pleaseSelectAllRooms = '{__("novoton_holidays.please_select_all_rooms")|default:"Please select a room type for each room"|escape:"javascript"}';
-window.NovotonTranslations.night = window.NovotonTranslations.night || '{__("novoton_holidays.night")|default:"night"|escape:"javascript"}';
-window.NovotonTranslations.nights = window.NovotonTranslations.nights || '{__("novoton_holidays.nights")|default:"nights"|escape:"javascript"}';
-window.NovotonTranslations.nightsMany = window.NovotonTranslations.nightsMany || '{__("novoton_holidays.nights_many")|default:"nights"|escape:"javascript"}';
-window.NovotonTranslations.loading = window.NovotonTranslations.loading || '{__("novoton_holidays.loading")|default:"Loading..."|escape:"javascript"}';
-window.NovotonTranslations.calendarPriceFooter = '{__("novoton_holidays.calendar_price_footer")|default:"Approximate prices in %s for a 1-night stay"|escape:"javascript"}';
 
 // HTML escape utility to prevent XSS
 function escapeHtml(str) {
@@ -538,19 +499,8 @@ window.bookingData = {ldelim}
     showCalendarPrices: {if $show_calendar_prices == 'Y'}true{else}false{/if}
 {rdelim};
 
-// A74e: These functions are defined in booking-form-validation.js
-// Wrapper just ensures they exist before calling
-function handleDobKeydownLocal(e) {
-    if (typeof window.handleDobKeydown === 'function') {
-        window.handleDobKeydown(e);
-    }
-}
-
-function applyDobMaskLocal(input) {
-    if (typeof window.applyDobMask === 'function') {
-        window.applyDobMask(input);
-    }
-}
+// DOB masking is wired directly to the shared TravelBooking.* API
+// (booking-form-validation.js), matching the sphinx booking form.
 
 // Main validation function for DOB fields
 function validateAndCheckAge(id, originalAge) {

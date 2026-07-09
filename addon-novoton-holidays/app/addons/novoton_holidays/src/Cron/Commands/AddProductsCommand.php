@@ -63,6 +63,11 @@ class AddProductsCommand extends AbstractCronCommand
         if (!empty($exclude_resorts)) {
             $this->output('Excluding resorts (' . count($exclude_resorts) . '): ' . implode(', ', $exclude_resorts));
         }
+        // Make the hard prerequisite + available knobs explicit in the output, so
+        // an empty run is never mistaken for "nothing to do". Only priced
+        // (has_room_price='Y'), not-yet-linked hotels are added.
+        $this->output('Prerequisite: run mode=room_price first — it sets has_room_price=Y (the flag this mode requires).');
+        $this->output('Options: &country=XX  &limit=N  &exclude_resorts=a,b   |   already-linked hotels are skipped (no force re-add).');
         $this->output('');
 
         $hotelRepo = Container::getInstance()->hotelRepository();
@@ -77,6 +82,23 @@ class AddProductsCommand extends AbstractCronCommand
             $this->output('Found ' . count($hotels) . ' hotels to add.');
 
             if (empty($hotels)) {
+                // 0 results is ambiguous ("no hotels" vs "no prices vs" all added").
+                // Classify from cheap counts so the operator sees the real reason and
+                // the next action — most often: mode=room_price was never run, so no
+                // hotel has has_room_price='Y' (the flag findUnlinkedWithPrices needs).
+                $total = $hotelRepo->count(['country' => $country]);
+                $priced = $hotelRepo->count(['country' => $country, 'has_room_price' => 'Y']);
+
+                if ($total === 0) {
+                    $this->output("  → No hotels are synced for {$country}. Run mode=hotel_list first, then mode=room_price.");
+                } elseif ($priced === 0) {
+                    $this->output("  → 0 of {$total} synced hotels have prices yet — mode=room_price has not run for {$country}.");
+                    $this->output('    Run mode=room_price FIRST (it sets has_room_price=Y), then re-run mode=add_hotels_as_products.');
+                    $this->output("    e.g. index.php?dispatch=novoton_cron.run&access_key=...&mode=room_price&country={$country}");
+                } else {
+                    $this->output("  → All {$priced} priced hotel(s) in {$country} are already linked to products (or excluded) — nothing new to add.");
+                    $this->output('    There is no force re-add. To refresh prices/features, run mode=room_price then re-run this mode.');
+                }
                 $this->output('');
                 continue;
             }
