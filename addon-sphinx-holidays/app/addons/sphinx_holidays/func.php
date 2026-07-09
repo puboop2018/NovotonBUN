@@ -902,6 +902,74 @@ function fn_sphinx_holidays_place_order_post(&$order_id, &$action, &$order_statu
 }
 
 /**
+ * Link any unlinked sphinx bookings referenced by an order's items to that
+ * order. Idempotent: bookings already linked are left untouched; status is
+ * NOT changed (a reconciliation must not reset a confirmed booking).
+ *
+ * @return int Number of bookings newly linked
+ */
+function fn_sphinx_holidays_link_order_bookings(int $order_id): int
+{
+    if ($order_id <= 0) {
+        return 0;
+    }
+
+    $order_info = fn_get_order_info($order_id);
+    /** @var array<string, mixed> $order_info */
+    $order_info = is_array($order_info) ? $order_info : [];
+    $oiProducts = is_array($order_info['products'] ?? null) ? $order_info['products'] : [];
+    if (empty($oiProducts)) {
+        return 0;
+    }
+
+    $repo = \Tygh\Addons\SphinxHolidays\Services\Container::getBookingRepository();
+    $linked = 0;
+
+    foreach ($oiProducts as $product) {
+        if (!is_array($product)) {
+            continue;
+        }
+        /** @var array<string, mixed> $extra */
+        $extra = is_array($product['extra'] ?? null) ? $product['extra'] : [];
+        if (empty($extra['sphinx_booking']) || empty($extra['travel_booking_id'])) {
+            continue;
+        }
+
+        $booking_id = (int) $extra['travel_booking_id'];
+        if ($booking_id <= 0) {
+            continue;
+        }
+
+        $current_order = (int) db_get_field(
+            'SELECT order_id FROM ?:sphinx_bookings WHERE booking_id = ?i',
+            $booking_id,
+        );
+
+        if ($current_order <= 0) {
+            // Repository update mirrors order_id into the shared
+            // travel_bookings row, so the admin Travel Bookings grid shows
+            // the order link too.
+            $repo->linkToOrder($booking_id, $order_id);
+            $linked++;
+        }
+    }
+
+    return $linked;
+}
+
+/**
+ * Hook: travel_link_order_bookings — fired by travel_core's
+ * travel_tools "Reconcile booking–order links" backfill.
+ *
+ * @param int $order_id
+ * @param int $linked Accumulator across providers
+ */
+function fn_sphinx_holidays_travel_link_order_bookings($order_id, &$linked): void
+{
+    $linked += fn_sphinx_holidays_link_order_bookings((int) $order_id);
+}
+
+/**
  * Hook: calculate_cart_items
  * Preserve stored price for Sphinx bookings.
  */

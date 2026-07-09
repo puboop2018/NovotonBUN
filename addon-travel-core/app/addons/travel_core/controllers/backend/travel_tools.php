@@ -46,6 +46,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         return [CONTROLLER_STATUS_REDIRECT, 'travel_tools.manage'];
     }
+
+    if ($mode === 'link_booking_orders') {
+        // Reconcile booking–order links: providers stamp order_id on their
+        // booking rows during place_order_post, but a booking placed while a
+        // submission bug (or older code) was live stays orphaned forever —
+        // the Travel Bookings grid then shows "Order ID: -" although the
+        // CS-Cart order exists. Walk recent orders and fire the provider
+        // reconcilers (idempotent: already-linked bookings are untouched).
+        $orderIds = TypeCoerce::toIntList(db_get_fields(
+            'SELECT order_id FROM ?:orders ORDER BY order_id DESC LIMIT 500',
+        ));
+
+        $linked = 0;
+        foreach ($orderIds as $reconcile_order_id) {
+            fn_set_hook('travel_link_order_bookings', $reconcile_order_id, $linked);
+        }
+
+        fn_set_notification(
+            'N',
+            __('notice'),
+            str_replace(
+                ['[linked]', '[orders]'],
+                [(string) $linked, (string) count($orderIds)],
+                TypeCoerce::toString(__('travel_core.booking_orders_linked')),
+            ),
+        );
+
+        return [CONTROLLER_STATUS_REDIRECT, 'travel_tools.manage'];
+    }
 }
 
 if ($mode === 'manage') {
@@ -63,6 +92,17 @@ if ($mode === 'manage') {
         'schedule'    => __('travel_core.cron_schedule_daily'),
         'cpanel'      => '5 13 * * *',
         'run_action'  => 'run_exchange_rates',
+    ];
+
+    // On-demand maintenance (no external cron URL): backfills order links for
+    // bookings orphaned by historical submission bugs. Idempotent.
+    $cron_jobs['link_booking_orders'] = [
+        'name'        => __('travel_core.link_booking_orders'),
+        'description' => __('travel_core.link_booking_orders_desc'),
+        'url'         => '',
+        'schedule'    => '—',
+        'cpanel'      => '—',
+        'run_action'  => 'link_booking_orders',
     ];
 
     $view = Tygh::$app['view'];
