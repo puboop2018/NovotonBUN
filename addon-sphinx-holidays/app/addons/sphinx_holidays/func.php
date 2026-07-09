@@ -945,10 +945,26 @@ function fn_sphinx_holidays_link_order_bookings(int $order_id): int
             $booking_id,
         );
 
-        if ($current_order <= 0) {
-            // Repository update mirrors order_id into the shared
-            // travel_bookings row, so the admin Travel Bookings grid shows
-            // the order link too.
+        // Already linked to a DIFFERENT order — never steal it.
+        if ($current_order > 0 && $current_order !== $order_id) {
+            continue;
+        }
+
+        // Write when the booking is unlinked. Also write when it is already
+        // linked to THIS order but the shared travel_bookings mirror drifted
+        // to a different value (typically 0) — that drift is what shows
+        // "Order ID: -" in the admin grid for an already-linked booking.
+        // linkToOrder() -> update() re-mirrors order_id into travel_bookings.
+        $needs_write = $current_order <= 0;
+        if (!$needs_write) {
+            $mirror_order = (int) db_get_field(
+                "SELECT order_id FROM ?:travel_bookings WHERE provider = 'sphinx' AND provider_booking_id = ?s",
+                (string) $booking_id,
+            );
+            $needs_write = $mirror_order !== $order_id;
+        }
+
+        if ($needs_write) {
             $repo->linkToOrder($booking_id, $order_id);
             $linked++;
         }

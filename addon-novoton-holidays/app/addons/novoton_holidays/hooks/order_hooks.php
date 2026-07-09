@@ -190,15 +190,33 @@ function fn_novoton_holidays_link_order_bookings(int $order_id): int
             continue;
         }
 
-        // Only link if the booking isn't already linked to an order
         $current_order = PriceInfoFormatter::toInt(db_get_field(
             "SELECT order_id FROM ?:novoton_bookings WHERE booking_id = ?i", $booking_id
         ));
 
-        if ($current_order <= 0) {
-            // Repository update mirrors order_id into the shared
-            // travel_bookings row (BookingSyncRepository::applyBookingUpdate),
-            // so the admin Travel Bookings grid shows the order link too.
+        // Already linked to a DIFFERENT order — never steal it.
+        if ($current_order > 0 && $current_order !== $order_id) {
+            continue;
+        }
+
+        // Write when the booking is unlinked. Also write when it is already
+        // linked to THIS order but the shared travel_bookings mirror drifted
+        // to a different value (typically 0) — that drift is exactly what makes
+        // the admin grid show "Order ID: -" for an already-linked booking, and
+        // is only reachable if order_id was ever written straight to
+        // novoton_bookings without going through the repository. The repo
+        // update re-mirrors order_id into travel_bookings
+        // (BookingSyncRepository::applyBookingUpdate).
+        $needs_write = $current_order <= 0;
+        if (!$needs_write) {
+            $mirror_order = PriceInfoFormatter::toInt(db_get_field(
+                "SELECT order_id FROM ?:travel_bookings WHERE provider = 'novoton' AND provider_booking_id = ?s",
+                (string) $booking_id
+            ));
+            $needs_write = $mirror_order !== $order_id;
+        }
+
+        if ($needs_write) {
             _nvt_booking_repo()->update($booking_id, ['order_id' => $order_id]);
             $linked++;
         }

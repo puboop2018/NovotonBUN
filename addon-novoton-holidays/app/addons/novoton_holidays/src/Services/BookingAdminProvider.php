@@ -38,10 +38,19 @@ class BookingAdminProvider implements BookingAdminProviderInterface
 
         $display = [];
 
-        // Provider reference: Novoton invoice ID
-        $display['provider_ref'] = !empty($booking['novoton_invoice_id'])
-            ? 'NT ' . TypeCoerce::toString($booking['novoton_invoice_id'])
-            : '';
+        // Provider reference: the first real Novoton identifier we hold — API
+        // confirmation, invoice (IdNum), or resinfo ResNum. Empty while the
+        // booking is still pending (no API reference yet); the grid then shows
+        // "-" instead of the internal booking id, which is NOT a provider ref
+        // and rendered a meaningless, per-provider-duplicated "#1".
+        $novotonRef = TypeCoerce::toString($booking['novoton_confirm_id'] ?? '');
+        if ($novotonRef === '') {
+            $novotonRef = TypeCoerce::toString($booking['novoton_invoice_id'] ?? '');
+        }
+        if ($novotonRef === '') {
+            $novotonRef = TypeCoerce::toString($booking['novoton_res_num'] ?? '');
+        }
+        $display['provider_ref'] = $novotonRef !== '' ? 'NT ' . $novotonRef : '';
 
         // Status label with Novoton-specific styling
         $novotonStatus = TypeCoerce::toString($booking['novoton_status'] ?? '');
@@ -141,7 +150,13 @@ class BookingAdminProvider implements BookingAdminProviderInterface
 
     public function getProviderViewUrl(string $providerBookingId): ?string
     {
-        return 'travel_bookings.view?booking_id=' . (int) $providerBookingId;
+        // Route through novoton's own controller, which resolves this novoton
+        // booking id to the unified travel_bookings surrogate before
+        // redirecting. Pointing straight at travel_bookings.view with the
+        // novoton id collides id-spaces: that param is the surrogate key, and
+        // each provider's FIRST booking shares provider_booking_id "1", so the
+        // novoton row's "View in Novoton" icon opened sphinx's booking 1.
+        return 'novoton_bookings.view?booking_id=' . (int) $providerBookingId;
     }
 
     /**
