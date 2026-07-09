@@ -110,7 +110,7 @@ try {
             $pollResponse = $api->getPackageResults($searchId, $cursor);
             if ($pollResponse === null) break;
 
-            $pollData = TypeCoerce::toRowList($pollResponse['data'] ?? []);
+            $pollData = TypeCoerce::toRowList($pollResponse['results'] ?? []);
             if (!empty($pollData)) {
                 foreach ($pollData as $result) {
                     $allResults[] = $result;

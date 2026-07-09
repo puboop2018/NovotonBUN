@@ -259,12 +259,11 @@ try {
     // No cache — initiate async search, JS will poll for results
     $searchResponse = $api->searchHotels($apiSearchParams);
 
-    // The search API returns an opaque polling token. Historically this was a
-    // top-level `search_id`; the API now returns a `cursor` JWT instead (the
-    // search_id is embedded inside it). Either value works as the token the JS
-    // poller echoes back to sphinx_booking.search_poll.
+    // SphinxApi::searchHotels returns the canonical decoded shape — the
+    // polling token is always under `cursor` (ResponseDecoder folds the
+    // legacy top-level `search_id` into it).
     $searchToken = is_array($searchResponse)
-        ? TypeCoerce::toString($searchResponse['cursor'] ?? $searchResponse['search_id'] ?? '')
+        ? TypeCoerce::toString($searchResponse['cursor'] ?? '')
         : '';
 
     if ($searchToken === '') {

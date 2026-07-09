@@ -434,11 +434,7 @@ class HotelSyncService extends AbstractSyncService implements HotelSyncServiceIn
                 continue;
             }
 
-            // Unwrap if API returns {data: {...}}
-            if (isset($raw['data']) && is_array($raw['data']) && !isset($raw['id'])) {
-                $raw = $raw['data'];
-            }
-
+            // Envelope already unwrapped by SphinxApi (ResponseDecoder::single).
             $normalized = $this->rowMapper->normalize(TypeCoerce::toStringMap($raw));
             if ($normalized === null) {
                 $stats['errors']++;

@@ -57,7 +57,8 @@ try {
     }
 
     $quoteResponse = $api->getExperienceQuote($quoteParams);
-    $quotes = TypeCoerce::toRowList($quoteResponse['data'] ?? []);
+    // SphinxApi returns the decoded list of quotes directly.
+    $quotes = TypeCoerce::toRowList($quoteResponse);
 
     if (empty($quotes)) {
         fn_set_notification('W', __('warning'),

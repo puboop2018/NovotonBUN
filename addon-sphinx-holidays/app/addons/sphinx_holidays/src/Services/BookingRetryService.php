@@ -56,29 +56,31 @@ class BookingRetryService implements BookingRetryServiceInterface
             $bookingType = 'hotel';
         }
 
-        // Step 1: Re-verify the offer (hotels and packages have verify endpoints)
+        // Step 1: Re-verify the offer (hotels and packages have verify endpoints).
+        // SphinxApi returns the offer PAYLOAD (envelope unwrapped by
+        // ResponseDecoder); availability uses the same tolerant gate as the
+        // storefront verify paths. The previous ad-hoc normalization computed
+        // available = !(must_verify ?? true) from a raw ['data'] read — so a
+        // payload WITHOUT must_verify (the live shape) made every retry report
+        // "Offer no longer available", and an envelope drift broke it entirely.
         if ($bookingType === 'hotel' || $bookingType === 'package') {
             try {
-                if ($bookingType === 'package') {
-                    $verifyResult = TypeCoerce::toStringMap($this->api->verifyPackageOffer($offerId));
-                    // Normalize package verify response
-                    if (!empty($verifyResult['data'])) {
-                        $data = TypeCoerce::toStringMap($verifyResult['data']);
-                        $verifyResult = ['available' => !(bool) ($data['must_verify'] ?? true)];
-                    }
-                } else {
-                    $verifyResult = TypeCoerce::toStringMap($this->api->verifyHotelOffer($offerId));
-                    // Normalize hotel verify response: {data: {must_verify, pricing: {selling_price}}}
-                    if (!empty($verifyResult['data'])) {
-                        $data = TypeCoerce::toStringMap($verifyResult['data']);
-                        $verifyResult = ['available' => !(bool) ($data['must_verify'] ?? true)];
-                    }
-                }
+                $verifyResult = $bookingType === 'package'
+                    ? $this->api->verifyPackageOffer($offerId)
+                    : $this->api->verifyHotelOffer($offerId);
             } catch (\Throwable $e) {
                 return ['success' => false, 'message' => 'Verification failed: ' . $e->getMessage(), 'booking_ref' => null];
             }
 
-            if (empty($verifyResult)) {
+            $available = \Tygh\Addons\SphinxHolidays\Helpers\OfferAvailability::isVerifiedAvailable(
+                $verifyResult,
+                ConfigProvider::shouldRequireImmediateAvailability(),
+            )
+                // An explicit must_verify=true means the price is not final —
+                // do not auto-retry a booking on an unconfirmed price.
+                && !TypeCoerce::toBool(($verifyResult ?? [])['must_verify'] ?? false);
+
+            if (!$available) {
                 return ['success' => false, 'message' => 'Offer no longer available', 'booking_ref' => null];
             }
         }

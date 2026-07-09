@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays;
 
+use Tygh\Addons\SphinxHolidays\Api\ResponseDecoder;
 use Tygh\Addons\SphinxHolidays\Api\SphinxHttpClient;
 
 /**
@@ -11,14 +12,34 @@ use Tygh\Addons\SphinxHolidays\Api\SphinxHttpClient;
  *
  * Provides a clean interface to all Sphinx API endpoints.
  * Mirrors the Novoton NovotonApi pattern but for REST/JSON.
+ *
+ * Response envelopes are interpreted ONCE here, via ResponseDecoder — the
+ * verify endpoints return the offer payload itself and the search/poll
+ * endpoints return the canonical {status, results, cursor} shape, so
+ * consumers never re-derive API shapes (the drift class behind three
+ * production incidents).
  */
 class SphinxApi
 {
     private SphinxHttpClient $client;
 
+    private ResponseDecoder $decoder;
+
     public function __construct(SphinxHttpClient $client)
     {
         $this->client = $client;
+        $this->decoder = new ResponseDecoder();
+    }
+
+    /**
+     * Diagnostics: top-level keys + decode branch of the last decoded
+     * response (feeds zero-results logging so shape drift shows in logs).
+     *
+     * @return array<string, mixed>
+     */
+    public function lastEnvelope(): array
+    {
+        return $this->decoder->lastEnvelope();
     }
 
     // ── Connectivity ──
@@ -64,7 +85,7 @@ class SphinxApi
      */
     public function getDestination(int $id): ?array
     {
-        return $this->client->get("/api/v1/static/destinations/{$id}");
+        return $this->decoder->single($this->client->get("/api/v1/static/destinations/{$id}"));
     }
 
     /**
@@ -92,7 +113,7 @@ class SphinxApi
      */
     public function getHotel(string $id): ?array
     {
-        return $this->client->get("/api/v1/static/hotels/{$id}");
+        return $this->decoder->single($this->client->get("/api/v1/static/hotels/{$id}"));
     }
 
     /**
@@ -139,18 +160,18 @@ class SphinxApi
      */
     public function getCircuitRates(array $params): ?array
     {
-        return $this->client->post('/api/v1/circuits/rates', $params);
+        return $this->decoder->search($this->client->post('/api/v1/circuits/rates', $params));
     }
 
     /**
      * Get a priced quote for a specific circuit departure.
      *
      * @param array<string, mixed> $params {circuit_id, departure_date, occupancy, departure_id?}
-     * @return array<string, mixed>|null
+     * @return list<array<string, mixed>> The decoded list of quotes
      */
-    public function getCircuitQuote(array $params): ?array
+    public function getCircuitQuote(array $params): array
     {
-        return $this->client->post('/api/v1/circuits/quote', $params);
+        return $this->decoder->list($this->client->post('/api/v1/circuits/quote', $params));
     }
 
     /**
@@ -161,7 +182,7 @@ class SphinxApi
      */
     public function customizeCircuit(array $data): ?array
     {
-        return $this->client->post('/api/v1/circuits/customize', $data);
+        return $this->decoder->single($this->client->post('/api/v1/circuits/customize', $data));
     }
 
     /**
@@ -183,18 +204,18 @@ class SphinxApi
      */
     public function getExperienceRates(array $params): ?array
     {
-        return $this->client->post('/api/v1/experiences/rates', $params);
+        return $this->decoder->search($this->client->post('/api/v1/experiences/rates', $params));
     }
 
     /**
      * Get a priced quote for a specific experience departure.
      *
      * @param array<string, mixed> $params {experience_id, departure_date, occupancy}
-     * @return array<string, mixed>|null
+     * @return list<array<string, mixed>> The decoded list of quotes
      */
-    public function getExperienceQuote(array $params): ?array
+    public function getExperienceQuote(array $params): array
     {
-        return $this->client->post('/api/v1/experiences/quote', $params);
+        return $this->decoder->list($this->client->post('/api/v1/experiences/quote', $params));
     }
 
     /**
@@ -222,7 +243,7 @@ class SphinxApi
      */
     public function searchHotels(array $params): ?array
     {
-        return $this->client->post('/api/v1/hotels/search', $params);
+        return $this->decoder->search($this->client->post('/api/v1/hotels/search', $params));
     }
 
     /**
@@ -281,18 +302,19 @@ class SphinxApi
         if ($cursor !== null && $cursor !== '') {
             $query['cursor'] = $cursor;
         }
-        return $this->client->get('/api/v1/hotels/results', $query);
+        return $this->decoder->search($this->client->get('/api/v1/hotels/results', $query));
     }
 
     /**
      * Verify a hotel offer before booking.
      *
      * @param string $offerId Offer ID from search results
-     * @return array<string, mixed>|null
+     * @return array<string, mixed>|null The offer PAYLOAD (envelope already
+     *                                   unwrapped by ResponseDecoder::offer)
      */
     public function verifyHotelOffer(string $offerId): ?array
     {
-        return $this->client->get('/api/v1/hotels/verify', ['offer_id' => $offerId]);
+        return $this->decoder->offer($this->client->get('/api/v1/hotels/verify', ['offer_id' => $offerId]));
     }
 
     /**
@@ -320,7 +342,7 @@ class SphinxApi
      */
     public function searchPackages(array $params): ?array
     {
-        return $this->client->post('/api/v1/packages/search', $params);
+        return $this->decoder->search($this->client->post('/api/v1/packages/search', $params));
     }
 
     /**
@@ -336,16 +358,17 @@ class SphinxApi
         if ($cursor !== null && $cursor !== '') {
             $query['cursor'] = $cursor;
         }
-        return $this->client->get('/api/v1/packages/results', $query);
+        return $this->decoder->search($this->client->get('/api/v1/packages/results', $query));
     }
 
     /**
      * Verify a package offer.
-     * @return array<string, mixed>|null
+     * @return array<string, mixed>|null The offer PAYLOAD (envelope already
+     *                                   unwrapped by ResponseDecoder::offer)
      */
     public function verifyPackageOffer(string $offerId): ?array
     {
-        return $this->client->get('/api/v1/packages/verify', ['offer_id' => $offerId]);
+        return $this->decoder->offer($this->client->get('/api/v1/packages/verify', ['offer_id' => $offerId]));
     }
 
     /**
@@ -355,7 +378,7 @@ class SphinxApi
      */
     public function customizePackage(array $data): ?array
     {
-        return $this->client->post('/api/v1/packages/customize', $data);
+        return $this->decoder->single($this->client->post('/api/v1/packages/customize', $data));
     }
 
     /**
@@ -378,10 +401,10 @@ class SphinxApi
      */
     public function getOrders(int $page = 1, int $perPage = 50, array $filters = []): ?array
     {
-        return $this->client->get('/api/v1/orders', array_merge([
+        return $this->decoder->search($this->client->get('/api/v1/orders', array_merge([
             'page' => $page,
             'per_page' => $perPage,
-        ], $filters));
+        ], $filters)));
     }
 
     /**
@@ -390,7 +413,7 @@ class SphinxApi
      */
     public function getOrder(string $orderId): ?array
     {
-        return $this->client->get("/api/v1/orders/{$orderId}");
+        return $this->decoder->single($this->client->get("/api/v1/orders/{$orderId}"));
     }
 
     // ── Cache ──
@@ -402,7 +425,7 @@ class SphinxApi
      */
     public function cacheHotels(array $params): ?array
     {
-        return $this->client->post('/api/v1/cache/hotels', $params);
+        return $this->decoder->search($this->client->post('/api/v1/cache/hotels', $params));
     }
 
     /**
@@ -412,7 +435,7 @@ class SphinxApi
      */
     public function cachePackages(array $params): ?array
     {
-        return $this->client->post('/api/v1/cache/packages', $params);
+        return $this->decoder->search($this->client->post('/api/v1/cache/packages', $params));
     }
 
     /**

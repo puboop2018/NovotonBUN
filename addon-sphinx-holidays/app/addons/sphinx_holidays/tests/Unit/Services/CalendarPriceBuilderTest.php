@@ -63,7 +63,7 @@ final class CalendarPriceBuilderTest extends TestCase
         $api->method('cacheHotels')->willReturnCallback(static function (array $params): array {
             // Same two hotels every window; H2's price varies by check-in date.
             return [
-                'data' => [
+                'results' => [
                     ['hotel_id' => 'H1', 'min_price' => ['price' => 500]],
                     ['hotel_id' => 'H2', 'price' => $params['check_in'] === '2026-07-02' ? 300 : 250],
                     ['name' => 'row without id — skipped'],

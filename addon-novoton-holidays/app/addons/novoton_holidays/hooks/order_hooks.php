@@ -136,19 +136,45 @@ function fn_novoton_holidays_place_order_post(&$order_id, &$action, &$order_stat
     // Primary path: use cart data when available (full booking submission with API call)
     if (is_array($cart) && !empty($cart['products'])) {
         Container::getInstance()->bookingSubmissionService()->submitOrder($resolved_order_id, $cart);
+        // Self-heal: submitOrder writes order_id on every branch it reaches,
+        // but a cart item it skipped (gate mismatch, pre-persist throw) would
+        // leave its booking orphaned forever — the admin grid then shows
+        // "Order ID: -" although the order exists. The reconciler is
+        // idempotent and cheap, so always run it after submission.
+        fn_novoton_holidays_link_order_bookings($resolved_order_id);
         return;
     }
 
-    // Fallback path: $cart is null/empty (payment callbacks, order status re-triggers).
-    // Link any unlinked novoton bookings to this order by looking up the order's products.
-    $order_info = fn_get_order_info($resolved_order_id);
+    // Fallback path: $cart is null/empty (payment callbacks, order status
+    // re-triggers) — link by looking up the order's products.
+    fn_novoton_holidays_link_order_bookings($resolved_order_id);
+}
+
+/**
+ * Link any unlinked novoton bookings referenced by an order's items to that
+ * order. Idempotent: bookings already linked to an order are left untouched.
+ *
+ * Used by place_order_post (always, as a self-heal after submitOrder) and by
+ * the travel_tools "Reconcile booking–order links" backfill via the
+ * travel_link_order_bookings hook.
+ *
+ * @return int Number of bookings newly linked
+ */
+function fn_novoton_holidays_link_order_bookings(int $order_id): int
+{
+    if ($order_id <= 0) {
+        return 0;
+    }
+
+    $order_info = fn_get_order_info($order_id);
     /** @var array<string, mixed> $order_info */
     $order_info = is_array($order_info) ? $order_info : [];
     $oiProducts = is_array($order_info['products'] ?? null) ? $order_info['products'] : [];
     if (empty($oiProducts)) {
-        return;
+        return 0;
     }
 
+    $linked = 0;
     foreach ($oiProducts as $product) {
         if (!is_array($product)) {
             continue;
@@ -170,9 +196,27 @@ function fn_novoton_holidays_place_order_post(&$order_id, &$action, &$order_stat
         ));
 
         if ($current_order <= 0) {
-            _nvt_booking_repo()->update($booking_id, ['order_id' => $resolved_order_id]);
+            // Repository update mirrors order_id into the shared
+            // travel_bookings row (BookingSyncRepository::applyBookingUpdate),
+            // so the admin Travel Bookings grid shows the order link too.
+            _nvt_booking_repo()->update($booking_id, ['order_id' => $order_id]);
+            $linked++;
         }
     }
+
+    return $linked;
+}
+
+/**
+ * Hook: travel_link_order_bookings — fired by travel_core's
+ * travel_tools "Reconcile booking–order links" backfill.
+ *
+ * @param int $order_id
+ * @param int $linked Accumulator across providers
+ */
+function fn_novoton_holidays_travel_link_order_bookings($order_id, &$linked): void
+{
+    $linked += fn_novoton_holidays_link_order_bookings((int) $order_id);
 }
 
 // ============================================================================

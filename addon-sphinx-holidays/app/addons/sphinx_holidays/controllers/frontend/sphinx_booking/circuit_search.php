@@ -44,7 +44,8 @@ try {
 
     $response = $api->getCircuitRates($searchParams);
 
-    $allResults = TypeCoerce::toRowList($response['data'] ?? []);
+    // Canonical decoded shape: the list is always under `results` (meta preserved).
+    $allResults = TypeCoerce::toRowList($response['results'] ?? []);
     $meta = TypeCoerce::toStringMap($response['meta'] ?? null);
 
     // Apply commission

@@ -1,0 +1,12 @@
+{
+    "success": true,
+    "data": {
+        "offer_id": "pkg-77",
+        "must_verify": false,
+        "pricing": {"selling_price": 1450.0, "currency": "EUR"},
+        "hotel": {"name": "Ozkaymak Falez Otel", "rooms": [{"name": "DBL"}]},
+        "flight": {"outbound": [{"flight_number": "RO123"}], "inbound": [{"flight_number": "RO124"}]},
+        "included_services": ["Transfer"],
+        "payment_terms": ["30% on booking"]
+    }
+}

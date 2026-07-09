@@ -39,18 +39,50 @@ is **deliberately skipped** via the `if: vars.INTEGRATION_TESTDB_READY == 'true'
 gate in `.github/workflows/ci.yml`. That keeps pushes green while the
 infrastructure is being stood up.
 
-1. Build and push the image (see "Rebuild procedure" below).
-2. In GitHub → **Settings → Secrets and variables → Actions**:
-   - Under **Secrets**, add `GHCR_READ_TOKEN` — a Personal Access Token
-     with the `read:packages` scope. Used by the workflow's service
-     container credentials to pull the private image.
-   - Under **Variables**, add `INTEGRATION_TESTDB_READY` with value `true`.
-3. Trigger a new workflow run (push a trivial commit or re-run the last
-   workflow). The integration job now runs and must pass.
+1. Build and push the image (see "Rebuild procedure" below):
+
+   ```bash
+   cp docker/test-db/build.env.example docker/test-db/build.env
+   # edit build.env — set CSCART_SRC + CSCART_LICENSE_KEY
+   docker login ghcr.io          # user with push access to puboop2018 packages
+   ./docker/test-db/build.sh
+   ```
+
+2. Give the workflow pull access + flip the gate. Create a classic
+   Personal Access Token with **only** the `read:packages` scope
+   (GitHub → Settings → Developer settings → Personal access tokens),
+   then either use the `gh` CLI:
+
+   ```bash
+   gh secret set GHCR_READ_TOKEN --repo puboop2018/NovotonBUN
+   # paste the PAT when prompted (avoids the token landing in shell history)
+
+   gh variable set INTEGRATION_TESTDB_READY --repo puboop2018/NovotonBUN --body true
+   ```
+
+   …or the UI: **Settings → Secrets and variables → Actions** — under
+   **Secrets** add `GHCR_READ_TOKEN` (the PAT; used by the workflow's
+   service-container credentials to pull the private image), under
+   **Variables** add `INTEGRATION_TESTDB_READY` = `true`.
+
+3. Trigger a run and confirm the gate opened:
+
+   ```bash
+   gh workflow run ci.yml --repo puboop2018/NovotonBUN --ref main   # or push any commit
+   gh run watch --repo puboop2018/NovotonBUN
+   ```
+
+   The `PHPUnit Integration (novoton)` job must now appear (no longer
+   skipped) and pass. It runs the booking write-path tests AND the
+   currencies write-path test (`CurrencyWritePathIntegrationTest`), which
+   proves exchange-rate coefficients round-trip exact decimals on real
+   MySQL — the class of bug the lossy-`?d` currency incident came from.
 
 To temporarily disable the integration job (e.g. while rebuilding the
-image), flip `INTEGRATION_TESTDB_READY` to any value other than `true` —
-the job skips on the next push without requiring a workflow edit.
+image), flip `INTEGRATION_TESTDB_READY` to any value other than `true`
+(`gh variable set INTEGRATION_TESTDB_READY --repo puboop2018/NovotonBUN
+--body false`) — the job skips on the next push without requiring a
+workflow edit.
 
 ## Rebuild procedure
 

@@ -194,11 +194,19 @@ hotel sync weekly, `cleanup` daily) via real cron on the server.
 
 ```bash
 composer install && composer check          # PHPStan L10 + cs-fixer + rector + unit suites
+npm ci && npm test                          # vitest (jsdom) — behavioral tests for the booking JS
 docker compose -f docker-compose.test.yml up -d db   # CS-Cart test DB (MySQL 8)
 cd addon-novoton-holidays/app/addons/novoton_holidays
 DB_DSN='mysql:host=127.0.0.1;port=3307;dbname=cscart' DB_USER=cscart DB_PASS=cscart \
-  vendor/bin/phpunit -c phpunit-integration.xml       # incl. booking write-path tests
+  vendor/bin/phpunit -c phpunit-integration.xml       # booking + currencies write-path tests
 ```
+
+The integration suite needs the pre-baked CS-Cart test-DB image. In CI the
+`PHPUnit Integration (novoton)` job stays **skipped** until a maintainer
+completes the one-time setup (build + push the image, add the
+`GHCR_READ_TOKEN` secret, set `INTEGRATION_TESTDB_READY=true`) — the exact
+runbook, including the `gh secret set` / `gh variable set` commands, is in
+`docker/test-db/README.md` under "One-time repo setup".
 
 ## 8. Future schema changes (post-install rule)
 

@@ -667,3 +667,15 @@ msgstr "Travel: Text preț minim calendar"
 msgctxt "Languages::theme_editor.travel_cal_price_color"
 msgid "Travel: Calendar price text"
 msgstr "Travel: Text preț calendar"
+
+msgctxt "Languages::travel_core.link_booking_orders"
+msgid "Reconcile booking–order links"
+msgstr "Reconciliere legături rezervare–comandă"
+
+msgctxt "Languages::travel_core.link_booking_orders_desc"
+msgid "Links bookings that are missing their CS-Cart order (Order ID shows \"-\" in Travel Bookings although the order exists). Scans the most recent 500 orders; safe to run repeatedly."
+msgstr "Leagă rezervările care nu au comanda CS-Cart asociată (Order ID apare \"-\" în Travel Bookings deși comanda există). Scanează ultimele 500 de comenzi; poate fi rulat oricând."
+
+msgctxt "Languages::travel_core.booking_orders_linked"
+msgid "Linked [linked] booking(s) to their orders (scanned [orders] recent orders)."
+msgstr "[linked] rezervări au fost legate de comenzile lor ([orders] comenzi recente scanate)."

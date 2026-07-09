@@ -1,0 +1,7 @@
+{
+    "status": "completed",
+    "data": [
+        {"offer_id": "p1", "pricing": {"selling_price": 1450.0}}
+    ],
+    "next_cursor": "tok-2"
+}

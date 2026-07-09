@@ -1,0 +1,9 @@
+{
+    "status": "completed",
+    "results": [
+        {"offer_id": "o1", "hotel_id": "61992", "confirmation": "immediate", "pricing": {"selling_price": 987.5}},
+        {"offer_id": "o2", "hotel_id": "61992", "confirmation": "on_request", "pricing": {"selling_price": 800.0}}
+    ],
+    "next_cursor": null,
+    "alternatives": [{"check_in": "2026-08-01", "check_out": "2026-08-08", "price": 700}]
+}

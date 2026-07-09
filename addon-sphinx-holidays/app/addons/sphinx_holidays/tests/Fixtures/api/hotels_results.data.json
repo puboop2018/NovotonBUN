@@ -1,0 +1,7 @@
+{
+    "status": "pending",
+    "data": [
+        {"offer_id": "o1", "hotel_id": "61992", "confirmation": "immediate", "selling_price": 987.5}
+    ],
+    "cursor": "eyJhbGciOi.eyJzZWFyY2hfaWQiOiJTMSJ9.sig"
+}

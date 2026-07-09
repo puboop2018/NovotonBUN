@@ -57,8 +57,12 @@ use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
         return [CONTROLLER_STATUS_REDIRECT, 'index.index'];
     }
 
-    // The gate above rejects null/empty responses — narrow for the reads below.
-    $verifyResult = TypeCoerce::toStringMap($verifyResult);
+    // The gate above rejects null/empty responses — narrow for the reads below,
+    // unwrapping the API envelope so the offer-field reads (hotel/room/board,
+    // dates, occupancy) see the offer payload itself.
+    $verifyResult = TypeCoerce::toStringMap(
+        \Tygh\Addons\SphinxHolidays\Helpers\OfferAvailability::unwrapOffer($verifyResult)
+    );
 
     // Price with commission
     $basePrice = \Tygh\Addons\SphinxHolidays\Helpers\OfferAvailability::extractPrice($verifyResult);
