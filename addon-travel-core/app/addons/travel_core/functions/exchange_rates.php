@@ -223,9 +223,17 @@ function fn_travel_core_update_cscart_currencies($coefficients): array
         db_query('START TRANSACTION');
         try {
             foreach ($pending as $currency_code => $update) {
+                // Bind the coefficient as an explicit, locale-safe decimal STRING.
+                // The Tygh '?d' placeholder does not reliably persist the full
+                // fractional precision of an exchange coefficient (it reformats /
+                // rounds the value), so the verify-readback below saw a different
+                // number than intended and rolled the WHOLE batch back on every
+                // run ("rates unchanged"). currencies.coefficient is decimal(20,10),
+                // so a "%.6F" string (locale-independent '.' separator, 6 dp covers
+                // our 4-dp inputs) round-trips exactly. Do NOT revert to ?d here.
                 db_query(
-                    "UPDATE ?:currencies SET coefficient = ?d WHERE currency_code = ?s",
-                    round($update['new'], 5),
+                    "UPDATE ?:currencies SET coefficient = ?s WHERE currency_code = ?s",
+                    sprintf('%.6F', $update['new']),
                     $currency_code
                 );
 
