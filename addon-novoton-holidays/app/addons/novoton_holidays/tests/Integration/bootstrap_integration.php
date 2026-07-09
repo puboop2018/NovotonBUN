@@ -17,7 +17,7 @@ declare(strict_types=1);
  * Placeholder support covers the subset used by addon queries:
  *   ?:  table prefix (cscart_)
  *   ?i  integer
- *   ?d  float
+ *   ?d  float (FIDELITY CAVEAT — see the 'd' arm in _novoton_integration_bind)
  *   ?s  string (quoted)
  *   ?e  array => "(`col`, ...) VALUES (v, ...)" (CS-Cart INSERT data map);
  *       scalar kept as quoted string for backward compatibility
@@ -115,6 +115,22 @@ if (!function_exists('_novoton_integration_bind')) {
                     $v = $params[$i++];
                     $out .= match ($type) {
                         'i' => (string) (int) $v,
+                        // FIDELITY CAVEAT: this harness's ?d is LOSSLESS (PHP 8
+                        // float->string round-trips exactly). Real Tygh's ?d is
+                        // NOT — it reformats the value and drops fractional
+                        // precision, which silently corrupted 4-dp currency
+                        // coefficients in production and rolled back every
+                        // exchange-rate batch (commit 61de1a5;
+                        // fn_travel_core_update_cscart_currencies now binds
+                        // money as a %.6F string via ?s — guarded by
+                        // UpdateCscartCurrenciesTest). We keep the harness
+                        // arm lossless rather than emulating the corruption:
+                        // CS-Cart core is not vendored here, so any emulation
+                        // would be a guess that breaks legitimate ?d reads.
+                        // Consequence: a GREEN integration run does NOT prove
+                        // a ?d write survives real Tygh — never bind decimals
+                        // that must persist exactly via ?d; use a formatted
+                        // string with ?s.
                         'd' => (string) (float) $v,
                         's' => $pdo->quote((string) $v),
                         // CS-Cart ?e: INSERT data map. Array => (`cols`) VALUES (vals);

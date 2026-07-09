@@ -169,6 +169,9 @@ if (!class_exists(\Tygh\Registry::class)) {
         public static function set(string $key, $value): void {
             self::$data[$key] = $value;
         }
+        public static function del(string $key): void {
+            unset(self::$data[$key]);
+        }
     }
     ');
 }
