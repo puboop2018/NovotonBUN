@@ -17,6 +17,10 @@
  *   guest_extra_class (string, default '') optional provider CSS hook on the wrapper.
  *   show_adult_dob    (bool,   default true) render an (optional) adult DOB field.
  *   child_dob_required(bool,   default true) mark child DOB required.
+ *   guard_expected_ages(bool,  default false) stamp data-expected-age on child
+ *                                        DOB inputs so the shared JS blocks a
+ *                                        DOB that contradicts the searched age
+ *                                        (fixed-price providers like sphinx).
  *
  * @package TravelCore
  *}
@@ -107,10 +111,14 @@
                     </div>
                     <div class="travel-guest-field travel-guest-field--dob">
                         <label for="dob_r{$room_num}_c{$smarty.section.child.index}">{__("`$_gp`.date_of_birth")|default:"Date of Birth"}</label>
+                        {* data-expected-age arms the shared JS + server guard: the DOB
+                           must imply THIS age at check-in (the age the offer was priced
+                           for). Fixed-price providers only — novoton re-prices instead. *}
                         <input type="text" id="dob_r{$room_num}_c{$smarty.section.child.index}"
                                name="guests[room{$room_num}_child_{$smarty.section.child.index}][dob]"
                                class="ty-input-text dob-masked-input" placeholder="DD/MM/YYYY" maxlength="10"
                                {if $_child_dob_required}required aria-required="true"{/if}
+                               {if $guard_expected_ages|default:false}data-expected-age="{$child_age}"{/if}
                                onkeydown="TravelBooking.handleDobKeydown(event)"
                                oninput="TravelBooking.applyDobMask(this)">
                         <span id="child_age_display_r{$room_num}_c{$smarty.section.child.index}" class="travel-age-display {$_extra_class}"></span>

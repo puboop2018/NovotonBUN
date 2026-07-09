@@ -68,6 +68,82 @@ describe('calculateAgeAtDate', () => {
     });
 });
 
+describe('expected-age guard (sphinx fixed-price offers)', () => {
+    function renderGuardedForm({ expectedAge = 7, checkIn = '2026-07-24' } = {}) {
+        document.body.innerHTML = `
+            <form id="guarded-form" action="#">
+                <input type="hidden" name="check_in" value="${checkIn}">
+                <div class="travel-guest-field">
+                    <input type="text" id="child-dob" data-expected-age="${expectedAge}" maxlength="10">
+                </div>
+                <button type="submit">Book</button>
+            </form>
+        `;
+        return document.getElementById('child-dob');
+    }
+
+    it('flags a DOB implying a different age at check-in and clears on correction', () => {
+        const input = renderGuardedForm({ expectedAge: 7 });
+
+        // Born 25/07/2019 → still 6 on 2026-07-24 (birthday the day after)
+        input.value = '25/07/2019';
+        input.dispatchEvent(new Event('focusout', { bubbles: true }));
+
+        expect(input.getAttribute('aria-invalid')).toBe('true');
+        const msg = input.parentElement.querySelector('.js-age-mismatch-msg');
+        expect(msg).not.toBeNull();
+        expect(msg.textContent).toContain('6');
+        expect(msg.textContent).toContain('7');
+
+        // Corrected to 24/07/2019 → exactly 7 at check-in
+        input.value = '24/07/2019';
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+
+        expect(input.getAttribute('aria-invalid')).toBeNull();
+        expect(input.parentElement.querySelector('.js-age-mismatch-msg')).toBeNull();
+    });
+
+    it('blocks form submission while a mismatch exists and allows it when resolved', () => {
+        const input = renderGuardedForm({ expectedAge: 7 });
+        const form = document.getElementById('guarded-form');
+
+        input.value = '25/07/2019';
+        let submitted = null;
+        const listener = (e) => { submitted = e.defaultPrevented; e.preventDefault(); };
+        // Registered AFTER the module's guard listener → sees its preventDefault.
+        document.addEventListener('submit', listener);
+
+        form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+        expect(submitted).toBe(true);
+
+        input.value = '24/07/2019';
+        submitted = null;
+        form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+        expect(submitted).toBe(false);
+
+        document.removeEventListener('submit', listener);
+    });
+
+    it('stays silent on inputs without the attribute and on incomplete DOBs', () => {
+        const input = renderGuardedForm({ expectedAge: 7 });
+
+        // Incomplete DOB — still typing
+        input.value = '25/07/20';
+        input.dispatchEvent(new Event('focusout', { bubbles: true }));
+        expect(input.getAttribute('aria-invalid')).toBeNull();
+
+        // Unarmed input (novoton path) never flags
+        document.body.innerHTML = `
+            <form><input type="hidden" name="check_in" value="2026-07-24">
+            <div><input type="text" id="plain-dob"></div></form>
+        `;
+        const plain = document.getElementById('plain-dob');
+        plain.value = '25/07/2019';
+        plain.dispatchEvent(new Event('focusout', { bubbles: true }));
+        expect(plain.getAttribute('aria-invalid')).toBeNull();
+    });
+});
+
 describe('updatePriceDisplay (the AJAX recalc UI path)', () => {
     it('writes the server-formatted price into every price element', () => {
         document.body.innerHTML = `

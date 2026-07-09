@@ -113,6 +113,7 @@ window.TravelTranslations = Object.assign(window.TravelTranslations || {ldelim}{
     nightsMany: '{__("novoton_holidays.nights_many")|default:"nights"|escape:"javascript"}',
     loading: '{__("novoton_holidays.loading")|default:"Loading..."|escape:"javascript"}',
     calendarPriceFooter: '{__("novoton_holidays.calendar_price_footer")|default:"Approximate prices in %s for a 1-night stay"|escape:"javascript"}',
+    childAgeMismatch: '{__("travel_core.child_age_mismatch")|default:"The child [guest] will be [actual] years old at check-in, but the offer was priced for age [declared]. The search was re-run with the correct ages — please choose an offer again."|escape:"javascript"}',
     currency: '{$travel_i18n_currency|default:$smarty.const.CART_PRIMARY_CURRENCY|escape:"javascript"}',
     currencyCoeff: {$travel_i18n_coeff|default:1}
 {rdelim});
