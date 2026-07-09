@@ -1075,9 +1075,34 @@ function fn_sphinx_holidays_create_user_post($user_id, $user_data, &$auth): void
  */
 function fn_sphinx_holidays_get_order_info(&$order, $additional_data): void
 {
-    // Only show notification in admin panel
+    // Admin only: the per-line "View Booking" link resolved below and the
+    // failed-booking notification are both admin-panel concerns.
     if (!defined('AREA') || AREA !== 'A' || empty($order['order_id'])) {
         return;
+    }
+
+    // Resolve the unified travel_bookings surrogate id for each sphinx booking
+    // product so the admin order-detail block links to travel_bookings.view
+    // with the CORRECT id. extra['travel_booking_id'] holds the sphinx_bookings
+    // PK — a different id-space from the surrogate travel_bookings.view expects
+    // — so linking it directly would open another provider's booking (the same
+    // id-space collision fixed for the "View in provider" grid icon).
+    if (!empty($order['products']) && is_array($order['products'])) {
+        foreach ($order['products'] as &$sxProduct) {
+            if (!is_array($sxProduct)) {
+                continue;
+            }
+            $sxExtra = is_array($sxProduct['extra'] ?? null) ? $sxProduct['extra'] : [];
+            if (empty($sxExtra['sphinx_booking']) || empty($sxExtra['travel_booking_id'])) {
+                continue;
+            }
+            $sxExtra['travel_surrogate_id'] = (int) db_get_field(
+                "SELECT booking_id FROM ?:travel_bookings WHERE provider = 'sphinx' AND provider_booking_id = ?s",
+                (string) $sxExtra['travel_booking_id']
+            );
+            $sxProduct['extra'] = $sxExtra;
+        }
+        unset($sxProduct);
     }
 
     $repo = \Tygh\Addons\SphinxHolidays\Services\Container::getBookingRepository();

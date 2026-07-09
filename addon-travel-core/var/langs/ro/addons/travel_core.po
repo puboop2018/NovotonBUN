@@ -305,6 +305,23 @@ msgctxt "Languages::travel_core.phone"
 msgid "Phone"
 msgstr "Telefon"
 
+# ── Shared order-detail booking block (both providers' order-line rendering) ──
+msgctxt "Languages::travel_core.hotel"
+msgid "Hotel"
+msgstr "Hotel"
+
+msgctxt "Languages::travel_core.board"
+msgid "Board"
+msgstr "Masă"
+
+msgctxt "Languages::travel_core.guest_names"
+msgid "Guest Names"
+msgstr "Nume oaspeți"
+
+msgctxt "Languages::travel_core.view_booking"
+msgid "View Booking"
+msgstr "Vezi rezervarea"
+
 msgctxt "Languages::travel_core.selected"
 msgid "selected"
 msgstr "selectate"
