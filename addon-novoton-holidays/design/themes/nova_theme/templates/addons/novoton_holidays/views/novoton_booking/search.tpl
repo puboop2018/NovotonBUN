@@ -753,75 +753,9 @@ window.updateAvailabilityBadge = function(roomsCount, offersCount) {
 };
 </script>
 
-{* Load React for search form *}
-<script>
-window.NovotonTranslations = {
-    availability: "{__('novoton_holidays.availability')|default:'Availability'}",
-    bookYourStay: "{__('novoton_holidays.book_your_stay')|default:'Book Your Stay'}",
-    checkIn: "{__('novoton_holidays.check_in')|default:'Check-in'}",
-    checkOut: "{__('novoton_holidays.check_out')|default:'Check-out'}",
-    selectDates: "{__('novoton_holidays.select_dates')|default:'Select dates'}",
-    guests: "{__('novoton_holidays.guests')|default:'Guests'}",
-    adult: "{__('novoton_holidays.adult')|default:'adult'}",
-    adults: "{__('novoton_holidays.adults')|default:'adults'}",
-    children: "{__('novoton_holidays.children')|default:'children'}",
-    rooms: "{__('novoton_holidays.rooms')|default:'rooms'}",
-    done: "{__('novoton_holidays.done')|default:'Done'}",
-    room: "{__('novoton_holidays.room')|default:'Room'}",
-    search: "{__('novoton_holidays.search')|default:'Search'}",
-    addRoom: "{__('novoton_holidays.add_room')|default:'Add Room'}",
-    childrenAges: "{__('novoton_holidays.childrens_ages')|default:"Children's ages"}",
-    selectAge: "{__('novoton_holidays.select_age')|default:'Select age'}",
-    yearsOld: "{__('novoton_holidays.years_old')|default:'years old'}",
-    yearOld: "{__('novoton_holidays.year_old')|default:'year old'}",
-    night: "{__('novoton_holidays.night')|default:'night'}",
-    nights: "{__('novoton_holidays.nights')|default:'nights'}",
-    applyChanges: "{__('novoton_holidays.apply_changes')|default:'Apply changes'}",
-    selected: "{__('novoton_holidays.selected')|default:'selected'}",
-    january: "{__('novoton_holidays.january')|default:'January'}",
-    february: "{__('novoton_holidays.february')|default:'February'}",
-    march: "{__('novoton_holidays.march')|default:'March'}",
-    april: "{__('novoton_holidays.april')|default:'April'}",
-    may: "{__('novoton_holidays.may')|default:'May'}",
-    june: "{__('novoton_holidays.june')|default:'June'}",
-    july: "{__('novoton_holidays.july')|default:'July'}",
-    august: "{__('novoton_holidays.august')|default:'August'}",
-    september: "{__('novoton_holidays.september')|default:'September'}",
-    october: "{__('novoton_holidays.october')|default:'October'}",
-    november: "{__('novoton_holidays.november')|default:'November'}",
-    december: "{__('novoton_holidays.december')|default:'December'}",
-    mon: "{__('novoton_holidays.mon')|default:'Mo'}",
-    tue: "{__('novoton_holidays.tue')|default:'Tu'}",
-    wed: "{__('novoton_holidays.wed')|default:'We'}",
-    thu: "{__('novoton_holidays.thu')|default:'Th'}",
-    fri: "{__('novoton_holidays.fri')|default:'Fr'}",
-    sat: "{__('novoton_holidays.sat')|default:'Sa'}",
-    sun: "{__('novoton_holidays.sun')|default:'Su'}",
-    selectCheckOut: "{__('novoton_holidays.select_check_out')|default:'Select check-out date'}",
-    selectedSingular: "{__('novoton_holidays.selected_singular')|default:'selected'}",
-    childAge: "{__('novoton_holidays.child_age')|default:"Child's age at check-in"}",
-    dobCannotBeFuture: "{__('novoton_holidays.dob_cannot_be_future')|default:'Data nasterii nu poate fi in viitor'}",
-    child: "{__('novoton_holidays.child')|default:'child'}",
-    childLabel: "{__('novoton_holidays.child_label')|default:'Child'}",
-    ageOfChild: "{__('novoton_holidays.age_of_child')|default:'Age of child'}",
-    checkInPast: "{__('novoton_holidays.check_in_past')|default:'Check-in date cannot be in the past'}",
-    includesOnRequest: "{__('novoton_holidays.includes_on_request')|default:'(includes on-request)'}",
-    of: "{__('novoton_holidays.of')|default:'of'}",
-    pleaseSelectAllRooms: "{__('novoton_holidays.please_select_all_rooms')|default:'Please select a room type for each room'}",
-    remove: "{__('novoton_holidays.remove')|default:'Remove'}",
-    changeSearch: "{__('novoton_holidays.change_search')|default:'Change search'}",
-    searching: "{__('novoton_holidays.searching')|default:'Searching...'}",
-    available: "{__('novoton_holidays.available')|default:'Available'}",
-    offer: "{__('novoton_holidays.offer')|default:'offer'}",
-    offers: "{__('novoton_holidays.offers')|default:'offers'}",
-    pleaseEnterDates: "{__('novoton_holidays.please_enter_dates')|default:'Please select check-in and check-out dates'}",
-    selectDatesMessage: "{__('novoton_holidays.select_dates_message')|default:"Select dates to see this property's availability and prices"}",
-    selectCheckIn: "{__('novoton_holidays.select_check_in')|default:'Select check-in date'}",
-    selectMissingAges: "{__('novoton_holidays.select_missing_ages')|default:'Select age ([count] missing)'}",
-    selectAgeForOneChild: "{__('novoton_holidays.select_age_for_one_child')|default:'Select age for 1 child (Room [rooms]).'}",
-    selectAgeForChildren: "{__('novoton_holidays.select_age_for_children')|default:'Select age for [count] children (Room [rooms]).'}"
-};
-</script>
+{* Client i18n for the booking engine — shared travel_core partial
+   (replaces the hand-maintained window.NovotonTranslations block). *}
+{include file="addons/travel_core/components/travel_i18n.tpl"}
 {* React scripts loaded by shared booking_engine.tpl include above *}
 {$cache_ver = $smarty.const.TRAVEL_CACHE_VER|default:$smarty.const.NOVOTON_CACHE_VER|default:'1'}
 <script src="{$config.current_location}/js/addons/travel_core/dob-validation.js?v={$cache_ver}" defer></script>
