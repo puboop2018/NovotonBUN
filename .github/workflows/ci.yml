@@ -277,10 +277,13 @@ jobs:
                addon-sphinx-holidays/app/addons/sphinx_holidays \
                -path '*/vendor' -prune -o -name '*.php' -print0 | xargs -0 -n 50 php -l
 
-  # ── ESLint (frontend JS / JSX) ──
+  # ── ESLint + Vitest (frontend JS / JSX) ──
   # Lints the addons' standalone JS (addon-*/js) and the React booking-engine
   # source (addon-*/react-src/src). JS embedded in Smarty .tpl templates is out
   # of scope (ESLint can't parse Smarty) — Qodana covers that.
+  # Vitest (jsdom) runs the behavioral suites in tests/js over the shared
+  # booking modules (DOB validation/masking, price display, multi-room
+  # selection) — revenue-path browser code that had no tests before.
   eslint:
     name: ESLint (JS/JSX)
     runs-on: ubuntu-latest
@@ -298,6 +301,9 @@ jobs:
 
       - name: Run ESLint
         run: npx eslint .
+
+      - name: Run JS behavioral tests (Vitest)
+        run: npm test
 
   # ── Qodana (JetBrains static analysis) ──
   # Gated behind the rest of the gauntlet via `needs`, so Qodana runs only
