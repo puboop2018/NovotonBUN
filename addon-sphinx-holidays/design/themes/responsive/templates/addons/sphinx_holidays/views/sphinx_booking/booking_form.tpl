@@ -88,11 +88,12 @@
                      guest_num_rooms=$sphinx_booking_data.num_rooms
                      guest_label_prefix="travel_core"
                      show_adult_dob=true
-                     child_dob_required=true}
+                     child_dob_required=true
+                     guard_expected_ages=true}
         </div>
 
-        {* Contact info — shared component (was a hand-copied duplicate) *}
-        {include file="addons/sphinx_holidays/views/sphinx_booking/components/contact_fields.tpl"}
+        {* Contact (email/phone) is NOT collected here: CS-Cart checkout already
+           collects it, and the booking submission reads it from the order. *}
 
         {* Submit *}
         <div class="travel-booking-submit sphinx-booking-submit">

@@ -835,6 +835,14 @@ function fn_sphinx_holidays_place_order_post(&$order_id, &$action, &$order_statu
 
     $repo = \Tygh\Addons\SphinxHolidays\Services\Container::getBookingRepository();
 
+    // Booking contact comes from the ORDER's checkout profile — the guest form
+    // no longer duplicates the email/phone questions. Legacy cart extras
+    // (contact_email/contact_phone, from forms submitted before the removal)
+    // remain as a fallback for in-flight carts only.
+    $orderContact = \Tygh\Addons\SphinxHolidays\Services\BookingPayloadFactory::contactFromUserData(
+        is_array($cart['user_data'] ?? null) ? $cart['user_data'] : []
+    );
+
     foreach ($cart['products'] as $product) {
         if (empty($product['extra']['sphinx_booking']) || empty($product['extra']['travel_booking_id'])) {
             continue;
@@ -843,8 +851,26 @@ function fn_sphinx_holidays_place_order_post(&$order_id, &$action, &$order_statu
         $booking_id = (int)$product['extra']['travel_booking_id'];
         $offer_id = $product['extra']['offer_id'] ?? '';
 
+        $contact = [
+            'email' => $orderContact['email'] !== ''
+                ? $orderContact['email']
+                : \Tygh\Addons\TravelCore\Helpers\TypeCoerce::toString($product['extra']['contact_email'] ?? ''),
+            'phone' => $orderContact['phone'] !== ''
+                ? $orderContact['phone']
+                : \Tygh\Addons\TravelCore\Helpers\TypeCoerce::toString($product['extra']['contact_phone'] ?? ''),
+        ];
+
         // Link booking to order with PENDING status (not confirmed yet — API call hasn't happened)
         $repo->linkToOrder($booking_id, $resolved_order_id, \Tygh\Addons\TravelCore\TravelConstants::STATUS_PENDING);
+
+        // Backfill the booking row so admin views and the retry path see the
+        // same contact the API is given (add_to_cart stores it empty now).
+        if ($contact['email'] !== '' || $contact['phone'] !== '') {
+            $repo->update($booking_id, [
+                'guest_email' => $contact['email'],
+                'guest_phone' => $contact['phone'],
+            ]);
+        }
 
         // Submit booking to Sphinx API
         if (!empty($offer_id)) {
@@ -857,14 +883,23 @@ function fn_sphinx_holidays_place_order_post(&$order_id, &$action, &$order_statu
                         : $product['extra']['guests_data'];
                 }
 
-                $bookResult = $api->bookHotel([
-                    'offer_id' => $offer_id,
-                    'guests' => $guests_data ?: [],
-                    'contact' => [
-                        'email' => $product['extra']['contact_email'] ?? '',
-                        'phone' => $product['extra']['contact_phone'] ?? '',
-                    ],
-                ]);
+                $payload = \Tygh\Addons\SphinxHolidays\Services\BookingPayloadFactory::build(
+                    \Tygh\Addons\TravelCore\Helpers\TypeCoerce::toString($offer_id),
+                    is_array($guests_data) ? $guests_data : [],
+                    $contact,
+                    $resolved_order_id
+                );
+
+                // Dispatch by booking type — packages/circuits/experiences have
+                // their own book endpoints (previously EVERY sphinx product was
+                // sent to bookHotel, so non-hotel bookings hit the wrong one).
+                $booking_type = \Tygh\Addons\TravelCore\Helpers\TypeCoerce::toString($product['extra']['booking_type'] ?? 'hotel');
+                $bookResult = match ($booking_type) {
+                    'circuit' => $api->bookCircuit($payload),
+                    'package' => $api->bookPackage($payload),
+                    'experience' => $api->bookExperience($payload),
+                    default => $api->bookHotel($payload),
+                };
 
                 if (!empty($bookResult['booking_reference'])) {
                     $repo->updateApiResponse(
@@ -892,7 +927,7 @@ function fn_sphinx_holidays_place_order_post(&$order_id, &$action, &$order_statu
                 ]);
 
                 fn_log_event('general', 'runtime', [
-                    'message' => 'Sphinx bookHotel API call failed: ' . $e->getMessage(),
+                    'message' => 'Sphinx book API call failed: ' . $e->getMessage(),
                     'booking_id' => $booking_id,
                     'order_id' => $resolved_order_id,
                 ]);
