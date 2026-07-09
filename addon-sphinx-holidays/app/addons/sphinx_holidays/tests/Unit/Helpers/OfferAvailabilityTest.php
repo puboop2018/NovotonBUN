@@ -142,4 +142,59 @@ class OfferAvailabilityTest extends TestCase
         $this->assertFalse(OfferAvailability::isVerifiedAvailable(null, false));
         $this->assertFalse(OfferAvailability::isVerifiedAvailable([], false));
     }
+
+    /**
+     * Regression (devx: every Rezervă click → "offer no longer available" on
+     * every date): the live verify endpoint wraps the offer in an envelope
+     * ({success, data: {...}} — same convention as the results endpoint's
+     * {status, results|data}). The gate used to inspect only the TOP level,
+     * found no offer signals there, and rejected everything.
+     */
+    public function testUnwrapOfferDescendsThroughKnownEnvelopes(): void
+    {
+        $offer = ['confirmation' => 'immediate', 'selling_price' => 987];
+
+        // Flat responses pass through unchanged
+        $this->assertSame($offer, OfferAvailability::unwrapOffer($offer));
+
+        // Single-level envelopes
+        $this->assertSame($offer, OfferAvailability::unwrapOffer(['success' => true, 'data' => $offer]));
+        $this->assertSame($offer, OfferAvailability::unwrapOffer(['offer' => $offer]));
+        $this->assertSame($offer, OfferAvailability::unwrapOffer(['result' => $offer]));
+
+        // Two-level nesting ({result: {data: {...}}})
+        $this->assertSame($offer, OfferAvailability::unwrapOffer(['result' => ['data' => $offer]]));
+
+        // Empty → null
+        $this->assertNull(OfferAvailability::unwrapOffer(null));
+        $this->assertNull(OfferAvailability::unwrapOffer([]));
+    }
+
+    public function testVerifiedAvailableAcceptsEnvelopedOffers(): void
+    {
+        $offer = ['confirmation' => 'immediate', 'selling_price' => 987];
+
+        $this->assertTrue(OfferAvailability::isVerifiedAvailable(['success' => true, 'data' => $offer], true));
+        $this->assertTrue(OfferAvailability::isVerifiedAvailable(['offer' => $offer], true));
+
+        // Enveloped on-request offer still honors the immediate requirement
+        $onRequest = ['data' => ['confirmation' => 'on_request', 'selling_price' => 500]];
+        $this->assertFalse(OfferAvailability::isVerifiedAvailable($onRequest, true));
+        $this->assertTrue(OfferAvailability::isVerifiedAvailable($onRequest, false));
+
+        // Enveloped explicit available=false is still a rejection
+        $this->assertFalse(OfferAvailability::isVerifiedAvailable(['data' => ['available' => false]], false));
+
+        // An envelope carrying NO offer payload (error responses) is rejected
+        $this->assertFalse(OfferAvailability::isVerifiedAvailable(['success' => false, 'message' => 'expired'], false));
+    }
+
+    public function testExtractPriceReadsThroughEnvelopes(): void
+    {
+        $this->assertSame(987.0, OfferAvailability::extractPrice(['data' => ['selling_price' => 987]]));
+        $this->assertSame(750.5, OfferAvailability::extractPrice(['offer' => ['pricing' => ['selling_price' => '750.50']]]));
+        // Flat offers unchanged
+        $this->assertSame(250.0, OfferAvailability::extractPrice(['selling_price' => 250]));
+        $this->assertSame(0.0, OfferAvailability::extractPrice(['success' => false]));
+    }
 }

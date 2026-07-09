@@ -55,6 +55,10 @@ final class OfferAvailability
      */
     public static function extractPrice(array $offer): float
     {
+        // Envelope-tolerant: verify responses may wrap the offer (see
+        // unwrapOffer); flat offers pass through unchanged at depth 0.
+        $offer = self::unwrapOffer($offer) ?? [];
+
         if (isset($offer['price']) && is_numeric($offer['price'])) {
             return (float) $offer['price'];
         }
@@ -66,13 +70,75 @@ final class OfferAvailability
     }
 
     /**
+     * Envelope keys the API wraps single-resource payloads in. The search
+     * endpoints answer `{status, results|data: [...]}` and their consumers
+     * unwrap explicitly (search_poll, image diagnostics); the verify endpoint
+     * follows the same convention for its single offer.
+     */
+    private const array ENVELOPE_KEYS = ['data', 'offer', 'result'];
+
+    /**
+     * Unwrap a verify-offer response to the offer payload itself.
+     *
+     * The HTTP client returns the WHOLE decoded body and does not unwrap
+     * envelopes (see SphinxHttpClient::request). When the verify endpoint
+     * answers `{success: true, data: {confirmation, selling_price, …}}`, the
+     * availability gate used to inspect only the TOP level, found none of the
+     * offer signals there, and rejected EVERY offer ("offer no longer
+     * available" on each Book-now click, on every date). Descend through the
+     * known envelope keys (depth-bounded) until a level carries offer signals;
+     * flat (un-enveloped) responses are returned unchanged.
+     *
+     * @param array<array-key, mixed>|null $response
+     * @return array<array-key, mixed>|null
+     */
+    public static function unwrapOffer(?array $response): ?array
+    {
+        if ($response === null || $response === []) {
+            return null;
+        }
+
+        $level = $response;
+        for ($depth = 0; $depth < 3; $depth++) {
+            // Offer signals present at this level → this IS the offer payload.
+            if (array_key_exists('available', $level)
+                || isset($level['confirmation'])
+                || isset($level['price'])
+                || isset($level['selling_price'])
+                || isset($level['pricing'])
+            ) {
+                return $level;
+            }
+
+            $descended = false;
+            foreach (self::ENVELOPE_KEYS as $key) {
+                $inner = $level[$key] ?? null;
+                if (is_array($inner) && $inner !== []) {
+                    $level = $inner;
+                    $descended = true;
+                    break;
+                }
+            }
+
+            if (!$descended) {
+                break;
+            }
+        }
+
+        // Unknown shape: hand back what we reached so the gate (and its
+        // diagnostic logging upstream) judges/records it, instead of silently
+        // swallowing the response.
+        return $level;
+    }
+
+    /**
      * Whether a verify-offer response denotes a bookable offer.
      *
-     * The verify endpoint's shape drifted: older builds returned an explicit
-     * `available` boolean; the live API returns the offer itself
-     * (`confirmation`, `selling_price`, …) with NO `available` key. Gating on
-     * `available ?? false` therefore rejected EVERY offer ("offer no longer
-     * available" on each Book-now click). Interpret tolerantly:
+     * The verify endpoint's shape drifted twice: older builds returned an
+     * explicit `available` boolean; later builds the bare offer
+     * (`confirmation`, `selling_price`, …); the live API wraps the offer in a
+     * `data`/`offer` envelope (handled by unwrapOffer above). Interpret
+     * tolerantly, at whichever level the offer payload lives:
      *  - explicit `available` key → honor it (the API's explicit signal);
      *  - else a `confirmation` value → bookable (immediate-only when the
      *    storefront requires immediate availability);
@@ -83,23 +149,24 @@ final class OfferAvailability
      */
     public static function isVerifiedAvailable(?array $response, bool $requireImmediate): bool
     {
-        if ($response === null || $response === []) {
+        $offer = self::unwrapOffer($response);
+        if ($offer === null || $offer === []) {
             return false;
         }
 
-        if (array_key_exists('available', $response)) {
-            $available = $response['available'];
+        if (array_key_exists('available', $offer)) {
+            $available = $offer['available'];
             if (is_string($available)) {
                 return in_array(strtolower(trim($available)), ['1', 'true', 'yes', 'y'], true);
             }
             return (bool) $available;
         }
 
-        if (TypeCoerce::toString($response['confirmation'] ?? '') !== '') {
-            return $requireImmediate ? self::isImmediate($response) : true;
+        if (TypeCoerce::toString($offer['confirmation'] ?? '') !== '') {
+            return $requireImmediate ? self::isImmediate($offer) : true;
         }
 
-        return self::extractPrice($response) > 0;
+        return self::extractPrice($offer) > 0;
     }
 
     /**

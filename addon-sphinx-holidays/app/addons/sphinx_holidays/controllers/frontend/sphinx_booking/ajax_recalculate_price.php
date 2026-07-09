@@ -34,12 +34,21 @@ try {
     $api = Container::getApi();
     $verifyResult = $api->verifyHotelOffer($offer_id);
 
-    if (empty($verifyResult) || !TypeCoerce::toBool($verifyResult['available'] ?? false)) {
+    // Tolerant availability semantics shared with booking_form/add_to_cart —
+    // this endpoint still gated on `available ?? false`, which rejects every
+    // response from API builds that return the bare offer or wrap it in an
+    // envelope (OfferAvailability::unwrapOffer handles both).
+    if (!\Tygh\Addons\SphinxHolidays\Helpers\OfferAvailability::isVerifiedAvailable(
+        $verifyResult,
+        ConfigProvider::shouldRequireImmediateAvailability(),
+    )) {
         echo json_encode(['success' => false, 'message' => 'Offer no longer available. Please search again.']);
         exit;
     }
 
-    $newPrice = Container::getCartService()->applyCommission(TypeCoerce::toFloat($verifyResult['price'] ?? 0));
+    $newPrice = Container::getCartService()->applyCommission(
+        \Tygh\Addons\SphinxHolidays\Helpers\OfferAvailability::extractPrice($verifyResult ?? [])
+    );
 
     $priceDiff = $newPrice - $original_price;
     $currency = ConfigProvider::getDefaultCurrency();

@@ -59,22 +59,26 @@ try {
         ])];
     }
 
-    $verifiedPrice = \Tygh\Addons\SphinxHolidays\Helpers\OfferAvailability::extractPrice($verifyResult ?? []);
+    // Read offer fields from the unwrapped payload — the live verify endpoint
+    // wraps the offer in an envelope (see OfferAvailability::unwrapOffer).
+    $verifiedOffer = \Tygh\Addons\SphinxHolidays\Helpers\OfferAvailability::unwrapOffer($verifyResult) ?? [];
+
+    $verifiedPrice = \Tygh\Addons\SphinxHolidays\Helpers\OfferAvailability::extractPrice($verifiedOffer);
     $basePrice = $verifiedPrice;
     $verifiedPrice = Container::getCartService()->applyCommission($verifiedPrice);
 
-    $hotelName = TypeCoerce::toString($verifyResult['hotel_name'] ?? '');
-    $roomName = TypeCoerce::toString($verifyResult['room_name'] ?? $verifyResult['room_type'] ?? '');
-    $boardName = TypeCoerce::toString($verifyResult['board_name'] ?? $verifyResult['board_type'] ?? '');
-    $checkIn = TypeCoerce::toString($verifyResult['check_in'] ?? RequestCoerce::string($_REQUEST, 'check_in'));
-    $checkOut = TypeCoerce::toString($verifyResult['check_out'] ?? RequestCoerce::string($_REQUEST, 'check_out'));
+    $hotelName = TypeCoerce::toString($verifiedOffer['hotel_name'] ?? '');
+    $roomName = TypeCoerce::toString($verifiedOffer['room_name'] ?? $verifiedOffer['room_type'] ?? '');
+    $boardName = TypeCoerce::toString($verifiedOffer['board_name'] ?? $verifiedOffer['board_type'] ?? '');
+    $checkIn = TypeCoerce::toString($verifiedOffer['check_in'] ?? RequestCoerce::string($_REQUEST, 'check_in'));
+    $checkOut = TypeCoerce::toString($verifiedOffer['check_out'] ?? RequestCoerce::string($_REQUEST, 'check_out'));
     $nights = 0;
     if (!empty($checkIn) && !empty($checkOut)) {
         $nights = (int)round((strtotime($checkOut) - strtotime($checkIn)) / 86400);
     }
-    $adults = TypeCoerce::toInt($verifyResult['adults'] ?? RequestCoerce::int($_REQUEST, 'adults', 2));
-    $children = TypeCoerce::toInt($verifyResult['children'] ?? RequestCoerce::int($_REQUEST, 'children'));
-    $childrenAges = TypeCoerce::toString($verifyResult['children_ages'] ?? RequestCoerce::string($_REQUEST, 'children_ages'));
+    $adults = TypeCoerce::toInt($verifiedOffer['adults'] ?? RequestCoerce::int($_REQUEST, 'adults', 2));
+    $children = TypeCoerce::toInt($verifiedOffer['children'] ?? RequestCoerce::int($_REQUEST, 'children'));
+    $childrenAges = TypeCoerce::toString($verifiedOffer['children_ages'] ?? RequestCoerce::string($_REQUEST, 'children_ages'));
 
     if (empty($product_id) && !empty($hotel_id)) {
         $product_id = TypeCoerce::toInt(db_get_field(
@@ -100,10 +104,10 @@ try {
         'base_price' => $basePrice,
         'currency' => ConfigProvider::getDefaultCurrency(),
         'verified' => true,
-        // Payment & cancellation terms straight from the verify response
+        // Payment & cancellation terms straight from the verified offer
         // (formatted display lines; [] when the API sends none).
-        'payment_terms' => \Tygh\Addons\SphinxHolidays\Services\TermsFormatter::lines($verifyResult['payment_terms'] ?? null),
-        'cancellation_fees' => \Tygh\Addons\SphinxHolidays\Services\TermsFormatter::lines($verifyResult['cancellation_fees'] ?? null),
+        'payment_terms' => \Tygh\Addons\SphinxHolidays\Services\TermsFormatter::lines($verifiedOffer['payment_terms'] ?? null),
+        'cancellation_fees' => \Tygh\Addons\SphinxHolidays\Services\TermsFormatter::lines($verifiedOffer['cancellation_fees'] ?? null),
     ]);
 
     $view->assign('sphinx_provider', 'sphinx');
