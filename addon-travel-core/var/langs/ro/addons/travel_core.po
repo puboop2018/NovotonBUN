@@ -268,6 +268,43 @@ msgctxt "Languages::travel_core.year_old"
 msgid "year old"
 msgstr "an"
 
+# ── Shared booking-form vocabulary (used by both providers' guest-entry forms) ──
+msgctxt "Languages::travel_core.total_price"
+msgid "Total price"
+msgstr "Preț total"
+
+msgctxt "Languages::travel_core.guest_details"
+msgid "Guest Details"
+msgstr "Detaliile rezervării"
+
+msgctxt "Languages::travel_core.main_guest"
+msgid "Main Guest"
+msgstr "Lider rezervare"
+
+msgctxt "Languages::travel_core.first_name"
+msgid "First Name"
+msgstr "Prenume"
+
+msgctxt "Languages::travel_core.last_name"
+msgid "Last Name"
+msgstr "Nume"
+
+msgctxt "Languages::travel_core.date_of_birth"
+msgid "Date of Birth"
+msgstr "Data nașterii"
+
+msgctxt "Languages::travel_core.contact_info"
+msgid "Contact Information"
+msgstr "Informații de contact"
+
+msgctxt "Languages::travel_core.email"
+msgid "Email"
+msgstr "Email"
+
+msgctxt "Languages::travel_core.phone"
+msgid "Phone"
+msgstr "Telefon"
+
 msgctxt "Languages::travel_core.selected"
 msgid "selected"
 msgstr "selectate"
