@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays;
 
+use Tygh\Addons\SphinxHolidays\Api\ResponseDecoder;
 use Tygh\Addons\SphinxHolidays\Api\SphinxHttpClient;
 
 /**
@@ -11,14 +12,34 @@ use Tygh\Addons\SphinxHolidays\Api\SphinxHttpClient;
  *
  * Provides a clean interface to all Sphinx API endpoints.
  * Mirrors the Novoton NovotonApi pattern but for REST/JSON.
+ *
+ * Response envelopes are interpreted ONCE here, via ResponseDecoder — the
+ * verify endpoints return the offer payload itself and the search/poll
+ * endpoints return the canonical {status, results, cursor} shape, so
+ * consumers never re-derive API shapes (the drift class behind three
+ * production incidents).
  */
 class SphinxApi
 {
     private SphinxHttpClient $client;
 
+    private ResponseDecoder $decoder;
+
     public function __construct(SphinxHttpClient $client)
     {
         $this->client = $client;
+        $this->decoder = new ResponseDecoder();
+    }
+
+    /**
+     * Diagnostics: top-level keys + decode branch of the last decoded
+     * response (feeds zero-results logging so shape drift shows in logs).
+     *
+     * @return array<string, mixed>
+     */
+    public function lastEnvelope(): array
+    {
+        return $this->decoder->lastEnvelope();
     }
 
     // ── Connectivity ──
@@ -222,7 +243,7 @@ class SphinxApi
      */
     public function searchHotels(array $params): ?array
     {
-        return $this->client->post('/api/v1/hotels/search', $params);
+        return $this->decoder->search($this->client->post('/api/v1/hotels/search', $params));
     }
 
     /**
@@ -281,18 +302,19 @@ class SphinxApi
         if ($cursor !== null && $cursor !== '') {
             $query['cursor'] = $cursor;
         }
-        return $this->client->get('/api/v1/hotels/results', $query);
+        return $this->decoder->search($this->client->get('/api/v1/hotels/results', $query));
     }
 
     /**
      * Verify a hotel offer before booking.
      *
      * @param string $offerId Offer ID from search results
-     * @return array<string, mixed>|null
+     * @return array<string, mixed>|null The offer PAYLOAD (envelope already
+     *                                   unwrapped by ResponseDecoder::offer)
      */
     public function verifyHotelOffer(string $offerId): ?array
     {
-        return $this->client->get('/api/v1/hotels/verify', ['offer_id' => $offerId]);
+        return $this->decoder->offer($this->client->get('/api/v1/hotels/verify', ['offer_id' => $offerId]));
     }
 
     /**
@@ -320,7 +342,7 @@ class SphinxApi
      */
     public function searchPackages(array $params): ?array
     {
-        return $this->client->post('/api/v1/packages/search', $params);
+        return $this->decoder->search($this->client->post('/api/v1/packages/search', $params));
     }
 
     /**
@@ -336,16 +358,17 @@ class SphinxApi
         if ($cursor !== null && $cursor !== '') {
             $query['cursor'] = $cursor;
         }
-        return $this->client->get('/api/v1/packages/results', $query);
+        return $this->decoder->search($this->client->get('/api/v1/packages/results', $query));
     }
 
     /**
      * Verify a package offer.
-     * @return array<string, mixed>|null
+     * @return array<string, mixed>|null The offer PAYLOAD (envelope already
+     *                                   unwrapped by ResponseDecoder::offer)
      */
     public function verifyPackageOffer(string $offerId): ?array
     {
-        return $this->client->get('/api/v1/packages/verify', ['offer_id' => $offerId]);
+        return $this->decoder->offer($this->client->get('/api/v1/packages/verify', ['offer_id' => $offerId]));
     }
 
     /**

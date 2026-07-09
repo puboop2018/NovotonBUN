@@ -1,0 +1,20 @@
+{
+    "success": true,
+    "data": {
+        "offer_id": "e302a15f-ad04-4d57-b7fd-90255cf2393f",
+        "hotel_id": 61992,
+        "hotel_name": "Ozkaymak Falez Otel",
+        "room_name": "Standard Room",
+        "board_name": "ULTRA ALL INCLUSIVE",
+        "confirmation": "immediate",
+        "selling_price": 987.5,
+        "currency": "EUR",
+        "check_in": "2026-07-24",
+        "check_out": "2026-07-31",
+        "adults": 2,
+        "children": 0,
+        "must_verify": false,
+        "payment_terms": ["20% on booking", "80% until 2026-07-10"],
+        "cancellation_fees": ["Free until 2026-07-01"]
+    }
+}

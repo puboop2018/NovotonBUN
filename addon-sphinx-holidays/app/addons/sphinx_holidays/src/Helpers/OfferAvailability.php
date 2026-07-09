@@ -70,14 +70,6 @@ final class OfferAvailability
     }
 
     /**
-     * Envelope keys the API wraps single-resource payloads in. The search
-     * endpoints answer `{status, results|data: [...]}` and their consumers
-     * unwrap explicitly (search_poll, image diagnostics); the verify endpoint
-     * follows the same convention for its single offer.
-     */
-    private const array ENVELOPE_KEYS = ['data', 'offer', 'result'];
-
-    /**
      * Unwrap a verify-offer response to the offer payload itself.
      *
      * The HTTP client returns the WHOLE decoded body and does not unwrap
@@ -94,41 +86,11 @@ final class OfferAvailability
      */
     public static function unwrapOffer(?array $response): ?array
     {
-        if ($response === null || $response === []) {
-            return null;
-        }
-
-        $level = $response;
-        for ($depth = 0; $depth < 3; $depth++) {
-            // Offer signals present at this level → this IS the offer payload.
-            if (array_key_exists('available', $level)
-                || isset($level['confirmation'])
-                || isset($level['price'])
-                || isset($level['selling_price'])
-                || isset($level['pricing'])
-            ) {
-                return $level;
-            }
-
-            $descended = false;
-            foreach (self::ENVELOPE_KEYS as $key) {
-                $inner = $level[$key] ?? null;
-                if (is_array($inner) && $inner !== []) {
-                    $level = $inner;
-                    $descended = true;
-                    break;
-                }
-            }
-
-            if (!$descended) {
-                break;
-            }
-        }
-
-        // Unknown shape: hand back what we reached so the gate (and its
-        // diagnostic logging upstream) judges/records it, instead of silently
-        // swallowing the response.
-        return $level;
+        // Single implementation of the descent — the API-layer decode
+        // boundary owns it; this helper stays as the availability-semantics
+        // entry point (and for consumers holding pre-decoded payloads, the
+        // descent is an idempotent no-op).
+        return \Tygh\Addons\SphinxHolidays\Api\ResponseDecoder::descendToPayload($response);
     }
 
     /**

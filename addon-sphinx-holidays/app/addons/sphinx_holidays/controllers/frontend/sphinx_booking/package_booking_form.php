@@ -39,17 +39,20 @@ $rooms = max(1, RequestCoerce::int($_REQUEST, 'rooms', 1));
 try {
     $api = Container::getApi();
 
-    // Verify the offer — this returns full pricing, payment terms, cancellation fees
+    // Verify the offer — SphinxApi returns the offer PAYLOAD (pricing,
+    // payment terms, cancellation fees) with the response envelope already
+    // unwrapped by ResponseDecoder. The old raw ['data'] read here was one
+    // envelope-drift away from the "every Rezervă rejected" hotel incident.
     $verifyResult = $api->verifyPackageOffer($offer_id);
 
-    if (empty($verifyResult) || empty($verifyResult['data']) || !is_array($verifyResult['data'])) {
+    if (empty($verifyResult) || empty($verifyResult['pricing'])) {
         fn_set_notification('W', __('warning'),
             __('sphinx_holidays.offer_unavailable', ['[default]' => 'This offer is no longer available.']));
         return [CONTROLLER_STATUS_REDIRECT, 'sphinx_booking.package_search'];
     }
 
     /** @var array<string, mixed> $offer */
-    $offer = $verifyResult['data'];
+    $offer = $verifyResult;
 
     // Apply commission
     /** @var array<string, mixed> $pricing */
