@@ -348,8 +348,8 @@
                                                autocomplete="off"
                                                placeholder="ZZ/LL/AAAA"
                                                value="{$prefilled_child_dob}"
-                                               onkeydown="handleDobKeydownLocal(event)"
-                                               oninput="applyDobMaskLocal(this)"
+                                               onkeydown="TravelBooking.handleDobKeydown(event)"
+                                               oninput="TravelBooking.applyDobMask(this)"
                                                onblur="validateAndCheckAge('r{$room_num}_c{$i}', {$child_age_at_checkin})" />
                                     </div>
                                     {* Hidden fields *}
@@ -499,19 +499,8 @@ window.bookingData = {ldelim}
     showCalendarPrices: {if $show_calendar_prices == 'Y'}true{else}false{/if}
 {rdelim};
 
-// A74e: These functions are defined in booking-form-validation.js
-// Wrapper just ensures they exist before calling
-function handleDobKeydownLocal(e) {
-    if (typeof window.handleDobKeydown === 'function') {
-        window.handleDobKeydown(e);
-    }
-}
-
-function applyDobMaskLocal(input) {
-    if (typeof window.applyDobMask === 'function') {
-        window.applyDobMask(input);
-    }
-}
+// DOB masking is wired directly to the shared TravelBooking.* API
+// (booking-form-validation.js), matching the sphinx booking form.
 
 // Main validation function for DOB fields
 function validateAndCheckAge(id, originalAge) {
