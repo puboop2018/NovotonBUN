@@ -88,6 +88,11 @@ try {
         'check_in' => TypeCoerce::toString($hotel['check_in'] ?? ''),
         'check_out' => TypeCoerce::toString($hotel['check_out'] ?? ''),
         'rooms' => $hotelRooms,
+        // Canonical shape for the shared guest-cards partial (synthesizes one
+        // room from booking-level occupancy when the quote carries none).
+        'rooms_data' => \Tygh\Addons\SphinxHolidays\Services\CartService::normalizeRoomsForDisplay(
+            TypeCoerce::toRowList($hotelRooms), $adults, $children_ages_str
+        ),
         'meal_type' => TypeCoerce::toString($hotel['meal_type_name'] ?? ''),
         'transport_type' => $transportType,
         'flight' => $flight,

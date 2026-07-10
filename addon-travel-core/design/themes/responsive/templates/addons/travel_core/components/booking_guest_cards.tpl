@@ -15,7 +15,10 @@
  *   guest_num_rooms   (int,    default 1) show per-room headers when > 1.
  *   guest_label_prefix(string, default 'travel_core') langvar namespace for labels.
  *   guest_extra_class (string, default '') optional provider CSS hook on the wrapper.
- *   show_adult_dob    (bool,   default true) render an (optional) adult DOB field.
+ *   show_adult_dob    (bool,   default true) render an adult DOB field.
+ *   adult_dob_required(bool,   default false) mark the adult DOB required
+ *                                        (package/circuit manifests need it;
+ *                                        hotel adult DOB stays optional).
  *   child_dob_required(bool,   default true) mark child DOB required.
  *   guard_expected_ages(bool,  default false) stamp data-expected-age on child
  *                                        DOB inputs so the shared JS blocks a
@@ -74,6 +77,7 @@
                     <input type="text" id="guest_r{$room_num}_a{$smarty.section.adult.index}_dob"
                            name="guests[room{$room_num}_adult_{$smarty.section.adult.index}][dob]"
                            class="ty-input-text dob-masked-input" placeholder="DD/MM/YYYY" maxlength="10"
+                           {if $adult_dob_required|default:false}required aria-required="true"{/if}
                            onkeydown="TravelBooking.handleDobKeydown(event)"
                            oninput="TravelBooking.applyDobMask(this)">
                 </div>
