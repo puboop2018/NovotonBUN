@@ -427,15 +427,23 @@ function fn_novoton_holidays_get_order_info(&$order, $additional_data): void
             $extra['guests_data'] = is_array($decoded) ? $decoded : [];
         }
 
-        // Look up the unified travel_booking_id so templates can link directly to travel_bookings.view
+        // Resolve the unified travel_bookings SURROGATE id for admin links.
+        // ID CONTRACT (see Documentation/shared-travel-core-architecture.md):
+        //   - provider-PK keys stay provider-named (novoton_booking_id here;
+        //     sphinx items persist theirs as travel_booking_id — legacy name);
+        //   - extra['travel_surrogate_id'] is the ONLY key that may be used
+        //     for travel_bookings.view links / unified-table lookups.
+        // This hook previously published the surrogate AS travel_booking_id,
+        // giving that key a different id-space per provider — the trap behind
+        // the "View in Novoton opened the wrong booking" bug.
         $nvt_id = PriceInfoFormatter::toInt($extra['novoton_booking_id'] ?? 0);
-        if ($nvt_id > 0 && empty($extra['travel_booking_id'])) {
+        if ($nvt_id > 0 && empty($extra['travel_surrogate_id'])) {
             $tb_id = PriceInfoFormatter::toInt(db_get_field(
                 "SELECT booking_id FROM ?:travel_bookings WHERE provider = 'novoton' AND provider_booking_id = ?s LIMIT 1",
                 (string) $nvt_id
             ));
             if ($tb_id > 0) {
-                $extra['travel_booking_id'] = $tb_id;
+                $extra['travel_surrogate_id'] = $tb_id;
             }
         }
 

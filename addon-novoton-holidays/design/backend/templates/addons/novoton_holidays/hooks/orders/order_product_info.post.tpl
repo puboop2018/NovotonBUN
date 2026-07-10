@@ -65,8 +65,8 @@
             <strong>Novoton Reservation:</strong> NT {$oi.extra.novoton_reservation_id}{if $oi.extra.novoton_reservation_status} ({$oi.extra.novoton_reservation_status}){/if}<br>
             {/if}
 
-            {if $oi.extra.travel_booking_id}
-            <a href="{"travel_bookings.view?booking_id=`$oi.extra.travel_booking_id`"|fn_url}">View Booking #{$oi.extra.travel_booking_id}</a>
+            {if $oi.extra.travel_surrogate_id}
+            <a href="{"travel_bookings.view?booking_id=`$oi.extra.travel_surrogate_id`"|fn_url}">View Booking #{$oi.extra.travel_surrogate_id}</a>
             {elseif $oi.extra.novoton_booking_id}
             <a href="{"novoton_bookings.view?booking_id=`$oi.extra.novoton_booking_id`"|fn_url}">View Booking</a>
             {/if}

@@ -1547,3 +1547,23 @@ Consequences for new code:
   the denormalized columns when the master row is absent.
 - Adding an FK to an *existing* table requires an orphan-cleanup migration
   first (`ADD CONSTRAINT` fails on violating rows) — prefer the cron model.
+
+## 17. Booking-ID Contract on Order Items (decided 2026-07-10)
+
+Order-item `extra` carries booking identifiers in TWO distinct id-spaces.
+The contract, enforced by `travel_core`'s `BookingIdContractTest`:
+
+| Key                          | Id-space                                   | Written by                              |
+|------------------------------|--------------------------------------------|-----------------------------------------|
+| `novoton_booking_id`         | `novoton_bookings.booking_id` (provider PK)| novoton add_to_cart (persisted)          |
+| `travel_booking_id`          | `sphinx_bookings.booking_id` (provider PK — legacy name, sphinx items only) | sphinx add_to_cart (persisted) |
+| `travel_surrogate_id`        | `travel_bookings.booking_id` (unified surrogate) | BOTH providers' `get_order_info` hooks (computed per render, never persisted) |
+
+Rules:
+1. `travel_surrogate_id` is the ONLY key allowed in `travel_bookings.view`
+   links and unified-table lookups.
+2. Provider actions (retry, resinfo, cancel…) take the PROVIDER PK — the
+   unified grid passes `provider_booking_id` from the mirror row.
+3. Never publish a surrogate under `travel_booking_id`. That mix-up (novoton
+   did exactly this until 2026-07-10) is what made booking #1 open a different
+   customer's booking depending on provider.
