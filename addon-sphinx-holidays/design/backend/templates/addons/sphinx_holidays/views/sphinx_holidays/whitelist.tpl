@@ -190,6 +190,7 @@
     var loadedFlat = {ldelim}{rdelim};    // countryId => [ { destination_id, name, type } ] (flat list)
     var treeUrl = '{"sphinx_holidays.get_destinations_tree"|fn_url}';
     var searchUrl = '{"sphinx_holidays.search_destinations"|fn_url}';
+    var childrenUrl = '{"sphinx_holidays.get_whitelist_children"|fn_url}';
     var searchTimeout = null;
 
     // Initialize state from server data
@@ -929,64 +930,35 @@
 
     {/literal}
 
-    // ─── Load whitelisted children state from server ───
-    {foreach from=$countries item=c}
-    {if $c.is_whitelisted && $c.selection_type !== 'all'}
-    (function(cid, cc) {ldelim}
+    // ─── Load whitelisted children state from server (ONE batch call) ───
+    // Previously this fired TWO XHRs per whitelisted country on load (a full
+    // destination-tree preload + a children fetch), each backed by multiple
+    // queries — hundreds of round-trips at real whitelist sizes. The tree
+    // still loads lazily when a country is expanded; the whitelisted-children
+    // state for badges/summary/save comes from a single batch endpoint.
+    {if $whitelist_map}
+    {literal}
+    (function() {
         var xhr = new XMLHttpRequest();
-        xhr.open('GET', treeUrl + '&country_code=' + encodeURIComponent(cc));
-        xhr.onload = function() {ldelim}
-            if (xhr.status === 200) {ldelim}
+        xhr.open('GET', childrenUrl);
+        xhr.onload = function() {
+            if (xhr.status === 200) {
                 var data = JSON.parse(xhr.responseText);
-                var tree = [];
-                var flat = [];
-                (data.tree || []).forEach(function(region) {ldelim}
-                    var regionItem = {ldelim}
-                        destination_id: parseInt(region.destination_id),
-                        name: region.name,
-                        type: region.type || 'region',
-                        children: []
-                    {rdelim};
-                    flat.push({ldelim} destination_id: regionItem.destination_id, name: regionItem.name, type: regionItem.type {rdelim});
-                    (region.children || []).forEach(function(city) {ldelim}
-                        var cityItem = {ldelim}
-                            destination_id: parseInt(city.destination_id),
-                            name: city.name,
-                            type: city.type || 'city'
-                        {rdelim};
-                        regionItem.children.push(cityItem);
-                        flat.push(cityItem);
-                    {rdelim});
-                    tree.push(regionItem);
-                {rdelim});
-                loadedTree[cid] = tree;
-                loadedFlat[cid] = flat;
-            {rdelim}
-        {rdelim};
+                var map = data.children_by_country || {};
+                for (var cid in map) {
+                    var cidNum = parseInt(cid);
+                    if (state[cidNum] && state[cidNum].type === 'specific') {
+                        state[cidNum].children = new Set(map[cid].map(Number));
+                        updateBadge(cidNum);
+                    }
+                }
+                updateSummary();
+            }
+        };
         xhr.send();
-    {rdelim})({$c.destination_id}, '{$c.country_code}');
+    })();
+    {/literal}
     {/if}
-    {/foreach}
-
-    {foreach from=$countries item=c}
-    {if $c.is_whitelisted && $c.selection_type !== 'all' && $c.whitelisted_child_count > 0}
-    (function(cid) {ldelim}
-        var xhr = new XMLHttpRequest();
-        xhr.open('GET', '{""|fn_url}' + '?dispatch=sphinx_holidays.get_whitelist_children&country_id=' + cid);
-        xhr.onload = function() {ldelim}
-            if (xhr.status === 200) {ldelim}
-                var data = JSON.parse(xhr.responseText);
-                if (state[cid] && data.children) {ldelim}
-                    state[cid].children = new Set(data.children.map(Number));
-                    updateBadge(cid);
-                    updateSummary();
-                {rdelim}
-            {rdelim}
-        {rdelim};
-        xhr.send();
-    {rdelim})({$c.destination_id});
-    {/if}
-    {/foreach}
 
     {literal}
     // Initial summary + first paginated render of the country list.

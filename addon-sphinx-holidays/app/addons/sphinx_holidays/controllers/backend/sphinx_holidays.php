@@ -399,17 +399,22 @@ if ($mode === 'get_destinations_tree') {
 if ($mode === 'get_whitelist_children') {
     header('Content-Type: application/json; charset=utf-8');
     $countryId = RequestCoerce::int($_REQUEST, 'country_id');
+    $whitelistRepo = Container::getDestinationWhitelistRepository();
+
+    // Batch form (no country_id): the whole map in ONE response. The
+    // whitelist page previously fired this endpoint once per whitelisted
+    // country on load — one XHR per country plus two queries each.
     if ($countryId <= 0) {
-        echo json_encode(['children' => []]);
+        echo json_encode(['children_by_country' => (object) $whitelistRepo->getWhitelistedChildIdsGroupedByCountryId()]);
         exit;
     }
+
     $destRepo = Container::getDestinationRepository();
     $countryCode = $destRepo->getCountryCodeById($countryId);
     if (empty($countryCode)) {
         echo json_encode(['children' => []]);
         exit;
     }
-    $whitelistRepo = Container::getDestinationWhitelistRepository();
     $childIds = $whitelistRepo->getWhitelistedChildIdsByCountry($countryCode);
     echo json_encode(['children' => $childIds]);
     exit;
@@ -607,21 +612,28 @@ if ($mode === 'manage') {
         $whitelistMap[TypeCoerce::toInt($row['destination_id'])] = $row['selection_type'];
     }
 
-    // For each whitelisted country, get child count for badge display
+    // Whitelisted children per country + whitelisted counts per region —
+    // grouped queries. The previous per-country/per-region loops issued
+    // hundreds of queries per page view at real whitelist sizes
+    // (~2 + 22×N for N whitelisted countries of ~20 regions).
+    $childIdsByCountryId = $whitelistRepo->getWhitelistedChildIdsGroupedByCountryId();
+    $whitelistedCountsByParent = $whitelistRepo->getWhitelistedCountsByParent();
+
+    // For each whitelisted country, child count for badge display
     $countryData = [];
+    $whitelistedCountryCodes = [];
     foreach ($countries as $country) {
         $cid = TypeCoerce::toInt($country['destination_id']);
         $countryCode = TypeCoerce::toString($country['country_code']);
         $isWhitelisted = isset($whitelistMap[$cid]);
         $selectionType = $whitelistMap[$cid] ?? null;
-
-        $childCount = 0;
-        $whitelistedChildren = [];
-        if ($isWhitelisted && $selectionType !== 'all') {
-            // Get whitelisted children for this country
-            $whitelistedChildren = $whitelistRepo->getWhitelistedChildIdsByCountry($countryCode);
-            $childCount = count($whitelistedChildren);
+        if ($isWhitelisted) {
+            $whitelistedCountryCodes[] = $countryCode;
         }
+
+        $childCount = ($isWhitelisted && $selectionType !== 'all')
+            ? count($childIdsByCountryId[$cid] ?? [])
+            : 0;
 
         $countryData[] = [
             'destination_id' => $cid,
@@ -641,36 +653,31 @@ if ($mode === 'manage') {
     // Sample whitelisted city names for summary
     $sampleCities = $whitelistRepo->getSampleNonCountryNames(5);
 
-    // Per-country whitelist summary: region full/partial counts + city count
+    // Per-country whitelist summary: region full/partial counts + city count.
+    // Two grouped queries for ALL whitelisted countries, assembled in PHP.
+    $regionStatsByCountry = $destRepo->getRegionChildStatsByCountry($whitelistedCountryCodes);
+    $cityCountsByCountry = $destRepo->countCitiesByCountries($whitelistedCountryCodes);
+
     $whitelistSummary = [];
     foreach ($countryData as $cd) {
         if (!$cd['is_whitelisted']) {
             continue;
         }
 
-        $regions = $destRepo->getRegionsByCountry($cd['country_code']);
+        $regionStats = $regionStatsByCountry[$cd['country_code']] ?? [];
         $fullRegions = 0;
         $partialRegions = 0;
         $totalCities = 0;
 
         if ($cd['selection_type'] === 'all') {
-            $fullRegions = count($regions);
-            $totalCities = $destRepo->countCitiesByCountry($cd['country_code']);
+            $fullRegions = count($regionStats);
+            $totalCities = $cityCountsByCountry[$cd['country_code']] ?? 0;
         } else {
-            foreach ($regions as $region) {
-                $rid = TypeCoerce::toInt($region['destination_id']);
-                $citiesInRegion = $destRepo->getCitiesByParent($rid);
-                $totalInRegion = count($citiesInRegion);
-                $whitelistedInRegion = 0;
-                foreach ($citiesInRegion as $city) {
-                    $cityDestId = \Tygh\Addons\TravelCore\Helpers\TypeCoerce::toInt($city['destination_id'] ?? 0);
-                    if (isset($whitelistMap[$cityDestId])) {
-                        $whitelistedInRegion++;
-                        $totalCities++;
-                    }
-                }
+            foreach ($regionStats as $regionStat) {
+                $whitelistedInRegion = $whitelistedCountsByParent[$regionStat['region_id']] ?? 0;
                 if ($whitelistedInRegion > 0) {
-                    if ($whitelistedInRegion >= $totalInRegion) {
+                    $totalCities += $whitelistedInRegion;
+                    if ($whitelistedInRegion >= $regionStat['total_cities']) {
                         $fullRegions++;
                     } else {
                         $partialRegions++;
