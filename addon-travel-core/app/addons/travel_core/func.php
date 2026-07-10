@@ -80,7 +80,7 @@ function fn_travel_core_ensure_schema(): void
     if (!is_array($columns)) {
         return;
     }
-    $columnSet = array_flip($columns);
+    $columnSet = array_flip(array_map(static fn ($c): string => is_scalar($c) ? (string) $c : '', $columns));
 
     if (!isset($columnSet['variant_source'])) {
         db_query("ALTER TABLE ?:travel_feature_map ADD COLUMN `variant_source` ENUM('auto','manual') DEFAULT 'auto' COMMENT 'manual = admin-locked' AFTER `cscart_variant_id`");
@@ -153,64 +153,79 @@ function fn_travel_core_get_feature_variants(): array
         DESCR_SL,
     );
 
-    $result = [0 => '-- ' . __('none') . ' --'];
-    foreach ($features as $f) {
-        $typeLabel = match ($f['feature_type']) {
+    $result = [0 => '-- ' . \Tygh\Addons\TravelCore\Helpers\TypeCoerce::toString(__('none')) . ' --'];
+    foreach (\Tygh\Addons\TravelCore\Helpers\TypeCoerce::toRowList($features) as $f) {
+        $featureType = \Tygh\Addons\TravelCore\Helpers\TypeCoerce::toString($f['feature_type'] ?? '');
+        $featureId = \Tygh\Addons\TravelCore\Helpers\TypeCoerce::toInt($f['feature_id'] ?? 0);
+        $description = \Tygh\Addons\TravelCore\Helpers\TypeCoerce::toString($f['description'] ?? '');
+        $typeLabel = match ($featureType) {
             'M' => 'Multi',
             'S' => 'Select',
             'C' => 'Checkbox',
             'T' => 'Text',
             'N' => 'Number',
             'O' => 'Date',
-            default => $f['feature_type'],
+            default => $featureType,
         };
-        $result[$f['feature_id']] = ($f['description'] ?: 'Feature') . " #{$f['feature_id']} ({$typeLabel})";
+        $result[$featureId] = ($description !== '' ? $description : 'Feature') . " #{$featureId} ({$typeLabel})";
     }
 
     return $result;
 }
 
 // CS-Cart auto-discovers these by naming convention for <type>selectbox</type> settings
+
+/** @return array<int, string> */
 function fn_settings_variants_addons_travel_core_feature_id_property_rating(): array
 {
     return fn_travel_core_get_feature_variants();
 }
+/** @return array<int, string> */
 function fn_settings_variants_addons_travel_core_feature_id_meals(): array
 {
     return fn_travel_core_get_feature_variants();
 }
+/** @return array<int, string> */
 function fn_settings_variants_addons_travel_core_feature_id_room_type(): array
 {
     return fn_travel_core_get_feature_variants();
 }
+/** @return array<int, string> */
 function fn_settings_variants_addons_travel_core_feature_id_property_type(): array
 {
     return fn_travel_core_get_feature_variants();
 }
+/** @return array<int, string> */
 function fn_settings_variants_addons_travel_core_feature_id_location(): array
 {
     return fn_travel_core_get_feature_variants();
 }
+/** @return array<int, string> */
 function fn_settings_variants_addons_travel_core_feature_id_region(): array
 {
     return fn_travel_core_get_feature_variants();
 }
+/** @return array<int, string> */
 function fn_settings_variants_addons_travel_core_feature_id_city(): array
 {
     return fn_travel_core_get_feature_variants();
 }
+/** @return array<int, string> */
 function fn_settings_variants_addons_travel_core_feature_id_travel_group(): array
 {
     return fn_travel_core_get_feature_variants();
 }
+/** @return array<int, string> */
 function fn_settings_variants_addons_travel_core_feature_id_hotel_facility(): array
 {
     return fn_travel_core_get_feature_variants();
 }
+/** @return array<int, string> */
 function fn_settings_variants_addons_travel_core_feature_id_room_facility(): array
 {
     return fn_travel_core_get_feature_variants();
 }
+/** @return array<int, string> */
 function fn_settings_variants_addons_travel_core_feature_id_beach_access(): array
 {
     return fn_travel_core_get_feature_variants();
@@ -219,6 +234,8 @@ function fn_settings_variants_addons_travel_core_feature_id_beach_access(): arra
 /**
  * Variants function for the default_currency addon setting.
  * Pulls currencies from CS-Cart's configured currencies.
+ *
+ * @return array<string, string>
  */
 function fn_settings_variants_addons_travel_core_default_currency(): array
 {
@@ -230,7 +247,9 @@ function fn_settings_variants_addons_travel_core_default_currency(): array
     }
 
     foreach ($currencies as $code => $currency) {
-        $result[$code] = $code . (!empty($currency['symbol']) ? ' (' . $currency['symbol'] . ')' : '');
+        $currencyRow = \Tygh\Addons\TravelCore\Helpers\TypeCoerce::toStringMap($currency);
+        $symbol = \Tygh\Addons\TravelCore\Helpers\TypeCoerce::toString($currencyRow['symbol'] ?? '');
+        $result[(string) $code] = (string) $code . ($symbol !== '' ? ' (' . $symbol . ')' : '');
     }
 
     return $result;

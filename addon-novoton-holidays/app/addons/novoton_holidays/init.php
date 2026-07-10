@@ -15,8 +15,9 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 // Addon version constant — single source of truth from addon.xml via Registry.
 // Strips build suffix (e.g. "3.0.0-A86" → "3.0.0") for display purposes.
 if (!defined('NOVOTON_VERSION')) {
-    $__nv = Registry::get('addons.novoton_holidays.version') ?: '0.0.0';
-    define('NOVOTON_VERSION', preg_replace('/-.*$/', '', $__nv));
+    $__nvRaw = Registry::get('addons.novoton_holidays.version');
+    $__nv = is_scalar($__nvRaw) && $__nvRaw !== '' ? (string) $__nvRaw : '0.0.0';
+    define('NOVOTON_VERSION', preg_replace('/-.*$/', '', $__nv) ?? '0.0.0');
     unset($__nv);
 }
 
@@ -26,7 +27,9 @@ if (!defined('NOVOTON_VERSION')) {
 if (!defined('NOVOTON_CACHE_VER')) {
     $__bundle = __DIR__ . '/../../../../js/addons/novoton_holidays/react19-bundle.js';
     $__mtime = file_exists($__bundle) ? (string) filemtime($__bundle) : '0';
-    define('NOVOTON_CACHE_VER', substr(md5(NOVOTON_VERSION . $__mtime), 0, 8));
+    $__ver = defined('NOVOTON_VERSION') && is_string(NOVOTON_VERSION) ? NOVOTON_VERSION : '0.0.0';
+    define('NOVOTON_CACHE_VER', substr(md5($__ver . $__mtime), 0, 8));
+    unset($__ver);
     unset($__bundle, $__mtime);
 }
 
@@ -79,14 +82,16 @@ require_once __DIR__ . '/hooks.php';
 
 /**
  * Smarty modifier: {$room_id|novoton_format_room_type}
+ *
+ * @param mixed $room_id
  */
-function smarty_modifier_novoton_format_room_type($room_id)
+function smarty_modifier_novoton_format_room_type($room_id): string
 {
     try {
         if (empty($room_id) || !is_string($room_id)) {
             return is_string($room_id) ? $room_id : '';
         }
-        if (preg_match('/[ăîâșț]/iu', $room_id)) {
+        if (preg_match('/[ăîâșț]/iu', $room_id) === 1) {
             return $room_id;
         }
         return \Tygh\Addons\TravelCore\ValueObjects\RoomType::formatRoomLabel($room_id);
@@ -97,8 +102,10 @@ function smarty_modifier_novoton_format_room_type($room_id)
 
 /**
  * Smarty modifier: {$board_id|novoton_format_board}
+ *
+ * @param mixed $board_id
  */
-function smarty_modifier_novoton_format_board($board_id)
+function smarty_modifier_novoton_format_board($board_id): string
 {
     try {
         if (empty($board_id) || !is_string($board_id)) {
@@ -129,19 +136,21 @@ function smarty_modifier_novoton_format_board($board_id)
  *
  * Log file: var/novoton_tpl_trace.log
  *
- * @param mixed  $value
- * @param string $label
+ * @param mixed $value
+ * @param mixed $label
  * @return mixed
  */
 function smarty_modifier_novoton_trace($value, $label = '')
 {
     try {
         if (\Tygh\Addons\NovotonHolidays\Services\ConfigProvider::isDebugMode()) {
-            $root = (string) \Tygh\Registry::get('config.dir.root');
+            $rootRaw = \Tygh\Registry::get('config.dir.root');
+            $root = is_scalar($rootRaw) ? (string) $rootRaw : '';
             $file = rtrim($root, '/') . '/var/novoton_tpl_trace.log';
+            $area = defined('AREA') && is_string(AREA) ? AREA : '?';
             $line = '[' . date('Y-m-d H:i:s') . '] '
-                . (defined('AREA') ? AREA : '?') . ' '
-                . (string) $label . PHP_EOL;
+                . $area . ' '
+                . (is_scalar($label) ? (string) $label : '') . PHP_EOL;
             @file_put_contents($file, $line, FILE_APPEND);
         }
     } catch (\Throwable) {
@@ -156,7 +165,7 @@ function smarty_modifier_novoton_trace($value, $label = '')
  * The smarty_modifier_{name} naming convention handles auto-discovery,
  * but explicit registration ensures CS-Cart's Smarty also knows about them.
  */
-function fn_novoton_holidays_register_smarty_modifiers()
+function fn_novoton_holidays_register_smarty_modifiers(): void
 {
     static $registered = false;
 
@@ -165,9 +174,15 @@ function fn_novoton_holidays_register_smarty_modifiers()
     }
 
     try {
-        if (class_exists('Tygh\Tygh') && !empty(\Tygh\Tygh::$app) && \Tygh\Tygh::$app->offsetExists('view')) {
-            $smarty = \Tygh\Tygh::$app['view'];
-            if ($smarty) {
+        $app = class_exists('Tygh\Tygh') ? \Tygh\Tygh::$app : null;
+        $smarty = null;
+        if ($app instanceof \ArrayAccess && $app->offsetExists('view')) {
+            $smarty = $app['view'];
+        } elseif (is_array($app) && isset($app['view'])) {
+            $smarty = $app['view'];
+        }
+        {
+            if (is_object($smarty) && method_exists($smarty, 'registerPlugin')) {
                 $smarty->registerPlugin('modifier', 'novoton_format_room_type', 'smarty_modifier_novoton_format_room_type');
                 $smarty->registerPlugin('modifier', 'novoton_format_board', 'smarty_modifier_novoton_format_board');
                 $smarty->registerPlugin('modifier', 'novoton_trace', 'smarty_modifier_novoton_trace');

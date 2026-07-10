@@ -29,6 +29,11 @@ jobs:
       # ── Baseline ratchet: phpstan-baseline.neon may only shrink ──
       # New code must be level-10 clean. Fail the PR if the total number of
       # baselined errors grew vs the base branch — forces fixing, not suppressing.
+      # ONE exception: when the PR also changes phpstan.neon (an analysis-
+      # COVERAGE expansion — e.g. 2026-07 brought the addon-root func.php/
+      # init.php files under analysis, absorbing their pre-existing debt),
+      # growth is downgraded to a loud warning for the reviewer instead of a
+      # failure. PRs that don't touch phpstan.neon keep the hard gate.
       - name: PHPStan baseline ratchet
         if: github.event_name == 'pull_request'
         run: |
@@ -37,10 +42,15 @@ jobs:
           cur=$(grep -oE 'count: [0-9]+' phpstan-baseline.neon | awk '{s+=$2} END {print s+0}')
           echo "phpstan-baseline.neon total errors — base=$base, PR=$cur"
           if [ "$cur" -gt "$base" ]; then
-            echo "::error::PHPStan baseline grew ($base -> $cur). New code must be level-10 clean — fix the errors instead of adding baseline entries."
-            exit 1
+            if ! git diff --quiet "origin/${{ github.base_ref }}" -- phpstan.neon; then
+              echo "::warning::PHPStan baseline grew ($base -> $cur) alongside a phpstan.neon change — treating as an analysis-coverage expansion. Reviewer: confirm the new baseline entries belong ONLY to newly-covered paths."
+            else
+              echo "::error::PHPStan baseline grew ($base -> $cur). New code must be level-10 clean — fix the errors instead of adding baseline entries."
+              exit 1
+            fi
+          else
+            echo "OK: baseline did not grow."
           fi
-          echo "OK: baseline did not grow."
 
   # ── PHP CS Fixer (dry-run; fails if formatting would change) ──
   phpcsfixer:
@@ -109,6 +119,26 @@ jobs:
 
       - name: Run PHPUnit (with coverage)
         run: vendor/bin/phpunit --colors=always --coverage-text=coverage.txt --coverage-clover=coverage.xml
+
+      # ── Coverage floor: line coverage may not drop below the floor ──
+      # Floor = measured coverage at introduction (19.43% on 2026-07-10)
+      # minus a small margin. Raise the floor as coverage grows — never lower
+      # it to make a PR pass; write the missing tests instead.
+      - name: Enforce coverage floor
+        run: |
+          floor=18.0
+          pct=$(python3 -c "
+          import xml.etree.ElementTree as ET
+          m = ET.parse('coverage.xml').getroot().find('./project/metrics')
+          total = int(m.get('statements')); covered = int(m.get('coveredstatements'))
+          print(f'{covered / total * 100:.2f}' if total else '0.00')
+          ")
+          echo "novoton line coverage: ${pct}% (floor: ${floor}%)"
+          awk -v p="$pct" -v f="$floor" 'BEGIN { exit !(p+0 < f+0) }' && {
+            echo "::error::Line coverage ${pct}% fell below the ${floor}% floor — add tests for the code this PR touches."
+            exit 1
+          }
+          echo "OK: coverage >= floor."
 
       - name: Append coverage summary to job summary
         if: always()
@@ -256,6 +286,29 @@ jobs:
       - name: Run PHPUnit
         run: vendor/bin/phpunit --colors=always --no-coverage
 
+  # ── PHPUnit (fgo_invoicing suite) ──
+  phpunit-fgo:
+    name: PHPUnit (fgo_invoicing)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: addon-fgo-invoicing/app/addons/fgo_invoicing
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: simplexml, curl, mbstring
+          tools: composer:v2
+
+      - name: Install addon dependencies
+        run: composer install --no-progress --no-interaction
+
+      - name: Run PHPUnit
+        run: vendor/bin/phpunit --colors=always --no-coverage
+
   # ── php -l syntax check on all PHP files ──
   lint:
     name: PHP Lint
@@ -275,6 +328,7 @@ jobs:
           find addon-novoton-holidays/app/addons/novoton_holidays \
                addon-travel-core/app/addons/travel_core \
                addon-sphinx-holidays/app/addons/sphinx_holidays \
+               addon-fgo-invoicing/app/addons/fgo_invoicing \
                -path '*/vendor' -prune -o -name '*.php' -print0 | xargs -0 -n 50 php -l
 
   # ── ESLint + Vitest (frontend JS / JSX) ──
@@ -320,6 +374,7 @@ jobs:
       - phpunit
       - phpunit-travel-core
       - phpunit-sphinx
+      - phpunit-fgo
       - lint
       - eslint
     runs-on: ubuntu-latest
