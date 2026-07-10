@@ -13,6 +13,15 @@ if (!defined('BOOTSTRAP')) {
     exit('Access denied');
 }
 
+// SELF-SUFFICIENCY GUARD: during travel_core's OWN installation the addon is
+// not yet active, so CS-Cart never runs init.php — and init.php is the only
+// thing that registers the Tygh\Addons\TravelCore\* autoloader. CS-Cart DOES
+// load this file and calls the fn_settings_variants_addons_travel_core_*
+// callbacks to build the selectbox settings, so any class referenced from
+// here must be loaded explicitly or the install dies with a silent fatal
+// ("click Install, nothing happens"). Guarded by FuncSelfSufficiencyTest.
+require_once __DIR__ . '/src/Helpers/TypeCoerce.php';
+
 /**
  * Addon uninstall function.
  * Drops shared tables and cleans up language variables.
