@@ -35,6 +35,9 @@
  *                          belongs to the wrapper.
  *   booking_fallback_url (string) link rendered when booking_view_id is 0,
  *                          e.g. the provider's own admin view.
+ *   booking_prefer_short (bool) prefer check_in_short/check_out_short (dotted
+ *                          DD.MM.YYYY) over the store-format check_in_formatted
+ *                          — novoton admin pages render dotted dates.
  *
  * @package TravelCore
  *}
@@ -43,13 +46,20 @@
 {$_bvid = $booking_view_id|default:0}
 {$_loc_style = $booking_location_style|default:''}
 {$_grouping = $guest_grouping|default:'flat'}
+{if $booking_prefer_short|default:false}
+    {$_ci = $_be.check_in_short|default:$_be.check_in_formatted|default:$_be.check_in|default:''}
+    {$_co = $_be.check_out_short|default:$_be.check_out_formatted|default:$_be.check_out|default:''}
+{else}
+    {$_ci = $_be.check_in_formatted|default:$_be.check_in_short|default:$_be.check_in|default:''}
+    {$_co = $_be.check_out_formatted|default:$_be.check_out_short|default:$_be.check_out|default:''}
+{/if}
 {if $_be}
     {if $_be.hotel_name}
         <strong>{__("`$_bp`.hotel")}:</strong> {$_be.hotel_name|escape:'html'}{if $_loc_style === 'paren' && $_be.hotel_city} ({$_be.hotel_city|escape:'html'}){elseif $_loc_style === 'inline'}{if $_be.hotel_city}, {$_be.hotel_city|escape:'html'}{/if}{if $_be.hotel_region}, {$_be.hotel_region|escape:'html'}{/if}{if $_be.hotel_country}, {$_be.hotel_country|escape:'html'}{/if}{/if}<br>
     {/if}
 
-    <strong>{__("`$_bp`.check_in")}:</strong> {$_be.check_in_formatted|default:$_be.check_in_short|default:$_be.check_in|default:''} |
-    <strong>{__("`$_bp`.check_out")}:</strong> {$_be.check_out_formatted|default:$_be.check_out_short|default:$_be.check_out|default:''} |
+    <strong>{__("`$_bp`.check_in")}:</strong> {$_ci} |
+    <strong>{__("`$_bp`.check_out")}:</strong> {$_co} |
     <strong>{__("`$_bp`.nights")}:</strong> {$_be.nights|default:0}<br>
 
     {if $show_package|default:false && $_be.package_name}

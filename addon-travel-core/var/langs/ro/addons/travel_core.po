@@ -737,3 +737,19 @@ msgstr "[linked] rezervări au fost legate de comenzile lor ([orders] comenzi re
 msgctxt "Languages::travel_core.child_age_mismatch"
 msgid "The child [guest] will be [actual] years old at check-in, but the offer was priced for age [declared]. The search was re-run with the correct ages — please choose an offer again."
 msgstr "Copilul [guest] va avea [actual] ani la check-in, dar oferta a fost calculată pentru [declared] ani. Căutarea a fost refăcută cu vârstele corecte — vă rugăm să alegeți din nou o ofertă."
+
+msgctxt "Languages::travel_core.package"
+msgid "Package"
+msgstr "Pachet"
+
+msgctxt "Languages::travel_core.payment_terms"
+msgid "Terms of Payment"
+msgstr "Termeni de plată"
+
+msgctxt "Languages::travel_core.cancellation_policy"
+msgid "Cancellation Policy"
+msgstr "Politica de anulare"
+
+msgctxt "Languages::travel_core.days"
+msgid "days"
+msgstr "zile"
