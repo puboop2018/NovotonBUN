@@ -22,9 +22,14 @@ class BookingAdminProvider implements BookingAdminProviderInterface
 {
     private SphinxBookingRepository $repo;
 
-    public function __construct(?SphinxBookingRepository $repo = null)
+    private ?BookingRetryService $retryService;
+
+    public function __construct(?SphinxBookingRepository $repo = null, ?BookingRetryService $retryService = null)
     {
         $this->repo = $repo ?? new SphinxBookingRepository();
+        // Lazily built in handleAction() when null — constructing the API
+        // client on every grid render would be wasted work.
+        $this->retryService = $retryService;
     }
 
     /**
@@ -119,16 +124,21 @@ class BookingAdminProvider implements BookingAdminProviderInterface
         $actions = [];
         $status = $booking['status'] ?? '';
 
-        // Retry action for failed bookings
+        // Retry action for failed bookings. Routed through the unified
+        // controller's provider_action mode (travel_bookings.retry_booking
+        // was never a real mode — the old button posted into a 404).
+        // booking_id must be the PROVIDER id: handleAction() resolves it
+        // against sphinx_bookings.
         if ($status === TravelConstants::STATUS_FAILED) {
             $actions[] = [
-                'name' => 'retry',
+                'name' => 'retry_booking',
                 'label' => 'Retry Booking',
-                'url' => 'travel_bookings.retry_booking',
+                'url' => 'travel_bookings.provider_action',
                 'method' => 'POST',
                 'css_class' => 'btn-warning',
                 'icon' => 'icon-repeat',
-                'booking_id' => $booking['booking_id'] ?? '',
+                'booking_id' => TypeCoerce::toString($booking['provider_booking_id'] ?? $booking['booking_id'] ?? ''),
+                'extra_params' => ['provider_action' => 'retry_booking'],
             ];
         }
 
@@ -150,13 +160,64 @@ class BookingAdminProvider implements BookingAdminProviderInterface
     #[\Override]
     public function handleAction(string $action, array $request): array
     {
-        // Sphinx has no provider-specific POST actions yet
+        if ($action === 'retry_booking') {
+            return $this->handleRetryBooking($request);
+        }
+
         return [
             'redirect' => 'travel_bookings.manage',
             'notification' => [
                 'type' => 'W',
                 'title' => TypeCoerce::toString(__('warning')),
                 'message' => "Unknown Sphinx action: {$action}",
+            ],
+        ];
+    }
+
+    /**
+     * Retry a failed booking submission (paid order, no reservation at
+     * Sphinx). Delegates to BookingRetryService: re-verifies the offer is
+     * still available at the same price, re-submits, flips failed→confirmed.
+     *
+     * @param array<string, mixed> $request
+     * @return array{redirect: string, notification: array{type: string, title: string, message: string}}
+     */
+    private function handleRetryBooking(array $request): array
+    {
+        $bookingId = TypeCoerce::toInt($request['booking_id'] ?? 0);
+        if ($bookingId <= 0) {
+            return [
+                'redirect' => 'travel_bookings.manage&provider=sphinx',
+                'notification' => [
+                    'type' => 'E',
+                    'title' => TypeCoerce::toString(__('error')),
+                    'message' => 'Invalid booking ID for retry.',
+                ],
+            ];
+        }
+
+        $this->retryService ??= new BookingRetryService(Container::getApi(), Container::getBookingRepository());
+        $result = $this->retryService->retry($bookingId);
+
+        $message = $result['message'];
+        if (!empty($result['success'])) {
+            $ref = TypeCoerce::toString($result['booking_ref'] ?? '');
+            return [
+                'redirect' => 'travel_bookings.manage&provider=sphinx',
+                'notification' => [
+                    'type' => 'N',
+                    'title' => TypeCoerce::toString(__('notice')),
+                    'message' => 'Booking retried successfully.' . ($ref !== '' ? " Reference: {$ref}" : ''),
+                ],
+            ];
+        }
+
+        return [
+            'redirect' => 'travel_bookings.manage&provider=sphinx',
+            'notification' => [
+                'type' => 'E',
+                'title' => TypeCoerce::toString(__('error')),
+                'message' => 'Booking retry failed: ' . ($message !== '' ? $message : 'unknown error'),
             ],
         ];
     }
