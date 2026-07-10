@@ -28,25 +28,41 @@ parameters:
     #   Level 8: upgraded 2026-04-13, 39 errors fixed (zero at L7)
     #   Level 9: upgraded 2026-04-13, 365 errors fixed (3459 baselined)
     #   Level 10: upgraded 2026-04-13 (max level, 5314 baselined)
+    #   2026-07-10: coverage expanded to addon-root func.php/init.php (they
+    #     were never analysed; the audits wrongly believed otherwise). 49
+    #     errors fixed outright; sphinx func.php's 158 pre-existing errors
+    #     baselined — every future edit there must be clean (ratchet).
     level: 10
 
     # Analyse all three addons in a single run so cross-addon type mismatches
     # (e.g. novoton services typed against travel_core contracts) surface.
+    # Addon-root func.php/init.php are listed EXPLICITLY: they are CS-Cart's
+    # auto-loaded hook files (sphinx's func.php alone is ~1,400 LOC of
+    # sync/pricing-critical code) and were silently outside analysis — the
+    # 2026-07 audits wrongly assumed they were covered.
     paths:
         - addon-novoton-holidays/app/addons/novoton_holidays/src
         - addon-novoton-holidays/app/addons/novoton_holidays/controllers
         - addon-novoton-holidays/app/addons/novoton_holidays/functions
         - addon-novoton-holidays/app/addons/novoton_holidays/hooks
+        - addon-novoton-holidays/app/addons/novoton_holidays/func.php
+        - addon-novoton-holidays/app/addons/novoton_holidays/init.php
         - addon-travel-core/app/addons/travel_core/src
         - addon-travel-core/app/addons/travel_core/controllers
         - addon-travel-core/app/addons/travel_core/functions
         - addon-travel-core/app/addons/travel_core/hooks
+        - addon-travel-core/app/addons/travel_core/func.php
+        - addon-travel-core/app/addons/travel_core/init.php
         - addon-sphinx-holidays/app/addons/sphinx_holidays/src
         - addon-sphinx-holidays/app/addons/sphinx_holidays/controllers
+        - addon-sphinx-holidays/app/addons/sphinx_holidays/func.php
+        - addon-sphinx-holidays/app/addons/sphinx_holidays/init.php
         - addon-fgo-invoicing/app/addons/fgo_invoicing/src
         - addon-fgo-invoicing/app/addons/fgo_invoicing/controllers
         - addon-fgo-invoicing/app/addons/fgo_invoicing/functions
         - addon-fgo-invoicing/app/addons/fgo_invoicing/hooks
+        - addon-fgo-invoicing/app/addons/fgo_invoicing/func.php
+        - addon-fgo-invoicing/app/addons/fgo_invoicing/init.php
 
     # Scan additional files/directories for symbol discovery without analysing
     # them. Novoton's Constants.php sits at the addon root (PSR-4 mapped to ""

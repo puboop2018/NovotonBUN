@@ -519,6 +519,70 @@ class DestinationRepository
     }
 
     /**
+     * countCitiesByCountry() for many countries in ONE query.
+     *
+     * @param list<string> $countryCodes
+     * @return array<string, int> country_code => city-level destination count
+     */
+    public function countCitiesByCountries(array $countryCodes): array
+    {
+        if ($countryCodes === []) {
+            return [];
+        }
+        $raw = db_get_hash_single_array(
+            "SELECT country_code, COUNT(*) AS cnt FROM ?:sphinx_destinations
+             WHERE country_code IN (?a) AND type IN ('city','destination')
+             GROUP BY country_code",
+            ['country_code', 'cnt'],
+            $countryCodes,
+        );
+        if (!is_array($raw)) {
+            return [];
+        }
+        $out = [];
+        foreach ($raw as $k => $v) {
+            $out[(string) $k] = TypeCoerce::toInt($v);
+        }
+        return $out;
+    }
+
+    /**
+     * Region rows (direct children of each country node) with the count of
+     * their OWN direct children ("cities"), for many countries in ONE query.
+     * Hierarchy semantics mirror getRegionsByCountry() + getCitiesByParent(),
+     * which the whitelist admin summary previously called per country and
+     * per region (N+1 at whitelist scale).
+     *
+     * @param list<string> $countryCodes
+     * @return array<string, list<array{region_id: int, total_cities: int}>> country_code => region stats
+     */
+    public function getRegionChildStatsByCountry(array $countryCodes): array
+    {
+        if ($countryCodes === []) {
+            return [];
+        }
+        $rows = self::asRowList(db_get_array(
+            "SELECT c.country_code, r.destination_id AS region_id,
+                    COUNT(ct.destination_id) AS total_cities
+             FROM ?:sphinx_destinations c
+             JOIN ?:sphinx_destinations r ON r.parent_id = c.destination_id
+             LEFT JOIN ?:sphinx_destinations ct ON ct.parent_id = r.destination_id
+             WHERE c.type = 'country' AND c.country_code IN (?a)
+             GROUP BY c.country_code, r.destination_id",
+            $countryCodes,
+        ));
+
+        $grouped = [];
+        foreach ($rows as $row) {
+            $grouped[TypeCoerce::toString($row['country_code'])][] = [
+                'region_id' => TypeCoerce::toInt($row['region_id']),
+                'total_cities' => TypeCoerce::toInt($row['total_cities']),
+            ];
+        }
+        return $grouped;
+    }
+
+    /**
      * Find destinations by name or full_path prefix.
      *
      * "Athens" matches by name. "Athens, Greece" matches via full_path prefix,

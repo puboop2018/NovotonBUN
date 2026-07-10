@@ -43,6 +43,7 @@
 
     {* Participant entry form *}
     <form action="{"sphinx_booking.experience_add_to_cart"|fn_url}" method="post" id="sphinx-experience-booking-form">
+        <input type="hidden" name="security_hash" value="{$security_hash}" />
         <input type="hidden" name="offer_id" value="{$sphinx_experience_booking.offer_id}">
         <input type="hidden" name="experience_id" value="{$sphinx_experience_booking.experience_id}">
         <input type="hidden" name="departure_date" value="{$sphinx_experience_booking.departure_date}">
@@ -58,65 +59,22 @@
         <div class="guest-names-section">
             <h3 class="travel-section-title"><i class="icon-user"></i> {__("sphinx_holidays.participant_details")|default:"Participant Details"}</h3>
 
-            {section name="adult" start=1 loop=$sphinx_experience_booking.adults+1}
-                <div class="guest-entry guest-entry-adult">
-                    <div class="travel-guest-label">
-                        {__("travel_core.adult")|default:"Adult"} {$smarty.section.adult.index}
-                        {if $smarty.section.adult.index == 1} <span class="travel-holder-tag">{__("travel_core.main_guest")|default:"Main Guest"}</span>{/if}
-                    </div>
-                    <div class="travel-guest-grid">
-                        <div class="travel-guest-field">
-                            <label>{__("travel_core.first_name")|default:"First Name"}</label>
-                            <input type="text" name="guests[adult_{$smarty.section.adult.index}][first_name]" class="ty-input-text" required>
-                            <input type="hidden" name="guests[adult_{$smarty.section.adult.index}][type]" value="adult">
-                            {if $smarty.section.adult.index == 1}
-                                <input type="hidden" name="guests[adult_1][is_holder]" value="1">
-                            {/if}
-                        </div>
-                        <div class="travel-guest-field">
-                            <label>{__("travel_core.last_name")|default:"Last Name"}</label>
-                            <input type="text" name="guests[adult_{$smarty.section.adult.index}][last_name]" class="ty-input-text" required>
-                        </div>
-                        <div class="travel-guest-field travel-guest-field--dob">
-                            <label>{__("travel_core.date_of_birth")|default:"Date of Birth"}</label>
-                            <input type="text" name="guests[adult_{$smarty.section.adult.index}][dob]"
-                                   class="ty-input-text dob-masked-input" placeholder="DD/MM/YYYY" maxlength="10" required
-                                   onkeydown="TravelBooking.handleDobKeydown(event)" oninput="TravelBooking.applyDobMask(this)">
-                        </div>
-                    </div>
-                </div>
-            {/section}
-
-            {if $sphinx_experience_booking.children > 0}
-                {assign var="exp_children_ages" value=","|explode:$sphinx_experience_booking.children_ages}
-                {section name="child" start=1 loop=$sphinx_experience_booking.children+1}
-                    {assign var="child_age" value=$exp_children_ages[$smarty.section.child.index-1]|default:0}
-                    <div class="guest-entry guest-entry-child">
-                        <div class="travel-guest-label travel-guest-label--child">
-                            {__("travel_core.child")|default:"Child"} {$smarty.section.child.index}
-                            <span class="travel-guest-age-note">({$child_age} {__("travel_core.years_old")|default:"years old"})</span>
-                        </div>
-                        <div class="travel-guest-grid">
-                            <div class="travel-guest-field">
-                                <label>{__("travel_core.first_name")|default:"First Name"}</label>
-                                <input type="text" name="guests[child_{$smarty.section.child.index}][first_name]" class="ty-input-text" required>
-                                <input type="hidden" name="guests[child_{$smarty.section.child.index}][type]" value="child">
-                                <input type="hidden" name="guests[child_{$smarty.section.child.index}][age]" value="{$child_age}">
-                            </div>
-                            <div class="travel-guest-field">
-                                <label>{__("travel_core.last_name")|default:"Last Name"}</label>
-                                <input type="text" name="guests[child_{$smarty.section.child.index}][last_name]" class="ty-input-text" required>
-                            </div>
-                            <div class="travel-guest-field travel-guest-field--dob">
-                                <label>{__("travel_core.date_of_birth")|default:"Date of Birth"}</label>
-                                <input type="text" name="guests[child_{$smarty.section.child.index}][dob]"
-                                       class="ty-input-text dob-masked-input" placeholder="DD/MM/YYYY" maxlength="10" required
-                                       onkeydown="TravelBooking.handleDobKeydown(event)" oninput="TravelBooking.applyDobMask(this)">
-                            </div>
-                        </div>
-                    </div>
-                {/section}
-            {/if}
+            {* Participant cards — shared travel_core component in ROOMLESS mode:
+               emits the experience wire contract (guests[adult_{i}] /
+               guests[child_{i}], no room prefix, no [room] field — these key
+               names reach the Sphinx API unchanged). The synthesized single
+               "room" comes from the controller (normalizeRoomsForDisplay).
+               guard_expected_ages arms the client-side DOB-vs-priced-age
+               check matching the server gate in experience_add_to_cart. *}
+            {include file="addons/travel_core/components/booking_guest_cards.tpl"
+                     guest_rooms=$sphinx_experience_booking.rooms_data
+                     guest_num_rooms=1
+                     guest_roomless=true
+                     guest_label_prefix="travel_core"
+                     show_adult_dob=true
+                     adult_dob_required=true
+                     child_dob_required=true
+                     guard_expected_ages=true}
         </div>
 
         {* Contact (email/phone) is NOT collected here: CS-Cart checkout already

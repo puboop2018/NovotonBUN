@@ -15,12 +15,22 @@
  *   guest_num_rooms   (int,    default 1) show per-room headers when > 1.
  *   guest_label_prefix(string, default 'travel_core') langvar namespace for labels.
  *   guest_extra_class (string, default '') optional provider CSS hook on the wrapper.
- *   show_adult_dob    (bool,   default true) render an (optional) adult DOB field.
+ *   show_adult_dob    (bool,   default true) render an adult DOB field.
+ *   adult_dob_required(bool,   default false) mark the adult DOB required
+ *                                        (package/circuit manifests need it;
+ *                                        hotel adult DOB stays optional).
  *   child_dob_required(bool,   default true) mark child DOB required.
  *   guard_expected_ages(bool,  default false) stamp data-expected-age on child
  *                                        DOB inputs so the shared JS blocks a
  *                                        DOB that contradicts the searched age
  *                                        (fixed-price providers like sphinx).
+ *   guest_roomless    (bool,   default false) participant mode (experiences):
+ *                                        field names guests[adult_{i}] /
+ *                                        guests[child_{i}] with NO room{N}_
+ *                                        prefix and NO [room] hidden — these
+ *                                        key names reach the provider API, so
+ *                                        the wire contract must not change.
+ *                                        Room headers never render.
  *
  * @package TravelCore
  *}
@@ -29,12 +39,15 @@
 {$_child_dob_required = $child_dob_required|default:true}
 {$_num_rooms = $guest_num_rooms|default:1}
 {$_extra_class = $guest_extra_class|default:''}
+{$_roomless = $guest_roomless|default:false}
 
 {foreach $guest_rooms as $room_idx => $room}
     {assign var="room_num" value=$room_idx+1}
+    {* Field-name prefix: '' in roomless (participant) mode, room{N}_ otherwise *}
+    {if $_roomless}{$_npfx = ''}{else}{$_npfx = "room`$room_num`_"}{/if}
 
     {* Room header — only when the booking spans more than one room *}
-    {if $_num_rooms > 1}
+    {if $_num_rooms > 1 && !$_roomless}
         <div class="travel-room-header {$_extra_class}">
             <strong>{__("`$_gp`.room")|default:"Room"} {$room_num}</strong>
             {if $room.room_name} &mdash; {$room.room_name|escape:html}{/if}
@@ -54,26 +67,29 @@
                 <div class="travel-guest-field">
                     <label for="guest_r{$room_num}_a{$smarty.section.adult.index}_first">{__("`$_gp`.first_name")|default:"First Name"}</label>
                     <input type="text" id="guest_r{$room_num}_a{$smarty.section.adult.index}_first"
-                           name="guests[room{$room_num}_adult_{$smarty.section.adult.index}][first_name]"
+                           name="guests[{$_npfx}adult_{$smarty.section.adult.index}][first_name]"
                            class="ty-input-text" required aria-required="true" placeholder="{__("`$_gp`.first_name")|default:"First Name"}">
-                    <input type="hidden" name="guests[room{$room_num}_adult_{$smarty.section.adult.index}][type]" value="adult">
-                    <input type="hidden" name="guests[room{$room_num}_adult_{$smarty.section.adult.index}][room]" value="{$room_num}">
+                    <input type="hidden" name="guests[{$_npfx}adult_{$smarty.section.adult.index}][type]" value="adult">
+                    {if !$_roomless}
+                    <input type="hidden" name="guests[{$_npfx}adult_{$smarty.section.adult.index}][room]" value="{$room_num}">
+                    {/if}
                     {if $room_idx == 0 && $smarty.section.adult.index == 1}
-                        <input type="hidden" name="guests[room1_adult_1][is_holder]" value="1">
+                        <input type="hidden" name="guests[{$_npfx}adult_1][is_holder]" value="1">
                     {/if}
                 </div>
                 <div class="travel-guest-field">
                     <label for="guest_r{$room_num}_a{$smarty.section.adult.index}_last">{__("`$_gp`.last_name")|default:"Last Name"}</label>
                     <input type="text" id="guest_r{$room_num}_a{$smarty.section.adult.index}_last"
-                           name="guests[room{$room_num}_adult_{$smarty.section.adult.index}][last_name]"
+                           name="guests[{$_npfx}adult_{$smarty.section.adult.index}][last_name]"
                            class="ty-input-text" required aria-required="true" placeholder="{__("`$_gp`.last_name")|default:"Last Name"}">
                 </div>
                 {if $_show_adult_dob}
                 <div class="travel-guest-field travel-guest-field--dob">
                     <label for="guest_r{$room_num}_a{$smarty.section.adult.index}_dob">{__("`$_gp`.date_of_birth")|default:"Date of Birth"}</label>
                     <input type="text" id="guest_r{$room_num}_a{$smarty.section.adult.index}_dob"
-                           name="guests[room{$room_num}_adult_{$smarty.section.adult.index}][dob]"
+                           name="guests[{$_npfx}adult_{$smarty.section.adult.index}][dob]"
                            class="ty-input-text dob-masked-input" placeholder="DD/MM/YYYY" maxlength="10"
+                           {if $adult_dob_required|default:false}required aria-required="true"{/if}
                            onkeydown="TravelBooking.handleDobKeydown(event)"
                            oninput="TravelBooking.applyDobMask(this)">
                 </div>
@@ -97,16 +113,18 @@
                     <div class="travel-guest-field">
                         <label for="guest_r{$room_num}_c{$smarty.section.child.index}_first">{__("`$_gp`.first_name")|default:"First Name"}</label>
                         <input type="text" id="guest_r{$room_num}_c{$smarty.section.child.index}_first"
-                               name="guests[room{$room_num}_child_{$smarty.section.child.index}][first_name]"
+                               name="guests[{$_npfx}child_{$smarty.section.child.index}][first_name]"
                                class="ty-input-text" required aria-required="true" placeholder="{__("`$_gp`.first_name")|default:"First Name"}">
-                        <input type="hidden" name="guests[room{$room_num}_child_{$smarty.section.child.index}][type]" value="child">
-                        <input type="hidden" name="guests[room{$room_num}_child_{$smarty.section.child.index}][age]" value="{$child_age}">
-                        <input type="hidden" name="guests[room{$room_num}_child_{$smarty.section.child.index}][room]" value="{$room_num}">
+                        <input type="hidden" name="guests[{$_npfx}child_{$smarty.section.child.index}][type]" value="child">
+                        <input type="hidden" name="guests[{$_npfx}child_{$smarty.section.child.index}][age]" value="{$child_age}">
+                        {if !$_roomless}
+                        <input type="hidden" name="guests[{$_npfx}child_{$smarty.section.child.index}][room]" value="{$room_num}">
+                        {/if}
                     </div>
                     <div class="travel-guest-field">
                         <label for="guest_r{$room_num}_c{$smarty.section.child.index}_last">{__("`$_gp`.last_name")|default:"Last Name"}</label>
                         <input type="text" id="guest_r{$room_num}_c{$smarty.section.child.index}_last"
-                               name="guests[room{$room_num}_child_{$smarty.section.child.index}][last_name]"
+                               name="guests[{$_npfx}child_{$smarty.section.child.index}][last_name]"
                                class="ty-input-text" required aria-required="true" placeholder="{__("`$_gp`.last_name")|default:"Last Name"}">
                     </div>
                     <div class="travel-guest-field travel-guest-field--dob">
@@ -115,7 +133,7 @@
                            must imply THIS age at check-in (the age the offer was priced
                            for). Fixed-price providers only — novoton re-prices instead. *}
                         <input type="text" id="dob_r{$room_num}_c{$smarty.section.child.index}"
-                               name="guests[room{$room_num}_child_{$smarty.section.child.index}][dob]"
+                               name="guests[{$_npfx}child_{$smarty.section.child.index}][dob]"
                                class="ty-input-text dob-masked-input" placeholder="DD/MM/YYYY" maxlength="10"
                                {if $_child_dob_required}required aria-required="true"{/if}
                                {if $guard_expected_ages|default:false}data-expected-age="{$child_age}"{/if}

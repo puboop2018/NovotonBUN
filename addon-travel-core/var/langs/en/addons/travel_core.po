@@ -737,3 +737,19 @@ msgstr "Linked [linked] booking(s) to their orders (scanned [orders] recent orde
 msgctxt "Languages::travel_core.child_age_mismatch"
 msgid "The child [guest] will be [actual] years old at check-in, but the offer was priced for age [declared]. The search was re-run with the correct ages — please choose an offer again."
 msgstr "The child [guest] will be [actual] years old at check-in, but the offer was priced for age [declared]. The search was re-run with the correct ages — please choose an offer again."
+
+msgctxt "Languages::travel_core.package"
+msgid "Package"
+msgstr "Package"
+
+msgctxt "Languages::travel_core.payment_terms"
+msgid "Terms of Payment"
+msgstr "Terms of Payment"
+
+msgctxt "Languages::travel_core.cancellation_policy"
+msgid "Cancellation Policy"
+msgstr "Cancellation Policy"
+
+msgctxt "Languages::travel_core.days"
+msgid "days"
+msgstr "days"

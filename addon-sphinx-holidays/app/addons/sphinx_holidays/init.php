@@ -96,6 +96,14 @@ if (defined('AREA') && AREA === 'A' && function_exists('fn_sphinx_holidays_seed_
     }
 }
 
+// Self-heal schema deltas on existing installs (mirrors travel_core). The
+// addon.xml for="upgrade" ALTERs never auto-apply (version pinned, no upgrade
+// scheme), so columns/indexes added after the initial install only reached
+// sites via a manual deploy step — until this.
+if (defined('AREA') && AREA === 'A' && function_exists('fn_sphinx_holidays_ensure_schema')) {
+    fn_sphinx_holidays_ensure_schema();
+}
+
 // Register addon hooks
 fn_register_hooks(
     'pre_place_order',                         // Re-verify Sphinx offer prices before order

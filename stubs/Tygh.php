@@ -54,7 +54,13 @@ namespace Tygh {
 
     class Tygh
     {
-        /** @var array<string, mixed> */
-        public static array $app = [];
+        /**
+         * Runtime this is Tygh\Application (a Pimple container implementing
+         * ArrayAccess); the array branch keeps historical array-style access
+         * analysable.
+         *
+         * @var array<string, mixed>|\ArrayAccess<string, mixed>
+         */
+        public static $app = [];
     }
 }

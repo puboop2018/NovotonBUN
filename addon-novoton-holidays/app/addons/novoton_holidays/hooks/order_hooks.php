@@ -315,24 +315,6 @@ function fn_novoton_holidays_get_order_info(&$order, $additional_data): void
     $date_format   = Registry::get('settings.Appearance.date_format') ?: '%d %b %Y';
     $currency_code = PriceInfoFormatter::toScalar($order['secondary_currency'] ?? TravelConstants::CURRENCY_EUR);
 
-    // Pre-fetch hotel locations in single query (avoid N+1)
-    $hotel_ids = [];
-    foreach ($orderProducts as $product) {
-        if (!is_array($product)) {
-            continue;
-        }
-        /** @var array<string, mixed> $pExtra */
-        $pExtra = is_array($product['extra'] ?? null) ? $product['extra'] : [];
-        if (!empty($pExtra['novoton_booking']) && !empty($pExtra['hotel_id']) && empty($pExtra['city'])) {
-            $hotel_ids[PriceInfoFormatter::toScalar($pExtra['hotel_id'])] = true;
-        }
-    }
-    $hotels_cache = [];
-    if (!empty($hotel_ids)) {
-        $hotelRepo = Container::getInstance()->hotelRepository();
-        $hotels_cache = $hotelRepo->getLocationsByIds(array_keys($hotel_ids));
-    }
-
     foreach ($order['products'] as &$product) {
         if (!is_array($product)) {
             continue;
@@ -353,13 +335,10 @@ function fn_novoton_holidays_get_order_info(&$order, $additional_data): void
         $check_out   = PriceInfoFormatter::toScalar($extra['check_out'] ?? '');
         $total_price = PriceInfoFormatter::toFloat($extra['total_price'] ?? $product['price'] ?? 0);
 
-        // [1] Hotel location
-        if (!empty($hotel_id) && empty($extra['city']) && isset($hotels_cache[$hotel_id])) {
-            $loc = $hotels_cache[$hotel_id];
-            $extra['city']    = PriceInfoFormatter::toScalar($loc['city']    ?? '');
-            $extra['region']  = PriceInfoFormatter::toScalar($loc['region']  ?? '');
-            $extra['country'] = PriceInfoFormatter::toScalar($loc['country'] ?? '');
-        }
+        // [1] (removed) Hotel-location enrichment into extra['city'/'region'/
+        // 'country'] was dead: order templates read hotel_city/hotel_region/
+        // hotel_country (set at cart time), never these keys. Dropping it also
+        // removes an N-hotel getLocationsByIds() query per order-info render.
 
         // [2] Formatted dates
         $ci_ts = !empty($check_in)  ? strtotime($check_in)  : false;
@@ -427,15 +406,23 @@ function fn_novoton_holidays_get_order_info(&$order, $additional_data): void
             $extra['guests_data'] = is_array($decoded) ? $decoded : [];
         }
 
-        // Look up the unified travel_booking_id so templates can link directly to travel_bookings.view
+        // Resolve the unified travel_bookings SURROGATE id for admin links.
+        // ID CONTRACT (see Documentation/shared-travel-core-architecture.md):
+        //   - provider-PK keys stay provider-named (novoton_booking_id here;
+        //     sphinx items persist theirs as travel_booking_id — legacy name);
+        //   - extra['travel_surrogate_id'] is the ONLY key that may be used
+        //     for travel_bookings.view links / unified-table lookups.
+        // This hook previously published the surrogate AS travel_booking_id,
+        // giving that key a different id-space per provider — the trap behind
+        // the "View in Novoton opened the wrong booking" bug.
         $nvt_id = PriceInfoFormatter::toInt($extra['novoton_booking_id'] ?? 0);
-        if ($nvt_id > 0 && empty($extra['travel_booking_id'])) {
+        if ($nvt_id > 0 && empty($extra['travel_surrogate_id'])) {
             $tb_id = PriceInfoFormatter::toInt(db_get_field(
                 "SELECT booking_id FROM ?:travel_bookings WHERE provider = 'novoton' AND provider_booking_id = ?s LIMIT 1",
                 (string) $nvt_id
             ));
             if ($tb_id > 0) {
-                $extra['travel_booking_id'] = $tb_id;
+                $extra['travel_surrogate_id'] = $tb_id;
             }
         }
 

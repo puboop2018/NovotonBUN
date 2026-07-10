@@ -170,6 +170,58 @@ class DestinationWhitelistRepository
     }
 
     /**
+     * Whitelisted non-country destination ids grouped by their country's
+     * DESTINATION id (the key the whitelist admin page keys its state by).
+     * ONE query replacing the per-country getWhitelistedChildIdsByCountry()
+     * fan-out (server loop + one AJAX call per whitelisted country).
+     *
+     * @return array<int, list<int>> country destination_id => whitelisted child ids
+     */
+    public function getWhitelistedChildIdsGroupedByCountryId(): array
+    {
+        $rows = self::asRowList(db_get_array(
+            "SELECT c.destination_id AS country_id, w.destination_id AS child_id
+             FROM ?:sphinx_destination_whitelist w
+             JOIN ?:sphinx_destinations d ON d.destination_id = w.destination_id AND d.type != 'country'
+             JOIN ?:sphinx_destinations c ON c.country_code = d.country_code AND c.type = 'country'
+             WHERE d.country_code != ''",
+        ));
+
+        $grouped = [];
+        foreach ($rows as $row) {
+            $grouped[TypeCoerce::toInt($row['country_id'])][] = TypeCoerce::toInt($row['child_id']);
+        }
+        return $grouped;
+    }
+
+    /**
+     * Count of whitelisted destinations per PARENT node — for a region this
+     * is how many of its direct children ("cities") are whitelisted. One
+     * query for the whole whitelist; the admin summary previously walked
+     * every region calling getCitiesByParent() and testing each city.
+     *
+     * @return array<int, int> parent destination_id => whitelisted child count
+     */
+    public function getWhitelistedCountsByParent(): array
+    {
+        $raw = db_get_hash_single_array(
+            'SELECT d.parent_id, COUNT(*) AS cnt
+             FROM ?:sphinx_destination_whitelist w
+             JOIN ?:sphinx_destinations d ON d.destination_id = w.destination_id
+             GROUP BY d.parent_id',
+            ['parent_id', 'cnt'],
+        );
+        if (!is_array($raw)) {
+            return [];
+        }
+        $out = [];
+        foreach ($raw as $k => $v) {
+            $out[(int) $k] = TypeCoerce::toInt($v);
+        }
+        return $out;
+    }
+
+    /**
      * Get whitelist type counts grouped by destination type.
      *
      * @return array<string, int> type => count (e.g. ['country' => 3, 'region' => 12])

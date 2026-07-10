@@ -23,7 +23,8 @@ use Tygh\Registry;
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
 // Get addon directory
-$addon_dir = Registry::get('config.dir.addons') . 'novoton_holidays/';
+$addon_dir_raw = Registry::get('config.dir.addons');
+$addon_dir = (is_scalar($addon_dir_raw) ? (string) $addon_dir_raw : '') . 'novoton_holidays/';
 
 // Include organized function files
 $function_files = [
@@ -47,7 +48,7 @@ foreach ($function_files as $file) {
  * Variants function for the api_currency addon setting.
  * Pulls currencies from CS-Cart's configured currencies.
  * Called only from admin settings page where Registry is always populated.
- * @return array<string, mixed>
+ * @return array<string, string>
  */
 function fn_settings_variants_addons_novoton_holidays_api_currency(): array
 {
@@ -59,7 +60,9 @@ function fn_settings_variants_addons_novoton_holidays_api_currency(): array
     }
 
     foreach ($currencies as $code => $currency) {
-        $result[$code] = $code . (!empty($currency['symbol']) ? ' (' . $currency['symbol'] . ')' : '');
+        $currencyRow = \Tygh\Addons\TravelCore\Helpers\TypeCoerce::toStringMap($currency);
+        $symbol = \Tygh\Addons\TravelCore\Helpers\TypeCoerce::toString($currencyRow['symbol'] ?? '');
+        $result[(string) $code] = (string) $code . ($symbol !== '' ? ' (' . $symbol . ')' : '');
     }
 
     return $result;
@@ -100,8 +103,12 @@ function fn_novoton_holidays_seed_seo_defaults(): void
 {
     $defaults = fn_novoton_holidays_seo_defaults();
 
-    $current  = \Tygh\Registry::get('addons.novoton_holidays') ?: [];
+    $currentRaw = \Tygh\Registry::get('addons.novoton_holidays');
+    $current  = is_array($currentRaw) ? $currentRaw : [];
     $settings = \Tygh\Settings::instance();
+    if (!is_object($settings) || !method_exists($settings, 'updateValue')) {
+        return;
+    }
     $toMerge  = [];
 
     foreach ($defaults as $key => $value) {

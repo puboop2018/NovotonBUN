@@ -197,109 +197,22 @@
         <div class="guest-names-section">
             <h3 class="travel-section-title"><i class="icon-user"></i> {__("travel_core.guest_details")|default:"Guest Details"}</h3>
 
-            {if $sphinx_package_booking.rooms}
-                {foreach $sphinx_package_booking.rooms as $room_idx => $room}
-                    {assign var="room_num" value=$room_idx+1}
-                    {assign var="room_adults" value=$room.adults|default:$sphinx_package_booking.adults}
-                    {assign var="room_children_ages" value=$room.children_ages|default:[]}
-
-                    {if count($sphinx_package_booking.rooms) > 1}
-                        <div class="travel-room-header sphinx-room-header">
-                            <strong>{__("travel_core.room")|default:"Room"} {$room_num}</strong>
-                            {if $room.name} &mdash; {$room.name|escape:html}{/if}
-                        </div>
-                    {/if}
-
-                    {section name="adult" start=1 loop=$room_adults+1}
-                        <div class="guest-entry guest-entry-adult">
-                            <div class="travel-guest-label">
-                                {__("travel_core.adult")|default:"Adult"} {$smarty.section.adult.index}
-                                {if $room_idx == 0 && $smarty.section.adult.index == 1} <span class="travel-holder-tag">{__("travel_core.main_guest")|default:"Main Guest"}</span>{/if}
-                            </div>
-                            <div class="travel-guest-grid">
-                                <div class="travel-guest-field">
-                                    <label>{__("travel_core.first_name")|default:"First Name"}</label>
-                                    <input type="text" name="guests[room{$room_num}_adult_{$smarty.section.adult.index}][first_name]" class="ty-input-text" required>
-                                    <input type="hidden" name="guests[room{$room_num}_adult_{$smarty.section.adult.index}][type]" value="adult">
-                                    <input type="hidden" name="guests[room{$room_num}_adult_{$smarty.section.adult.index}][room]" value="{$room_num}">
-                                    {if $room_idx == 0 && $smarty.section.adult.index == 1}
-                                        <input type="hidden" name="guests[room1_adult_1][is_holder]" value="1">
-                                    {/if}
-                                </div>
-                                <div class="travel-guest-field">
-                                    <label>{__("travel_core.last_name")|default:"Last Name"}</label>
-                                    <input type="text" name="guests[room{$room_num}_adult_{$smarty.section.adult.index}][last_name]" class="ty-input-text" required>
-                                </div>
-                                <div class="travel-guest-field travel-guest-field--dob">
-                                    <label>{__("travel_core.date_of_birth")|default:"Date of Birth"}</label>
-                                    <input type="text" name="guests[room{$room_num}_adult_{$smarty.section.adult.index}][dob]"
-                                           class="ty-input-text dob-masked-input" placeholder="DD/MM/YYYY" maxlength="10" required
-                                           onkeydown="TravelBooking.handleDobKeydown(event)" oninput="TravelBooking.applyDobMask(this)">
-                                </div>
-                            </div>
-                        </div>
-                    {/section}
-
-                    {if $room_children_ages}
-                        {foreach $room_children_ages as $child_idx => $child_age}
-                            <div class="guest-entry guest-entry-child">
-                                <div class="travel-guest-label travel-guest-label--child">
-                                    {__("travel_core.child")|default:"Child"} {$child_idx+1}
-                                    <span class="travel-guest-age-note">({$child_age} {__("travel_core.years_old")|default:"years old"})</span>
-                                </div>
-                                <div class="travel-guest-grid">
-                                    <div class="travel-guest-field">
-                                        <label>{__("travel_core.first_name")|default:"First Name"}</label>
-                                        <input type="text" name="guests[room{$room_num}_child_{$child_idx+1}][first_name]" class="ty-input-text" required>
-                                        <input type="hidden" name="guests[room{$room_num}_child_{$child_idx+1}][type]" value="child">
-                                        <input type="hidden" name="guests[room{$room_num}_child_{$child_idx+1}][age]" value="{$child_age}">
-                                        <input type="hidden" name="guests[room{$room_num}_child_{$child_idx+1}][room]" value="{$room_num}">
-                                    </div>
-                                    <div class="travel-guest-field">
-                                        <label>{__("travel_core.last_name")|default:"Last Name"}</label>
-                                        <input type="text" name="guests[room{$room_num}_child_{$child_idx+1}][last_name]" class="ty-input-text" required>
-                                    </div>
-                                    <div class="travel-guest-field travel-guest-field--dob">
-                                        <label>{__("travel_core.date_of_birth")|default:"Date of Birth"}</label>
-                                        <input type="text" name="guests[room{$room_num}_child_{$child_idx+1}][dob]"
-                                               class="ty-input-text dob-masked-input" placeholder="DD/MM/YYYY" maxlength="10" required
-                                               onkeydown="TravelBooking.handleDobKeydown(event)" oninput="TravelBooking.applyDobMask(this)">
-                                    </div>
-                                </div>
-                            </div>
-                        {/foreach}
-                    {/if}
-                {/foreach}
-            {else}
-                {* Fallback: simple adult fields based on params *}
-                {section name="adult" start=1 loop=$sphinx_package_booking.adults+1}
-                    <div class="guest-entry guest-entry-adult">
-                        <div class="travel-guest-label">
-                            {__("travel_core.adult")|default:"Adult"} {$smarty.section.adult.index}
-                            {if $smarty.section.adult.index == 1} <span class="travel-holder-tag">{__("travel_core.main_guest")|default:"Main Guest"}</span>{/if}
-                        </div>
-                        <div class="travel-guest-grid">
-                            <div class="travel-guest-field">
-                                <label>{__("travel_core.first_name")|default:"First Name"}</label>
-                                <input type="text" name="guests[room1_adult_{$smarty.section.adult.index}][first_name]" class="ty-input-text" required>
-                                <input type="hidden" name="guests[room1_adult_{$smarty.section.adult.index}][type]" value="adult">
-                                <input type="hidden" name="guests[room1_adult_{$smarty.section.adult.index}][room]" value="1">
-                                {if $smarty.section.adult.index == 1}<input type="hidden" name="guests[room1_adult_1][is_holder]" value="1">{/if}
-                            </div>
-                            <div class="travel-guest-field">
-                                <label>{__("travel_core.last_name")|default:"Last Name"}</label>
-                                <input type="text" name="guests[room1_adult_{$smarty.section.adult.index}][last_name]" class="ty-input-text" required>
-                            </div>
-                            <div class="travel-guest-field travel-guest-field--dob">
-                                <label>{__("travel_core.date_of_birth")|default:"Date of Birth"}</label>
-                                <input type="text" name="guests[room1_adult_{$smarty.section.adult.index}][dob]"
-                                       class="ty-input-text dob-masked-input" placeholder="DD/MM/YYYY" maxlength="10" required
-                                       onkeydown="TravelBooking.handleDobKeydown(event)" oninput="TravelBooking.applyDobMask(this)">
-                            </div>
-                        </div>
-                    </div>
-                {/section}
-            {/if}
+            {* Guest name + DOB cards — shared travel_core component (same markup
+               contract all sphinx forms post: guests[room{N}_{type}_{i}][...]).
+               rooms_data is normalized by the controller (CartService::
+               normalizeRoomsForDisplay), incl. the one-room fallback the old
+               duplicated {else} branch existed for. Adult DOB stays REQUIRED
+               (package manifests need it); the age guard arms the client-side
+               DOB-vs-priced-age check to match the server gate. *}
+            {include file="addons/travel_core/components/booking_guest_cards.tpl"
+                     guest_rooms=$sphinx_package_booking.rooms_data
+                     guest_num_rooms=$sphinx_package_booking.rooms_data|count
+                     guest_label_prefix="travel_core"
+                     guest_extra_class="sphinx-room-header"
+                     show_adult_dob=true
+                     adult_dob_required=true
+                     child_dob_required=true
+                     guard_expected_ages=true}
         </div>
 
         {* Contact (email/phone) is NOT collected here: CS-Cart checkout already

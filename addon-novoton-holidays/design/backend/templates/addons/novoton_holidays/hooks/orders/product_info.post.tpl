@@ -1,69 +1,28 @@
-{* Novoton Holidays - Admin Order Details (product_info hook) - Simple text display *}
-{* NOTE: This template must use ONLY core Smarty modifiers (escape/default/fn_url).
-   Custom modifiers (novoton_format_room_type / novoton_format_board) must NOT be
-   used here: if they fail to resolve at Smarty COMPILE time, the compile error
-   aborts mid {capture name="mainbox"} and surfaces as the masked
-   "Not matching {capture}{/capture}" crash on EVERY order-details page. The raw
-   room_name / board_name fields are already human-readable, so we render those. *}
-
+{* Novoton Holidays — admin order-detail per-line booking block (product_info
+   hook variant; sibling of order_product_info.post.tpl). Both include the
+   SHARED travel_core partial with IDENTICAL params so the two admin hooks
+   cannot drift — this one previously omitted the hotel city and the unified
+   travel_bookings link. <div> wrapper (no <tr>) for the hook points that
+   render outside the products table. Core Smarty modifiers only. *}
 {if $oi.extra.novoton_booking}
-{$_nvt_rooms = $oi.extra.rooms_data|default:[]}
-<div style="margin:10px 0;font-size:13px;line-height:1.8;">
-
-    {if $oi.extra.hotel_name}
-    <strong>Hotel:</strong> {$oi.extra.hotel_name|escape:'html'}<br>
-    {/if}
-
-    {if $oi.extra.check_in}
-    <strong>Check-in:</strong> {$oi.extra.check_in_short|default:$oi.extra.check_in|default:''} |
-    <strong>Check-out:</strong> {$oi.extra.check_out_short|default:$oi.extra.check_out|default:''} |
-    <strong>Nights:</strong> {$oi.extra.nights|default:'-'}<br>
-    {/if}
-
-    {if $oi.extra.package_name}
-    <strong>Package:</strong> {$oi.extra.package_name|escape:'html'}<br>
-    {/if}
-
-    {if $oi.extra.num_rooms > 1 && $_nvt_rooms}
-        <strong>Rooms ({$oi.extra.num_rooms}):</strong><br>
-        {foreach from=$_nvt_rooms item=room key=idx}
-            &nbsp;&nbsp;- <strong>Room {$idx+1}:</strong> {$room.room_name_formatted|default:$room.room_name|default:$room.room_type_display|default:$room.room_id|default:'Room'|escape:'html'} | {$room.board_name_formatted|default:$room.board_name|default:$room.board_id|default:''|escape:'html'} | {$room.adults|default:0} adults{if $room.children}, {$room.children} children{if $room.children_ages_str} ({$room.children_ages_str}){/if}{/if} | {$room.price|default:0} {$smarty.const.CART_PRIMARY_CURRENCY}<br>
-        {/foreach}
-    {else}
-        {if $oi.extra.room_name_formatted || $oi.extra.room_name || $oi.extra.room_id}<strong>Room:</strong> {$oi.extra.room_name_formatted|default:$oi.extra.room_name|default:$oi.extra.room_type_display|default:$oi.extra.room_id|escape:'html'}<br>{/if}
-        {if $oi.extra.board_name_formatted || $oi.extra.board_name || $oi.extra.board_id}<strong>Board:</strong> {$oi.extra.board_name_formatted|default:$oi.extra.board_name|default:$oi.extra.board_id|escape:'html'}<br>{/if}
-        <strong>Guests:</strong> {$oi.extra.adults|default:0} adults{if $oi.extra.children}, {$oi.extra.children} children{/if}<br>
-    {/if}
-
-    {* Guest Names *}
-    {if $oi.extra.guests_data}
-        <strong>Guest Names:</strong><br>
-        {foreach from=$oi.extra.guests_data item=guest}
-            &nbsp;&nbsp;{$guest.name|default:'Guest'|escape:'html'} ({$guest.type|default:'adult'}){if $guest.room} — Room {$guest.room}{/if}<br>
-        {/foreach}
-    {elseif $oi.extra.holder_name}
-        <strong>Holder:</strong> {$oi.extra.holder_name|escape:'html'}<br>
-    {/if}
-
-    {* Payment and Cancellation Terms *}
-    {$_payment_display = $oi.extra.terms_of_payment_with_amounts|default:$oi.extra.terms_of_payment_formatted|default:''}
-    {$_cancel_display = $oi.extra.terms_of_cancellation_formatted|default:''}
-
-    {if $_payment_display}
-    <strong>Terms of Payment:</strong> {$_payment_display|escape:'html'|nl2br nofilter}<br>
-    {/if}
-
-    {if $_cancel_display}
-    <strong>Cancellation Policy:</strong> {$_cancel_display|escape:'html'|nl2br nofilter}<br>
-    {/if}
-
     {if $oi.extra.novoton_reservation_id}
-    <strong>Novoton Reservation:</strong> NT {$oi.extra.novoton_reservation_id}{if $oi.extra.novoton_reservation_status} ({$oi.extra.novoton_reservation_status}){/if}<br>
+        {$_nvt_ref = "Novoton Reservation: NT "|cat:$oi.extra.novoton_reservation_id}
+        {if $oi.extra.novoton_reservation_status}{$_nvt_ref = $_nvt_ref|cat:" ("|cat:$oi.extra.novoton_reservation_status|cat:")"}{/if}
+    {else}
+        {$_nvt_ref = ''}
     {/if}
-
-    {if $oi.extra.novoton_booking_id}
-    <a href="{"novoton_bookings.view?booking_id=`$oi.extra.novoton_booking_id`"|fn_url}">View Booking #{$oi.extra.novoton_booking_id}</a>
-    {/if}
-
+<div style="margin:10px 0;font-size:13px;line-height:1.8;">
+    {include file="addons/travel_core/components/order_booking_details.tpl"
+             booking_extra=$oi.extra
+             booking_label_prefix="travel_core"
+             booking_view_id=$oi.extra.travel_surrogate_id|default:0
+             booking_fallback_url="novoton_bookings.view?booking_id=`$oi.extra.novoton_booking_id|default:0`"
+             booking_location_style="paren"
+             booking_prefer_short=true
+             show_package=true
+             show_rooms_breakdown=true
+             show_terms=true
+             guest_grouping="flat"
+             booking_ref_line=$_nvt_ref}
 </div>
 {/if}

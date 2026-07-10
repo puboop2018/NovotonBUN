@@ -246,6 +246,19 @@
                                 {if $action.method == 'POST'}
                                 <form action="{$action.url|fn_url}" method="post" style="display: inline;">
                                     <input type="hidden" name="security_hash" value="{$security_hash}">
+                                    {* provider_action routing contract: the unified controller's
+                                       provider_action mode needs provider + provider_action to
+                                       dispatch into BookingAdminProvider::handleAction(). Without
+                                       these the POST was a silent no-op. *}
+                                    <input type="hidden" name="provider" value="{$booking.provider|escape:html}">
+                                    <input type="hidden" name="provider_action" value="{$action.extra_params.provider_action|default:$action.name|escape:html}">
+                                    {if $action.extra_params}
+                                        {foreach from=$action.extra_params key="_ap_key" item="_ap_val"}
+                                            {if $_ap_key !== 'provider_action'}
+                                            <input type="hidden" name="{$_ap_key|escape:html}" value="{$_ap_val|escape:html}">
+                                            {/if}
+                                        {/foreach}
+                                    {/if}
                                     {if $action.booking_id}
                                     <input type="hidden" name="booking_id" value="{$action.booking_id}" />
                                     {/if}

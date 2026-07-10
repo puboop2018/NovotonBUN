@@ -31,6 +31,58 @@ final class CartService implements CartServiceInterface
     {
         $this->session = $session ?? new SessionAccessor();
     }
+
+    /**
+     * Normalize API room rows into the canonical rooms_data shape the shared
+     * booking_guest_cards.tpl partial consumes: room_name, adults, children,
+     * childrenAges[] (camelCase). Package/circuit quotes deliver rooms with
+     * `name` + snake_case `children_ages`; when the quote carries no rooms at
+     * all, ONE room is synthesized from the booking-level occupancy so the
+     * form always renders guest cards (the old templates needed a duplicated
+     * fallback branch for this case).
+     *
+     * @param array<int, array<string, mixed>> $rooms Raw API room rows
+     * @param string $childrenAgesStr Booking-level ages, comma-separated ("7,12")
+     * @return list<array<string, mixed>>
+     */
+    public static function normalizeRoomsForDisplay(array $rooms, int $fallbackAdults, string $childrenAgesStr): array
+    {
+        $normalized = [];
+        foreach ($rooms as $room) {
+            $ages = array_map(
+                static fn ($a): int => TypeCoerce::toInt($a),
+                TypeCoerce::toList($room['childrenAges'] ?? $room['children_ages'] ?? []),
+            );
+            $normalized[] = [
+                'room_id' => TypeCoerce::toString($room['room_id'] ?? $room['code'] ?? ''),
+                'room_name' => TypeCoerce::toString($room['room_name'] ?? $room['name'] ?? ''),
+                'board_name' => TypeCoerce::toString($room['board_name'] ?? ''),
+                'adults' => max(1, TypeCoerce::toInt($room['adults'] ?? $fallbackAdults)),
+                'children' => count($ages),
+                'childrenAges' => $ages,
+            ];
+        }
+
+        if ($normalized === []) {
+            $ages = array_values(array_map(
+                'intval',
+                array_filter(
+                    array_map('trim', explode(',', $childrenAgesStr)),
+                    static fn (string $a): bool => $a !== '',
+                ),
+            ));
+            $normalized[] = [
+                'room_id' => '',
+                'room_name' => '',
+                'board_name' => '',
+                'adults' => max(1, $fallbackAdults),
+                'children' => count($ages),
+                'childrenAges' => $ages,
+            ];
+        }
+
+        return $normalized;
+    }
     /**
      * @return array<int, mixed>|null
      */

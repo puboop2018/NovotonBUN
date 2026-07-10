@@ -17,7 +17,8 @@ if (!defined('BOOTSTRAP')) {
 
 // Addon version constant
 if (!defined('TRAVEL_CORE_VERSION')) {
-    $__tv = Registry::get('addons.travel_core.version') ?: '0.0.0';
+    $__tvRaw = Registry::get('addons.travel_core.version');
+    $__tv = is_scalar($__tvRaw) && $__tvRaw !== '' ? (string) $__tvRaw : '0.0.0';
     define('TRAVEL_CORE_VERSION', preg_replace('/-.*$/', '', $__tv));
     unset($__tv);
 }
