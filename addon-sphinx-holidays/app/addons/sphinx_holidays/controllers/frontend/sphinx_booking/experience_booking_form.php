@@ -90,6 +90,11 @@ try {
         'adults' => $adults,
         'children' => $children,
         'children_ages' => $children_ages_str,
+        // Canonical single "room" for the shared guest-cards partial
+        // (roomless mode — experiences have participants, not rooms).
+        'rooms_data' => \Tygh\Addons\SphinxHolidays\Services\CartService::normalizeRoomsForDisplay(
+            [], $adults, $children_ages_str
+        ),
         'pickup_point_code' => $pickup_point_code,
         'pickup_point_time' => $pickup_point_time,
         'total_price' => $sellingPrice,
