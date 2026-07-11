@@ -144,9 +144,13 @@
             </tr>
         </thead>
         <tbody>
-            {foreach from=$booking.guests_decoded item=guest key=idx}
+            {* name=g / iteration, NOT key arithmetic: sphinx guests_json is a
+               KEYED object ("room1_adult_1" => {...}), so `{$idx+1}` was
+               "room1_adult_1" + 1 — a PHP 8 TypeError inside the open
+               {capture}, which Smarty masks as "Not matching {capture}". *}
+            {foreach from=$booking.guests_decoded item=guest name=g}
             <tr>
-                <td>{$idx+1}</td>
+                <td>{$smarty.foreach.g.iteration}</td>
                 <td>
                     {if $guest.first_name || $guest.last_name}
                         {$guest.first_name|escape:html} {$guest.last_name|escape:html}
