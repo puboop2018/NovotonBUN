@@ -829,7 +829,16 @@ function fn_sphinx_holidays_place_order_post(&$order_id, &$action, &$order_statu
     // Normalize to the parent (first) order ID for booking submission.
     $resolved_order_id = (int) (is_array($order_id) ? reset($order_id) : $order_id);
 
-    if (empty($resolved_order_id) || empty($cart['products'])) {
+    if (empty($resolved_order_id)) {
+        return;
+    }
+
+    // Fallback path: $cart is null/empty (payment callbacks, order-status
+    // re-triggers) — nothing to submit, but the bookings referenced by the
+    // order's items may still be unlinked; link them from the stored order
+    // (novoton parity: its place_order_post handles this the same way).
+    if (empty($cart['products'])) {
+        fn_sphinx_holidays_link_order_bookings($resolved_order_id);
         return;
     }
 
@@ -934,6 +943,13 @@ function fn_sphinx_holidays_place_order_post(&$order_id, &$action, &$order_statu
             }
         }
     }
+
+    // Self-heal: a cart item skipped by the guard above (missing
+    // sphinx_booking/travel_booking_id extras, pre-persist throw) would leave
+    // its booking orphaned forever — the admin grid then shows "Order ID: -"
+    // although the order exists. The reconciler is idempotent and cheap, so
+    // always run it after submission (novoton parity).
+    fn_sphinx_holidays_link_order_bookings($resolved_order_id);
 }
 
 /**
