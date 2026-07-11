@@ -100,10 +100,16 @@ class BookingRetryService implements BookingRetryServiceInterface
 
             $bookResult = $this->submitBooking($bookingType, $offerId, $booking, $guestsData);
 
-            if (!empty($bookResult['booking_reference'])) {
+            // Real book responses carry booking_confirmation_number (the
+            // voucher code) — booking_reference never existed in the API and
+            // is kept only as a tolerance fallback.
+            $bookingRef = TypeCoerce::toString(
+                $bookResult['booking_confirmation_number'] ?? $bookResult['booking_reference'] ?? '',
+            );
+            if ($bookingRef !== '') {
                 $this->repo->updateApiResponse(
                     $bookingId,
-                    TypeCoerce::toString($bookResult['booking_reference']),
+                    $bookingRef,
                     (string) json_encode($bookResult),
                 );
             }
@@ -112,19 +118,15 @@ class BookingRetryService implements BookingRetryServiceInterface
                 'status' => TravelConstants::STATUS_CONFIRMED,
             ]);
 
-            $bookingRef = isset($bookResult['booking_reference'])
-                ? TypeCoerce::toString($bookResult['booking_reference'])
-                : null;
-
             fn_log_event('general', 'runtime', [
                 'message' => "Sphinx booking #{$bookingId} retry succeeded",
-                'booking_ref' => $bookingRef ?? '',
+                'booking_ref' => $bookingRef,
             ]);
 
             return [
                 'success' => true,
                 'message' => 'Booking retry successful',
-                'booking_ref' => $bookingRef,
+                'booking_ref' => $bookingRef !== '' ? $bookingRef : null,
             ];
         } catch (\Throwable $e) {
             $this->repo->update($bookingId, [

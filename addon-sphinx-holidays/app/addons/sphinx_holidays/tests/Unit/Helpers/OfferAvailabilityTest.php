@@ -197,4 +197,18 @@ class OfferAvailabilityTest extends TestCase
         $this->assertSame(250.0, OfferAvailability::extractPrice(['selling_price' => 250]));
         $this->assertSame(0.0, OfferAvailability::extractPrice(['success' => false]));
     }
+
+    public function testExtractPriceFromDocumentedFullPricingFixture(): void
+    {
+        // The documented verify shape with the complete pricing breakdown
+        // (marketing/discount/selling/commission/supplier/taxes/fees):
+        // extractPrice must read pricing.selling_price through the envelope.
+        $raw = (string) file_get_contents(
+            dirname(__DIR__, 2) . '/Fixtures/api/hotels_verify.full_pricing.json',
+        );
+        $decoded = json_decode($raw, true);
+        self::assertIsArray($decoded);
+
+        $this->assertSame(4000.0, OfferAvailability::extractPrice($decoded));
+    }
 }

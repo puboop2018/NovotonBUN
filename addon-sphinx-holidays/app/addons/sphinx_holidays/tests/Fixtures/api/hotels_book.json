@@ -1,0 +1,7 @@
+{
+    "order_id": 123456,
+    "contract_id": 112233,
+    "booking_confirmation_number": "ABC123XYZ",
+    "reference_code": "123456789",
+    "status": "confirmed"
+}

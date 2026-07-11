@@ -420,6 +420,7 @@
                 `api_response`      JSON DEFAULT NULL COMMENT 'Full API response JSON',
                 `payment_terms_json` JSON DEFAULT NULL COMMENT 'Payment terms from API (verify / orders sync)',
                 `cancellation_fees_json` JSON DEFAULT NULL COMMENT 'Cancellation fees from API (verify / orders sync)',
+                `pricing_json`      JSON DEFAULT NULL COMMENT 'Full pricing breakdown from verify (marketing/discount/selling/commission/supplier/taxes/fees)',
                 `created_at`        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 `updated_at`        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                 KEY `idx_order_id` (`order_id`),
@@ -602,6 +603,12 @@
                 ADD COLUMN `cancellation_fees_json` JSON DEFAULT NULL
                 COMMENT 'Cancellation fees from API (verify / orders sync)'
                 AFTER `payment_terms_json`;
+        </item>
+        <item for="upgrade">
+            ALTER TABLE `?:sphinx_bookings`
+                ADD COLUMN `pricing_json` JSON DEFAULT NULL
+                COMMENT 'Full pricing breakdown from verify (marketing/discount/selling/commission/supplier/taxes/fees)'
+                AFTER `cancellation_fees_json`;
         </item>
 
         <!-- Uninstall SQL fallback: guarantees teardown of Sphinx-owned data

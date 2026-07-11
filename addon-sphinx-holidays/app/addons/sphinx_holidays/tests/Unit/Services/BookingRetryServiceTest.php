@@ -63,7 +63,15 @@ final class BookingRetryServiceTest extends TestCase
                 'contact' => ['email' => 'guest@example.ro', 'phone' => '+40737000000'],
                 'reference_code' => '85',
             ])
-            ->willReturn(['booking_reference' => 'SPX-REF-1']);
+            // Documented book response shape (tests/Fixtures/api/hotels_book.json):
+            // the voucher code is booking_confirmation_number, NOT booking_reference.
+            ->willReturn([
+                'order_id' => 123456,
+                'contract_id' => 112233,
+                'booking_confirmation_number' => 'SPX-REF-1',
+                'reference_code' => '85',
+                'status' => 'confirmed',
+            ]);
 
         $repo->expects(self::once())
             ->method('updateApiResponse')

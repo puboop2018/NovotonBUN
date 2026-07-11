@@ -105,4 +105,56 @@ final class BookingAdminProviderTest extends TestCase
         self::assertSame('W', $result['notification']['type']);
         self::assertStringContainsString('nonsense', $result['notification']['message']);
     }
+
+    // ── pricing breakdown rows (pricing_json → formatted view rows) ─────────
+
+    public function testDisplayDataFormatsPricingBreakdown(): void
+    {
+        $repo = $this->createMock(SphinxBookingRepository::class);
+        $repo->method('findById')->with(7)->willReturn([
+            'api_booking_ref' => 'ABC123XYZ',
+            'offer_id' => 'OFF-1',
+            'status' => TravelConstants::STATUS_CONFIRMED,
+            'currency' => 'EUR',
+            'pricing_json' => json_encode([
+                'marketing_price' => 5000.0,
+                'discount' => 1000.0,
+                'selling_price' => 4000.0,
+                'commission' => 400.0,
+                'supplier_price' => 3600.0,
+                'currency' => 'RON',
+                'taxes' => [],
+                'additional_fees' => [['name' => 'City tax', 'amount' => 12.5]],
+            ]),
+        ]);
+
+        $display = (new BookingAdminProvider($repo, null))->getDisplayData('7');
+
+        self::assertSame('ABC123XYZ', $display['provider_ref']);
+        self::assertSame('ABC123XYZ', $display['booking_confirmation'], 'row label source for the unified view');
+        // Money formatted in PHP (admin templates cannot use Smarty modifiers),
+        // with the pricing object's own currency winning over the row currency.
+        self::assertSame('5,000.00 RON', $display['api_marketing_price']);
+        self::assertSame('1,000.00 RON', $display['api_discount']);
+        self::assertSame('4,000.00 RON', $display['api_selling_price']);
+        self::assertSame('400.00 RON', $display['api_commission']);
+        self::assertSame('3,600.00 RON', $display['api_supplier_price']);
+        self::assertArrayNotHasKey('api_taxes', $display, 'empty arrays are omitted');
+        self::assertSame([['name' => 'City tax', 'amount' => 12.5]], $display['api_additional_fees']);
+    }
+
+    public function testDisplayDataWithoutPricingJsonEmitsNoPricingRows(): void
+    {
+        $repo = $this->createMock(SphinxBookingRepository::class);
+        $repo->method('findById')->with(8)->willReturn([
+            'offer_id' => 'OFF-2',
+            'status' => TravelConstants::STATUS_PENDING,
+        ]);
+
+        $display = (new BookingAdminProvider($repo, null))->getDisplayData('8');
+
+        foreach (['api_marketing_price', 'api_discount', 'api_selling_price', 'api_commission', 'api_supplier_price', 'api_taxes', 'api_additional_fees'] as $key) {
+            self::assertArrayNotHasKey($key, $display);
+        }
+    }
 }

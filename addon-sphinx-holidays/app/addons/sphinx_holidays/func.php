@@ -829,7 +829,16 @@ function fn_sphinx_holidays_place_order_post(&$order_id, &$action, &$order_statu
     // Normalize to the parent (first) order ID for booking submission.
     $resolved_order_id = (int) (is_array($order_id) ? reset($order_id) : $order_id);
 
-    if (empty($resolved_order_id) || empty($cart['products'])) {
+    if (empty($resolved_order_id)) {
+        return;
+    }
+
+    // Fallback path: $cart is null/empty (payment callbacks, order-status
+    // re-triggers) — nothing to submit, but the bookings referenced by the
+    // order's items may still be unlinked; link them from the stored order
+    // (novoton parity: its place_order_post handles this the same way).
+    if (empty($cart['products'])) {
+        fn_sphinx_holidays_link_order_bookings($resolved_order_id);
         return;
     }
 
@@ -901,15 +910,24 @@ function fn_sphinx_holidays_place_order_post(&$order_id, &$action, &$order_statu
                     default => $api->bookHotel($payload),
                 };
 
-                if (!empty($bookResult['booking_reference'])) {
+                // The documented book response carries the voucher code as
+                // booking_confirmation_number (order_id/contract_id/
+                // reference_code/status alongside) — there is NO
+                // booking_reference field. Reading the wrong key meant
+                // api_booking_ref was never stored and the admin grid's
+                // confirmation column stayed "-" for every sphinx booking.
+                $confirmationNumber = \Tygh\Addons\TravelCore\Helpers\TypeCoerce::toString(
+                    $bookResult['booking_confirmation_number'] ?? $bookResult['booking_reference'] ?? ''
+                );
+                if ($confirmationNumber !== '') {
                     $repo->updateApiResponse(
                         $booking_id,
-                        $bookResult['booking_reference'],
+                        $confirmationNumber,
                         json_encode($bookResult)
                     );
                 } else {
                     fn_log_event('general', 'runtime', [
-                        'message' => 'Sphinx: booking confirmed but no reference returned',
+                        'message' => 'Sphinx: booking confirmed but no confirmation number returned',
                         'booking_id' => $booking_id,
                         'order_id' => $resolved_order_id,
                     ]);
@@ -934,6 +952,13 @@ function fn_sphinx_holidays_place_order_post(&$order_id, &$action, &$order_statu
             }
         }
     }
+
+    // Self-heal: a cart item skipped by the guard above (missing
+    // sphinx_booking/travel_booking_id extras, pre-persist throw) would leave
+    // its booking orphaned forever — the admin grid then shows "Order ID: -"
+    // although the order exists. The reconciler is idempotent and cheap, so
+    // always run it after submission (novoton parity).
+    fn_sphinx_holidays_link_order_bookings($resolved_order_id);
 }
 
 /**
@@ -1457,6 +1482,7 @@ function fn_sphinx_holidays_ensure_schema(): void
         'sphinx_bookings' => [
             'payment_terms_json' => "ADD COLUMN `payment_terms_json` JSON DEFAULT NULL COMMENT 'Payment terms from API (verify / orders sync)' AFTER `api_response`",
             'cancellation_fees_json' => "ADD COLUMN `cancellation_fees_json` JSON DEFAULT NULL COMMENT 'Cancellation fees from API (verify / orders sync)' AFTER `payment_terms_json`",
+            'pricing_json' => "ADD COLUMN `pricing_json` JSON DEFAULT NULL COMMENT 'Full pricing breakdown from verify (marketing/discount/selling/commission/supplier/taxes/fees)' AFTER `cancellation_fees_json`",
         ],
     ];
 
