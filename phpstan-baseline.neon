@@ -367,12 +367,6 @@ parameters:
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/func.php
 
 		-
-			message: '#^Function fn_sphinx_holidays_get_hotels\(\) should return array\{array, array\} but returns array\{mixed, non\-empty\-array\<''classification''\|''country_code''\|''destination_id''\|''items_per_page''\|''link_status''\|''page''\|''property_type''\|''q''\|''region_id''\|''sort_by''\|''sort_order''\|''sort_order_toggle''\|''sync_status''\|''total_items'', mixed\>\}\.$#'
-			identifier: return.type
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/func.php
-
-		-
 			message: '#^Function fn_sphinx_holidays_get_order_info\(\) has parameter \$additional_data with no type specified\.$#'
 			identifier: missingType.parameter
 			count: 1

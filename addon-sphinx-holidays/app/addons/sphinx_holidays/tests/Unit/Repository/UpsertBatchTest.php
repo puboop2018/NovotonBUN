@@ -19,8 +19,8 @@ use Tygh\Addons\SphinxHolidays\Tests\Support\DbStub;
 #[CoversClass(DestinationRepository::class)]
 class UpsertBatchTest extends TestCase
 {
-    /** 26 columns per hotel row, minus the literal 'active' sync_status = 25 bound params. */
-    private const HOTEL_PARAMS_PER_ROW = 25;
+    /** 28 tuple positions per hotel row, minus the literal 'active' sync_status = 27 bound params. */
+    private const HOTEL_PARAMS_PER_ROW = 27;
     private const DESTINATION_PARAMS_PER_ROW = 10;
 
     /** @var list<array{query: string, params: list<mixed>}> */
@@ -63,6 +63,10 @@ class UpsertBatchTest extends TestCase
         // Portable VALUES(col) form — the MySQL-8-only "AS alias" syntax breaks MariaDB.
         self::assertStringContainsString('name = VALUES(name)', $query);
         self::assertStringNotContainsString('AS new_row', $query);
+        // Per-hotel address city/country (grid City/Country columns) are inserted + kept fresh.
+        self::assertStringContainsString('address_city, address_country', $query);
+        self::assertStringContainsString('address_city = VALUES(address_city)', $query);
+        self::assertStringContainsString('address_country = VALUES(address_country)', $query);
 
         $params = $this->calls[0]['params'];
         self::assertCount(3 * self::HOTEL_PARAMS_PER_ROW, $params);

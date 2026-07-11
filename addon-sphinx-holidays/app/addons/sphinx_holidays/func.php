@@ -1315,6 +1315,7 @@ function fn_sphinx_holidays_get_hotels(array $params = []): array
         'property_type'  => '',
         'link_status'    => '',
         'q'              => '',
+        'city'           => '',
     ];
 
     $params = array_merge($default_params, array_intersect_key($params, $default_params));
@@ -1323,6 +1324,7 @@ function fn_sphinx_holidays_get_hotels(array $params = []): array
     $params['region_id'] = (int) $params['region_id'];
     $params['destination_id'] = (int) $params['destination_id'];
     $params['q'] = trim((string) $params['q']);
+    $params['city'] = trim(\Tygh\Addons\TravelCore\Helpers\TypeCoerce::toString($params['city']));
 
     // Sortings map: allowed sort columns
     $sortings = [
@@ -1330,6 +1332,8 @@ function fn_sphinx_holidays_get_hotels(array $params = []): array
         'name'           => 'h.name',
         'classification' => 'h.classification',
         'country_code'   => 'h.country_code',
+        'address_city'   => 'h.address_city',
+        'address_country' => 'h.address_country',
         'sync_status'    => 'h.sync_status',
         'last_synced_at' => 'h.last_synced_at',
         'property_type'  => 'h.property_type',
@@ -1377,6 +1381,9 @@ function fn_sphinx_holidays_get_hotels(array $params = []): array
     if ($params['q'] !== '') {
         $condition .= db_quote(" AND h.name LIKE ?l", '%' . $params['q'] . '%');
     }
+    if ($params['city'] !== '') {
+        $condition .= db_quote(" AND h.address_city LIKE ?l", '%' . $params['city'] . '%');
+    }
 
     // Total count
     $params['total_items'] = (int) db_get_field(
@@ -1390,7 +1397,7 @@ function fn_sphinx_holidays_get_hotels(array $params = []): array
     // Select listing columns (prefixed with alias)
     $listing_cols = 'h.hotel_id, h.product_id, h.name, h.classification, h.property_type, '
         . 'h.destination_id, h.destination_name, h.region_id, h.region_name, '
-        . 'h.country_code, h.country_name, h.latitude, h.longitude, '
+        . 'h.country_code, h.country_name, h.address_city, h.address_country, h.latitude, h.longitude, '
         . 'h.image_url, h.is_recommended, h.is_adults_only, h.rating, h.rating_count, '
         . 'h.sync_status, h.last_synced_at, h.created_at, h.updated_at, h.product_skip_reason';
 
@@ -1404,7 +1411,7 @@ function fn_sphinx_holidays_get_hotels(array $params = []): array
         $params['items_per_page']
     );
 
-    return [$hotels, $params];
+    return [is_array($hotels) ? $hotels : [], $params];
 }
 
 /**
@@ -1467,6 +1474,8 @@ function fn_sphinx_holidays_ensure_schema(): void
             'phone' => "ADD COLUMN `phone` VARCHAR(50) DEFAULT NULL COMMENT 'Hotel phone number' AFTER `address`",
             'email' => "ADD COLUMN `email` VARCHAR(255) DEFAULT NULL COMMENT 'Hotel email address' AFTER `phone`",
             'website' => "ADD COLUMN `website` VARCHAR(500) DEFAULT NULL COMMENT 'Hotel website URL' AFTER `email`",
+            'address_city' => "ADD COLUMN `address_city` VARCHAR(255) DEFAULT NULL COMMENT 'City from the hotel API address' AFTER `website`",
+            'address_country' => "ADD COLUMN `address_country` VARCHAR(255) DEFAULT NULL COMMENT 'Country from the hotel API address' AFTER `address_city`",
             'product_skip_reason' => "ADD COLUMN `product_skip_reason` VARCHAR(50) DEFAULT NULL COMMENT 'Why product linking was skipped (category_failed, invalid_country, etc.)' AFTER `product_id`",
             'images_json' => "ADD COLUMN `images_json` JSON DEFAULT NULL COMMENT 'All image objects from API [{url, ...}, ...]' AFTER `image_url`",
             'product_needs_update' => "ADD COLUMN `product_needs_update` ENUM('Y','N') DEFAULT 'N' COMMENT 'Set to Y when API data differs from CS-Cart product' AFTER `images_json`",
