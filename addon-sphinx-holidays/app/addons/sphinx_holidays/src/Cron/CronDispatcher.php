@@ -7,6 +7,7 @@ namespace Tygh\Addons\SphinxHolidays\Cron;
 use Tygh\Addons\SphinxHolidays\Cron\Commands\AddProductsCommand;
 use Tygh\Addons\SphinxHolidays\Cron\Commands\AssignBoardsCommand;
 use Tygh\Addons\SphinxHolidays\Cron\Commands\AuditFacilitiesCommand;
+use Tygh\Addons\SphinxHolidays\Cron\Commands\BackfillHotelLocationsCommand;
 use Tygh\Addons\SphinxHolidays\Cron\Commands\CacheRefreshCommand;
 use Tygh\Addons\SphinxHolidays\Cron\Commands\CalendarPricesCommand;
 use Tygh\Addons\SphinxHolidays\Cron\Commands\CircuitSyncCommand;
@@ -59,6 +60,7 @@ class CronDispatcher implements CronDispatcherInterface
         'update_products' => UpdateProductsCommand::class,
         'reassign_features' => ReassignFeaturesCommand::class,
         'enrich_hotel_data' => EnrichHotelDataCommand::class,
+        'backfill_hotel_locations' => BackfillHotelLocationsCommand::class,
         'sync_images' => SyncImagesCommand::class,
         'process_image_queue' => ProcessImageQueueCommand::class,
         'sync_and_upload_images' => SyncAndUploadImagesCommand::class,

@@ -1,5 +1,6 @@
 {script src="js/lib/select2/dist/js/select2.full.min.js"}
 {style src="js/lib/select2/dist/css/select2.min.css"}
+{script src="js/tygh/backend/bulkedit.js"}
 
 {* ── Sidebar: Filter Panel ── *}
 {capture name="sidebar"}
@@ -106,12 +107,21 @@
 <input type="hidden" name="bulk_status" value="active" id="sphinx_bulk_action" />
 
 {if $hotels}
+{* longtap-selection + data-ca-bulkedit-component activate the native
+   selection driver (row click/tap toggles the row checkbox, keeps the
+   selected counter current and fires ce.tap.toggle); bulkedit.js then swaps
+   the default header for the contextual action bar — the same mechanism
+   products.manage uses. *}
+<div class="longtap-selection" data-ca-bulkedit-component="true" data-ca-longtap="true">
 <table class="table table-middle table-striped">
-    <thead>
+    <thead data-ca-bulkedit-default-object="true">
         <tr>
-            {* Select-all checkbox *}
+            {* Bulk-mode toggler: checking it swaps this header for the
+               contextual action bar below. *}
             <th width="30">
-                <input type="checkbox" class="select-all-hotels" onclick="toggleAllHotels(this)" />
+                <input type="checkbox" class="bulkedit-toggler"
+                       data-ca-bulkedit-enable="[data-ca-bulkedit-expanded-object=true]"
+                       data-ca-bulkedit-disable="[data-ca-bulkedit-default-object=true]" />
             </th>
 
             {* ID — sortable *}
@@ -194,12 +204,63 @@
             </th>
         </tr>
     </thead>
+    {* Contextual bulk bar — shown while rows are selected (or via the
+       toggler). check_all uses the core cm-check-items microformat; the
+       counter is updated by the selection driver; every action is a plain
+       dispatch[] submit of the surrounding form, so the checked
+       hotel_ids[] (+ bulk_status for the status actions) POST exactly as
+       the old "With selected" buttons did — the three backend handlers are
+       unchanged. *}
+    <thead class="hidden" data-ca-bulkedit-expanded-object="true">
+        <tr>
+            <th width="30">
+                <input type="checkbox" name="check_all" class="cm-check-items" title="{__("check_uncheck_all")}" />
+            </th>
+            <th colspan="10">
+                <div class="bulk-edit" style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                    <strong style="white-space:nowrap;"><span data-ca-longtap-selected-counter="true">0</span> {__("sphinx_holidays.selected_count_label")}</strong>
+                    <a href="#" class="bulkedit-deselect">{__("sphinx_holidays.deselect_all")}</a>
+                    <div class="btn-group dropdown">
+                        <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">{__("status")} <span class="caret"></span></a>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <button type="submit" class="btn btn-link" name="dispatch[sphinx_holidays.bulk_update_hotels]"
+                                        onclick="document.getElementById('sphinx_bulk_action').value='active';">
+                                    <i class="icon-ok"></i> {__("sphinx_holidays.bulk_activate")}
+                                </button>
+                            </li>
+                            <li>
+                                <button type="submit" class="btn btn-link" name="dispatch[sphinx_holidays.bulk_update_hotels]"
+                                        onclick="document.getElementById('sphinx_bulk_action').value='inactive';">
+                                    <i class="icon-ban-circle"></i> {__("sphinx_holidays.bulk_deactivate")}
+                                </button>
+                            </li>
+                        </ul>
+                    </div>
+                    <button type="submit" class="btn" name="dispatch[sphinx_holidays.bulk_sync_images]">
+                        <i class="icon-picture"></i> {__("sphinx_holidays.bulk_sync_images")}
+                    </button>
+                    <button type="submit" class="btn cm-confirm" name="dispatch[sphinx_holidays.bulk_delete_hotels]"
+                            data-ca-confirm-text="{__("sphinx_holidays.bulk_delete_confirm")|escape:html}">
+                        <i class="icon-trash"></i> {__("sphinx_holidays.bulk_delete")}
+                    </button>
+                    <a href="#" class="bulkedit-disabler btn" style="margin-left:auto;"
+                       data-ca-bulkedit-enable="[data-ca-bulkedit-default-object=true]"
+                       data-ca-bulkedit-disable="[data-ca-bulkedit-expanded-object=true]"
+                       title="{__("close")}">&times;</a>
+                </div>
+            </th>
+        </tr>
+    </thead>
     <tbody>
         {foreach from=$hotels item=hotel}
-        <tr>
+        <tr class="cm-longtap-target"
+            data-ca-longtap-action="setCheckBox"
+            data-ca-longtap-target="input.cm-item"
+            data-ca-id="{$hotel.hotel_id|escape:html}">
             {* Checkbox *}
             <td>
-                <input type="checkbox" name="hotel_ids[]" value="{$hotel.hotel_id|escape:html}" class="cm-item-hotel" />
+                <input type="checkbox" name="hotel_ids[]" value="{$hotel.hotel_id|escape:html}" class="cm-item" />
             </td>
 
             {* Hotel ID *}
@@ -234,10 +295,10 @@
             <td>{$hotel.country_code|escape:html}</td>
 
             {* Region *}
-            <td>{$hotel.region_name|escape:html}</td>
+            <td>{$hotel.region_name|default:"-"|escape:html}</td>
 
             {* City/Destination *}
-            <td>{$hotel.destination_name|escape:html}</td>
+            <td>{$hotel.destination_name|default:"-"|escape:html}</td>
 
             {* Property Type *}
             <td>{$hotel.property_type|escape:html}</td>
@@ -270,21 +331,6 @@
         {/foreach}
     </tbody>
 </table>
-{* ── Bulk Action Buttons ── *}
-<div class="well well-small" style="margin-top: 10px;">
-    <strong>{__("sphinx_holidays.with_selected")}:</strong>
-    <a href="#" class="btn btn-mini btn-success" onclick="document.getElementById('sphinx_bulk_action').value='active'; document.getElementById('sphinx_bulk_form').submit(); return false;">
-        <i class="icon-ok"></i> {__("sphinx_holidays.bulk_activate")}
-    </a>
-    <a href="#" class="btn btn-mini btn-warning" onclick="document.getElementById('sphinx_bulk_action').value='inactive'; document.getElementById('sphinx_bulk_form').submit(); return false;">
-        <i class="icon-ban-circle"></i> {__("sphinx_holidays.bulk_deactivate")}
-    </a>
-    <a href="#" class="btn btn-mini" onclick="document.getElementById('sphinx_bulk_form').action = '{"sphinx_holidays.bulk_sync_images"|fn_url}'; document.getElementById('sphinx_bulk_form').submit(); return false;">
-        <i class="icon-picture"></i> {__("sphinx_holidays.bulk_sync_images")}
-    </a>
-    <a href="#" class="btn btn-mini btn-danger" onclick="if(confirm('{__("sphinx_holidays.bulk_delete_confirm")|escape:"javascript"}')) {ldelim} document.getElementById('sphinx_bulk_form').action = '{"sphinx_holidays.bulk_delete_hotels"|fn_url}'; document.getElementById('sphinx_bulk_form').submit(); {rdelim} return false;">
-        <i class="icon-trash"></i> {__("sphinx_holidays.bulk_delete")}
-    </a>
 </div>
 
 {else}
@@ -370,15 +416,6 @@
     if (countrySelect.value) {ldelim}
         loadRegions(countrySelect.value, savedRegionId);
     {rdelim}
-
-    // ─── Bulk select/deselect all ───
-
-    window.toggleAllHotels = function(source) {ldelim}
-        var checkboxes = document.querySelectorAll('.cm-item-hotel');
-        for (var i = 0; i < checkboxes.length; i++) {ldelim}
-            checkboxes[i].checked = source.checked;
-        {rdelim}
-    {rdelim};
 
     // ─── Hotel name autocomplete (Select2 + AJAX) ───
     if (typeof $ !== 'undefined' && typeof $.fn.select2 !== 'undefined') {ldelim}

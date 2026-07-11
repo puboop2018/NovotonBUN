@@ -149,6 +149,14 @@ return [
         'en' => 'Are you sure you want to delete the selected hotels?',
         'ro' => 'Sigur doriți să ștergeți hotelurile selectate?',
     ],
+    'sphinx_holidays.selected_count_label' => [
+        'en' => 'selected',
+        'ro' => 'selectate',
+    ],
+    'sphinx_holidays.deselect_all' => [
+        'en' => 'Deselect all',
+        'ro' => 'Deselectează tot',
+    ],
     'sphinx_holidays.images_synced' => [
         'en' => 'Images synced',
         'ro' => 'Imagini sincronizate',
