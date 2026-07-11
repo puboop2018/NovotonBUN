@@ -20,6 +20,7 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
  *   cron_mode=diagnose_search&hotel_id=2249
  *   cron_mode=diagnose_search&hotel_id=2249&check_in=2026-07-05&check_out=2026-07-12
  *   cron_mode=diagnose_search&hotel_id=2249&adults=2&rooms=1
+ *   cron_mode=diagnose_search&hotel_id=2249&adults=2&children_ages=6,8   (children search)
  *
  * Usage — by name (partial, case-insensitive):
  *   cron_mode=diagnose_search&hotel_name=kazbek
@@ -59,6 +60,10 @@ class DiagnoseSearchCommand extends AbstractSyncCommand
         $checkOut = TypeCoerce::toString($params['check_out'] ?? '');
         $adults = max(1, TypeCoerce::toInt($params['adults'] ?? 2));
         $rooms = max(1, TypeCoerce::toInt($params['rooms'] ?? 1));
+        // &children_ages=6,8 — lets the operator reproduce a CHILDREN search
+        // against the live API (the storefront defect class this diagnoses);
+        // previously the command could only ever exercise adults-only.
+        $childrenAgesCsv = TypeCoerce::toString($params['children_ages'] ?? '');
 
         // Remember whether dates were supplied so we can warn the operator: a
         // defaulted date can land out of season and return 0 offers, which is
@@ -202,10 +207,12 @@ class DiagnoseSearchCommand extends AbstractSyncCommand
         $this->output('');
         $this->output('--- 4. Search request (POST /api/v1/hotels/search) ---');
 
-        $occupancy = [];
-        for ($r = 0; $r < $rooms; $r++) {
-            $occupancy[] = ['adults' => $adults, 'children_ages' => []];
-        }
+        $occupancy = \Tygh\Addons\SphinxHolidays\Helpers\SearchOccupancyResolver::resolve(
+            '',
+            $adults,
+            $rooms,
+            $childrenAgesCsv,
+        );
 
         $searchParams = [
             'check_in' => $checkIn,
