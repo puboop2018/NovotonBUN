@@ -172,3 +172,84 @@ describe('updatePriceDisplay (the AJAX recalc UI path)', () => {
         expect(notif.textContent).toContain('+23.40');
     });
 });
+
+describe('basic DOB validation (shared guest cards / js-dob-basics)', () => {
+    function makeInput(dobValue, { child = true, checkIn = '2026-08-17' } = {}) {
+        const name = child ? 'guests[room1_child_1][dob]' : 'guests[room1_adult_1][dob]';
+        document.body.innerHTML = `
+            <form>
+                <input name="check_in" value="${checkIn}">
+                <div class="travel-guest-field">
+                    <input class="dob-masked-input js-dob-basics" name="${name}" value="${dobValue}">
+                </div>
+            </form>`;
+        return document.querySelector('.js-dob-basics');
+    }
+    const msgOf = (input) => input.parentElement.querySelector('.js-dob-basics-msg');
+
+    it('flags an incomplete mask with the ZZ/LL/AAAA format message', () => {
+        const input = makeInput('24/07');
+        expect(window.TravelBooking.validateDobBasics(input)).toBe(false);
+        expect(input.getAttribute('aria-invalid')).toBe('true');
+        expect(msgOf(input).textContent).toContain('Format invalid');
+    });
+
+    it('flags an impossible calendar date (31/02) that Date would roll over', () => {
+        const input = makeInput('31/02/2020');
+        expect(window.TravelBooking.validateDobBasics(input)).toBe(false);
+        expect(msgOf(input).textContent).toContain('Format invalid');
+    });
+
+    it('flags a birth date in the future', () => {
+        // Tomorrow, computed dynamically so the outcome is date-independent;
+        // on Dec 31 the year-range rule fires instead — both are failures.
+        const t = new Date(Date.now() + 86400000);
+        const dd = String(t.getDate()).padStart(2, '0');
+        const mm = String(t.getMonth() + 1).padStart(2, '0');
+        const input = makeInput(`${dd}/${mm}/${t.getFullYear()}`);
+        expect(window.TravelBooking.validateDobBasics(input)).toBe(false);
+        expect(input.getAttribute('aria-invalid')).toBe('true');
+    });
+
+    it('rejects a child who is 18 or older at check-in (novoton rule)', () => {
+        const input = makeInput('24/07/2000', { checkIn: '2026-08-17' });
+        expect(window.TravelBooking.validateDobBasics(input)).toBe(false);
+        expect(msgOf(input).textContent).toContain('sub 18');
+    });
+
+    it('accepts a valid child DOB and clears a previous flag', () => {
+        const input = makeInput('24/07');
+        window.TravelBooking.validateDobBasics(input);
+        expect(input.getAttribute('aria-invalid')).toBe('true');
+
+        input.value = '24/07/2020';
+        expect(window.TravelBooking.validateDobBasics(input)).toBe(true);
+        expect(input.getAttribute('aria-invalid')).toBeNull();
+        expect(msgOf(input)).toBeNull();
+    });
+
+    it('does not apply the under-18 rule to adult DOB inputs', () => {
+        const input = makeInput('24/07/1990', { child: false });
+        expect(window.TravelBooking.validateDobBasics(input)).toBe(true);
+        expect(msgOf(input)).toBeNull();
+    });
+
+    it('leaves empty values to the required attribute', () => {
+        const input = makeInput('');
+        expect(window.TravelBooking.validateDobBasics(input)).toBe(true);
+        expect(msgOf(input)).toBeNull();
+    });
+
+    it('stays inert on focusout for inputs without the marker class (novoton path)', () => {
+        document.body.innerHTML = `
+            <form>
+                <div class="travel-guest-field">
+                    <input class="dob-masked-input" name="guests[room1_child_1][dob]" value="99/99/9999">
+                </div>
+            </form>`;
+        const input = document.querySelector('.dob-masked-input');
+        input.dispatchEvent(new Event('focusout', { bubbles: true }));
+        expect(input.getAttribute('aria-invalid')).toBeNull();
+        expect(document.querySelector('.js-dob-basics-msg')).toBeNull();
+    });
+});

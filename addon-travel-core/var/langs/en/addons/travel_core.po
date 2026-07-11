@@ -734,6 +734,10 @@ msgctxt "Languages::travel_core.booking_orders_linked"
 msgid "Linked [linked] booking(s) to their orders (scanned [orders] recent orders)."
 msgstr "Linked [linked] booking(s) to their orders (scanned [orders] recent orders)."
 
+msgctxt "Languages::travel_core.must_be_under_18"
+msgid "Must be under 18 years old."
+msgstr "Must be under 18 years old."
+
 msgctxt "Languages::travel_core.child_age_mismatch"
 msgid "The child [guest] will be [actual] years old at check-in, but the offer was priced for age [declared]. The search was re-run with the correct ages — please choose an offer again."
 msgstr "The child [guest] will be [actual] years old at check-in, but the offer was priced for age [declared]. The search was re-run with the correct ages — please choose an offer again."

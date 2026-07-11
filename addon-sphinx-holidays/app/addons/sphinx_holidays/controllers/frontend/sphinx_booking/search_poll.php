@@ -111,13 +111,31 @@ try {
     // consumers (and the cached set) contain only immediately-bookable offers.
     if (ConfigProvider::shouldRequireImmediateAvailability() && !empty($results)) {
         $beforeCount = count($results);
+        $droppedConfirmations = [];
         $results = OfferAvailability::filterImmediate($results);
-        if ($beforeCount !== count($results) && ConfigProvider::isDebugLogging()) {
+        $droppedCount = $beforeCount - count($results);
+        if ($droppedCount > 0 && count($results) === 0) {
+            // The filter emptied a non-empty batch — the ONE case where the
+            // customer sees "no availability" although the API returned
+            // offers. Log UNCONDITIONALLY (the zero-results diagnostic above
+            // runs pre-filter and stays silent here), naming the confirmation
+            // values dropped so Administration → Logs states the cause
+            // outright. require_immediate_availability is the relaxing lever.
+            foreach (TypeCoerce::toRowList($pollResponse['results'] ?? []) as $droppedOffer) {
+                $droppedConfirmations[TypeCoerce::toString($droppedOffer['confirmation'] ?? '(missing)')] = true;
+            }
+            fn_log_event('general', 'runtime', [
+                'message' => 'Sphinx search_poll: immediate-availability filter dropped ALL offers in this batch',
+                'search_id' => $searchId,
+                'dropped' => $droppedCount,
+                'confirmation_values' => implode(', ', array_keys($droppedConfirmations)),
+            ]);
+        } elseif ($droppedCount > 0 && ConfigProvider::isDebugLogging()) {
             fn_log_event('general', 'runtime', [
                 'message' => 'Sphinx search_poll filtered non-immediate offers',
                 'search_id' => $searchId,
                 'kept' => count($results),
-                'dropped' => $beforeCount - count($results),
+                'dropped' => $droppedCount,
             ]);
         }
     }

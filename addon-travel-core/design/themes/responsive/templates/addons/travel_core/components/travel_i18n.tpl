@@ -110,6 +110,7 @@ window.TravelTranslations = Object.assign(window.TravelTranslations || {ldelim}{
     invalidYear: '{__("novoton_holidays.invalid_year")|default:"An invalid"|escape:"javascript"}',
     futureDate: '{__("novoton_holidays.future_date")|default:"Data nu poate fi in viitor"|escape:"javascript"}',
     notChild: '{__("novoton_holidays.not_child")|default:"La check-in, copilul va avea"|escape:"javascript"}',
+    mustBeUnder18: '{__("travel_core.must_be_under_18")|default:"Trebuie sa fie sub 18 ani."|escape:"javascript"}',
     nightsMany: '{__("novoton_holidays.nights_many")|default:"nights"|escape:"javascript"}',
     loading: '{__("novoton_holidays.loading")|default:"Loading..."|escape:"javascript"}',
     calendarPriceFooter: '{__("novoton_holidays.calendar_price_footer")|default:"Approximate prices in %s for a 1-night stay"|escape:"javascript"}',
