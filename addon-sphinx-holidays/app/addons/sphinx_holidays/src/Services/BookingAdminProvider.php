@@ -53,7 +53,10 @@ class BookingAdminProvider implements BookingAdminProviderInterface
 
         // Sphinx-specific fields
         $display['offer_id'] = $booking['offer_id'] ?? '';
-        $display['api_booking_ref'] = $booking['api_booking_ref'] ?? '';
+        // Display key names the row label on the unified view page
+        // (ucfirst + underscores→spaces): "Booking confirmation" — matches
+        // the renamed grid column and the API's booking_confirmation_number.
+        $display['booking_confirmation'] = $booking['api_booking_ref'] ?? '';
 
         if (!empty($booking['base_price'])) {
             $display['api_price'] = $booking['base_price'];
@@ -61,6 +64,30 @@ class BookingAdminProvider implements BookingAdminProviderInterface
 
         if (!empty($booking['last_status_check'])) {
             $display['last_status_check'] = $booking['last_status_check'];
+        }
+
+        // Full pricing breakdown captured at add_to_cart (pricing_json).
+        // Money is formatted HERE: the unified view renders these rows
+        // verbatim, and Smarty modifiers throw inside the admin {capture}.
+        // Array fields (taxes/additional_fees) stay arrays — the view
+        // controller renders arrays as pretty-printed <pre> rows.
+        if (!empty($booking['pricing_json'])) {
+            $pricing = json_decode(TypeCoerce::toString($booking['pricing_json']), true);
+            if (is_array($pricing)) {
+                $pricingCurrency = TypeCoerce::toString($pricing['currency'] ?? ($booking['currency'] ?? 'EUR'));
+                foreach (['marketing_price', 'discount', 'selling_price', 'commission', 'supplier_price'] as $pricingField) {
+                    if (isset($pricing[$pricingField]) && is_numeric($pricing[$pricingField])) {
+                        $display['api_' . $pricingField] =
+                            number_format((float) $pricing[$pricingField], 2) . ' ' . $pricingCurrency;
+                    }
+                }
+                if (!empty($pricing['taxes']) && is_array($pricing['taxes'])) {
+                    $display['api_taxes'] = $pricing['taxes'];
+                }
+                if (!empty($pricing['additional_fees']) && is_array($pricing['additional_fees'])) {
+                    $display['api_additional_fees'] = $pricing['additional_fees'];
+                }
+            }
         }
 
         // Payment terms & cancellation fees

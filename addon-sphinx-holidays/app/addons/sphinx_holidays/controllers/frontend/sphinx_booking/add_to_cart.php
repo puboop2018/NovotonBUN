@@ -204,6 +204,14 @@ use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
         $booking_record['cancellation_fees_json'] = json_encode($cancellation_fees_raw, JSON_UNESCAPED_UNICODE);
     }
 
+    // Full pricing breakdown (marketing/discount/selling/commission/supplier/
+    // taxes/fees) — durable copy for the admin booking view. api_response is
+    // NOT durable: it is overwritten with the book response at confirmation.
+    $pricing_raw = TypeCoerce::toStringMap($verifyResult['pricing'] ?? null);
+    if ($pricing_raw !== []) {
+        $booking_record['pricing_json'] = json_encode($pricing_raw, JSON_UNESCAPED_UNICODE);
+    }
+
     $booking_id = $cartService->upsertBooking(
         $booking_record, $hotel_id, $check_in, $check_out, TypeCoerce::toString($parsed_guests['holder_name'])
     );

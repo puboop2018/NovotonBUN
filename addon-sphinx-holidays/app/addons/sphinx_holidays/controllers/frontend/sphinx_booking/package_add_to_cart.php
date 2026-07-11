@@ -158,6 +158,12 @@ use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
         'rooms_data'    => json_encode($rooms_data, JSON_UNESCAPED_UNICODE),
     ];
 
+    // Durable pricing breakdown for the admin booking view (same capture as
+    // the hotel flow; api_response gets overwritten at confirmation).
+    if ($customizedPricing !== []) {
+        $booking_record['pricing_json'] = json_encode($customizedPricing, JSON_UNESCAPED_UNICODE);
+    }
+
     $booking_id = $cartService->upsertBooking(
         $booking_record, $hotel_id, $check_in, $check_out, TypeCoerce::toString($parsed_guests['holder_name'])
     );

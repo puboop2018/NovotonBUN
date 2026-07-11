@@ -910,15 +910,24 @@ function fn_sphinx_holidays_place_order_post(&$order_id, &$action, &$order_statu
                     default => $api->bookHotel($payload),
                 };
 
-                if (!empty($bookResult['booking_reference'])) {
+                // The documented book response carries the voucher code as
+                // booking_confirmation_number (order_id/contract_id/
+                // reference_code/status alongside) — there is NO
+                // booking_reference field. Reading the wrong key meant
+                // api_booking_ref was never stored and the admin grid's
+                // confirmation column stayed "-" for every sphinx booking.
+                $confirmationNumber = \Tygh\Addons\TravelCore\Helpers\TypeCoerce::toString(
+                    $bookResult['booking_confirmation_number'] ?? $bookResult['booking_reference'] ?? ''
+                );
+                if ($confirmationNumber !== '') {
                     $repo->updateApiResponse(
                         $booking_id,
-                        $bookResult['booking_reference'],
+                        $confirmationNumber,
                         json_encode($bookResult)
                     );
                 } else {
                     fn_log_event('general', 'runtime', [
-                        'message' => 'Sphinx: booking confirmed but no reference returned',
+                        'message' => 'Sphinx: booking confirmed but no confirmation number returned',
                         'booking_id' => $booking_id,
                         'order_id' => $resolved_order_id,
                     ]);
@@ -1473,6 +1482,7 @@ function fn_sphinx_holidays_ensure_schema(): void
         'sphinx_bookings' => [
             'payment_terms_json' => "ADD COLUMN `payment_terms_json` JSON DEFAULT NULL COMMENT 'Payment terms from API (verify / orders sync)' AFTER `api_response`",
             'cancellation_fees_json' => "ADD COLUMN `cancellation_fees_json` JSON DEFAULT NULL COMMENT 'Cancellation fees from API (verify / orders sync)' AFTER `payment_terms_json`",
+            'pricing_json' => "ADD COLUMN `pricing_json` JSON DEFAULT NULL COMMENT 'Full pricing breakdown from verify (marketing/discount/selling/commission/supplier/taxes/fees)' AFTER `cancellation_fees_json`",
         ],
     ];
 

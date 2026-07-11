@@ -126,7 +126,7 @@
                         {/if}
                     </a>
                 </th>
-                <th width="100">Provider Ref</th>
+                <th width="100">Booking confirmation</th>
                 <th width="80">{__("status")}</th>
                 <th width="100">{__("tools")}</th>
             </tr>
