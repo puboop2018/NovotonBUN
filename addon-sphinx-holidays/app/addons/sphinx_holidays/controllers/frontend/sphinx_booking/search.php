@@ -304,7 +304,23 @@ try {
     // Filter raw offers here, before flatten/commission/cache, so the field is
     // still present and cached entries store the filtered set.
     if (ConfigProvider::shouldRequireImmediateAvailability() && !empty($initialResults)) {
+        $preFilterResults = $initialResults;
         $initialResults = OfferAvailability::filterImmediate($initialResults);
+        if ($initialResults === [] ) {
+            // Filter emptied a non-empty initial set: without this line the
+            // customer-facing "no availability" would be indistinguishable
+            // from a genuinely empty API response in Administration → Logs.
+            $confirmations = [];
+            foreach ($preFilterResults as $droppedOffer) {
+                $confirmations[TypeCoerce::toString($droppedOffer['confirmation'] ?? '(missing)')] = true;
+            }
+            fn_log_event('general', 'runtime', [
+                'message' => 'Sphinx search: immediate-availability filter dropped ALL initial offers',
+                'hotel_id' => $hotel_id,
+                'dropped' => count($preFilterResults),
+                'confirmation_values' => implode(', ', array_keys($confirmations)),
+            ]);
+        }
     }
 
     // If the API returns final results synchronously, render inline and skip polling.
