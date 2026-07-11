@@ -15,7 +15,6 @@ declare(strict_types=1);
 
 use Tygh\Registry;
 use Tygh\Addons\NovotonHolidays\Services\Container;
-use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Services\PriceInfoFormatter;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
@@ -301,12 +300,6 @@ function fn_novoton_holidays_get_orders_post($params, &$orders): void
  */
 function fn_novoton_holidays_get_order_info(&$order, $additional_data): void
 {
-    $debugMode = ConfigProvider::isDebugLogging();
-
-    if ($debugMode && defined('AREA') && AREA === 'A') {
-        fn_set_notification('N', 'DEBUG', 'fn_novoton_holidays_get_order_info hook fired for order #' . PriceInfoFormatter::toScalar($order['order_id'] ?? '?'));
-    }
-
     $orderProducts = is_array($order['products'] ?? null) ? $order['products'] : [];
     if (empty($orderProducts)) {
         return;
@@ -322,9 +315,6 @@ function fn_novoton_holidays_get_order_info(&$order, $additional_data): void
         /** @var array<string, mixed> $product */
         /** @var array<string, mixed> $extra */
         $extra = is_array($product['extra'] ?? null) ? $product['extra'] : [];
-        if ($debugMode && defined('AREA') && AREA === 'A') {
-            fn_set_notification('N', 'DEBUG', 'Product extra keys: ' . implode(', ', array_keys($extra)));
-        }
 
         if (empty($extra['novoton_booking'])) {
             continue;
@@ -435,14 +425,6 @@ function fn_novoton_holidays_get_order_info(&$order, $additional_data): void
 
         // [5] Guests data formatting
         _nvt_format_order_guests($product);
-
-        if ($debugMode && defined('AREA') && AREA === 'A') {
-            $dbgExtra = TypeCoerce::toStringMap($product['extra'] ?? null);
-            $payment_set    = !empty($dbgExtra['terms_of_payment_formatted'])      ? 'YES' : 'NO';
-            $payment_amounts = !empty($dbgExtra['terms_of_payment_with_amounts'])   ? 'YES' : 'NO';
-            $cancel_set     = !empty($dbgExtra['terms_of_cancellation_formatted']) ? 'YES' : 'NO';
-            fn_set_notification('N', 'DEBUG', "terms_of_payment_formatted: {$payment_set}, with_amounts: {$payment_amounts}, cancellation: {$cancel_set}");
-        }
     }
     unset($product);
 

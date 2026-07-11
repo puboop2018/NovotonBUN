@@ -20,9 +20,9 @@
                 <div style="margin: 8px 0;">
                     <strong> {$product.extra.num_rooms} rooms:</strong>
                 </div>
-                {foreach from=$product.extra.rooms_data item=room_info key=room_idx}
+                {foreach from=$product.extra.rooms_data item=room_info name=co_rooms}
                     <div style="margin-left: 10px; padding: 5px; background: #fff; border-radius: 4px; margin-bottom: 4px; font-size: 11px;">
-                        <strong>R{$room_idx+1}:</strong> {$room_info.room_name|default:$room_info.room_id}
+                        <strong>R{$smarty.foreach.co_rooms.iteration}:</strong> {$room_info.room_name|default:$room_info.room_id}
                         {if $room_info.board_name} - {$room_info.board_name}{/if}<br>
                         <span style="color: #666;">
                              {$room_info.adults|default:2} ad.{if $room_info.children}, {$room_info.children} ch.{/if}

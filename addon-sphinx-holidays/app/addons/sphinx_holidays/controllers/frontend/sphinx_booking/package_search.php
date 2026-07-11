@@ -41,15 +41,15 @@ try {
         return;
     }
 
-    $children_ages = [];
-    if (!empty($children_ages_str)) {
-        $children_ages = array_map('intval', array_filter(explode(',', $children_ages_str), function($v) { return $v !== ''; }));
-    }
-
-    $occupancy = [];
-    for ($r = 0; $r < $rooms; $r++) {
-        $occupancy[] = ['adults' => $adults, 'children_ages' => $children_ages];
-    }
+    // Per-room occupancy (shared resolver — same API contract and the same
+    // fixed defects as the hotel search: infant age "0" dropped by !empty(),
+    // totals replicated into every room instead of per-room rooms_data).
+    $occupancy = \Tygh\Addons\SphinxHolidays\Helpers\SearchOccupancyResolver::resolve(
+        RequestCoerce::string($_REQUEST, 'rooms_data'),
+        $adults,
+        $rooms,
+        $children_ages_str,
+    );
 
     $searchParams = [
         'departure_date' => $departure_date,

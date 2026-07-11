@@ -111,17 +111,22 @@ class SphinxBookingRepository
         $data = self::filterNullValues($data);
 
         return $this->withTransaction(function () use ($booking_id, $data): bool {
-            $result = (bool) db_query(
+            // db_query() returns affected rows for UPDATE. A return of 0 means
+            // "query succeeded but no rows changed" (data identical) — NOT
+            // failure. Gating the mirror sync on it desynced travel_bookings:
+            // reconcile re-writing an already-set sphinx order_id affected 0
+            // rows, the sync was skipped, and the unified grid kept showing
+            // Order ID "-" forever (novoton's update() documents the same
+            // trap). Sync unconditionally; the mirror UPDATE is idempotent.
+            db_query(
                 'UPDATE ?:sphinx_bookings SET ?u WHERE booking_id = ?i',
                 $data,
                 $booking_id,
             );
 
-            if ($result) {
-                $this->syncUpdateToTravelBookings($booking_id, $data);
-            }
+            $this->syncUpdateToTravelBookings($booking_id, $data);
 
-            return $result;
+            return true;
         });
     }
 

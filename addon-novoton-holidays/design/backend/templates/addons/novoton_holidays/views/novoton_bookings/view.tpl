@@ -102,9 +102,9 @@
     <div class="rooms-section">
         <h4>Rooms ({$rooms|count})</h4>
         <div class="rooms-grid">
-            {foreach from=$rooms item=room key=idx}
+            {foreach from=$rooms item=room name=nb_rooms}
             <div class="room-card">
-                <strong>Room {$idx+1}</strong>
+                <strong>Room {$smarty.foreach.nb_rooms.iteration}</strong>
                 <div class="room-details">
                     <div>{$room.room_name|default:$room.room_id}</div>
                     <div>{$room.board_name|default:$room.board_id}</div>
@@ -134,9 +134,9 @@
                 <tr><th>#</th><th>Name</th><th>Birthday</th><th>Type</th><th>Age</th><th>Room</th></tr>
             </thead>
             <tbody>
-                {foreach from=$guests_parsed item=guest key=idx}
+                {foreach from=$guests_parsed item=guest name=nb_guests}
                 <tr>
-                    <td>{$idx+1}</td>
+                    <td>{$smarty.foreach.nb_guests.iteration}</td>
                     <td><strong>{$guest.name}</strong></td>
                     <td>{$guest.birthday|default:'-'}</td>
                     <td>{if $guest.type == 'child'}<span class="label label-info">Child</span>{else}<span class="label">Adult</span>{/if}</td>

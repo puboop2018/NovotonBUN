@@ -68,8 +68,8 @@
 
     {if $show_rooms_breakdown|default:false && $_be.num_rooms > 1 && $_be.rooms_data}
         <strong>{__("`$_bp`.rooms")|default:"Rooms"} ({$_be.num_rooms}):</strong><br>
-        {foreach from=$_be.rooms_data item=_obd_room key=_obd_idx}
-            &nbsp;&nbsp;- <strong>{__("`$_bp`.room")} {$_obd_idx+1}:</strong>
+        {foreach from=$_be.rooms_data item=_obd_room name=obd_rooms}
+            &nbsp;&nbsp;- <strong>{__("`$_bp`.room")} {$smarty.foreach.obd_rooms.iteration}:</strong>
             {$_obd_room.room_name_formatted|default:$_obd_room.room_name|default:$_obd_room.room_type_display|default:$_obd_room.room_id|default:'Room'|escape:'html'}
             | {$_obd_room.board_name_formatted|default:$_obd_room.board_name|default:$_obd_room.board_id|default:''|escape:'html'}
             | {$_obd_room.adults|default:0} {__("`$_bp`.adults")}{if $_obd_room.children}, {$_obd_room.children} {__("`$_bp`.children")}{if $_obd_room.children_ages_str} ({$_obd_room.children_ages_str}){/if}{/if}

@@ -10,7 +10,8 @@
             {include file="addons/travel_core/components/order_booking_details.tpl"
                      booking_extra=$oi.extra
                      booking_view_id=0
-                     booking_label_prefix="travel_core"}
+                     booking_label_prefix="travel_core"
+                 show_rooms_breakdown=true}
         </td>
     </tr>
 </table>

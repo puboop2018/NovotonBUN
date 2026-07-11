@@ -60,6 +60,8 @@ class AlternativeDateProber
     /**
      * Probe candidate windows for the hotel; stops after MAX_ALTERNATIVES hits.
      *
+     * @param string $today Clock floor for candidate windows — injectable so
+     *                      tests stay deterministic as the real date moves.
      * @return list<array{check_in: string, check_out: string, price: float}>
      */
     public function probe(
@@ -69,13 +71,14 @@ class AlternativeDateProber
         int $nights,
         int $adults,
         string $currency,
+        string $today = 'today',
     ): array {
         if ($destinationId <= 0 || $hotelId === '') {
             return [];
         }
 
         $alternatives = [];
-        foreach (self::candidateWindows($checkIn, $nights) as $window) {
+        foreach (self::candidateWindows($checkIn, $nights, $today) as $window) {
             $response = $this->api->cacheHotels([
                 'destination_id' => $destinationId,
                 'check_in' => $window['check_in'],

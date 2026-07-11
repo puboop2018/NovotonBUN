@@ -62,6 +62,43 @@ final class SmartyTemplateGuardTest extends TestCase
         self::assertSame([], $offenders, 'templates calling json_decode() — prepare the value in PHP instead');
     }
 
+    /**
+     * Arithmetic on a foreach KEY variable ({$idx+1} with key=idx) is a latent
+     * PHP 8 TypeError: the moment the iterated array is keyed by strings
+     * (sphinx guests_json: "room1_adult_1" => {…}), "room1_adult_1" + 1 throws
+     * inside the open {capture} and Smarty masks it as "Not matching
+     * {capture}{/capture}" — the exact production crash on
+     * travel_bookings.view. Use {foreach … name=n} +
+     * {$smarty.foreach.n.iteration} for display counters instead.
+     */
+    public function testNoArithmeticOnForeachKeyVariables(): void
+    {
+        $offenders = [];
+        foreach (self::designTemplates() as $path) {
+            $source = (string) preg_replace('/\{\*.*?\*\}/s', '', (string) file_get_contents($path));
+
+            $keyVars = [];
+            if (preg_match_all('/\{foreach\b[^}]*\bkey\s*=\s*["\']?\$?(\w+)/', $source, $m)) {
+                $keyVars = $m[1];
+            }
+            if (preg_match_all('/\{foreach\s+[^}]*\bas\s+\$(\w+)\s*=>/', $source, $m)) {
+                $keyVars = array_merge($keyVars, $m[1]);
+            }
+
+            foreach (array_unique($keyVars) as $keyVar) {
+                if (preg_match('/\{\$' . preg_quote($keyVar, '/') . '\s*[+\-*\/]/', $source)) {
+                    $offenders[] = self::rel($path) . ' ($' . $keyVar . ')';
+                }
+            }
+        }
+
+        self::assertSame(
+            [],
+            $offenders,
+            'templates doing arithmetic on a foreach KEY (string keys throw under PHP 8) — use {foreach … name=n} + {$smarty.foreach.n.iteration}',
+        );
+    }
+
     /** @return list<string> every travel_core .tpl (backend + both storefront themes) */
     private static function designTemplates(): array
     {

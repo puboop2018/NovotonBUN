@@ -59,7 +59,10 @@ final class AlternativeDateProberTest extends TestCase
         });
 
         $prober = new AlternativeDateProber($api);
-        $alts = $prober->probe(5, 'H61992', '2026-07-14', 7, 2, 'EUR');
+        // Pinned clock: without it the -7/-3 windows silently drop off as the
+        // real date approaches 2026-07-14 (this test failed in CI on
+        // 2026-07-11 with 2 alternatives instead of 3).
+        $alts = $prober->probe(5, 'H61992', '2026-07-14', 7, 2, 'EUR', '2026-07-01');
 
         self::assertCount(AlternativeDateProber::MAX_ALTERNATIVES, $alts);
         foreach ($alts as $alt) {

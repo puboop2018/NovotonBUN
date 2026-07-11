@@ -4,10 +4,10 @@
     <div style="margin-bottom:6px;">{$product.extra.check_in|default:''|date_format:"%d.%m.%Y"} - {$product.extra.check_out|default:''|date_format:"%d.%m.%Y"} ({$product.extra.nights} {__("travel_core.nights")|default:"nights"})</div>
     {if $product.extra.num_rooms > 1 && $product.extra.rooms_data}
         <div style="font-weight:600;color:#003580;margin:8px 0 6px;">{$product.extra.num_rooms} rooms:</div>
-        {foreach from=$product.extra.rooms_data item=room key=idx}
+        {foreach from=$product.extra.rooms_data item=room name=tc_rooms}
             <div style="margin-left:10px;margin-bottom:6px;padding:6px 8px;background:#fff;border-radius:4px;border:1px solid #e0e7ef;display:flex;justify-content:space-between;align-items:flex-start;">
                 <div style="flex:1;">
-                    <strong>Room {$idx+1}:</strong> {$room.room_type_display|default:$room.room_name|default:$room.room_id|escape:html}
+                    <strong>Room {$smarty.foreach.tc_rooms.iteration}:</strong> {$room.room_type_display|default:$room.room_name|default:$room.room_id|escape:html}
                     <br><span style="color:#666;">{$room.board_name|default:$room.board_id|escape:html}</span>
                     <br><span style="color:#666;">{$room.adults} adults{if $room.children}, {$room.children} children{if $room.children_ages_str} ({$room.children_ages_str}){/if}{/if}</span>
                 </div>

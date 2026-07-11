@@ -129,8 +129,19 @@ use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
     // Extract offer details
     $contact     = RequestCoerce::stringMap($_REQUEST, 'contact');
     $hotelName   = TypeCoerce::toString($verifyResult['hotel_name'] ?? '');
+    // Room/board names: verify response first; when it omits them (shape
+    // drift) fall back to the booking form's hidden fields — the names the
+    // customer actually saw. Display-only: price/ids stay verify-sourced.
+    // An empty stored room_name blanks the Travel Bookings grid Room column
+    // AND the order-details room line, so the fallback matters.
     $roomName    = TypeCoerce::toString($verifyResult['room_name'] ?? $verifyResult['room_type'] ?? '');
+    if ($roomName === '') {
+        $roomName = RequestCoerce::string($_REQUEST, 'room_name');
+    }
     $boardName   = TypeCoerce::toString($verifyResult['board_name'] ?? $verifyResult['board_type'] ?? '');
+    if ($boardName === '') {
+        $boardName = RequestCoerce::string($_REQUEST, 'board_name');
+    }
     $boardId     = TypeCoerce::toString($verifyResult['board_code'] ?? $boardName);
     $roomId      = TypeCoerce::toString($verifyResult['room_code'] ?? $roomName);
     $check_out   = TypeCoerce::toString($verifyResult['check_out'] ?? $bookingData['check_out'] ?? '');

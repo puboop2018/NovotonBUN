@@ -136,18 +136,16 @@ try {
         return;
     }
 
-    $children_ages = [];
-    if (!empty($children_ages_str)) {
-        $children_ages = array_map(
-            'intval',
-            array_filter(explode(',', $children_ages_str), static fn ($v) => $v !== ''),
-        );
-    }
-
-    $occupancy = [];
-    for ($r = 0; $r < $rooms; $r++) {
-        $occupancy[] = ['adults' => $adults, 'children_ages' => $children_ages];
-    }
+    // Per-room occupancy from the widget's rooms_data JSON (API spec:
+    // occupancy is one {adults, children_ages} entry PER ROOM). The old
+    // inline build replicated the totals into every room, dropped a lone
+    // infant age "0" (!empty("0")), and sent an empty occupancy for rooms=0.
+    $occupancy = \Tygh\Addons\SphinxHolidays\Helpers\SearchOccupancyResolver::resolve(
+        RequestCoerce::string($_REQUEST, 'rooms_data'),
+        $adults,
+        $rooms,
+        $children_ages_str,
+    );
 
     $searchParams = [
         'check_in' => $check_in,
@@ -280,6 +278,12 @@ try {
             __('error'),
             __('sphinx_holidays.search_error', ['[default]' => 'Search failed. Please try again.']),
         );
+        // 'error' (NOT the initial 'idle'): the template renders the
+        // no-results block only for completed/error and the skeleton/poller
+        // only for pending — leaving 'idle' here rendered a completely BLANK
+        // results area, hiding the failure from the customer.
+        $view->assign('sphinx_search_results', []);
+        $view->assign('sphinx_search_status', 'error');
         return;
     }
 

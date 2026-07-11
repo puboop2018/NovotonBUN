@@ -74,6 +74,12 @@
         <input type="hidden" name="adults" value="{$sphinx_booking_data.adults}">
         <input type="hidden" name="children" value="{$sphinx_booking_data.children}">
         <input type="hidden" name="children_ages" value="{$sphinx_booking_data.children_ages}">
+        {* Display-only fallbacks for add_to_cart: the verify response stays the
+           primary source for room/board names, but when it omits them (shape
+           drift) the names the customer SAW on this form are the next-best
+           truth. Price/ids are never taken from these. *}
+        <input type="hidden" name="room_name" value="{$sphinx_booking_data.room_name|escape:html}">
+        <input type="hidden" name="board_name" value="{$sphinx_booking_data.board_name|escape:html}">
         <input type="hidden" name="total_price" value="{$sphinx_booking_data.total_price}">
         <input type="hidden" name="num_rooms" value="{$sphinx_booking_data.num_rooms|default:1}">
         <input type="hidden" name="rooms_data" value="{$sphinx_booking_data.rooms_data|json_encode|escape:html}">

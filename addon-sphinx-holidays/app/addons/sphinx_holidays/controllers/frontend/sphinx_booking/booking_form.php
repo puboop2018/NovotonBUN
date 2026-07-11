@@ -68,8 +68,18 @@ try {
     $verifiedPrice = Container::getCartService()->applyCommission($verifiedPrice);
 
     $hotelName = TypeCoerce::toString($verifiedOffer['hotel_name'] ?? '');
+    // Room/board names: verify response first; when it omits them (shape
+    // drift) fall back to what the search offer showed — the results card
+    // passes them on the Book-now URL. Display-only: price/ids stay
+    // verify-sourced.
     $roomName = TypeCoerce::toString($verifiedOffer['room_name'] ?? $verifiedOffer['room_type'] ?? '');
+    if ($roomName === '') {
+        $roomName = RequestCoerce::string($_REQUEST, 'room_name');
+    }
     $boardName = TypeCoerce::toString($verifiedOffer['board_name'] ?? $verifiedOffer['board_type'] ?? '');
+    if ($boardName === '') {
+        $boardName = RequestCoerce::string($_REQUEST, 'board_name');
+    }
     $checkIn = TypeCoerce::toString($verifiedOffer['check_in'] ?? RequestCoerce::string($_REQUEST, 'check_in'));
     $checkOut = TypeCoerce::toString($verifiedOffer['check_out'] ?? RequestCoerce::string($_REQUEST, 'check_out'));
     $nights = 0;
