@@ -86,6 +86,10 @@ class HotelRowMapper
             'facilities_json' => !empty($raw['facilities']) ? json_encode($raw['facilities']) : '[]',
             'is_adults_only' => $isAdultsOnly,
             'address' => trim(TypeCoerce::toString($address['street'] ?? '')),
+            // Transient (stripped in enrichFromHierarchy): the static payload's
+            // only city hint — the last-resort destination_name fallback when
+            // the destination tree can't name a city for this hotel.
+            '_address_city' => trim(TypeCoerce::toString($address['city'] ?? '')),
             'phone' => trim(TypeCoerce::toString($address['phone'] ?? '')),
             'email' => trim(TypeCoerce::toString($address['email'] ?? '')),
             'website' => trim(TypeCoerce::toString($address['website'] ?? '')),
@@ -148,6 +152,14 @@ class HotelRowMapper
             if ($hotel['country_code'] === '') {
                 $hotel['country_code'] = $countryCode;
             }
+
+            // Last-resort display fallback: the static payload's address.city,
+            // used only when the destination tree couldn't name a city/resort
+            // (region stays tree-sourced — the payload has no region hint).
+            if (($hotel['destination_name'] ?? '') === '' && !empty($hotel['_address_city'])) {
+                $hotel['destination_name'] = TypeCoerce::toString($hotel['_address_city']);
+            }
+            unset($hotel['_address_city']);
         }
         unset($hotel);
 

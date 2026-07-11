@@ -164,4 +164,59 @@ class HotelRowMapperTest extends TestCase
         $this->assertSame(3, $out[0]['region_id']);
         $this->assertSame('BG', $out[0]['country_code']); // fallback to context
     }
+
+    // ── address.city fallback (the static payload's only location hint) ─────
+
+    public function testNormalizeCapturesAddressCityAsTransient(): void
+    {
+        $row = $this->mapper->normalize([
+            'id' => '1',
+            'name' => 'H',
+            'address' => ['street' => 'Main St', 'city' => ' Antalya '],
+        ]);
+
+        $this->assertNotNull($row);
+        $this->assertSame('Antalya', $row['_address_city']);
+    }
+
+    public function testEnrichFallsBackToAddressCityWhenTreeNamesNoCity(): void
+    {
+        // Destination unknown to the tree → city stays '' from the hierarchy,
+        // so the static payload's address.city becomes the display fallback.
+        $this->destRepo->method('resolveHierarchies')->willReturn([]);
+
+        $out = $this->mapper->enrichFromHierarchy([[
+            'destination_id' => 99,
+            'destination_name' => '',
+            'region_name' => '',
+            'region_id' => 0,
+            'country_code' => '',
+            'country_name' => '',
+            '_address_city' => 'Side',
+        ]], 'TR');
+
+        $this->assertSame('Side', $out[0]['destination_name']);
+        $this->assertSame('', $out[0]['region_name'], 'region has no payload fallback — tree only');
+        $this->assertArrayNotHasKey('_address_city', $out[0], 'transient must be stripped before upsert');
+    }
+
+    public function testEnrichPrefersTreeCityOverAddressCityAndStripsTransient(): void
+    {
+        $this->destRepo->method('resolveHierarchies')->with([12])->willReturn([
+            12 => ['country_code' => 'GR', 'country' => 'Greece', 'city' => 'Chania', 'region' => 'Crete', 'region_id' => 7],
+        ]);
+
+        $out = $this->mapper->enrichFromHierarchy([[
+            'destination_id' => 12,
+            'destination_name' => '',
+            'region_name' => '',
+            'region_id' => 0,
+            'country_code' => '',
+            'country_name' => '',
+            '_address_city' => 'Some Address City',
+        ]], 'XX');
+
+        $this->assertSame('Chania', $out[0]['destination_name'], 'tree city wins over address.city');
+        $this->assertArrayNotHasKey('_address_city', $out[0]);
+    }
 }
