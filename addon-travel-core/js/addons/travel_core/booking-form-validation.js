@@ -633,10 +633,111 @@
     });
 
     // =========================================================================
+    // BASIC DOB VALIDATION (shared guest cards)
+    // =========================================================================
+    // Inputs carrying .js-dob-basics (rendered ONLY by the shared
+    // booking_guest_cards.tpl — i.e. the sphinx forms) get the same on-blur
+    // checks novoton's inline validateAndCheckAge performs: complete mask,
+    // real calendar date, plausible year range, not in the future, and for
+    // CHILD inputs an under-18-at-check-in rule (the rule the server enforces
+    // authoritatively via GuestDataService). Novoton's own form does not
+    // render .js-dob-basics, so this path is inert there — no double
+    // messages next to its inline handler.
+
+    function validateDobBasics(input) {
+        var t = _getTranslations();
+        var msgEl = input.parentElement ? input.parentElement.querySelector('.js-dob-basics-msg') : null;
+        var clear = function () {
+            input.removeAttribute('aria-invalid');
+            if (msgEl) msgEl.remove();
+        };
+        var fail = function (text) {
+            input.setAttribute('aria-invalid', 'true');
+            if (!msgEl) {
+                msgEl = document.createElement('span');
+                msgEl.className = 'travel-field-error-message js-dob-basics-msg';
+                msgEl.setAttribute('role', 'alert');
+                input.parentElement.appendChild(msgEl);
+            }
+            msgEl.textContent = text;
+            return false;
+        };
+
+        var value = input.value || '';
+        if (value === '') {
+            // Empty is the `required` attribute's business, not ours.
+            clear();
+            return true;
+        }
+
+        var parsed = parseDobMasked(value);
+        if (value.length < 10 || !parsed) {
+            return fail(t.invalidDobFormat || 'Format invalid. Folositi ZZ/LL/AAAA');
+        }
+        if (parsed.day < 1 || parsed.day > 31) {
+            return fail(t.invalidDay || 'Ziua trebuie sa fie intre 1 si 31');
+        }
+        if (parsed.month < 1 || parsed.month > 12) {
+            return fail(t.invalidMonth || 'Luna trebuie sa fie intre 1 si 12');
+        }
+        var currentYear = new Date().getFullYear();
+        if (parsed.year < 1925 || parsed.year > currentYear) {
+            return fail(t.invalidYear || 'An invalid');
+        }
+        var birth = new Date(parsed.year, parsed.month - 1, parsed.day);
+        if (birth.getDate() !== parsed.day || birth.getMonth() !== parsed.month - 1) {
+            // Impossible calendar date (31/02/…) silently rolled over by Date.
+            return fail(t.invalidDobFormat || 'Format invalid. Folositi ZZ/LL/AAAA');
+        }
+        var today = new Date();
+        today.setHours(0, 0, 0, 0);
+        if (birth > today) {
+            return fail(t.futureDate || 'Data nu poate fi in viitor');
+        }
+
+        // Children must still be under 18 at check-in.
+        if (/child_\d+\]/.test(input.name || '')) {
+            var form = input.form || input.closest('form');
+            var checkInEl = form ? form.querySelector('input[name="check_in"]') : null;
+            var checkIn = _parseIsoDate(checkInEl ? checkInEl.value : '');
+            if (checkIn) {
+                var age = calculateAgeAtDate(birth, checkIn);
+                if (age >= 18) {
+                    return fail(
+                        (t.notChild || 'La check-in, copilul va avea') + ' ' + age + ' '
+                        + (t.ageLabel || 'ani') + '. '
+                        + (t.mustBeUnder18 || 'Trebuie sa fie sub 18 ani.')
+                    );
+                }
+            }
+        }
+
+        clear();
+        return true;
+    }
+
+    document.addEventListener('focusout', function (e) {
+        var el = e.target;
+        if (el && el.matches && el.matches('input.js-dob-basics')) {
+            validateDobBasics(el);
+        }
+    });
+
+    document.addEventListener('input', function (e) {
+        var el = e.target;
+        // Re-judge a flagged field as soon as the mask completes so the
+        // correction clears without waiting for blur.
+        if (el && el.matches && el.matches('input.js-dob-basics[aria-invalid]') && el.value.length === 10) {
+            validateDobBasics(el);
+        }
+    });
+
+    // =========================================================================
     // PUBLIC API — namespaced under window.TravelBooking (with Novoton alias)
     // =========================================================================
 
     window.TravelBooking.validateExpectedAge = validateExpectedAge;
+    window.TravelBooking.validateDobBasics = validateDobBasics;
     window.TravelBooking.handleDobKeydown = handleDobKeydown;
     window.TravelBooking.applyDobMask = applyDobMask;
     window.TravelBooking.parseDobMasked = parseDobMasked;

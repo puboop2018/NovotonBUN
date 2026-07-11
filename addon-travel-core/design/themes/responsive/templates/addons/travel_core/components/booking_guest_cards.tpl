@@ -64,11 +64,12 @@
                 {if $room_idx == 0 && $smarty.section.adult.index == 1} <span class="travel-holder-tag">{__("`$_gp`.main_guest")|default:"Main Guest"}</span>{/if}
             </div>
             <div class="travel-guest-grid">
+                {* Nume (last name) FIRST, Prenume second — novoton field order *}
                 <div class="travel-guest-field">
-                    <label for="guest_r{$room_num}_a{$smarty.section.adult.index}_first">{__("`$_gp`.first_name")|default:"First Name"}</label>
-                    <input type="text" id="guest_r{$room_num}_a{$smarty.section.adult.index}_first"
-                           name="guests[{$_npfx}adult_{$smarty.section.adult.index}][first_name]"
-                           class="ty-input-text" required aria-required="true" placeholder="{__("`$_gp`.first_name")|default:"First Name"}">
+                    <label for="guest_r{$room_num}_a{$smarty.section.adult.index}_last">{__("`$_gp`.last_name")|default:"Last Name"}</label>
+                    <input type="text" id="guest_r{$room_num}_a{$smarty.section.adult.index}_last"
+                           name="guests[{$_npfx}adult_{$smarty.section.adult.index}][last_name]"
+                           class="ty-input-text" required aria-required="true" placeholder="{__("`$_gp`.last_name")|default:"Last Name"}">
                     <input type="hidden" name="guests[{$_npfx}adult_{$smarty.section.adult.index}][type]" value="adult">
                     {if !$_roomless}
                     <input type="hidden" name="guests[{$_npfx}adult_{$smarty.section.adult.index}][room]" value="{$room_num}">
@@ -78,17 +79,18 @@
                     {/if}
                 </div>
                 <div class="travel-guest-field">
-                    <label for="guest_r{$room_num}_a{$smarty.section.adult.index}_last">{__("`$_gp`.last_name")|default:"Last Name"}</label>
-                    <input type="text" id="guest_r{$room_num}_a{$smarty.section.adult.index}_last"
-                           name="guests[{$_npfx}adult_{$smarty.section.adult.index}][last_name]"
-                           class="ty-input-text" required aria-required="true" placeholder="{__("`$_gp`.last_name")|default:"Last Name"}">
+                    <label for="guest_r{$room_num}_a{$smarty.section.adult.index}_first">{__("`$_gp`.first_name")|default:"First Name"}</label>
+                    <input type="text" id="guest_r{$room_num}_a{$smarty.section.adult.index}_first"
+                           name="guests[{$_npfx}adult_{$smarty.section.adult.index}][first_name]"
+                           class="ty-input-text" required aria-required="true" placeholder="{__("`$_gp`.first_name")|default:"First Name"}">
                 </div>
                 {if $_show_adult_dob}
                 <div class="travel-guest-field travel-guest-field--dob">
-                    <label for="guest_r{$room_num}_a{$smarty.section.adult.index}_dob">{__("`$_gp`.date_of_birth")|default:"Date of Birth"}</label>
-                    <input type="text" id="guest_r{$room_num}_a{$smarty.section.adult.index}_dob"
+                    <label for="guest_r{$room_num}_a{$smarty.section.adult.index}_dob">{__("`$_gp`.date_of_birth")|default:"Date of Birth"} <span class="travel-muted-note">(ex: 27/05/1990)</span></label>
+                    <input type="tel" id="guest_r{$room_num}_a{$smarty.section.adult.index}_dob"
                            name="guests[{$_npfx}adult_{$smarty.section.adult.index}][dob]"
-                           class="ty-input-text dob-masked-input" placeholder="DD/MM/YYYY" maxlength="10"
+                           class="ty-input-text dob-masked-input js-dob-basics" placeholder="ZZ/LL/AAAA" maxlength="10"
+                           inputmode="numeric" autocomplete="off"
                            {if $adult_dob_required|default:false}required aria-required="true"{/if}
                            onkeydown="TravelBooking.handleDobKeydown(event)"
                            oninput="TravelBooking.applyDobMask(this)">
@@ -110,11 +112,12 @@
                     <span class="travel-guest-age-note"> ({$child_age} {__("`$_gp`.years_old")|default:"years old"})</span>
                 </div>
                 <div class="travel-guest-grid">
+                    {* Nume (last name) FIRST, Prenume second — novoton field order *}
                     <div class="travel-guest-field">
-                        <label for="guest_r{$room_num}_c{$smarty.section.child.index}_first">{__("`$_gp`.first_name")|default:"First Name"}</label>
-                        <input type="text" id="guest_r{$room_num}_c{$smarty.section.child.index}_first"
-                               name="guests[{$_npfx}child_{$smarty.section.child.index}][first_name]"
-                               class="ty-input-text" required aria-required="true" placeholder="{__("`$_gp`.first_name")|default:"First Name"}">
+                        <label for="guest_r{$room_num}_c{$smarty.section.child.index}_last">{__("`$_gp`.last_name")|default:"Last Name"}</label>
+                        <input type="text" id="guest_r{$room_num}_c{$smarty.section.child.index}_last"
+                               name="guests[{$_npfx}child_{$smarty.section.child.index}][last_name]"
+                               class="ty-input-text" required aria-required="true" placeholder="{__("`$_gp`.last_name")|default:"Last Name"}">
                         <input type="hidden" name="guests[{$_npfx}child_{$smarty.section.child.index}][type]" value="child">
                         <input type="hidden" name="guests[{$_npfx}child_{$smarty.section.child.index}][age]" value="{$child_age}">
                         {if !$_roomless}
@@ -122,19 +125,20 @@
                         {/if}
                     </div>
                     <div class="travel-guest-field">
-                        <label for="guest_r{$room_num}_c{$smarty.section.child.index}_last">{__("`$_gp`.last_name")|default:"Last Name"}</label>
-                        <input type="text" id="guest_r{$room_num}_c{$smarty.section.child.index}_last"
-                               name="guests[{$_npfx}child_{$smarty.section.child.index}][last_name]"
-                               class="ty-input-text" required aria-required="true" placeholder="{__("`$_gp`.last_name")|default:"Last Name"}">
+                        <label for="guest_r{$room_num}_c{$smarty.section.child.index}_first">{__("`$_gp`.first_name")|default:"First Name"}</label>
+                        <input type="text" id="guest_r{$room_num}_c{$smarty.section.child.index}_first"
+                               name="guests[{$_npfx}child_{$smarty.section.child.index}][first_name]"
+                               class="ty-input-text" required aria-required="true" placeholder="{__("`$_gp`.first_name")|default:"First Name"}">
                     </div>
                     <div class="travel-guest-field travel-guest-field--dob">
-                        <label for="dob_r{$room_num}_c{$smarty.section.child.index}">{__("`$_gp`.date_of_birth")|default:"Date of Birth"}</label>
+                        <label for="dob_r{$room_num}_c{$smarty.section.child.index}">{__("`$_gp`.date_of_birth")|default:"Date of Birth"} <span class="travel-muted-note">(ex: 27/05/2020)</span></label>
                         {* data-expected-age arms the shared JS + server guard: the DOB
                            must imply THIS age at check-in (the age the offer was priced
                            for). Fixed-price providers only — novoton re-prices instead. *}
-                        <input type="text" id="dob_r{$room_num}_c{$smarty.section.child.index}"
+                        <input type="tel" id="dob_r{$room_num}_c{$smarty.section.child.index}"
                                name="guests[{$_npfx}child_{$smarty.section.child.index}][dob]"
-                               class="ty-input-text dob-masked-input" placeholder="DD/MM/YYYY" maxlength="10"
+                               class="ty-input-text dob-masked-input js-dob-basics" placeholder="ZZ/LL/AAAA" maxlength="10"
+                               inputmode="numeric" autocomplete="off"
                                {if $_child_dob_required}required aria-required="true"{/if}
                                {if $guard_expected_ages|default:false}data-expected-age="{$child_age}"{/if}
                                onkeydown="TravelBooking.handleDobKeydown(event)"
