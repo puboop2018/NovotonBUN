@@ -125,7 +125,12 @@
                         {/if}
                         <span class="travel-price-includes">{__("sphinx_holidays.includes_taxes")|default:"Includes taxes and commissions"}</span>
                     </div>
-                    <a href="{"sphinx_booking.booking_form?offer_id=`$result.offer_id`&hotel_id=`$result.hotel_id`&product_id=`$result.product_id`&check_in=`$sphinx_search_params.check_in`&check_out=`$sphinx_search_params.check_out`&adults=`$sphinx_search_params.adults`&children=`$sphinx_search_params.children`&children_ages=`$sphinx_search_params.children_ages`&rooms=`$sphinx_search_params.rooms`"|fn_url}"
+                    {* Offer room/board names ride the Book-now URL so the
+                       booking form + add_to_cart can fall back to them when
+                       the verify response omits the names (display-only). *}
+                    {$_sx_room_q = $result.room_name|default:$result.room_type|default:''|escape:url}
+                    {$_sx_board_q = $result.board_name|default:$result.board_type|default:''|escape:url}
+                    <a href="{"sphinx_booking.booking_form?offer_id=`$result.offer_id`&hotel_id=`$result.hotel_id`&product_id=`$result.product_id`&check_in=`$sphinx_search_params.check_in`&check_out=`$sphinx_search_params.check_out`&adults=`$sphinx_search_params.adults`&children=`$sphinx_search_params.children`&children_ages=`$sphinx_search_params.children_ages`&rooms=`$sphinx_search_params.rooms`&room_name=`$_sx_room_q`&board_name=`$_sx_board_q`"|fn_url}"
                        class="travel-offer-book-btn sphinx-offer-book-btn">
                         {__("sphinx_holidays.book_now")|default:"Book now"}
                     </a>
@@ -227,7 +232,11 @@ window.__sphinxConfig = {
             '&adults=' + searchParams.adults +
             '&children=' + searchParams.children +
             '&children_ages=' + encodeURIComponent(searchParams.children_ages) +
-            '&rooms=' + searchParams.rooms;
+            '&rooms=' + searchParams.rooms +
+            // Offer room/board names: booking form + add_to_cart fall back to
+            // these when the verify response omits the names (display-only).
+            '&room_name=' + encodeURIComponent(result.room_name || result.room_type || '') +
+            '&board_name=' + encodeURIComponent(result.board_name || result.board_type || '');
 
         var datesLine = searchParams.check_in && searchParams.check_out
             ? formatAltDate(searchParams.check_in) + '.' + searchParams.check_in.slice(0, 4) +

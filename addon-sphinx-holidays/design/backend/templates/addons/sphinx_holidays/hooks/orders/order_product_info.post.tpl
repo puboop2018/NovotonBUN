@@ -9,7 +9,8 @@
     <td colspan="7" style="padding:8px 15px;background:#f9f9f9;font-size:13px;line-height:1.8;">
         {include file="addons/travel_core/components/order_booking_details.tpl"
                  booking_extra=$oi.extra
-                 booking_view_id=$oi.extra.travel_surrogate_id|default:0}
+                 booking_view_id=$oi.extra.travel_surrogate_id|default:0
+                 show_rooms_breakdown=true}
     </td>
 </tr>
 {/if}
