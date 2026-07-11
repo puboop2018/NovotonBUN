@@ -111,6 +111,8 @@
                     {if $result.confirmation == 'immediate'}
                         <span class="travel-offer-badge--instant">✓ {__("sphinx_holidays.instant_confirmation")|default:"Instant confirmation"}</span>
                     {/if}
+                    {* Terms modal trigger — offer_id read from the card wrapper's data-offer-id *}
+                    <a href="#" class="travel-terms-link sphinx-terms-link">{__("sphinx_holidays.cancellation_and_payment_terms")|default:"Condiții de Anulare și Plată"}</a>
                 </div>
 
                 {* Price and action *}
@@ -154,6 +156,17 @@
 
 </div>
 
+{* On-demand payment/cancellation terms modal (loaded via sphinx_booking.offer_terms) *}
+<div id="sphinx-terms-modal" class="travel-terms-modal" role="dialog" aria-modal="true" aria-labelledby="sphinx-terms-modal-title" style="display: none;">
+    <div class="travel-terms-modal__box">
+        <div class="travel-terms-modal__head">
+            <h3 id="sphinx-terms-modal-title">{__("sphinx_holidays.cancellation_and_payment_terms")|default:"Condiții de Anulare și Plată"}</h3>
+            <button type="button" class="travel-terms-modal__close" aria-label="{__("close")|default:"Close"}">&times;</button>
+        </div>
+        <div class="travel-terms-modal__body" id="sphinx-terms-modal-body"></div>
+    </div>
+</div>
+
 {* Async polling logic *}
 <script>
 window.__sphinxSearchParams = {
@@ -175,7 +188,16 @@ window.__sphinxConfig = {
         includesTaxes: "{__("sphinx_holidays.includes_taxes")|default:"Includes taxes and commissions"|escape:javascript}",
         bookNow: "{__("sphinx_holidays.book_now")|default:"Book now"|escape:javascript}",
         nights: "{__("travel_core.nights")|default:"nights"|escape:javascript}",
-        starsRating: "{__("sphinx_holidays.stars_rating", ["[rating]" => "%s"])|default:"%s-star rating"|escape:javascript}"
+        starsRating: "{__("sphinx_holidays.stars_rating", ["[rating]" => "%s"])|default:"%s-star rating"|escape:javascript}",
+        cancellationAndPaymentTerms: "{__("sphinx_holidays.cancellation_and_payment_terms")|default:"Condiții de Anulare și Plată"|escape:javascript}",
+        paymentTerms: "{__("sphinx_holidays.payment_terms")|default:"Termeni de plată"|escape:javascript}",
+        cancellationPolicy: "{__("sphinx_holidays.cancellation_policy")|default:"Politica de anulare"|escape:javascript}",
+        freeCancellationUntil: "{__("sphinx_holidays.free_cancellation_until")|default:"Anulare gratuită până la"|escape:javascript}",
+        freeCancellation: "{__("sphinx_holidays.free_cancellation")|default:"Anulare gratuită"|escape:javascript}",
+        termsLoading: "{__("sphinx_holidays.terms_loading")|default:"Se încarcă condițiile..."|escape:javascript}",
+        termsUnavailable: "{__("sphinx_holidays.terms_unavailable")|default:"Condițiile nu sunt disponibile. Vă rugăm căutați din nou."|escape:javascript}",
+        noTermsInfo: "{__("sphinx_holidays.no_terms_info")|default:"Nu există condiții specifice pentru această ofertă."|escape:javascript}",
+        close: "{__("close")|default:"Close"|escape:javascript}"
     }
 };
 {literal}
@@ -269,6 +291,7 @@ window.__sphinxConfig = {
                 (result.confirmation === 'immediate'
                     ? '<span class="travel-offer-badge--instant">✓ ' + (labels.instantConfirmation || 'Instant confirmation') + '</span>'
                     : '') +
+                '<a href="#" class="travel-terms-link sphinx-terms-link">' + (labels.cancellationAndPaymentTerms || 'Condiții de Anulare și Plată') + '</a>' +
             '</div>' +
             '<div class="travel-offer-price-action sphinx-offer-price-action">' +
                 '<div class="travel-offer-price sphinx-offer-price">' +
@@ -394,6 +417,93 @@ window.__sphinxConfig = {
 
     // Kick off polling
     poll();
+})();
+{/literal}
+</script>
+
+{* Terms modal: on-demand load + open/close, delegated so it covers both the
+   server-rendered and poll-rendered cards. *}
+<script>
+{literal}
+(function() {
+    var cfg = (window.__sphinxConfig && window.__sphinxConfig.labels) || {};
+    var modal = document.getElementById('sphinx-terms-modal');
+    if (!modal) return;
+    var body = document.getElementById('sphinx-terms-modal-body');
+    var lastFocus = null;
+    var cache = {};
+
+    function esc(v) {
+        var d = document.createElement('div');
+        d.textContent = (v == null) ? '' : String(v);
+        return d.innerHTML;
+    }
+    function openModal() {
+        lastFocus = document.activeElement;
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+        var c = modal.querySelector('.travel-terms-modal__close');
+        if (c) c.focus();
+    }
+    function closeModal() {
+        modal.style.display = 'none';
+        document.body.style.overflow = '';
+        if (lastFocus && lastFocus.focus) { try { lastFocus.focus(); } catch (e) {} }
+    }
+    function section(title, lines) {
+        if (!lines || !lines.length) return '';
+        var items = '';
+        for (var i = 0; i < lines.length; i++) items += '<li>' + esc(lines[i]) + '</li>';
+        return '<div class="travel-terms-modal__section"><strong>' + esc(title) + '</strong><ul>' + items + '</ul></div>';
+    }
+    function renderTerms(data) {
+        var html = '';
+        if (data.is_free && !data.free_until) {
+            html += '<div class="travel-terms-modal__free">\u2713 ' + esc(cfg.freeCancellation || 'Anulare gratuita') + '</div>';
+        } else if (data.free_until) {
+            html += '<div class="travel-terms-modal__free">\u2713 ' + esc(cfg.freeCancellationUntil || 'Free cancellation until') + ' <strong>' + esc(data.free_until) + '</strong></div>';
+        }
+        html += section(cfg.paymentTerms || 'Payment terms', data.payment_terms);
+        html += section(cfg.cancellationPolicy || 'Cancellation policy', data.cancellation_fees);
+        if (html === '') html = '<p>' + esc(cfg.noTermsInfo || 'No specific terms for this offer.') + '</p>';
+        body.innerHTML = html;
+    }
+    function loadTerms(offerId) {
+        if (cache[offerId]) { renderTerms(cache[offerId]); return; }
+        body.innerHTML = '<div class="travel-terms-modal__loading"><span class="travel-spinner"></span> ' + esc(cfg.termsLoading || 'Loading...') + '</div>';
+        fetch('index.php?dispatch=sphinx_booking.offer_terms&offer_id=' + encodeURIComponent(offerId), { credentials: 'same-origin' })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (!data || data.status !== 'ok') {
+                    body.innerHTML = '<p class="travel-terms-modal__unavailable">' + esc(cfg.termsUnavailable || 'Terms unavailable. Please search again.') + '</p>';
+                    return;
+                }
+                cache[offerId] = data;
+                renderTerms(data);
+            })
+            .catch(function() {
+                body.innerHTML = '<p class="travel-terms-modal__unavailable">' + esc(cfg.termsUnavailable || 'Terms unavailable. Please search again.') + '</p>';
+            });
+    }
+
+    document.addEventListener('click', function(e) {
+        var link = e.target.closest ? e.target.closest('.sphinx-terms-link') : null;
+        if (link) {
+            e.preventDefault();
+            var cardEl = link.closest('[data-offer-id]');
+            var offerId = cardEl ? cardEl.getAttribute('data-offer-id') : '';
+            if (!offerId) return;
+            openModal();
+            loadTerms(offerId);
+            return;
+        }
+        if (e.target === modal || (e.target.closest && e.target.closest('.travel-terms-modal__close'))) {
+            closeModal();
+        }
+    });
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && modal.style.display === 'flex') closeModal();
+    });
 })();
 {/literal}
 </script>

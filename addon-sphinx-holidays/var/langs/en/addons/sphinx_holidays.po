@@ -371,3 +371,35 @@ msgstr "Next"
 msgctxt "Languages::sphinx_holidays.last_page"
 msgid "Last"
 msgstr "Last"
+
+msgctxt "Languages::sphinx_holidays.cancellation_and_payment_terms"
+msgid "Payment and cancellation terms"
+msgstr "Payment and cancellation terms"
+
+msgctxt "Languages::sphinx_holidays.free_cancellation_until"
+msgid "Free cancellation until"
+msgstr "Free cancellation until"
+
+msgctxt "Languages::sphinx_holidays.free_cancellation"
+msgid "Free cancellation"
+msgstr "Free cancellation"
+
+msgctxt "Languages::sphinx_holidays.terms_loading"
+msgid "Loading terms…"
+msgstr "Loading terms…"
+
+msgctxt "Languages::sphinx_holidays.terms_unavailable"
+msgid "Terms are not available. Please search again."
+msgstr "Terms are not available. Please search again."
+
+msgctxt "Languages::sphinx_holidays.no_terms_info"
+msgid "No specific terms for this offer."
+msgstr "No specific terms for this offer."
+
+msgctxt "Languages::sphinx_holidays.terms_until"
+msgid "until"
+msgstr "until"
+
+msgctxt "Languages::sphinx_holidays.terms_from"
+msgid "from"
+msgstr "from"
