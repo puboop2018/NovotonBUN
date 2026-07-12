@@ -78,4 +78,36 @@ final class HotelsGridBulkBarTest extends TestCase
         self::assertStringNotContainsString('cm-item-hotel', $tpl);
         self::assertStringNotContainsString('with_selected', $tpl, 'the static "With selected" strip was replaced');
     }
+
+    // ── City/Country columns from the hotel API address (not the dest tree) ──
+
+    public function testGridShowsAddressCityAndCountryColumns(): void
+    {
+        $tpl = self::template();
+
+        // Cells render the per-hotel API address fields.
+        self::assertStringContainsString('{$hotel.address_city|default:"-"|escape:html}', $tpl);
+        self::assertStringContainsString('{$hotel.address_country|default:"-"|escape:html}', $tpl);
+        // Sortable headers labelled City / Country.
+        self::assertStringContainsString('sort_by=address_city', $tpl);
+        self::assertStringContainsString('sort_by=address_country', $tpl);
+        self::assertStringContainsString('sphinx_holidays.city', $tpl);
+        self::assertStringContainsString('sphinx_holidays.country', $tpl);
+        // City text filter in the sidebar.
+        self::assertStringContainsString('name="city"', $tpl);
+    }
+
+    public function testTreeRegionCityColumnsAndCascadingFiltersRemoved(): void
+    {
+        $tpl = self::template();
+
+        // The tree-derived Region / City-Resort cells are no longer rendered.
+        self::assertStringNotContainsString('$hotel.region_name', $tpl);
+        self::assertStringNotContainsString('$hotel.destination_name', $tpl);
+        // The cascading tree filter selects + their JS are gone from this page.
+        self::assertStringNotContainsString('sphinx_region_filter', $tpl);
+        self::assertStringNotContainsString('sphinx_city_filter', $tpl);
+        self::assertStringNotContainsString('get_regions', $tpl);
+        self::assertStringNotContainsString('get_cities', $tpl);
+    }
 }

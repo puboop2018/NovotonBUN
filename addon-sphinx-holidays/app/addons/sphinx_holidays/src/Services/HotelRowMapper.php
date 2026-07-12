@@ -86,10 +86,12 @@ class HotelRowMapper
             'facilities_json' => !empty($raw['facilities']) ? json_encode($raw['facilities']) : '[]',
             'is_adults_only' => $isAdultsOnly,
             'address' => trim(TypeCoerce::toString($address['street'] ?? '')),
-            // Transient (stripped in enrichFromHierarchy): the static payload's
-            // only city hint — the last-resort destination_name fallback when
-            // the destination tree can't name a city for this hotel.
-            '_address_city' => trim(TypeCoerce::toString($address['city'] ?? '')),
+            // Per-hotel city/country straight from the API address — shown as
+            // the City/Country columns on the admin hotels grid, and (for
+            // address_city) the last-resort fallback for the tree-derived
+            // destination_name in enrichFromHierarchy().
+            'address_city' => trim(TypeCoerce::toString($address['city'] ?? '')),
+            'address_country' => trim(TypeCoerce::toString($address['country'] ?? '')),
             'phone' => trim(TypeCoerce::toString($address['phone'] ?? '')),
             'email' => trim(TypeCoerce::toString($address['email'] ?? '')),
             'website' => trim(TypeCoerce::toString($address['website'] ?? '')),
@@ -153,13 +155,14 @@ class HotelRowMapper
                 $hotel['country_code'] = $countryCode;
             }
 
-            // Last-resort display fallback: the static payload's address.city,
-            // used only when the destination tree couldn't name a city/resort
-            // (region stays tree-sourced — the payload has no region hint).
-            if (($hotel['destination_name'] ?? '') === '' && !empty($hotel['_address_city'])) {
-                $hotel['destination_name'] = TypeCoerce::toString($hotel['_address_city']);
+            // Last-resort fallback for the tree-derived destination_name (used by
+            // products/search): the API address city, only when the destination
+            // tree couldn't name a city/resort. address_city is a persistent
+            // column in its own right (the grid's City column), so it is NOT
+            // stripped here — just read.
+            if (($hotel['destination_name'] ?? '') === '' && !empty($hotel['address_city'])) {
+                $hotel['destination_name'] = TypeCoerce::toString($hotel['address_city']);
             }
-            unset($hotel['_address_city']);
         }
         unset($hotel);
 

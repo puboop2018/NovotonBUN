@@ -497,7 +497,7 @@
 
                         {if $result.remark || $result.more_info || $result.important || $result.terms_of_payment || $result.terms_of_cancellation}
                             <div class="novoton-offer-info-row">
-                                <a href="#" onclick="openInfoModal({$row_id}); return false;" class="novoton-info-link">ℹ️ {__("novoton_holidays.more_info")|default:"Mai multe informații"}</a>
+                                <a href="#" onclick="openInfoModal({$row_id}); return false;" class="novoton-info-link">{__("novoton_holidays.cancellation_and_payment_terms")}</a>
                             </div>
                             <div id="modal-content-{$row_id}" style="display: none;">
                                 {* Payment Terms - displayed first *}

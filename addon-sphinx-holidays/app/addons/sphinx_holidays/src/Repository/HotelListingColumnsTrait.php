@@ -21,7 +21,7 @@ trait HotelListingColumnsTrait
     private const array LISTING_COLUMN_NAMES = [
         'hotel_id', 'product_id', 'name', 'classification', 'property_type',
         'destination_id', 'destination_name', 'region_id', 'region_name',
-        'country_code', 'country_name', 'latitude', 'longitude',
+        'country_code', 'country_name', 'address_city', 'address_country', 'latitude', 'longitude',
         'image_url', 'is_recommended', 'is_adults_only', 'rating', 'rating_count',
         'sync_status', 'last_synced_at', 'created_at', 'updated_at',
     ];

@@ -21,17 +21,8 @@
         </div>
 
         <div class="sidebar-field">
-            <label>{__("sphinx_holidays.region")}:</label>
-            <select name="region_id" id="sphinx_region_filter">
-                <option value="">{__("sphinx_holidays.all_regions")}</option>
-            </select>
-        </div>
-
-        <div class="sidebar-field">
-            <label>{__("sphinx_holidays.city_resort")}:</label>
-            <select name="destination_id" id="sphinx_city_filter">
-                <option value="">{__("sphinx_holidays.all_cities")}</option>
-            </select>
+            <label>{__("sphinx_holidays.city")}:</label>
+            <input type="text" name="city" value="{$search.city|escape:html}" placeholder="{__("sphinx_holidays.city")}" />
         </div>
 
         <div class="sidebar-field">
@@ -164,11 +155,25 @@
                 </a>
             </th>
 
-            {* Region — not sortable *}
-            <th>{__("sphinx_holidays.region")}</th>
+            {* City — from the hotel API address, sortable *}
+            <th width="120">
+                <a href="{"`$sort_url_base`&sort_by=address_city&sort_order=`$search.sort_order_toggle`"|fn_url}">
+                    {__("sphinx_holidays.city")}
+                    {if $search.sort_by == 'address_city'}
+                        {if $search.sort_order == 'asc'}&#9650;{else}&#9660;{/if}
+                    {/if}
+                </a>
+            </th>
 
-            {* City/Destination — not sortable *}
-            <th>{__("sphinx_holidays.city_resort")}</th>
+            {* Country — from the hotel API address, sortable *}
+            <th width="120">
+                <a href="{"`$sort_url_base`&sort_by=address_country&sort_order=`$search.sort_order_toggle`"|fn_url}">
+                    {__("sphinx_holidays.country")}
+                    {if $search.sort_by == 'address_country'}
+                        {if $search.sort_order == 'asc'}&#9650;{else}&#9660;{/if}
+                    {/if}
+                </a>
+            </th>
 
             {* Type — sortable *}
             <th width="90">
@@ -294,11 +299,11 @@
             {* Country *}
             <td>{$hotel.country_code|escape:html}</td>
 
-            {* Region *}
-            <td>{$hotel.region_name|default:"-"|escape:html}</td>
+            {* City — hotel API address.city *}
+            <td>{$hotel.address_city|default:"-"|escape:html}</td>
 
-            {* City/Destination *}
-            <td>{$hotel.destination_name|default:"-"|escape:html}</td>
+            {* Country — hotel API address.country *}
+            <td>{$hotel.address_country|default:"-"|escape:html}</td>
 
             {* Property Type *}
             <td>{$hotel.property_type|escape:html}</td>
@@ -341,82 +346,9 @@
 
 </form>
 
-{* ── JavaScript: Cascading selects + bulk select ── *}
+{* ── JavaScript: hotel-name autocomplete (Select2) ── *}
 <script>
 (function() {ldelim}
-    var countrySelect = document.getElementById('sphinx_country_filter');
-    var regionSelect = document.getElementById('sphinx_region_filter');
-    var citySelect = document.getElementById('sphinx_city_filter');
-
-    var savedRegionId = '{$search.region_id|escape:javascript}';
-    var savedDestinationId = '{$search.destination_id|escape:javascript}';
-
-    function resetSelect(sel, defaultText) {ldelim}
-        sel.innerHTML = '<option value="">' + defaultText + '</option>';
-    {rdelim}
-
-    function populateSelect(sel, items, idKey, nameKey, selectedVal, defaultText) {ldelim}
-        resetSelect(sel, defaultText);
-        for (var i = 0; i < items.length; i++) {ldelim}
-            var opt = document.createElement('option');
-            opt.value = items[i][idKey];
-            var label = items[i][nameKey];
-            if (items[i].hotel_count > 0) {ldelim}
-                label += ' (' + items[i].hotel_count + ')';
-            {rdelim}
-            opt.textContent = label;
-            if (String(items[i][idKey]) === String(selectedVal)) {ldelim}
-                opt.selected = true;
-            {rdelim}
-            sel.appendChild(opt);
-        {rdelim}
-    {rdelim}
-
-    function loadRegions(countryCode, preselect) {ldelim}
-        resetSelect(regionSelect, '{__("sphinx_holidays.all_regions")|escape:javascript}');
-        resetSelect(citySelect, '{__("sphinx_holidays.all_cities")|escape:javascript}');
-        if (!countryCode) return;
-
-        fetch('{"sphinx_holidays.get_regions"|fn_url:"A"}&country_code=' + encodeURIComponent(countryCode))
-            .then(function(r) {ldelim} return r.json(); {rdelim})
-            .then(function(data) {ldelim}
-                if (data.regions && data.regions.length > 0) {ldelim}
-                    populateSelect(regionSelect, data.regions, 'destination_id', 'name',
-                        preselect || '', '{__("sphinx_holidays.all_regions")|escape:javascript}');
-                    if (preselect) {ldelim}
-                        loadCities(preselect, savedDestinationId);
-                    {rdelim}
-                {rdelim}
-            {rdelim});
-    {rdelim}
-
-    function loadCities(regionId, preselect) {ldelim}
-        resetSelect(citySelect, '{__("sphinx_holidays.all_cities")|escape:javascript}');
-        if (!regionId) return;
-
-        fetch('{"sphinx_holidays.get_cities"|fn_url:"A"}&region_id=' + encodeURIComponent(regionId))
-            .then(function(r) {ldelim} return r.json(); {rdelim})
-            .then(function(data) {ldelim}
-                if (data.cities && data.cities.length > 0) {ldelim}
-                    populateSelect(citySelect, data.cities, 'destination_id', 'name',
-                        preselect || '', '{__("sphinx_holidays.all_cities")|escape:javascript}');
-                {rdelim}
-            {rdelim});
-    {rdelim}
-
-    countrySelect.addEventListener('change', function() {ldelim}
-        loadRegions(this.value, '');
-    {rdelim});
-
-    regionSelect.addEventListener('change', function() {ldelim}
-        loadCities(this.value, '');
-    {rdelim});
-
-    // Restore state on page load if country was selected
-    if (countrySelect.value) {ldelim}
-        loadRegions(countrySelect.value, savedRegionId);
-    {rdelim}
-
     // ─── Hotel name autocomplete (Select2 + AJAX) ───
     if (typeof $ !== 'undefined' && typeof $.fn.select2 !== 'undefined') {ldelim}
         (function() {ldelim}

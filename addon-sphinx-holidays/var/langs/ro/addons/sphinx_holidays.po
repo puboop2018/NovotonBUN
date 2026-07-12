@@ -371,3 +371,35 @@ msgstr "Următoarea"
 msgctxt "Languages::sphinx_holidays.last_page"
 msgid "Last"
 msgstr "Ultima"
+
+msgctxt "Languages::sphinx_holidays.cancellation_and_payment_terms"
+msgid "Payment and cancellation terms"
+msgstr "Condiții de Anulare și Plată"
+
+msgctxt "Languages::sphinx_holidays.free_cancellation_until"
+msgid "Free cancellation until"
+msgstr "Anulare gratuită până la"
+
+msgctxt "Languages::sphinx_holidays.free_cancellation"
+msgid "Free cancellation"
+msgstr "Anulare gratuită"
+
+msgctxt "Languages::sphinx_holidays.terms_loading"
+msgid "Loading terms…"
+msgstr "Se încarcă condițiile…"
+
+msgctxt "Languages::sphinx_holidays.terms_unavailable"
+msgid "Terms are not available. Please search again."
+msgstr "Condițiile nu sunt disponibile. Vă rugăm căutați din nou."
+
+msgctxt "Languages::sphinx_holidays.no_terms_info"
+msgid "No specific terms for this offer."
+msgstr "Nu există condiții specifice pentru această ofertă."
+
+msgctxt "Languages::sphinx_holidays.terms_until"
+msgid "until"
+msgstr "până la"
+
+msgctxt "Languages::sphinx_holidays.terms_from"
+msgid "from"
+msgstr "de la"

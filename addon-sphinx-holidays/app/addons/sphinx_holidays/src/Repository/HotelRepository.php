@@ -53,9 +53,9 @@ class HotelRepository implements HotelRepositoryInterface
      */
     private const UPSERT_CHUNK_SIZE = 100;
 
-    /** Placeholder tuple for one hotel row of the multi-row upsert (26 bound values). */
+    /** Placeholder tuple for one hotel row of the multi-row upsert (28 values). */
     private const UPSERT_ROW_PLACEHOLDERS = '(?s, ?s, ?i, ?s, ?i, ?s, ?i, ?s, ?s, ?s, ?d, ?d, '
-        . "?s, ?s, ?s, ?s, ?s, ?s, ?s, ?s, ?s, ?s, ?d, ?i, 'active', ?s)";
+        . "?s, ?s, ?s, ?s, ?s, ?s, ?s, ?s, ?s, ?s, ?s, ?s, ?d, ?i, 'active', ?s)";
 
     /**
      * Upsert a batch of hotels (multi-row INSERT ... ON DUPLICATE KEY UPDATE).
@@ -108,6 +108,8 @@ class HotelRepository implements HotelRepositoryInterface
                     TypeCoerce::toString($hotel['phone'] ?? ''),
                     TypeCoerce::toString($hotel['email'] ?? ''),
                     TypeCoerce::toString($hotel['website'] ?? ''),
+                    TypeCoerce::toString($hotel['address_city'] ?? ''),
+                    TypeCoerce::toString($hotel['address_country'] ?? ''),
                     TypeCoerce::toString($hotel['description'] ?? ''),
                     TypeCoerce::toString($hotel['short_description'] ?? ''),
                     TypeCoerce::toString($hotel['image_url'] ?? ''),
@@ -130,6 +132,7 @@ class HotelRepository implements HotelRepositoryInterface
                      destination_id, destination_name, region_id, region_name,
                      country_code, country_name, latitude, longitude,
                      address, phone, email, website,
+                     address_city, address_country,
                      description, short_description, image_url,
                      images_json, facilities_json, is_adults_only,
                      rating, rating_count,
@@ -171,6 +174,8 @@ class HotelRepository implements HotelRepositoryInterface
                     phone = VALUES(phone),
                     email = VALUES(email),
                     website = VALUES(website),
+                    address_city = VALUES(address_city),
+                    address_country = VALUES(address_country),
                     description = VALUES(description),
                     short_description = VALUES(short_description),
                     image_url = VALUES(image_url),

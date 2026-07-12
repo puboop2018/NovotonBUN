@@ -59,6 +59,7 @@ $_sphinx_modes = [
     'booking_form',
     'add_to_cart',
     'ajax_recalculate_price',
+    'offer_terms',
     'cache_deals',
     'circuit_search',
     'circuit_booking_form',
