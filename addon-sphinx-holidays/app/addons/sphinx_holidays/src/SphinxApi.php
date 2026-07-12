@@ -130,14 +130,17 @@ class SphinxApi
 
     /**
      * Get all circuits (paginated).
+     *
+     * @param string|null $updatedSince Only return circuits updated since this ISO 8601 datetime
      * @return array<string, mixed>|null
      */
-    public function getCircuits(int $page = 1, int $perPage = 1000): ?array
+    public function getCircuits(int $page = 1, int $perPage = 1000, ?string $updatedSince = null): ?array
     {
-        return $this->client->get('/api/v1/static/circuits', [
-            'page' => $page,
-            'per_page' => $perPage,
-        ]);
+        $query = ['page' => $page, 'per_page' => $perPage];
+        if ($updatedSince !== null) {
+            $query['updated_since'] = $updatedSince;
+        }
+        return $this->client->get('/api/v1/static/circuits', $query);
     }
 
     /**

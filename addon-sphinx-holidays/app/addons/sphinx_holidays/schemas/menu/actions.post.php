@@ -26,6 +26,16 @@ $tabs = [
         'text'     => __('sphinx_holidays.hotels'),
         'position' => 150,
     ],
+    'sphinx_circuits' => [
+        'href'     => 'sphinx_holidays.circuits',
+        'text'     => __('sphinx_holidays.circuits'),
+        'position' => 160,
+    ],
+    'sphinx_package_routes' => [
+        'href'     => 'sphinx_holidays.package_routes',
+        'text'     => __('sphinx_holidays.package_routes'),
+        'position' => 170,
+    ],
     'sphinx_whitelist' => [
         'href'     => 'sphinx_holidays.whitelist',
         'text'     => __('sphinx_holidays.destination_whitelist'),
@@ -48,6 +58,8 @@ $pages = [
     'sphinx_holidays.manage',
     'sphinx_holidays.destinations',
     'sphinx_holidays.hotels',
+    'sphinx_holidays.circuits',
+    'sphinx_holidays.package_routes',
     'sphinx_holidays.whitelist',
     'sphinx_seo_templates.manage',
 ];

@@ -16,10 +16,12 @@ declare(strict_types=1);
  */
 
 use Tygh\Addons\SphinxHolidays\Cron\Commands\AddProductsCommand;
+use Tygh\Addons\SphinxHolidays\Services\CircuitSyncService;
 use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
 use Tygh\Addons\SphinxHolidays\Services\Container;
 use Tygh\Addons\SphinxHolidays\Services\DestinationSyncService;
 use Tygh\Addons\SphinxHolidays\Services\HotelSyncService;
+use Tygh\Addons\SphinxHolidays\Services\PackageRouteSyncService;
 use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Tygh;
@@ -88,6 +90,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         return [CONTROLLER_STATUS_REDIRECT, 'sphinx_holidays.manage'];
+    }
+
+    if ($mode === 'sync_circuits') {
+        if (!ConfigProvider::isConfigured()) {
+            fn_set_notification('E', __('error'), __('sphinx_holidays.api_not_configured'));
+            return [CONTROLLER_STATUS_REDIRECT, 'sphinx_holidays.circuits'];
+        }
+
+        if (function_exists('set_time_limit')) {
+            set_time_limit(0);
+        }
+
+        // Admin "Sync now" runs a full re-fetch; the nightly cron stays incremental.
+        $service = new CircuitSyncService(Container::getApi());
+        $result = $service->sync(true);
+
+        if (!empty($result['success'])) {
+            fn_set_notification('N', __('notice'), TypeCoerce::toString(__('sphinx_holidays.sync_completed')) . ': ' . TypeCoerce::toInt($result['synced']) . '/' . TypeCoerce::toInt($result['total']));
+        } else {
+            fn_set_notification('E', __('error'), TypeCoerce::toString(__('sphinx_holidays.sync_failed')) . ': ' . (TypeCoerce::toString($result['error']) ?: 'Unknown error'));
+        }
+
+        return [CONTROLLER_STATUS_REDIRECT, 'sphinx_holidays.circuits'];
+    }
+
+    if ($mode === 'sync_package_routes') {
+        if (!ConfigProvider::isConfigured()) {
+            fn_set_notification('E', __('error'), __('sphinx_holidays.api_not_configured'));
+            return [CONTROLLER_STATUS_REDIRECT, 'sphinx_holidays.package_routes'];
+        }
+
+        if (function_exists('set_time_limit')) {
+            set_time_limit(0);
+        }
+
+        $service = new PackageRouteSyncService(Container::getApi());
+        $result = $service->sync();
+
+        if (!empty($result['success'])) {
+            fn_set_notification('N', __('notice'), TypeCoerce::toString(__('sphinx_holidays.sync_completed')) . ': ' . TypeCoerce::toInt($result['synced']) . '/' . TypeCoerce::toInt($result['total']));
+        } else {
+            fn_set_notification('E', __('error'), TypeCoerce::toString(__('sphinx_holidays.sync_failed')) . ': ' . (TypeCoerce::toString($result['error']) ?: 'Unknown error'));
+        }
+
+        return [CONTROLLER_STATUS_REDIRECT, 'sphinx_holidays.package_routes'];
     }
 
     if ($mode === 'add_products') {
@@ -703,4 +750,44 @@ if ($mode === 'manage') {
     $view->assign('whitelisted_region_count', $whitelistedRegionCount);
     $view->assign('sample_cities', $sampleCities);
     $view->assign('whitelist_summary', $whitelistSummary);
+
+} elseif ($mode === 'circuits') {
+    $circuitRepo = Container::getCircuitRepository();
+    [$circuits, $search] = $circuitRepo->getListing(TypeCoerce::toStringMap($_REQUEST));
+
+    // Preserve active filters when building sort-header links.
+    $sortFilterParams = array_filter([
+        'transport_type' => $search['transport_type'] ?? '',
+        'sync_status'    => $search['sync_status'] ?? '',
+        'q'              => $search['q'] ?? '',
+        'items_per_page' => $search['items_per_page'] ?? '',
+    ], static fn ($v): bool => $v !== '');
+    $sortUrlBase = 'sphinx_holidays.circuits?' . http_build_query($sortFilterParams);
+
+    $view->assign('circuits', $circuits);
+    $view->assign('search', $search);
+    $view->assign('total_items', $search['total_items']);
+    $view->assign('sort_url_base', $sortUrlBase);
+    $view->assign('last_synced_at', $circuitRepo->getLastSyncedAt());
+    $view->assign('total_count', $circuitRepo->countAll());
+
+} elseif ($mode === 'package_routes') {
+    $routeRepo = Container::getPackageRouteRepository();
+    [$routes, $search] = $routeRepo->getListing(TypeCoerce::toStringMap($_REQUEST));
+
+    $sortFilterParams = array_filter([
+        'transport_type' => $search['transport_type'] ?? '',
+        'departure'      => $search['departure'] ?? '',
+        'arrival'        => $search['arrival'] ?? '',
+        'duration'       => $search['duration'] ?? '',
+        'items_per_page' => $search['items_per_page'] ?? '',
+    ], static fn ($v): bool => $v !== '');
+    $sortUrlBase = 'sphinx_holidays.package_routes?' . http_build_query($sortFilterParams);
+
+    $view->assign('package_routes', $routes);
+    $view->assign('search', $search);
+    $view->assign('total_items', $search['total_items']);
+    $view->assign('sort_url_base', $sortUrlBase);
+    $view->assign('last_synced_at', $routeRepo->getLastSyncedAt());
+    $view->assign('total_count', $routeRepo->countAll());
 }

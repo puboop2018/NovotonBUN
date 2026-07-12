@@ -177,6 +177,87 @@ return [
         'en' => 'Change to Disabled',
         'ro' => 'Schimbă în Dezactivat',
     ],
+    // ── Circuits & package routes (static-data admin grids) ──
+    'sphinx_holidays.circuits' => [
+        'en' => 'Circuits',
+        'ro' => 'Circuite',
+    ],
+    'sphinx_holidays.package_routes' => [
+        'en' => 'Package routes',
+        'ro' => 'Rute pachete',
+    ],
+    'sphinx_holidays.sync_now' => [
+        'en' => 'Sync now',
+        'ro' => 'Sincronizează acum',
+    ],
+    'sphinx_holidays.sync_circuits' => [
+        'en' => 'Sync Circuits',
+        'ro' => 'Sincronizează Circuite',
+    ],
+    'sphinx_holidays.sync_package_routes' => [
+        'en' => 'Sync Package Routes',
+        'ro' => 'Sincronizează Rute Pachete',
+    ],
+    'sphinx_holidays.sync_circuits_confirm' => [
+        'en' => 'Sync the circuit catalog from the Sphinx API now?',
+        'ro' => 'Sincronizați acum catalogul de circuite din API-ul Sphinx?',
+    ],
+    'sphinx_holidays.sync_package_routes_confirm' => [
+        'en' => 'Sync package routes from the Sphinx API now?',
+        'ro' => 'Sincronizați acum rutele de pachete din API-ul Sphinx?',
+    ],
+    'sphinx_holidays.no_circuits' => [
+        'en' => 'No circuits found.',
+        'ro' => 'Niciun circuit găsit.',
+    ],
+    'sphinx_holidays.no_package_routes' => [
+        'en' => 'No package routes found.',
+        'ro' => 'Nicio rută de pachet găsită.',
+    ],
+    'sphinx_holidays.all' => [
+        'en' => 'All',
+        'ro' => 'Toate',
+    ],
+    'sphinx_holidays.transport_type' => [
+        'en' => 'Transport',
+        'ro' => 'Transport',
+    ],
+    'sphinx_holidays.transport_flight' => [
+        'en' => 'Flight',
+        'ro' => 'Avion',
+    ],
+    'sphinx_holidays.transport_bus' => [
+        'en' => 'Bus',
+        'ro' => 'Autocar',
+    ],
+    'sphinx_holidays.duration' => [
+        'en' => 'Duration',
+        'ro' => 'Durată',
+    ],
+    'sphinx_holidays.min_price' => [
+        'en' => 'From price',
+        'ro' => 'Preț de la',
+    ],
+    'sphinx_holidays.nights_short' => [
+        'en' => 'nights',
+        'ro' => 'nopți',
+    ],
+    'sphinx_holidays.days_short' => [
+        'en' => 'days',
+        'ro' => 'zile',
+    ],
+    'sphinx_holidays.departure' => [
+        'en' => 'Departure',
+        'ro' => 'Plecare',
+    ],
+    'sphinx_holidays.arrival' => [
+        'en' => 'Arrival',
+        'ro' => 'Sosire',
+    ],
+    'sphinx_holidays.available_dates' => [
+        'en' => 'Available dates',
+        'ro' => 'Date disponibile',
+    ],
     'sphinx_holidays.images_synced' => [
         'en' => 'Images synced',
         'ro' => 'Imagini sincronizate',

@@ -36,12 +36,22 @@ class CircuitSyncService extends AbstractSyncService implements CircuitSyncServi
     /**
      * Run circuit sync from static API.
      *
+     * @param bool $fullSync When false, only circuits updated since the last
+     *                       successful sync are re-fetched (updated_since).
      * @return array{success: bool, total: int, synced: int, failed: int, duration_ms: int, error: string}
      */
     #[\Override]
-    public function sync(): array
+    public function sync(bool $fullSync = true): array
     {
-        return $this->runSync(true);
+        $context = [];
+        if (!$fullSync) {
+            $lastSynced = (new CircuitRepository())->getLastSyncedAt();
+            if ($lastSynced !== null) {
+                $context['updated_since'] = $lastSynced;
+            }
+        }
+
+        return $this->runSync($fullSync, $context);
     }
 
     /**
@@ -59,14 +69,20 @@ class CircuitSyncService extends AbstractSyncService implements CircuitSyncServi
             return $stats;
         }
 
-        $this->output('Circuit sync starting (filtering by ' . count($allowedDestIds) . ' allowed destinations)...');
+        $updatedSince = TypeCoerce::toString($context['updated_since'] ?? '');
+        if ($updatedSince !== '') {
+            $stats['sync_mode'] = 'incremental';
+            $this->output('Circuit sync starting incrementally (updated since ' . $updatedSince . ', filtering by ' . count($allowedDestIds) . ' allowed destinations)...');
+        } else {
+            $this->output('Circuit sync starting (filtering by ' . count($allowedDestIds) . ' allowed destinations)...');
+        }
 
         $allCircuits = [];
         $filtered = 0;
         $page = 1;
 
         while (true) {
-            $response = $this->api->getCircuits($page, self::PER_PAGE);
+            $response = $this->api->getCircuits($page, self::PER_PAGE, $updatedSince !== '' ? $updatedSince : null);
             if ($response === null) {
                 $stats['error'] = 'API request failed on page ' . $page;
                 break;

@@ -36,6 +36,18 @@ $schema['central']['sphinx_holidays'] = [
             'position' => 300,
             'title' => __('sphinx_holidays.hotels', ['[default]' => 'Hotels']),
         ],
+        'sphinx_circuits' => [
+            'attrs' => ['class' => 'is-addon'],
+            'href' => 'sphinx_holidays.circuits',
+            'position' => 320,
+            'title' => __('sphinx_holidays.circuits', ['[default]' => 'Circuits']),
+        ],
+        'sphinx_package_routes' => [
+            'attrs' => ['class' => 'is-addon'],
+            'href' => 'sphinx_holidays.package_routes',
+            'position' => 340,
+            'title' => __('sphinx_holidays.package_routes', ['[default]' => 'Package routes']),
+        ],
         'sphinx_whitelist' => [
             'attrs' => ['class' => 'is-addon'],
             'href' => 'sphinx_holidays.whitelist',
