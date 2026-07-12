@@ -39,6 +39,7 @@ try {
     $check_in = RequestCoerce::string($_REQUEST, 'check_in');
     $check_out = RequestCoerce::string($_REQUEST, 'check_out');
     $hotel_id = RequestCoerce::string($_REQUEST, 'hotel_id');
+    $product_id = max(0, RequestCoerce::int($_REQUEST, 'product_id'));
     $destination_id = RequestCoerce::int($_REQUEST, 'destination_id');
     $adults = max(1, RequestCoerce::int($_REQUEST, 'adults', 2));
     $children = max(0, RequestCoerce::int($_REQUEST, 'children'));
@@ -74,6 +75,7 @@ try {
 
     $templateParams = [
         'hotel_id' => $hotel_id,
+        'product_id' => $product_id,
         'destination_id' => $destination_id,
         'check_in' => $check_in,
         'check_out' => $check_out,

@@ -29,22 +29,18 @@
     </div>
     {/if}
 
-    {* ===== BOOKING FORM — Pre-rendered in controller to prevent OOM ===== *}
-    {* Rendered to string in search.php BEFORE heavy results are assigned.
-       Smarty has NO scope="local" — {include} always inherits parent scope.
-       Pre-rendering avoids scope chain traversal over large result arrays. *}
-    <div class="travel-search-form-wrapper novoton-search-form-wrapper">
-        {$booking_engine_html nofilter}
-    </div>
-
+    {* ===== HOTEL HEADER — placed ABOVE the search form (sphinx parity) ===== *}
     {if $novoton_results && $novoton_results|count > 0}
-
-        {* ===== HOTEL HEADER ===== *}
         <div class="travel-hotel-header novoton-hotel-header">
             <div class="novoton-hotel-header-row">
                 <div>
                     <h2>
-                        {$hotel_name|default:'Hotel'} <span class="travel-hotel-stars" aria-hidden="true">{$hotel_stars|default:'****'}</span>
+                        {if $novoton_params.product_id}
+                            <a href="{"products.view?product_id=`$novoton_params.product_id`"|fn_url}" class="travel-hotel-name-link">{$hotel_name|default:'Hotel'}</a>
+                        {else}
+                            {$hotel_name|default:'Hotel'}
+                        {/if}
+                        <span class="travel-hotel-stars" aria-hidden="true">{$hotel_stars|default:'****'}</span>
                     </h2>
                     <p class="travel-hotel-location">
                          {$hotel_city|default:''}{if $hotel_region}, {$hotel_region}{/if}{if $hotel_country}, {$hotel_country}{/if}
@@ -56,7 +52,6 @@
                     {/if}
                 </div>
                 <div>
-                    {if $novoton_results|count > 0}
                     {* Rooms = DISTINCT room types, not availability quota: two
                        board variants of the same room count as ONE room. The
                        party suffix ties "availability" to the searched guests. *}
@@ -74,10 +69,20 @@
                     <span id="novoton-availability-badge" class="travel-availability-badge" data-rooms-count="{$badge_rooms_count}" data-offers-count="{$badge_offers_count}" data-party-suffix="{$badge_party_suffix|escape:html}">
                         ✓ {__("novoton_holidays.available")}: {$badge_rooms_count} {if $badge_rooms_count == 1}{__("novoton_holidays.room")|default:"room"|lower}{else}{__("novoton_holidays.rooms")|default:"rooms"|lower}{/if}, {$badge_offers_count} {if $badge_offers_count == 1}{__("novoton_holidays.offer")|default:"offer"|lower}{else}{__("novoton_holidays.offers")|default:"offers"|lower}{/if}{$badge_party_suffix}
                     </span>
-                    {/if}
                 </div>
             </div>
         </div>
+    {/if}
+
+    {* ===== BOOKING FORM — Pre-rendered in controller to prevent OOM ===== *}
+    {* Rendered to string in search.php BEFORE heavy results are assigned.
+       Smarty has NO scope="local" — {include} always inherits parent scope.
+       Pre-rendering avoids scope chain traversal over large result arrays. *}
+    <div class="travel-search-form-wrapper novoton-search-form-wrapper">
+        {$booking_engine_html nofilter}
+    </div>
+
+    {if $novoton_results && $novoton_results|count > 0}
 
         {* ===== EARLY BOOKING BANNER ===== *}
         {if $active_early_booking || ($early_booking_range && $early_booking_range.max > 0)}

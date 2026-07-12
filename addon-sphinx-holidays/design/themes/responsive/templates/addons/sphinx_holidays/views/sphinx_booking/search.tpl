@@ -14,12 +14,6 @@
      data-search-id="{$sphinx_search_id|escape:html}"
      data-search-status="{$sphinx_search_status|default:'idle'}">
 
-    {* ===== BOOKING FORM — Pre-rendered in controller to prevent OOM.
-       Placed ABOVE the hotel header: same page order as novoton results. ===== *}
-    <div class="travel-search-form-wrapper">
-        {$booking_engine_html nofilter}
-    </div>
-
     {* Availability badge — same format as novoton's badge:
        "✓ Available: N room(s), M offer(s) for X adults[, Y children]".
        Rooms = DISTINCT room types (two boards of one room count once); the
@@ -39,13 +33,18 @@
     {capture assign="sx_badge_party_suffix"} {__("sphinx_holidays.for")|default:"for"} {$sx_badge_adults} {if $sx_badge_adults == 1}{__("sphinx_holidays.adult")|default:"adult"|lower}{else}{__("sphinx_holidays.adults")|default:"adults"|lower}{/if}{if $sx_badge_children > 0}, {$sx_badge_children} {if $sx_badge_children == 1}{__("sphinx_holidays.child")|default:"child"|lower}{else}{__("sphinx_holidays.children")|default:"children"|lower}{/if}{/if}{/capture}
     {capture assign="sx_badge_html"}<div class="travel-availability-badge sphinx-results-title" id="sphinx-results-title" data-party-suffix="{$sx_badge_party_suffix|escape:html}"{if !$sphinx_search_results} style="display: none;"{/if}>{if $sphinx_search_results}✓ {__("sphinx_holidays.available")|default:"Available"}: {$sx_badge_rooms} {if $sx_badge_rooms == 1}{__("sphinx_holidays.room")|default:"room"|lower}{else}{__("sphinx_holidays.rooms")|default:"rooms"|lower}{/if}, {$sx_badge_offers} {if $sx_badge_offers == 1}{__("sphinx_holidays.offer")|default:"offer"|lower}{else}{__("sphinx_holidays.offers")|default:"offers"|lower}{/if}{$sx_badge_party_suffix}{/if}</div>{/capture}
 
-    {* ===== HOTEL HEADER — badge on the right, same row layout as novoton ===== *}
+    {* ===== HOTEL HEADER — placed ABOVE the search form (novoton parity);
+       availability badge on the right, same row layout as novoton ===== *}
     {if $sphinx_hotel_name}
         <div class="travel-hotel-header sphinx-hotel-header">
             <div class="travel-hotel-header-row">
                 <div>
                     <h1 class="sphinx-hotel-header-name">
-                        {$sphinx_hotel_name|escape:html}
+                        {if $sphinx_search_params.product_id}
+                            <a href="{"products.view?product_id=`$sphinx_search_params.product_id`"|fn_url}" class="travel-hotel-name-link">{$sphinx_hotel_name|escape:html}</a>
+                        {else}
+                            {$sphinx_hotel_name|escape:html}
+                        {/if}
                         {if $sphinx_hotel_stars}<span class="travel-hotel-stars sphinx-stars" role="img" aria-label="{__("sphinx_holidays.stars_rating", ["[rating]" => $sphinx_hotel_stars])|escape:html}">{"★"|str_repeat:$sphinx_hotel_stars}</span>{/if}
                     </h1>
                     {if $sphinx_hotel_location}
@@ -60,6 +59,11 @@
     {else}
         {$sx_badge_html nofilter}
     {/if}
+
+    {* ===== BOOKING FORM — Pre-rendered in controller to prevent OOM ===== *}
+    <div class="travel-search-form-wrapper">
+        {$booking_engine_html nofilter}
+    </div>
 
     {* Loading skeleton — shown while JS polls for results. Styled by
        travel_core's search-results.css; display:none is JS-toggled state. *}

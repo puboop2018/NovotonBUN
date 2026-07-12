@@ -48,6 +48,25 @@ final class AvailabilityBadgeTest extends TestCase
         self::assertStringContainsString("badge.getAttribute('data-party-suffix')", $tpl);
     }
 
+    public function testHotelHeaderRendersAboveTheBookingForm(): void
+    {
+        $tpl = self::themeTpl('responsive');
+
+        $headerPos = strpos($tpl, 'travel-hotel-header ');
+        $formPos = strpos($tpl, 'travel-search-form-wrapper');
+        self::assertIsInt($headerPos);
+        self::assertIsInt($formPos);
+        self::assertLessThan($formPos, $headerPos, 'the hotel header must come before the search form (sphinx parity)');
+    }
+
+    public function testHotelNameLinksToTheProductPage(): void
+    {
+        $tpl = self::themeTpl('responsive');
+
+        self::assertStringContainsString('travel-hotel-name-link', $tpl);
+        self::assertStringContainsString('products.view?product_id=`$novoton_params.product_id`', $tpl);
+    }
+
     public function testThemeCopiesAreByteIdentical(): void
     {
         self::assertSame(
