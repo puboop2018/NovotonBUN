@@ -67,6 +67,15 @@ final class AvailabilityBadgeTest extends TestCase
         self::assertStringContainsString('products.view?product_id=`$novoton_params.product_id`', $tpl);
     }
 
+    public function testHeaderShowsMapLinkFromCoordinates(): void
+    {
+        $tpl = self::themeTpl('responsive');
+
+        self::assertStringContainsString('travel-hotel-map-link', $tpl);
+        self::assertStringContainsString('https://www.google.com/maps?q={$hotel_lat},{$hotel_lng}', $tpl);
+        self::assertStringContainsString('novoton_holidays.location_show_map', $tpl);
+    }
+
     public function testThemeCopiesAreByteIdentical(): void
     {
         self::assertSame(

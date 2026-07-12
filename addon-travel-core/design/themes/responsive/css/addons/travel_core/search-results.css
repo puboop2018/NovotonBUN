@@ -26,6 +26,12 @@
     border-radius: 8px;
     margin-bottom: 12px;
 }
+/* "Location - show map" link next to the hotel address (Google Maps) */
+.travel-search-results-page .travel-hotel-map-link {
+    margin-left: 10px;
+    font-size: 13px;
+    white-space: nowrap;
+}
 /* Hotel name links to the product detail page — keep the heading look */
 .travel-search-results-page .travel-hotel-name-link {
     color: inherit;

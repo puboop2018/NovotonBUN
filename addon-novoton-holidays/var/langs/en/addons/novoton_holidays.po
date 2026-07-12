@@ -3335,3 +3335,7 @@ msgstr "Hotel description text"
 msgctxt "Languages::novoton_holidays.ph_facilities"
 msgid "Top facilities (comma-separated)"
 msgstr "Top facilities (comma-separated)"
+
+msgctxt "Languages::novoton_holidays.location_show_map"
+msgid "Location - show map"
+msgstr "Location - show map"

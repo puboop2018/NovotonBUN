@@ -44,6 +44,9 @@
                     </h2>
                     <p class="travel-hotel-location">
                          {$hotel_city|default:''}{if $hotel_region}, {$hotel_region}{/if}{if $hotel_country}, {$hotel_country}{/if}
+                        {if $hotel_lat && $hotel_lng}
+                            <a href="https://www.google.com/maps?q={$hotel_lat},{$hotel_lng}" target="_blank" rel="noopener" class="travel-hotel-map-link">{__("novoton_holidays.location_show_map")|default:"Location - show map"}</a>
+                        {/if}
                     </p>
                     {if $hotel_season_from && $hotel_season_to}
                     <p class="novoton-season-note">

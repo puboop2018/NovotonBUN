@@ -1029,6 +1029,8 @@
         <item lang="ro" id="sphinx_holidays.child"><![CDATA[copil]]></item>
         <item lang="en" id="sphinx_holidays.children"><![CDATA[children]]></item>
         <item lang="ro" id="sphinx_holidays.children"><![CDATA[copii]]></item>
+        <item lang="en" id="sphinx_holidays.location_show_map"><![CDATA[Location - show map]]></item>
+        <item lang="ro" id="sphinx_holidays.location_show_map"><![CDATA[Locație - arată pe hartă]]></item>
         <item lang="en" id="sphinx_holidays.circuits"><![CDATA[Circuits]]></item>
         <item lang="ro" id="sphinx_holidays.circuits"><![CDATA[Circuite]]></item>
         <item lang="en" id="sphinx_holidays.package_routes"><![CDATA[Package routes]]></item>

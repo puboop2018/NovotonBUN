@@ -130,6 +130,8 @@ class SearchResultFormatter implements SearchResultFormatterInterface
         $view->assign('hotel_city', '');
         $view->assign('hotel_country', '');
         $view->assign('hotel_region', '');
+        $view->assign('hotel_lat', 0.0);
+        $view->assign('hotel_lng', 0.0);
         $view->assign('hotel_package_name', '');
         $view->assign('hotel_url', '');
         $view->assign('terms_of_payment', '');
@@ -174,6 +176,8 @@ class SearchResultFormatter implements SearchResultFormatterInterface
         $hotelCity = '';
         $hotelRegion = '';
         $hotelCountry = '';
+        $hotelLat = 0.0;
+        $hotelLng = 0.0;
 
         if (!empty($hotelId)) {
             $hotelRepo = Container::getInstance()->hotelRepository();
@@ -184,6 +188,8 @@ class SearchResultFormatter implements SearchResultFormatterInterface
                 $hotelCity = $hotelInfo['city'] ?? '';
                 $hotelRegion = $hotelInfo['region'] ?? '';
                 $hotelCountry = $hotelInfo['country'] ?? '';
+                $hotelLat = TypeCoerce::toFloat($hotelInfo['latitude'] ?? 0);
+                $hotelLng = TypeCoerce::toFloat($hotelInfo['longitude'] ?? 0);
 
                 // Fetch packages once, reuse across sub-methods
                 $packageRepo = Container::getInstance()->hotelPackageRepository();
@@ -218,6 +224,8 @@ class SearchResultFormatter implements SearchResultFormatterInterface
         $view->assign('hotel_city', $hotelCity);
         $view->assign('hotel_region', $hotelRegion);
         $view->assign('hotel_country', $hotelCountry);
+        $view->assign('hotel_lat', $hotelLat);
+        $view->assign('hotel_lng', $hotelLng);
     }
 
     /**

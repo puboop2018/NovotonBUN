@@ -47,6 +47,22 @@ final class SearchLayoutBadgeTest extends TestCase
         self::assertStringContainsString('products.view?product_id=`$sphinx_search_params.product_id`', $tpl);
     }
 
+    public function testHeaderShowsMapLinkFromCoordinates(): void
+    {
+        $tpl = self::searchTpl();
+
+        self::assertStringContainsString('travel-hotel-map-link', $tpl);
+        self::assertStringContainsString('https://www.google.com/maps?q={$sphinx_hotel_lat},{$sphinx_hotel_lng}', $tpl);
+        self::assertStringContainsString('sphinx_holidays.location_show_map', $tpl);
+
+        // The controller feeds street+city+country and coordinates.
+        $controller = (string) file_get_contents(
+            dirname(__DIR__, 3) . '/controllers/frontend/sphinx_booking/search.php',
+        );
+        self::assertStringContainsString("sphinx_hotel_lat", $controller);
+        self::assertStringContainsString("\$hotelRow['address']", $controller);
+    }
+
     public function testServerBadgeMatchesNovotonFormat(): void
     {
         $tpl = self::searchTpl();

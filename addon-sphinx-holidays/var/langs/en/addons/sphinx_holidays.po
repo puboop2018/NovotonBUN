@@ -543,3 +543,7 @@ msgstr "child"
 msgctxt "Languages::sphinx_holidays.children"
 msgid "children"
 msgstr "children"
+
+msgctxt "Languages::sphinx_holidays.location_show_map"
+msgid "Location - show map"
+msgstr "Location - show map"

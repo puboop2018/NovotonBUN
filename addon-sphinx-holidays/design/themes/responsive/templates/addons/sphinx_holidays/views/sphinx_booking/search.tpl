@@ -47,8 +47,13 @@
                         {/if}
                         {if $sphinx_hotel_stars}<span class="travel-hotel-stars sphinx-stars" role="img" aria-label="{__("sphinx_holidays.stars_rating", ["[rating]" => $sphinx_hotel_stars])|escape:html}">{"★"|str_repeat:$sphinx_hotel_stars}</span>{/if}
                     </h1>
-                    {if $sphinx_hotel_location}
-                        <p class="travel-hotel-location sphinx-hotel-header-location">{$sphinx_hotel_location|escape:html}</p>
+                    {if $sphinx_hotel_location || ($sphinx_hotel_lat && $sphinx_hotel_lng)}
+                        <p class="travel-hotel-location sphinx-hotel-header-location">
+                            {$sphinx_hotel_location|escape:html}
+                            {if $sphinx_hotel_lat && $sphinx_hotel_lng}
+                                <a href="https://www.google.com/maps?q={$sphinx_hotel_lat},{$sphinx_hotel_lng}" target="_blank" rel="noopener" class="travel-hotel-map-link">{__("sphinx_holidays.location_show_map")|default:"Location - show map"}</a>
+                            {/if}
+                        </p>
                     {/if}
                 </div>
                 <div>

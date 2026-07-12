@@ -62,15 +62,26 @@ try {
     $hotel_name = $hotelRow !== null ? TypeCoerce::toString($hotelRow['name'] ?? '') : '';
     $hotel_stars = $hotelRow !== null ? TypeCoerce::toString($hotelRow['classification'] ?? '') : '';
     $hotel_location = '';
+    $hotel_lat = 0.0;
+    $hotel_lng = 0.0;
     if ($hotelRow !== null) {
+        // Full postal-style line: street, city, country (API address fields),
+        // falling back to the destination-tree names when address is missing.
         $locationParts = array_filter(
             [
-                TypeCoerce::toString($hotelRow['destination_name'] ?? ''),
-                TypeCoerce::toString($hotelRow['country_name'] ?? ''),
+                trim(TypeCoerce::toString($hotelRow['address'] ?? '')),
+                trim(TypeCoerce::toString($hotelRow['address_city'] ?? '')) !== ''
+                    ? trim(TypeCoerce::toString($hotelRow['address_city'] ?? ''))
+                    : TypeCoerce::toString($hotelRow['destination_name'] ?? ''),
+                trim(TypeCoerce::toString($hotelRow['address_country'] ?? '')) !== ''
+                    ? trim(TypeCoerce::toString($hotelRow['address_country'] ?? ''))
+                    : TypeCoerce::toString($hotelRow['country_name'] ?? ''),
             ],
             static fn (string $part): bool => $part !== '',
         );
         $hotel_location = implode(', ', $locationParts);
+        $hotel_lat = TypeCoerce::toFloat($hotelRow['latitude'] ?? 0);
+        $hotel_lng = TypeCoerce::toFloat($hotelRow['longitude'] ?? 0);
     }
 
     $templateParams = [
@@ -120,6 +131,8 @@ try {
     $view->assign('sphinx_hotel_name', $hotel_name);
     $view->assign('sphinx_hotel_stars', $hotel_stars);
     $view->assign('sphinx_hotel_location', $hotel_location);
+    $view->assign('sphinx_hotel_lat', $hotel_lat);
+    $view->assign('sphinx_hotel_lng', $hotel_lng);
     $view->assign('sphinx_search_results', []);
     $view->assign('sphinx_search_id', '');
     $view->assign('sphinx_search_status', 'idle');

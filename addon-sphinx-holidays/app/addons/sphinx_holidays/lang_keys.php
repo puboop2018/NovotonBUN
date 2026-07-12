@@ -218,6 +218,10 @@ return [
         'en' => 'children',
         'ro' => 'copii',
     ],
+    'sphinx_holidays.location_show_map' => [
+        'en' => 'Location - show map',
+        'ro' => 'Locație - arată pe hartă',
+    ],
     // ── Circuits & package routes (static-data admin grids) ──
     'sphinx_holidays.circuits' => [
         'en' => 'Circuits',
