@@ -26,6 +26,14 @@
     border-radius: 8px;
     margin-bottom: 12px;
 }
+/* Header row: hotel identity left, availability badge right (novoton parity) */
+.travel-search-results-page .travel-hotel-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+}
 .travel-search-results-page .travel-hotel-header h1,
 .travel-search-results-page .travel-hotel-header h2 {
     margin: 0;

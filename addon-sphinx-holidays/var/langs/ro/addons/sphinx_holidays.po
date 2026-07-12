@@ -503,3 +503,43 @@ msgstr "Sosire"
 msgctxt "Languages::sphinx_holidays.available_dates"
 msgid "Available dates"
 msgstr "Date disponibile"
+
+msgctxt "Languages::sphinx_holidays.available"
+msgid "Available"
+msgstr "Disponibil"
+
+msgctxt "Languages::sphinx_holidays.room"
+msgid "room"
+msgstr "cameră"
+
+msgctxt "Languages::sphinx_holidays.rooms"
+msgid "rooms"
+msgstr "camere"
+
+msgctxt "Languages::sphinx_holidays.offer"
+msgid "offer"
+msgstr "ofertă"
+
+msgctxt "Languages::sphinx_holidays.offers"
+msgid "offers"
+msgstr "oferte"
+
+msgctxt "Languages::sphinx_holidays.for"
+msgid "for"
+msgstr "pentru"
+
+msgctxt "Languages::sphinx_holidays.adult"
+msgid "adult"
+msgstr "adult"
+
+msgctxt "Languages::sphinx_holidays.adults"
+msgid "adults"
+msgstr "adulți"
+
+msgctxt "Languages::sphinx_holidays.child"
+msgid "child"
+msgstr "copil"
+
+msgctxt "Languages::sphinx_holidays.children"
+msgid "children"
+msgstr "copii"
