@@ -403,3 +403,23 @@ msgstr "până la"
 msgctxt "Languages::sphinx_holidays.terms_from"
 msgid "from"
 msgstr "de la"
+
+msgctxt "Languages::sphinx_holidays.bulk_select_all"
+msgid "All"
+msgstr "Toate"
+
+msgctxt "Languages::sphinx_holidays.bulk_select_none"
+msgid "None"
+msgstr "Niciunul"
+
+msgctxt "Languages::sphinx_holidays.bulk_actions"
+msgid "Actions"
+msgstr "Acțiuni"
+
+msgctxt "Languages::sphinx_holidays.bulk_change_to_active"
+msgid "Change to Active"
+msgstr "Schimbă în Activ"
+
+msgctxt "Languages::sphinx_holidays.bulk_change_to_disabled"
+msgid "Change to Disabled"
+msgstr "Schimbă în Dezactivat"

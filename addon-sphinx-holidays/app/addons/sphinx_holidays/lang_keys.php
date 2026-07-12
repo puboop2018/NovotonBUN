@@ -157,6 +157,26 @@ return [
         'en' => 'Deselect all',
         'ro' => 'Deselectează tot',
     ],
+    'sphinx_holidays.bulk_select_all' => [
+        'en' => 'All',
+        'ro' => 'Toate',
+    ],
+    'sphinx_holidays.bulk_select_none' => [
+        'en' => 'None',
+        'ro' => 'Niciunul',
+    ],
+    'sphinx_holidays.bulk_actions' => [
+        'en' => 'Actions',
+        'ro' => 'Acțiuni',
+    ],
+    'sphinx_holidays.bulk_change_to_active' => [
+        'en' => 'Change to Active',
+        'ro' => 'Schimbă în Activ',
+    ],
+    'sphinx_holidays.bulk_change_to_disabled' => [
+        'en' => 'Change to Disabled',
+        'ro' => 'Schimbă în Dezactivat',
+    ],
     'sphinx_holidays.images_synced' => [
         'en' => 'Images synced',
         'ro' => 'Imagini sincronizate',

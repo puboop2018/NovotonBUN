@@ -995,6 +995,20 @@
         <item lang="ro" id="sphinx_holidays.bulk_sync_images"><![CDATA[Sincronizează Imagini]]></item>
         <item lang="en" id="sphinx_holidays.bulk_delete_confirm"><![CDATA[Are you sure you want to delete the selected hotels?]]></item>
         <item lang="ro" id="sphinx_holidays.bulk_delete_confirm"><![CDATA[Sigur doriți să ștergeți hotelurile selectate?]]></item>
+        <item lang="en" id="sphinx_holidays.selected_count_label"><![CDATA[selected]]></item>
+        <item lang="ro" id="sphinx_holidays.selected_count_label"><![CDATA[selectate]]></item>
+        <item lang="en" id="sphinx_holidays.deselect_all"><![CDATA[Deselect all]]></item>
+        <item lang="ro" id="sphinx_holidays.deselect_all"><![CDATA[Deselectează tot]]></item>
+        <item lang="en" id="sphinx_holidays.bulk_select_all"><![CDATA[All]]></item>
+        <item lang="ro" id="sphinx_holidays.bulk_select_all"><![CDATA[Toate]]></item>
+        <item lang="en" id="sphinx_holidays.bulk_select_none"><![CDATA[None]]></item>
+        <item lang="ro" id="sphinx_holidays.bulk_select_none"><![CDATA[Niciunul]]></item>
+        <item lang="en" id="sphinx_holidays.bulk_actions"><![CDATA[Actions]]></item>
+        <item lang="ro" id="sphinx_holidays.bulk_actions"><![CDATA[Acțiuni]]></item>
+        <item lang="en" id="sphinx_holidays.bulk_change_to_active"><![CDATA[Change to Active]]></item>
+        <item lang="ro" id="sphinx_holidays.bulk_change_to_active"><![CDATA[Schimbă în Activ]]></item>
+        <item lang="en" id="sphinx_holidays.bulk_change_to_disabled"><![CDATA[Change to Disabled]]></item>
+        <item lang="ro" id="sphinx_holidays.bulk_change_to_disabled"><![CDATA[Schimbă în Dezactivat]]></item>
         <item lang="en" id="sphinx_holidays.images_synced"><![CDATA[Images synced]]></item>
         <item lang="ro" id="sphinx_holidays.images_synced"><![CDATA[Imagini sincronizate]]></item>
         <item lang="en" id="sphinx_holidays.hotels_updated"><![CDATA[Hotels updated]]></item>

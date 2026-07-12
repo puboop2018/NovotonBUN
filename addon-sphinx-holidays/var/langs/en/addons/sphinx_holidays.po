@@ -403,3 +403,23 @@ msgstr "until"
 msgctxt "Languages::sphinx_holidays.terms_from"
 msgid "from"
 msgstr "from"
+
+msgctxt "Languages::sphinx_holidays.bulk_select_all"
+msgid "All"
+msgstr "All"
+
+msgctxt "Languages::sphinx_holidays.bulk_select_none"
+msgid "None"
+msgstr "None"
+
+msgctxt "Languages::sphinx_holidays.bulk_actions"
+msgid "Actions"
+msgstr "Actions"
+
+msgctxt "Languages::sphinx_holidays.bulk_change_to_active"
+msgid "Change to Active"
+msgstr "Change to Active"
+
+msgctxt "Languages::sphinx_holidays.bulk_change_to_disabled"
+msgid "Change to Disabled"
+msgstr "Change to Disabled"

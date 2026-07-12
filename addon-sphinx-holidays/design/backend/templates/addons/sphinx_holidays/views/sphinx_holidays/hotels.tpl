@@ -216,39 +216,64 @@
        hotel_ids[] (+ bulk_status for the status actions) POST exactly as
        the old "With selected" buttons did — the three backend handlers are
        unchanged. *}
+    {* products.manage-style bar: three dropdowns (N Selected / Status /
+       Actions), plain-text items — no icons. "All" proxies a real click on
+       the native check_all checkbox so counter/highlight update through the
+       same core handlers as a user click; "None" is the core
+       bulkedit-deselect handler. *}
     <thead class="hidden" data-ca-bulkedit-expanded-object="true">
         <tr>
             <th width="30">
-                <input type="checkbox" name="check_all" class="cm-check-items" title="{__("check_uncheck_all")}" />
+                <input type="checkbox" name="check_all" id="sphinx_check_all" class="cm-check-items" title="{__("check_uncheck_all")}" />
             </th>
             <th colspan="10">
                 <div class="bulk-edit" style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-                    <strong style="white-space:nowrap;"><span data-ca-longtap-selected-counter="true">0</span> {__("sphinx_holidays.selected_count_label")}</strong>
-                    <a href="#" class="bulkedit-deselect">{__("sphinx_holidays.deselect_all")}</a>
+                    <div class="btn-group dropdown">
+                        <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+                            <strong><span data-ca-longtap-selected-counter="true">0</span> {__("sphinx_holidays.selected_count_label")}</strong> <span class="caret"></span>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a href="#" onclick="var c = document.getElementById('sphinx_check_all'); if (c) { if (c.checked) { c.click(); } c.click(); } return false;">{__("sphinx_holidays.bulk_select_all")}</a>
+                            </li>
+                            <li>
+                                <a href="#" class="bulkedit-deselect">{__("sphinx_holidays.bulk_select_none")}</a>
+                            </li>
+                        </ul>
+                    </div>
                     <div class="btn-group dropdown">
                         <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">{__("status")} <span class="caret"></span></a>
                         <ul class="dropdown-menu">
                             <li>
                                 <button type="submit" class="btn btn-link" name="dispatch[sphinx_holidays.bulk_update_hotels]"
                                         onclick="document.getElementById('sphinx_bulk_action').value='active';">
-                                    <i class="icon-ok"></i> {__("sphinx_holidays.bulk_activate")}
+                                    {__("sphinx_holidays.bulk_change_to_active")}
                                 </button>
                             </li>
                             <li>
                                 <button type="submit" class="btn btn-link" name="dispatch[sphinx_holidays.bulk_update_hotels]"
                                         onclick="document.getElementById('sphinx_bulk_action').value='inactive';">
-                                    <i class="icon-ban-circle"></i> {__("sphinx_holidays.bulk_deactivate")}
+                                    {__("sphinx_holidays.bulk_change_to_disabled")}
                                 </button>
                             </li>
                         </ul>
                     </div>
-                    <button type="submit" class="btn" name="dispatch[sphinx_holidays.bulk_sync_images]">
-                        <i class="icon-picture"></i> {__("sphinx_holidays.bulk_sync_images")}
-                    </button>
-                    <button type="submit" class="btn cm-confirm" name="dispatch[sphinx_holidays.bulk_delete_hotels]"
-                            data-ca-confirm-text="{__("sphinx_holidays.bulk_delete_confirm")|escape:html}">
-                        <i class="icon-trash"></i> {__("sphinx_holidays.bulk_delete")}
-                    </button>
+                    <div class="btn-group dropdown">
+                        <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">{__("sphinx_holidays.bulk_actions")} <span class="caret"></span></a>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <button type="submit" class="btn btn-link" name="dispatch[sphinx_holidays.bulk_sync_images]">
+                                    {__("sphinx_holidays.bulk_sync_images")}
+                                </button>
+                            </li>
+                            <li>
+                                <button type="submit" class="btn btn-link cm-confirm" name="dispatch[sphinx_holidays.bulk_delete_hotels]"
+                                        data-ca-confirm-text="{__("sphinx_holidays.bulk_delete_confirm")|escape:html}">
+                                    {__("sphinx_holidays.bulk_delete")}
+                                </button>
+                            </li>
+                        </ul>
+                    </div>
                     <a href="#" class="bulkedit-disabler btn" style="margin-left:auto;"
                        data-ca-bulkedit-enable="[data-ca-bulkedit-default-object=true]"
                        data-ca-bulkedit-disable="[data-ca-bulkedit-expanded-object=true]"
