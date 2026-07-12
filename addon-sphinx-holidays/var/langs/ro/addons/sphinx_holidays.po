@@ -403,3 +403,103 @@ msgstr "până la"
 msgctxt "Languages::sphinx_holidays.terms_from"
 msgid "from"
 msgstr "de la"
+
+msgctxt "Languages::sphinx_holidays.bulk_select_all"
+msgid "All"
+msgstr "Toate"
+
+msgctxt "Languages::sphinx_holidays.bulk_select_none"
+msgid "None"
+msgstr "Niciunul"
+
+msgctxt "Languages::sphinx_holidays.bulk_actions"
+msgid "Actions"
+msgstr "Acțiuni"
+
+msgctxt "Languages::sphinx_holidays.bulk_change_to_active"
+msgid "Change to Active"
+msgstr "Schimbă în Activ"
+
+msgctxt "Languages::sphinx_holidays.bulk_change_to_disabled"
+msgid "Change to Disabled"
+msgstr "Schimbă în Dezactivat"
+
+msgctxt "Languages::sphinx_holidays.circuits"
+msgid "Circuits"
+msgstr "Circuite"
+
+msgctxt "Languages::sphinx_holidays.package_routes"
+msgid "Package routes"
+msgstr "Rute pachete"
+
+msgctxt "Languages::sphinx_holidays.sync_now"
+msgid "Sync now"
+msgstr "Sincronizează acum"
+
+msgctxt "Languages::sphinx_holidays.sync_circuits"
+msgid "Sync Circuits"
+msgstr "Sincronizează Circuite"
+
+msgctxt "Languages::sphinx_holidays.sync_package_routes"
+msgid "Sync Package Routes"
+msgstr "Sincronizează Rute Pachete"
+
+msgctxt "Languages::sphinx_holidays.sync_circuits_confirm"
+msgid "Sync the circuit catalog from the Sphinx API now?"
+msgstr "Sincronizați acum catalogul de circuite din API-ul Sphinx?"
+
+msgctxt "Languages::sphinx_holidays.sync_package_routes_confirm"
+msgid "Sync package routes from the Sphinx API now?"
+msgstr "Sincronizați acum rutele de pachete din API-ul Sphinx?"
+
+msgctxt "Languages::sphinx_holidays.no_circuits"
+msgid "No circuits found."
+msgstr "Niciun circuit găsit."
+
+msgctxt "Languages::sphinx_holidays.no_package_routes"
+msgid "No package routes found."
+msgstr "Nicio rută de pachet găsită."
+
+msgctxt "Languages::sphinx_holidays.all"
+msgid "All"
+msgstr "Toate"
+
+msgctxt "Languages::sphinx_holidays.transport_type"
+msgid "Transport"
+msgstr "Transport"
+
+msgctxt "Languages::sphinx_holidays.transport_flight"
+msgid "Flight"
+msgstr "Avion"
+
+msgctxt "Languages::sphinx_holidays.transport_bus"
+msgid "Bus"
+msgstr "Autocar"
+
+msgctxt "Languages::sphinx_holidays.duration"
+msgid "Duration"
+msgstr "Durată"
+
+msgctxt "Languages::sphinx_holidays.min_price"
+msgid "From price"
+msgstr "Preț de la"
+
+msgctxt "Languages::sphinx_holidays.nights_short"
+msgid "nights"
+msgstr "nopți"
+
+msgctxt "Languages::sphinx_holidays.days_short"
+msgid "days"
+msgstr "zile"
+
+msgctxt "Languages::sphinx_holidays.departure"
+msgid "Departure"
+msgstr "Plecare"
+
+msgctxt "Languages::sphinx_holidays.arrival"
+msgid "Arrival"
+msgstr "Sosire"
+
+msgctxt "Languages::sphinx_holidays.available_dates"
+msgid "Available dates"
+msgstr "Date disponibile"

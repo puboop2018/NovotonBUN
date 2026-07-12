@@ -79,6 +79,59 @@ final class HotelsGridBulkBarTest extends TestCase
         self::assertStringNotContainsString('with_selected', $tpl, 'the static "With selected" strip was replaced');
     }
 
+    /**
+     * The bar is laid out like products.manage: three dropdowns
+     * ("N Selected ▾" with All/None, "Status ▾" with Change to Active/Disabled,
+     * "Actions ▾" with Sync Images/Delete Selected) and NO icon glyphs.
+     */
+    public function testBarIsThreeDropdownsWithoutIcons(): void
+    {
+        $bar = self::expandedBar();
+
+        self::assertSame(
+            3,
+            substr_count($bar, 'dropdown-toggle'),
+            'the bar has exactly three dropdowns: Selected / Status / Actions',
+        );
+
+        // "N Selected ▾" — live counter inside the toggle; All + None items.
+        self::assertStringContainsString('data-ca-longtap-selected-counter="true"', $bar);
+        self::assertStringContainsString('sphinx_holidays.bulk_select_all', $bar);
+        self::assertStringContainsString('sphinx_holidays.bulk_select_none', $bar);
+        // "All" drives the native check_all control (same handlers as a user click).
+        self::assertStringContainsString("getElementById('sphinx_check_all')", $bar);
+        self::assertStringContainsString('id="sphinx_check_all"', $bar);
+        // "None" rides the core deselect handler.
+        self::assertStringContainsString('class="bulkedit-deselect"', $bar);
+
+        // "Status ▾" — products.manage wording.
+        self::assertStringContainsString('sphinx_holidays.bulk_change_to_active', $bar);
+        self::assertStringContainsString('sphinx_holidays.bulk_change_to_disabled', $bar);
+        self::assertStringNotContainsString('bulk_activate', $bar, 'old label replaced by Change to Active');
+        self::assertStringNotContainsString('bulk_deactivate', $bar, 'old label replaced by Change to Disabled');
+
+        // "Actions ▾" — Sync Images + Delete Selected as menu items.
+        self::assertStringContainsString('sphinx_holidays.bulk_actions', $bar);
+        self::assertStringContainsString('sphinx_holidays.bulk_sync_images', $bar);
+        self::assertStringContainsString('sphinx_holidays.bulk_delete', $bar);
+
+        // No icon glyphs anywhere in the bar.
+        self::assertStringNotContainsString('<i class="icon-', $bar, 'the bulk bar is plain text — no icons');
+    }
+
+    /** The expanded (bulk-mode) <thead> region only. */
+    private static function expandedBar(): string
+    {
+        $tpl = self::template();
+
+        $start = strpos($tpl, 'data-ca-bulkedit-expanded-object="true"');
+        self::assertIsInt($start);
+        $end = strpos($tpl, '</thead>', $start);
+        self::assertIsInt($end);
+
+        return substr($tpl, $start, $end - $start);
+    }
+
     // ── City/Country columns from the hotel API address (not the dest tree) ──
 
     public function testGridShowsAddressCityAndCountryColumns(): void

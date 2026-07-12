@@ -10,14 +10,17 @@ use Tygh\Addons\SphinxHolidays\Services\Container;
 /**
  * Cron command: sync circuits from Sphinx static API.
  *
- * Usage: php cron.php access_key=KEY mode=circuits
+ * Usage: php cron.php access_key=KEY mode=circuits [full=1]
+ *
+ * Default is incremental (only circuits updated since the last successful run,
+ * via updated_since); pass full=1 to force a full re-fetch of the catalog.
  */
 class CircuitSyncCommand extends AbstractSyncCommand
 {
     #[\Override]
     public static function getDescription(): string
     {
-        return 'Sync circuit catalog from Sphinx static API';
+        return 'Sync circuit catalog from Sphinx static API (incremental; full=1 for a full re-fetch)';
     }
 
     /**
@@ -34,7 +37,8 @@ class CircuitSyncCommand extends AbstractSyncCommand
             $service->setOutputCallback($this->outputCallback);
         }
 
-        $stats = $service->sync();
+        $fullSync = !empty($params['full']);
+        $stats = $service->sync($fullSync);
 
         $this->outputRateLimitSummary($stats);
 

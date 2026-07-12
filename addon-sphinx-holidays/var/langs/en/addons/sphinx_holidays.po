@@ -403,3 +403,103 @@ msgstr "until"
 msgctxt "Languages::sphinx_holidays.terms_from"
 msgid "from"
 msgstr "from"
+
+msgctxt "Languages::sphinx_holidays.bulk_select_all"
+msgid "All"
+msgstr "All"
+
+msgctxt "Languages::sphinx_holidays.bulk_select_none"
+msgid "None"
+msgstr "None"
+
+msgctxt "Languages::sphinx_holidays.bulk_actions"
+msgid "Actions"
+msgstr "Actions"
+
+msgctxt "Languages::sphinx_holidays.bulk_change_to_active"
+msgid "Change to Active"
+msgstr "Change to Active"
+
+msgctxt "Languages::sphinx_holidays.bulk_change_to_disabled"
+msgid "Change to Disabled"
+msgstr "Change to Disabled"
+
+msgctxt "Languages::sphinx_holidays.circuits"
+msgid "Circuits"
+msgstr "Circuits"
+
+msgctxt "Languages::sphinx_holidays.package_routes"
+msgid "Package routes"
+msgstr "Package routes"
+
+msgctxt "Languages::sphinx_holidays.sync_now"
+msgid "Sync now"
+msgstr "Sync now"
+
+msgctxt "Languages::sphinx_holidays.sync_circuits"
+msgid "Sync Circuits"
+msgstr "Sync Circuits"
+
+msgctxt "Languages::sphinx_holidays.sync_package_routes"
+msgid "Sync Package Routes"
+msgstr "Sync Package Routes"
+
+msgctxt "Languages::sphinx_holidays.sync_circuits_confirm"
+msgid "Sync the circuit catalog from the Sphinx API now?"
+msgstr "Sync the circuit catalog from the Sphinx API now?"
+
+msgctxt "Languages::sphinx_holidays.sync_package_routes_confirm"
+msgid "Sync package routes from the Sphinx API now?"
+msgstr "Sync package routes from the Sphinx API now?"
+
+msgctxt "Languages::sphinx_holidays.no_circuits"
+msgid "No circuits found."
+msgstr "No circuits found."
+
+msgctxt "Languages::sphinx_holidays.no_package_routes"
+msgid "No package routes found."
+msgstr "No package routes found."
+
+msgctxt "Languages::sphinx_holidays.all"
+msgid "All"
+msgstr "All"
+
+msgctxt "Languages::sphinx_holidays.transport_type"
+msgid "Transport"
+msgstr "Transport"
+
+msgctxt "Languages::sphinx_holidays.transport_flight"
+msgid "Flight"
+msgstr "Flight"
+
+msgctxt "Languages::sphinx_holidays.transport_bus"
+msgid "Bus"
+msgstr "Bus"
+
+msgctxt "Languages::sphinx_holidays.duration"
+msgid "Duration"
+msgstr "Duration"
+
+msgctxt "Languages::sphinx_holidays.min_price"
+msgid "From price"
+msgstr "From price"
+
+msgctxt "Languages::sphinx_holidays.nights_short"
+msgid "nights"
+msgstr "nights"
+
+msgctxt "Languages::sphinx_holidays.days_short"
+msgid "days"
+msgstr "days"
+
+msgctxt "Languages::sphinx_holidays.departure"
+msgid "Departure"
+msgstr "Departure"
+
+msgctxt "Languages::sphinx_holidays.arrival"
+msgid "Arrival"
+msgstr "Arrival"
+
+msgctxt "Languages::sphinx_holidays.available_dates"
+msgid "Available dates"
+msgstr "Available dates"

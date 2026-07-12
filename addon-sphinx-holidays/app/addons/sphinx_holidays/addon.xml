@@ -995,6 +995,60 @@
         <item lang="ro" id="sphinx_holidays.bulk_sync_images"><![CDATA[Sincronizează Imagini]]></item>
         <item lang="en" id="sphinx_holidays.bulk_delete_confirm"><![CDATA[Are you sure you want to delete the selected hotels?]]></item>
         <item lang="ro" id="sphinx_holidays.bulk_delete_confirm"><![CDATA[Sigur doriți să ștergeți hotelurile selectate?]]></item>
+        <item lang="en" id="sphinx_holidays.selected_count_label"><![CDATA[selected]]></item>
+        <item lang="ro" id="sphinx_holidays.selected_count_label"><![CDATA[selectate]]></item>
+        <item lang="en" id="sphinx_holidays.deselect_all"><![CDATA[Deselect all]]></item>
+        <item lang="ro" id="sphinx_holidays.deselect_all"><![CDATA[Deselectează tot]]></item>
+        <item lang="en" id="sphinx_holidays.bulk_select_all"><![CDATA[All]]></item>
+        <item lang="ro" id="sphinx_holidays.bulk_select_all"><![CDATA[Toate]]></item>
+        <item lang="en" id="sphinx_holidays.bulk_select_none"><![CDATA[None]]></item>
+        <item lang="ro" id="sphinx_holidays.bulk_select_none"><![CDATA[Niciunul]]></item>
+        <item lang="en" id="sphinx_holidays.bulk_actions"><![CDATA[Actions]]></item>
+        <item lang="ro" id="sphinx_holidays.bulk_actions"><![CDATA[Acțiuni]]></item>
+        <item lang="en" id="sphinx_holidays.bulk_change_to_active"><![CDATA[Change to Active]]></item>
+        <item lang="ro" id="sphinx_holidays.bulk_change_to_active"><![CDATA[Schimbă în Activ]]></item>
+        <item lang="en" id="sphinx_holidays.bulk_change_to_disabled"><![CDATA[Change to Disabled]]></item>
+        <item lang="ro" id="sphinx_holidays.bulk_change_to_disabled"><![CDATA[Schimbă în Dezactivat]]></item>
+        <item lang="en" id="sphinx_holidays.circuits"><![CDATA[Circuits]]></item>
+        <item lang="ro" id="sphinx_holidays.circuits"><![CDATA[Circuite]]></item>
+        <item lang="en" id="sphinx_holidays.package_routes"><![CDATA[Package routes]]></item>
+        <item lang="ro" id="sphinx_holidays.package_routes"><![CDATA[Rute pachete]]></item>
+        <item lang="en" id="sphinx_holidays.sync_now"><![CDATA[Sync now]]></item>
+        <item lang="ro" id="sphinx_holidays.sync_now"><![CDATA[Sincronizează acum]]></item>
+        <item lang="en" id="sphinx_holidays.sync_circuits"><![CDATA[Sync Circuits]]></item>
+        <item lang="ro" id="sphinx_holidays.sync_circuits"><![CDATA[Sincronizează Circuite]]></item>
+        <item lang="en" id="sphinx_holidays.sync_package_routes"><![CDATA[Sync Package Routes]]></item>
+        <item lang="ro" id="sphinx_holidays.sync_package_routes"><![CDATA[Sincronizează Rute Pachete]]></item>
+        <item lang="en" id="sphinx_holidays.sync_circuits_confirm"><![CDATA[Sync the circuit catalog from the Sphinx API now?]]></item>
+        <item lang="ro" id="sphinx_holidays.sync_circuits_confirm"><![CDATA[Sincronizați acum catalogul de circuite din API-ul Sphinx?]]></item>
+        <item lang="en" id="sphinx_holidays.sync_package_routes_confirm"><![CDATA[Sync package routes from the Sphinx API now?]]></item>
+        <item lang="ro" id="sphinx_holidays.sync_package_routes_confirm"><![CDATA[Sincronizați acum rutele de pachete din API-ul Sphinx?]]></item>
+        <item lang="en" id="sphinx_holidays.no_circuits"><![CDATA[No circuits found.]]></item>
+        <item lang="ro" id="sphinx_holidays.no_circuits"><![CDATA[Niciun circuit găsit.]]></item>
+        <item lang="en" id="sphinx_holidays.no_package_routes"><![CDATA[No package routes found.]]></item>
+        <item lang="ro" id="sphinx_holidays.no_package_routes"><![CDATA[Nicio rută de pachet găsită.]]></item>
+        <item lang="en" id="sphinx_holidays.all"><![CDATA[All]]></item>
+        <item lang="ro" id="sphinx_holidays.all"><![CDATA[Toate]]></item>
+        <item lang="en" id="sphinx_holidays.transport_type"><![CDATA[Transport]]></item>
+        <item lang="ro" id="sphinx_holidays.transport_type"><![CDATA[Transport]]></item>
+        <item lang="en" id="sphinx_holidays.transport_flight"><![CDATA[Flight]]></item>
+        <item lang="ro" id="sphinx_holidays.transport_flight"><![CDATA[Avion]]></item>
+        <item lang="en" id="sphinx_holidays.transport_bus"><![CDATA[Bus]]></item>
+        <item lang="ro" id="sphinx_holidays.transport_bus"><![CDATA[Autocar]]></item>
+        <item lang="en" id="sphinx_holidays.duration"><![CDATA[Duration]]></item>
+        <item lang="ro" id="sphinx_holidays.duration"><![CDATA[Durată]]></item>
+        <item lang="en" id="sphinx_holidays.min_price"><![CDATA[From price]]></item>
+        <item lang="ro" id="sphinx_holidays.min_price"><![CDATA[Preț de la]]></item>
+        <item lang="en" id="sphinx_holidays.nights_short"><![CDATA[nights]]></item>
+        <item lang="ro" id="sphinx_holidays.nights_short"><![CDATA[nopți]]></item>
+        <item lang="en" id="sphinx_holidays.days_short"><![CDATA[days]]></item>
+        <item lang="ro" id="sphinx_holidays.days_short"><![CDATA[zile]]></item>
+        <item lang="en" id="sphinx_holidays.departure"><![CDATA[Departure]]></item>
+        <item lang="ro" id="sphinx_holidays.departure"><![CDATA[Plecare]]></item>
+        <item lang="en" id="sphinx_holidays.arrival"><![CDATA[Arrival]]></item>
+        <item lang="ro" id="sphinx_holidays.arrival"><![CDATA[Sosire]]></item>
+        <item lang="en" id="sphinx_holidays.available_dates"><![CDATA[Available dates]]></item>
+        <item lang="ro" id="sphinx_holidays.available_dates"><![CDATA[Date disponibile]]></item>
         <item lang="en" id="sphinx_holidays.images_synced"><![CDATA[Images synced]]></item>
         <item lang="ro" id="sphinx_holidays.images_synced"><![CDATA[Imagini sincronizate]]></item>
         <item lang="en" id="sphinx_holidays.hotels_updated"><![CDATA[Hotels updated]]></item>

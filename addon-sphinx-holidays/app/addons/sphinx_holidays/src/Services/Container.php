@@ -8,10 +8,12 @@ use Tygh\Addons\SphinxHolidays\Api\SphinxHttpClient;
 use Tygh\Addons\SphinxHolidays\Api\SphinxNormalizer;
 use Tygh\Addons\SphinxHolidays\Helpers\SphinxProductFactory;
 use Tygh\Addons\SphinxHolidays\Helpers\SphinxProductFactoryInterface;
+use Tygh\Addons\SphinxHolidays\Repository\CircuitRepository;
 use Tygh\Addons\SphinxHolidays\Repository\DestinationRepository;
 use Tygh\Addons\SphinxHolidays\Repository\DestinationWhitelistRepository;
 use Tygh\Addons\SphinxHolidays\Repository\HotelRepository;
 use Tygh\Addons\SphinxHolidays\Repository\HotelSkipRepository;
+use Tygh\Addons\SphinxHolidays\Repository\PackageRouteRepository;
 use Tygh\Addons\SphinxHolidays\Repository\SphinxBookingRepository;
 use Tygh\Addons\SphinxHolidays\Repository\SyncLogRepository;
 use Tygh\Addons\SphinxHolidays\SphinxApi;
@@ -126,6 +128,18 @@ class Container
     {
         /** @var HotelSkipRepository */
         return self::resolve('hotelSkipRepository', static fn (): \Tygh\Addons\SphinxHolidays\Repository\HotelSkipRepository => new HotelSkipRepository());
+    }
+
+    public static function getCircuitRepository(): CircuitRepository
+    {
+        /** @var CircuitRepository */
+        return self::resolve('circuitRepository', static fn (): \Tygh\Addons\SphinxHolidays\Repository\CircuitRepository => new CircuitRepository());
+    }
+
+    public static function getPackageRouteRepository(): PackageRouteRepository
+    {
+        /** @var PackageRouteRepository */
+        return self::resolve('packageRouteRepository', static fn (): \Tygh\Addons\SphinxHolidays\Repository\PackageRouteRepository => new PackageRouteRepository());
     }
 
     public static function getBookingRepository(): SphinxBookingRepository

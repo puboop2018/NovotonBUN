@@ -28,6 +28,22 @@
             </button>
         </form>
 
+        <form action="{""|fn_url}" method="post" style="display:inline;">
+            <input type="hidden" name="dispatch" value="sphinx_holidays.sync_circuits" />
+            <button type="submit" class="btn btn-primary" {if !$is_configured}disabled{/if}
+                    onclick="return confirm('{__("sphinx_holidays.sync_circuits_confirm")|escape:javascript}');">
+                <i class="icon-refresh"></i> {__("sphinx_holidays.sync_circuits")}
+            </button>
+        </form>
+
+        <form action="{""|fn_url}" method="post" style="display:inline;">
+            <input type="hidden" name="dispatch" value="sphinx_holidays.sync_package_routes" />
+            <button type="submit" class="btn btn-primary" {if !$is_configured}disabled{/if}
+                    onclick="return confirm('{__("sphinx_holidays.sync_package_routes_confirm")|escape:javascript}');">
+                <i class="icon-refresh"></i> {__("sphinx_holidays.sync_package_routes")}
+            </button>
+        </form>
+
         {if $selected_countries}
             <span class="muted">
                 {__("sphinx_holidays.sync_targets")}: <code>{', '|implode:$selected_countries}</code>
@@ -206,6 +222,13 @@
                     <td><code>0 4 * * 1</code> (weekly)</td>
                     <td style="word-break:break-all; font-size:11px; overflow:hidden;"><code>{$cron_urls.package_routes}</code></td>
                     <td><a href="{$cron_urls.package_routes}" target="_blank" class="btn btn-mini">Run</a></td>
+                </tr>
+                <tr>
+                    <td><strong>circuits</strong></td>
+                    <td>Sync circuit catalog from Sphinx API (incremental; add <code>&amp;full=1</code> for a full re-fetch)</td>
+                    <td><code>15 3 * * *</code> (daily)</td>
+                    <td style="word-break:break-all; font-size:11px; overflow:hidden;"><code>{$cron_urls.circuits}</code></td>
+                    <td><a href="{$cron_urls.circuits}" target="_blank" class="btn btn-mini">Run</a></td>
                 </tr>
                 <tr>
                     <td><strong>order_status</strong></td>
