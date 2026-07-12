@@ -199,6 +199,47 @@ class AlternativeRequestService implements AlternativeRequestServiceInterface
 
             $requestId = $this->altRequestRepo->create($requestRecord);
 
+            // Mirror into the shared cross-provider registry and notify staff.
+            // Never breaks the customer flow — the provider record above is
+            // the source of truth; the mirror is for the shared admin grid.
+            try {
+                $sharedRepo = new \Tygh\Addons\TravelCore\Repository\AlternativeRequestRepository();
+                $sharedRepo->create([
+                    'provider' => 'novoton',
+                    'provider_request_id' => $requestId,
+                    'hotel_id' => $hotelId,
+                    'hotel_name' => $hotelName,
+                    'check_in' => $checkIn,
+                    'check_out' => $checkOut !== '' ? $checkOut : null,
+                    'nights' => $nights,
+                    'num_rooms' => $numRooms,
+                    'adults' => $adults,
+                    'children' => $children,
+                    'contact_email' => $contactEmail,
+                    'contact_phone' => $contactPhone,
+                    'notes' => $notes,
+                    'status' => TravelConstants::STATUS_PENDING,
+                ]);
+                (new \Tygh\Addons\TravelCore\Services\AlternativeRequestNotifier())->notifyAdmin([
+                    'provider' => 'novoton',
+                    'hotel_id' => $hotelId,
+                    'hotel_name' => $hotelName,
+                    'check_in' => $checkIn,
+                    'check_out' => $checkOut,
+                    'nights' => $nights,
+                    'adults' => $adults,
+                    'children' => $children,
+                    'num_rooms' => $numRooms,
+                    'contact_email' => $contactEmail,
+                    'contact_phone' => $contactPhone,
+                    'notes' => $notes,
+                ]);
+            } catch (\Throwable $mirrorError) {
+                fn_log_event('general', 'runtime', [
+                    'message' => '[NovotonAlternatives] Shared-registry mirror/notify failed: ' . $mirrorError->getMessage(),
+                ]);
+            }
+
             // Send confirmation email
             $this->sendConfirmationEmail($contactEmail, [
                 'hotel_name' => $hotelName,

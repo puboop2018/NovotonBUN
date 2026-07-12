@@ -180,6 +180,34 @@
          data-alt-from="{__("sphinx_holidays.alt_from")|default:"from"|escape:html}">
         <p>{__("sphinx_holidays.no_results")|default:"No availability for the selected dates. Please try different dates."}</p>
         <div id="sphinx-alt-dates" class="travel-alt-dates" style="display: none;"></div>
+
+        {* "Contact me when available" — stored in the SHARED travel registry
+           for INTERNAL follow-up only; no Sphinx API request is created. *}
+        <div class="travel-request-box">
+            <h4>{__("travel_core.request_alternatives_title")|default:"Can't find what you're looking for?"}</h4>
+            <p>{__("travel_core.request_alternatives_desc")|default:"Leave your contact details and we'll get back to you with alternatives for your dates."}</p>
+            <form method="post" action="{""|fn_url}" name="sphinx_alt_request_form">
+                <input type="hidden" name="dispatch" value="sphinx_booking.request_alternatives">
+                <input type="hidden" name="security_hash" value="{$security_hash}">
+                <input type="hidden" name="hotel_id" value="{$sphinx_search_params.hotel_id|escape:html}">
+                <input type="hidden" name="hotel_name" value="{$sphinx_hotel_name|escape:html}">
+                <input type="hidden" name="product_id" value="{$sphinx_search_params.product_id|escape:html}">
+                <input type="hidden" name="check_in" value="{$sphinx_search_params.check_in|escape:html}">
+                <input type="hidden" name="check_out" value="{$sphinx_search_params.check_out|escape:html}">
+                <input type="hidden" name="nights" value="{$sphinx_search_params.nights|escape:html}">
+                <input type="hidden" name="adults" value="{$sphinx_search_params.adults|escape:html}">
+                <input type="hidden" name="children" value="{$sphinx_search_params.children|escape:html}">
+                <input type="hidden" name="children_ages" value="{$sphinx_search_params.children_ages|escape:html}">
+                <input type="hidden" name="rooms" value="{$sphinx_search_params.rooms|escape:html}">
+                {* Honeypot — humans never see it, bots fill everything *}
+                <input type="text" name="website" value="" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;">
+                <div class="travel-request-grid">
+                    <input type="email" name="contact_email" required placeholder="{__("email")|default:"E-mail"}">
+                    <input type="tel" name="contact_phone" placeholder="{__("phone")|default:"Phone"}">
+                    <button type="submit" class="travel-offer-book-btn">{__("travel_core.send_request")|default:"Send"}</button>
+                </div>
+            </form>
+        </div>
     </div>
 
 </div>

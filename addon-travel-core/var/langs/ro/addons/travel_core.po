@@ -757,3 +757,75 @@ msgstr "Politica de anulare"
 msgctxt "Languages::travel_core.days"
 msgid "days"
 msgstr "zile"
+
+msgctxt "Languages::travel_core.alternative_requests"
+msgid "Availability Requests"
+msgstr "Cereri de Disponibilitate"
+
+msgctxt "Languages::travel_core.provider"
+msgid "Provider"
+msgstr "Furnizor"
+
+msgctxt "Languages::travel_core.period"
+msgid "Period"
+msgstr "Perioadă"
+
+msgctxt "Languages::travel_core.guests"
+msgid "Guests"
+msgstr "Turiști"
+
+msgctxt "Languages::travel_core.contact"
+msgid "Contact"
+msgstr "Contact"
+
+msgctxt "Languages::travel_core.created"
+msgid "Created"
+msgstr "Creat"
+
+msgctxt "Languages::travel_core.hotel"
+msgid "Hotel"
+msgstr "Hotel"
+
+msgctxt "Languages::travel_core.rooms_short"
+msgid "room(s)"
+msgstr "cam."
+
+msgctxt "Languages::travel_core.provider_ref"
+msgid "provider ref"
+msgstr "ref. furnizor"
+
+msgctxt "Languages::travel_core.hotel_or_email"
+msgid "Hotel or e-mail"
+msgstr "Hotel sau e-mail"
+
+msgctxt "Languages::travel_core.no_alternative_requests"
+msgid "No availability requests yet."
+msgstr "Nicio cerere de disponibilitate încă."
+
+msgctxt "Languages::travel_core.request_alternatives_title"
+msgid "Can't find what you're looking for?"
+msgstr "Nu găsiți ce căutați?"
+
+msgctxt "Languages::travel_core.request_alternatives_desc"
+msgid "Leave your contact details and we'll get back to you with alternatives for your dates."
+msgstr "Lăsați datele de contact și revenim cu alternative pentru datele dvs."
+
+msgctxt "Languages::travel_core.send_request"
+msgid "Send"
+msgstr "Trimite"
+
+msgctxt "Languages::travel_core.request_received"
+msgid "Your request was recorded. We will contact you shortly."
+msgstr "Cererea a fost înregistrată. Vă vom contacta în curând."
+
+msgctxt "Languages::travel_core.request_failed"
+msgid "Could not record your request. Please try again."
+msgstr "Cererea nu a putut fi înregistrată. Vă rugăm încercați din nou."
+
+msgctxt "Languages::travel_core.request_invalid_email"
+msgid "Please provide a valid e-mail address."
+msgstr "Vă rugăm introduceți o adresă de e-mail validă."
+
+msgctxt "Languages::travel_core.request_too_soon"
+msgid "Please wait a moment before sending another request."
+msgstr "Vă rugăm așteptați un moment înainte de a trimite o nouă cerere."
