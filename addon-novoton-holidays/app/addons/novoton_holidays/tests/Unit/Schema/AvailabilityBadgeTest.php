@@ -67,6 +67,27 @@ final class AvailabilityBadgeTest extends TestCase
         self::assertStringContainsString('products.view?product_id=`$novoton_params.product_id`', $tpl);
     }
 
+    public function testHeaderShownWheneverHotelKnownBadgeOnlyWithResults(): void
+    {
+        $tpl = self::themeTpl('responsive');
+
+        // The header is gated on the hotel being KNOWN, not on results: a
+        // zero-availability search must still show which hotel was searched
+        // (name -> product page, address, map link).
+        $headerGuardPos = strpos($tpl, '{if $hotel_name}');
+        $headerPos = strpos($tpl, 'travel-hotel-header ');
+        $firstResultsGuardPos = strpos($tpl, '{if $novoton_results');
+        self::assertIsInt($headerGuardPos);
+        self::assertIsInt($headerPos);
+        self::assertIsInt($firstResultsGuardPos);
+        self::assertLessThan($headerPos, $headerGuardPos, 'the header opens under the hotel-known guard');
+        self::assertLessThan(
+            $firstResultsGuardPos,
+            $headerPos,
+            'the header must not be inside a results guard — only the badge is results-gated',
+        );
+    }
+
     public function testHeaderShowsMapLinkFromCoordinates(): void
     {
         $tpl = self::themeTpl('responsive');

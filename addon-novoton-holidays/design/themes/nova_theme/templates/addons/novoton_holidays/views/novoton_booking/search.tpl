@@ -29,8 +29,12 @@
     </div>
     {/if}
 
-    {* ===== HOTEL HEADER — placed ABOVE the search form (sphinx parity) ===== *}
-    {if $novoton_results && $novoton_results|count > 0}
+    {* ===== HOTEL HEADER — placed ABOVE the search form (sphinx parity).
+       Shown whenever the hotel is KNOWN, results or not: on a
+       zero-availability search the guest still needs to see which hotel this
+       is (name → product page, address, map link). Only the badge is
+       results-gated — it never shows "0 offers". ===== *}
+    {if $hotel_name}
         <div class="travel-hotel-header novoton-hotel-header">
             <div class="novoton-hotel-header-row">
                 <div>
@@ -55,6 +59,7 @@
                     {/if}
                 </div>
                 <div>
+                    {if $novoton_results && $novoton_results|count > 0}
                     {* Rooms = DISTINCT room types, not availability quota: two
                        board variants of the same room count as ONE room. The
                        party suffix ties "availability" to the searched guests. *}
@@ -72,6 +77,7 @@
                     <span id="novoton-availability-badge" class="travel-availability-badge" data-rooms-count="{$badge_rooms_count}" data-offers-count="{$badge_offers_count}" data-party-suffix="{$badge_party_suffix|escape:html}">
                         ✓ {__("novoton_holidays.available")}: {$badge_rooms_count} {if $badge_rooms_count == 1}{__("novoton_holidays.room")|default:"room"|lower}{else}{__("novoton_holidays.rooms")|default:"rooms"|lower}{/if}, {$badge_offers_count} {if $badge_offers_count == 1}{__("novoton_holidays.offer")|default:"offer"|lower}{else}{__("novoton_holidays.offers")|default:"offers"|lower}{/if}{$badge_party_suffix}
                     </span>
+                    {/if}
                 </div>
             </div>
         </div>
