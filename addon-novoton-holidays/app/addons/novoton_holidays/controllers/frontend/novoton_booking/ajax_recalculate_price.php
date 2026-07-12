@@ -29,12 +29,13 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
         return true;
     }, E_WARNING | E_NOTICE | E_DEPRECATED | E_USER_WARNING | E_USER_NOTICE);
 
-    // Debug logging — writes to CS-Cart log when addon setting debug=Y
-    // or when ?novoton_debug=1 is in the URL
+    // Debug logging — writes to CS-Cart log when addon setting debug_mode=Y.
+    // (Regression: this read a nonexistent 'debug' setting key, so the gate
+    // was permanently off and no recalc evidence ever reached the logs.)
     $debug_enabled = false;
     $debug_messages = [];
     try {
-        $debug_enabled = (ConfigProvider::get('debug', 'N') === 'Y');
+        $debug_enabled = ConfigProvider::isDebugMode();
     } catch (\Exception $e) {
         // Registry may not be available in edge cases; debug stays disabled
     }
@@ -324,6 +325,25 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
             'matched_room' => $matched_room ?: 'N/A',
             'room_changed' => $room_changed ? 'YES' : 'NO'
         ]);
+
+        if ($room_changed) {
+            // Unconditional (not debug-gated): a substituted room means the
+            // operator no longer offers the selected room for this occupancy —
+            // always worth evidence in Administration → Logs.
+            fn_log_event('general', 'runtime', [
+                'message' => sprintf(
+                    '[NovotonPriceRecalc] Room substitution: "%s" -> "%s" (hotel %s, check-in %s, adults=%d, children=[%s], price %.2f -> %.2f)',
+                    $original_room,
+                    TypeCoerce::toString($matched_room),
+                    $hotel_id,
+                    $check_in,
+                    $adults,
+                    implode(',', $children_ages),
+                    $original_price,
+                    TypeCoerce::toFloat($new_price)
+                ),
+            ]);
+        }
 
         // Calculate price difference (both prices now in display currency)
         $price_difference = $new_price - $original_price;

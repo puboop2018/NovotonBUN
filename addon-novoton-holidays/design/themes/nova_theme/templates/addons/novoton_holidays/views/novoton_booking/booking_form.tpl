@@ -643,11 +643,13 @@ function collectAndRecalculate(roomNum) {
     }, 600);
 }
 
-function doCollectAndRecalculate(roomNum) {
-    // For multi-room: collect only this room's children ages
-    // For single room: collect all children ages
+// Collect the per-child ages from the hidden child_age_* inputs.
+// For multi-room: only this room's children; for single room: all children.
+// The inputs are pre-seeded from the search occupancy and updated on DOB
+// entry, so they always reflect the party this offer was priced for.
+function collectChildrenAges(roomNum) {
     var childrenAges = [];
-    var isMultiRoom = window.bookingData.numRooms > 1;
+    var isMultiRoom = window.bookingData && window.bookingData.numRooms > 1;
     var selector = isMultiRoom
         ? '[id^="child_age_r' + roomNum + '_c"]'
         : '[id^="child_age_"]';
@@ -659,6 +661,11 @@ function doCollectAndRecalculate(roomNum) {
         }
     });
     novotonLog('Collected children ages' + (isMultiRoom ? ' for room ' + roomNum : ''), childrenAges);
+    return childrenAges;
+}
+
+function doCollectAndRecalculate(roomNum) {
+    var childrenAges = collectChildrenAges(roomNum);
 
     if (childrenAges.length > 0) {
         triggerPriceRecalculationInline(childrenAges, roomNum);
@@ -755,77 +762,15 @@ function triggerPriceRecalculationInline(childrenAges, roomNum, isInitialLoad) {
             hidePriceError();
 
             try {
-            var newPrice = parseFloat(data.new_price) || 0;
-            var coeff = window.NovotonTranslations.currencyCoeff || 1;
-            var currSym = window.NovotonTranslations.currency || 'EUR';
-            novotonLog('New price for room ' + roomNum + ': ' + newPrice + ' (coeff=' + coeff + ')');
 
-            if (isMultiRoom && window.bookingData.roomsData && window.bookingData.roomsData[roomIdx]) {
-                // Multi-room: Update only this room's price (EUR for form submission)
-                var oldRoomPrice = parseFloat(window.bookingData.roomsData[roomIdx].price) || 0;
-                window.bookingData.roomsData[roomIdx].price = newPrice;
-
-                // Update the room card price display (converted to display currency)
-                var roomPriceEl = document.querySelector('.room-card[data-room-num="' + roomNum + '"] .room-price');
-                if (roomPriceEl) {
-                    roomPriceEl.textContent = Math.round(newPrice * coeff) + ' ' + currSym;
-                }
-
-                // Recalculate total from all rooms (in EUR)
-                var totalPrice = 0;
-                for (var i = 0; i < window.bookingData.roomsData.length; i++) {
-                    totalPrice += parseFloat(window.bookingData.roomsData[i].price) || 0;
-                }
-
-                novotonLog('New total price: ' + totalPrice);
-
-                // Update total price display (converted to display currency)
-                var displayTotal = (totalPrice * coeff).toFixed(2);
-                document.querySelectorAll('.price-total').forEach(function(el) {
-                    el.textContent = displayTotal;
-                });
-
-                // A76i: Update hidden total_price input for form submission (EUR)
-                var hiddenPriceInput = document.querySelector('input[name="total_price"]');
-                if (hiddenPriceInput) {
-                    hiddenPriceInput.value = totalPrice.toFixed(2);
-                    novotonLog('Updated hidden total_price to: ' + totalPrice.toFixed(2));
-                }
-
-                // Update bookingData total
-                var priceDiff = totalPrice - window.bookingData.currentPrice;
-                window.bookingData.currentPrice = totalPrice;
-
-                // Show price change notification (skip on initial load — wording is child-age specific)
-                if (!isInitialLoad && Math.abs(priceDiff) > 0.01) {
-                    showPriceNotification(priceDiff * coeff);
-                }
-            } else {
-                // Single room: Update total price display (converted to display currency)
-                var displayPrice = (newPrice * coeff).toFixed(2);
-                document.querySelectorAll('.price-total').forEach(function(el) {
-                    el.textContent = displayPrice;
-                });
-
-                // A76i: Update hidden total_price input for form submission (EUR)
-                var hiddenPriceInput = document.querySelector('input[name="total_price"]');
-                if (hiddenPriceInput) {
-                    hiddenPriceInput.value = newPrice.toFixed(2);
-                    novotonLog('Updated hidden total_price to: ' + newPrice.toFixed(2));
-                }
-
-                // Show price change notification (skip on initial load — wording is child-age specific)
-                if (!isInitialLoad && data.price_difference && data.price_difference !== 0) {
-                    showPriceNotification(data.price_difference * coeff);
-                }
-
-                // Update bookingData (EUR)
-                window.bookingData.currentPrice = newPrice;
-            }
-
-            // Show room change warning if needed
             if (data.room_changed) {
+                // The quote is for a DIFFERENT room — do NOT commit the price
+                // yet. acceptRoomChangeInline applies price + room together
+                // once the guest accepts; declining keeps the original state.
+                window._roomChangeContext = { roomNum: roomNum, isMultiRoom: isMultiRoom, isInitialLoad: isInitialLoad };
                 showRoomChangeModal(data);
+            } else {
+                applyRecalculatedPrice(data, roomNum, isMultiRoom, isInitialLoad);
             }
 
             // Hide any previous notice
@@ -852,6 +797,80 @@ function triggerPriceRecalculationInline(childrenAges, roomNum, isInitialLoad) {
         // Server-side will verify the price at checkout anyway
         showInfoNotice('{__("novoton_holidays.price_verified_at_checkout")|default:"Prețul va fi verificat la finalizare"}');
     });
+}
+
+// Commit a successful re-quote to the price displays, the hidden total_price
+// input and bookingData. Called directly when the room is unchanged; when the
+// server proposed a DIFFERENT room it runs only from acceptRoomChangeInline,
+// so an undecided (or declined) room change never overwrites the form price.
+function applyRecalculatedPrice(data, roomNum, isMultiRoom, isInitialLoad) {
+    var roomIdx = roomNum - 1;
+    var newPrice = parseFloat(data.new_price) || 0;
+    var coeff = window.NovotonTranslations.currencyCoeff || 1;
+    var currSym = window.NovotonTranslations.currency || 'EUR';
+    novotonLog('New price for room ' + roomNum + ': ' + newPrice + ' (coeff=' + coeff + ')');
+
+    if (isMultiRoom && window.bookingData.roomsData && window.bookingData.roomsData[roomIdx]) {
+        // Multi-room: Update only this room's price (EUR for form submission)
+        window.bookingData.roomsData[roomIdx].price = newPrice;
+
+        // Update the room card price display (converted to display currency)
+        var roomPriceEl = document.querySelector('.room-card[data-room-num="' + roomNum + '"] .room-price');
+        if (roomPriceEl) {
+            roomPriceEl.textContent = Math.round(newPrice * coeff) + ' ' + currSym;
+        }
+
+        // Recalculate total from all rooms (in EUR)
+        var totalPrice = 0;
+        for (var i = 0; i < window.bookingData.roomsData.length; i++) {
+            totalPrice += parseFloat(window.bookingData.roomsData[i].price) || 0;
+        }
+
+        novotonLog('New total price: ' + totalPrice);
+
+        // Update total price display (converted to display currency)
+        var displayTotal = (totalPrice * coeff).toFixed(2);
+        document.querySelectorAll('.price-total').forEach(function(el) {
+            el.textContent = displayTotal;
+        });
+
+        // A76i: Update hidden total_price input for form submission (EUR)
+        var hiddenPriceInput = document.querySelector('input[name="total_price"]');
+        if (hiddenPriceInput) {
+            hiddenPriceInput.value = totalPrice.toFixed(2);
+            novotonLog('Updated hidden total_price to: ' + totalPrice.toFixed(2));
+        }
+
+        // Update bookingData total
+        var priceDiff = totalPrice - window.bookingData.currentPrice;
+        window.bookingData.currentPrice = totalPrice;
+
+        // Show price change notification (skip on initial load — wording is child-age specific)
+        if (!isInitialLoad && Math.abs(priceDiff) > 0.01) {
+            showPriceNotification(priceDiff * coeff);
+        }
+    } else {
+        // Single room: Update total price display (converted to display currency)
+        var displayPrice = (newPrice * coeff).toFixed(2);
+        document.querySelectorAll('.price-total').forEach(function(el) {
+            el.textContent = displayPrice;
+        });
+
+        // A76i: Update hidden total_price input for form submission (EUR)
+        var hiddenPriceInput = document.querySelector('input[name="total_price"]');
+        if (hiddenPriceInput) {
+            hiddenPriceInput.value = newPrice.toFixed(2);
+            novotonLog('Updated hidden total_price to: ' + newPrice.toFixed(2));
+        }
+
+        // Show price change notification (skip on initial load — wording is child-age specific)
+        if (!isInitialLoad && data.price_difference && data.price_difference !== 0) {
+            showPriceNotification(data.price_difference * coeff);
+        }
+
+        // Update bookingData (EUR)
+        window.bookingData.currentPrice = newPrice;
+    }
 }
 
 // Show price error, refresh link, unverified badge, and disable submit
@@ -1027,8 +1046,13 @@ function closeRoomModal() {
 
 function acceptRoomChangeInline() {
     var data = window._roomChangeData || {};
+    var ctx = window._roomChangeContext || {};
     closeRoomModal();
-    
+
+    // Commit the accepted quote: price first, then the room identity below,
+    // so the form never holds the new price with the old room or vice versa.
+    applyRecalculatedPrice(data, ctx.roomNum || 1, !!ctx.isMultiRoom, !!ctx.isInitialLoad);
+
     // Format room name for display using translated room type prefix
     var displayRoom = data.new_room || '';
     if (displayRoom && !displayRoom.toLowerCase().includes('camer')) {
@@ -1047,7 +1071,8 @@ function acceptRoomChangeInline() {
     }
     
     // Check if this is for a specific room in multi-room booking
-    var roomNum = data.room_num || data.roomNum || null;
+    // (the recalc response carries no room_num — fall back to the request context)
+    var roomNum = data.room_num || data.roomNum || (ctx.isMultiRoom ? ctx.roomNum : null);
     
     if (roomNum) {
         // Multi-room: Update only the specific room's header
@@ -1119,6 +1144,11 @@ function acceptRoomChangeInline() {
 // API can return a different price for that query than for a room-specific query.
 // Calling ajax_recalculate_price here populates the cache with the binding price and
 // updates the hidden total_price field so add_to_cart sees no change.
+// MUST send the real searched children ages (pre-seeded in the hidden
+// child_age_* inputs): an empty list re-quotes for adults-only occupancy, so
+// the operator omits the child-capacity room and the endpoint substitutes an
+// arbitrary 2-adult room — popping a bogus "room changed" modal before any
+// DOB is typed (QUAD 3+1 SEA -> DBL 2+0 regression).
 document.addEventListener('DOMContentLoaded', function() {
     if (typeof triggerPriceRecalculationInline !== 'function') return;
     if (!window.bookingData || !window.bookingData.hotelId) return;
@@ -1131,12 +1161,12 @@ document.addEventListener('DOMContentLoaded', function() {
         for (var r = 1; r <= window.bookingData.numRooms; r++) {
             (function(roomNum) {
                 setTimeout(function() {
-                    triggerPriceRecalculationInline([], roomNum, true);
+                    triggerPriceRecalculationInline(collectChildrenAges(roomNum), roomNum, true);
                 }, (roomNum - 1) * 400);
             })(r);
         }
     } else {
-        triggerPriceRecalculationInline([], 1, true);
+        triggerPriceRecalculationInline(collectChildrenAges(1), 1, true);
     }
 });
 </script>
