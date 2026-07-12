@@ -83,7 +83,7 @@
                 {* Hotel info *}
                 <div class="travel-offer-hotel sphinx-offer-hotel">
                     {if $result.hotel_image}
-                        <img src="{$result.hotel_image}" alt="{$result.hotel_name|escape:html}" class="travel-offer-image sphinx-offer-image" width="110" height="80" loading="lazy">
+                        <img src="{$result.hotel_image}" alt="{$result.hotel_name|escape:html}" class="travel-offer-image sphinx-offer-image" width="88" height="64" loading="lazy">
                     {/if}
                     <div class="sphinx-offer-hotel-info">
                         <h3 class="travel-offer-hotel-name sphinx-offer-hotel-name">{$result.hotel_name|escape:html}</h3>
@@ -276,7 +276,7 @@ window.__sphinxConfig = {
         card.innerHTML =
             '<div class="travel-offer-hotel sphinx-offer-hotel">' +
                 (result.hotel_image
-                    ? '<img src="' + result.hotel_image + '" alt="" class="travel-offer-image sphinx-offer-image" width="110" height="80" loading="lazy">'
+                    ? '<img src="' + result.hotel_image + '" alt="" class="travel-offer-image sphinx-offer-image" width="88" height="64" loading="lazy">'
                     : '') +
                 '<div class="sphinx-offer-hotel-info">' +
                     '<h3 class="travel-offer-hotel-name sphinx-offer-hotel-name"></h3>' +

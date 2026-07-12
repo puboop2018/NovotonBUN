@@ -60,15 +60,17 @@
 }
 
 /* ── Offer card (3 zones: hotel / details / price+action) ─────────────── */
+/* Compact by design: the page lists room/board variants of ONE hotel, so
+   tighter rows put more offers on screen for side-by-side comparison. */
 .travel-search-results-page .travel-offer-card {
     display: flex;
     align-items: center;
-    gap: 20px;
+    gap: 16px;
     background: var(--nvt-bg, #fff);
     border: 1px solid var(--nvt-border, #e0e0e0);
     border-radius: 8px;
-    padding: 16px 20px;
-    margin-bottom: 12px;
+    padding: 12px 16px;
+    margin-bottom: 8px;
 }
 .travel-search-results-page .travel-offer-hotel {
     display: flex;
@@ -78,8 +80,8 @@
     min-width: 0;
 }
 .travel-search-results-page .travel-offer-image {
-    width: 110px;
-    height: 80px;
+    width: 88px;
+    height: 64px;
     object-fit: cover;
     border-radius: 6px;
     flex-shrink: 0;
@@ -134,7 +136,7 @@
     text-align: right;
 }
 .travel-search-results-page .travel-offer-price {
-    margin-bottom: 10px;
+    margin-bottom: 6px;
 }
 .travel-search-results-page .travel-price-amount {
     font-size: 22px;
@@ -205,8 +207,8 @@
 .travel-search-results-page .sphinx-skeleton-card { opacity: 0.6; }
 .travel-search-results-page .travel-skeleton-img,
 .travel-search-results-page .sphinx-skeleton-img {
-    width: 110px;
-    height: 80px;
+    width: 88px;
+    height: 64px;
     background: linear-gradient(90deg, #eee 0%, #f5f5f5 50%, #eee 100%);
     background-size: 200% 100%;
     animation: travel-shimmer 1.5s infinite;
