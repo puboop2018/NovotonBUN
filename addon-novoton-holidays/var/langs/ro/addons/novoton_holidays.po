@@ -2140,6 +2140,34 @@ msgctxt "SettingsOptions::novoton_holidays::cron_header"
 msgid "Cron / Automation"
 msgstr "Cron / Automatizare"
 
+msgctxt "SettingsOptions::novoton_holidays::geocoding_header"
+msgid "Street geocoding (OpenStreetMap Nominatim)"
+msgstr "Geocodare stradă (OpenStreetMap Nominatim)"
+
+msgctxt "SettingsOptions::novoton_holidays::geocoding_enabled"
+msgid "Enable reverse geocoding"
+msgstr "Activează geocodarea inversă"
+
+msgctxt "SettingsTooltips::novoton_holidays::geocoding_enabled"
+msgid "Fill hotel street addresses from stored coordinates via OSM Nominatim (cron mode geocode_addresses). Results are approximate (nearest mapped address). Displaying OSM data requires a \"© OpenStreetMap contributors\" attribution on the site."
+msgstr "Completează adresele stradale ale hotelurilor din coordonatele stocate prin OSM Nominatim (mod cron geocode_addresses). Rezultatele sunt aproximative (cea mai apropiată adresă cartografiată). Afișarea datelor OSM necesită atribuirea \"© OpenStreetMap contributors\" pe site."
+
+msgctxt "SettingsOptions::novoton_holidays::geocoding_contact_email"
+msgid "Geocoding contact email"
+msgstr "Email de contact pentru geocodare"
+
+msgctxt "SettingsTooltips::novoton_holidays::geocoding_contact_email"
+msgid "Sent in the User-Agent of Nominatim requests — the public instance's usage policy requires a way to contact you. Geocoding will not run without it."
+msgstr "Trimis în User-Agent-ul cererilor Nominatim — politica de utilizare a instanței publice cere o modalitate de contact. Geocodarea nu rulează fără acesta."
+
+msgctxt "SettingsOptions::novoton_holidays::geocoding_endpoint"
+msgid "Nominatim endpoint"
+msgstr "Endpoint Nominatim"
+
+msgctxt "SettingsTooltips::novoton_holidays::geocoding_endpoint"
+msgid "Base URL of the Nominatim server. Change only if you run your own instance (removes the 1 request/second limit of the public server)."
+msgstr "URL-ul de bază al serverului Nominatim. Schimbați doar dacă rulați propria instanță (elimină limita de 1 cerere/secundă a serverului public)."
+
 msgctxt "SettingsOptions::novoton_holidays::display_header"
 msgid "Display Settings"
 msgstr "Setări Afișare"

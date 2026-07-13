@@ -452,6 +452,43 @@ Crontab:
 
 
 --------------------------------------------------------------------------------
+MODE: geocode_addresses
+--------------------------------------------------------------------------------
+Description: Reverse-geocode hotel coordinates into street addresses
+             (OSM Nominatim) — the Novoton API has no street field
+Duration:    ~5 minutes per run (300 hotels @ 1 request/second)
+Frequency:   Hourly until the backlog drains, then it's a near-instant no-op
+
+What it does:
+  - Selects hotels with real coordinates that were never geocoded
+  - Calls Nominatim /reverse (1 req/s, public-instance usage policy)
+  - Stores street_address and stamps geocoded_at (stamped even when no
+    street was found, so hotels are not retried every run)
+  - The product page location line upgrades to "street, city, country"
+    for hotels where OSM knows a street
+
+Requirements:
+  - Enable geocoding + set a contact email in the addon settings
+    (Settings → Novoton Holidays → Street geocoding)
+  - Coordinates come from the hotel_list sync — run it first
+  - Displaying OSM-derived data requires a "© OpenStreetMap contributors"
+    attribution on the site (e.g. footer)
+
+Parameters:
+  &limit=N           Hotels per run (default: 300)
+  &status=1          Show backlog counters (no processing)
+  &force=1           Clear all stamps first (full re-geocode)
+
+Examples:
+  mode=geocode_addresses                 # Process next 300 hotels
+  mode=geocode_addresses&status=1        # Check backlog
+  mode=geocode_addresses&force=1         # Re-geocode everything
+
+Crontab:
+  0 * * * * curl -s "...&mode=geocode_addresses"
+
+
+--------------------------------------------------------------------------------
 MODE: cleanup
 --------------------------------------------------------------------------------
 Description: Clean orphan bookings, old logs, and expired cache
@@ -591,6 +628,7 @@ alternative_rs              | Variable    | 0 */4 * * *    | LOW
 alternative_rs_bookings     | Variable    | 0 */4 * * *    | LOW
 notify_alternatives         | 5-30s       | 0 */4 * * *    | LOW
 expire_requests             | 1-5s        | 0 0 * * *      | LOW
+geocode_addresses           | ~5min/run   | 0 * * * *      | LOW
 cleanup                     | 1-10s       | 0 1 * * *      | LOW
 recompute_calendar_prices   | 10-30s      | Manual/Daily   | LOW
 full                        | 5-30min     | Manual/Weekly  | LOW
@@ -701,6 +739,7 @@ Command files:
   app/addons/novoton_holidays/src/Cron/Commands/DataSyncCommand.php
   app/addons/novoton_holidays/src/Cron/Commands/FacilitiesBatchSyncCommand.php
   app/addons/novoton_holidays/src/Cron/Commands/FullSyncCommand.php
+  app/addons/novoton_holidays/src/Cron/Commands/GeocodeAddressesCommand.php
   app/addons/novoton_holidays/src/Cron/Commands/HotelListSyncCommand.php
   app/addons/novoton_holidays/src/Cron/Commands/HotelSyncCommand.php
   app/addons/novoton_holidays/src/Cron/Commands/OffersUpdateCommand.php

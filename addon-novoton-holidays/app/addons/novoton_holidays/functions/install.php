@@ -459,6 +459,16 @@ function fn_novoton_holidays_setup_db(): void
             'column'  => 'variant_source',
             'sql'     => "ALTER TABLE ?:hotel_feature_mappings ADD COLUMN `variant_source` enum('auto','manual') DEFAULT NULL COMMENT 'How variant was resolved: auto=name-match/create, manual=admin override' AFTER `mapping_source`",
         ],
+        [
+            'table'   => '?:novoton_hotels',
+            'column'  => 'street_address',
+            'sql'     => "ALTER TABLE ?:novoton_hotels ADD COLUMN `street_address` varchar(255) DEFAULT NULL COMMENT 'Reverse-geocoded street (OSM Nominatim), approximate — API has no street field' AFTER `longitude`",
+        ],
+        [
+            'table'   => '?:novoton_hotels',
+            'column'  => 'geocoded_at',
+            'sql'     => "ALTER TABLE ?:novoton_hotels ADD COLUMN `geocoded_at` datetime DEFAULT NULL COMMENT 'Last reverse-geocode attempt (stamped even when no street found)' AFTER `street_address`",
+        ],
     ];
 
     foreach ($migrations as $migration) {

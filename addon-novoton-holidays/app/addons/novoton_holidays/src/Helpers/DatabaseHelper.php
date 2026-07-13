@@ -226,6 +226,7 @@ class DatabaseHelper implements DatabaseHelperInterface
         'hotel_type', 'star_rating', 'latitude', 'longitude', 'has_room_price',
         'packages_count', 'hotelinfo_synced_at', 'hotel_list_synced_at',
         'created_at', 'updated_at', 'hotel_data', 'last_price_check',
+        'street_address', 'geocoded_at',
     ];
 
     /**
