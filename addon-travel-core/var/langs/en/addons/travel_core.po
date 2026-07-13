@@ -829,3 +829,7 @@ msgstr "Please provide a valid e-mail address."
 msgctxt "Languages::travel_core.request_too_soon"
 msgid "Please wait a moment before sending another request."
 msgstr "Please wait a moment before sending another request."
+
+msgctxt "Languages::travel_core.location_show_map"
+msgid "Location - show map"
+msgstr "Location - show map"

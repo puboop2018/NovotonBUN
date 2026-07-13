@@ -829,3 +829,7 @@ msgstr "Vă rugăm introduceți o adresă de e-mail validă."
 msgctxt "Languages::travel_core.request_too_soon"
 msgid "Please wait a moment before sending another request."
 msgstr "Vă rugăm așteptați un moment înainte de a trimite o nouă cerere."
+
+msgctxt "Languages::travel_core.location_show_map"
+msgid "Location - show map"
+msgstr "Locație - arată pe hartă"

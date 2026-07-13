@@ -363,6 +363,8 @@
         <item lang="ro" id="travel_core.manage_bookings"><![CDATA[Rezervări Turism]]></item>
         <item lang="en" id="travel_core.alternative_requests"><![CDATA[Availability Requests]]></item>
         <item lang="ro" id="travel_core.alternative_requests"><![CDATA[Cereri de Disponibilitate]]></item>
+        <item lang="en" id="travel_core.location_show_map"><![CDATA[Location - show map]]></item>
+        <item lang="ro" id="travel_core.location_show_map"><![CDATA[Locație - arată pe hartă]]></item>
         <item lang="en" id="travel_core.provider"><![CDATA[Provider]]></item>
         <item lang="ro" id="travel_core.provider"><![CDATA[Furnizor]]></item>
         <item lang="en" id="travel_core.period"><![CDATA[Period]]></item>

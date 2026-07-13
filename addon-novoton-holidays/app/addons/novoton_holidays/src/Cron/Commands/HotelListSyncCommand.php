@@ -76,8 +76,11 @@ class HotelListSyncCommand extends AbstractCronCommand
                     'hotel_type' => $hotelType,
                     'star_rating' => self::parseStarRating($hotelType),
                     'property_type' => $detector->detect($hotelName),
-                    'latitude' => (string)($hotel->Lat ?? ''),
-                    'longitude' => (string)($hotel->Lng ?? ''),
+                    // The Eurosite spec names the elements Latitude/Longitude;
+                    // older feeds used Lat/Lng — accept both so coordinates
+                    // are captured whichever spelling the live feed sends.
+                    'latitude' => (string)($hotel->Lat ?? $hotel->Latitude ?? ''),
+                    'longitude' => (string)($hotel->Lng ?? $hotel->Longitude ?? ''),
                     'hotel_list_synced_at' => date('Y-m-d H:i:s'),
                 ];
             }
