@@ -14,17 +14,55 @@
      data-search-id="{$sphinx_search_id|escape:html}"
      data-search-status="{$sphinx_search_status|default:'idle'}">
 
-    {* ===== HOTEL HEADER — styled by travel_core's shared search-results.css ===== *}
+    {* Availability badge — same format as novoton's badge:
+       "✓ Available: N room(s), M offer(s) for X adults[, Y children]".
+       Rooms = DISTINCT room types (two boards of one room count once); the
+       party suffix ties availability to the searched guests. Text is
+       (re)written by the poll JS as offers stream in; data-party-suffix
+       carries the server-rendered party for that JS. *}
+    {$sx_badge_room_keys = []}
+    {foreach from=$sphinx_search_results item=__sx_r}
+        {$__sx_rk = $__sx_r.room_name|default:$__sx_r.room_type|default:''}
+        {$__sx_rk = $__sx_rk|trim|lower}
+        {$sx_badge_room_keys[$__sx_rk] = 1}
+    {/foreach}
+    {$sx_badge_rooms = $sx_badge_room_keys|count}
+    {$sx_badge_offers = $sphinx_search_results|count}
+    {$sx_badge_adults = $sphinx_search_params.adults|default:0}
+    {$sx_badge_children = $sphinx_search_params.children|default:0}
+    {capture assign="sx_badge_party_suffix"} {__("sphinx_holidays.for")|default:"for"} {$sx_badge_adults} {if $sx_badge_adults == 1}{__("sphinx_holidays.adult")|default:"adult"|lower}{else}{__("sphinx_holidays.adults")|default:"adults"|lower}{/if}{if $sx_badge_children > 0}, {$sx_badge_children} {if $sx_badge_children == 1}{__("sphinx_holidays.child")|default:"child"|lower}{else}{__("sphinx_holidays.children")|default:"children"|lower}{/if}{/if}{/capture}
+    {capture assign="sx_badge_html"}<div class="travel-availability-badge sphinx-results-title" id="sphinx-results-title" data-party-suffix="{$sx_badge_party_suffix|escape:html}"{if !$sphinx_search_results} style="display: none;"{/if}>{if $sphinx_search_results}✓ {__("sphinx_holidays.available")|default:"Available"}: {$sx_badge_rooms} {if $sx_badge_rooms == 1}{__("sphinx_holidays.room")|default:"room"|lower}{else}{__("sphinx_holidays.rooms")|default:"rooms"|lower}{/if}, {$sx_badge_offers} {if $sx_badge_offers == 1}{__("sphinx_holidays.offer")|default:"offer"|lower}{else}{__("sphinx_holidays.offers")|default:"offers"|lower}{/if}{$sx_badge_party_suffix}{/if}</div>{/capture}
+
+    {* ===== HOTEL HEADER — placed ABOVE the search form (novoton parity);
+       availability badge on the right, same row layout as novoton ===== *}
     {if $sphinx_hotel_name}
         <div class="travel-hotel-header sphinx-hotel-header">
-            <h1 class="sphinx-hotel-header-name">
-                {$sphinx_hotel_name|escape:html}
-                {if $sphinx_hotel_stars}<span class="travel-hotel-stars sphinx-stars" role="img" aria-label="{__("sphinx_holidays.stars_rating", ["[rating]" => $sphinx_hotel_stars])|escape:html}">{"★"|str_repeat:$sphinx_hotel_stars}</span>{/if}
-            </h1>
-            {if $sphinx_hotel_location}
-                <p class="travel-hotel-location sphinx-hotel-header-location">{$sphinx_hotel_location|escape:html}</p>
-            {/if}
+            <div class="travel-hotel-header-row">
+                <div>
+                    <h1 class="sphinx-hotel-header-name">
+                        {if $sphinx_search_params.product_id}
+                            <a href="{"products.view?product_id=`$sphinx_search_params.product_id`"|fn_url}" class="travel-hotel-name-link">{$sphinx_hotel_name|escape:html}</a>
+                        {else}
+                            {$sphinx_hotel_name|escape:html}
+                        {/if}
+                        {if $sphinx_hotel_stars}<span class="travel-hotel-stars sphinx-stars" role="img" aria-label="{__("sphinx_holidays.stars_rating", ["[rating]" => $sphinx_hotel_stars])|escape:html}">{"★"|str_repeat:$sphinx_hotel_stars}</span>{/if}
+                    </h1>
+                    {if $sphinx_hotel_location || ($sphinx_hotel_lat && $sphinx_hotel_lng)}
+                        <p class="travel-hotel-location sphinx-hotel-header-location">
+                            {$sphinx_hotel_location|escape:html}
+                            {if $sphinx_hotel_lat && $sphinx_hotel_lng}
+                                <a href="https://www.google.com/maps?q={$sphinx_hotel_lat},{$sphinx_hotel_lng}" target="_blank" rel="noopener" class="travel-hotel-map-link">{__("sphinx_holidays.location_show_map")|default:"Location - show map"}</a>
+                            {/if}
+                        </p>
+                    {/if}
+                </div>
+                <div>
+                    {$sx_badge_html nofilter}
+                </div>
+            </div>
         </div>
+    {else}
+        {$sx_badge_html nofilter}
     {/if}
 
     {* ===== BOOKING FORM — Pre-rendered in controller to prevent OOM ===== *}
@@ -65,18 +103,8 @@
         {/foreach}
     </div>
 
-    {* Results container *}
+    {* Results container — the availability badge lives in the hotel header above *}
     <div class="sphinx-results-container" id="sphinx-results-container">
-        {if $sphinx_search_results}
-            <div class="travel-availability-badge sphinx-results-title" id="sphinx-results-title">
-                ✓ {__("sphinx_holidays.search_results", ["[count]" => $sphinx_search_results|count])|default:"`$sphinx_search_results|count` results found"}
-            </div>
-        {else}
-            <div class="travel-availability-badge sphinx-results-title" id="sphinx-results-title" style="display: none;">
-                ✓ <span id="sphinx-results-count">0</span> {__("sphinx_holidays.results_found")|default:"results found"}
-            </div>
-        {/if}
-
         {foreach from=$sphinx_search_results item=result name=results}
             <div class="travel-offer-card sphinx-offer-card" data-offer-id="{$result.offer_id|default:''}">
 
@@ -152,6 +180,34 @@
          data-alt-from="{__("sphinx_holidays.alt_from")|default:"from"|escape:html}">
         <p>{__("sphinx_holidays.no_results")|default:"No availability for the selected dates. Please try different dates."}</p>
         <div id="sphinx-alt-dates" class="travel-alt-dates" style="display: none;"></div>
+
+        {* "Contact me when available" — stored in the SHARED travel registry
+           for INTERNAL follow-up only; no Sphinx API request is created. *}
+        <div class="travel-request-box">
+            <h4>{__("travel_core.request_alternatives_title")|default:"Can't find what you're looking for?"}</h4>
+            <p>{__("travel_core.request_alternatives_desc")|default:"Leave your contact details and we'll get back to you with alternatives for your dates."}</p>
+            <form method="post" action="{""|fn_url}" name="sphinx_alt_request_form">
+                <input type="hidden" name="dispatch" value="sphinx_booking.request_alternatives">
+                <input type="hidden" name="security_hash" value="{$security_hash}">
+                <input type="hidden" name="hotel_id" value="{$sphinx_search_params.hotel_id|escape:html}">
+                <input type="hidden" name="hotel_name" value="{$sphinx_hotel_name|escape:html}">
+                <input type="hidden" name="product_id" value="{$sphinx_search_params.product_id|escape:html}">
+                <input type="hidden" name="check_in" value="{$sphinx_search_params.check_in|escape:html}">
+                <input type="hidden" name="check_out" value="{$sphinx_search_params.check_out|escape:html}">
+                <input type="hidden" name="nights" value="{$sphinx_search_params.nights|escape:html}">
+                <input type="hidden" name="adults" value="{$sphinx_search_params.adults|escape:html}">
+                <input type="hidden" name="children" value="{$sphinx_search_params.children|escape:html}">
+                <input type="hidden" name="children_ages" value="{$sphinx_search_params.children_ages|escape:html}">
+                <input type="hidden" name="rooms" value="{$sphinx_search_params.rooms|escape:html}">
+                {* Honeypot — humans never see it, bots fill everything *}
+                <input type="text" name="website" value="" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;">
+                <div class="travel-request-grid">
+                    <input type="email" name="contact_email" required placeholder="{__("email")|default:"E-mail"}">
+                    <input type="tel" name="contact_phone" placeholder="{__("phone")|default:"Phone"}">
+                    <button type="submit" class="travel-offer-book-btn">{__("travel_core.send_request")|default:"Send"}</button>
+                </div>
+            </form>
+        </div>
     </div>
 
 </div>
@@ -197,7 +253,12 @@ window.__sphinxConfig = {
         termsLoading: "{__("sphinx_holidays.terms_loading")|default:"Se încarcă condițiile..."|escape:javascript}",
         termsUnavailable: "{__("sphinx_holidays.terms_unavailable")|default:"Condițiile nu sunt disponibile. Vă rugăm căutați din nou."|escape:javascript}",
         noTermsInfo: "{__("sphinx_holidays.no_terms_info")|default:"Nu există condiții specifice pentru această ofertă."|escape:javascript}",
-        close: "{__("close")|default:"Close"|escape:javascript}"
+        close: "{__("close")|default:"Close"|escape:javascript}",
+        available: "{__("sphinx_holidays.available")|default:"Available"|escape:javascript}",
+        room: "{__("sphinx_holidays.room")|default:"room"|lower|escape:javascript}",
+        rooms: "{__("sphinx_holidays.rooms")|default:"rooms"|lower|escape:javascript}",
+        offer: "{__("sphinx_holidays.offer")|default:"offer"|lower|escape:javascript}",
+        offers: "{__("sphinx_holidays.offers")|default:"offers"|lower|escape:javascript}"
     }
 };
 {literal}
@@ -211,7 +272,23 @@ window.__sphinxConfig = {
 
     var container = document.getElementById('sphinx-results-container');
     var title = document.getElementById('sphinx-results-title');
-    var countEl = document.getElementById('sphinx-results-count');
+    // Distinct room types seen so far — the badge counts room TYPES, not offers.
+    var seenRoomKeys = {};
+    var seenRoomCount = 0;
+
+    // Rebuild the badge in the shared novoton/sphinx format:
+    // "✓ Available: N room(s), M offer(s) for X adults[, Y children]".
+    // The party suffix is server-rendered into data-party-suffix.
+    function updateBadgeText() {
+        if (!title) return;
+        var l = (window.__sphinxConfig && window.__sphinxConfig.labels) || {};
+        var roomLabel = (seenRoomCount === 1) ? (l.room || 'room') : (l.rooms || 'rooms');
+        var offerLabel = (accumulated === 1) ? (l.offer || 'offer') : (l.offers || 'offers');
+        var partySuffix = title.getAttribute('data-party-suffix') || '';
+        title.textContent = '✓ ' + (l.available || 'Available') + ': '
+            + seenRoomCount + ' ' + roomLabel + ', '
+            + accumulated + ' ' + offerLabel + partySuffix;
+    }
     var skeleton = document.querySelector('.sphinx-loading-skeleton');
     var noResults = document.getElementById('sphinx-no-results');
 
@@ -315,12 +392,17 @@ window.__sphinxConfig = {
     function appendResults(results) {
         if (!results || !results.length) return;
         for (var i = 0; i < results.length; i++) {
+            var roomKey = String(results[i].room_name || results[i].room_type || '').trim().toLowerCase();
+            if (!seenRoomKeys[roomKey]) {
+                seenRoomKeys[roomKey] = true;
+                seenRoomCount++;
+            }
             container.appendChild(renderCard(results[i]));
             accumulated++;
         }
         if (title) {
             title.style.display = '';
-            if (countEl) countEl.textContent = accumulated;
+            updateBadgeText();
         }
     }
 

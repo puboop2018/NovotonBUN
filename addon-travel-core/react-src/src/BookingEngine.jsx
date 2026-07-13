@@ -18,7 +18,7 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import Calendar from './Calendar';
 import GuestPicker from './GuestPicker';
-import { CalendarIcon, GuestIcon, ChevronDown, RefreshIcon } from './icons';
+import { CalendarIcon, GuestIcon, ChevronDown } from './icons';
 import { parseDate, toDateString, formatDateShort, nightsBetween, t, tPlural } from './utils';
 import { injectStyles } from './styles';
 
@@ -394,9 +394,8 @@ export default function BookingEngine({ config }) {
 
         return (
             <div className="nvt-availability-header">
-                <h2 className="nvt-availability-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <RefreshIcon />
-                    {t('changeSearch', 'Change search')}
+                <h2 className="nvt-availability-title" style={{ color: '#000' }}>
+                    {t('availability', 'Availability')}
                 </h2>
             </div>
         );

@@ -29,6 +29,60 @@
     </div>
     {/if}
 
+    {* ===== HOTEL HEADER — placed ABOVE the search form (sphinx parity).
+       Shown whenever the hotel is KNOWN, results or not: on a
+       zero-availability search the guest still needs to see which hotel this
+       is (name → product page, address, map link). Only the badge is
+       results-gated — it never shows "0 offers". ===== *}
+    {if $hotel_name}
+        <div class="travel-hotel-header novoton-hotel-header">
+            <div class="novoton-hotel-header-row">
+                <div>
+                    <h2>
+                        {if $novoton_params.product_id}
+                            <a href="{"products.view?product_id=`$novoton_params.product_id`"|fn_url}" class="travel-hotel-name-link">{$hotel_name|default:'Hotel'}</a>
+                        {else}
+                            {$hotel_name|default:'Hotel'}
+                        {/if}
+                        <span class="travel-hotel-stars" aria-hidden="true">{$hotel_stars|default:'****'}</span>
+                    </h2>
+                    <p class="travel-hotel-location">
+                         {$hotel_city|default:''}{if $hotel_region}, {$hotel_region}{/if}{if $hotel_country}, {$hotel_country}{/if}
+                        {if $hotel_lat && $hotel_lng}
+                            <a href="https://www.google.com/maps?q={$hotel_lat},{$hotel_lng}" target="_blank" rel="noopener" class="travel-hotel-map-link">{__("novoton_holidays.location_show_map")|default:"Location - show map"}</a>
+                        {/if}
+                    </p>
+                    {if $hotel_season_from && $hotel_season_to}
+                    <p class="novoton-season-note">
+                        {__("novoton_holidays.accommodation_period")|default:"This hotel offers accommodation from"} {$hotel_season_from|date_format:"%d %b"} {__("novoton_holidays.to")|default:"to"} {$hotel_season_to|date_format:"%d %b %Y"}
+                    </p>
+                    {/if}
+                </div>
+                <div>
+                    {if $novoton_results && $novoton_results|count > 0}
+                    {* Rooms = DISTINCT room types, not availability quota: two
+                       board variants of the same room count as ONE room. The
+                       party suffix ties "availability" to the searched guests. *}
+                    {$badge_room_keys = []}
+                    {foreach from=$novoton_results item=r}
+                        {$__badge_rk = $r.room_id|default:$r.room_name|default:''}
+                        {$__badge_rk = $__badge_rk|trim|lower}
+                        {$badge_room_keys[$__badge_rk] = 1}
+                    {/foreach}
+                    {$badge_rooms_count = $badge_room_keys|count}
+                    {$badge_offers_count = $novoton_results|count}
+                    {$badge_adults = $novoton_params.adults|default:0}
+                    {$badge_children = $novoton_params.children_count|default:0}
+                    {capture assign="badge_party_suffix"} {__("novoton_holidays.for")|default:"for"} {$badge_adults} {if $badge_adults == 1}{__("novoton_holidays.adult")|default:"adult"|lower}{else}{__("novoton_holidays.adults")|default:"adults"|lower}{/if}{if $badge_children > 0}, {$badge_children} {if $badge_children == 1}{__("novoton_holidays.child")|default:"child"|lower}{else}{__("novoton_holidays.children")|default:"children"|lower}{/if}{/if}{/capture}
+                    <span id="novoton-availability-badge" class="travel-availability-badge" data-rooms-count="{$badge_rooms_count}" data-offers-count="{$badge_offers_count}" data-party-suffix="{$badge_party_suffix|escape:html}">
+                        ✓ {__("novoton_holidays.available")}: {$badge_rooms_count} {if $badge_rooms_count == 1}{__("novoton_holidays.room")|default:"room"|lower}{else}{__("novoton_holidays.rooms")|default:"rooms"|lower}{/if}, {$badge_offers_count} {if $badge_offers_count == 1}{__("novoton_holidays.offer")|default:"offer"|lower}{else}{__("novoton_holidays.offers")|default:"offers"|lower}{/if}{$badge_party_suffix}
+                    </span>
+                    {/if}
+                </div>
+            </div>
+        </div>
+    {/if}
+
     {* ===== BOOKING FORM — Pre-rendered in controller to prevent OOM ===== *}
     {* Rendered to string in search.php BEFORE heavy results are assigned.
        Smarty has NO scope="local" — {include} always inherits parent scope.
@@ -38,41 +92,6 @@
     </div>
 
     {if $novoton_results && $novoton_results|count > 0}
-
-        {* ===== HOTEL HEADER ===== *}
-        <div class="travel-hotel-header novoton-hotel-header">
-            <div class="novoton-hotel-header-row">
-                <div>
-                    <h2>
-                        {$hotel_name|default:'Hotel'} <span class="travel-hotel-stars" aria-hidden="true">{$hotel_stars|default:'****'}</span>
-                    </h2>
-                    <p class="travel-hotel-location">
-                         {$hotel_city|default:''}{if $hotel_region}, {$hotel_region}{/if}{if $hotel_country}, {$hotel_country}{/if}
-                    </p>
-                    {if $hotel_season_from && $hotel_season_to}
-                    <p class="novoton-season-note">
-                        {__("novoton_holidays.accommodation_period")|default:"This hotel offers accommodation from"} {$hotel_season_from|date_format:"%d %b"} {__("novoton_holidays.to")|default:"to"} {$hotel_season_to|date_format:"%d %b %Y"}
-                    </p>
-                    {/if}
-                </div>
-                <div>
-                    {if $novoton_results|count > 0}
-                    {* Calculate total quota from all results *}
-                    {$total_quota = 0}
-                    {foreach from=$novoton_results item=r}
-                        {if $r.rooms_available && $r.rooms_available > 0}
-                            {$total_quota = $total_quota + $r.rooms_available}
-                        {/if}
-                    {/foreach}
-                    {$badge_rooms_count = ($total_quota > 0) ? $total_quota : $novoton_results|count}
-                    {$badge_offers_count = $novoton_results|count}
-                    <span id="novoton-availability-badge" class="travel-availability-badge" data-rooms-count="{$badge_rooms_count}" data-offers-count="{$badge_offers_count}">
-                        ✓ {__("novoton_holidays.available")}: {$badge_rooms_count} {if $badge_rooms_count == 1}{__("novoton_holidays.room")|default:"room"}{else}{__("novoton_holidays.rooms")|default:"rooms"}{/if}, {$badge_offers_count} {if $badge_offers_count == 1}{__("novoton_holidays.offer")|default:"offer"}{else}{__("novoton_holidays.offers")|default:"offers"}{/if}
-                    </span>
-                    {/if}
-                </div>
-            </div>
-        </div>
 
         {* ===== EARLY BOOKING BANNER ===== *}
         {if $active_early_booking || ($early_booking_range && $early_booking_range.max > 0)}
@@ -744,10 +763,11 @@ window.updateAvailabilityBadge = function(roomsCount, offersCount) {
     var badge = document.getElementById('novoton-availability-badge');
     if (!badge) return;
     var tr = window.NovotonTranslations || {};
-    var roomLabel = (roomsCount === 1) ? (tr.room || 'room') : (tr.rooms || 'rooms');
-    var offerLabel = (offersCount === 1) ? (tr.offer || 'offer') : (tr.offers || 'offers');
+    var roomLabel = ((roomsCount === 1) ? (tr.room || 'room') : (tr.rooms || 'rooms')).toLowerCase();
+    var offerLabel = ((offersCount === 1) ? (tr.offer || 'offer') : (tr.offers || 'offers')).toLowerCase();
     var availableLabel = tr.available || 'Available';
-    badge.textContent = '✓ ' + availableLabel + ': ' + roomsCount + ' ' + roomLabel + ', ' + offersCount + ' ' + offerLabel;
+    var partySuffix = badge.getAttribute('data-party-suffix') || '';
+    badge.textContent = '✓ ' + availableLabel + ': ' + roomsCount + ' ' + roomLabel + ', ' + offersCount + ' ' + offerLabel + partySuffix;
     badge.setAttribute('data-rooms-count', roomsCount);
     badge.setAttribute('data-offers-count', offersCount);
 };

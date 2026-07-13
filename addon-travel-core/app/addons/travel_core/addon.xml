@@ -270,6 +270,67 @@
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
         </item>
 
+        <!-- Cross-provider "no availability" requests: guests who asked to be
+             contacted when a hotel had no offers for their dates. Novoton
+             mirrors its provider-level requests here (provider_request_id
+             links back); sphinx writes here ONLY — internal follow-up, no
+             provider API call. Runs on upgrade too (idempotent CREATE) so
+             existing installs get the table on deploy. -->
+        <item>
+            CREATE TABLE IF NOT EXISTS `?:travel_alternative_requests` (
+                `request_id`          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                `provider`            VARCHAR(50)  NOT NULL COMMENT 'novoton, sphinx',
+                `provider_request_id` INT UNSIGNED DEFAULT NULL COMMENT 'Row id in the provider request table, when mirrored',
+                `user_id`             INT UNSIGNED DEFAULT NULL COMMENT 'FK to ?:users',
+                `hotel_id`            VARCHAR(100) NOT NULL,
+                `hotel_name`          VARCHAR(255) DEFAULT NULL,
+                `product_id`          INT UNSIGNED DEFAULT NULL COMMENT 'FK to ?:products',
+                `check_in`            DATE         DEFAULT NULL,
+                `check_out`           DATE         DEFAULT NULL,
+                `nights`              INT UNSIGNED DEFAULT NULL,
+                `num_rooms`           TINYINT UNSIGNED NOT NULL DEFAULT 1,
+                `adults`              TINYINT UNSIGNED NOT NULL DEFAULT 2,
+                `children`            TINYINT UNSIGNED NOT NULL DEFAULT 0,
+                `children_ages`       VARCHAR(100) DEFAULT NULL,
+                `contact_email`       VARCHAR(255) DEFAULT NULL,
+                `contact_phone`       VARCHAR(50)  DEFAULT NULL,
+                `notes`               TEXT,
+                `status`              ENUM('pending','pending_manual','alternatives_found','notified','booked','expired','cancelled') NOT NULL DEFAULT 'pending',
+                `created_at`          DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                `updated_at`          DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                KEY `idx_provider` (`provider`),
+                KEY `idx_status` (`status`),
+                KEY `idx_created` (`created_at`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        </item>
+        <item for="upgrade">
+            CREATE TABLE IF NOT EXISTS `?:travel_alternative_requests` (
+                `request_id`          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                `provider`            VARCHAR(50)  NOT NULL COMMENT 'novoton, sphinx',
+                `provider_request_id` INT UNSIGNED DEFAULT NULL COMMENT 'Row id in the provider request table, when mirrored',
+                `user_id`             INT UNSIGNED DEFAULT NULL COMMENT 'FK to ?:users',
+                `hotel_id`            VARCHAR(100) NOT NULL,
+                `hotel_name`          VARCHAR(255) DEFAULT NULL,
+                `product_id`          INT UNSIGNED DEFAULT NULL COMMENT 'FK to ?:products',
+                `check_in`            DATE         DEFAULT NULL,
+                `check_out`           DATE         DEFAULT NULL,
+                `nights`              INT UNSIGNED DEFAULT NULL,
+                `num_rooms`           TINYINT UNSIGNED NOT NULL DEFAULT 1,
+                `adults`              TINYINT UNSIGNED NOT NULL DEFAULT 2,
+                `children`            TINYINT UNSIGNED NOT NULL DEFAULT 0,
+                `children_ages`       VARCHAR(100) DEFAULT NULL,
+                `contact_email`       VARCHAR(255) DEFAULT NULL,
+                `contact_phone`       VARCHAR(50)  DEFAULT NULL,
+                `notes`               TEXT,
+                `status`              ENUM('pending','pending_manual','alternatives_found','notified','booked','expired','cancelled') NOT NULL DEFAULT 'pending',
+                `created_at`          DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                `updated_at`          DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                KEY `idx_provider` (`provider`),
+                KEY `idx_status` (`status`),
+                KEY `idx_created` (`created_at`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        </item>
+
         <!-- Uninstall SQL fallback: guarantees teardown of travel_core's data
              even when the PHP uninstall hook (fn_travel_core_uninstall) does
              not run. The provider-still-active veto lives in the PHP function,
@@ -280,6 +341,7 @@
         <item for="uninstall">DROP TABLE IF EXISTS `?:travel_unmapped_values`</item>
         <item for="uninstall">DROP TABLE IF EXISTS `?:travel_bookings`</item>
         <item for="uninstall">DROP TABLE IF EXISTS `?:travel_feature_map`</item>
+        <item for="uninstall">DROP TABLE IF EXISTS `?:travel_alternative_requests`</item>
     </queries>
 
     <language_variables>
@@ -299,6 +361,44 @@
         <item lang="ro" id="travel_core.admin_menu_travel"><![CDATA[Turism]]></item>
         <item lang="en" id="travel_core.manage_bookings"><![CDATA[Travel Bookings]]></item>
         <item lang="ro" id="travel_core.manage_bookings"><![CDATA[Rezervări Turism]]></item>
+        <item lang="en" id="travel_core.alternative_requests"><![CDATA[Availability Requests]]></item>
+        <item lang="ro" id="travel_core.alternative_requests"><![CDATA[Cereri de Disponibilitate]]></item>
+        <item lang="en" id="travel_core.location_show_map"><![CDATA[Location - show map]]></item>
+        <item lang="ro" id="travel_core.location_show_map"><![CDATA[Locație - arată pe hartă]]></item>
+        <item lang="en" id="travel_core.provider"><![CDATA[Provider]]></item>
+        <item lang="ro" id="travel_core.provider"><![CDATA[Furnizor]]></item>
+        <item lang="en" id="travel_core.period"><![CDATA[Period]]></item>
+        <item lang="ro" id="travel_core.period"><![CDATA[Perioadă]]></item>
+        <item lang="en" id="travel_core.guests"><![CDATA[Guests]]></item>
+        <item lang="ro" id="travel_core.guests"><![CDATA[Turiști]]></item>
+        <item lang="en" id="travel_core.contact"><![CDATA[Contact]]></item>
+        <item lang="ro" id="travel_core.contact"><![CDATA[Contact]]></item>
+        <item lang="en" id="travel_core.created"><![CDATA[Created]]></item>
+        <item lang="ro" id="travel_core.created"><![CDATA[Creat]]></item>
+        <item lang="en" id="travel_core.hotel"><![CDATA[Hotel]]></item>
+        <item lang="ro" id="travel_core.hotel"><![CDATA[Hotel]]></item>
+        <item lang="en" id="travel_core.rooms_short"><![CDATA[room(s)]]></item>
+        <item lang="ro" id="travel_core.rooms_short"><![CDATA[cam.]]></item>
+        <item lang="en" id="travel_core.provider_ref"><![CDATA[provider ref]]></item>
+        <item lang="ro" id="travel_core.provider_ref"><![CDATA[ref. furnizor]]></item>
+        <item lang="en" id="travel_core.hotel_or_email"><![CDATA[Hotel or e-mail]]></item>
+        <item lang="ro" id="travel_core.hotel_or_email"><![CDATA[Hotel sau e-mail]]></item>
+        <item lang="en" id="travel_core.no_alternative_requests"><![CDATA[No availability requests yet.]]></item>
+        <item lang="ro" id="travel_core.no_alternative_requests"><![CDATA[Nicio cerere de disponibilitate încă.]]></item>
+        <item lang="en" id="travel_core.request_alternatives_title"><![CDATA[Can't find what you're looking for?]]></item>
+        <item lang="ro" id="travel_core.request_alternatives_title"><![CDATA[Nu găsiți ce căutați?]]></item>
+        <item lang="en" id="travel_core.request_alternatives_desc"><![CDATA[Leave your contact details and we'll get back to you with alternatives for your dates.]]></item>
+        <item lang="ro" id="travel_core.request_alternatives_desc"><![CDATA[Lăsați datele de contact și revenim cu alternative pentru datele dvs.]]></item>
+        <item lang="en" id="travel_core.send_request"><![CDATA[Send]]></item>
+        <item lang="ro" id="travel_core.send_request"><![CDATA[Trimite]]></item>
+        <item lang="en" id="travel_core.request_received"><![CDATA[Your request was recorded. We will contact you shortly.]]></item>
+        <item lang="ro" id="travel_core.request_received"><![CDATA[Cererea a fost înregistrată. Vă vom contacta în curând.]]></item>
+        <item lang="en" id="travel_core.request_failed"><![CDATA[Could not record your request. Please try again.]]></item>
+        <item lang="ro" id="travel_core.request_failed"><![CDATA[Cererea nu a putut fi înregistrată. Vă rugăm încercați din nou.]]></item>
+        <item lang="en" id="travel_core.request_invalid_email"><![CDATA[Please provide a valid e-mail address.]]></item>
+        <item lang="ro" id="travel_core.request_invalid_email"><![CDATA[Vă rugăm introduceți o adresă de e-mail validă.]]></item>
+        <item lang="en" id="travel_core.request_too_soon"><![CDATA[Please wait a moment before sending another request.]]></item>
+        <item lang="ro" id="travel_core.request_too_soon"><![CDATA[Vă rugăm așteptați un moment înainte de a trimite o nouă cerere.]]></item>
         <item lang="en" id="travel_core.complete_booking"><![CDATA[Booking Details]]></item>
         <item lang="ro" id="travel_core.complete_booking"><![CDATA[Detalii Rezervare]]></item>
         <item lang="en" id="travel_core.check_in"><![CDATA[Check-in]]></item>

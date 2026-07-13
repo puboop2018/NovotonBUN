@@ -234,6 +234,11 @@ function _travel_core_prepare_hotel_seo_data(int $productId): void
         $view->assign('travel_og_description', $productDesc['meta_description'] ?? '');
         $view->assign('travel_og_image', $hotel->imageUrl ?? '');
         $view->assign('travel_og_type', 'hotel');
+        // Location line + coordinates for the visible PDP line under the
+        // hotel name (hooks/products/title.post.tpl) — both providers.
+        $view->assign('travel_hotel_location_line', \Tygh\Addons\TravelCore\Services\HotelLocationLine::build($hotel));
+        $view->assign('travel_hotel_lat', (float) ($hotel->latitude ?? 0));
+        $view->assign('travel_hotel_lng', (float) ($hotel->longitude ?? 0));
     }
 }
 

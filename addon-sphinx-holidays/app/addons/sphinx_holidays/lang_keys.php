@@ -177,6 +177,51 @@ return [
         'en' => 'Change to Disabled',
         'ro' => 'Schimbă în Dezactivat',
     ],
+    // ── Search results availability badge (novoton-parity vocabulary) ──
+    'sphinx_holidays.available' => [
+        'en' => 'Available',
+        'ro' => 'Disponibil',
+    ],
+    'sphinx_holidays.room' => [
+        'en' => 'room',
+        'ro' => 'cameră',
+    ],
+    'sphinx_holidays.rooms' => [
+        'en' => 'rooms',
+        'ro' => 'camere',
+    ],
+    'sphinx_holidays.offer' => [
+        'en' => 'offer',
+        'ro' => 'ofertă',
+    ],
+    'sphinx_holidays.offers' => [
+        'en' => 'offers',
+        'ro' => 'oferte',
+    ],
+    'sphinx_holidays.for' => [
+        'en' => 'for',
+        'ro' => 'pentru',
+    ],
+    'sphinx_holidays.adult' => [
+        'en' => 'adult',
+        'ro' => 'adult',
+    ],
+    'sphinx_holidays.adults' => [
+        'en' => 'adults',
+        'ro' => 'adulți',
+    ],
+    'sphinx_holidays.child' => [
+        'en' => 'child',
+        'ro' => 'copil',
+    ],
+    'sphinx_holidays.children' => [
+        'en' => 'children',
+        'ro' => 'copii',
+    ],
+    'sphinx_holidays.location_show_map' => [
+        'en' => 'Location - show map',
+        'ro' => 'Locație - arată pe hartă',
+    ],
     // ── Circuits & package routes (static-data admin grids) ──
     'sphinx_holidays.circuits' => [
         'en' => 'Circuits',

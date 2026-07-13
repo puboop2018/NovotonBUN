@@ -503,3 +503,47 @@ msgstr "Arrival"
 msgctxt "Languages::sphinx_holidays.available_dates"
 msgid "Available dates"
 msgstr "Available dates"
+
+msgctxt "Languages::sphinx_holidays.available"
+msgid "Available"
+msgstr "Available"
+
+msgctxt "Languages::sphinx_holidays.room"
+msgid "room"
+msgstr "room"
+
+msgctxt "Languages::sphinx_holidays.rooms"
+msgid "rooms"
+msgstr "rooms"
+
+msgctxt "Languages::sphinx_holidays.offer"
+msgid "offer"
+msgstr "offer"
+
+msgctxt "Languages::sphinx_holidays.offers"
+msgid "offers"
+msgstr "offers"
+
+msgctxt "Languages::sphinx_holidays.for"
+msgid "for"
+msgstr "for"
+
+msgctxt "Languages::sphinx_holidays.adult"
+msgid "adult"
+msgstr "adult"
+
+msgctxt "Languages::sphinx_holidays.adults"
+msgid "adults"
+msgstr "adults"
+
+msgctxt "Languages::sphinx_holidays.child"
+msgid "child"
+msgstr "child"
+
+msgctxt "Languages::sphinx_holidays.children"
+msgid "children"
+msgstr "children"
+
+msgctxt "Languages::sphinx_holidays.location_show_map"
+msgid "Location - show map"
+msgstr "Location - show map"

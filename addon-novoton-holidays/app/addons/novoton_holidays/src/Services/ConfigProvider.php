@@ -222,6 +222,29 @@ class ConfigProvider extends AbstractConfigProvider
         return TypeCoerce::toString(self::settings()['default_country'] ?? 'BULGARIA');
     }
 
+    // ── Geocoding (OSM Nominatim) Settings ──
+
+    public static function isGeocodingEnabled(): bool
+    {
+        return (self::settings()['geocoding_enabled'] ?? 'N') === 'Y';
+    }
+
+    /**
+     * Contact email carried in the Nominatim User-Agent — the public
+     * instance's usage policy requires identifying the application.
+     */
+    public static function getGeocodingContactEmail(): string
+    {
+        return trim(TypeCoerce::toString(self::settings()['geocoding_contact_email'] ?? ''));
+    }
+
+    public static function getGeocodingEndpoint(): string
+    {
+        $val = trim(TypeCoerce::toString(self::settings()['geocoding_endpoint'] ?? ''));
+
+        return $val !== '' ? $val : NominatimClient::DEFAULT_ENDPOINT;
+    }
+
     public static function getLastExchangeRateUpdate(): string
     {
         return TypeCoerce::toString(db_get_field(

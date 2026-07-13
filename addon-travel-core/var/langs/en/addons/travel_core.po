@@ -757,3 +757,79 @@ msgstr "Cancellation Policy"
 msgctxt "Languages::travel_core.days"
 msgid "days"
 msgstr "days"
+
+msgctxt "Languages::travel_core.alternative_requests"
+msgid "Availability Requests"
+msgstr "Availability Requests"
+
+msgctxt "Languages::travel_core.provider"
+msgid "Provider"
+msgstr "Provider"
+
+msgctxt "Languages::travel_core.period"
+msgid "Period"
+msgstr "Period"
+
+msgctxt "Languages::travel_core.guests"
+msgid "Guests"
+msgstr "Guests"
+
+msgctxt "Languages::travel_core.contact"
+msgid "Contact"
+msgstr "Contact"
+
+msgctxt "Languages::travel_core.created"
+msgid "Created"
+msgstr "Created"
+
+msgctxt "Languages::travel_core.hotel"
+msgid "Hotel"
+msgstr "Hotel"
+
+msgctxt "Languages::travel_core.rooms_short"
+msgid "room(s)"
+msgstr "room(s)"
+
+msgctxt "Languages::travel_core.provider_ref"
+msgid "provider ref"
+msgstr "provider ref"
+
+msgctxt "Languages::travel_core.hotel_or_email"
+msgid "Hotel or e-mail"
+msgstr "Hotel or e-mail"
+
+msgctxt "Languages::travel_core.no_alternative_requests"
+msgid "No availability requests yet."
+msgstr "No availability requests yet."
+
+msgctxt "Languages::travel_core.request_alternatives_title"
+msgid "Can't find what you're looking for?"
+msgstr "Can't find what you're looking for?"
+
+msgctxt "Languages::travel_core.request_alternatives_desc"
+msgid "Leave your contact details and we'll get back to you with alternatives for your dates."
+msgstr "Leave your contact details and we'll get back to you with alternatives for your dates."
+
+msgctxt "Languages::travel_core.send_request"
+msgid "Send"
+msgstr "Send"
+
+msgctxt "Languages::travel_core.request_received"
+msgid "Your request was recorded. We will contact you shortly."
+msgstr "Your request was recorded. We will contact you shortly."
+
+msgctxt "Languages::travel_core.request_failed"
+msgid "Could not record your request. Please try again."
+msgstr "Could not record your request. Please try again."
+
+msgctxt "Languages::travel_core.request_invalid_email"
+msgid "Please provide a valid e-mail address."
+msgstr "Please provide a valid e-mail address."
+
+msgctxt "Languages::travel_core.request_too_soon"
+msgid "Please wait a moment before sending another request."
+msgstr "Please wait a moment before sending another request."
+
+msgctxt "Languages::travel_core.location_show_map"
+msgid "Location - show map"
+msgstr "Location - show map"

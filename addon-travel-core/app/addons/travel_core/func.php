@@ -54,6 +54,7 @@ function fn_travel_core_uninstall(): bool
     db_query('DROP TABLE IF EXISTS ?:travel_api_alias');
     db_query('DROP TABLE IF EXISTS ?:travel_unmapped_values');
     db_query('DROP TABLE IF EXISTS ?:travel_bookings');
+    db_query('DROP TABLE IF EXISTS ?:travel_alternative_requests');
     db_query('DROP TABLE IF EXISTS ?:travel_feature_map');
 
     // Remove language variables

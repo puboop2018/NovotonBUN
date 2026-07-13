@@ -26,6 +26,29 @@
     border-radius: 8px;
     margin-bottom: 12px;
 }
+/* "Location - show map" link next to the hotel address (Google Maps) */
+.travel-search-results-page .travel-hotel-map-link {
+    margin-left: 10px;
+    font-size: 13px;
+    white-space: nowrap;
+}
+/* Hotel name links to the product detail page — keep the heading look */
+.travel-search-results-page .travel-hotel-name-link {
+    color: inherit;
+    text-decoration: none;
+}
+.travel-search-results-page .travel-hotel-name-link:hover,
+.travel-search-results-page .travel-hotel-name-link:focus {
+    text-decoration: underline;
+}
+/* Header row: hotel identity left, availability badge right (novoton parity) */
+.travel-search-results-page .travel-hotel-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+}
 .travel-search-results-page .travel-hotel-header h1,
 .travel-search-results-page .travel-hotel-header h2 {
     margin: 0;
@@ -239,6 +262,36 @@
     margin-top: 8px;
     font-size: 15px;
     color: var(--nvt-primary, #003580);
+}
+
+/* ── "Contact me when available" request box (no-results panel) ───────── */
+.travel-search-results-page .travel-request-box {
+    background: var(--nvt-bg-light, #f7f9fb);
+    border: 1px dashed var(--nvt-border, #b9c4cf);
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin-top: 14px;
+}
+.travel-search-results-page .travel-request-box h4 {
+    margin: 0 0 4px;
+    font-size: 15px;
+}
+.travel-search-results-page .travel-request-box p {
+    margin: 0 0 10px;
+    font-size: 13px;
+    color: var(--nvt-text-light, #666);
+}
+.travel-search-results-page .travel-request-grid {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.travel-search-results-page .travel-request-grid input {
+    flex: 1 1 200px;
+    border: 1px solid var(--nvt-border, #ccd4dc);
+    border-radius: 6px;
+    padding: 9px 12px;
+    font-size: 14px;
 }
 
 /* ── No-results panel + alternative-date chips ────────────────────────── */

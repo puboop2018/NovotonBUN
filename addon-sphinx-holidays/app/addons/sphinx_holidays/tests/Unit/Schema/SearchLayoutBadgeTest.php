@@ -1,0 +1,90 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Tygh\Addons\SphinxHolidays\Tests\Unit\Schema;
+
+use PHPUnit\Framework\TestCase;
+
+/**
+ * Pins the sphinx search results page to novoton parity:
+ * 1. Page order — the hotel header renders ABOVE the booking search form.
+ * 2. Availability badge — same format as novoton's
+ *    ("✓ Available: N room(s), M offer(s) for X adults[, Y children]"),
+ *    rooms = DISTINCT room types, party suffix from the searched guests,
+ *    on BOTH render paths (server-rendered results and the poll JS that
+ *    streams offers in).
+ */
+final class SearchLayoutBadgeTest extends TestCase
+{
+    private static function searchTpl(): string
+    {
+        $path = dirname(__DIR__, 6)
+            . '/design/themes/responsive/templates/addons/sphinx_holidays/views/sphinx_booking/search.tpl';
+        self::assertFileExists($path);
+
+        return (string) file_get_contents($path);
+    }
+
+    public function testHotelHeaderRendersAboveTheBookingForm(): void
+    {
+        $tpl = self::searchTpl();
+
+        $headerPos = strpos($tpl, 'travel-hotel-header ');
+        $formPos = strpos($tpl, 'travel-search-form-wrapper');
+        self::assertIsInt($headerPos);
+        self::assertIsInt($formPos);
+        self::assertLessThan($formPos, $headerPos, 'the hotel header must come before the search form (novoton parity)');
+        // The badge sits in the hotel header row, like novoton's.
+        self::assertStringContainsString('travel-hotel-header-row', $tpl);
+    }
+
+    public function testHotelNameLinksToTheProductPage(): void
+    {
+        $tpl = self::searchTpl();
+
+        self::assertStringContainsString('travel-hotel-name-link', $tpl);
+        self::assertStringContainsString('products.view?product_id=`$sphinx_search_params.product_id`', $tpl);
+    }
+
+    public function testHeaderShowsMapLinkFromCoordinates(): void
+    {
+        $tpl = self::searchTpl();
+
+        self::assertStringContainsString('travel-hotel-map-link', $tpl);
+        self::assertStringContainsString('https://www.google.com/maps?q={$sphinx_hotel_lat},{$sphinx_hotel_lng}', $tpl);
+        self::assertStringContainsString('sphinx_holidays.location_show_map', $tpl);
+
+        // The controller feeds street+city+country and coordinates.
+        $controller = (string) file_get_contents(
+            dirname(__DIR__, 3) . '/controllers/frontend/sphinx_booking/search.php',
+        );
+        self::assertStringContainsString("sphinx_hotel_lat", $controller);
+        self::assertStringContainsString("\$hotelRow['address']", $controller);
+    }
+
+    public function testServerBadgeMatchesNovotonFormat(): void
+    {
+        $tpl = self::searchTpl();
+
+        self::assertStringContainsString('$sx_badge_room_keys', $tpl, 'rooms are counted as distinct room types');
+        self::assertStringContainsString('sphinx_holidays.available', $tpl);
+        self::assertStringContainsString('sphinx_holidays.for', $tpl);
+        self::assertStringContainsString('data-party-suffix', $tpl);
+        // The old "N results found" count span is gone.
+        self::assertStringNotContainsString('sphinx-results-count', $tpl);
+    }
+
+    public function testPollJsRebuildsTheBadgeInTheSameFormat(): void
+    {
+        $tpl = self::searchTpl();
+
+        self::assertStringContainsString('updateBadgeText', $tpl);
+        self::assertStringContainsString('seenRoomKeys', $tpl, 'the poll path deduplicates room types too');
+        self::assertStringContainsString("title.getAttribute('data-party-suffix')", $tpl);
+        // Badge vocabulary is exported to the poll JS.
+        foreach (['available:', 'room:', 'rooms:', 'offer:', 'offers:'] as $label) {
+            self::assertStringContainsString($label, $tpl, "__sphinxConfig.labels must carry {$label}");
+        }
+    }
+}

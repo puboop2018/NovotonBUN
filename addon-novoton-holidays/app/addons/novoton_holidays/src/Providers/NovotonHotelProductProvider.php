@@ -30,7 +30,7 @@ final class NovotonHotelProductProvider implements HotelProductProviderInterface
 
         $row = TypeCoerce::toStringMap(db_get_row(
             'SELECT hotel_name AS name, star_rating AS classification, hotel_type AS property_type,
-                    city, region, country, latitude, longitude
+                    city, region, country, latitude, longitude, street_address
              FROM ?:novoton_hotels WHERE hotel_id = ?s',
             $hotelId,
         ));
@@ -50,6 +50,9 @@ final class NovotonHotelProductProvider implements HotelProductProviderInterface
             country: self::optString($row['country'] ?? null),
             latitude: self::optFloat($row['latitude'] ?? null),
             longitude: self::optFloat($row['longitude'] ?? null),
+            // Reverse-geocoded (OSM Nominatim) — flips the PDP location line
+            // to "street, city, country" once the geocode_addresses cron ran.
+            address: self::optString($row['street_address'] ?? null),
         );
     }
 

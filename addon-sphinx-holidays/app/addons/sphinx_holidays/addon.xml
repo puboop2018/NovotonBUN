@@ -1009,6 +1009,28 @@
         <item lang="ro" id="sphinx_holidays.bulk_change_to_active"><![CDATA[Schimbă în Activ]]></item>
         <item lang="en" id="sphinx_holidays.bulk_change_to_disabled"><![CDATA[Change to Disabled]]></item>
         <item lang="ro" id="sphinx_holidays.bulk_change_to_disabled"><![CDATA[Schimbă în Dezactivat]]></item>
+        <item lang="en" id="sphinx_holidays.available"><![CDATA[Available]]></item>
+        <item lang="ro" id="sphinx_holidays.available"><![CDATA[Disponibil]]></item>
+        <item lang="en" id="sphinx_holidays.room"><![CDATA[room]]></item>
+        <item lang="ro" id="sphinx_holidays.room"><![CDATA[cameră]]></item>
+        <item lang="en" id="sphinx_holidays.rooms"><![CDATA[rooms]]></item>
+        <item lang="ro" id="sphinx_holidays.rooms"><![CDATA[camere]]></item>
+        <item lang="en" id="sphinx_holidays.offer"><![CDATA[offer]]></item>
+        <item lang="ro" id="sphinx_holidays.offer"><![CDATA[ofertă]]></item>
+        <item lang="en" id="sphinx_holidays.offers"><![CDATA[offers]]></item>
+        <item lang="ro" id="sphinx_holidays.offers"><![CDATA[oferte]]></item>
+        <item lang="en" id="sphinx_holidays.for"><![CDATA[for]]></item>
+        <item lang="ro" id="sphinx_holidays.for"><![CDATA[pentru]]></item>
+        <item lang="en" id="sphinx_holidays.adult"><![CDATA[adult]]></item>
+        <item lang="ro" id="sphinx_holidays.adult"><![CDATA[adult]]></item>
+        <item lang="en" id="sphinx_holidays.adults"><![CDATA[adults]]></item>
+        <item lang="ro" id="sphinx_holidays.adults"><![CDATA[adulți]]></item>
+        <item lang="en" id="sphinx_holidays.child"><![CDATA[child]]></item>
+        <item lang="ro" id="sphinx_holidays.child"><![CDATA[copil]]></item>
+        <item lang="en" id="sphinx_holidays.children"><![CDATA[children]]></item>
+        <item lang="ro" id="sphinx_holidays.children"><![CDATA[copii]]></item>
+        <item lang="en" id="sphinx_holidays.location_show_map"><![CDATA[Location - show map]]></item>
+        <item lang="ro" id="sphinx_holidays.location_show_map"><![CDATA[Locație - arată pe hartă]]></item>
         <item lang="en" id="sphinx_holidays.circuits"><![CDATA[Circuits]]></item>
         <item lang="ro" id="sphinx_holidays.circuits"><![CDATA[Circuite]]></item>
         <item lang="en" id="sphinx_holidays.package_routes"><![CDATA[Package routes]]></item>

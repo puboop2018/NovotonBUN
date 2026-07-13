@@ -21,11 +21,17 @@ final class SphinxHotelProductProvider implements HotelProductProviderInterface
     #[\Override]
     public function resolveProduct(int $productId, string $productCode): ?HotelSeoData
     {
+        // City/country prefer the hotel's own API address fields (clean,
+        // per-hotel) over the destination-tree names, which are irregular.
         $row = TypeCoerce::toStringMap(db_get_row(
             'SELECT hotel_id, name, classification, property_type,
-                    destination_name AS city, region_name AS region, country_name AS country,
+                    COALESCE(NULLIF(address_city, ?s), destination_name) AS city,
+                    region_name AS region,
+                    COALESCE(NULLIF(address_country, ?s), country_name) AS country,
                     latitude, longitude, image_url, address, phone, email, website
              FROM ?:sphinx_hotels WHERE product_id = ?i LIMIT 1',
+            '',
+            '',
             $productId,
         ));
 

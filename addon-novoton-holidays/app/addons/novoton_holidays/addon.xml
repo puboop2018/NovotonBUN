@@ -195,6 +195,30 @@
                         <variants/>
                     </item>
 
+                    <!-- Geocoding Header (reverse geocoding of hotel
+                         coordinates via OSM Nominatim — fills
+                         novoton_hotels.street_address for the PDP location
+                         line; the API itself has no street field) -->
+                    <item id="geocoding_header">
+                        <type>header</type>
+                        <variants/>
+                    </item>
+                    <item id="geocoding_enabled">
+                        <type>checkbox</type>
+                        <default_value>N</default_value>
+                        <variants/>
+                    </item>
+                    <item id="geocoding_contact_email">
+                        <type>input</type>
+                        <default_value></default_value>
+                        <variants/>
+                    </item>
+                    <item id="geocoding_endpoint">
+                        <type>input</type>
+                        <default_value>https://nominatim.openstreetmap.org</default_value>
+                        <variants/>
+                    </item>
+
                     <!-- Display Header
                          (show_booking_form + booking_form_position moved to
                          travel_core — the shared injection owns them for both
@@ -401,6 +425,8 @@
                 `is_adults_only` enum('Y','N') DEFAULT 'N' COMMENT 'Detected from hotel name: Adults Only, 18+, etc.',
                 `latitude` decimal(10,7) DEFAULT NULL,
                 `longitude` decimal(10,7) DEFAULT NULL,
+                `street_address` varchar(255) DEFAULT NULL COMMENT 'Reverse-geocoded street (OSM Nominatim), approximate — API has no street field',
+                `geocoded_at` datetime DEFAULT NULL COMMENT 'Last reverse-geocode attempt (stamped even when no street found)',
                 `hotel_data` JSON COMMENT 'JSON: full hotelinfo API response',
                 `has_room_price` enum('Y','N') DEFAULT 'N' COMMENT 'Has room_price check results',
                 `packages_count` int(3) DEFAULT 0 COMMENT 'Number of packages for this hotel',

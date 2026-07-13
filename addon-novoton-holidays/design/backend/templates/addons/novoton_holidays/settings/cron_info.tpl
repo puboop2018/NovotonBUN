@@ -60,6 +60,11 @@
                     <td><code>php {$smarty.const.DIR_ROOT}/index.php?dispatch=novoton_cron.run&amp;access_key=YOUR_KEY&amp;mode=cleanup</code></td>
                     <td>Daily (<code>0 4 * * *</code>)</td>
                 </tr>
+                <tr>
+                    <td><strong>geocode_addresses</strong></td>
+                    <td><code>php {$smarty.const.DIR_ROOT}/index.php?dispatch=novoton_cron.run&amp;access_key=YOUR_KEY&amp;mode=geocode_addresses</code></td>
+                    <td>Hourly until backlog drains (<code>0 * * * *</code>), needs geocoding enabled in settings</td>
+                </tr>
             </tbody>
         </table>
     </div>
