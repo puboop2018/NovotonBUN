@@ -17,7 +17,7 @@ final class PdpLocationLineTest extends TestCase
     private static function themeTpl(string $theme): string
     {
         $path = dirname(__DIR__, 6)
-            . '/design/themes/' . $theme . '/templates/addons/travel_core/hooks/products/title.post.tpl';
+            . '/design/themes/' . $theme . '/templates/addons/travel_core/hooks/products/main_info_title.post.tpl';
         self::assertFileExists($path);
 
         return (string) file_get_contents($path);
