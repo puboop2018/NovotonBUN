@@ -267,6 +267,15 @@
                 <td><a href="{$cron_urls.resinfo}" target="_blank" class="novoton-btn novoton-btn-sm">Run</a></td>
             </tr>
             <tr>
+                <td><strong>Geocode Streets</strong><br><small class="muted">street_address from coordinates (OSM Nominatim, needs geocoding enabled in settings)</small></td>
+                <td><div class="novoton-cron-url">{$cron_urls.geocode_addresses}</div></td>
+                <td>Hourly until backlog drains</td>
+                <td>
+                    <a href="{$cron_urls.geocode_addresses}" target="_blank" class="novoton-btn novoton-btn-sm">Run</a>
+                    <a href="{$cron_urls.geocode_addresses}&status=1" target="_blank" class="novoton-btn novoton-btn-sm">Status</a>
+                </td>
+            </tr>
+            <tr>
                 <td><strong>Cleanup</strong><br><small class="muted">Orphans, logs, cache</small></td>
                 <td><div class="novoton-cron-url">{$cron_urls.cleanup}</div></td>
                 <td>Daily</td>

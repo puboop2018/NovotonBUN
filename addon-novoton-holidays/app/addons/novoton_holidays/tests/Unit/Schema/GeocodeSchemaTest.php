@@ -90,4 +90,14 @@ final class GeocodeSchemaTest extends TestCase
 
         self::assertStringContainsString('geocode_addresses', $tpl);
     }
+
+    public function testDashboardCronUrlsIncludeTheMode(): void
+    {
+        $controller = self::read('controllers/backend/novoton_holidays.php');
+        self::assertStringContainsString("'geocode_addresses' =>", $controller);
+        self::assertStringContainsString('mode=geocode_addresses', $controller);
+
+        $dashboard = self::read('../../../design/backend/templates/addons/novoton_holidays/views/novoton_holidays/manage.tpl');
+        self::assertStringContainsString('{$cron_urls.geocode_addresses}', $dashboard);
+    }
 }
