@@ -1,0 +1,6 @@
+# The CS-Cart kit is licensed core code — supply it locally, never commit it.
+kit/*
+!kit/.gitkeep
+
+# Local environment carries the license key.
+.env

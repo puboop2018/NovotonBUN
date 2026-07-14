@@ -1,0 +1,10 @@
+# These run inside a Linux container — CRLF (from a Windows checkout) would
+# break the shebang ("bad interpreter") and msmtp/php config parsing. Force LF.
+*.sh            text eol=lf
+entrypoint.sh   text eol=lf
+link-addons.sh  text eol=lf
+*.php           text eol=lf
+php-dev.ini     text eol=lf
+msmtprc         text eol=lf
+*.conf          text eol=lf
+Dockerfile      text eol=lf
