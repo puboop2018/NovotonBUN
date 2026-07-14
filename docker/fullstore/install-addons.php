@@ -49,8 +49,14 @@ if (!function_exists('fn_install_addon') || !function_exists('fn_get_addon_statu
     exit(0);
 }
 
-// Dependency order: travel_core first, providers next, fgo (independent) last.
-$order = ['travel_core', 'novoton_holidays', 'sphinx_holidays', 'fgo_invoicing'];
+// Dependency order: travel_core first, then the two providers.
+//
+// fgo_invoicing is intentionally excluded: its install fatals in this
+// sandbox (Romanian e-invoicing addon, needs api.fgo.ro credentials it
+// doesn't have here) and it isn't needed to exercise the travel addons.
+// Its files are still linked, so it can be installed manually from the
+// admin Add-ons page once configured.
+$order = ['travel_core', 'novoton_holidays', 'sphinx_holidays'];
 
 foreach ($order as $addon) {
     if (!is_file($docroot . '/app/addons/' . $addon . '/addon.xml')) {
