@@ -76,7 +76,12 @@ write_install_config() {
     cat > "$DOCROOT/install/config.php" <<PHP
 <?php
 return array(
-    'addons' => array('travel_core', 'novoton_holidays', 'sphinx_holidays', 'fgo_invoicing'),
+    // fgo_invoicing is intentionally NOT installed by the console installer:
+    // its install fatals (exit 255) here (Romanian e-invoicing addon, needs
+    // api.fgo.ro credentials), which would abort the whole provision. The
+    // three travel addons install cleanly. install-addons.php still ATTEMPTS
+    // fgo afterward (tolerated), so it activates if its install ever succeeds.
+    'addons' => array('travel_core', 'novoton_holidays', 'sphinx_holidays'),
     'cart_settings' => array(
         'email' => '${ADMIN_EMAIL}',
         'password' => '${ADMIN_PASSWORD}',
@@ -134,9 +139,13 @@ provision() {
     write_install_config
 
     log "Running the CS-Cart console installer (this can take a few minutes)..."
-    ( cd "$DOCROOT/install" && php index.php )
+    # Non-fatal: a single addon's install fataling must not crash-loop the
+    # whole provision. The core schema + the three travel addons install
+    # cleanly; install-addons.php below reconciles anything the console
+    # installer missed.
+    ( cd "$DOCROOT/install" && php index.php ) || log "console installer reported errors; continuing (install-addons.php will reconcile)."
 
-    log "Verifying addon install order (installs fgo_invoicing + any missed)..."
+    log "Verifying addon install order (reconciling any the installer missed)..."
     php /usr/local/bin/install-addons.php || log "install-addons.php reported an issue (non-fatal); check the admin Add-ons page."
 
     enable_dev_mode
