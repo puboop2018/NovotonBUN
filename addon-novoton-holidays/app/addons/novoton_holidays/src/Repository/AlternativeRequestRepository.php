@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\NovotonHolidays\Repository;
 
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+use Tygh\Addons\TravelCore\Repository\AlternativeRequestRepository as SharedAlternativeRequestRepository;
 use Tygh\Addons\TravelCore\Repository\RowNarrowingTrait;
 use Tygh\Addons\TravelCore\TravelConstants;
 
@@ -91,15 +92,47 @@ class AlternativeRequestRepository implements AlternativeRequestRepositoryInterf
 
     /**
      * Update a request's status and optional data fields.
+     *
+     * Status changes propagate to the shared travel_alternative_requests
+     * mirror (created with provider_request_id = this table's PK) so the
+     * cross-provider admin grid tracks the workflow instead of showing
+     * every novoton row as forever-pending. All transition helpers
+     * (markAlternativesFound/markNotified) funnel through here.
+     *
      * @param array<string, mixed> $data
      */
     public function update(int $request_id, array $data): bool
     {
-        return (bool) db_query(
+        $result = (bool) db_query(
             'UPDATE ?:novoton_alternative_requests SET ?u WHERE request_id = ?i',
             $data,
             $request_id,
         );
+
+        if (isset($data['status'])) {
+            $this->mirrorBestEffort(static fn (): bool => (new SharedAlternativeRequestRepository())
+                ->updateStatusByProviderRef('novoton', $request_id, TypeCoerce::toString($data['status'])));
+        }
+
+        return $result;
+    }
+
+    /**
+     * Best-effort shared-mirror write: a mirror failure must never break
+     * the provider workflow (same contract as the create-time mirror in
+     * AlternativeRequestService).
+     */
+    private function mirrorBestEffort(callable $write): void
+    {
+        try {
+            $write();
+        } catch (\Throwable $mirrorError) {
+            if (function_exists('fn_log_event')) {
+                fn_log_event('novoton_holidays', 'runtime', [
+                    'message' => 'Alternative-request mirror sync failed: ' . $mirrorError->getMessage(),
+                ]);
+            }
+        }
     }
 
     /**
@@ -126,30 +159,42 @@ class AlternativeRequestRepository implements AlternativeRequestRepositoryInterf
     }
 
     /**
-     * Expire old pending requests.
+     * Expire old pending requests. The shared mirror gets the same bulk
+     * transition (same criteria, novoton rows only) so both tables age
+     * identically.
      *
      * @return int Number of rows updated
      */
     public function expireOlderThan(int $days = 30): int
     {
-        return TypeCoerce::toInt(db_query(
+        $expired = TypeCoerce::toInt(db_query(
             "UPDATE ?:novoton_alternative_requests
              SET status = 'expired', updated_at = NOW()
              WHERE status IN ('pending', 'pending_manual')
              AND created_at < DATE_SUB(NOW(), INTERVAL ?i DAY)",
             $days,
         ));
+
+        $this->mirrorBestEffort(static fn (): int => (new SharedAlternativeRequestRepository())
+            ->expireOlderThan($days, 'novoton'));
+
+        return $expired;
     }
 
     /**
-     * Delete a request by ID.
+     * Delete a request by ID (mirror row removed too).
      */
     public function delete(int $request_id): bool
     {
-        return (bool) db_query(
+        $result = (bool) db_query(
             'DELETE FROM ?:novoton_alternative_requests WHERE request_id = ?i',
             $request_id,
         );
+
+        $this->mirrorBestEffort(static fn (): bool => (new SharedAlternativeRequestRepository())
+            ->deleteByProviderRef('novoton', $request_id));
+
+        return $result;
     }
 
     /**

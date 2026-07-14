@@ -36,12 +36,13 @@ if ($mode === 'run') {
         $cron_mode = isset($_REQUEST['cron_mode']) ? preg_replace('/[^a-z0-9_]/', '', strtolower(RequestCoerce::string($_REQUEST, 'cron_mode'))) : '';
     }
 
-    $supported_modes = ['exchange_rates'];
+    $supported_modes = ['exchange_rates', 'expire_alternative_requests'];
 
     if (empty($cron_mode) || !in_array($cron_mode, $supported_modes, true)) {
         header('Content-Type: text/plain');
         echo "Travel Core Cron - Available modes:\n";
-        echo "  exchange_rates - Update BNR exchange rates\n\n";
+        echo "  exchange_rates              - Update BNR exchange rates\n";
+        echo "  expire_alternative_requests - Expire stale availability requests (&days=30) and purge old terminal rows (&purge_days=180)\n\n";
         echo "Usage: dispatch=travel_cron.run&access_key=KEY&cron_mode=exchange_rates\n";
         exit;
     }
@@ -49,16 +50,32 @@ if ($mode === 'run') {
     header('Content-Type: text/plain');
     echo "[" . date('Y-m-d H:i:s') . "] Travel Core Cron - Mode: {$cron_mode}\n\n";
 
-    // Currently only 'exchange_rates' is in $supported_modes, so we always reach here.
-    $commission = TypeCoerce::toFloat(Registry::get('addons.travel_core.currency_risk_commission'));
+    if ($cron_mode === 'expire_alternative_requests') {
+        // Lifecycle for the shared travel_alternative_requests table.
+        // Expiry targets ONLY sphinx rows — they are internal-manual with no
+        // provider workflow; novoton's own expire_requests cron propagates
+        // its transitions into this table itself. The purge (PII hygiene)
+        // deletes terminal expired/cancelled rows for all providers.
+        $days = max(1, TypeCoerce::toInt($_REQUEST['days'] ?? 30));
+        $purgeDays = max(1, TypeCoerce::toInt($_REQUEST['purge_days'] ?? 180));
 
-    $result = fn_travel_core_update_exchange_rates($commission, true);
+        $repo = new \Tygh\Addons\TravelCore\Repository\AlternativeRequestRepository();
+        $expired = $repo->expireOlderThan($days, 'sphinx');
+        $purged = $repo->purgeOlderThan($purgeDays);
 
-    if (!is_array($result)) {
-        $result = ['success' => false, 'message' => 'No response from exchange rate service'];
+        echo "Expired sphinx requests older than {$days} days: {$expired}\n";
+        echo "Purged expired/cancelled rows older than {$purgeDays} days: {$purged}\n";
+    } else {
+        $commission = TypeCoerce::toFloat(Registry::get('addons.travel_core.currency_risk_commission'));
+
+        $result = fn_travel_core_update_exchange_rates($commission, true);
+
+        if (!is_array($result)) {
+            $result = ['success' => false, 'message' => 'No response from exchange rate service'];
+        }
+
+        echo fn_travel_core_format_exchange_rate_output($result) . "\n";
     }
-
-    echo fn_travel_core_format_exchange_rate_output($result) . "\n";
 
     echo "\n[" . date('Y-m-d H:i:s') . "] Cron job completed.\n";
 

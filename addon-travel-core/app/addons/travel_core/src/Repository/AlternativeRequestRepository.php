@@ -19,6 +19,16 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 class AlternativeRequestRepository
 {
     /**
+     * Statuses an admin may set manually from the shared grid. Only
+     * internal-only providers (sphinx) are managed here — novoton rows
+     * follow the provider workflow, whose transitions propagate via
+     * updateStatusByProviderRef().
+     *
+     * @var list<string>
+     */
+    public const array MANUAL_STATUSES = ['notified', 'booked', 'cancelled'];
+
+    /**
      * Store a request; returns the new request_id.
      *
      * @param array<string, mixed> $row
@@ -26,6 +36,91 @@ class AlternativeRequestRepository
     public function create(array $row): int
     {
         return TypeCoerce::toInt(db_query('INSERT INTO ?:travel_alternative_requests ?e', $row));
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    public function findById(int $requestId): ?array
+    {
+        $row = TypeCoerce::toStringMap(db_get_row(
+            'SELECT * FROM ?:travel_alternative_requests WHERE request_id = ?i',
+            $requestId,
+        ));
+
+        return $row === [] ? null : $row;
+    }
+
+    /** Set one request's status (updated_at maintained by ON UPDATE). */
+    public function updateStatus(int $requestId, string $status): bool
+    {
+        return (bool) db_query(
+            'UPDATE ?:travel_alternative_requests SET status = ?s WHERE request_id = ?i',
+            $status,
+            $requestId,
+        );
+    }
+
+    /**
+     * Propagate a provider-side transition to the mirror row, keyed by
+     * (provider, provider_request_id) — the link written at create time.
+     */
+    public function updateStatusByProviderRef(string $provider, int $providerRequestId, string $status): bool
+    {
+        return (bool) db_query(
+            'UPDATE ?:travel_alternative_requests SET status = ?s WHERE provider = ?s AND provider_request_id = ?i',
+            $status,
+            $provider,
+            $providerRequestId,
+        );
+    }
+
+    /** Remove the mirror row of a deleted provider request. */
+    public function deleteByProviderRef(string $provider, int $providerRequestId): bool
+    {
+        return (bool) db_query(
+            'DELETE FROM ?:travel_alternative_requests WHERE provider = ?s AND provider_request_id = ?i',
+            $provider,
+            $providerRequestId,
+        );
+    }
+
+    /**
+     * Expire stale open requests — same 30-day policy as novoton's provider
+     * table. Optionally restricted to one provider (the shared cron passes
+     * 'sphinx'; novoton propagates its own expiry here itself).
+     *
+     * @return int Rows expired
+     */
+    public function expireOlderThan(int $days = 30, string $provider = ''): int
+    {
+        $providerCondition = $provider !== '' ? db_quote(' AND provider = ?s', $provider) : '';
+
+        return TypeCoerce::toInt(db_query(
+            "UPDATE ?:travel_alternative_requests
+             SET status = 'expired'
+             WHERE status IN ('pending', 'pending_manual')
+             AND created_at < DATE_SUB(NOW(), INTERVAL ?i DAY) ?p",
+            $days,
+            $providerCondition,
+        ));
+    }
+
+    /**
+     * PII hygiene: hard-delete terminal rows past the retention window.
+     * Only expired/cancelled rows go — notified/booked stay as history
+     * (novoton keeps its own provider copy regardless).
+     *
+     * @return int Rows deleted
+     */
+    public function purgeOlderThan(int $days = 180): int
+    {
+        return TypeCoerce::toInt(db_query(
+            "DELETE FROM ?:travel_alternative_requests
+             WHERE status IN ('expired', 'cancelled')
+             AND created_at < DATE_SUB(NOW(), INTERVAL ?i DAY)",
+            $days,
+        ));
     }
 
     /** Total number of stored requests. */

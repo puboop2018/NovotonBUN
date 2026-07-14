@@ -24,6 +24,30 @@ if (!defined('BOOTSTRAP')) {
 /** @var \Smarty $view */
 $view = Tygh::$app['view'];
 
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $mode === 'update_status') {
+    // Manual transitions are only for internal-only providers (sphinx) —
+    // novoton rows follow the provider workflow, whose transitions
+    // propagate into this table automatically.
+    $requestId = TypeCoerce::toInt($_REQUEST['request_id'] ?? 0);
+    $newStatus = trim(TypeCoerce::toString($_REQUEST['new_status'] ?? ''));
+
+    $repo = new AlternativeRequestRepository();
+    $request = $requestId > 0 ? $repo->findById($requestId) : null;
+
+    if ($request === null) {
+        fn_set_notification('E', __('error'), __('travel_core.request_not_found'));
+    } elseif (($request['provider'] ?? '') !== 'sphinx') {
+        fn_set_notification('E', __('error'), __('travel_core.status_managed_by_provider'));
+    } elseif (!in_array($newStatus, AlternativeRequestRepository::MANUAL_STATUSES, true)) {
+        fn_set_notification('E', __('error'), __('travel_core.invalid_status'));
+    } else {
+        $repo->updateStatus($requestId, $newStatus);
+        fn_set_notification('N', __('notice'), __('travel_core.status_updated'));
+    }
+
+    return [CONTROLLER_STATUS_OK, 'travel_alternatives.manage'];
+}
+
 if ($mode === 'manage') {
     $repo = new AlternativeRequestRepository();
     [$requests, $search] = $repo->getListing(TypeCoerce::toStringMap($_REQUEST));

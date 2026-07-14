@@ -57,6 +57,7 @@
             <th>{__("travel_core.contact")}</th>
             <th width="120">{__("status")}</th>
             <th width="130">{__("travel_core.created")}</th>
+            <th width="170">{__("travel_core.actions")|default:"Actions"}</th>
         </tr>
     </thead>
     <tbody>
@@ -97,6 +98,26 @@
                 {/if}
             </td>
             <td>{$req.created_at|default:"-"}</td>
+            <td>
+                {* Manual transitions only for internal-only providers —
+                   novoton rows track the provider workflow automatically. *}
+                {if $req.provider == 'sphinx' && $req.status != 'notified' && $req.status != 'booked' && $req.status != 'cancelled'}
+                <form action="{""|fn_url}" method="post" name="travel_alt_status_{$req.request_id}" style="margin:0; white-space:nowrap;">
+                    <input type="hidden" name="dispatch" value="travel_alternatives.update_status" />
+                    <input type="hidden" name="request_id" value="{$req.request_id}" />
+                    <select name="new_status" style="width:105px; margin:0;">
+                        {foreach from=["notified", "booked", "cancelled"] item=ns}
+                            <option value="{$ns}">{$ns}</option>
+                        {/foreach}
+                    </select>
+                    <input type="submit" class="btn" value="{__("travel_core.set_status")|default:"Set"}" />
+                </form>
+                {elseif $req.provider == 'sphinx'}
+                    <span class="muted">&mdash;</span>
+                {else}
+                    <span class="muted" style="font-size:11px;">{__("travel_core.provider_managed")|default:"provider-managed"}</span>
+                {/if}
+            </td>
         </tr>
         {/foreach}
     </tbody>
