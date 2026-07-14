@@ -24,6 +24,15 @@ use Tygh\Addons\TravelCore\Services\TravelGroupResolver;
  */
 class DiagnoseProductFeaturesCommand extends AbstractSyncCommand
 {
+    /**
+     * @return list<string>
+     */
+    #[\Override]
+    public static function getModes(): array
+    {
+        return ['diagnose_product_features'];
+    }
+
     private const string API_SOURCE = 'sphinx';
 
     #[\Override]

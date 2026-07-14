@@ -24,6 +24,15 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
  */
 class CalendarPricesCommand extends AbstractSyncCommand
 {
+    /**
+     * @return list<string>
+     */
+    #[\Override]
+    public static function getModes(): array
+    {
+        return ['calendar_prices'];
+    }
+
     #[\Override]
     public static function getDescription(): string
     {

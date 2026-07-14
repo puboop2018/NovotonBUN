@@ -29,6 +29,15 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 class DiagnoseSearchCommand extends AbstractSyncCommand
 {
     /**
+     * @return list<string>
+     */
+    #[\Override]
+    public static function getModes(): array
+    {
+        return ['diagnose_search'];
+    }
+
+    /**
      * How long to poll for results before giving up (seconds).
      *
      * The Sphinx async-search spec notes offers "may take a couple of tens of

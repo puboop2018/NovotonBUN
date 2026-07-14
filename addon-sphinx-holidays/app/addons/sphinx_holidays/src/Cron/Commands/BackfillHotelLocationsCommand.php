@@ -27,6 +27,15 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
  */
 class BackfillHotelLocationsCommand extends AbstractSyncCommand
 {
+    /**
+     * @return list<string>
+     */
+    #[\Override]
+    public static function getModes(): array
+    {
+        return ['backfill_hotel_locations'];
+    }
+
     private const int CHUNK = 500;
 
     /** How many unresolved examples to include in the report. */

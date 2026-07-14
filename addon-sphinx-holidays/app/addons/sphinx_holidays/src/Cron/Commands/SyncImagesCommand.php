@@ -27,6 +27,15 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
  */
 class SyncImagesCommand extends AbstractSyncCommand
 {
+    /**
+     * @return list<string>
+     */
+    #[\Override]
+    public static function getModes(): array
+    {
+        return ['sync_images'];
+    }
+
     private const int BATCH_SIZE = 50;
 
     #[\Override]

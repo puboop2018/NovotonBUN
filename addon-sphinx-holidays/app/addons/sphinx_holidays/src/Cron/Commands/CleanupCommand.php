@@ -13,6 +13,15 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
  */
 class CleanupCommand extends AbstractSyncCommand
 {
+    /**
+     * @return list<string>
+     */
+    #[\Override]
+    public static function getModes(): array
+    {
+        return ['cleanup'];
+    }
+
     #[\Override]
     public static function getDescription(): string
     {

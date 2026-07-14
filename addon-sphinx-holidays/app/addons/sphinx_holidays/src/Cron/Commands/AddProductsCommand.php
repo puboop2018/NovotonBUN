@@ -36,6 +36,15 @@ class AddProductsCommand extends AbstractSyncCommand
 {
     use StatefulCommandTrait;
 
+    /**
+     * @return list<string>
+     */
+    #[\Override]
+    public static function getModes(): array
+    {
+        return ['add_products'];
+    }
+
     private const string STATE_FILE_NAME = 'sphinx_add_products_state.json';
     private const int STALE_HOURS = 6;
     private const array DEFAULT_STATE = [

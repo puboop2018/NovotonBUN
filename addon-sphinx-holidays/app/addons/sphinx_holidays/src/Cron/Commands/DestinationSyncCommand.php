@@ -26,6 +26,15 @@ class DestinationSyncCommand extends AbstractSyncCommand
 {
     use StatefulCommandTrait;
 
+    /**
+     * @return list<string>
+     */
+    #[\Override]
+    public static function getModes(): array
+    {
+        return ['destinations'];
+    }
+
     private const string STATE_FILE_NAME = 'sphinx_destination_sync_state.json';
     private const float STALE_HOURS = 0.5; // 30 minutes — full sync takes ~7 min
     private const array DEFAULT_STATE = [

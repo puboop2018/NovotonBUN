@@ -23,6 +23,15 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
  */
 class DiagnoseSeoCommand extends AbstractSyncCommand
 {
+    /**
+     * @return list<string>
+     */
+    #[\Override]
+    public static function getModes(): array
+    {
+        return ['diagnose_seo'];
+    }
+
     /** All 13 seo_* addon setting keys managed by fn_sphinx_holidays_seed_seo_defaults(). */
     private const array SEO_KEYS = [
         'seo_overwrite_mode',

@@ -14,6 +14,15 @@ use Tygh\Addons\SphinxHolidays\Services\ExperienceSyncService;
  */
 class ExperienceSyncCommand extends AbstractSyncCommand
 {
+    /**
+     * @return list<string>
+     */
+    #[\Override]
+    public static function getModes(): array
+    {
+        return ['experiences'];
+    }
+
     #[\Override]
     public static function getDescription(): string
     {

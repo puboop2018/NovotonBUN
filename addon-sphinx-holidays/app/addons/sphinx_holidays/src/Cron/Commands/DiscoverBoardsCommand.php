@@ -36,6 +36,15 @@ class DiscoverBoardsCommand extends AbstractSyncCommand
 {
     use StatefulCommandTrait;
 
+    /**
+     * @return list<string>
+     */
+    #[\Override]
+    public static function getModes(): array
+    {
+        return ['discover_boards'];
+    }
+
     /** State file name stored in DIR_CACHE */
     private const string STATE_FILE_NAME = 'sphinx_discover_boards_state.json';
 

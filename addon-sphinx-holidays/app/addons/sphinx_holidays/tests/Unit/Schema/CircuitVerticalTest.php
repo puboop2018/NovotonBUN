@@ -38,9 +38,8 @@ final class CircuitVerticalTest extends TestCase
 
     public function testCircuitProductCreationPathIsWired(): void
     {
-        $dispatcher = self::read('src/Cron/CronDispatcher.php');
-        self::assertStringContainsString("'add_circuit_products' => AddCircuitProductsCommand::class", $dispatcher);
-
+        // Registration is auto-discovery: the command self-registers via
+        // getModes() (CronModeRegistrationTest pins the discovered set).
         $command = self::read('src/Cron/Commands/AddCircuitProductsCommand.php');
         self::assertStringContainsString("['add_circuit_products']", $command);
         self::assertStringContainsString('getCircuitsCategoryId', $command);

@@ -20,6 +20,15 @@ use Tygh\Addons\TravelCore\Services\FeatureMapper;
  */
 class UpdateProductsCommand extends AbstractSyncCommand
 {
+    /**
+     * @return list<string>
+     */
+    #[\Override]
+    public static function getModes(): array
+    {
+        return ['update_products'];
+    }
+
     private const int BATCH_SIZE = 200;
 
     #[\Override]
