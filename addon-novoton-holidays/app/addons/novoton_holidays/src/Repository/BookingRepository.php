@@ -18,7 +18,6 @@ use Tygh\Addons\NovotonHolidays\Helpers\JsonDecoder;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Repository\RowNarrowingTrait;
 use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
-use Tygh\Addons\TravelCore\TravelConstants;
 
 class BookingRepository implements BookingRepositoryInterface
 {
@@ -266,20 +265,6 @@ class BookingRepository implements BookingRepositoryInterface
     public function linkToOrder(int $booking_id, int $order_id): bool
     {
         return $this->update($booking_id, ['order_id' => $order_id]);
-    }
-
-    /**
-     * Set Novoton reservation ID
-     */
-    public function setReservationId(int $booking_id, string $reservation_id, string $status = 'Good'): bool
-    {
-        $internal_status = Constants::NOVOTON_STATUS_TO_INTERNAL[$status] ?? TravelConstants::STATUS_PENDING;
-
-        return $this->update($booking_id, [
-            'novoton_reservation_id' => $reservation_id,
-            'novoton_status' => $status,
-            'status' => $internal_status,
-        ]);
     }
 
     /**

@@ -155,8 +155,13 @@ class AlternativesCommand extends AbstractCronCommand
             $bookingId = TypeCoerce::toInt($booking['booking_id']);
             $this->output("Booking #{$bookingId}... ", false);
 
-            if (!empty($booking['novoton_reservation_id'])) {
-                $this->api->reservations()->getAlternatives(TypeCoerce::toString($booking['novoton_reservation_id']));
+            // Reservation reference: confirmation id from booking, else the
+            // ResNum learned via resinfo (same precedence as ResInfoCommand).
+            $reservationRef = TypeCoerce::toString($booking['novoton_confirm_id'] ?? '')
+                ?: TypeCoerce::toString($booking['novoton_res_num'] ?? '');
+
+            if ($reservationRef !== '') {
+                $this->api->reservations()->getAlternatives($reservationRef);
                 $bookingRepo->update($bookingId, ['alternatives_requested' => 1]);
                 $this->output('checked');
             } else {

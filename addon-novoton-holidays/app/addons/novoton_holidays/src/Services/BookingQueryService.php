@@ -173,7 +173,9 @@ class BookingQueryService implements BookingQueryServiceInterface
             'novoton_status' => $nb['novoton_status'] ?? '',
             'novoton_invoice_id' => $nb['novoton_invoice_id'] ?? '',
             'novoton_confirm_id' => $nb['novoton_confirm_id'] ?? '',
-            'novoton_reservation_id' => $nb['novoton_reservation_id'] ?? '',
+            // Derived: no novoton_reservation_id column exists — the
+            // reference is confirm id, else the resinfo ResNum.
+            'novoton_reservation_id' => ($nb['novoton_confirm_id'] ?? '') ?: ($nb['novoton_res_num'] ?? ''),
             'api_request' => $nb['api_request'] ?? null,
             'api_response' => $nb['api_response'] ?? null,
             'alternatives_data' => $nb['alternatives_data'] ?? null,
