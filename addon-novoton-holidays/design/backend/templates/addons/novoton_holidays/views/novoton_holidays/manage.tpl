@@ -276,6 +276,15 @@
                 </td>
             </tr>
             <tr>
+                <td><strong>Backfill Images</strong><br><small class="muted">Re-attach images to products that synced without them (recovery)</small></td>
+                <td><div class="novoton-cron-url">{$cron_urls.backfill_images}</div></td>
+                <td>Hourly until backlog drains</td>
+                <td>
+                    <a href="{$cron_urls.backfill_images}" target="_blank" class="novoton-btn novoton-btn-sm">Run</a>
+                    <a href="{$cron_urls.backfill_images}&status=1" target="_blank" class="novoton-btn novoton-btn-sm">Status</a>
+                </td>
+            </tr>
+            <tr>
                 <td><strong>Cleanup</strong><br><small class="muted">Orphans, logs, cache</small></td>
                 <td><div class="novoton-cron-url">{$cron_urls.cleanup}</div></td>
                 <td>Daily</td>

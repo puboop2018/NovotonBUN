@@ -489,6 +489,44 @@ Crontab:
 
 
 --------------------------------------------------------------------------------
+MODE: backfill_images
+--------------------------------------------------------------------------------
+Description: Re-attach hotel images to products that are missing them —
+             recovery for images that failed to import during add_products
+Duration:    Depends on backlog (paced ~0.2s per product between API calls)
+Frequency:   Hourly until the backlog drains, then it's a near-instant no-op
+
+What it does:
+  - Finds linked products (novoton_hotels.product_id set) that have zero
+    rows in images_links — i.e. a product created without images because a
+    transient provider hiccup made getHotelImages fail during add_products
+  - Re-fetches the hotel's images from the API and re-runs the exact same,
+    proven attach pipeline (fn_travel_core_attach_images_from_urls)
+  - Naturally resumable with no state file: a product leaves the candidate
+    set the moment it has at least one image
+
+Why it exists:
+  add_hotels_as_products attaches images at product-creation time and never
+  revisits an already-linked hotel, so a one-off image failure would
+  otherwise leave that product permanently image-less. This is the catch-up.
+
+Parameters:
+  &limit=N           Products per run (default: 100)
+  &status=1          Show backlog counters (no processing)
+  &force=1           Re-attach ALL linked products, not just image-less ones
+  &hotel_id=X        Backfill a single hotel's product
+
+Examples:
+  mode=backfill_images                   # Process next 100 image-less products
+  mode=backfill_images&status=1          # Check backlog
+  mode=backfill_images&hotel_id=4402     # Fix one hotel
+  mode=backfill_images&force=1           # Re-attach everything
+
+Crontab:
+  0 * * * * curl -s "...&mode=backfill_images"
+
+
+--------------------------------------------------------------------------------
 MODE: cleanup
 --------------------------------------------------------------------------------
 Description: Clean orphan bookings, old logs, and expired cache
@@ -629,6 +667,7 @@ alternative_rs_bookings     | Variable    | 0 */4 * * *    | LOW
 notify_alternatives         | 5-30s       | 0 */4 * * *    | LOW
 expire_requests             | 1-5s        | 0 0 * * *      | LOW
 geocode_addresses           | ~5min/run   | 0 * * * *      | LOW
+backfill_images             | Variable    | 0 * * * *      | LOW
 cleanup                     | 1-10s       | 0 1 * * *      | LOW
 recompute_calendar_prices   | 10-30s      | Manual/Daily   | LOW
 full                        | 5-30min     | Manual/Weekly  | LOW

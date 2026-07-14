@@ -402,6 +402,7 @@ if ($mode === 'manage' || empty($mode)) {
         'compute_prices' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=compute_prices",
         'recompute_calendar_prices' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=recompute_calendar_prices",
         'geocode_addresses' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=geocode_addresses",
+        'backfill_images' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=backfill_images",
         'cleanup' => $base_url . "index.php?dispatch=novoton_cron.run&access_key={$cron_key}&mode=cleanup",
     ];
 
