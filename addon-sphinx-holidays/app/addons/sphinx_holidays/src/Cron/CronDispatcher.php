@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays\Cron;
 
+use Tygh\Addons\SphinxHolidays\Cron\Commands\AddCircuitProductsCommand;
 use Tygh\Addons\SphinxHolidays\Cron\Commands\AddProductsCommand;
 use Tygh\Addons\SphinxHolidays\Cron\Commands\AssignBoardsCommand;
 use Tygh\Addons\SphinxHolidays\Cron\Commands\AuditFacilitiesCommand;
@@ -55,6 +56,7 @@ class CronDispatcher implements CronDispatcherInterface
         'cache_refresh' => CacheRefreshCommand::class,
         'calendar_prices' => CalendarPricesCommand::class,
         'add_products' => AddProductsCommand::class,
+        'add_circuit_products' => AddCircuitProductsCommand::class,
         'discover_boards' => DiscoverBoardsCommand::class,
         'assign_boards' => AssignBoardsCommand::class,
         'update_products' => UpdateProductsCommand::class,

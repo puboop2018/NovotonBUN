@@ -332,6 +332,62 @@ msgctxt "Languages::sphinx_deals_packages"
 msgid "Packages"
 msgstr "Packages"
 
+msgctxt "Languages::sphinx_deals_circuits"
+msgid "Circuits"
+msgstr "Circuits"
+
+msgctxt "Languages::block_sphinx_package_search"
+msgid "Sphinx: Package Search"
+msgstr "Sphinx: Package Search"
+
+msgctxt "Languages::sphinx_holidays.pkg_destination"
+msgid "Destination"
+msgstr "Destination"
+
+msgctxt "Languages::sphinx_holidays.pkg_departure_city"
+msgid "Departure city"
+msgstr "Departure city"
+
+msgctxt "Languages::sphinx_holidays.pkg_transport"
+msgid "Transport"
+msgstr "Transport"
+
+msgctxt "Languages::sphinx_holidays.pkg_departure_date"
+msgid "Departure date"
+msgstr "Departure date"
+
+msgctxt "Languages::sphinx_holidays.pkg_nights"
+msgid "Nights"
+msgstr "Nights"
+
+msgctxt "Languages::sphinx_holidays.pkg_adults"
+msgid "Adults"
+msgstr "Adults"
+
+msgctxt "Languages::sphinx_holidays.pkg_children"
+msgid "Children"
+msgstr "Children"
+
+msgctxt "Languages::sphinx_holidays.pkg_children_ages"
+msgid "Children ages"
+msgstr "Children ages"
+
+msgctxt "Languages::sphinx_holidays.pkg_children_ages_hint"
+msgid "e.g. 5,9"
+msgstr "e.g. 5,9"
+
+msgctxt "Languages::sphinx_holidays.pkg_any"
+msgid "Any"
+msgstr "Any"
+
+msgctxt "Languages::sphinx_holidays.pkg_loading"
+msgid "Loading..."
+msgstr "Loading..."
+
+msgctxt "Languages::sphinx_holidays.pkg_search"
+msgid "Search packages"
+msgstr "Search packages"
+
 msgctxt "Languages::sphinx_holidays.payment_terms"
 msgid "Payment terms"
 msgstr "Payment terms"
