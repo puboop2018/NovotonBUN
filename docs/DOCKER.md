@@ -1,9 +1,9 @@
 # Local Docker sandbox — full CS-Cart store for addon testing
 
-A disposable CS-Cart 4.20.1 store (matching devx) that runs the four repo
-addons from live source, so features can be exercised locally — install/
-uninstall, crons, booking flows, template rendering, and emails — before
-verifying on devx. It fills the gap the codebase repeatedly notes ("verify
+A disposable CS-Cart 4.20.1 store on **MariaDB 10.11** (matching the production
+server) that runs the four repo addons from live source, so features can be
+exercised locally — install/uninstall, crons, booking flows, template rendering,
+and emails — before verifying on devx. It fills the gap the codebase repeatedly notes ("verify
 manually on devx"): there was no local full store until now.
 
 Everything lives under **`docker/fullstore/`**; the full walkthrough is in

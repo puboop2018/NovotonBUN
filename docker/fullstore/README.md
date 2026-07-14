@@ -1,8 +1,9 @@
 # Full-store CS-Cart sandbox
 
-A disposable, local CS-Cart 4.20.1 store (matching devx) with all four repo
-addons linked in for live testing — install/uninstall, crons, booking flows,
-templates, and emails — without touching devx.
+A disposable, local CS-Cart 4.20.1 store on **MariaDB 10.11** (matching the
+production server) with all four repo addons linked in for live testing —
+install/uninstall, crons, booking flows, templates, and emails — without
+touching devx.
 
 > This is a **dev sandbox**, not a production image (development mode on,
 > debug-friendly PHP). devx/production remain the deploy targets.

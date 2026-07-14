@@ -38,18 +38,21 @@ services:
     restart: unless-stopped
 
   db:
-    image: mysql:8.0
+    # MariaDB 10.11 to match the production server (10.11.14). Pin :10.11.14
+    # for a byte-exact match — the 10.11 series is behaviourally identical.
+    image: mariadb:10.11
     environment:
-      MYSQL_DATABASE: "${CSCART_DB_NAME:-cscart}"
-      MYSQL_USER: "${CSCART_DB_USER:-cscart}"
-      MYSQL_PASSWORD: "${CSCART_DB_PASSWORD:-cscart}"
-      MYSQL_ROOT_PASSWORD: root
+      MARIADB_DATABASE: "${CSCART_DB_NAME:-cscart}"
+      MARIADB_USER: "${CSCART_DB_USER:-cscart}"
+      MARIADB_PASSWORD: "${CSCART_DB_PASSWORD:-cscart}"
+      MARIADB_ROOT_PASSWORD: root
     ports:
       - "${DB_PORT:-3307}:3306"
     volumes:
       - dbdata:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-proot", "--silent"]
+      # MariaDB's own healthcheck helper (avoids the deprecated mysql-named tools).
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
       interval: 5s
       timeout: 5s
       retries: 40
