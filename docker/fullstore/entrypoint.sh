@@ -102,7 +102,12 @@ return array(
         'http_path' => '',
         'https_host' => '${HTTP_HOST}',
         'https_path' => '',
-        'correct_permissions' => true,
+        // false: the addons are symlinked to the read-only /repo mount, so
+        // CS-Cart's chmod-everything pass would fail on them and abort the
+        // install. This entrypoint runs the installer as root and
+        // chown -R www-data's the docroot afterward, so the installer's own
+        // permission pass is unnecessary.
+        'correct_permissions' => false,
     ),
 );
 PHP
