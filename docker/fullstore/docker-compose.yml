@@ -29,11 +29,15 @@ services:
       - "${HTTP_PORT:-8080}:80"
     volumes:
       # CS-Cart docroot lives in a named volume (fast on Windows; never
-      # bind-mount the whole store). The repo is mounted read-only so addon
-      # sources are live-editable from the host IDE. The kit folder feeds
-      # the one-time install.
+      # bind-mount the whole store). The repo is mounted read-WRITE: the
+      # addons are symlinked into design/ and var/langs/, and CS-Cart's
+      # installer hard-requires those trees to be writable (is_writable()).
+      # A :ro mount fails that check and blocks the install. CS-Cart writes
+      # its runtime data into the var/ volume, not the addon source, so the
+      # working tree stays clean in practice. The kit folder feeds the
+      # one-time install.
       - docroot:/var/www/html
-      - ../..:/repo:ro
+      - ../..:/repo
       - ./kit:/kit:ro
     restart: unless-stopped
 

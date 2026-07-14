@@ -39,9 +39,12 @@ clean with `docker compose down -v && docker compose up -d --build`.
   `docker/test-db/build.sh`. On first boot the entrypoint ingests the kit, runs
   the CS-Cart **console installer** with all four addons, enables development
   mode, and clears the cache. A sentinel file makes later boots fast.
-- `link-addons.sh` **symlinks each addon's deploy artifacts** from the read-only
-  `/repo` mount into the docroot, so the store runs your live repo code. The
-  dev-only trees (`react-src`, tests, vendor) are excluded by construction.
+- `link-addons.sh` **symlinks each addon's deploy artifacts** from the `/repo`
+  mount into the docroot, so the store runs your live repo code. The dev-only
+  trees (`react-src`, tests, vendor) are excluded by construction. (The repo is
+  mounted read-write because CS-Cart's installer requires its `design/`/`var/`
+  trees writable; CS-Cart writes runtime data into the `var/` volume, not your
+  addon source, so the working tree stays clean.)
 - `mailpit` captures every outbound email (booking confirmations, availability
   notifications, fgo invoices); `phpmyadmin` exposes the DB.
 
