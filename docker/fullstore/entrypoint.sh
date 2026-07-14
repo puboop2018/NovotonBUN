@@ -23,15 +23,19 @@ HTTP_HOST="${CSCART_HTTP_HOST:-localhost:8080}"
 log() { echo "[entrypoint] $*"; }
 
 wait_for_db() {
-    log "Waiting for MySQL at ${DB_HOST}..."
+    # Probe with PHP's mysqli — the exact driver CS-Cart uses, and always
+    # present in this image. (The old `mysqladmin ping` broke once the
+    # php:8.3-apache base moved to Debian trixie, whose MariaDB client 11.x
+    # dropped the mysql-named tools; the command was simply absent.)
+    log "Waiting for the database at ${DB_HOST}..."
     for _ in $(seq 1 60); do
-        if mysqladmin ping -h "$DB_HOST" -u"$DB_USER" -p"$DB_PASSWORD" --silent >/dev/null 2>&1; then
-            log "MySQL is ready."
+        if php -r 'mysqli_report(MYSQLI_REPORT_OFF); $c=@mysqli_connect(getenv("CSCART_DB_HOST")?:"db", getenv("CSCART_DB_USER")?:"cscart", getenv("CSCART_DB_PASSWORD")?:"cscart"); exit($c?0:1);' >/dev/null 2>&1; then
+            log "Database is ready."
             return 0
         fi
         sleep 2
     done
-    log "FATAL: MySQL never became ready." >&2
+    log "FATAL: database never became ready." >&2
     exit 1
 }
 
