@@ -28,6 +28,7 @@ export default [
             '**/react-src/build/**',
             '**/react-src/dist/**',
             '**/react*-bundle.js', // built React bundle (generated, not source)
+            '**/react-vendor.js', // built React vendor chunk (generated, not source)
             'addon-*/design/**', // third-party CS-Cart themes + Smarty templates
             'stubs/**',
             'var/**',

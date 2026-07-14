@@ -65,9 +65,10 @@ $_sphinx_modes = [
     'circuit_search',
     'circuit_booking_form',
     'circuit_add_to_cart',
-    'experience_search',
-    'experience_booking_form',
-    'experience_add_to_cart',
+    // Experiences are deliberately UNROUTED: the provider does not support
+    // them yet, so the half-shipped pages must not be publicly reachable.
+    // The sync pipeline (ExperienceSyncCommand, sphinx_experiences) stays
+    // dormant for when the provider enables the vertical.
     'package_search',
     'package_booking_form',
     'package_add_to_cart',

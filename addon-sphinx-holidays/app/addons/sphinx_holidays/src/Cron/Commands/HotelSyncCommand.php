@@ -26,6 +26,15 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
  */
 class HotelSyncCommand extends AbstractSyncCommand
 {
+    /**
+     * @return list<string>
+     */
+    #[\Override]
+    public static function getModes(): array
+    {
+        return ['hotels'];
+    }
+
     #[\Override]
     public static function getDescription(): string
     {

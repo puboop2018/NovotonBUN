@@ -18,6 +18,15 @@ use Tygh\Addons\SphinxHolidays\Services\OrderStatusSyncService;
  */
 class OrderStatusSyncCommand extends AbstractSyncCommand
 {
+    /**
+     * @return list<string>
+     */
+    #[\Override]
+    public static function getModes(): array
+    {
+        return ['order_status'];
+    }
+
     #[\Override]
     public static function getDescription(): string
     {

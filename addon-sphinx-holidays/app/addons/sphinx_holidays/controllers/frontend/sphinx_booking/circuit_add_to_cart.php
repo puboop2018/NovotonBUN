@@ -67,8 +67,9 @@ use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
         return [CONTROLLER_STATUS_REDIRECT, 'sphinx_booking.circuit_search'];
     }
 
-    // Resolve product
-    $product_id = $cartService->resolveProductId((string) $circuit_id, RequestCoerce::int($_REQUEST, 'product_id'));
+    // Resolve product via the circuit link (sphinx_circuits.product_id,
+    // populated by the add_circuit_products cron).
+    $product_id = $cartService->resolveCircuitProductId($circuit_id, RequestCoerce::int($_REQUEST, 'product_id'));
     if (empty($product_id)) {
         fn_set_notification('E', __('error'),
             __('sphinx_holidays.product_not_found', ['[default]' => 'Circuit product not found.']));

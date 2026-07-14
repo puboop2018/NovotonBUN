@@ -21,9 +21,16 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
  *
  * Usage: php cron.php access_key=KEY mode=full
  */
-class FullSyncCommand
+class FullSyncCommand extends AbstractSyncCommand
 {
-    private ?\Closure $outputCallback = null;
+    /**
+     * @return list<string>
+     */
+    #[\Override]
+    public static function getModes(): array
+    {
+        return ['full'];
+    }
 
     /**
      * Ordered list of modes to execute in sequence.
@@ -61,15 +68,11 @@ class FullSyncCommand
         return 'Run all sync modes in sequence (full pipeline)';
     }
 
-    public function setOutputCallback(\Closure $callback): void
-    {
-        $this->outputCallback = $callback;
-    }
-
     /**
      * @param array<string, mixed> $params
      * @return array<string, mixed>
      */
+    #[\Override]
     public function execute(array $params = []): array
     {
         $startMs = (int)(microtime(true) * 1000);
@@ -135,12 +138,5 @@ class FullSyncCommand
                 'modes' => $results,
             ],
         ];
-    }
-
-    private function output(string $message): void
-    {
-        if ($this->outputCallback !== null) {
-            ($this->outputCallback)($message);
-        }
     }
 }

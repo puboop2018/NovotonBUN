@@ -37,6 +37,15 @@ class AssignBoardsCommand extends AbstractSyncCommand
 {
     use StatefulCommandTrait;
 
+    /**
+     * @return list<string>
+     */
+    #[\Override]
+    public static function getModes(): array
+    {
+        return ['assign_boards'];
+    }
+
     /** State file name stored in DIR_CACHE */
     private const string STATE_FILE_NAME = 'sphinx_assign_boards_state.json';
 

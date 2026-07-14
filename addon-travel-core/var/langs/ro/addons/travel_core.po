@@ -306,6 +306,34 @@ msgid "Phone"
 msgstr "Telefon"
 
 # ── Shared order-detail booking block (both providers' order-line rendering) ──
+msgctxt "Languages::travel_core.actions"
+msgid "Actions"
+msgstr "Acțiuni"
+
+msgctxt "Languages::travel_core.set_status"
+msgid "Set"
+msgstr "Setează"
+
+msgctxt "Languages::travel_core.provider_managed"
+msgid "provider-managed"
+msgstr "gestionat de furnizor"
+
+msgctxt "Languages::travel_core.status_updated"
+msgid "Request status updated."
+msgstr "Statusul cererii a fost actualizat."
+
+msgctxt "Languages::travel_core.request_not_found"
+msgid "Request not found."
+msgstr "Cererea nu a fost găsită."
+
+msgctxt "Languages::travel_core.status_managed_by_provider"
+msgid "This request's status is managed by the provider workflow and cannot be changed manually."
+msgstr "Statusul acestei cereri este gestionat de fluxul furnizorului și nu poate fi modificat manual."
+
+msgctxt "Languages::travel_core.invalid_status"
+msgid "Invalid status."
+msgstr "Status invalid."
+
 msgctxt "Languages::travel_core.hotel"
 msgid "Hotel"
 msgstr "Hotel"

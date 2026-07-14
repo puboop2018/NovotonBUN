@@ -332,6 +332,62 @@ msgctxt "Languages::sphinx_deals_packages"
 msgid "Packages"
 msgstr "Pachete"
 
+msgctxt "Languages::sphinx_deals_circuits"
+msgid "Circuits"
+msgstr "Circuite"
+
+msgctxt "Languages::block_sphinx_package_search"
+msgid "Sphinx: Package Search"
+msgstr "Sphinx: Căutare Pachete"
+
+msgctxt "Languages::sphinx_holidays.pkg_destination"
+msgid "Destination"
+msgstr "Destinație"
+
+msgctxt "Languages::sphinx_holidays.pkg_departure_city"
+msgid "Departure city"
+msgstr "Oraș de plecare"
+
+msgctxt "Languages::sphinx_holidays.pkg_transport"
+msgid "Transport"
+msgstr "Transport"
+
+msgctxt "Languages::sphinx_holidays.pkg_departure_date"
+msgid "Departure date"
+msgstr "Data plecării"
+
+msgctxt "Languages::sphinx_holidays.pkg_nights"
+msgid "Nights"
+msgstr "Nopți"
+
+msgctxt "Languages::sphinx_holidays.pkg_adults"
+msgid "Adults"
+msgstr "Adulți"
+
+msgctxt "Languages::sphinx_holidays.pkg_children"
+msgid "Children"
+msgstr "Copii"
+
+msgctxt "Languages::sphinx_holidays.pkg_children_ages"
+msgid "Children ages"
+msgstr "Vârstele copiilor"
+
+msgctxt "Languages::sphinx_holidays.pkg_children_ages_hint"
+msgid "e.g. 5,9"
+msgstr "ex. 5,9"
+
+msgctxt "Languages::sphinx_holidays.pkg_any"
+msgid "Any"
+msgstr "Oricare"
+
+msgctxt "Languages::sphinx_holidays.pkg_loading"
+msgid "Loading..."
+msgstr "Se încarcă..."
+
+msgctxt "Languages::sphinx_holidays.pkg_search"
+msgid "Search packages"
+msgstr "Caută pachete"
+
 msgctxt "Languages::sphinx_holidays.payment_terms"
 msgid "Payment terms"
 msgstr "Termeni de plată"

@@ -109,14 +109,18 @@ function fn_novoton_holidays_check_reservation_status($booking_id = 0): array
     ];
 
     foreach ($bookings as $booking) {
-        if (empty($booking['novoton_reservation_id'])) continue;
+        // Reservation reference: confirmation id from booking, else the
+        // ResNum learned via resinfo (same precedence as ResInfoCommand).
+        $reservation_ref = TypeCoerce::toString($booking['novoton_confirm_id'] ?? '')
+            ?: TypeCoerce::toString($booking['novoton_res_num'] ?? '');
+        if ($reservation_ref === '') continue;
         $result['checked']++;
 
         $booking_pk = TypeCoerce::toInt($booking['booking_id'] ?? 0);
         $current_status = TypeCoerce::toString($booking['status'] ?? '');
 
         try {
-            $status_response = $api->reservations()->getReservationInfo(TypeCoerce::toString($booking['novoton_reservation_id']));
+            $status_response = $api->reservations()->getReservationInfo($reservation_ref);
 
             if (!empty($status_response)) {
                 // getReservationInfo returns an XML object — access via object properties

@@ -24,6 +24,15 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
  */
 class EnrichHotelDataCommand extends AbstractSyncCommand
 {
+    /**
+     * @return list<string>
+     */
+    #[\Override]
+    public static function getModes(): array
+    {
+        return ['enrich_hotel_data'];
+    }
+
     private const int DEFAULT_BATCH = 100;
 
     #[\Override]

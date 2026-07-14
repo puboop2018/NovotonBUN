@@ -112,4 +112,49 @@ final class CircuitRepositoryTest extends TestCase
         DbStub::$getField = static fn (string $q, ...$p): string => '412';
         self::assertSame(412, $this->repo->countAll());
     }
+
+    public function testFindUnlinkedSelectsActiveProductlessCircuits(): void
+    {
+        $captured = [];
+        DbStub::$getArray = static function (string $q, ...$p) use (&$captured): array {
+            $captured = [$q, $p];
+            return [['circuit_id' => 5, 'name' => 'Grand Tour']];
+        };
+
+        $rows = $this->repo->findUnlinked(50);
+
+        self::assertCount(1, $rows);
+        self::assertStringContainsString('(product_id IS NULL OR product_id = 0)', $captured[0]);
+        self::assertStringContainsString("sync_status = 'active'", $captured[0]);
+        self::assertSame(50, $captured[1][0]);
+    }
+
+    public function testLinkToProductWritesTheCircuitLink(): void
+    {
+        $captured = [];
+        DbStub::$query = static function (string $q, ...$p) use (&$captured): int {
+            $captured = [$q, $p];
+            return 1;
+        };
+
+        $this->repo->linkToProduct(5, 777);
+
+        self::assertStringContainsString('UPDATE ?:sphinx_circuits SET product_id = ?i WHERE circuit_id = ?i', $captured[0]);
+        self::assertSame([777, 5], $captured[1]);
+    }
+
+    public function testFindSellableRequiresLinkAndActiveStatus(): void
+    {
+        $captured = [];
+        DbStub::$getArray = static function (string $q, ...$p) use (&$captured): array {
+            $captured = [$q, $p];
+            return [];
+        };
+
+        $this->repo->findSellable(6);
+
+        self::assertStringContainsString("sync_status = 'active' AND product_id IS NOT NULL AND product_id > 0", $captured[0]);
+        self::assertStringContainsString('ORDER BY min_price ASC', $captured[0]);
+        self::assertSame(6, $captured[1][0]);
+    }
 }

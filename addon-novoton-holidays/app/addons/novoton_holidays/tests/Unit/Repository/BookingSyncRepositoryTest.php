@@ -134,8 +134,9 @@ class BookingSyncRepositoryTest extends TestCase
             'api_request' => 'ignored',
         ]);
 
+        // Provider is now a bound parameter (shared TravelBookingMirror).
         $this->assertStringContainsString(
-            "UPDATE ?:travel_bookings SET ?u WHERE provider = 'novoton' AND provider_booking_id = ?s",
+            'UPDATE ?:travel_bookings SET ?u WHERE provider = ?s AND provider_booking_id = ?s',
             $captured[0],
         );
         // Order follows UPDATE_FIELD_MAP iteration, not the input array order.
@@ -145,7 +146,8 @@ class BookingSyncRepositoryTest extends TestCase
             'status' => 'cancelled',
             'guests_json' => '{"x":2}',
         ], $captured[1][0]);
-        $this->assertSame('42', $captured[1][1]);
+        $this->assertSame('novoton', $captured[1][1]);
+        $this->assertSame('42', $captured[1][2]);
     }
 
     public function testApplyUpdateIsNoOpWhenNoMirroredFields(): void
@@ -173,11 +175,12 @@ class BookingSyncRepositoryTest extends TestCase
 
         $this->repo->deleteByBookingId(55);
 
+        // Provider is now a bound parameter (shared TravelBookingMirror).
         $this->assertStringContainsString(
-            "DELETE FROM ?:travel_bookings WHERE provider = 'novoton' AND provider_booking_id = ?s",
+            'DELETE FROM ?:travel_bookings WHERE provider = ?s AND provider_booking_id = ?s',
             $captured[0],
         );
-        $this->assertSame(['55'], $captured[1]);
+        $this->assertSame(['novoton', '55'], $captured[1]);
     }
 
     // ── deleteOrphansOlderThan ───────────────────────────────────────────────

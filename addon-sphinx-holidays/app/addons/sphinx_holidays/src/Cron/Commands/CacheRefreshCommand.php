@@ -19,6 +19,15 @@ use Tygh\Addons\SphinxHolidays\Services\Container;
  */
 class CacheRefreshCommand extends AbstractSyncCommand
 {
+    /**
+     * @return list<string>
+     */
+    #[\Override]
+    public static function getModes(): array
+    {
+        return ['cache_refresh'];
+    }
+
     #[\Override]
     public static function getDescription(): string
     {

@@ -22,6 +22,15 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
  */
 class DeduplicateCommand extends AbstractSyncCommand
 {
+    /**
+     * @return list<string>
+     */
+    #[\Override]
+    public static function getModes(): array
+    {
+        return ['deduplicate'];
+    }
+
     #[\Override]
     public static function getDescription(): string
     {

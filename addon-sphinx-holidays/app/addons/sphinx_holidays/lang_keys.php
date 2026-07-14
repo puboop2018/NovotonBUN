@@ -675,4 +675,52 @@ return [
         'en' => '[rating]-star rating',
         'ro' => 'Clasificare [rating] stele',
     ],
+    'sphinx_holidays.pkg_destination' => [
+        'en' => 'Destination',
+        'ro' => 'Destinație',
+    ],
+    'sphinx_holidays.pkg_departure_city' => [
+        'en' => 'Departure city',
+        'ro' => 'Oraș de plecare',
+    ],
+    'sphinx_holidays.pkg_transport' => [
+        'en' => 'Transport',
+        'ro' => 'Transport',
+    ],
+    'sphinx_holidays.pkg_departure_date' => [
+        'en' => 'Departure date',
+        'ro' => 'Data plecării',
+    ],
+    'sphinx_holidays.pkg_nights' => [
+        'en' => 'Nights',
+        'ro' => 'Nopți',
+    ],
+    'sphinx_holidays.pkg_adults' => [
+        'en' => 'Adults',
+        'ro' => 'Adulți',
+    ],
+    'sphinx_holidays.pkg_children' => [
+        'en' => 'Children',
+        'ro' => 'Copii',
+    ],
+    'sphinx_holidays.pkg_children_ages' => [
+        'en' => 'Children ages',
+        'ro' => 'Vârstele copiilor',
+    ],
+    'sphinx_holidays.pkg_children_ages_hint' => [
+        'en' => 'e.g. 5,9',
+        'ro' => 'ex. 5,9',
+    ],
+    'sphinx_holidays.pkg_any' => [
+        'en' => 'Any',
+        'ro' => 'Oricare',
+    ],
+    'sphinx_holidays.pkg_loading' => [
+        'en' => 'Loading...',
+        'ro' => 'Se încarcă...',
+    ],
+    'sphinx_holidays.pkg_search' => [
+        'en' => 'Search packages',
+        'ro' => 'Caută pachete',
+    ],
 ];

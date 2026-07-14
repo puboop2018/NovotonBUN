@@ -22,6 +22,15 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
  */
 class ProcessImageQueueCommand extends AbstractSyncCommand
 {
+    /**
+     * @return list<string>
+     */
+    #[\Override]
+    public static function getModes(): array
+    {
+        return ['process_image_queue'];
+    }
+
     private const int DEFAULT_BATCH = 50;
 
     #[\Override]

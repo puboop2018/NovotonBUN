@@ -62,31 +62,39 @@
                     var currency = data.currency || 'EUR';
                     var currSymbol = { 'EUR': '\u20ac', 'USD': '$', 'GBP': '\u00a3', 'RON': 'lei', 'BGN': '\u043b\u0432' }[currency] || currency;
 
-                    html += '<div class="sphinx-deal-card" style="background: #fff; border: 1px solid #e0e7ef; border-radius: 8px; overflow: hidden;">';
+                    var card = '';
                     if (deal.image) {
-                        html += '<img src="' + deal.image + '" alt="' + (deal.hotel_name || '').replace(/"/g, '&quot;') + '" style="width: 100%; height: 180px; object-fit: cover;" loading="lazy">';
+                        card += '<img src="' + deal.image + '" alt="' + (deal.hotel_name || '').replace(/"/g, '&quot;') + '" style="width: 100%; height: 180px; object-fit: cover;" loading="lazy">';
                     }
-                    html += '<div style="padding: 12px;">';
-                    html += '<h4 style="margin: 0 0 5px; color: #003580; font-size: 16px;">' + (deal.hotel_name || '') + '</h4>';
+                    card += '<div style="padding: 12px;">';
+                    card += '<h4 style="margin: 0 0 5px; color: #003580; font-size: 16px;">' + (deal.hotel_name || '') + '</h4>';
                     if (deal.destination) {
-                        html += '<div style="font-size: 13px; color: #666; margin-bottom: 8px;">' + deal.destination + '</div>';
+                        card += '<div style="font-size: 13px; color: #666; margin-bottom: 8px;">' + deal.destination + '</div>';
                     }
                     if (deal.star_rating > 0) {
-                        html += '<div style="color: #f5a623; margin-bottom: 5px;">' + '\u2605'.repeat(deal.star_rating) + '</div>';
+                        card += '<div style="color: #f5a623; margin-bottom: 5px;">' + '\u2605'.repeat(deal.star_rating) + '</div>';
                     }
                     if (deal.room_name) {
-                        html += '<div style="font-size: 13px; color: #333;">' + deal.room_name + '</div>';
+                        card += '<div style="font-size: 13px; color: #333;">' + deal.room_name + '</div>';
                     }
                     if (deal.board_name) {
-                        html += '<div style="font-size: 12px; color: #666;">' + deal.board_name + '</div>';
+                        card += '<div style="font-size: 12px; color: #666;">' + deal.board_name + '</div>';
                     }
-                    if (deal.check_in && deal.nights > 0) {
-                        html += '<div style="font-size: 12px; color: #999; margin-top: 5px;">' + deal.nights + ' nights</div>';
+                    if (deal.nights > 0) {
+                        card += '<div style="font-size: 12px; color: #999; margin-top: 5px;">' + deal.nights + ' nights</div>';
                     }
-                    html += '<div style="margin-top: 10px; font-size: 22px; font-weight: 700; color: #003580;">';
-                    html += parseFloat(deal.price).toFixed(2).replace('.', ',') + ' ' + currSymbol;
-                    html += '</div>';
-                    html += '</div></div>';
+                    card += '<div style="margin-top: 10px; font-size: 22px; font-weight: 700; color: #003580;">';
+                    card += parseFloat(deal.price).toFixed(2).replace('.', ',') + ' ' + currSymbol;
+                    card += '</div>';
+                    card += '</div>';
+
+                    // Deals carrying a url (circuits -> their product page)
+                    // render as one whole-card link.
+                    if (deal.url) {
+                        card = '<a href="' + deal.url + '" style="display: block; color: inherit; text-decoration: none;">' + card + '</a>';
+                    }
+
+                    html += '<div class="sphinx-deal-card" style="background: #fff; border: 1px solid #e0e7ef; border-radius: 8px; overflow: hidden;">' + card + '</div>';
                 }
                 if (grid) {
                     grid.innerHTML = html;

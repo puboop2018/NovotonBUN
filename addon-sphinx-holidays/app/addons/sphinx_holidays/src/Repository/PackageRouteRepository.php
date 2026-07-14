@@ -79,6 +79,48 @@ class PackageRouteRepository
     }
 
     /**
+     * Distinct route dimensions for the storefront package-search form:
+     * where you can fly/ride from, where to, and how. Fed entirely from
+     * the cron-synced cache — no provider API call.
+     *
+     * @return array{transport_types: list<string>, departures: list<array<string, mixed>>, destinations: list<array<string, mixed>>}
+     */
+    public function getRouteOptions(): array
+    {
+        $transportTypes = [];
+        foreach (TypeCoerce::toList(db_get_fields(
+            'SELECT DISTINCT transport_type FROM ?:sphinx_package_routes ORDER BY transport_type',
+        )) as $t) {
+            $t = TypeCoerce::toString($t);
+            if ($t !== '') {
+                $transportTypes[] = $t;
+            }
+        }
+
+        $departures = TypeCoerce::toRowList(db_get_array(
+            'SELECT DISTINCT departure_id AS id, departure_name AS name
+             FROM ?:sphinx_package_routes
+             WHERE departure_id > 0 AND departure_name != ?s
+             ORDER BY departure_name',
+            '',
+        ));
+
+        $destinations = TypeCoerce::toRowList(db_get_array(
+            'SELECT DISTINCT arrival_id AS id, arrival_name AS name
+             FROM ?:sphinx_package_routes
+             WHERE arrival_id > 0 AND arrival_name != ?s
+             ORDER BY arrival_name',
+            '',
+        ));
+
+        return [
+            'transport_types' => $transportTypes,
+            'departures' => $departures,
+            'destinations' => $destinations,
+        ];
+    }
+
+    /**
      * Paginated, sortable, filterable package-route listing for the admin grid.
      * Returns [$rows, $params] where $params carries total_items / page /
      * items_per_page — the CS-Cart pagination.tpl contract (mirrors

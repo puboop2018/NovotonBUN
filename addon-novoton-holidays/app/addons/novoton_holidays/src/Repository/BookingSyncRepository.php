@@ -4,113 +4,45 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Repository;
 
-use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
-use Tygh\Addons\TravelCore\TravelConstants;
+use Tygh\Addons\TravelCore\Repository\TravelBookingMirror;
 
 /**
  * Synchronises novoton bookings into the shared travel_bookings table.
  *
  * All access to travel_bookings for novoton bookings lives here, lifted out of
  * BookingRepository so the cross-provider coupling is a single, explicit,
- * testable surface. BookingRepository keeps the novoton_bookings writes and the
- * surrounding transaction and delegates the travel_bookings half to this class.
- *
- * Behaviour (SQL and parameters) is preserved verbatim from BookingRepository;
- * the only change is that the upsert's field values are coerced through
- * TypeCoerce instead of raw casts (equivalent for the data that flows here).
+ * testable surface. The per-booking upsert/partial-update/delete now delegate
+ * to travel_core's TravelBookingMirror (the once-duplicated field map and SQL
+ * live there); the novoton-specific JOIN/bulk operations stay local.
  */
 class BookingSyncRepository implements BookingSyncRepositoryInterface
 {
-    /**
-     * Map of novoton_bookings column => travel_bookings column for partial
-     * update mirroring. Only these fields are stored in travel_bookings.
-     *
-     * @var array<string, string>
-     */
-    private const array UPDATE_FIELD_MAP = [
-        'order_id' => 'order_id',
-        'user_id' => 'user_id',
-        'hotel_id' => 'hotel_id',
-        'hotel_name' => 'hotel_name',
-        'room_type' => 'room_name',
-        'board_id' => 'board_code',
-        'check_in' => 'check_in',
-        'check_out' => 'check_out',
-        'nights' => 'nights',
-        'adults' => 'adults',
-        'children' => 'children',
-        'children_ages' => 'children_ages',
-        'total_price' => 'total_price',
-        'currency' => 'currency',
-        'status' => 'status',
-        'guests_data' => 'guests_json',
-    ];
+    private readonly TravelBookingMirror $mirror;
+
+    public function __construct()
+    {
+        $this->mirror = new TravelBookingMirror('novoton');
+    }
 
     /**
      * Mirror a created (or replaced) booking into travel_bookings.
-     *
-     * Maps novoton-specific fields to the provider-agnostic schema and upserts
-     * via INSERT ... ON DUPLICATE KEY UPDATE — atomic, relying on the
-     * UNIQUE KEY uq_provider_booking(provider, provider_booking_id).
      *
      * @param array<string, mixed> $data novoton_bookings column data
      */
     public function upsertFromBooking(int $booking_id, array $data): void
     {
-        $travel_record = [
-            'provider' => 'novoton',
-            'provider_booking_id' => (string) $booking_id,
-            'order_id' => TypeCoerce::toInt($data['order_id'] ?? 0),
-            'user_id' => TypeCoerce::toInt($data['user_id'] ?? 0),
-            'hotel_id' => $data['hotel_id'] ?? '',
-            'hotel_name' => $data['hotel_name'] ?? '',
-            'room_name' => $data['room_type'] ?? '',
-            'board_code' => $data['board_id'] ?? '',
-            'check_in' => $data['check_in'] ?? '',
-            'check_out' => $data['check_out'] ?? '',
-            'nights' => TypeCoerce::toInt($data['nights'] ?? 0),
-            'adults' => TypeCoerce::toInt($data['adults'] ?? 2),
-            'children' => TypeCoerce::toInt($data['children'] ?? 0),
-            'children_ages' => $data['children_ages'] ?? '',
-            'total_price' => TypeCoerce::toFloat($data['total_price'] ?? 0),
-            'currency' => $data['currency'] ?? 'EUR',
-            'status' => $data['status'] ?? TravelConstants::STATUS_PENDING,
-            'guests_json' => $data['guests_data'] ?? '{}',
-        ];
-
-        db_query(
-            'INSERT INTO ?:travel_bookings ?e ON DUPLICATE KEY UPDATE ?u',
-            $travel_record,
-            $travel_record,
-        );
+        $this->mirror->upsert($booking_id, $data);
     }
 
     /**
-     * Mirror a partial booking update into travel_bookings.
-     *
-     * Only the fields travel_bookings actually stores are forwarded; the sync
-     * is skipped entirely when no mirrored field changed.
+     * Mirror a partial booking update into travel_bookings. Skipped entirely
+     * when no mirrored field changed.
      *
      * @param array<string, mixed> $data Changed novoton_bookings columns
      */
     public function applyBookingUpdate(int $booking_id, array $data): void
     {
-        $travelUpdate = [];
-        foreach (self::UPDATE_FIELD_MAP as $novotonField => $travelField) {
-            if (array_key_exists($novotonField, $data)) {
-                $travelUpdate[$travelField] = $data[$novotonField];
-            }
-        }
-
-        if (empty($travelUpdate)) {
-            return;
-        }
-
-        db_query(
-            "UPDATE ?:travel_bookings SET ?u WHERE provider = 'novoton' AND provider_booking_id = ?s",
-            $travelUpdate,
-            (string) $booking_id,
-        );
+        $this->mirror->applyUpdate($booking_id, $data);
     }
 
     /**
@@ -118,10 +50,7 @@ class BookingSyncRepository implements BookingSyncRepositoryInterface
      */
     public function deleteByBookingId(int $booking_id): void
     {
-        db_query(
-            "DELETE FROM ?:travel_bookings WHERE provider = 'novoton' AND provider_booking_id = ?s",
-            (string) $booking_id,
-        );
+        $this->mirror->deleteByProviderBookingId($booking_id);
     }
 
     /**

@@ -17,7 +17,6 @@ namespace Tygh\Addons\SphinxHolidays\Repository;
 
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Repository\RowNarrowingTrait;
-use Tygh\Addons\TravelCore\TravelConstants;
 
 class SphinxBookingRepository
 {
@@ -230,37 +229,10 @@ class SphinxBookingRepository
      */
     private function syncToTravelBookings(int $booking_id, array $data): void
     {
-        $guests_json = $data['guests_data'] ?? '{}';
-        if (!is_string($guests_json)) {
-            $guests_json = json_encode($guests_json) ?: '{}';
-        }
-
-        $travel_record = [
-            'provider' => 'sphinx',
-            'provider_booking_id' => (string) $booking_id,
-            'order_id' => TypeCoerce::toInt($data['order_id'] ?? 0),
-            'user_id' => TypeCoerce::toInt($data['user_id'] ?? 0),
-            'hotel_id' => $data['hotel_id'] ?? '',
-            'hotel_name' => $data['hotel_name'] ?? '',
-            'room_name' => $data['room_type'] ?? '',
-            'board_code' => $data['board_id'] ?? '',
-            'check_in' => $data['check_in'] ?? '',
-            'check_out' => $data['check_out'] ?? '',
-            'nights' => TypeCoerce::toInt($data['nights'] ?? 0),
-            'adults' => TypeCoerce::toInt($data['adults'] ?? 2),
-            'children' => TypeCoerce::toInt($data['children'] ?? 0),
-            'children_ages' => $data['children_ages'] ?? '',
-            'total_price' => TypeCoerce::toFloat($data['total_price'] ?? 0),
-            'currency' => $data['currency'] ?? 'EUR',
-            'status' => $data['status'] ?? TravelConstants::STATUS_PENDING,
-            'guests_json' => $guests_json,
-        ];
-
-        db_query(
-            'INSERT INTO ?:travel_bookings ?e ON DUPLICATE KEY UPDATE ?u',
-            $travel_record,
-            $travel_record,
-        );
+        // Delegates to travel_core's TravelBookingMirror — the shared home
+        // of the once-duplicated field map, upsert SQL and guests_json
+        // string-coercion guard (which now also covers the update path).
+        (new \Tygh\Addons\TravelCore\Repository\TravelBookingMirror('sphinx'))->upsert($booking_id, $data);
     }
 
     /**
@@ -271,41 +243,7 @@ class SphinxBookingRepository
      */
     private function syncUpdateToTravelBookings(int $booking_id, array $data): void
     {
-        $fieldMap = [
-            'order_id' => 'order_id',
-            'user_id' => 'user_id',
-            'hotel_id' => 'hotel_id',
-            'hotel_name' => 'hotel_name',
-            'room_type' => 'room_name',
-            'board_id' => 'board_code',
-            'check_in' => 'check_in',
-            'check_out' => 'check_out',
-            'nights' => 'nights',
-            'adults' => 'adults',
-            'children' => 'children',
-            'children_ages' => 'children_ages',
-            'total_price' => 'total_price',
-            'currency' => 'currency',
-            'status' => 'status',
-            'guests_data' => 'guests_json',
-        ];
-
-        $travelUpdate = [];
-        foreach ($fieldMap as $sphinxField => $travelField) {
-            if (array_key_exists($sphinxField, $data)) {
-                $travelUpdate[$travelField] = $data[$sphinxField];
-            }
-        }
-
-        if (empty($travelUpdate)) {
-            return;
-        }
-
-        db_query(
-            "UPDATE ?:travel_bookings SET ?u WHERE provider = 'sphinx' AND provider_booking_id = ?s",
-            $travelUpdate,
-            (string) $booking_id,
-        );
+        (new \Tygh\Addons\TravelCore\Repository\TravelBookingMirror('sphinx'))->applyUpdate($booking_id, $data);
     }
 
     /**

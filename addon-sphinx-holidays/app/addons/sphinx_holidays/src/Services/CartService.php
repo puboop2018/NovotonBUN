@@ -187,6 +187,28 @@ final class CartService implements CartServiceInterface
     }
 
     /**
+     * Resolve the CS-Cart product for a circuit. Circuits link products via
+     * sphinx_circuits.product_id (written by the add_circuit_products cron)
+     * — the hotel_id fallback in resolveProductId can never match a
+     * circuit_id, which is exactly how circuit add-to-cart used to dead-end.
+     */
+    public function resolveCircuitProductId(int $circuitId, int $providedId = 0): int
+    {
+        if ($providedId > 0) {
+            return $providedId;
+        }
+
+        if ($circuitId <= 0) {
+            return 0;
+        }
+
+        return TypeCoerce::toInt(db_get_field(
+            'SELECT product_id FROM ?:sphinx_circuits WHERE circuit_id = ?i',
+            $circuitId,
+        ));
+    }
+
+    /**
      * Create or update a booking record using the findRecentUnassigned pattern.
      * Returns the booking_id.
      * @param array<string, mixed> $record

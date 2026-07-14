@@ -35,6 +35,10 @@ $schema['sphinx_best_deals'] = [
             'values' => [
                 'hotels'   => 'sphinx_deals_hotels',
                 'packages' => 'sphinx_deals_packages',
+                // Sellable circuits from the cron-synced sphinx_circuits
+                // cache (products created by add_circuit_products) — cards
+                // link to the circuit product page.
+                'circuits' => 'sphinx_deals_circuits',
             ],
             'default_value' => 'hotels',
         ],
@@ -46,6 +50,17 @@ $schema['sphinx_best_deals'] = [
             'type' => 'input',
             'default_value' => '0',
         ],
+    ],
+    'wrappers'  => 'blocks/wrappers',
+];
+
+// Storefront entry point for the package vertical: a search form posting to
+// sphinx_booking.package_search, its destination/departure/transport selects
+// fed from the cron-synced sphinx_package_routes table (via the cache_deals
+// JSON endpoint, type=package_routes — no provider API call).
+$schema['sphinx_package_search'] = [
+    'templates' => [
+        'addons/sphinx_holidays/blocks/package_search.tpl' => [],
     ],
     'wrappers'  => 'blocks/wrappers',
 ];

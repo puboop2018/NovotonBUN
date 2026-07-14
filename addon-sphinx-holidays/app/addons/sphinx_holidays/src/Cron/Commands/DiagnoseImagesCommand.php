@@ -23,6 +23,15 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
  */
 class DiagnoseImagesCommand extends AbstractSyncCommand
 {
+    /**
+     * @return list<string>
+     */
+    #[\Override]
+    public static function getModes(): array
+    {
+        return ['diagnose_images'];
+    }
+
     #[\Override]
     public static function getDescription(): string
     {

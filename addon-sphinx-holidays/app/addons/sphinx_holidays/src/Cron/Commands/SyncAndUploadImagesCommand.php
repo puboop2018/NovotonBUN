@@ -26,6 +26,15 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
  */
 class SyncAndUploadImagesCommand extends AbstractSyncCommand
 {
+    /**
+     * @return list<string>
+     */
+    #[\Override]
+    public static function getModes(): array
+    {
+        return ['sync_and_upload_images'];
+    }
+
     /** Modes to run in order. */
     private const array IMAGE_SEQUENCE = ['sync_images', 'process_image_queue'];
 

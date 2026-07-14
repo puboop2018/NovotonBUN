@@ -4,75 +4,60 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays\Cron;
 
-use Tygh\Addons\SphinxHolidays\Cron\Commands\AddProductsCommand;
-use Tygh\Addons\SphinxHolidays\Cron\Commands\AssignBoardsCommand;
-use Tygh\Addons\SphinxHolidays\Cron\Commands\AuditFacilitiesCommand;
-use Tygh\Addons\SphinxHolidays\Cron\Commands\BackfillHotelLocationsCommand;
-use Tygh\Addons\SphinxHolidays\Cron\Commands\CacheRefreshCommand;
-use Tygh\Addons\SphinxHolidays\Cron\Commands\CalendarPricesCommand;
-use Tygh\Addons\SphinxHolidays\Cron\Commands\CircuitSyncCommand;
-use Tygh\Addons\SphinxHolidays\Cron\Commands\CleanupCommand;
-use Tygh\Addons\SphinxHolidays\Cron\Commands\DeduplicateCommand;
-use Tygh\Addons\SphinxHolidays\Cron\Commands\DestinationSyncCommand;
-use Tygh\Addons\SphinxHolidays\Cron\Commands\DiagnoseImagesCommand;
-use Tygh\Addons\SphinxHolidays\Cron\Commands\DiagnoseProductFeaturesCommand;
-use Tygh\Addons\SphinxHolidays\Cron\Commands\DiagnoseSearchCommand;
-use Tygh\Addons\SphinxHolidays\Cron\Commands\DiagnoseSeoCommand;
-use Tygh\Addons\SphinxHolidays\Cron\Commands\DiscoverBoardsCommand;
-use Tygh\Addons\SphinxHolidays\Cron\Commands\EnrichHotelDataCommand;
-use Tygh\Addons\SphinxHolidays\Cron\Commands\ExperienceSyncCommand;
-use Tygh\Addons\SphinxHolidays\Cron\Commands\FullSyncCommand;
-use Tygh\Addons\SphinxHolidays\Cron\Commands\HotelSyncCommand;
-use Tygh\Addons\SphinxHolidays\Cron\Commands\OrderStatusSyncCommand;
-use Tygh\Addons\SphinxHolidays\Cron\Commands\PackageRouteSyncCommand;
-use Tygh\Addons\SphinxHolidays\Cron\Commands\ProcessImageQueueCommand;
-use Tygh\Addons\SphinxHolidays\Cron\Commands\ReassignFeaturesCommand;
-use Tygh\Addons\SphinxHolidays\Cron\Commands\SyncAndUploadImagesCommand;
-use Tygh\Addons\SphinxHolidays\Cron\Commands\SyncImagesCommand;
-use Tygh\Addons\SphinxHolidays\Cron\Commands\UpdateProductsCommand;
+use Tygh\Addons\SphinxHolidays\Cron\Commands\AbstractSyncCommand;
 use Tygh\Addons\TravelCore\Contracts\CronDispatcherInterface;
+use Tygh\Addons\TravelCore\Helpers\CronRunLock;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 /**
- * Dispatches cron jobs by mode name.
+ * Cron Command Dispatcher
  *
- * Each mode maps to a Command class that implements execute().
- * Concurrency protection via file locks prevents two instances of the same mode from running simultaneously.
+ * Auto-discovers command classes from the Cron/Commands/ directory — the
+ * same OCP pattern as novoton's dispatcher: any class extending
+ * AbstractSyncCommand registers itself via getModes(), so adding a command
+ * requires only a new file (the hand-maintained 26-entry mode map is gone,
+ * as is the class-per-line import list it dragged along).
+ *
+ * Run-level mutual exclusion uses the shared travel_core CronRunLock
+ * (PID-stamped non-blocking flock with stale-takeover) — this dispatcher
+ * carried the original inline copy that helper was extracted from.
+ * Status/reset/debug requests are read-only and skip the lock.
  */
 class CronDispatcher implements CronDispatcherInterface
 {
+    /** @var array<string, class-string<AbstractSyncCommand>> mode => command class */
+    private static array $commandMap = [];
+    private static bool $registered = false;
+
     /**
-     * Map of mode => command class.
-     * @var array<string, class-string>
+     * Auto-discover and register all command classes from the Commands/ directory.
      */
-    private static array $modes = [
-        'destinations' => DestinationSyncCommand::class,
-        'hotels' => HotelSyncCommand::class,
-        'package_routes' => PackageRouteSyncCommand::class,
-        'circuits' => CircuitSyncCommand::class,
-        'experiences' => ExperienceSyncCommand::class,
-        'order_status' => OrderStatusSyncCommand::class,
-        'cache_refresh' => CacheRefreshCommand::class,
-        'calendar_prices' => CalendarPricesCommand::class,
-        'add_products' => AddProductsCommand::class,
-        'discover_boards' => DiscoverBoardsCommand::class,
-        'assign_boards' => AssignBoardsCommand::class,
-        'update_products' => UpdateProductsCommand::class,
-        'reassign_features' => ReassignFeaturesCommand::class,
-        'enrich_hotel_data' => EnrichHotelDataCommand::class,
-        'backfill_hotel_locations' => BackfillHotelLocationsCommand::class,
-        'sync_images' => SyncImagesCommand::class,
-        'process_image_queue' => ProcessImageQueueCommand::class,
-        'sync_and_upload_images' => SyncAndUploadImagesCommand::class,
-        'diagnose_images' => DiagnoseImagesCommand::class,
-        'diagnose_product_features' => DiagnoseProductFeaturesCommand::class,
-        'diagnose_search' => DiagnoseSearchCommand::class,
-        'diagnose_seo' => DiagnoseSeoCommand::class,
-        'cleanup' => CleanupCommand::class,
-        'deduplicate' => DeduplicateCommand::class,
-        'audit_facilities' => AuditFacilitiesCommand::class,
-        'full' => FullSyncCommand::class,
-    ];
+    private static function registerCommands(): void
+    {
+        if (self::$registered) {
+            return;
+        }
+
+        $namespace = 'Tygh\\Addons\\SphinxHolidays\\Cron\\Commands\\';
+
+        foreach (glob(__DIR__ . '/Commands/*Command.php') ?: [] as $file) {
+            $className = $namespace . basename($file, '.php');
+
+            if (!class_exists($className)) {
+                require_once $file;
+            }
+
+            if (!class_exists($className) || !is_subclass_of($className, AbstractSyncCommand::class)) {
+                continue;
+            }
+
+            foreach ($className::getModes() as $mode) {
+                self::$commandMap[TypeCoerce::toString($mode)] = $className;
+            }
+        }
+
+        self::$registered = true;
+    }
 
     /**
      * Get all available modes with descriptions.
@@ -82,10 +67,14 @@ class CronDispatcher implements CronDispatcherInterface
     #[\Override]
     public static function getAvailableModes(): array
     {
+        self::registerCommands();
+
         $result = [];
-        foreach (self::$modes as $mode => $class) {
+        foreach (self::$commandMap as $mode => $class) {
             $result[$mode] = TypeCoerce::toString($class::getDescription());
         }
+        ksort($result);
+
         return $result;
     }
 
@@ -95,7 +84,9 @@ class CronDispatcher implements CronDispatcherInterface
     #[\Override]
     public function hasMode(string $mode): bool
     {
-        return isset(self::$modes[$mode]);
+        self::registerCommands();
+
+        return isset(self::$commandMap[$mode]);
     }
 
     /**
@@ -123,14 +114,11 @@ class CronDispatcher implements CronDispatcherInterface
         // Status/reset/debug are non-destructive read-only ops — skip the lock
         $isReadOnly = !empty($params['status']) || !empty($params['reset']) || !empty($params['debug']);
 
-        // Acquire file lock to prevent concurrent execution of the same mode
-        $lockFile = null;
-        $lockFp = null;
+        $lock = null;
         if (!$isReadOnly) {
-            $lockFile = $this->getLockPath($mode);
-            $lockFp = $this->acquireLock($lockFile);
+            $lock = new CronRunLock($this->getLockPath($mode));
 
-            if ($lockFp === false) {
+            if (!$lock->acquire()) {
                 return [
                     'success' => false,
                     'busy' => true,
@@ -144,33 +132,23 @@ class CronDispatcher implements CronDispatcherInterface
             // (destination sync: 200k+ items, hotel sync: 100k+ items)
             set_time_limit(0);
 
-            $class = self::$modes[$mode];
-            /** @var \Tygh\Addons\SphinxHolidays\Cron\Commands\AbstractSyncCommand $command */
+            $class = self::$commandMap[$mode];
             $command = new $class();
 
             // Set output callback to echo progress and keep lock file fresh
-            $command->setOutputCallback(function (string $message, bool $addNewline = true) use ($lockFile): void {
+            $command->setOutputCallback(function (string $message, bool $addNewline = true) use ($lock): void {
                 echo $message . ($addNewline ? "\n" : '');
                 if (ob_get_level() > 0) {
                     ob_flush();
                 }
                 flush();
-                // Touch lock file so stale detection doesn't kill active sync
-                if ($lockFile !== null && file_exists($lockFile)) {
-                    touch($lockFile);
-                }
+                // Touch the lock so stale detection doesn't kill an active sync
+                $lock?->touch();
             });
 
             $result = $command->execute($params);
         } finally {
-            // Release lock
-            if ($lockFp !== null) {
-                flock($lockFp, LOCK_UN);
-                fclose($lockFp);
-                if (file_exists($lockFile)) {
-                    unlink($lockFile);
-                }
-            }
+            $lock?->release();
         }
 
         // Normalise the command result to the dispatcher contract: callers
@@ -196,74 +174,6 @@ class CronDispatcher implements CronDispatcherInterface
         return $normalized;
     }
 
-    /** Maximum lock age before it's considered stale (seconds). */
-    private const int STALE_LOCK_THRESHOLD = 1800; // 30 minutes
-
-    /**
-     * Acquire an exclusive file lock with stale lock detection.
-     *
-     * If the lock is held by another process but the lock file hasn't been
-     * touched in 30+ minutes, assume the holder died and force-acquire.
-     *
-     * Uses a single fopen+flock cycle to avoid TOCTOU race conditions:
-     * instead of unlink+reopen (where two processes could both delete and
-     * re-create), we open the existing file and retry the lock after
-     * checking staleness via the file handle we already hold.
-     *
-     * @return resource|false File handle on success, false if lock is held
-     */
-    private function acquireLock(string $lockFile)
-    {
-        $fp = fopen($lockFile, 'c'); // 'c' = create if missing, don't truncate
-        if ($fp === false) {
-            return false;
-        }
-
-        // Try non-blocking exclusive lock
-        if (flock($fp, LOCK_EX | LOCK_NB)) {
-            // Got the lock — truncate and write PID for debugging
-            ftruncate($fp, 0);
-            fwrite($fp, (string) getmypid());
-            fflush($fp);
-            return $fp;
-        }
-
-        // Lock is held — check if stale via the file we already opened
-        $stat = fstat($fp);
-        fclose($fp);
-
-        if ($stat === false) {
-            return false;
-        }
-
-        $lockAge = time() - $stat['mtime'];
-        if ($lockAge <= self::STALE_LOCK_THRESHOLD) {
-            return false; // Lock is fresh, another process is active
-        }
-
-        // Stale lock — force-acquire by reopening and retrying
-        // The unlink+reopen is acceptable here because only stale-lock
-        // recovery reaches this path, and concurrent stale recovery is
-        // harmless (both processes would try to acquire, only one wins flock)
-        if (file_exists($lockFile)) {
-            unlink($lockFile);
-        }
-        $fp = fopen($lockFile, 'c');
-        if ($fp === false) {
-            return false;
-        }
-
-        if (flock($fp, LOCK_EX | LOCK_NB)) {
-            ftruncate($fp, 0);
-            fwrite($fp, (string) getmypid());
-            fflush($fp);
-            return $fp;
-        }
-
-        fclose($fp);
-        return false;
-    }
-
     /**
      * Get the lock file path for a given mode.
      */
@@ -271,5 +181,14 @@ class CronDispatcher implements CronDispatcherInterface
     {
         $cacheDir = TypeCoerce::toString(defined('DIR_CACHE') ? DIR_CACHE : sys_get_temp_dir());
         return rtrim($cacheDir, '/') . "/sphinx_cron_{$mode}.lock";
+    }
+
+    /**
+     * Reset for testing — forces re-discovery on next use.
+     */
+    public static function reset(): void
+    {
+        self::$commandMap = [];
+        self::$registered = false;
     }
 }

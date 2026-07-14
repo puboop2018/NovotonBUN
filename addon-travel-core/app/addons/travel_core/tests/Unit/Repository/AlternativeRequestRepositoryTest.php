@@ -81,4 +81,72 @@ final class AlternativeRequestRepositoryTest extends TestCase
         self::assertStringContainsString("r.provider = 'sphinx'", (string) $condition);
         self::assertStringContainsString("r.status = 'pending_manual'", (string) $condition);
     }
+
+    public function testUpdateStatusTargetsSingleRow(): void
+    {
+        $captured = [];
+        DbStub::$query = static function (string $q, ...$p) use (&$captured): int {
+            $captured = [$q, $p];
+            return 1;
+        };
+
+        self::assertTrue($this->repo->updateStatus(9, 'booked'));
+        self::assertStringContainsString('SET status = ?s WHERE request_id = ?i', $captured[0]);
+        self::assertSame(['booked', 9], $captured[1]);
+    }
+
+    public function testProviderRefTransitionAndDeleteKeyOnProviderPair(): void
+    {
+        $queries = [];
+        DbStub::$query = static function (string $q, ...$p) use (&$queries): int {
+            $queries[] = [$q, $p];
+            return 1;
+        };
+
+        $this->repo->updateStatusByProviderRef('novoton', 41, 'notified');
+        $this->repo->deleteByProviderRef('novoton', 41);
+
+        self::assertStringContainsString('WHERE provider = ?s AND provider_request_id = ?i', $queries[0][0]);
+        self::assertSame(['notified', 'novoton', 41], $queries[0][1]);
+        self::assertStringContainsString('DELETE FROM ?:travel_alternative_requests WHERE provider = ?s AND provider_request_id = ?i', $queries[1][0]);
+        self::assertSame(['novoton', 41], $queries[1][1]);
+    }
+
+    public function testExpireTargetsOpenStatusesWithOptionalProvider(): void
+    {
+        $captured = [];
+        DbStub::$query = static function (string $q, ...$p) use (&$captured): int {
+            $captured = [$q, $p];
+            return 3;
+        };
+
+        self::assertSame(3, $this->repo->expireOlderThan(30, 'sphinx'));
+        self::assertStringContainsString("SET status = 'expired'", $captured[0]);
+        self::assertStringContainsString("status IN ('pending', 'pending_manual')", $captured[0]);
+        self::assertStringContainsString('DATE_SUB(NOW(), INTERVAL ?i DAY)', $captured[0]);
+        self::assertSame(30, $captured[1][0]);
+        // Provider filter arrives as a pre-quoted ?p fragment.
+        self::assertStringContainsString("provider = 'sphinx'", (string) $captured[1][1]);
+    }
+
+    public function testPurgeDeletesOnlyTerminalRows(): void
+    {
+        $captured = [];
+        DbStub::$query = static function (string $q, ...$p) use (&$captured): int {
+            $captured = [$q, $p];
+            return 5;
+        };
+
+        self::assertSame(5, $this->repo->purgeOlderThan(180));
+        self::assertStringContainsString('DELETE FROM ?:travel_alternative_requests', $captured[0]);
+        self::assertStringContainsString("status IN ('expired', 'cancelled')", $captured[0]);
+        self::assertSame(180, $captured[1][0]);
+    }
+
+    public function testManualStatusesExcludeWorkflowOnlyValues(): void
+    {
+        self::assertSame(['notified', 'booked', 'cancelled'], AlternativeRequestRepository::MANUAL_STATUSES);
+        self::assertNotContains('pending', AlternativeRequestRepository::MANUAL_STATUSES);
+        self::assertNotContains('alternatives_found', AlternativeRequestRepository::MANUAL_STATUSES);
+    }
 }

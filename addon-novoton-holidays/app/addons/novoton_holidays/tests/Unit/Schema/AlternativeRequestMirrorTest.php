@@ -26,4 +26,27 @@ final class AlternativeRequestMirrorTest extends TestCase
         // Mirror failures must be swallowed + logged, not break the flow.
         self::assertStringContainsString('catch (\Throwable $mirrorError)', $src);
     }
+
+    /**
+     * Lifecycle propagation: provider-side transitions must reach the shared
+     * mirror — status changes via update() (the choke point every mark*
+     * helper funnels through), bulk expiry with the same criteria, and
+     * mirror-row removal on delete. All best-effort (never break the
+     * provider workflow).
+     */
+    public function testRepositoryPropagatesTransitionsToTheSharedMirror(): void
+    {
+        $path = dirname(__DIR__, 3) . '/src/Repository/AlternativeRequestRepository.php';
+        $src = (string) file_get_contents($path);
+
+        self::assertStringContainsString('SharedAlternativeRequestRepository', $src);
+        self::assertStringContainsString("updateStatusByProviderRef('novoton', \$request_id", $src);
+        self::assertStringContainsString("expireOlderThan(\$days, 'novoton')", $src);
+        self::assertStringContainsString("deleteByProviderRef('novoton', \$request_id)", $src);
+        self::assertStringContainsString('mirrorBestEffort', $src);
+        self::assertStringContainsString('catch (\Throwable $mirrorError)', $src);
+        // The propagation hangs off the generic status write, so every
+        // transition helper (markAlternativesFound/markNotified) is covered.
+        self::assertStringContainsString("isset(\$data['status'])", $src);
+    }
 }

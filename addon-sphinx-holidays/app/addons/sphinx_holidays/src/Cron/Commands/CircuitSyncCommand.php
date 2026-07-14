@@ -17,6 +17,15 @@ use Tygh\Addons\SphinxHolidays\Services\Container;
  */
 class CircuitSyncCommand extends AbstractSyncCommand
 {
+    /**
+     * @return list<string>
+     */
+    #[\Override]
+    public static function getModes(): array
+    {
+        return ['circuits'];
+    }
+
     #[\Override]
     public static function getDescription(): string
     {

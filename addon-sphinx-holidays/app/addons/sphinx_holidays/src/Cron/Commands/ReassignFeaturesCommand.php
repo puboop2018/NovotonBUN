@@ -34,6 +34,15 @@ use Tygh\Addons\TravelCore\Services\FeatureMapper;
  */
 class ReassignFeaturesCommand extends AbstractSyncCommand
 {
+    /**
+     * @return list<string>
+     */
+    #[\Override]
+    public static function getModes(): array
+    {
+        return ['reassign_features'];
+    }
+
     private const int BATCH_SIZE = 200;
 
     #[\Override]

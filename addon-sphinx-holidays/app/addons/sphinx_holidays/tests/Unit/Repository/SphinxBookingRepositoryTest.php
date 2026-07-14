@@ -76,7 +76,9 @@ class SphinxBookingRepositoryTest extends TestCase
             'travel_bookings mirror UPDATE must run even when the sphinx_bookings UPDATE affects 0 rows',
         );
         self::assertSame(['order_id' => 86], $mirror[0]['params'][0]);
-        self::assertSame('77', $mirror[0]['params'][1], 'mirror row is addressed by provider_booking_id (stringified)');
+        // Shared TravelBookingMirror binds provider then booking id.
+        self::assertSame('sphinx', $mirror[0]['params'][1]);
+        self::assertSame('77', $mirror[0]['params'][2], 'mirror row is addressed by provider_booking_id (stringified)');
     }
 
     public function testUpdateWithChangedRowSyncsTravelBookingsMirror(): void
