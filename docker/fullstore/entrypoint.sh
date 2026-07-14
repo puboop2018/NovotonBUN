@@ -1,0 +1,154 @@
+#!/usr/bin/env bash
+#
+# First-run provisioner for the full-store sandbox. On the very first boot it
+# ingests the CS-Cart kit, links the repo addons, runs the console installer,
+# enables development mode and clears the cache; a sentinel file in the docroot
+# volume makes every later boot skip straight to Apache (only re-linking addons
+# so a freshly added addon dir shows up).
+set -euo pipefail
+
+DOCROOT=/var/www/html
+KIT=/kit
+SENTINEL="$DOCROOT/.novoton-provisioned"
+
+DB_HOST="${CSCART_DB_HOST:-db}"
+DB_NAME="${CSCART_DB_NAME:-cscart}"
+DB_USER="${CSCART_DB_USER:-cscart}"
+DB_PASSWORD="${CSCART_DB_PASSWORD:-cscart}"
+ADMIN_EMAIL="${CSCART_ADMIN_EMAIL:-admin@example.com}"
+ADMIN_PASSWORD="${CSCART_ADMIN_PASSWORD:-admin}"
+LICENSE="${CSCART_LICENSE_KEY:-}"
+HTTP_HOST="${CSCART_HTTP_HOST:-localhost:8080}"
+
+log() { echo "[entrypoint] $*"; }
+
+wait_for_db() {
+    log "Waiting for MySQL at ${DB_HOST}..."
+    for _ in $(seq 1 60); do
+        if mysqladmin ping -h "$DB_HOST" -u"$DB_USER" -p"$DB_PASSWORD" --silent >/dev/null 2>&1; then
+            log "MySQL is ready."
+            return 0
+        fi
+        sleep 2
+    done
+    log "FATAL: MySQL never became ready." >&2
+    exit 1
+}
+
+ingest_kit() {
+    # Accept either a .zip archive or an already-extracted directory in /kit
+    # (same contract as docker/test-db/build.sh's CSCART_SRC).
+    local zip src inner tmp
+    zip="$(find "$KIT" -maxdepth 1 -iname '*.zip' 2>/dev/null | head -n1 || true)"
+    if [ -n "$zip" ]; then
+        log "Unzipping kit: $zip"
+        tmp="$(mktemp -d)"
+        unzip -q "$zip" -d "$tmp"
+        src="$tmp"
+    else
+        src="$KIT"
+    fi
+
+    # Normalise: CS-Cart zips often nest under one top-level folder. Locate the
+    # dir that actually contains install/index.php.
+    if [ ! -f "$src/install/index.php" ]; then
+        inner="$(find "$src" -maxdepth 3 -type f -path '*/install/index.php' 2>/dev/null | head -n1 || true)"
+        if [ -n "$inner" ]; then
+            src="$(dirname "$(dirname "$inner")")"
+        fi
+    fi
+
+    if [ ! -f "$src/install/index.php" ]; then
+        log "FATAL: no CS-Cart kit found in ./kit (need a cscart_*.zip or an extracted dir with install/index.php)." >&2
+        exit 1
+    fi
+
+    log "Copying CS-Cart into the docroot..."
+    cp -a "$src/." "$DOCROOT/"
+}
+
+write_install_config() {
+    log "Writing install/config.php..."
+    cat > "$DOCROOT/install/config.php" <<PHP
+<?php
+return array(
+    'addons' => array('travel_core', 'novoton_holidays', 'sphinx_holidays', 'fgo_invoicing'),
+    'cart_settings' => array(
+        'email' => '${ADMIN_EMAIL}',
+        'password' => '${ADMIN_PASSWORD}',
+        'secret_key' => 'novotonbun-fullstore-secret',
+        'languages' => array('en', 'ro'),
+        'main_language' => 'en',
+        'demo_catalog' => false,
+        'theme_name' => 'responsive',
+        'license_number' => '${LICENSE}',
+    ),
+    'database_settings' => array(
+        'host' => '${DB_HOST}',
+        'name' => '${DB_NAME}',
+        'user' => '${DB_USER}',
+        'password' => '${DB_PASSWORD}',
+        'table_prefix' => 'cscart_',
+        'database_backend' => 'mysqli',
+        'notify' => false,
+        'allow_override' => 'Y',
+    ),
+    'server_settings' => array(
+        'http_host' => '${HTTP_HOST}',
+        'http_path' => '',
+        'https_host' => '${HTTP_HOST}',
+        'https_path' => '',
+        'correct_permissions' => true,
+    ),
+);
+PHP
+}
+
+enable_dev_mode() {
+    # DEVELOPMENT turns on template recompilation (compile_check) + error
+    # display, so storefront/admin .tpl edits show up without a manual cache
+    # clear. config.local.php is included before init, so appending is fine.
+    local cfg="$DOCROOT/config.local.php"
+    if [ -f "$cfg" ] && ! grep -q "define('DEVELOPMENT'" "$cfg"; then
+        printf "\n// Local sandbox: recompile templates on change, show errors.\nif (!defined('DEVELOPMENT')) { define('DEVELOPMENT', true); }\n" >> "$cfg"
+        log "Enabled DEVELOPMENT mode in config.local.php."
+    fi
+}
+
+provision() {
+    log "=== First-run provisioning ==="
+    ingest_kit
+
+    log "Linking repo addons into the docroot..."
+    DOCROOT="$DOCROOT" REPO=/repo bash /usr/local/bin/link-addons.sh
+
+    write_install_config
+
+    log "Running the CS-Cart console installer (this can take a few minutes)..."
+    ( cd "$DOCROOT/install" && php index.php )
+
+    log "Verifying addon install order (installs fgo_invoicing + any missed)..."
+    php /usr/local/bin/install-addons.php || log "install-addons.php reported an issue (non-fatal); check the admin Add-ons page."
+
+    enable_dev_mode
+
+    log "Clearing the template/cache dir..."
+    rm -rf "${DOCROOT:?}/var/cache/"* 2>/dev/null || true
+
+    log "Fixing docroot ownership for Apache..."
+    chown -R www-data:www-data "$DOCROOT" 2>/dev/null || true
+
+    touch "$SENTINEL"
+    log "=== Provisioning complete — store is live ==="
+}
+
+wait_for_db
+
+if [ ! -f "$SENTINEL" ]; then
+    provision
+else
+    log "Already provisioned; re-linking addons for freshness."
+    DOCROOT="$DOCROOT" REPO=/repo bash /usr/local/bin/link-addons.sh || true
+fi
+
+exec "$@"

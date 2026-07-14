@@ -1,0 +1,3 @@
+Drop your CS-Cart 4.20.1 kit here: either cscart_v4.20.1.zip or an
+already-extracted CS-Cart directory. It is gitignored — it never leaves your
+machine. The container ingests it on first boot.
