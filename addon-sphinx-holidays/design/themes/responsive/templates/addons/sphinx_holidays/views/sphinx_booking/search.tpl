@@ -140,7 +140,7 @@
                         <span class="travel-offer-badge--instant">✓ {__("sphinx_holidays.instant_confirmation")|default:"Instant confirmation"}</span>
                     {/if}
                     {* Terms modal trigger — offer_id read from the card wrapper's data-offer-id *}
-                    <a href="#" class="travel-terms-link sphinx-terms-link">{__("sphinx_holidays.cancellation_and_payment_terms")|default:"Condiții de Anulare și Plată"}</a>
+                    <a href="#" class="travel-terms-link sphinx-terms-link">{__("sphinx_holidays.cancellation_and_payment_terms")|default:"Condiții de Plată și Anulare"}</a>
                 </div>
 
                 {* Price and action *}
@@ -216,7 +216,7 @@
 <div id="sphinx-terms-modal" class="travel-terms-modal" role="dialog" aria-modal="true" aria-labelledby="sphinx-terms-modal-title" style="display: none;">
     <div class="travel-terms-modal__box">
         <div class="travel-terms-modal__head">
-            <h3 id="sphinx-terms-modal-title">{__("sphinx_holidays.cancellation_and_payment_terms")|default:"Condiții de Anulare și Plată"}</h3>
+            <h3 id="sphinx-terms-modal-title">{__("sphinx_holidays.cancellation_and_payment_terms")|default:"Condiții de Plată și Anulare"}</h3>
             <button type="button" class="travel-terms-modal__close" aria-label="{__("close")|default:"Close"}">&times;</button>
         </div>
         <div class="travel-terms-modal__body" id="sphinx-terms-modal-body"></div>
@@ -245,14 +245,19 @@ window.__sphinxConfig = {
         bookNow: "{__("sphinx_holidays.book_now")|default:"Book now"|escape:javascript}",
         nights: "{__("travel_core.nights")|default:"nights"|escape:javascript}",
         starsRating: "{__("sphinx_holidays.stars_rating", ["[rating]" => "%s"])|default:"%s-star rating"|escape:javascript}",
-        cancellationAndPaymentTerms: "{__("sphinx_holidays.cancellation_and_payment_terms")|default:"Condiții de Anulare și Plată"|escape:javascript}",
+        cancellationAndPaymentTerms: "{__("sphinx_holidays.cancellation_and_payment_terms")|default:"Condiții de Plată și Anulare"|escape:javascript}",
         paymentTerms: "{__("sphinx_holidays.payment_terms")|default:"Termeni de plată"|escape:javascript}",
         cancellationPolicy: "{__("sphinx_holidays.cancellation_policy")|default:"Politica de anulare"|escape:javascript}",
-        freeCancellationUntil: "{__("sphinx_holidays.free_cancellation_until")|default:"Anulare gratuită până la"|escape:javascript}",
+        freeCancellationUntil: "{__("sphinx_holidays.free_cancellation_until")|default:"Anulare gratuită înainte de"|escape:javascript}",
         freeCancellation: "{__("sphinx_holidays.free_cancellation")|default:"Anulare gratuită"|escape:javascript}",
         termsLoading: "{__("sphinx_holidays.terms_loading")|default:"Se încarcă condițiile..."|escape:javascript}",
         termsUnavailable: "{__("sphinx_holidays.terms_unavailable")|default:"Condițiile nu sunt disponibile. Vă rugăm căutați din nou."|escape:javascript}",
         noTermsInfo: "{__("sphinx_holidays.no_terms_info")|default:"Nu există condiții specifice pentru această ofertă."|escape:javascript}",
+        termsDueBy: "{__("sphinx_holidays.terms_due_by")|default:"De achitat"|escape:javascript}",
+        termsPenalty: "{__("sphinx_holidays.terms_penalty")|default:"Penalizare"|escape:javascript}",
+        termsNonRefundable: "{__("sphinx_holidays.terms_non_refundable")|default:"Nerambursabil"|escape:javascript}",
+        termsUntil: "{__("sphinx_holidays.terms_until")|default:"până la"|escape:javascript}",
+        termsFrom: "{__("sphinx_holidays.terms_from")|default:"de la"|escape:javascript}",
         close: "{__("close")|default:"Close"|escape:javascript}",
         available: "{__("sphinx_holidays.available")|default:"Available"|escape:javascript}",
         room: "{__("sphinx_holidays.room")|default:"room"|lower|escape:javascript}",
@@ -368,7 +373,7 @@ window.__sphinxConfig = {
                 (result.confirmation === 'immediate'
                     ? '<span class="travel-offer-badge--instant">✓ ' + (labels.instantConfirmation || 'Instant confirmation') + '</span>'
                     : '') +
-                '<a href="#" class="travel-terms-link sphinx-terms-link">' + (labels.cancellationAndPaymentTerms || 'Condiții de Anulare și Plată') + '</a>' +
+                '<a href="#" class="travel-terms-link sphinx-terms-link">' + (labels.cancellationAndPaymentTerms || 'Condiții de Plată și Anulare') + '</a>' +
             '</div>' +
             '<div class="travel-offer-price-action sphinx-offer-price-action">' +
                 '<div class="travel-offer-price sphinx-offer-price">' +
@@ -538,15 +543,90 @@ window.__sphinxConfig = {
         for (var i = 0; i < lines.length; i++) items += '<li>' + esc(lines[i]) + '</li>';
         return '<div class="travel-terms-modal__section"><strong>' + esc(title) + '</strong><ul>' + items + '</ul></div>';
     }
+    function fmtAmount(a, cur) {
+        var n = parseFloat(a || 0);
+        var s = (n % 1 === 0) ? String(Math.round(n)) : n.toFixed(2);
+        return cur ? s + ' ' + cur : s;
+    }
+    function pctNum(p) {
+        if (p == null || isNaN(parseFloat(p))) return '';
+        var n = Math.round(parseFloat(p) * 10) / 10;
+        return (n % 1 === 0) ? String(Math.round(n)) : String(n);
+    }
+    function fmtPct(p) {
+        var s = pctNum(p);
+        return s === '' ? '' : ' <span class="travel-terms-timeline__pct">(' + esc(s) + '%)</span>';
+    }
+    // One timeline PER schedule (payment vs cancellation) \u2014 deliberately NOT
+    // merged: a reader who only cares about payment shouldn't have to parse
+    // cancellation nodes, and vice versa. Rules arrive date-sorted from the
+    // endpoint. Copy is strictly "due by" (checkout charges once; nothing is
+    // auto-charged).
+    function cap(s) {
+        s = String(s || '');
+        return s.charAt(0).toUpperCase() + s.slice(1);
+    }
+    function renderTrack(rules, heading, kind, total, cur) {
+        if (!rules || !rules.length) return '';
+        // Each node is headed by ITS DATE at the timeline dot ("P\u00e2n\u0103 la
+        // 20.06.2026" / "De la 01.07.2026"), with a terse amount row below.
+        var dateLabel = kind === 'pay' ? (cfg.termsUntil || 'p\u00e2n\u0103 la') : (cfg.termsFrom || 'de la');
+        var html = '<p class="travel-terms-timeline__heading">' + esc(heading) + '</p>';
+        html += '<ul class="travel-terms-timeline">';
+        for (var i = 0; i < rules.length; i++) {
+            var r = rules[i];
+            html += '<li class="travel-terms-timeline__node">';
+            // Date gutter LEFT of the rail (tracker style): small preposition
+            // over a bold date, right-aligned against the dot.
+            html += '<div class="travel-terms-timeline__date">' + esc(cap(dateLabel)) + ' <strong>' + esc(r.date) + '</strong></div>';
+            if (kind === 'pay') {
+                html += '<div class="travel-terms-timeline__row travel-terms-timeline__row--pay">'
+                    + esc(cfg.termsDueBy || 'De achitat') + ': <strong>'
+                    + esc(fmtAmount(r.amount, cur)) + '</strong>' + fmtPct(r.percent) + '</div>';
+            } else {
+                var nonref = total > 0 && parseFloat(r.amount) >= total
+                    ? ' <span class="travel-terms-timeline__tag--nonref">' + esc(cfg.termsNonRefundable || 'Nerambursabil') + '</span>'
+                    : '';
+                // Penalty severity leads: "Penalizare 20%: 763 EUR" — the
+                // percent is the instantly comparable signal; the amount is
+                // the consequence detail (payment rows stay amount-first).
+                var pctLead = pctNum(r.percent);
+                html += '<div class="travel-terms-timeline__row travel-terms-timeline__row--cancel">'
+                    + esc(cfg.termsPenalty || 'Penalizare') + (pctLead !== '' ? ' <strong>' + esc(pctLead) + '%</strong>' : '') + ': <strong>'
+                    + esc(fmtAmount(r.amount, cur)) + '</strong>' + nonref + '</div>';
+            }
+            html += '</li>';
+        }
+        html += '</ul>';
+        return html;
+    }
+    function renderTimeline(data) {
+        var total = parseFloat(data.schedule_total || 0);
+        var cur = data.currency || '';
+        return renderTrack(data.payment_rules, cfg.paymentTerms || 'Termeni de plat\u0103', 'pay', total, cur)
+             + renderTrack(data.cancellation_rules, cfg.cancellationPolicy || 'Politica de anulare', 'cancel', total, cur);
+    }
     function renderTerms(data) {
         var html = '';
         if (data.is_free && !data.free_until) {
             html += '<div class="travel-terms-modal__free">\u2713 ' + esc(cfg.freeCancellation || 'Anulare gratuita') + '</div>';
         } else if (data.free_until) {
-            html += '<div class="travel-terms-modal__free">\u2713 ' + esc(cfg.freeCancellationUntil || 'Free cancellation until') + ' <strong>' + esc(data.free_until) + '</strong></div>';
+            // free_until IS the first penalty date (earliest `since`), so the
+            // copy must read "before <date>" \u2014 "until" would wrongly imply
+            // the date itself is still free.
+            html += '<div class="travel-terms-modal__free">\u2713 ' + esc(cfg.freeCancellationUntil || 'Anulare gratuit\u0103 \u00eenainte de') + ' <strong>' + esc(data.free_until) + '</strong></div>';
         }
-        html += section(cfg.paymentTerms || 'Payment terms', data.payment_terms);
-        html += section(cfg.cancellationPolicy || 'Cancellation policy', data.cancellation_fees);
+        var hasRules = (data.payment_rules && data.payment_rules.length)
+            || (data.cancellation_rules && data.cancellation_rules.length);
+        if (hasRules) {
+            // Structured schedule \u2192 timeline.
+            html += renderTimeline(data);
+        } else {
+            // Prose/legacy terms (or an old cached endpoint response) \u2192 the
+            // original two plain lists.
+            html += section(cfg.paymentTerms || 'Payment terms', data.payment_terms);
+            html += section(cfg.cancellationPolicy || 'Cancellation policy', data.cancellation_fees);
+        }
         if (html === '') html = '<p>' + esc(cfg.noTermsInfo || 'No specific terms for this offer.') + '</p>';
         body.innerHTML = html;
     }

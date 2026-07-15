@@ -159,4 +159,104 @@ final class TermsFormatterTest extends TestCase
         $json = '{"is_free":false,"rules":[{"since":"2026-07-01","value":50}]}';
         self::assertSame('01.07.2026', TermsFormatter::freeCancellationUntil($json));
     }
+
+    // ── rules() — the timeline's structured data source ─────────────────────
+
+    public function testRulesExtractDateSortedRowsFromEitherDateKey(): void
+    {
+        $payment = ['is_loaded' => true, 'text' => null, 'rules' => [
+            ['until' => '2026-07-15', 'value' => 3813.0],
+            ['until' => '2026-06-20', 'value' => 763.0],
+        ]];
+        $cancellation = ['is_free' => false, 'rules' => [
+            ['since' => '2026-07-28', 'value' => 3813.0],
+        ]];
+
+        // Cumulative amounts pass through untouched; rows come back date-sorted.
+        self::assertSame(
+            [
+                ['date' => '20.06.2026', 'iso' => '2026-06-20', 'amount' => 763.0],
+                ['date' => '15.07.2026', 'iso' => '2026-07-15', 'amount' => 3813.0],
+            ],
+            TermsFormatter::rules($payment),
+        );
+        self::assertSame(
+            [['date' => '28.07.2026', 'iso' => '2026-07-28', 'amount' => 3813.0]],
+            TermsFormatter::rules($cancellation),
+        );
+    }
+
+    public function testRulesYieldNothingWhenSupplierProseWins(): void
+    {
+        // Mirrors lines(): non-empty supplier text suppresses the rules, so
+        // the modal falls back to the plain list rendering.
+        self::assertSame([], TermsFormatter::rules([
+            'is_loaded' => true,
+            'text' => '20% avans, restul la check-in',
+            'rules' => [['until' => '2026-06-20', 'value' => 763.0]],
+        ]));
+    }
+
+    public function testRulesSkipUndatedOrValuelessEntriesAndBadShapes(): void
+    {
+        self::assertSame(
+            [['date' => '20.06.2026', 'iso' => '2026-06-20', 'amount' => 763.0]],
+            TermsFormatter::rules(['rules' => [
+                ['until' => '2026-06-20', 'value' => 763.0],
+                ['until' => '2026-07-01'],            // no value
+                ['value' => 100.0],                   // no date
+                'not-a-rule',
+            ]]),
+        );
+        self::assertSame([], TermsFormatter::rules(null));
+        self::assertSame([], TermsFormatter::rules('not-json'));
+        self::assertSame([], TermsFormatter::rules(['plain', 'list']));
+        self::assertSame([], TermsFormatter::rules(['is_free' => true, 'rules' => []]));
+    }
+
+    public function testRulesAcceptJsonStringInput(): void
+    {
+        $json = '{"is_free":false,"rules":[{"since":"2026-07-01","value":50}]}';
+        self::assertSame(
+            [['date' => '01.07.2026', 'iso' => '2026-07-01', 'amount' => 50.0]],
+            TermsFormatter::rules($json),
+        );
+    }
+
+    // ── increments() — cumulative → per-installment (must sum to 100%) ──────
+
+    public function testIncrementsConvertCumulativeAmountsToInstallments(): void
+    {
+        $cumulative = [
+            ['date' => '20.06.2026', 'iso' => '2026-06-20', 'amount' => 763.0],
+            ['date' => '15.07.2026', 'iso' => '2026-07-15', 'amount' => 3813.0],
+        ];
+
+        // 763 + 3050 = 3813 — the displayed installments sum to the total.
+        self::assertSame(
+            [
+                ['date' => '20.06.2026', 'iso' => '2026-06-20', 'amount' => 763.0],
+                ['date' => '15.07.2026', 'iso' => '2026-07-15', 'amount' => 3050.0],
+            ],
+            TermsFormatter::increments($cumulative),
+        );
+    }
+
+    public function testIncrementsSingleRowAndEmptyPassThrough(): void
+    {
+        $one = [['date' => '20.06.2026', 'iso' => '2026-06-20', 'amount' => 763.0]];
+        self::assertSame($one, TermsFormatter::increments($one));
+        self::assertSame([], TermsFormatter::increments([]));
+    }
+
+    public function testIncrementsClampNonMonotonicDataToZero(): void
+    {
+        $rows = TermsFormatter::increments([
+            ['date' => '20.06.2026', 'iso' => '2026-06-20', 'amount' => 800.0],
+            ['date' => '15.07.2026', 'iso' => '2026-07-15', 'amount' => 700.0],
+        ]);
+
+        self::assertSame(800.0, $rows[0]['amount']);
+        self::assertSame(0.0, $rows[1]['amount']);
+    }
 }

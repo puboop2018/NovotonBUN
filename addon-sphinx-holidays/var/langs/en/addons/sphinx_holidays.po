@@ -433,8 +433,8 @@ msgid "Payment and cancellation terms"
 msgstr "Payment and cancellation terms"
 
 msgctxt "Languages::sphinx_holidays.free_cancellation_until"
-msgid "Free cancellation until"
-msgstr "Free cancellation until"
+msgid "Free cancellation before"
+msgstr "Free cancellation before"
 
 msgctxt "Languages::sphinx_holidays.free_cancellation"
 msgid "Free cancellation"
@@ -611,3 +611,15 @@ msgstr "Name or ID"
 msgctxt "Languages::sphinx_holidays.search_destinations_name_or_id"
 msgid "Search by name or destination ID"
 msgstr "Search by name or destination ID"
+
+msgctxt "Languages::sphinx_holidays.terms_due_by"
+msgid "Amount due"
+msgstr "Amount due"
+
+msgctxt "Languages::sphinx_holidays.terms_penalty"
+msgid "Penalty"
+msgstr "Penalty"
+
+msgctxt "Languages::sphinx_holidays.terms_non_refundable"
+msgid "Non-refundable"
+msgstr "Non-refundable"
