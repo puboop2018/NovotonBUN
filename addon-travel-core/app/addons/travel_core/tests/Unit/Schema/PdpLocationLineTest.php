@@ -28,7 +28,11 @@ final class PdpLocationLineTest extends TestCase
         $tpl = self::themeTpl('responsive');
 
         self::assertStringContainsString('$travel_hotel_location_line', $tpl);
-        self::assertStringContainsString('https://www.google.com/maps?q={$travel_hotel_lat},{$travel_hotel_lng}', $tpl);
+        // The map URL is built SERVER-SIDE (HotelMapUrl): full-precision
+        // coordinate pin, or a place-search fallback when coords are null.
+        // The template must not rebuild it from raw lat/lng.
+        self::assertStringContainsString('href="{$travel_hotel_map_url|escape:html}"', $tpl);
+        self::assertStringNotContainsString('maps?q={$travel_hotel_lat', $tpl);
         self::assertStringContainsString('travel_core.location_show_map', $tpl);
         self::assertStringContainsString('target="_blank"', $tpl);
         self::assertStringContainsString('rel="noopener"', $tpl);
@@ -44,8 +48,11 @@ final class PdpLocationLineTest extends TestCase
         $src = (string) file_get_contents(dirname(__DIR__, 3) . '/hooks/cart_hooks.php');
 
         self::assertStringContainsString("assign('travel_hotel_location_line'", $src);
-        self::assertStringContainsString("assign('travel_hotel_lat'", $src);
-        self::assertStringContainsString("assign('travel_hotel_lng'", $src);
+        self::assertStringContainsString("assign('travel_hotel_map_url'", $src);
         self::assertStringContainsString('HotelLocationLine::build', $src);
+        self::assertStringContainsString('HotelMapUrl::build', $src);
+        // The raw-coordinate assigns are gone — the URL is prebuilt.
+        self::assertStringNotContainsString("assign('travel_hotel_lat'", $src);
+        self::assertStringNotContainsString("assign('travel_hotel_lng'", $src);
     }
 }

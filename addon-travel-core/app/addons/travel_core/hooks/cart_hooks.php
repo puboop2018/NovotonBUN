@@ -234,11 +234,14 @@ function _travel_core_prepare_hotel_seo_data(int $productId): void
         $view->assign('travel_og_description', $productDesc['meta_description'] ?? '');
         $view->assign('travel_og_image', $hotel->imageUrl ?? '');
         $view->assign('travel_og_type', 'hotel');
-        // Location line + coordinates for the visible PDP line under the
-        // hotel name (hooks/products/title.post.tpl) — both providers.
-        $view->assign('travel_hotel_location_line', \Tygh\Addons\TravelCore\Services\HotelLocationLine::build($hotel));
-        $view->assign('travel_hotel_lat', (float) ($hotel->latitude ?? 0));
-        $view->assign('travel_hotel_lng', (float) ($hotel->longitude ?? 0));
+        // Location line + map URL for the visible PDP line under the hotel
+        // name (hooks/products/main_info_title.post.tpl) — both providers.
+        // The URL is built server-side: a full-precision coordinate pin when
+        // the provider has coordinates, else a Google place search by
+        // "name, address" (hotels whose coordinates the API can't establish).
+        $locationLine = \Tygh\Addons\TravelCore\Services\HotelLocationLine::build($hotel);
+        $view->assign('travel_hotel_location_line', $locationLine);
+        $view->assign('travel_hotel_map_url', \Tygh\Addons\TravelCore\Services\HotelMapUrl::build($hotel, $locationLine) ?? '');
     }
 }
 
