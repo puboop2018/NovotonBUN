@@ -285,15 +285,29 @@ class DestinationRepository
     }
 
     /**
-     * Search destinations by name.
+     * Search destinations by name — or, for an all-digits query, by exact
+     * destination_id as well (the id shown in the admin grid / used by the
+     * hotels sync). Backs both the destinations admin grid and the whitelist
+     * autocomplete. The LIKE stays in the numeric branch so destinations
+     * whose NAME contains the digits remain findable.
      *
-     * @param string $query Search term
+     * @param string $query Search term (name fragment or numeric destination id)
      * @param int $limit Max results
      * @return list<array<string, mixed>>
      */
     public function search(string $query, int $limit = 20): array
     {
-        $escaped = addcslashes($query, '%_\\');
+        $trimmed = trim($query);
+        $escaped = addcslashes($trimmed, '%_\\');
+
+        if (ctype_digit($trimmed)) {
+            return self::asRowList(db_get_array(
+                'SELECT * FROM ?:sphinx_destinations WHERE name LIKE ?l OR destination_id = ?i ORDER BY type ASC, name ASC LIMIT ?i',
+                '%' . $escaped . '%',
+                (int) $trimmed,
+                $limit,
+            ));
+        }
 
         return self::asRowList(db_get_array(
             'SELECT * FROM ?:sphinx_destinations WHERE name LIKE ?l ORDER BY type ASC, name ASC LIMIT ?i',

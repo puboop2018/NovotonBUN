@@ -806,6 +806,10 @@
         <item lang="ro" id="sphinx_holidays.all_types"><![CDATA[Toate tipurile]]></item>
         <item lang="en" id="sphinx_holidays.search_destinations"><![CDATA[Search destinations]]></item>
         <item lang="ro" id="sphinx_holidays.search_destinations"><![CDATA[Caută destinații]]></item>
+        <item lang="en" id="sphinx_holidays.destination_name_or_id"><![CDATA[Name or ID]]></item>
+        <item lang="ro" id="sphinx_holidays.destination_name_or_id"><![CDATA[Nume sau ID]]></item>
+        <item lang="en" id="sphinx_holidays.search_destinations_name_or_id"><![CDATA[Search by name or destination ID]]></item>
+        <item lang="ro" id="sphinx_holidays.search_destinations_name_or_id"><![CDATA[Caută după nume sau ID destinație]]></item>
         <item lang="en" id="sphinx_holidays.no_destinations"><![CDATA[No destinations found. Run a sync first.]]></item>
         <item lang="ro" id="sphinx_holidays.no_destinations"><![CDATA[Nu s-au găsit destinații. Rulați mai întâi o sincronizare.]]></item>
         <item lang="en" id="sphinx_holidays.api_not_configured"><![CDATA[Sphinx API is not configured. Please set the API key in addon settings.]]></item>

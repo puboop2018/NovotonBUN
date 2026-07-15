@@ -603,3 +603,11 @@ msgstr "children"
 msgctxt "Languages::sphinx_holidays.location_show_map"
 msgid "Location - show map"
 msgstr "Location - show map"
+
+msgctxt "Languages::sphinx_holidays.destination_name_or_id"
+msgid "Name or ID"
+msgstr "Name or ID"
+
+msgctxt "Languages::sphinx_holidays.search_destinations_name_or_id"
+msgid "Search by name or destination ID"
+msgstr "Search by name or destination ID"
