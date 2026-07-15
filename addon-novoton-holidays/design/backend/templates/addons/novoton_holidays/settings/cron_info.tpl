@@ -65,6 +65,11 @@
                     <td><code>php {$smarty.const.DIR_ROOT}/index.php?dispatch=novoton_cron.run&amp;access_key=YOUR_KEY&amp;mode=geocode_addresses</code></td>
                     <td>Hourly until backlog drains (<code>0 * * * *</code>), needs geocoding enabled in settings</td>
                 </tr>
+                <tr>
+                    <td><strong>backfill_images</strong></td>
+                    <td><code>php {$smarty.const.DIR_ROOT}/index.php?dispatch=novoton_cron.run&amp;access_key=YOUR_KEY&amp;mode=backfill_images</code></td>
+                    <td>Hourly until backlog drains (<code>0 * * * *</code>); re-attaches images to products that synced without them</td>
+                </tr>
             </tbody>
         </table>
     </div>

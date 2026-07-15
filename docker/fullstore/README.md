@@ -83,6 +83,53 @@ touching devx.
   docker compose down -v && docker compose up -d --build
   ```
 
+## Storefront theme (nova_theme vs responsive)
+
+The first provision installs **nova_theme automatically when your kit ships
+it** (that's the modern theme production runs), falling back to classic
+`responsive`. Force one via `CSCART_THEME=` in `.env` (fresh provisions only).
+
+Why it matters: the hotel product page's **booking form and location line**
+are injected through theme hook anchors (`products:product_tabs`,
+`products:main_info_title`, `products:product_detail_bottom`) that live in the
+theme's product-page templates. Themes/templates that don't fire those anchors
+render a bare product page even though the PHP side prepared everything.
+
+**Switching an already-provisioned store without losing synced data:** install
+and activate the other theme from **Admin → Design → Themes**, then
+`docker compose restart app` (each boot re-links the addon design files, so
+the newly installed theme's overlays appear), then **Admin → Settings → Clear
+cache**. A `down -v` re-provision also works but wipes the DB.
+
+> `sphinx_holidays` ships storefront templates for `responsive` only; its
+> hotel-PDP booking form comes from shared `travel_core` templates (which
+> ship for both themes), but sphinx's own search/booking VIEW pages rely on
+> the theme falling back to responsive templates — verify them after a theme
+> switch.
+
+## Troubleshooting: hotel page shows no booking form / location line
+
+Open the product page with `&travel_debug=1` appended, e.g.
+`http://localhost:8080/index.php?dispatch=products.view&product_id=1&travel_debug=1`,
+then press **F12 → Console** and read the `[travel_debug]` object (it also
+lands in Admin → Administration → Logs, and as a visible panel when the
+theme's anchors fire). Interpret it top-down:
+
+| Symptom in `[travel_debug]` | Cause → fix |
+|---|---|
+| no `[travel_debug]` in console at all | travel_core's theme overlay isn't linked — `docker compose restart app`, then Clear cache |
+| `product.is_hotel: false`, `provider: none` | No provider claims the product. Sphinx: `sphinx_hotels.product_id` link missing — re-run the sphinx `add_products` cron (it re-links existing products by code). Novoton: code must be `NVT<hotel_id>` with a matching `novoton_hotels` row. |
+| `registered_providers` empty / missing resolver | The provider addon is inactive — activate it in Add-ons |
+| `settings.show_booking_form: N` | Master kill-switch off — enable it in Travel Core settings |
+| `smarty_vars.travel_booking_product_id: SET` but no form on the page | The active theme's product template doesn't fire the mount anchors — switch the theme (see above), or add the provider's *Booking Form* block to the `products.view` layout in Block Manager |
+| `js_files: MISSING` | JS symlinks absent — `docker compose restart app` |
+| `template_files: MISSING (…)` | Theme overlay not linked for the ACTIVE theme — restart to re-link; if it persists, the addon genuinely ships no overlay for that theme (sphinx has none for nova_theme) |
+
+Two data gotchas that look like bugs but aren't: **novoton products are
+created disabled** (`status='D'`) — enable them to see their pages; and the
+location line upgrades from "city, country" to "street, city, country" only
+after the novoton `geocode_addresses` cron has run.
+
 ## Notes & limits
 
 - **Live provider API calls** (Novoton/Sphinx) need real credentials + network

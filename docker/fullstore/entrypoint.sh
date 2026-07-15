@@ -19,6 +19,11 @@ ADMIN_EMAIL="${CSCART_ADMIN_EMAIL:-admin@example.com}"
 ADMIN_PASSWORD="${CSCART_ADMIN_PASSWORD:-admin}"
 LICENSE="${CSCART_LICENSE_KEY:-}"
 HTTP_HOST="${CSCART_HTTP_HOST:-localhost:8080}"
+# Storefront theme. Empty = auto: prefer the modern nova_theme when the kit
+# ships it (that's what production runs — its product templates fire the hook
+# anchors the travel addons' PDP booking form + location line attach to),
+# falling back to classic responsive. Set CSCART_THEME=responsive to force.
+THEME="${CSCART_THEME:-}"
 
 log() { echo "[entrypoint] $*"; }
 
@@ -71,6 +76,20 @@ ingest_kit() {
     cp -a "$src/." "$DOCROOT/"
 }
 
+resolve_theme() {
+    if [ -n "$THEME" ]; then
+        log "Storefront theme (from CSCART_THEME): $THEME"
+        return 0
+    fi
+    if [ -d "$DOCROOT/var/themes_repository/nova_theme" ]; then
+        THEME=nova_theme
+        log "Storefront theme: nova_theme (kit ships it — matches production)."
+    else
+        THEME=responsive
+        log "Storefront theme: responsive (kit has no nova_theme)."
+    fi
+}
+
 write_install_config() {
     log "Writing install/config.php..."
     cat > "$DOCROOT/install/config.php" <<PHP
@@ -89,7 +108,7 @@ return array(
         'languages' => array('en', 'ro'),
         'main_language' => 'en',
         'demo_catalog' => false,
-        'theme_name' => 'responsive',
+        'theme_name' => '${THEME}',
         'license_number' => '${LICENSE}',
     ),
     'database_settings' => array(
@@ -132,6 +151,7 @@ enable_dev_mode() {
 provision() {
     log "=== First-run provisioning ==="
     ingest_kit
+    resolve_theme
 
     log "Linking repo addons into the docroot..."
     DOCROOT="$DOCROOT" REPO=/repo bash /usr/local/bin/link-addons.sh
@@ -147,6 +167,14 @@ provision() {
 
     log "Verifying addon install order (reconciling any the installer missed)..."
     php /usr/local/bin/install-addons.php || log "install-addons.php reported an issue (non-fatal); check the admin Add-ons page."
+
+    # Second link pass: the installer only NOW copied the chosen theme into
+    # design/themes/<theme>, so the first pass (which guards on that dir
+    # existing) skipped the theme-level overlays. Re-running is idempotent
+    # and picks them up — without this, the storefront booking form /
+    # location line templates would be missing until the next restart.
+    log "Re-linking addon design files for the installed theme..."
+    DOCROOT="$DOCROOT" REPO=/repo bash /usr/local/bin/link-addons.sh
 
     enable_dev_mode
 

@@ -267,6 +267,30 @@ function _travel_core_render_debug(string $dispatch): void
         $debug['addon_status'][$addon] = $status ?: 'NOT INSTALLED';
     }
 
+    // ── 2b. Active theme + the display settings that gate the mount ──
+    // The #1 real-world cause of "no booking form / no location line" is the
+    // active theme's product template not firing the hook anchors — surface
+    // the theme name right next to the switch values.
+    $layout = TypeCoerce::toStringMap(Registry::get('runtime.layout'));
+    $activeTheme = ValidationHelpers::toString($layout['theme_name'] ?? '');
+    $debug['theme'] = $activeTheme !== '' ? $activeTheme : '(unknown)';
+    $debug['settings'] = [
+        'show_booking_form' => ValidationHelpers::toString(Registry::get('addons.travel_core.show_booking_form')) ?: '(unset → treated as Y)',
+        'booking_form_position' => ValidationHelpers::toString(Registry::get('addons.travel_core.booking_form_position')) ?: '(unset → before_tabs)',
+    ];
+
+    // ── 2c. Which providers registered a PDP resolver this request ──
+    // Empty = no provider addon ran init.php (inactive?); a provider listed
+    // without a resolver can never claim its products.
+    foreach (TravelProviderRegistry::all() as $pname => $pentry) {
+        $debug['registered_providers'][$pname] = isset($pentry['hotel_product_provider'])
+            ? get_class($pentry['hotel_product_provider'])
+            : 'NO hotel_product_provider registered';
+    }
+    if (empty($debug['registered_providers'])) {
+        $debug['registered_providers'] = ['(none)' => 'no provider addon registered — are novoton/sphinx active?'];
+    }
+
     // ── 3. Product info (if on product page) ──
     if ($dispatch === 'products.view' && !empty($_REQUEST['product_id'])) {
         $pid = ValidationHelpers::toInt($_REQUEST['product_id']);
@@ -314,18 +338,20 @@ function _travel_core_render_debug(string $dispatch): void
             : 'MISSING';
     }
 
-    // ── 5. Smarty template hook files ──
+    // ── 5. Smarty template hook files (checked in the ACTIVE theme) ──
+    $checkTheme = $activeTheme !== '' ? $activeTheme : 'responsive';
     $tplHooks = [
-        'design/themes/responsive/templates/addons/travel_core/hooks/products/product_detail_bottom.post.tpl',
-        'design/themes/responsive/templates/addons/travel_core/hooks/index/scripts.post.tpl',
-        'design/themes/responsive/templates/addons/travel_core/blocks/booking_engine.tpl',
-        'design/themes/responsive/templates/addons/novoton_holidays/hooks/products/product_tabs.pre.tpl',
+        "design/themes/{$checkTheme}/templates/addons/travel_core/hooks/products/product_tabs.pre.tpl",
+        "design/themes/{$checkTheme}/templates/addons/travel_core/hooks/products/product_detail_bottom.post.tpl",
+        "design/themes/{$checkTheme}/templates/addons/travel_core/hooks/products/main_info_title.post.tpl",
+        "design/themes/{$checkTheme}/templates/addons/travel_core/components/booking_form_mount.tpl",
+        "design/themes/{$checkTheme}/templates/addons/travel_core/hooks/index/scripts.post.tpl",
     ];
     foreach ($tplHooks as $tplFile) {
         $fullPath = $docRoot . '/' . $tplFile;
         $debug['template_files'][$tplFile] = file_exists($fullPath)
             ? 'EXISTS (' . number_format((float) filesize($fullPath)) . ' bytes)'
-            : 'MISSING';
+            : 'MISSING (addon overlay not deployed for this theme)';
     }
 
     // ── 6. Smarty cache info ──
@@ -340,8 +366,8 @@ function _travel_core_render_debug(string $dispatch): void
         $debug['smarty_cache'] = ['cache_dir_exists' => false, 'note' => 'Cache dir not found at ' . $cacheDir];
     }
 
-    // ── 7. CSS file ──
-    $cssFile = $docRoot . '/design/themes/responsive/css/addons/travel_core/styles.css';
+    // ── 7. CSS file (active theme) ──
+    $cssFile = $docRoot . "/design/themes/{$checkTheme}/css/addons/travel_core/styles.css";
     $debug['css_file'] = file_exists($cssFile)
         ? 'EXISTS (' . number_format((float) filesize($cssFile)) . ' bytes)'
         : 'MISSING';

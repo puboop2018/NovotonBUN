@@ -70,4 +70,20 @@ final class CircuitsPackageRoutesGridTest extends TestCase
         self::assertStringContainsString("\$mode === 'sync_circuits'", $src);
         self::assertStringContainsString("\$mode === 'sync_package_routes'", $src);
     }
+
+    /**
+     * The dashboard cron-URL base must come from config.http_location, not
+     * fn_url('', 'C') — the latter already ends in "index.php" on installs
+     * without SEO clean-URLs, so appending "index.php?..." produced a broken
+     * "index.phpindex.php" (surfaced by the local Docker sandbox).
+     */
+    public function testCronUrlBaseUsesHttpLocationNotFnUrl(): void
+    {
+        $src = (string) file_get_contents(
+            dirname(__DIR__, 3) . '/controllers/backend/sphinx_holidays.php',
+        );
+
+        self::assertStringContainsString("Registry::get('config.http_location')", $src);
+        self::assertStringNotContainsString("\$base_url = TypeCoerce::toString(fn_url('', 'C'))", $src);
+    }
 }

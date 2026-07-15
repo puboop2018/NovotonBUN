@@ -559,9 +559,13 @@ if ($mode === 'manage') {
 
     $view->assign('sync_logs', $syncLogs);
 
-    // Cron URLs for the dashboard
+    // Cron URLs for the dashboard.
+    // Use the storefront root (config.http_location) — same as novoton's
+    // dashboard. fn_url('', 'C') returns a URL that already ends in
+    // "index.php" on installs without SEO clean-URLs, so appending
+    // "index.php?..." below produced a broken "index.phpindex.php".
     $cron_key = ConfigProvider::getCronAccessKey();
-    $base_url = TypeCoerce::toString(fn_url('', 'C'));
+    $base_url = TypeCoerce::toString(\Tygh\Registry::get('config.http_location')) . '/';
     $cron_urls = [
         'destinations' => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=destinations",
         'hotels' => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=hotels",

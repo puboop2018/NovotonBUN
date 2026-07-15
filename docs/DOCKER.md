@@ -47,6 +47,14 @@ clean with `docker compose down -v && docker compose up -d --build`.
   addon source, so the working tree stays clean.)
 - `mailpit` captures every outbound email (booking confirmations, availability
   notifications, fgo invoices); `phpmyadmin` exposes the DB.
+- **Storefront theme**: the provision installs `nova_theme` automatically when
+  the kit ships it (production's theme), else classic `responsive`; override
+  with `CSCART_THEME=` in `.env`. This matters because the hotel PDP booking
+  form + location line hang on theme hook anchors in the product templates —
+  see "Storefront theme" and the PDP troubleshooting table in
+  [`docker/fullstore/README.md`](../docker/fullstore/README.md). Quick
+  diagnosis on any product page: append `&travel_debug=1` and read the
+  `[travel_debug]` object in the browser console (F12).
 
 ## Relationship to the CI test-DB image
 
