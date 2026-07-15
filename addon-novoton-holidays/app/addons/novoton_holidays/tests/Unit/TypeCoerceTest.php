@@ -116,6 +116,31 @@ class TypeCoerceTest extends TestCase
         $this->assertSame(0.0, TypeCoerce::toFloat([]));
     }
 
+    // ── toDecimalString ──────────────────────────────────────────────────────
+    // SQL-binding formatter for decimals that must persist exactly (Tygh's ?d
+    // placeholder is lossy — it rounds to ~2 dp; coordinates/currency
+    // coefficients are bound as ?s with this instead).
+
+    public function testToDecimalStringKeepsFullCoordinatePrecision(): void
+    {
+        $this->assertSame('36.8870690', TypeCoerce::toDecimalString('36.887069', 7));
+        $this->assertSame('30.6746220', TypeCoerce::toDecimalString(30.674622, 7));
+        $this->assertSame('-70.1234567', TypeCoerce::toDecimalString('-70.1234567', 7));
+    }
+
+    public function testToDecimalStringHonoursScale(): void
+    {
+        $this->assertSame('8.5', TypeCoerce::toDecimalString(8.5, 1));
+        $this->assertSame('4.9765', TypeCoerce::toDecimalString('4.9765', 4));
+    }
+
+    public function testToDecimalStringGarbageBecomesZeroAtScale(): void
+    {
+        $this->assertSame('0.0000000', TypeCoerce::toDecimalString('not-a-number', 7));
+        $this->assertSame('0.0', TypeCoerce::toDecimalString(null, 1));
+        $this->assertSame('0.00', TypeCoerce::toDecimalString([], 2));
+    }
+
     // ── toBool ───────────────────────────────────────────────────────────────
 
     public function testToBoolFromBool(): void

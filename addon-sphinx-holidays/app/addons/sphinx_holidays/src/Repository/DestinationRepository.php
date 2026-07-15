@@ -56,7 +56,9 @@ class DestinationRepository
                     continue;
                 }
 
-                $tuples[] = '(?i, ?s, ?s, ?i, ?s, ?i, ?d, ?d, ?i, ?s)';
+                // lat/lng bound as ?s decimal strings — Tygh's ?d placeholder
+                // truncates DECIMAL(10,7) to ~2 dp (see HotelRepository).
+                $tuples[] = '(?i, ?s, ?s, ?i, ?s, ?i, ?s, ?s, ?i, ?s)';
                 array_push(
                     $params,
                     $id,
@@ -65,8 +67,8 @@ class DestinationRepository
                     TypeCoerce::toInt($dest['parent_id'] ?? 0),
                     TypeCoerce::toString($dest['country_code'] ?? ''),
                     TypeCoerce::toInt($dest['geoname_id'] ?? 0),
-                    TypeCoerce::toFloat($dest['latitude'] ?? 0),
-                    TypeCoerce::toFloat($dest['longitude'] ?? 0),
+                    TypeCoerce::toDecimalString($dest['latitude'] ?? 0, 7),
+                    TypeCoerce::toDecimalString($dest['longitude'] ?? 0, 7),
                     TypeCoerce::toInt($dest['hotel_count'] ?? 0),
                     $now,
                 );
