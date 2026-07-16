@@ -53,10 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $repository = Container::getDestinationRepository();
         $service = new DestinationSyncService($api, $repository);
 
-        // "full=1" (dashboard "Full re-sync" button) re-fetches everything and rewrites
-        // all rows; without it the sync stays incremental (skips unchanged destinations).
-        $fullSync = !empty($_REQUEST['full']);
-        $result = $service->sync($fullSync);
+        $result = $service->sync();
 
         if (!empty($result['success'])) {
             fn_set_notification('N', __('notice'), TypeCoerce::toString(__('sphinx_holidays.sync_completed')) . ': ' . TypeCoerce::toInt($result['synced']) . '/' . TypeCoerce::toInt($result['total']));
@@ -84,10 +81,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $service = new HotelSyncService($api, $hotelRepo, $destRepo, $skipRepo);
 
         $countryCodes = ConfigProvider::getSelectedCountryCodes();
-        // "full=1" (dashboard "Full re-sync" button) re-fetches every hotel and rewrites
-        // all rows; without it the sync stays incremental (skips unchanged hotels).
-        $fullSync = !empty($_REQUEST['full']);
-        $result = $service->sync($countryCodes, [], $fullSync);
+        $result = $service->sync($countryCodes);
 
         if (!empty($result['success'])) {
             fn_set_notification('N', __('notice'), TypeCoerce::toString(__('sphinx_holidays.hotel_sync_completed')) . ': ' . TypeCoerce::toInt($result['synced']) . '/' . TypeCoerce::toInt($result['total']));

@@ -20,33 +20,11 @@
             </button>
         </form>
 
-        {* Full re-sync: re-fetches everything and rewrites all rows (the button above
-           is incremental and skips unchanged destinations). Secondary style. *}
-        <form action="{""|fn_url}" method="post" style="display:inline;">
-            <input type="hidden" name="dispatch" value="sphinx_holidays.sync_destinations" />
-            <input type="hidden" name="full" value="1" />
-            <button type="submit" class="btn" {if !$is_configured}disabled{/if}
-                    onclick="return confirm('{__("sphinx_holidays.full_resync_destinations_confirm")|escape:javascript}');">
-                <i class="icon-refresh"></i> {__("sphinx_holidays.full_resync_destinations")}
-            </button>
-        </form>
-
         <form action="{""|fn_url}" method="post" style="display:inline;">
             <input type="hidden" name="dispatch" value="sphinx_holidays.sync_hotels" />
             <button type="submit" class="btn btn-primary" {if !$is_configured}disabled{/if}
                     onclick="return confirm('{__("sphinx_holidays.sync_hotels_confirm")|escape:javascript}');">
                 <i class="icon-refresh"></i> {__("sphinx_holidays.sync_hotels")}
-            </button>
-        </form>
-
-        {* Full re-sync: re-fetches every hotel and rewrites all rows, incl. lat/lng (the
-           button above is incremental and skips unchanged hotels). Secondary style. *}
-        <form action="{""|fn_url}" method="post" style="display:inline;">
-            <input type="hidden" name="dispatch" value="sphinx_holidays.sync_hotels" />
-            <input type="hidden" name="full" value="1" />
-            <button type="submit" class="btn" {if !$is_configured}disabled{/if}
-                    onclick="return confirm('{__("sphinx_holidays.full_resync_hotels_confirm")|escape:javascript}');">
-                <i class="icon-refresh"></i> {__("sphinx_holidays.full_resync_hotels")}
             </button>
         </form>
 
@@ -205,7 +183,7 @@
                 <col style="width:260px;" />
                 <col style="width:180px;" />
                 <col />
-                <col style="width:40px;" />
+                <col style="width:120px;" />
             </colgroup>
             <thead>
                 <tr>
@@ -219,17 +197,17 @@
             <tbody>
                 <tr>
                     <td><strong>destinations</strong></td>
-                    <td>Sync all destinations from Sphinx API</td>
+                    <td>Sync all destinations from Sphinx API (incremental; <strong>Run (full)</strong> re-fetches &amp; rewrites all rows)</td>
                     <td><code>0 2 * * 0</code> (weekly)</td>
                     <td style="word-break:break-all; font-size:11px; overflow:hidden;"><code>{$cron_urls.destinations}</code></td>
-                    <td><a href="{$cron_urls.destinations}" target="_blank" class="btn btn-mini">Run</a></td>
+                    <td><a href="{$cron_urls.destinations}" target="_blank" class="btn btn-mini">Run</a> <a href="{$cron_urls.destinations}&full=1" target="_blank" class="btn btn-mini">Run (full)</a></td>
                 </tr>
                 <tr>
                     <td><strong>hotels</strong></td>
-                    <td>Sync hotels for selected destinations</td>
+                    <td>Sync hotels for selected destinations (incremental; <strong>Run (full)</strong> re-fetches &amp; rewrites all rows, incl. lat/lng)</td>
                     <td><code>0 3 * * *</code> (daily)</td>
                     <td style="word-break:break-all; font-size:11px; overflow:hidden;"><code>{$cron_urls.hotels}</code></td>
-                    <td><a href="{$cron_urls.hotels}" target="_blank" class="btn btn-mini">Run</a></td>
+                    <td><a href="{$cron_urls.hotels}" target="_blank" class="btn btn-mini">Run</a> <a href="{$cron_urls.hotels}&full=1" target="_blank" class="btn btn-mini">Run (full)</a></td>
                 </tr>
                 <tr>
                     <td><strong>add_products</strong></td>
