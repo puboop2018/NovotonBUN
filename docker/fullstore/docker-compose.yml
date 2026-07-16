@@ -39,6 +39,11 @@ services:
       - docroot:/var/www/html
       - ../..:/repo
       - ./kit:/kit:ro
+      # Standalone Sphinx-API dev probes served as REAL files in the web root
+      # (http://localhost:8080/sphinx_api_dev/…). Mounted straight into the docroot
+      # so `docker compose up -d` recreates the container and picks it up — no image
+      # rebuild, no symlink. Host edits reflect live. Local sandbox only.
+      - ../../sphinx_api_dev:/var/www/html/sphinx_api_dev
     restart: unless-stopped
 
   db:

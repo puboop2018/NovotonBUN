@@ -74,10 +74,13 @@ touching devx.
   ```
 - **Shell into the store**: `docker compose exec app bash`
 - **Logs**: `docker compose logs -f app`
-- **Sphinx API probes** (the `sphinx_api_dev/` folder) are auto-served in the
-  browser: `http://localhost:8080/sphinx_api_dev/GetHotelbyId.php?id=3612` and
-  `http://localhost:8080/sphinx_api_dev/HotelSearchResults.php`. Added a new
-  probe? `docker compose restart app` re-links the folder.
+- **Sphinx API probes** (the `sphinx_api_dev/` folder) are **bind-mounted** straight
+  into the web root as real files, so they're served directly:
+  `http://localhost:8080/sphinx_api_dev/GetHotelbyId.php?id=3612` and
+  `http://localhost:8080/sphinx_api_dev/HotelSearchResults.php`. Edits to the scripts
+  show up live (it's a bind mount), and new files in the folder need no restart. If a
+  probe 404s, the mount just isn't in your container yet — `docker compose up -d`
+  recreates it to pick up the mount (no image rebuild; DB/docroot volumes persist).
 
 ## Reset
 
@@ -104,6 +107,12 @@ and activate the other theme from **Admin → Design → Themes**, then
 `docker compose restart app` (each boot re-links the addon design files, so
 the newly installed theme's overlays appear), then **Admin → Settings → Clear
 cache**. A `down -v` re-provision also works but wipes the DB.
+
+> Caveat: that restart re-runs the copy of `link-addons.sh` **baked into the image**,
+> not the one in your working tree. If you *edit* `link-addons.sh` itself (e.g. to link
+> a newly added tree), a plain restart keeps running the old baked script — rebuild with
+> `docker compose up -d --build` for the change to take effect (the DB/docroot volumes
+> persist, so no re-provision).
 
 > `sphinx_holidays` ships storefront templates for `responsive` only; its
 > hotel-PDP booking form comes from shared `travel_core` templates (which
