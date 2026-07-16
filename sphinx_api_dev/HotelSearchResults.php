@@ -8,7 +8,8 @@ declare(strict_types=1);
  * NOT part of any addon. No CS-Cart bootstrap, no addon autoload, no DB. It
  * drives the two-step hotels search directly: POST the search (which returns a
  * cursor, NOT offers), then GET the results repeatedly, following the cursor
- * until it is null. One script on purpose — the results call only makes sense
+ * until it is null, then lists the DISTINCT hotels found (count + names) followed
+ * by every offer. One script on purpose — the results call only makes sense
  * with the cursor the search call just handed back.
  *
  * Endpoints:
@@ -224,6 +225,36 @@ if ($offers === []) {
     echo "{$why}\n";
     exit;
 }
+
+// ── Distinct hotels ─────────────────────────────────────────────────────────
+// Many offers share one hotel (different rooms/boards/prices); collapse them by
+// hotel_id so you can see WHICH hotels and HOW MANY, not just the raw offer count.
+// Computed from the final $offers, so immediate=1 narrows this too. First-seen name
+// wins; insertion order preserved (faithful to the order the API streamed them).
+$hotels = [];
+foreach ($offers as $offer) {
+    if (!is_array($offer)) {
+        continue;
+    }
+    $hid = $offer['hotel_id'] ?? null;
+    $key = is_scalar($hid) ? (string) $hid : (string) json_encode($hid);
+    if (!isset($hotels[$key])) {
+        $hotels[$key] = ['id' => $hid, 'name' => $offer['hotel_name'] ?? null, 'offers' => 0];
+    }
+    $hotels[$key]['offers']++;
+}
+
+echo "{$divider}\n";
+echo 'DISTINCT HOTELS (' . count($hotels) . " unique)\n";
+echo "{$divider}\n";
+$hotelNo = 0;
+foreach ($hotels as $hotel) {
+    $hotelNo++;
+    echo '  ' . str_pad((string) $hotelNo, 3, ' ', STR_PAD_LEFT) . '. '
+        . str_pad(s($hotel['name']), 44)
+        . ' [hotel_id ' . s($hotel['id']) . ']  — ' . $hotel['offers'] . " offer(s)\n";
+}
+echo "\n";
 
 echo "{$divider}\n";
 echo "OFFERS\n";
