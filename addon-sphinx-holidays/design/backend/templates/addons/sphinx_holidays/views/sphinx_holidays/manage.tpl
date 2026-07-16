@@ -20,11 +20,33 @@
             </button>
         </form>
 
+        {* Full re-sync: re-fetches everything and rewrites all rows (the button above
+           is incremental and skips unchanged destinations). Secondary style. *}
+        <form action="{""|fn_url}" method="post" style="display:inline;">
+            <input type="hidden" name="dispatch" value="sphinx_holidays.sync_destinations" />
+            <input type="hidden" name="full" value="1" />
+            <button type="submit" class="btn" {if !$is_configured}disabled{/if}
+                    onclick="return confirm('{__("sphinx_holidays.full_resync_destinations_confirm")|escape:javascript}');">
+                <i class="icon-refresh"></i> {__("sphinx_holidays.full_resync_destinations")}
+            </button>
+        </form>
+
         <form action="{""|fn_url}" method="post" style="display:inline;">
             <input type="hidden" name="dispatch" value="sphinx_holidays.sync_hotels" />
             <button type="submit" class="btn btn-primary" {if !$is_configured}disabled{/if}
                     onclick="return confirm('{__("sphinx_holidays.sync_hotels_confirm")|escape:javascript}');">
                 <i class="icon-refresh"></i> {__("sphinx_holidays.sync_hotels")}
+            </button>
+        </form>
+
+        {* Full re-sync: re-fetches every hotel and rewrites all rows, incl. lat/lng (the
+           button above is incremental and skips unchanged hotels). Secondary style. *}
+        <form action="{""|fn_url}" method="post" style="display:inline;">
+            <input type="hidden" name="dispatch" value="sphinx_holidays.sync_hotels" />
+            <input type="hidden" name="full" value="1" />
+            <button type="submit" class="btn" {if !$is_configured}disabled{/if}
+                    onclick="return confirm('{__("sphinx_holidays.full_resync_hotels_confirm")|escape:javascript}');">
+                <i class="icon-refresh"></i> {__("sphinx_holidays.full_resync_hotels")}
             </button>
         </form>
 
