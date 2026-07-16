@@ -7,16 +7,17 @@ scratch pad, deliberately outside every lint/analysis gate.
 
 ## Reaching them in the browser (docker sandbox)
 
-The full-store sandbox symlinks this folder into the store's web root on every
-boot, so the scripts are served directly — no manual copy:
+The full-store sandbox **bind-mounts this folder into the store's web root**, so the
+scripts are served directly as real files — no manual copy, and host edits show up live:
 
 ```
 http://localhost:8080/sphinx_api_dev/GetHotelbyId.php?id=3612
 http://localhost:8080/sphinx_api_dev/HotelSearchResults.php
 ```
 
-(After a `git pull`, run `docker compose restart app` once so the re-link picks
-up any newly added script.) They also run from the CLI — see below.
+(New files in the folder appear immediately. If a script 404s, the mount isn't in your
+container yet — run `docker compose up -d` once to recreate it and pick up the mount.)
+They also run from the CLI — see below.
 
 ## GetHotelbyId.php — inspect a hotel's raw payload (esp. coordinates)
 
@@ -36,8 +37,10 @@ Browser: `GetHotelbyId.php?id=3612`
 
 Drives the two-step search in one call: **POST** `/api/v1/hotels/search`
 (returns a cursor, not offers), then **GET** `/api/v1/hotels/results?cursor=…`
-repeatedly, following the cursor until it's null, then lists every offer
-(hotel, room, board, price, confirmation, offer_id).
+repeatedly, following the cursor until it's null, then prints the **distinct
+hotels** found (a `DISTINCT HOTELS (N unique)` block — count, name, hotel_id and
+how many offers each has) followed by every offer (hotel, room, board, price,
+confirmation, offer_id).
 
 ```bash
 php HotelSearchResults.php                                    # defaults: destination 3713, 2 rooms
