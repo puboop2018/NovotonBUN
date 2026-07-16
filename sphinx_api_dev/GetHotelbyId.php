@@ -14,14 +14,14 @@ declare(strict_types=1);
  * Endpoint:  GET /api/v1/static/hotels/{id}   (Authorization: Bearer <token>)
  *
  * Usage (CLI):
- *   php get_hotel.php                 # defaults to hotel 3612
- *   php get_hotel.php 3612            # one hotel
- *   php get_hotel.php 3612 234 999    # several — handy for comparing precision
- *   SPHINX_API_TOKEN=... SPHINX_API_URL=... php get_hotel.php 3612
- *   SPHINX_API_INSECURE=1 php get_hotel.php 3612   # skip TLS verify (dev only)
+ *   php GetHotelbyId.php                 # defaults to hotel 3612
+ *   php GetHotelbyId.php 3612            # one hotel
+ *   php GetHotelbyId.php 3612 234 999    # several — handy for comparing precision
+ *   SPHINX_API_TOKEN=... SPHINX_API_URL=... php GetHotelbyId.php 3612
+ *   SPHINX_API_INSECURE=1 php GetHotelbyId.php 3612   # skip TLS verify (dev only)
  *
  * Usage (browser — drop the folder anywhere PHP is served):
- *   get_hotel.php?id=3612
+ *   GetHotelbyId.php?id=3612
  *
  * Credentials default to the Sphinx DEV/staging values already committed in
  * the sphinx_holidays addon.xml (these are non-production dev creds). Override

@@ -525,6 +525,13 @@ window.__sphinxConfig = {
         d.textContent = (v == null) ? '' : String(v);
         return d.innerHTML;
     }
+    // CS-Cart returns the literal "_key.name" for a MISSING language var —
+    // a truthy string, so `cfg.x || fallback` never fires. Treat empty or
+    // "_"-prefixed values as missing so a raw key can never render.
+    function lbl(v, fb) {
+        v = (v == null) ? '' : String(v);
+        return (v === '' || v.charAt(0) === '_') ? fb : v;
+    }
     function openModal() {
         lastFocus = document.activeElement;
         modal.style.display = 'flex';
@@ -600,51 +607,50 @@ window.__sphinxConfig = {
         html += '</ul>';
         return html;
     }
-    function renderTimeline(data) {
-        var total = parseFloat(data.schedule_total || 0);
-        var cur = data.currency || '';
-        return renderTrack(data.payment_rules, cfg.paymentTerms || 'Termeni de plat\u0103', 'pay', total, cur)
-             + renderTrack(data.cancellation_rules, cfg.cancellationPolicy || 'Politica de anulare', 'cancel', total, cur);
-    }
     function renderTerms(data) {
         var html = '';
         if (data.is_free && !data.free_until) {
-            html += '<div class="travel-terms-modal__free">\u2713 ' + esc(cfg.freeCancellation || 'Anulare gratuita') + '</div>';
+            html += '<div class="travel-terms-modal__free">\u2713 ' + esc(lbl(cfg.freeCancellation, 'Anulare gratuit\u0103')) + '</div>';
         } else if (data.free_until) {
             // free_until IS the first penalty date (earliest `since`), so the
             // copy must read "before <date>" \u2014 "until" would wrongly imply
             // the date itself is still free.
-            html += '<div class="travel-terms-modal__free">\u2713 ' + esc(cfg.freeCancellationUntil || 'Anulare gratuit\u0103 \u00eenainte de') + ' <strong>' + esc(data.free_until) + '</strong></div>';
+            html += '<div class="travel-terms-modal__free">\u2713 ' + esc(lbl(cfg.freeCancellationUntil, 'Anulare gratuit\u0103 \u00eenainte de')) + ' <strong>' + esc(data.free_until) + '</strong></div>';
         }
-        var hasRules = (data.payment_rules && data.payment_rules.length)
-            || (data.cancellation_rules && data.cancellation_rules.length);
-        if (hasRules) {
-            // Structured schedule \u2192 timeline.
-            html += renderTimeline(data);
-        } else {
-            // Prose/legacy terms (or an old cached endpoint response) \u2192 the
-            // original two plain lists.
-            html += section(cfg.paymentTerms || 'Payment terms', data.payment_terms);
-            html += section(cfg.cancellationPolicy || 'Cancellation policy', data.cancellation_fees);
-        }
-        if (html === '') html = '<p>' + esc(cfg.noTermsInfo || 'No specific terms for this offer.') + '</p>';
+        // PER-TRACK shape mapping. The API is binary per block \u2014 structured
+        // `rules` XOR prose `text` (populated only "when we cannot parse the
+        // fees"), never partial. A track with rules renders as a timeline; a
+        // track without renders the API's parsed text lines. Never decide
+        // globally: a prose payment track must not be dropped just because
+        // the cancellation track happens to be structured.
+        var total = parseFloat(data.schedule_total || 0);
+        var cur = data.currency || '';
+        var payHeading = lbl(cfg.paymentTerms, 'Termeni de plat\u0103');
+        var cancelHeading = lbl(cfg.cancellationPolicy, 'Politica de anulare');
+        html += (data.payment_rules && data.payment_rules.length)
+            ? renderTrack(data.payment_rules, payHeading, 'pay', total, cur)
+            : section(payHeading, data.payment_terms);
+        html += (data.cancellation_rules && data.cancellation_rules.length)
+            ? renderTrack(data.cancellation_rules, cancelHeading, 'cancel', total, cur)
+            : section(cancelHeading, data.cancellation_fees);
+        if (html === '') html = '<p>' + esc(lbl(cfg.noTermsInfo, 'Nu exist\u0103 condi\u021bii specifice pentru aceast\u0103 ofert\u0103.')) + '</p>';
         body.innerHTML = html;
     }
     function loadTerms(offerId) {
         if (cache[offerId]) { renderTerms(cache[offerId]); return; }
-        body.innerHTML = '<div class="travel-terms-modal__loading"><span class="travel-spinner"></span> ' + esc(cfg.termsLoading || 'Loading...') + '</div>';
+        body.innerHTML = '<div class="travel-terms-modal__loading"><span class="travel-spinner"></span> ' + esc(lbl(cfg.termsLoading, 'Se \u00eencarc\u0103 condi\u021biile...')) + '</div>';
         fetch('index.php?dispatch=sphinx_booking.offer_terms&offer_id=' + encodeURIComponent(offerId), { credentials: 'same-origin' })
             .then(function(r) { return r.json(); })
             .then(function(data) {
                 if (!data || data.status !== 'ok') {
-                    body.innerHTML = '<p class="travel-terms-modal__unavailable">' + esc(cfg.termsUnavailable || 'Terms unavailable. Please search again.') + '</p>';
+                    body.innerHTML = '<p class="travel-terms-modal__unavailable">' + esc(lbl(cfg.termsUnavailable, 'Condi\u021biile nu sunt disponibile. V\u0103 rug\u0103m c\u0103uta\u021bi din nou.')) + '</p>';
                     return;
                 }
                 cache[offerId] = data;
                 renderTerms(data);
             })
             .catch(function() {
-                body.innerHTML = '<p class="travel-terms-modal__unavailable">' + esc(cfg.termsUnavailable || 'Terms unavailable. Please search again.') + '</p>';
+                body.innerHTML = '<p class="travel-terms-modal__unavailable">' + esc(lbl(cfg.termsUnavailable, 'Condi\u021biile nu sunt disponibile. V\u0103 rug\u0103m c\u0103uta\u021bi din nou.')) + '</p>';
             });
     }
 

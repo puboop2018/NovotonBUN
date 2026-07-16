@@ -723,4 +723,40 @@ return [
         'en' => 'Search packages',
         'ro' => 'Caută pachete',
     ],
+
+    // ── Search-card terms modal (payment/cancellation timelines) ──────────
+    // These MUST live here (not only in the .po files): the self-heal seeder
+    // reads lang_keys.php + addon.xml and re-seeds installed stores when
+    // their hash changes — .po files are only imported on install. Keys left
+    // .po-only render as raw "_sphinx_holidays.*" on existing stores.
+    'sphinx_holidays.cancellation_and_payment_terms' => [
+        'en' => 'Payment and cancellation terms',
+        'ro' => 'Condiții de Plată și Anulare',
+    ],
+    'sphinx_holidays.free_cancellation_until' => [
+        // The date shown is the FIRST PENALTY date (earliest `since`), so the
+        // copy must read "before" — "until" would imply the date is still free.
+        'en' => 'Free cancellation before',
+        'ro' => 'Anulare gratuită înainte de',
+    ],
+    'sphinx_holidays.terms_due_by' => [
+        'en' => 'Amount due',
+        'ro' => 'De achitat',
+    ],
+    'sphinx_holidays.terms_penalty' => [
+        'en' => 'Penalty',
+        'ro' => 'Penalizare',
+    ],
+    'sphinx_holidays.terms_non_refundable' => [
+        'en' => 'Non-refundable',
+        'ro' => 'Nerambursabil',
+    ],
+    'sphinx_holidays.terms_until' => [
+        'en' => 'until',
+        'ro' => 'până la',
+    ],
+    'sphinx_holidays.terms_from' => [
+        'en' => 'from',
+        'ro' => 'de la',
+    ],
 ];

@@ -60,4 +60,11 @@ for id in "${!ADDONS[@]}"; do
     done
 done
 
+# Standalone Sphinx-API probe scripts (not an addon): symlink the whole folder
+# into the docroot so they're reachable at http://localhost:8080/sphinx_api_dev/…
+# Apache serves them directly through the symlink (FollowSymLinks) and CS-Cart's
+# .htaccess passes real files straight to PHP instead of routing via index.php.
+# Live-linked to /repo, so host edits show up immediately. Local sandbox only.
+link "$REPO/sphinx_api_dev" "$DOCROOT/sphinx_api_dev"
+
 echo "[link-addons] done"

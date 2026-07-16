@@ -81,24 +81,29 @@ final class SearchTermsModalTest extends TestCase
     }
 
     /**
-     * The modal body renders TWO separate timelines (payment vs cancellation
-     * — never merged, so each schedule reads on its own) when the endpoint
-     * returns structured rules, and the plain list rendering must SURVIVE as
-     * the fallback for prose/legacy payloads.
+     * The modal decides PER TRACK on the API's binary shape: a track with
+     * structured rules renders as a timeline, a track without renders the
+     * API's parsed text lines — a prose payment track must never be dropped
+     * because the cancellation track is structured (and vice versa).
      */
     public function testTimelineRendererAndListFallbackCoexist(): void
     {
         $tpl = self::searchTpl();
 
-        self::assertStringContainsString('function renderTimeline(', $tpl);
         // One track per schedule — the per-schedule renderer is the split.
         self::assertStringContainsString('function renderTrack(', $tpl);
-        self::assertStringContainsString('payment_rules', $tpl);
-        self::assertStringContainsString('cancellation_rules', $tpl);
         self::assertStringContainsString('schedule_total', $tpl);
         self::assertStringContainsString('travel-terms-timeline__node', $tpl);
         self::assertStringContainsString('travel-terms-timeline__tag--nonref', $tpl);
-        // Fallback path intact.
+        // PER-TRACK gates: each schedule branches on ITS OWN rules, with the
+        // section() list as that track's text fallback.
+        self::assertStringContainsString('data.payment_rules && data.payment_rules.length', $tpl);
+        self::assertStringContainsString('data.cancellation_rules && data.cancellation_rules.length', $tpl);
+        self::assertStringContainsString('section(payHeading, data.payment_terms)', $tpl);
+        self::assertStringContainsString('section(cancelHeading, data.cancellation_fees)', $tpl);
+        // The old all-or-nothing wrapper must not come back.
+        self::assertStringNotContainsString('function renderTimeline(', $tpl);
+        // Fallback list renderer intact.
         self::assertStringContainsString('function section(', $tpl);
         self::assertStringContainsString('travel-terms-modal__section', $tpl);
         // Timeline labels wired through the Smarty labels map: terse row
@@ -108,6 +113,40 @@ final class SearchTermsModalTest extends TestCase
         }
         // Dates render in the gutter beside the rail (tracker style).
         self::assertStringContainsString('travel-terms-timeline__date', $tpl);
+        // Missing-lang-var guard: CS-Cart returns "_key" (truthy) for missing
+        // vars, so labels go through lbl() — a raw key can never render.
+        self::assertStringContainsString('function lbl(', $tpl);
+        self::assertStringContainsString("charAt(0) === '_'", $tpl);
+    }
+
+    /**
+     * The terms-modal language keys MUST live in lang_keys.php: the self-heal
+     * seeder (fn_sphinx_holidays_seed_language_keys) reads lang_keys.php +
+     * addon.xml and re-seeds INSTALLED stores when their hash changes — .po
+     * files are only imported at install, so .po-only keys render as raw
+     * "_sphinx_holidays.*" on existing stores (the exact bug this pins).
+     */
+    public function testTermsLangKeysSeededViaLangKeysPhp(): void
+    {
+        $path = dirname(__DIR__, 3) . '/lang_keys.php';
+        self::assertFileExists($path);
+        /** @var array<string, array<string, string>> $keys */
+        $keys = require $path;
+
+        $expectedRo = [
+            'sphinx_holidays.cancellation_and_payment_terms' => 'Condiții de Plată și Anulare',
+            'sphinx_holidays.free_cancellation_until' => 'Anulare gratuită înainte de',
+            'sphinx_holidays.terms_due_by' => 'De achitat',
+            'sphinx_holidays.terms_penalty' => 'Penalizare',
+            'sphinx_holidays.terms_non_refundable' => 'Nerambursabil',
+            'sphinx_holidays.terms_until' => 'până la',
+            'sphinx_holidays.terms_from' => 'de la',
+        ];
+        foreach ($expectedRo as $key => $ro) {
+            self::assertArrayHasKey($key, $keys, $key);
+            self::assertSame($ro, $keys[$key]['ro'] ?? null, $key);
+            self::assertNotSame('', trim($keys[$key]['en'] ?? ''), $key . ' needs an EN value');
+        }
     }
 
     /** The endpoint feeds the timeline: structured rules ride NEXT TO the legacy lines. */
