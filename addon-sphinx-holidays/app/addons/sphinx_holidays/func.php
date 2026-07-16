@@ -1574,4 +1574,38 @@ function fn_sphinx_holidays_ensure_schema(): void
     if ($cacheDataType === 'longblob') {
         db_query('ALTER TABLE ?:sphinx_cache MODIFY `cache_data` LONGTEXT NOT NULL');
     }
+
+    // Widen coordinate columns to the 8-decimal standard (latitude DECIMAL(10,8),
+    // longitude DECIMAL(11,8); originally DECIMAL(10,7)). Idempotent: MODIFY only
+    // when the stored scale is still below 8, so it runs once then no-ops.
+    $coordScaleRows = db_get_array(
+        "SELECT TABLE_NAME, COLUMN_NAME, NUMERIC_SCALE FROM INFORMATION_SCHEMA.COLUMNS
+         WHERE TABLE_SCHEMA = DATABASE() AND COLUMN_NAME IN ('latitude', 'longitude')
+           AND TABLE_NAME IN (?a)",
+        [$prefix . 'sphinx_hotels', $prefix . 'sphinx_destinations'],
+    );
+    if (is_array($coordScaleRows)) {
+        $coordScale = [];
+        foreach ($coordScaleRows as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+            $coordTableName = $row['TABLE_NAME'] ?? null;
+            $coordColName = $row['COLUMN_NAME'] ?? null;
+            if (!is_string($coordTableName) || !is_string($coordColName)) {
+                continue;
+            }
+            $coordRowScale = $row['NUMERIC_SCALE'] ?? null;
+            $coordScale[$coordTableName][$coordColName] = is_numeric($coordRowScale) ? (int) $coordRowScale : 0;
+        }
+        foreach (['sphinx_hotels', 'sphinx_destinations'] as $coordTable) {
+            $have = $coordScale[$prefix . $coordTable] ?? null;
+            if ($have !== null && (($have['latitude'] ?? 0) < 8 || ($have['longitude'] ?? 0) < 8)) {
+                db_query(
+                    'ALTER TABLE ?:' . $coordTable
+                    . ' MODIFY `latitude` DECIMAL(10,8) DEFAULT NULL, MODIFY `longitude` DECIMAL(11,8) DEFAULT NULL'
+                );
+            }
+        }
+    }
 }

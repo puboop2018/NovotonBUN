@@ -43,12 +43,12 @@ final class HotelMapUrl
 
     /**
      * Full-precision, locale-independent coordinate string: %F always uses
-     * '.', 7 decimals match the DECIMAL(10,7) storage, trailing zeros are
-     * trimmed for URL aesthetics (30.7000000 → 30.7, 36.0000000 → 36).
+     * '.', 8 decimals match the DECIMAL(10,8)/(11,8) storage, trailing zeros
+     * are trimmed for URL aesthetics (30.70000000 → 30.7, 36.00000000 → 36).
      */
     private static function coord(float $value): string
     {
-        $s = rtrim(rtrim(sprintf('%.7F', $value), '0'), '.');
+        $s = rtrim(rtrim(sprintf('%.8F', $value), '0'), '.');
 
         return $s === '' || $s === '-' ? '0' : $s;
     }

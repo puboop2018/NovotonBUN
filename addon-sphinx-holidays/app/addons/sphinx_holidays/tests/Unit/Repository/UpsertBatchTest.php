@@ -138,7 +138,7 @@ class UpsertBatchTest extends TestCase
     /**
      * Coordinates/rating must be bound as pre-formatted decimal STRINGS via
      * ?s — Tygh's ?d placeholder reformats decimals to ~2 dp and truncated
-     * DECIMAL(10,7) coordinates (36.887069 was stored as 36.89, putting the
+     * DECIMAL(10,8) coordinates (36.887069 was stored as 36.89, putting the
      * storefront map pin ~1 km off). Same failure mode as the currency
      * coefficients (exchange_rates.php). Do NOT revert these to ?d.
      */
@@ -160,8 +160,8 @@ class UpsertBatchTest extends TestCase
 
         self::assertStringNotContainsString('?d', $query, 'lossy ?d must not bind any hotel column');
         // Tuple positions 11/12 (lat/lng) and 25 (rating) → param indices 10/11/24.
-        self::assertSame('36.8870690', $params[10]);
-        self::assertSame('30.6746220', $params[11]);
+        self::assertSame('36.88706900', $params[10]);
+        self::assertSame('30.67462200', $params[11]);
         self::assertSame('8.5', $params[24]);
     }
 
@@ -183,7 +183,7 @@ class UpsertBatchTest extends TestCase
 
         self::assertStringNotContainsString('?d', $query, 'lossy ?d must not bind any destination column');
         // Tuple positions 7/8 (lat/lng) → param indices 6/7.
-        self::assertSame('36.8841234', $params[6]);
-        self::assertSame('30.7056789', $params[7]);
+        self::assertSame('36.88412340', $params[6]);
+        self::assertSame('30.70567890', $params[7]);
     }
 }

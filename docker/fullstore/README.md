@@ -82,6 +82,40 @@ touching devx.
   probe 404s, the mount just isn't in your container yet — `docker compose up -d`
   recreates it to pick up the mount (no image rebuild; DB/docroot volumes persist).
 
+## Getting your changes to show up (update & verify)
+
+After a `git pull`, what you have to run depends on **which layer** you changed — most
+addon changes need nothing but a browser refresh, because addon source is symlinked live
+from your repo (`/repo`) and opcache re-checks the file every request.
+
+| What you changed | To see it in the browser |
+|---|---|
+| Addon PHP (`app/addons/<id>`), Smarty `.tpl`, hand-written JS/CSS | **browser refresh** (symlinked; dev mode recompiles templates) |
+| React JSX (`addon-travel-core/react-src/src`) | **`npm run build`** in `react-src/`, then refresh (regenerates the committed bundle the symlink serves) |
+| Sphinx language label (`lang_keys.php` / `addon.xml`) | load any **admin page** once — it self-reseeds on a content-hash change and clears cache |
+| Novoton / travel_core language, a **new DB table**, or an `addon.xml` scheme change | **re-install** the addon (Admin → Add-ons, or `install-addons.php` once it's inactive) |
+| DB column covered by an addon's auto-heal map | load any **admin page** once (it runs the `ALTER TABLE`) |
+| `link-addons.sh` / `entrypoint.sh` / `install-addons.php` / `php-dev.ini` / `apache-cscart.conf` / `Dockerfile` | **`docker compose up -d --build`** — these are baked into the image |
+| A new `sphinx_api_dev/` probe **file** | live (bind mount); a brand-new file → **`docker compose up -d`** |
+| Provider **data** already stored (e.g. hotel coordinates from an earlier sync) | **re-run the provider sync** — see *Stale coordinates* under Troubleshooting |
+
+Two gotchas that make people think an update "didn't take":
+
+- **`docker compose up -d` with unchanged config is a no-op** — it doesn't recreate the
+  container, so it doesn't even re-link. `docker compose restart app` *does* re-link, but it
+  runs the **image-baked** copy of `link-addons.sh` (so edits to that script need `--build`).
+- To be **100 % sure** you're on a clean, latest everything:
+  ```bash
+  git pull && docker compose down -v && docker compose up -d --build
+  ```
+  This rebuilds the image, wipes the DB, and re-installs every addon from scratch (costs a few
+  minutes and any manual test data). A lighter pass that keeps data:
+  `docker compose up -d --build` → load an admin page once → **Admin → Clear cache** →
+  hard-refresh the storefront (Ctrl-Shift-R, to defeat the browser's own JS/CSS cache).
+
+Confirm you actually pulled the code: `git rev-parse --short HEAD` should match origin, and on
+a hotel page append `&travel_debug=1` and read the `[travel_debug]` object in the browser console.
+
 ## Reset
 
 - Restart (keeps data): `docker compose restart`
@@ -142,6 +176,28 @@ Two data gotchas that look like bugs but aren't: **novoton products are
 created disabled** (`status='D'`) — enable them to see their pages; and the
 location line upgrades from "city, country" to "street, city, country" only
 after the novoton `geocode_addresses` cron has run.
+
+### Stale coordinates: map pin is off / lat-lng looks rounded
+
+If a hotel's "show on map" opens at a rounded coordinate (e.g. `36.89,30.67`) while the
+Sphinx API returns full precision (`36.887069,30.674622`), the **data is stale, the code is
+not**. The `latitude`/`longitude` columns are `DECIMAL(10,8)`/`DECIMAL(11,8)` and every write
+goes through `HotelRepository`'s upsert as `%.8F`, so current code stores full precision — but
+any row written **before** the coordinate-precision fix still physically holds the truncated
+value (check it in phpMyAdmin: `cscart_sphinx_hotels.latitude` for the hotel shows `36.89000000`).
+
+Only a **full** hotel re-sync overwrites existing rows (the upsert does
+`ON DUPLICATE KEY UPDATE latitude = VALUES(latitude)`). Grab the hotels cron URL from
+**Admin → Sphinx Holidays** and append **`&full=1`**:
+
+```
+http://localhost:8080/index.php?dispatch=sphinx_cron.run&access_key=KEY&cron_mode=hotels&full=1
+```
+
+(Add `&cron_mode=destinations&full=1` for destination-level pins.) **Heads-up:** the admin
+**"Sync now" button for hotels runs an *incremental* sync** (`updated_since`) and will *not*
+re-fetch an unchanged hotel like this one — you must use the `&full=1` URL. Verify in
+phpMyAdmin: the row's `latitude` flips to `36.8870690` and the PDP map opens at full precision.
 
 ## Notes & limits
 

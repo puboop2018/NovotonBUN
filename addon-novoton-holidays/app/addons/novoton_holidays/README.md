@@ -500,8 +500,8 @@ Stores synced hotel information.
 | country | varchar(100) | Country |
 | hotel_type | varchar(50) | e.g. 4*, 3* Sup, Apart (raw from API) |
 | star_rating | tinyint | Parsed numeric rating 1-5 |
-| latitude | decimal(10,7) | Hotel latitude |
-| longitude | decimal(10,7) | Hotel longitude |
+| latitude | decimal(10,8) | Hotel latitude |
+| longitude | decimal(11,8) | Hotel longitude |
 | hotel_data | longtext | JSON: full hotelinfo API response |
 | has_room_price | enum('Y','N') | Has room_price check results |
 | packages_count | int | Number of packages |
