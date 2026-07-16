@@ -166,17 +166,19 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
             ));
         }
 
-        // Tier 2: name + coordinates with ROUND(,3) tolerance (~110m)
+        // Tier 2: name + coordinates with ROUND(,3) tolerance (~110m).
+        // Bound as ?s decimal strings — Tygh's ?d would round the bound value
+        // to ~2 dp BEFORE MySQL's ROUND(,3) comparison runs.
         if ($dupeProductId === 0 && $lat !== 0.0 && $lng !== 0.0) {
             $dupeProductId = TypeCoerce::toInt(db_get_field(
                 'SELECT product_id FROM ?:sphinx_hotels
                  WHERE name = ?s
-                   AND ROUND(latitude, 3) = ROUND(?d, 3) AND ROUND(longitude, 3) = ROUND(?d, 3)
+                   AND ROUND(latitude, 3) = ROUND(?s, 3) AND ROUND(longitude, 3) = ROUND(?s, 3)
                    AND product_id IS NOT NULL AND product_id > 0 AND hotel_id != ?s
                  LIMIT 1',
                 $hotel['name'],
-                $lat,
-                $lng,
+                TypeCoerce::toDecimalString($lat, 7),
+                TypeCoerce::toDecimalString($lng, 7),
                 $hotelId,
             ));
         }

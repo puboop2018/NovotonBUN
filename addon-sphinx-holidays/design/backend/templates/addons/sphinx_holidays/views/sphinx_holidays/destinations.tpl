@@ -22,8 +22,8 @@
         </div>
 
         <div class="sidebar-field">
-            <label>{__("sphinx_holidays.destination_name")}:</label>
-            <input type="text" name="q" value="{$search.q|escape:html}" size="20" placeholder="{__("sphinx_holidays.search_destinations")}" />
+            <label>{__("sphinx_holidays.destination_name_or_id")}:</label>
+            <input type="text" name="q" value="{$search.q|escape:html}" size="20" placeholder="{__("sphinx_holidays.search_destinations_name_or_id")}" />
         </div>
 
         <div class="sidebar-field">

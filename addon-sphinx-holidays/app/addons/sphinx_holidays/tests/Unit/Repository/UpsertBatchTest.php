@@ -134,4 +134,56 @@ class UpsertBatchTest extends TestCase
         self::assertSame(10, $params[0]);
         self::assertSame(20, $params[self::DESTINATION_PARAMS_PER_ROW]);
     }
+
+    /**
+     * Coordinates/rating must be bound as pre-formatted decimal STRINGS via
+     * ?s — Tygh's ?d placeholder reformats decimals to ~2 dp and truncated
+     * DECIMAL(10,7) coordinates (36.887069 was stored as 36.89, putting the
+     * storefront map pin ~1 km off). Same failure mode as the currency
+     * coefficients (exchange_rates.php). Do NOT revert these to ?d.
+     */
+    public function testHotelCoordinatesAndRatingBindAsFullPrecisionStringsNotDd(): void
+    {
+        $repo = new HotelRepository();
+
+        $repo->upsertBatch([[
+            'hotel_id' => '3612',
+            'name' => 'Rixos Downtown',
+            'latitude' => '36.887069',
+            'longitude' => '30.674622',
+            'rating' => 8.5,
+        ]]);
+
+        self::assertCount(1, $this->calls);
+        $query = $this->calls[0]['query'];
+        $params = $this->calls[0]['params'];
+
+        self::assertStringNotContainsString('?d', $query, 'lossy ?d must not bind any hotel column');
+        // Tuple positions 11/12 (lat/lng) and 25 (rating) → param indices 10/11/24.
+        self::assertSame('36.8870690', $params[10]);
+        self::assertSame('30.6746220', $params[11]);
+        self::assertSame('8.5', $params[24]);
+    }
+
+    public function testDestinationCoordinatesBindAsFullPrecisionStringsNotDd(): void
+    {
+        $repo = new DestinationRepository();
+
+        $repo->upsertBatch([[
+            'destination_id' => 168566,
+            'name' => 'Antalya',
+            'type' => 'city',
+            'latitude' => '36.8841234',
+            'longitude' => '30.7056789',
+        ]]);
+
+        self::assertCount(1, $this->calls);
+        $query = $this->calls[0]['query'];
+        $params = $this->calls[0]['params'];
+
+        self::assertStringNotContainsString('?d', $query, 'lossy ?d must not bind any destination column');
+        // Tuple positions 7/8 (lat/lng) → param indices 6/7.
+        self::assertSame('36.8841234', $params[6]);
+        self::assertSame('30.7056789', $params[7]);
+    }
 }

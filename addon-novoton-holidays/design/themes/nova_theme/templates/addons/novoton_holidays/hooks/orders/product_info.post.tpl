@@ -66,7 +66,7 @@
         <div style="margin-top: 8px;">
             <a href="#" onclick="document.getElementById('{$modal_id}').style.display='flex'; return false;"
                style="color: #0071c2; text-decoration: none; border-bottom: 1px dashed #0071c2; font-size: 13px;">
-                📋 {__("novoton_holidays.payment_cancellation_terms_link")|default:"Condiții de Anulare și Plată"}
+                📋 {__("novoton_holidays.payment_cancellation_terms_link")|default:"Condiții de Plată și Anulare"}
             </a>
         </div>
 
@@ -74,7 +74,7 @@
         <div id="{$modal_id}" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
             <div style="background: #fff; border-radius: 8px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
                 <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; border-bottom: 1px solid #e0e0e0; background: #f8f9fa;">
-                    <h3 style="margin: 0; font-size: 18px; color: #333;">{__("novoton_holidays.payment_cancellation_terms_link")|default:"Condiții de Anulare și Plată"}</h3>
+                    <h3 style="margin: 0; font-size: 18px; color: #333;">{__("novoton_holidays.payment_cancellation_terms_link")|default:"Condiții de Plată și Anulare"}</h3>
                     <button onclick="this.closest('[id^=terms-modal]').style.display='none'" style="background: none; border: none; font-size: 28px; cursor: pointer; color: #666; padding: 0; line-height: 1;">&times;</button>
                 </div>
                 <div style="padding: 20px; font-size: 14px; line-height: 1.6; color: #333;">

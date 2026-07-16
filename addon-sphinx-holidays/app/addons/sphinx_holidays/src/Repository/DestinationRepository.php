@@ -56,7 +56,9 @@ class DestinationRepository
                     continue;
                 }
 
-                $tuples[] = '(?i, ?s, ?s, ?i, ?s, ?i, ?d, ?d, ?i, ?s)';
+                // lat/lng bound as ?s decimal strings — Tygh's ?d placeholder
+                // truncates DECIMAL(10,7) to ~2 dp (see HotelRepository).
+                $tuples[] = '(?i, ?s, ?s, ?i, ?s, ?i, ?s, ?s, ?i, ?s)';
                 array_push(
                     $params,
                     $id,
@@ -65,8 +67,8 @@ class DestinationRepository
                     TypeCoerce::toInt($dest['parent_id'] ?? 0),
                     TypeCoerce::toString($dest['country_code'] ?? ''),
                     TypeCoerce::toInt($dest['geoname_id'] ?? 0),
-                    TypeCoerce::toFloat($dest['latitude'] ?? 0),
-                    TypeCoerce::toFloat($dest['longitude'] ?? 0),
+                    TypeCoerce::toDecimalString($dest['latitude'] ?? 0, 7),
+                    TypeCoerce::toDecimalString($dest['longitude'] ?? 0, 7),
                     TypeCoerce::toInt($dest['hotel_count'] ?? 0),
                     $now,
                 );
@@ -283,15 +285,29 @@ class DestinationRepository
     }
 
     /**
-     * Search destinations by name.
+     * Search destinations by name — or, for an all-digits query, by exact
+     * destination_id as well (the id shown in the admin grid / used by the
+     * hotels sync). Backs both the destinations admin grid and the whitelist
+     * autocomplete. The LIKE stays in the numeric branch so destinations
+     * whose NAME contains the digits remain findable.
      *
-     * @param string $query Search term
+     * @param string $query Search term (name fragment or numeric destination id)
      * @param int $limit Max results
      * @return list<array<string, mixed>>
      */
     public function search(string $query, int $limit = 20): array
     {
-        $escaped = addcslashes($query, '%_\\');
+        $trimmed = trim($query);
+        $escaped = addcslashes($trimmed, '%_\\');
+
+        if (ctype_digit($trimmed)) {
+            return self::asRowList(db_get_array(
+                'SELECT * FROM ?:sphinx_destinations WHERE name LIKE ?l OR destination_id = ?i ORDER BY type ASC, name ASC LIMIT ?i',
+                '%' . $escaped . '%',
+                (int) $trimmed,
+                $limit,
+            ));
+        }
 
         return self::asRowList(db_get_array(
             'SELECT * FROM ?:sphinx_destinations WHERE name LIKE ?l ORDER BY type ASC, name ASC LIMIT ?i',

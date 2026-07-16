@@ -61,6 +61,25 @@ final class TypeCoerce
     }
 
     /**
+     * Format a mixed value as a fixed-scale decimal STRING for SQL binding.
+     *
+     * Tygh's `?d` placeholder is LOSSY: it reformats the value and drops
+     * fractional precision (rounds to ~2 decimals) — it silently corrupted
+     * 4-dp currency coefficients (see functions/exchange_rates.php, "Do NOT
+     * revert to ?d here") and truncated sphinx hotel coordinates from
+     * DECIMAL(10,7) to 2 dp. Decimals that must persist exactly are bound as
+     * `?s` with this formatter instead; MySQL/MariaDB cast the clean numeric
+     * string into the DECIMAL column losslessly.
+     *
+     * `%F` is locale-independent (always '.'), so this is safe under any
+     * setlocale() the host application applies.
+     */
+    public static function toDecimalString(mixed $value, int $scale): string
+    {
+        return sprintf('%.' . $scale . 'F', self::toFloat($value));
+    }
+
+    /**
      * Safely extract an int from a mixed value.
      *
      * int stays as-is; float is truncated; numeric strings are parsed;

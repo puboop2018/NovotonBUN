@@ -345,8 +345,11 @@
 }
 
 /* ── Terms link + on-demand payment/cancellation modal (sphinx search) ─── */
+/* block + fit-content: the link sits on its OWN line under the instant-
+   confirmation badge, while the dashed underline still hugs the text. */
 .travel-search-results-page .travel-terms-link {
-    display: inline-block;
+    display: block;
+    width: fit-content;
     margin-top: 6px;
     font-size: 12px;
     color: var(--nvt-primary, #0071c2);
@@ -437,4 +440,86 @@
 .travel-terms-modal__unavailable {
     color: var(--nvt-text-light, #666);
     margin: 0;
+}
+
+/* ── Timeline variant of the terms modal body ────────────────────────────
+   TWO separate timelines — payment ("due by") and cancellation ("withheld")
+   — built by renderTimeline() from the endpoint's structured rules; the
+   schedules stay apart so a reader scanning one isn't forced through the
+   other. The plain __section lists above remain the fallback when the API
+   sends prose text instead of parseable rules. */
+.travel-terms-timeline__heading {
+    margin: 0 0 10px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: var(--nvt-text-light, #666);
+}
+.travel-terms-timeline {
+    margin: 0 0 16px;
+    padding: 0;
+    list-style: none;
+}
+.travel-terms-timeline:last-child {
+    margin-bottom: 0;
+}
+.travel-terms-timeline__node {
+    position: relative;
+    /* left margin reserves the date gutter (tracker-style: date beside the
+       rail, dot on the rail, content to the right) */
+    margin-left: 96px;
+    padding: 0 0 18px 20px;
+    border-left: 2px solid var(--nvt-border, #e0e0e0);
+    min-height: 34px;
+}
+.travel-terms-timeline__node:last-child {
+    padding-bottom: 2px;
+}
+.travel-terms-timeline__node::before {
+    content: "";
+    position: absolute;
+    left: -7px;
+    top: 2px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--nvt-bg, #fff);
+    border: 3px solid var(--nvt-primary, #0071c2);
+}
+.travel-terms-timeline__date {
+    position: absolute;
+    left: -96px;
+    top: 0;
+    width: 80px;
+    text-align: right;
+    font-size: 11px;
+    line-height: 1.3;
+    color: var(--nvt-text-light, #666);
+}
+.travel-terms-timeline__date strong {
+    display: block;
+    font-size: 13px;
+    color: var(--nvt-text, #333);
+}
+.travel-terms-timeline__row {
+    font-size: 13px;
+    margin: 2px 0;
+    color: var(--nvt-text, #333);
+}
+.travel-terms-timeline__row--cancel {
+    color: var(--nvt-text-light, #666);
+}
+.travel-terms-timeline__pct {
+    color: var(--nvt-text-light, #666);
+}
+.travel-terms-timeline__tag--nonref {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 1px 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #fff;
+    background: var(--nvt-danger, #c0392b);
 }

@@ -53,9 +53,16 @@ class HotelRepository implements HotelRepositoryInterface
      */
     private const UPSERT_CHUNK_SIZE = 100;
 
-    /** Placeholder tuple for one hotel row of the multi-row upsert (28 values). */
-    private const UPSERT_ROW_PLACEHOLDERS = '(?s, ?s, ?i, ?s, ?i, ?s, ?i, ?s, ?s, ?s, ?d, ?d, '
-        . "?s, ?s, ?s, ?s, ?s, ?s, ?s, ?s, ?s, ?s, ?s, ?s, ?d, ?i, 'active', ?s)";
+    /**
+     * Placeholder tuple for one hotel row of the multi-row upsert (28 values).
+     *
+     * latitude/longitude/rating are bound as ?s with pre-formatted decimal
+     * strings (TypeCoerce::toDecimalString), NOT ?d — Tygh's ?d placeholder
+     * reformats decimals to ~2 dp and truncated DECIMAL(10,7) coordinates
+     * (36.887069 was stored as 36.89). Do NOT revert to ?d for decimals.
+     */
+    private const UPSERT_ROW_PLACEHOLDERS = '(?s, ?s, ?i, ?s, ?i, ?s, ?i, ?s, ?s, ?s, ?s, ?s, '
+        . "?s, ?s, ?s, ?s, ?s, ?s, ?s, ?s, ?s, ?s, ?s, ?s, ?s, ?i, 'active', ?s)";
 
     /**
      * Upsert a batch of hotels (multi-row INSERT ... ON DUPLICATE KEY UPDATE).
@@ -102,8 +109,8 @@ class HotelRepository implements HotelRepositoryInterface
                     TypeCoerce::toString($hotel['region_name'] ?? ''),
                     TypeCoerce::toString($hotel['country_code'] ?? ''),
                     TypeCoerce::toString($hotel['country_name'] ?? ''),
-                    TypeCoerce::toFloat($hotel['latitude'] ?? 0),
-                    TypeCoerce::toFloat($hotel['longitude'] ?? 0),
+                    TypeCoerce::toDecimalString($hotel['latitude'] ?? 0, 7),
+                    TypeCoerce::toDecimalString($hotel['longitude'] ?? 0, 7),
                     TypeCoerce::toString($hotel['address'] ?? ''),
                     TypeCoerce::toString($hotel['phone'] ?? ''),
                     TypeCoerce::toString($hotel['email'] ?? ''),
@@ -116,7 +123,7 @@ class HotelRepository implements HotelRepositoryInterface
                     TypeCoerce::toString($hotel['images_json'] ?? '[]'),
                     TypeCoerce::toString($hotel['facilities_json'] ?? '[]'),
                     TypeCoerce::toString($hotel['is_adults_only'] ?? 'N'),
-                    TypeCoerce::toFloat($hotel['rating'] ?? 0),
+                    TypeCoerce::toDecimalString($hotel['rating'] ?? 0, 1),
                     TypeCoerce::toInt($hotel['rating_count'] ?? 0),
                     $now,
                 );

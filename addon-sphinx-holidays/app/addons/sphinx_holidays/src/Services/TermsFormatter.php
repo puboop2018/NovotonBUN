@@ -77,6 +77,82 @@ final class TermsFormatter
     }
 
     /**
+     * Structured schedule rows from the API object wrapper — the timeline's
+     * data source. Each row: `date` (dd.mm.yyyy, display), `iso` (YYYY-MM-DD,
+     * sort/merge key), `amount` (the rule's CUMULATIVE absolute value in the
+     * offer currency — the API sends no percentages; callers derive them).
+     *
+     * Returns [] whenever lines() would not have rendered rules: supplier
+     * prose `text` wins (the modal falls back to the plain line lists),
+     * list-shaped legacy payloads, undated/valueless rules, unparseable
+     * input. Rows come back date-sorted.
+     *
+     * @return list<array{date: string, iso: string, amount: float}>
+     */
+    public static function rules(mixed $terms): array
+    {
+        if (is_string($terms)) {
+            $decoded = json_decode(trim($terms), true);
+            $terms = is_array($decoded) ? $decoded : null;
+        }
+        if (!is_array($terms) || !self::isTermsObject($terms)) {
+            return [];
+        }
+        if (trim(TypeCoerce::toString($terms['text'] ?? '')) !== '') {
+            return [];
+        }
+
+        $rules = $terms['rules'] ?? null;
+        if (!is_array($rules)) {
+            return [];
+        }
+
+        $rows = [];
+        foreach ($rules as $rule) {
+            if (!is_array($rule)) {
+                continue;
+            }
+            $map = TypeCoerce::toStringMap($rule);
+            $iso = trim(TypeCoerce::toString($map['until'] ?? $map['since'] ?? $map['from'] ?? ''));
+            if ($iso === '' || !isset($map['value']) || !is_numeric($map['value'])) {
+                continue;
+            }
+            $rows[] = [
+                'date' => self::friendlyDate($iso),
+                'iso' => $iso,
+                'amount' => (float) $map['value'],
+            ];
+        }
+
+        usort($rows, static fn (array $a, array $b): int => strcmp($a['iso'], $b['iso']));
+
+        return $rows;
+    }
+
+    /**
+     * Convert CUMULATIVE schedule rows (rules() output — "total due by this
+     * date") into PER-INSTALLMENT increments ("amount due AT this date"), so
+     * displayed amounts and percentages sum to exactly 100%. Payment display
+     * uses this; cancellation does NOT (each cancellation row is an
+     * alternative scenario — "cancel from this date, lose Y" — not an
+     * installment). Non-monotonic data clamps to 0 rather than going negative.
+     *
+     * @param list<array{date: string, iso: string, amount: float}> $rows date-sorted cumulative rows
+     * @return list<array{date: string, iso: string, amount: float}>
+     */
+    public static function increments(array $rows): array
+    {
+        $previous = 0.0;
+        foreach ($rows as $i => $row) {
+            $delta = max(0.0, $row['amount'] - $previous);
+            $previous = $row['amount'];
+            $rows[$i]['amount'] = round($delta, 2);
+        }
+
+        return $rows;
+    }
+
+    /**
      * The date until which cancellation is free — the earliest `since` boundary
      * across the cancellation rules (before it, cancellation is free), formatted
      * dd.mm.yyyy. Returns null when there are no dated rules (e.g. is_free with

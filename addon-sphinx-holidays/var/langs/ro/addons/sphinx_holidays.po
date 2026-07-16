@@ -430,11 +430,11 @@ msgstr "Ultima"
 
 msgctxt "Languages::sphinx_holidays.cancellation_and_payment_terms"
 msgid "Payment and cancellation terms"
-msgstr "Condiții de Anulare și Plată"
+msgstr "Condiții de Plată și Anulare"
 
 msgctxt "Languages::sphinx_holidays.free_cancellation_until"
-msgid "Free cancellation until"
-msgstr "Anulare gratuită până la"
+msgid "Free cancellation before"
+msgstr "Anulare gratuită înainte de"
 
 msgctxt "Languages::sphinx_holidays.free_cancellation"
 msgid "Free cancellation"
@@ -603,3 +603,23 @@ msgstr "copii"
 msgctxt "Languages::sphinx_holidays.location_show_map"
 msgid "Location - show map"
 msgstr "Locație - arată pe hartă"
+
+msgctxt "Languages::sphinx_holidays.destination_name_or_id"
+msgid "Name or ID"
+msgstr "Nume sau ID"
+
+msgctxt "Languages::sphinx_holidays.search_destinations_name_or_id"
+msgid "Search by name or destination ID"
+msgstr "Caută după nume sau ID destinație"
+
+msgctxt "Languages::sphinx_holidays.terms_due_by"
+msgid "Amount due"
+msgstr "De achitat"
+
+msgctxt "Languages::sphinx_holidays.terms_penalty"
+msgid "Penalty"
+msgstr "Penalizare"
+
+msgctxt "Languages::sphinx_holidays.terms_non_refundable"
+msgid "Non-refundable"
+msgstr "Nerambursabil"
