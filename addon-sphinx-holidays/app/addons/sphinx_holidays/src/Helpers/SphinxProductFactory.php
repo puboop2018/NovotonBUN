@@ -177,8 +177,8 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
                    AND product_id IS NOT NULL AND product_id > 0 AND hotel_id != ?s
                  LIMIT 1',
                 $hotel['name'],
-                TypeCoerce::toDecimalString($lat, 7),
-                TypeCoerce::toDecimalString($lng, 7),
+                TypeCoerce::toDecimalString($lat, 8),
+                TypeCoerce::toDecimalString($lng, 8),
                 $hotelId,
             ));
         }

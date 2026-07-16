@@ -555,6 +555,20 @@ function fn_novoton_holidays_setup_db(): void
         @db_query("UPDATE ?:novoton_facilities SET facility_type = 'room_facility'  WHERE facility_type = 'room'");
     }
 
+    // ── Coordinate precision: widen latitude/longitude to the 8-decimal standard ──
+    // latitude DECIMAL(10,8), longitude DECIMAL(11,8) (was DECIMAL(10,7)). Idempotent:
+    // read the stored column type and only MODIFY when latitude is not yet (10,8).
+    $novLatType = str_replace(' ', '', strtolower(TypeCoerce::toString(db_get_field(
+        "SELECT COLUMN_TYPE FROM INFORMATION_SCHEMA.COLUMNS
+         WHERE TABLE_SCHEMA = DATABASE()
+         AND TABLE_NAME = ?s AND COLUMN_NAME = 'latitude'",
+        $resolve('?:novoton_hotels')
+    ))));
+    if ($novLatType !== '' && !str_contains($novLatType, 'decimal(10,8)')) {
+        @db_query("ALTER TABLE ?:novoton_hotels MODIFY COLUMN `latitude` decimal(10,8) DEFAULT NULL");
+        @db_query("ALTER TABLE ?:novoton_hotels MODIFY COLUMN `longitude` decimal(11,8) DEFAULT NULL");
+    }
+
     // ── Cache table migration: TIMESTAMP → INT UNSIGNED for expires_at/created_at ──
     // Aligns with sphinx_cache (INT unix timestamp) for consistency and performance
     $cacheTable = $resolve('?:novoton_cache');

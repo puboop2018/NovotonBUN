@@ -181,10 +181,10 @@ after the novoton `geocode_addresses` cron has run.
 
 If a hotel's "show on map" opens at a rounded coordinate (e.g. `36.89,30.67`) while the
 Sphinx API returns full precision (`36.887069,30.674622`), the **data is stale, the code is
-not**. The `latitude`/`longitude` columns are `DECIMAL(10,7)` and every write goes through
-`HotelRepository`'s upsert as `%.7F`, so current code stores full precision — but any row
-written **before** the coordinate-precision fix still physically holds the truncated value
-(check it in phpMyAdmin: `cscart_sphinx_hotels.latitude` for the hotel shows `36.8900000`).
+not**. The `latitude`/`longitude` columns are `DECIMAL(10,8)`/`DECIMAL(11,8)` and every write
+goes through `HotelRepository`'s upsert as `%.8F`, so current code stores full precision — but
+any row written **before** the coordinate-precision fix still physically holds the truncated
+value (check it in phpMyAdmin: `cscart_sphinx_hotels.latitude` for the hotel shows `36.89000000`).
 
 Only a **full** hotel re-sync overwrites existing rows (the upsert does
 `ON DUPLICATE KEY UPDATE latitude = VALUES(latitude)`). Grab the hotels cron URL from

@@ -254,8 +254,8 @@
                 `region_name`       VARCHAR(255) DEFAULT NULL,
                 `country_code`      VARCHAR(5) DEFAULT NULL,
                 `country_name`      VARCHAR(255) DEFAULT NULL,
-                `latitude`          DECIMAL(10,7) DEFAULT NULL,
-                `longitude`         DECIMAL(10,7) DEFAULT NULL,
+                `latitude`          DECIMAL(10,8) DEFAULT NULL,
+                `longitude`         DECIMAL(11,8) DEFAULT NULL,
                 `address`           VARCHAR(500) DEFAULT NULL COMMENT 'Street address from API',
                 `phone`             VARCHAR(50) DEFAULT NULL COMMENT 'Hotel phone number',
                 `email`             VARCHAR(255) DEFAULT NULL COMMENT 'Hotel email address',
@@ -302,8 +302,8 @@
                 `country_code`      VARCHAR(5) DEFAULT NULL,
                 `full_path`         VARCHAR(500) DEFAULT NULL COMMENT 'Breadcrumb: City, Region, Country, Continent',
                 `geoname_id`        INT UNSIGNED DEFAULT NULL,
-                `latitude`          DECIMAL(10,7) DEFAULT NULL,
-                `longitude`         DECIMAL(10,7) DEFAULT NULL,
+                `latitude`          DECIMAL(10,8) DEFAULT NULL,
+                `longitude`         DECIMAL(11,8) DEFAULT NULL,
                 `hotel_count`       INT UNSIGNED DEFAULT 0,
                 `last_synced_at`    DATETIME DEFAULT NULL,
                 KEY `idx_type` (`type`),
@@ -624,6 +624,22 @@
                 ADD COLUMN `pricing_json` JSON DEFAULT NULL
                 COMMENT 'Full pricing breakdown from verify (marketing/discount/selling/commission/supplier/taxes/fees)'
                 AFTER `cancellation_fees_json`;
+        </item>
+
+        <!-- Upgrade: widen coordinate columns to the 8-decimal standard
+             (latitude DECIMAL(10,8), longitude DECIMAL(11,8); was DECIMAL(10,7)).
+             Existing installs also self-heal at runtime via
+             fn_sphinx_holidays_ensure_schema(); this records it for the
+             install/upgrade path. -->
+        <item for="upgrade">
+            ALTER TABLE `?:sphinx_hotels`
+                MODIFY `latitude` DECIMAL(10,8) DEFAULT NULL,
+                MODIFY `longitude` DECIMAL(11,8) DEFAULT NULL;
+        </item>
+        <item for="upgrade">
+            ALTER TABLE `?:sphinx_destinations`
+                MODIFY `latitude` DECIMAL(10,8) DEFAULT NULL,
+                MODIFY `longitude` DECIMAL(11,8) DEFAULT NULL;
         </item>
 
         <!-- Uninstall SQL fallback: guarantees teardown of Sphinx-owned data

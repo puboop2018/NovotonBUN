@@ -95,4 +95,14 @@ final class HotelMapUrlTest extends TestCase
         self::assertNull(HotelMapUrl::build($this->hotel(null, null, ''), ''));
         self::assertNull(HotelMapUrl::build($this->hotel(null, null, '  '), '  '));
     }
+
+    public function testEighthDecimalSurvives(): void
+    {
+        // DECIMAL(10,8)/(11,8) storage keeps 8 decimals; the formatter (%.8F)
+        // must not drop the 8th the way the older %.7F did.
+        self::assertSame(
+            'https://www.google.com/maps?q=36.88706912,30.67462198',
+            HotelMapUrl::build($this->hotel(36.88706912, 30.67462198), ''),
+        );
+    }
 }

@@ -9,7 +9,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * Pins the ban on Tygh's lossy `?d` placeholder for sphinx coordinates.
  *
- * `?d` reformats decimals to ~2 dp before they reach SQL: DECIMAL(10,7)
+ * `?d` reformats decimals to ~2 dp before they reach SQL: DECIMAL(10,8)
  * coordinates written through it were stored as e.g. 36.89 instead of
  * 36.887069, putting the storefront "show on map" pin ~1 km off the hotel.
  * The exact same failure corrupted 4-dp currency coefficients (see
@@ -43,8 +43,8 @@ final class CoordinatePrecisionTest extends TestCase
 
         self::assertNoDdBinding($src);
         self::assertStringContainsString('(?s, ?s, ?i, ?s, ?i, ?s, ?i, ?s, ?s, ?s, ?s, ?s,', $src);
-        self::assertStringContainsString("toDecimalString(\$hotel['latitude'] ?? 0, 7)", $src);
-        self::assertStringContainsString("toDecimalString(\$hotel['longitude'] ?? 0, 7)", $src);
+        self::assertStringContainsString("toDecimalString(\$hotel['latitude'] ?? 0, 8)", $src);
+        self::assertStringContainsString("toDecimalString(\$hotel['longitude'] ?? 0, 8)", $src);
         self::assertStringContainsString("toDecimalString(\$hotel['rating'] ?? 0, 1)", $src);
     }
 
@@ -54,8 +54,8 @@ final class CoordinatePrecisionTest extends TestCase
 
         self::assertNoDdBinding($src);
         self::assertStringContainsString('(?i, ?s, ?s, ?i, ?s, ?i, ?s, ?s, ?i, ?s)', $src);
-        self::assertStringContainsString("toDecimalString(\$dest['latitude'] ?? 0, 7)", $src);
-        self::assertStringContainsString("toDecimalString(\$dest['longitude'] ?? 0, 7)", $src);
+        self::assertStringContainsString("toDecimalString(\$dest['latitude'] ?? 0, 8)", $src);
+        self::assertStringContainsString("toDecimalString(\$dest['longitude'] ?? 0, 8)", $src);
     }
 
     public function testProductFactoryDedupComparesFullPrecisionStrings(): void
@@ -65,7 +65,16 @@ final class CoordinatePrecisionTest extends TestCase
         // ?d would round the bound coordinate BEFORE MySQL's ROUND(,3) runs.
         self::assertStringNotContainsString('ROUND(?d, 3)', $src);
         self::assertStringContainsString('ROUND(?s, 3)', $src);
-        self::assertStringContainsString('toDecimalString($lat, 7)', $src);
-        self::assertStringContainsString('toDecimalString($lng, 7)', $src);
+        self::assertStringContainsString('toDecimalString($lat, 8)', $src);
+        self::assertStringContainsString('toDecimalString($lng, 8)', $src);
+    }
+
+    public function testAddonXmlStoresCoordinatesAtEightDecimals(): void
+    {
+        $xml = self::src('addon.xml');
+
+        // Latitude DECIMAL(10,8), longitude DECIMAL(11,8) — the ~1 mm standard.
+        self::assertStringContainsString('DECIMAL(10,8)', $xml);
+        self::assertStringContainsString('DECIMAL(11,8)', $xml);
     }
 }
