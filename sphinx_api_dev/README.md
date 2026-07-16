@@ -5,23 +5,52 @@ directly during investigation. No CS-Cart bootstrap, no DB, no addon autoload �
 just `curl` + a Bearer token. Nothing here is loaded by the store; it's a dev
 scratch pad, deliberately outside every lint/analysis gate.
 
-## get_hotel.php — inspect a hotel's raw payload (esp. coordinates)
+## Reaching them in the browser (docker sandbox)
+
+The full-store sandbox symlinks this folder into the store's web root on every
+boot, so the scripts are served directly — no manual copy:
+
+```
+http://localhost:8080/sphinx_api_dev/GetHotelbyId.php?id=3612
+http://localhost:8080/sphinx_api_dev/HotelSearchResults.php
+```
+
+(After a `git pull`, run `docker compose restart app` once so the re-link picks
+up any newly added script.) They also run from the CLI — see below.
+
+## GetHotelbyId.php — inspect a hotel's raw payload (esp. coordinates)
 
 Fetches `GET /api/v1/static/hotels/{id}` and prints the full JSON plus a
 **location summary** and **map links**, so you can judge how precise Sphinx's
 own latitude/longitude are before we change the storefront "show on map" pin.
 
 ```bash
-php get_hotel.php                 # defaults to hotel 3612
-php get_hotel.php 3612            # one hotel
-php get_hotel.php 3612 234 999    # several — compare precision side by side
+php GetHotelbyId.php                 # defaults to hotel 3612
+php GetHotelbyId.php 3612            # one hotel
+php GetHotelbyId.php 3612 234 999    # several — compare precision side by side
 ```
 
-Browser (drop the folder anywhere PHP is served, e.g. the sandbox docroot):
+Browser: `GetHotelbyId.php?id=3612`
 
+## HotelSearchResults.php — run a live hotel search + list the offers
+
+Drives the two-step search in one call: **POST** `/api/v1/hotels/search`
+(returns a cursor, not offers), then **GET** `/api/v1/hotels/results?cursor=…`
+repeatedly, following the cursor until it's null, then lists every offer
+(hotel, room, board, price, confirmation, offer_id).
+
+```bash
+php HotelSearchResults.php                                    # defaults: destination 3713, 2 rooms
+php HotelSearchResults.php destination_id=168566 check_in=2026-08-11 check_out=2026-08-18
+php HotelSearchResults.php immediate=1                        # only instantly-confirmable offers
+php HotelSearchResults.php raw=1                              # also dump the full JSON offers
 ```
-get_hotel.php?id=3612
-```
+
+Browser: `HotelSearchResults.php?destination_id=3713&immediate=1`
+(Overridable: `destination_id`, `check_in`, `check_out`, `currency`;
+`immediate=1` lists only `confirmation=immediate` offers, `raw=1` dumps JSON;
+the occupancy keeps the default 2-room shape. The summary line always reports
+how many of the total are immediate.)
 
 ### Credentials
 
@@ -31,9 +60,9 @@ Defaults to the Sphinx **dev/staging** values already committed in the
 ```bash
 SPHINX_API_URL=https://api.sphinx…            \
 SPHINX_API_TOKEN=<prod token>                 \
-php get_hotel.php 3612
+php GetHotelbyId.php 3612
 
-SPHINX_API_INSECURE=1 php get_hotel.php 3612   # skip TLS verify (dev boxes only)
+SPHINX_API_INSECURE=1 php GetHotelbyId.php 3612   # skip TLS verify (dev boxes only)
 ```
 
 ## What it revealed for hotel 3612 (Rixos Downtown, Antalya)

@@ -74,6 +74,10 @@ touching devx.
   ```
 - **Shell into the store**: `docker compose exec app bash`
 - **Logs**: `docker compose logs -f app`
+- **Sphinx API probes** (the `sphinx_api_dev/` folder) are auto-served in the
+  browser: `http://localhost:8080/sphinx_api_dev/GetHotelbyId.php?id=3612` and
+  `http://localhost:8080/sphinx_api_dev/HotelSearchResults.php`. Added a new
+  probe? `docker compose restart app` re-links the folder.
 
 ## Reset
 
