@@ -187,17 +187,19 @@ any row written **before** the coordinate-precision fix still physically holds t
 value (check it in phpMyAdmin: `cscart_sphinx_hotels.latitude` for the hotel shows `36.89000000`).
 
 Only a **full** hotel re-sync overwrites existing rows (the upsert does
-`ON DUPLICATE KEY UPDATE latitude = VALUES(latitude)`). Grab the hotels cron URL from
-**Admin → Sphinx Holidays** and append **`&full=1`**:
+`ON DUPLICATE KEY UPDATE latitude = VALUES(latitude)`). Easiest: the one-click
+**Full re-sync (hotels)** button on the dashboard (**Admin → Sphinx Holidays**) — it runs the
+full sync for your selected countries (there's a matching **Full re-sync (destinations)** button).
+Prefer the URL? Grab the hotels cron URL from that page and append **`&full=1`**:
 
 ```
 http://localhost:8080/index.php?dispatch=sphinx_cron.run&access_key=KEY&cron_mode=hotels&full=1
 ```
 
-(Add `&cron_mode=destinations&full=1` for destination-level pins.) **Heads-up:** the admin
-**"Sync now" button for hotels runs an *incremental* sync** (`updated_since`) and will *not*
-re-fetch an unchanged hotel like this one — you must use the `&full=1` URL. Verify in
-phpMyAdmin: the row's `latitude` flips to `36.8870690` and the PDP map opens at full precision.
+(Add `&cron_mode=destinations&full=1` for destination-level pins.) **Heads-up:** the plain
+**"Sync hotels" button is *incremental*** (`updated_since`) and will *not* re-fetch an unchanged
+hotel like this one — use the **Full re-sync (hotels)** button (or the `&full=1` URL). Verify in
+phpMyAdmin: the row's `latitude` flips to `36.88706900` and the PDP map opens at full precision.
 
 ## Notes & limits
 

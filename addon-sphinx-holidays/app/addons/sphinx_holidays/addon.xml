@@ -790,6 +790,10 @@
         <item lang="ro" id="sphinx_holidays.sync_destinations"><![CDATA[Sincronizare Destinații]]></item>
         <item lang="en" id="sphinx_holidays.sync_destinations_confirm"><![CDATA[This will fetch all destinations from the Sphinx API. Continue?]]></item>
         <item lang="ro" id="sphinx_holidays.sync_destinations_confirm"><![CDATA[Se vor descărca toate destinațiile din API-ul Sphinx. Continuați?]]></item>
+        <item lang="en" id="sphinx_holidays.full_resync_destinations"><![CDATA[Full re-sync (destinations)]]></item>
+        <item lang="ro" id="sphinx_holidays.full_resync_destinations"><![CDATA[Re-sincronizare completă destinații]]></item>
+        <item lang="en" id="sphinx_holidays.full_resync_destinations_confirm"><![CDATA[Run a FULL destination re-sync? It re-fetches every destination and rewrites all rows. Slower than the normal incremental sync.]]></item>
+        <item lang="ro" id="sphinx_holidays.full_resync_destinations_confirm"><![CDATA[Rulați o re-sincronizare COMPLETĂ de destinații? Preia din nou toate destinațiile și rescrie toate înregistrările. Mai lentă decât sincronizarea incrementală.]]></item>
         <item lang="en" id="sphinx_holidays.sync_started"><![CDATA[Destination sync started]]></item>
         <item lang="ro" id="sphinx_holidays.sync_started"><![CDATA[Sincronizarea destinațiilor a început]]></item>
         <item lang="en" id="sphinx_holidays.sync_completed"><![CDATA[Destination sync completed]]></item>
@@ -844,6 +848,10 @@
         <item lang="ro" id="sphinx_holidays.sync_hotels"><![CDATA[Sincronizare Hoteluri]]></item>
         <item lang="en" id="sphinx_holidays.sync_hotels_confirm"><![CDATA[This will fetch hotels for the selected countries from the Sphinx API. Continue?]]></item>
         <item lang="ro" id="sphinx_holidays.sync_hotels_confirm"><![CDATA[Se vor descărca hotelurile pentru țările selectate din API-ul Sphinx. Continuați?]]></item>
+        <item lang="en" id="sphinx_holidays.full_resync_hotels"><![CDATA[Full re-sync (hotels)]]></item>
+        <item lang="ro" id="sphinx_holidays.full_resync_hotels"><![CDATA[Re-sincronizare completă hoteluri]]></item>
+        <item lang="en" id="sphinx_holidays.full_resync_hotels_confirm"><![CDATA[Run a FULL hotel re-sync? It re-fetches every hotel for your selected countries and rewrites all rows (latitude/longitude included). Slower than the normal incremental sync.]]></item>
+        <item lang="ro" id="sphinx_holidays.full_resync_hotels_confirm"><![CDATA[Rulați o re-sincronizare COMPLETĂ de hoteluri? Preia din nou toate hotelurile pentru țările selectate și rescrie toate înregistrările (inclusiv latitudine/longitudine). Mai lentă decât sincronizarea incrementală.]]></item>
         <item lang="en" id="sphinx_holidays.hotel_sync_completed"><![CDATA[Hotel sync completed]]></item>
         <item lang="ro" id="sphinx_holidays.hotel_sync_completed"><![CDATA[Sincronizarea hotelurilor s-a finalizat]]></item>
         <item lang="en" id="sphinx_holidays.hotel_sync_failed"><![CDATA[Hotel sync failed]]></item>

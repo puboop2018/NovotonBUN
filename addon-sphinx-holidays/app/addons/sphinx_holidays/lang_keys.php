@@ -759,4 +759,24 @@ return [
         'en' => 'from',
         'ro' => 'de la',
     ],
+
+    // One-click FULL re-sync buttons on the dashboard. The plain "Sync" buttons are
+    // incremental (they skip rows the API hasn't flagged as changed); "full" re-fetches
+    // every hotel / destination for the selected countries and rewrites all rows.
+    'sphinx_holidays.full_resync_hotels' => [
+        'en' => 'Full re-sync (hotels)',
+        'ro' => 'Re-sincronizare completă hoteluri',
+    ],
+    'sphinx_holidays.full_resync_hotels_confirm' => [
+        'en' => 'Run a FULL hotel re-sync? It re-fetches every hotel for your selected countries and rewrites all rows (latitude/longitude included). Slower than the normal incremental sync.',
+        'ro' => 'Rulați o re-sincronizare COMPLETĂ de hoteluri? Preia din nou toate hotelurile pentru țările selectate și rescrie toate înregistrările (inclusiv latitudine/longitudine). Mai lentă decât sincronizarea incrementală.',
+    ],
+    'sphinx_holidays.full_resync_destinations' => [
+        'en' => 'Full re-sync (destinations)',
+        'ro' => 'Re-sincronizare completă destinații',
+    ],
+    'sphinx_holidays.full_resync_destinations_confirm' => [
+        'en' => 'Run a FULL destination re-sync? It re-fetches every destination and rewrites all rows. Slower than the normal incremental sync.',
+        'ro' => 'Rulați o re-sincronizare COMPLETĂ de destinații? Preia din nou toate destinațiile și rescrie toate înregistrările. Mai lentă decât sincronizarea incrementală.',
+    ],
 ];
