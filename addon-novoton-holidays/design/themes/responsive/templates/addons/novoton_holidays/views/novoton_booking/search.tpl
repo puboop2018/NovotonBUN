@@ -47,7 +47,8 @@
                         <span class="travel-hotel-stars" aria-hidden="true">{$hotel_stars|default:'****'}</span>
                     </h2>
                     <p class="travel-hotel-location">
-                         {$hotel_city|default:''}{if $hotel_region}, {$hotel_region}{/if}{if $hotel_country}, {$hotel_country}{/if}
+                         {* Sanitized by HotelLocationLine (Title Case + dedup), same as the PDP *}
+                         {$hotel_location_line|default:''}
                         {if $hotel_lat && $hotel_lng}
                             <a href="https://www.google.com/maps?q={$hotel_lat},{$hotel_lng}" target="_blank" rel="noopener" class="travel-hotel-map-link">{__("novoton_holidays.location_show_map")|default:"Location - show map"}</a>
                         {/if}
@@ -242,19 +243,22 @@
                                         {$room_display = $result.room_name|default:$result.room_id}
                                     {/if}
 
-                                    {if $result.board_id == 'AI' || $result.board_id == 'ALL INCL'}
+                                    {* Normalize the provider code (trim/upper/strip spaces) so
+                                       variants like "HB +" still map to the translated name *}
+                                    {$__bcode = $result.board_id|default:''|trim|upper|replace:' ':''}
+                                    {if $__bcode == 'AI' || $__bcode == 'ALLINCL' || $__bcode == 'ALLINCLUSIVE'}
                                         {$board_display = {__('novoton_holidays.all_inclusive')|default:'All Inclusive'}}
-                                    {elseif $result.board_id == 'UAI' || $result.board_id|strpos:'ULTRA' !== false}
+                                    {elseif $__bcode == 'UAI' || $__bcode|strpos:'ULTRA' !== false}
                                         {$board_display = {__('novoton_holidays.ultra_all_inclusive')|default:'Ultra All Inclusive'}}
-                                    {elseif $result.board_id == 'FB' || $result.board_id == 'FB+'}
+                                    {elseif $__bcode == 'FB' || $__bcode == 'FB+'}
                                         {$board_display = {__('novoton_holidays.full_board')|default:'Full Board'}}
-                                    {elseif $result.board_id == 'HB' || $result.board_id == 'HB+'}
+                                    {elseif $__bcode == 'HB' || $__bcode == 'HB+'}
                                         {$board_display = {__('novoton_holidays.half_board')|default:'Half Board'}}
-                                    {elseif $result.board_id == 'BB' || $result.board_id == 'B&B'}
+                                    {elseif $__bcode == 'BB' || $__bcode == 'B&B'}
                                         {$board_display = {__('novoton_holidays.bed_breakfast')|default:'Bed & Breakfast'}}
-                                    {elseif $result.board_id == 'RO' || $result.board_id == 'ROOM ONLY'}
+                                    {elseif $__bcode == 'RO' || $__bcode == 'ROOMONLY'}
                                         {$board_display = {__('novoton_holidays.room_only')|default:'Room Only'}}
-                                    {elseif $result.board_id == 'SC'}
+                                    {elseif $__bcode == 'SC'}
                                         {$board_display = {__('novoton_holidays.self_catering')|default:'Self Catering'}}
                                     {else}
                                         {$board_display = $result.board_name|default:$result.board_id}
@@ -399,19 +403,22 @@
                     {$room_display = $result.room_name|default:$result.room_id}
                 {/if}
 
-                {if $result.board_id == 'AI' || $result.board_id == 'ALL INCL'}
+                {* Normalize the provider code (trim/upper/strip spaces) so
+                   variants like "HB +" still map to the translated name *}
+                {$__bcode = $result.board_id|default:''|trim|upper|replace:' ':''}
+                {if $__bcode == 'AI' || $__bcode == 'ALLINCL' || $__bcode == 'ALLINCLUSIVE'}
                     {$board_display = {__('novoton_holidays.all_inclusive')|default:'All Inclusive'}}
-                {elseif $result.board_id == 'UAI' || $result.board_id|strpos:'ULTRA' !== false}
+                {elseif $__bcode == 'UAI' || $__bcode|strpos:'ULTRA' !== false}
                     {$board_display = {__('novoton_holidays.ultra_all_inclusive')|default:'Ultra All Inclusive'}}
-                {elseif $result.board_id == 'FB' || $result.board_id == 'FB+'}
+                {elseif $__bcode == 'FB' || $__bcode == 'FB+'}
                     {$board_display = {__('novoton_holidays.full_board')|default:'Full Board'}}
-                {elseif $result.board_id == 'HB' || $result.board_id == 'HB+'}
+                {elseif $__bcode == 'HB' || $__bcode == 'HB+'}
                     {$board_display = {__('novoton_holidays.half_board')|default:'Half Board'}}
-                {elseif $result.board_id == 'BB' || $result.board_id == 'B&B'}
+                {elseif $__bcode == 'BB' || $__bcode == 'B&B'}
                     {$board_display = {__('novoton_holidays.bed_breakfast')|default:'Bed & Breakfast'}}
-                {elseif $result.board_id == 'RO' || $result.board_id == 'ROOM ONLY'}
+                {elseif $__bcode == 'RO' || $__bcode == 'ROOMONLY'}
                     {$board_display = {__('novoton_holidays.room_only')|default:'Room Only'}}
-                {elseif $result.board_id == 'SC'}
+                {elseif $__bcode == 'SC'}
                     {$board_display = {__('novoton_holidays.self_catering')|default:'Self Catering'}}
                 {else}
                     {$board_display = $result.board_name|default:$result.board_id}
@@ -481,7 +488,9 @@
 
                     {* Zone 2: Choices *}
                     <div class="travel-offer-details novoton-offer-choices-zone">
-                        <div class="travel-offer-board novoton-board">{$result.board_name|default:$board_display}</div>
+                        {* Translated meal plan first, raw provider code in parens when it
+                           differs — e.g. "Demipensiune (HB +)" *}
+                        <div class="travel-offer-board novoton-board">{$board_display}{if $result.board_id && $result.board_id|trim != $board_display} ({$result.board_id|trim}){/if}</div>
 
                         {* Free Cancellation Date *}
                         {if $result.free_cancellation_date}
@@ -577,7 +586,7 @@
                                 </div>
                             {/if}
                         </div>
-                        <a href="{fn_url("novoton_booking.booking_form?hotel_id=`$novoton_params.hotel_id`&room_id=`$result.room_id|escape:'url'`&board_id=`$result.board_id`&check_in=`$check_in_date`&check_out=`$check_out_date`&nights=`$novoton_params.nights`&adults=`$novoton_params.adults`&children=`$novoton_params.children_count`&children_ages=`$novoton_params.children_ages|default:''`&price=`$result.extras_price|default:$result.total_price`&package_name=`$result_package_name|escape:'url'`&room_name=`$room_display|escape:'url'`&board_name=`$board_display|escape:'url'`&rooms_data=`$single_room_data|json_encode|escape:'url'`&extras=`$result.extras_label|default:''|escape:'url'`&extras_price=`$result.extras_price|default:''`")}"
+                        <a href="{fn_url("novoton_booking.booking_form?hotel_id=`$novoton_params.hotel_id`&room_id=`$result.room_id|escape:'url'`&board_id=`$result.board_id|escape:'url'`&check_in=`$check_in_date`&check_out=`$check_out_date`&nights=`$novoton_params.nights`&adults=`$novoton_params.adults`&children=`$novoton_params.children_count`&children_ages=`$novoton_params.children_ages|default:''`&price=`$result.extras_price|default:$result.total_price`&package_name=`$result_package_name|escape:'url'`&room_name=`$room_display|escape:'url'`&board_name=`$board_display|escape:'url'`&rooms_data=`$single_room_data|json_encode|escape:'url'`&extras=`$result.extras_label|default:''|escape:'url'`&extras_price=`$result.extras_price|default:''`")}"
                            class="travel-offer-book-btn">
                             {__("novoton_holidays.book")}
                         </a>

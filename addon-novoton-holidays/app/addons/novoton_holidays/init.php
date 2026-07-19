@@ -231,6 +231,28 @@ if (defined('AREA') && AREA === 'A' && function_exists('fn_novoton_holidays_seed
     }
 }
 
+// Repair: the RO .po shipped without the blank line between ph_facilities and
+// location_show_map, so the import glued the admin SEO-placeholder hint
+// ("Facilități principale (separate prin virgulă)") onto the storefront map
+// link. Fingerprint-guarded so a merchant's own label is never overwritten;
+// once repaired the guard no longer matches and this is a single cheap SELECT.
+if (defined('AREA') && AREA === 'A') {
+    $__mapLabel = db_get_field(
+        "SELECT value FROM ?:language_values WHERE name = 'novoton_holidays.location_show_map' AND lang_code = 'ro' LIMIT 1"
+    );
+    if (is_string($__mapLabel) && str_contains($__mapLabel, 'virgul')) {
+        db_query(
+            "INSERT INTO ?:language_values (name, lang_code, value) VALUES ('novoton_holidays.location_show_map', 'ro', ?s)
+             ON DUPLICATE KEY UPDATE value = ?s",
+            'Locație - arată pe hartă', 'Locație - arată pe hartă'
+        );
+        if (function_exists('fn_clear_cache')) {
+            fn_clear_cache();
+        }
+    }
+    unset($__mapLabel);
+}
+
 // Register addon hooks
 fn_register_hooks(
     'get_products_post',                       // Batch prefetch hotel data for product listings
