@@ -22,7 +22,6 @@ use Tygh\Addons\NovotonHolidays\Repository\BookingReportingRepositoryInterface;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
 use Tygh\Addons\TravelCore\TravelConstants;
-use Tygh\Addons\TravelCore\ValueObjects\BoardType;
 use Tygh\Addons\TravelCore\ValueObjects\RoomType;
 
 class BookingQueryService implements BookingQueryServiceInterface
@@ -212,7 +211,7 @@ class BookingQueryService implements BookingQueryServiceInterface
             $booking['board_display'] = !empty($board_names) ? $board_names[0] : $booking['board_name'];
         } else {
             $booking['room_types_list'] = $booking['room_type'] ?: RoomType::formatRoomLabel(TypeCoerce::toString($booking['room_id']));
-            $booking['board_display'] = $booking['board_name'] ?: BoardType::toDisplayName(TypeCoerce::toString($booking['board_id']));
+            $booking['board_display'] = $booking['board_name'] ?: fn_novoton_holidays_format_board_name(TypeCoerce::toString($booking['board_id']));
         }
     }
 

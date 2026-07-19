@@ -149,23 +149,9 @@
                         </span>
                         
                         <span class="travel-info-key">{__("novoton_holidays.board")}:</span>
-                        <span class="travel-info-val">
-                            {if $booking_data.board_id == 'AI' || $booking_data.board_id == 'ALL INCL' || $booking_data.board_id == 'ALLINC'}
-                                {__("novoton_holidays.all_inclusive")}
-                            {elseif $booking_data.board_id == 'UAI' || $booking_data.board_id == 'ULTRA ALL INCL' || $booking_data.board_id == 'ULTRA ALL INCLUSIVE'}
-                                {__("novoton_holidays.ultra_all_inclusive")}
-                            {elseif $booking_data.board_id == 'FB'}
-                                {__("novoton_holidays.full_board")}
-                            {elseif $booking_data.board_id == 'HB'}
-                                {__("novoton_holidays.half_board")}
-                            {elseif $booking_data.board_id == 'BB'}
-                                {__("novoton_holidays.bed_breakfast")}
-                            {elseif $booking_data.board_id == 'RO'}
-                                {__("novoton_holidays.room_only")}
-                            {else}
-                                {$booking_data.board_id}
-                            {/if}
-                        </span>
+                        {* Localized label with the raw code in parens, e.g.
+                           "Demipensiune (HB +)" — same as the search card. *}
+                        <span class="travel-info-val">{$booking_data.board_id|novoton_format_board}</span>
                     {/if}
                 </div>
                 

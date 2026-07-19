@@ -111,7 +111,7 @@ function smarty_modifier_novoton_format_board($board_id): string
         if (empty($board_id) || !is_string($board_id)) {
             return is_string($board_id) ? $board_id : '';
         }
-        return \Tygh\Addons\TravelCore\ValueObjects\BoardType::toDisplayName($board_id);
+        return fn_novoton_holidays_board_label($board_id);
     } catch (\Throwable) {
         return is_string($board_id) ? $board_id : '';
     }
