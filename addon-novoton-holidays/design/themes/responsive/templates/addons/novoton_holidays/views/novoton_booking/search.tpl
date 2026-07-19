@@ -10,8 +10,7 @@
  * - Styling: shared classes from travel_core search-results.css + the
  *   novoton-specific classes in novoton-results.css (loaded via the
  *   styles.post.tpl hook). No {style}/<link>/<style> loads in this file.
- * - JS contract preserved: #novoton-availability-badge (text rewritten by
- *   updateAvailabilityBadge), #multi-room-selection + data attrs,
+ * - JS contract preserved: #multi-room-selection + data attrs,
  *   #room-N-price, #total-combined-price, #book-multi-room-btn,
  *   #multi-room-booking-form (multiroom-booking.js), #info-modal +
  *   #modal-content-N (openInfoModal), #request-alternatives-form.
@@ -47,7 +46,8 @@
                         <span class="travel-hotel-stars" aria-hidden="true">{$hotel_stars|default:'****'}</span>
                     </h2>
                     <p class="travel-hotel-location">
-                         {$hotel_city|default:''}{if $hotel_region}, {$hotel_region}{/if}{if $hotel_country}, {$hotel_country}{/if}
+                         {* Sanitized by HotelLocationLine (Title Case + dedup), same as the PDP *}
+                         {$hotel_location_line|default:''}
                         {if $hotel_lat && $hotel_lng}
                             <a href="https://www.google.com/maps?q={$hotel_lat},{$hotel_lng}" target="_blank" rel="noopener" class="travel-hotel-map-link">{__("novoton_holidays.location_show_map")|default:"Location - show map"}</a>
                         {/if}
@@ -74,9 +74,12 @@
                     {$badge_adults = $novoton_params.adults|default:0}
                     {$badge_children = $novoton_params.children_count|default:0}
                     {capture assign="badge_party_suffix"} {__("novoton_holidays.for")|default:"for"} {$badge_adults} {if $badge_adults == 1}{__("novoton_holidays.adult")|default:"adult"|lower}{else}{__("novoton_holidays.adults")|default:"adults"|lower}{/if}{if $badge_children > 0}, {$badge_children} {if $badge_children == 1}{__("novoton_holidays.child")|default:"child"|lower}{else}{__("novoton_holidays.children")|default:"children"|lower}{/if}{/if}{/capture}
-                    <span id="novoton-availability-badge" class="travel-availability-badge" data-rooms-count="{$badge_rooms_count}" data-offers-count="{$badge_offers_count}" data-party-suffix="{$badge_party_suffix|escape:html}">
-                        ✓ {__("novoton_holidays.available")}: {$badge_rooms_count} {if $badge_rooms_count == 1}{__("novoton_holidays.room")|default:"room"|lower}{else}{__("novoton_holidays.rooms")|default:"rooms"|lower}{/if}, {$badge_offers_count} {if $badge_offers_count == 1}{__("novoton_holidays.offer")|default:"offer"|lower}{else}{__("novoton_holidays.offers")|default:"offers"|lower}{/if}{$badge_party_suffix}
-                    </span>
+                    {* Split hierarchy: compact status pill (the "is it available?"
+                       signal) with the guest-count confirmation as plain text below. *}
+                    <div class="travel-availability-block">
+                        <span class="travel-availability-badge">✓ {__("novoton_holidays.available")}</span>
+                        <div class="travel-availability-details">{$badge_rooms_count} {if $badge_rooms_count == 1}{__("novoton_holidays.room")|default:"room"|lower}{else}{__("novoton_holidays.rooms")|default:"rooms"|lower}{/if}, {$badge_offers_count} {if $badge_offers_count == 1}{__("novoton_holidays.offer")|default:"offer"|lower}{else}{__("novoton_holidays.offers")|default:"offers"|lower}{/if}{$badge_party_suffix}</div>
+                    </div>
                     {/if}
                 </div>
             </div>
@@ -242,19 +245,22 @@
                                         {$room_display = $result.room_name|default:$result.room_id}
                                     {/if}
 
-                                    {if $result.board_id == 'AI' || $result.board_id == 'ALL INCL'}
+                                    {* Normalize the provider code (trim/upper/strip spaces) so
+                                       variants like "HB +" still map to the translated name *}
+                                    {$__bcode = $result.board_id|default:''|trim|upper|replace:' ':''}
+                                    {if $__bcode == 'AI' || $__bcode == 'ALLINCL' || $__bcode == 'ALLINCLUSIVE'}
                                         {$board_display = {__('novoton_holidays.all_inclusive')|default:'All Inclusive'}}
-                                    {elseif $result.board_id == 'UAI' || $result.board_id|strpos:'ULTRA' !== false}
+                                    {elseif $__bcode == 'UAI' || $__bcode|strpos:'ULTRA' !== false}
                                         {$board_display = {__('novoton_holidays.ultra_all_inclusive')|default:'Ultra All Inclusive'}}
-                                    {elseif $result.board_id == 'FB' || $result.board_id == 'FB+'}
+                                    {elseif $__bcode == 'FB' || $__bcode == 'FB+'}
                                         {$board_display = {__('novoton_holidays.full_board')|default:'Full Board'}}
-                                    {elseif $result.board_id == 'HB' || $result.board_id == 'HB+'}
+                                    {elseif $__bcode == 'HB' || $__bcode == 'HB+'}
                                         {$board_display = {__('novoton_holidays.half_board')|default:'Half Board'}}
-                                    {elseif $result.board_id == 'BB' || $result.board_id == 'B&B'}
+                                    {elseif $__bcode == 'BB' || $__bcode == 'B&B'}
                                         {$board_display = {__('novoton_holidays.bed_breakfast')|default:'Bed & Breakfast'}}
-                                    {elseif $result.board_id == 'RO' || $result.board_id == 'ROOM ONLY'}
+                                    {elseif $__bcode == 'RO' || $__bcode == 'ROOMONLY'}
                                         {$board_display = {__('novoton_holidays.room_only')|default:'Room Only'}}
-                                    {elseif $result.board_id == 'SC'}
+                                    {elseif $__bcode == 'SC'}
                                         {$board_display = {__('novoton_holidays.self_catering')|default:'Self Catering'}}
                                     {else}
                                         {$board_display = $result.board_name|default:$result.board_id}
@@ -399,19 +405,22 @@
                     {$room_display = $result.room_name|default:$result.room_id}
                 {/if}
 
-                {if $result.board_id == 'AI' || $result.board_id == 'ALL INCL'}
+                {* Normalize the provider code (trim/upper/strip spaces) so
+                   variants like "HB +" still map to the translated name *}
+                {$__bcode = $result.board_id|default:''|trim|upper|replace:' ':''}
+                {if $__bcode == 'AI' || $__bcode == 'ALLINCL' || $__bcode == 'ALLINCLUSIVE'}
                     {$board_display = {__('novoton_holidays.all_inclusive')|default:'All Inclusive'}}
-                {elseif $result.board_id == 'UAI' || $result.board_id|strpos:'ULTRA' !== false}
+                {elseif $__bcode == 'UAI' || $__bcode|strpos:'ULTRA' !== false}
                     {$board_display = {__('novoton_holidays.ultra_all_inclusive')|default:'Ultra All Inclusive'}}
-                {elseif $result.board_id == 'FB' || $result.board_id == 'FB+'}
+                {elseif $__bcode == 'FB' || $__bcode == 'FB+'}
                     {$board_display = {__('novoton_holidays.full_board')|default:'Full Board'}}
-                {elseif $result.board_id == 'HB' || $result.board_id == 'HB+'}
+                {elseif $__bcode == 'HB' || $__bcode == 'HB+'}
                     {$board_display = {__('novoton_holidays.half_board')|default:'Half Board'}}
-                {elseif $result.board_id == 'BB' || $result.board_id == 'B&B'}
+                {elseif $__bcode == 'BB' || $__bcode == 'B&B'}
                     {$board_display = {__('novoton_holidays.bed_breakfast')|default:'Bed & Breakfast'}}
-                {elseif $result.board_id == 'RO' || $result.board_id == 'ROOM ONLY'}
+                {elseif $__bcode == 'RO' || $__bcode == 'ROOMONLY'}
                     {$board_display = {__('novoton_holidays.room_only')|default:'Room Only'}}
-                {elseif $result.board_id == 'SC'}
+                {elseif $__bcode == 'SC'}
                     {$board_display = {__('novoton_holidays.self_catering')|default:'Self Catering'}}
                 {else}
                     {$board_display = $result.board_name|default:$result.board_id}
@@ -481,7 +490,9 @@
 
                     {* Zone 2: Choices *}
                     <div class="travel-offer-details novoton-offer-choices-zone">
-                        <div class="travel-offer-board novoton-board">{$result.board_name|default:$board_display}</div>
+                        {* Translated meal plan first, raw provider code in parens when it
+                           differs — e.g. "Demipensiune (HB +)" *}
+                        <div class="travel-offer-board novoton-board">{$board_display}{if $result.board_id && $result.board_id|trim != $board_display} ({$result.board_id|trim}){/if}</div>
 
                         {* Free Cancellation Date *}
                         {if $result.free_cancellation_date}
@@ -577,7 +588,7 @@
                                 </div>
                             {/if}
                         </div>
-                        <a href="{fn_url("novoton_booking.booking_form?hotel_id=`$novoton_params.hotel_id`&room_id=`$result.room_id|escape:'url'`&board_id=`$result.board_id`&check_in=`$check_in_date`&check_out=`$check_out_date`&nights=`$novoton_params.nights`&adults=`$novoton_params.adults`&children=`$novoton_params.children_count`&children_ages=`$novoton_params.children_ages|default:''`&price=`$result.extras_price|default:$result.total_price`&package_name=`$result_package_name|escape:'url'`&room_name=`$room_display|escape:'url'`&board_name=`$board_display|escape:'url'`&rooms_data=`$single_room_data|json_encode|escape:'url'`&extras=`$result.extras_label|default:''|escape:'url'`&extras_price=`$result.extras_price|default:''`")}"
+                        <a href="{fn_url("novoton_booking.booking_form?hotel_id=`$novoton_params.hotel_id`&room_id=`$result.room_id|escape:'url'`&board_id=`$result.board_id|escape:'url'`&check_in=`$check_in_date`&check_out=`$check_out_date`&nights=`$novoton_params.nights`&adults=`$novoton_params.adults`&children=`$novoton_params.children_count`&children_ages=`$novoton_params.children_ages|default:''`&price=`$result.extras_price|default:$result.total_price`&package_name=`$result_package_name|escape:'url'`&room_name=`$room_display|escape:'url'`&board_name=`$board_display|escape:'url'`&rooms_data=`$single_room_data|json_encode|escape:'url'`&extras=`$result.extras_label|default:''|escape:'url'`&extras_price=`$result.extras_price|default:''`")}"
                            class="travel-offer-book-btn">
                             {__("novoton_holidays.book")}
                         </a>
@@ -754,23 +765,6 @@ function closeInfoModal() {
 }
 document.getElementById('info-modal').addEventListener('click', function(e) { if (e.target === this) closeInfoModal(); });
 document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeInfoModal(); });
-
-/**
- * Dynamically update the availability badge text without page reload.
- * Call updateAvailabilityBadge(roomsCount, offersCount) from anywhere.
- */
-window.updateAvailabilityBadge = function(roomsCount, offersCount) {
-    var badge = document.getElementById('novoton-availability-badge');
-    if (!badge) return;
-    var tr = window.NovotonTranslations || {};
-    var roomLabel = ((roomsCount === 1) ? (tr.room || 'room') : (tr.rooms || 'rooms')).toLowerCase();
-    var offerLabel = ((offersCount === 1) ? (tr.offer || 'offer') : (tr.offers || 'offers')).toLowerCase();
-    var availableLabel = tr.available || 'Available';
-    var partySuffix = badge.getAttribute('data-party-suffix') || '';
-    badge.textContent = '✓ ' + availableLabel + ': ' + roomsCount + ' ' + roomLabel + ', ' + offersCount + ' ' + offerLabel + partySuffix;
-    badge.setAttribute('data-rooms-count', roomsCount);
-    badge.setAttribute('data-offers-count', offersCount);
-};
 </script>
 
 {* Client i18n for the booking engine — shared travel_core partial

@@ -25,7 +25,7 @@ if (!defined('TRAVEL_CORE_VERSION')) {
 
 // React bundle cache version — bump when JS bundles are rebuilt
 if (!defined('TRAVEL_CACHE_VER')) {
-    define('TRAVEL_CACHE_VER', '5');
+    define('TRAVEL_CACHE_VER', '6');
 }
 
 // Register PSR-4 autoloader for travel_core namespace.
@@ -55,6 +55,21 @@ require_once __DIR__ . '/hooks.php';
 // can coexist. The function is idempotent and guards itself with a static flag.
 if (defined('AREA') && AREA === 'A' && function_exists('fn_travel_core_ensure_schema')) {
     fn_travel_core_ensure_schema();
+}
+
+// Self-heal language keys: addon.xml/.po are only imported at install, so new
+// or changed labels never reach existing stores on their own. Compare a stored
+// stamp against the current content hash of addon.xml + lang_keys.php and
+// reseed on any change; the seeder is idempotent (same pattern as sphinx).
+if (defined('AREA') && AREA === 'A' && function_exists('fn_travel_core_seed_language_keys')) {
+    $__stamp = db_get_field(
+        "SELECT value FROM ?:language_values WHERE name = ?s AND lang_code = ?s LIMIT 1",
+        'travel_core._lang_seed_hash', 'en'
+    );
+    if ($__stamp !== fn_travel_core_language_seed_hash()) {
+        fn_travel_core_seed_language_keys();
+    }
+    unset($__stamp);
 }
 
 // Register addon hooks

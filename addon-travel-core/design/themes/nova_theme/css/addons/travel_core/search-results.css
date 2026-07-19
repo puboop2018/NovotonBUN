@@ -67,7 +67,17 @@
     color: var(--nvt-text-light, #666);
 }
 
-/* ── Availability badge ("N oferte") ──────────────────────────────────── */
+/* ── Availability status: compact pill + guest-count line below ───────── */
+/* Split hierarchy: the pill answers "is it available?" at a glance; the
+   count line below it confirms the searched party. Stacked layout also
+   avoids the old wide badge wrapping awkwardly on narrow screens. */
+.travel-search-results-page .travel-availability-block {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    margin: 10px 0;
+}
 /* --nvt-success-strong, not --nvt-success: the theme-derived success green
    is too light for white text (fails WCAG AA); -strong is a hardcoded
    AA-safe surface (≥ 4.5:1 with #fff). */
@@ -75,11 +85,14 @@
     display: inline-block;
     background: var(--nvt-success-strong, #1e7e34);
     color: #fff;
-    padding: 7px 16px;
+    padding: 4px 12px;
     border-radius: 20px;
-    font-size: 14px;
+    font-size: 12.5px;
     font-weight: 600;
-    margin: 10px 0;
+}
+.travel-search-results-page .travel-availability-details {
+    font-size: 14px;
+    color: var(--nvt-text, #333);
 }
 
 /* ── Offer card (3 zones: hotel / details / price+action) ─────────────── */

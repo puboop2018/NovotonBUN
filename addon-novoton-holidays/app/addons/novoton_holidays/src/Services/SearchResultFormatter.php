@@ -15,8 +15,10 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Services;
 
+use Tygh\Addons\TravelCore\Dto\Hotel\HotelSeoData;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Services\CurrencyService;
+use Tygh\Addons\TravelCore\Services\HotelLocationLine;
 
 class SearchResultFormatter implements SearchResultFormatterInterface
 {
@@ -226,6 +228,17 @@ class SearchResultFormatter implements SearchResultFormatterInterface
         $view->assign('hotel_country', $hotelCountry);
         $view->assign('hotel_lat', $hotelLat);
         $view->assign('hotel_lng', $hotelLng);
+
+        // Same sanitizer as the PDP: Title-Cases single-case labels and dedups
+        // city==region, so "DURRES, DURRES, ALBANIA" renders "Durres, Albania".
+        $view->assign('hotel_location_line', HotelLocationLine::build(new HotelSeoData(
+            hotelId: TypeCoerce::toString($hotelId),
+            providerName: 'novoton',
+            name: TypeCoerce::toString($hotelName),
+            city: TypeCoerce::toString($hotelCity),
+            region: TypeCoerce::toString($hotelRegion),
+            country: TypeCoerce::toString($hotelCountry),
+        )));
     }
 
     /**

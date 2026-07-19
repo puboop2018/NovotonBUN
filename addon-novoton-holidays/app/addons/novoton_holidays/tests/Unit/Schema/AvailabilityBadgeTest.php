@@ -7,12 +7,13 @@ namespace Tygh\Addons\NovotonHolidays\Tests\Unit\Schema;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Pins the availability badge on the novoton search results:
- * "✓ Available: N room(s), M offer(s) for X adults[, Y children]".
+ * Pins the availability status on the novoton search results — a compact
+ * "✓ Available" pill with the guest-count confirmation as plain text below:
+ * "N room(s), M offer(s) for X adults[, Y children]".
  * Rooms count DISTINCT room types — two board variants of the same room are
  * ONE room (regression: the quota-based count showed "2 camere" for two
  * boards of the same QUAD). The party suffix ties availability to the
- * searched guests, and the JS badge helper must preserve it.
+ * searched guests.
  */
 final class AvailabilityBadgeTest extends TestCase
 {
@@ -38,14 +39,19 @@ final class AvailabilityBadgeTest extends TestCase
         );
     }
 
-    public function testBadgeCarriesThePartySuffix(): void
+    public function testBadgeSplitsStatusPillFromGuestCountLine(): void
     {
         $tpl = self::themeTpl('responsive');
 
+        // Split hierarchy: compact status pill, then the count/party line below.
+        self::assertStringContainsString('travel-availability-block', $tpl);
+        self::assertStringContainsString('travel-availability-badge', $tpl);
+        self::assertStringContainsString('travel-availability-details', $tpl);
+        // The party suffix still renders (now inside the details line).
         self::assertStringContainsString('novoton_holidays.for', $tpl);
-        self::assertStringContainsString('data-party-suffix', $tpl);
-        // The JS helper appends the same suffix when it rewrites the badge.
-        self::assertStringContainsString("badge.getAttribute('data-party-suffix')", $tpl);
+        // The dead JS badge rewriter and its data-attribute contract are gone.
+        self::assertStringNotContainsString('updateAvailabilityBadge', $tpl);
+        self::assertStringNotContainsString('data-party-suffix', $tpl);
     }
 
     public function testHotelHeaderRendersAboveTheBookingForm(): void

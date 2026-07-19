@@ -125,7 +125,7 @@ if ($mode === 'booking_config') {
                 'rooms', 'room', 'done', 'add_room',
                 'adults_label', 'children_label',
                 'nights_stay', 'night_stay', 'night', 'nights',
-                'childrens_ages', 'child_age', 'select_age',
+                'childrens_ages', 'child_age', 'child_n_age', 'select_age',
                 'years_old', 'year_old',
                 'selected', 'selected_singular', 'select_check_out',
                 'january', 'february', 'march', 'april',
@@ -141,6 +141,11 @@ if ($mode === 'booking_config') {
                 $camelKey = lcfirst(str_replace('_', '', ucwords($key, '_')));
                 $translations[$camelKey] = __('travel_core.' . $key);
             }
+            // GuestPicker.jsx reads t('childrenAges', ...) but the auto-camelCase of
+            // 'childrens_ages' yields 'childrensAges' — alias it so the RO label wins
+            // over the English fallback compiled into the bundle (mirrors the inline
+            // map in functions/hotels.php, which already emits 'childrenAges').
+            $translations['childrenAges'] = __('travel_core.childrens_ages');
 
             $config = [
                 'isHotel' => true,
