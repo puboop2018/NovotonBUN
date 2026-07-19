@@ -55,16 +55,75 @@ function fn_novoton_holidays_format_date(string|int $date): string
 }
 
 /**
+ * Localized board label: "Demipensiune (HB +)" — the Romanian meal-plan name
+ * with the raw provider code in parens, the same format the search card shows.
+ *
+ * Hardcoded RO map (RoomType precedent): matches the .po / search-card
+ * vocabulary; normalization strips inner spaces so provider variants like
+ * "HB +" resolve, and plus-variants map to the base name.
+ *
+ * Unknown codes return the RAW code BARE (no parens): booking_form.php detects
+ * "formatter didn't change it" via strict equality to trigger its board_name
+ * fallback, and "XYZ (XYZ)" would be noise.
+ *
+ * @param string $boardId Board code as received (e.g. "HB +", "AI", "ALL INCL")
+ */
+function fn_novoton_holidays_board_label(string $boardId): string
+{
+    $raw = trim($boardId);
+    if ($raw === '') {
+        return '';
+    }
+
+    $names = [
+        'AI' => 'All Inclusive',
+        'ALLINC' => 'All Inclusive',
+        'ALLINCL' => 'All Inclusive',
+        'ALLINCLUSIVE' => 'All Inclusive',
+        'AIL' => 'All Inclusive Light',
+        'ALLINCLUSIVELIGHT' => 'All Inclusive Light',
+        'ALLINCLUSIVESOFT' => 'All Inclusive Light',
+        'UAI' => 'Ultra All Inclusive',
+        'ULTRAALLINCL' => 'Ultra All Inclusive',
+        'ULTRAALLINCLUSIVE' => 'Ultra All Inclusive',
+        'FB' => 'Pensiune Completă',
+        'FB+' => 'Pensiune Completă',
+        'FULLBOARD' => 'Pensiune Completă',
+        'HB' => 'Demipensiune',
+        'HB+' => 'Demipensiune',
+        'HALFBOARD' => 'Demipensiune',
+        'BB' => 'Mic Dejun Inclus',
+        'B&B' => 'Mic Dejun Inclus',
+        'BEDANDBREAKFAST' => 'Mic Dejun Inclus',
+        'RO' => 'Doar Cameră',
+        'ROOMONLY' => 'Doar Cameră',
+        'SC' => 'Self Catering',
+        'SELFCATERING' => 'Self Catering',
+    ];
+
+    $key = strtoupper(str_replace(' ', '', $raw));
+    $name = $names[$key] ?? null;
+
+    if ($name === null) {
+        return $raw;
+    }
+
+    return $name === $raw ? $name : $name . ' (' . $raw . ')';
+}
+
+/**
  * Format board name for display
  *
- * Delegates to BoardType value object (single source of truth).
+ * Delegates to the localized board label ("Demipensiune (HB +)") so every
+ * consumer — cart hooks, order hooks, booking records, emails — renders the
+ * same label the search card shows. Unknown codes pass through unchanged.
  *
  * @param string $boardId Board code (AI, HB, FB, etc.)
  * @return string Formatted board name
  */
 function fn_novoton_holidays_format_board_name(string $boardId): string
 {
-    return \Tygh\Addons\TravelCore\ValueObjects\BoardType::toDisplayName($boardId);
+    return fn_novoton_holidays_board_label($boardId);
 }
 
 /**

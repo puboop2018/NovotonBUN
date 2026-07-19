@@ -46,7 +46,7 @@
                 <tr><td>Order ID:</td><td>{if $booking.order_id > 0}<a href="{"orders.details?order_id=`$booking.order_id`"|fn_url}">#{$booking.order_id}</a>{else}<span class="muted">-</span>{/if}</td></tr>
                 <tr><td>Hotel ID:</td><td>{$booking.hotel_id}</td></tr>
                 <tr><td>Room:</td><td>{$booking.room_type|default:$booking.room_id}</td></tr>
-                <tr><td>Board:</td><td>{$booking.board_id}</td></tr>
+                <tr><td>Board:</td><td>{$booking.board_id|novoton_format_board}</td></tr>
             </table>
         </div>
 

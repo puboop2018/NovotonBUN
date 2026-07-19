@@ -25,9 +25,9 @@
         {$product.extra.room_name|default:$product.extra.room_id|replace:'%2b':'+'|replace:'%2B':'+'|escape:html}
     </div>
 
-    {* Board type *}
+    {* Board type — prefer the formatted label ("Demipensiune (HB +)"), raw code as fallback *}
     <div style="margin-bottom: 4px; font-size: 13px;">
-        {$product.extra.board_id|default:$product.extra.board_name|escape:html}
+        {$product.extra.board_name|default:$product.extra.board_id|escape:html}
     </div>
 
     {* Guests *}
