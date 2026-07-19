@@ -270,6 +270,16 @@ export default function BookingEngine({ config }) {
                     }
                     curPage.appendChild(fragment);
 
+                    // The hotel header (name, location line, availability badge)
+                    // renders BEFORE the search form, so the post-form swap above
+                    // never touches it — refresh it too, or the badge keeps the
+                    // previous search's room/offer counts and party text.
+                    const curHeader = curPage.querySelector('.travel-hotel-header');
+                    const newHeader = newPage.querySelector('.travel-hotel-header');
+                    if (curHeader && newHeader) {
+                        curHeader.replaceWith(document.importNode(newHeader, true));
+                    }
+
                     // Re-execute scripts from the fetched same-origin page.
                     curPage.querySelectorAll('script').forEach(oldScript => {
                         if (oldScript.closest('.travel-search-form-wrapper')) return;
