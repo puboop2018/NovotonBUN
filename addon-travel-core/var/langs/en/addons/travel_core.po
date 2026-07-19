@@ -245,8 +245,8 @@ msgid "nights stay"
 msgstr "nights stay"
 
 msgctxt "Languages::travel_core.childrens_ages"
-msgid "Children's ages"
-msgstr "Children's ages"
+msgid "Children's ages at check-in"
+msgstr "Children's ages at check-in"
 
 msgctxt "Languages::travel_core.child_age"
 msgid "Child's age"

@@ -245,8 +245,8 @@ msgid "nights stay"
 msgstr "nopți"
 
 msgctxt "Languages::travel_core.childrens_ages"
-msgid "Children's ages"
-msgstr "Vârstele copiilor"
+msgid "Children's ages at check-in"
+msgstr "Vârsta copilului la check-in"
 
 msgctxt "Languages::travel_core.child_age"
 msgid "Child's age"
@@ -254,7 +254,7 @@ msgstr "Vârsta copilului"
 
 msgctxt "Languages::travel_core.child_n_age"
 msgid "Select child [n] age"
-msgstr "Selectează vârsta copil [n]"
+msgstr "Selectează vârsta copilului [n]"
 
 msgctxt "Languages::travel_core.select_age"
 msgid "Select age"

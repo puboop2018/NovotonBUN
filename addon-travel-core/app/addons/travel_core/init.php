@@ -57,6 +57,21 @@ if (defined('AREA') && AREA === 'A' && function_exists('fn_travel_core_ensure_sc
     fn_travel_core_ensure_schema();
 }
 
+// Self-heal language keys: addon.xml/.po are only imported at install, so new
+// or changed labels never reach existing stores on their own. Compare a stored
+// stamp against the current content hash of addon.xml + lang_keys.php and
+// reseed on any change; the seeder is idempotent (same pattern as sphinx).
+if (defined('AREA') && AREA === 'A' && function_exists('fn_travel_core_seed_language_keys')) {
+    $__stamp = db_get_field(
+        "SELECT value FROM ?:language_values WHERE name = ?s AND lang_code = ?s LIMIT 1",
+        'travel_core._lang_seed_hash', 'en'
+    );
+    if ($__stamp !== fn_travel_core_language_seed_hash()) {
+        fn_travel_core_seed_language_keys();
+    }
+    unset($__stamp);
+}
+
 // Register addon hooks
 fn_register_hooks(
     'get_cart_product_data_post',      // Format cart items for travel bookings

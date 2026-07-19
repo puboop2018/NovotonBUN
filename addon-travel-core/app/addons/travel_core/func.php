@@ -472,3 +472,80 @@ function fn_travel_core_seed_feature_map(): void
         );
     }
 }
+
+/**
+ * Self-heal language keys for existing installations.
+ *
+ * CS-Cart imports addon.xml/.po language variables only at install, so labels
+ * added or changed in later releases never reach an already-installed store.
+ * This seeder UPSERTs every variable from lang_keys.php + addon.xml into
+ * ?:language_values, stamps the source content hash into the
+ * travel_core._lang_seed_hash lang var, and clears the registry cache; the
+ * init.php probe re-runs it whenever either source file changes. Same
+ * mechanism as sphinx_holidays (which also mirrors settings labels — travel
+ * core has no such gap, so this port seeds language_values only).
+ */
+function fn_travel_core_seed_language_keys(): void
+{
+    $vars = fn_travel_core_language_variables();
+
+    foreach ($vars as $name => $translations) {
+        foreach ($translations as $lang_code => $value) {
+            db_query(
+                "INSERT INTO ?:language_values (name, lang_code, value) VALUES (?s, ?s, ?s)
+                 ON DUPLICATE KEY UPDATE value = ?s",
+                $name, $lang_code, $value, $value
+            );
+        }
+    }
+
+    // Stamp the seeded content so the init.php probe knows when to re-seed.
+    $hash = fn_travel_core_language_seed_hash();
+    db_query(
+        "INSERT INTO ?:language_values (name, lang_code, value) VALUES (?s, 'en', ?s)
+         ON DUPLICATE KEY UPDATE value = ?s",
+        'travel_core._lang_seed_hash', $hash, $hash
+    );
+
+    // Labels are served through CS-Cart's registry cache; clear it so the
+    // (re)seeded values render on the next request instead of after a manual cc.
+    if (function_exists('fn_clear_cache')) {
+        fn_clear_cache();
+    }
+}
+
+/**
+ * All travel_core language variables from both sources, merged.
+ *
+ * @return array<string, array<string, string>> name => [lang_code => value]
+ */
+function fn_travel_core_language_variables(): array
+{
+    /** @var array<string, array<string, string>> $vars */
+    $vars = require __DIR__ . '/lang_keys.php';
+
+    $xml = @simplexml_load_file(__DIR__ . '/addon.xml');
+    if ($xml !== false && isset($xml->language_variables)) {
+        foreach ($xml->language_variables->item as $item) {
+            $name = (string) $item['id'];
+            $lang_code = (string) $item['lang'];
+            if ($name === '' || $lang_code === '') {
+                continue;
+            }
+            $vars[$name][$lang_code] = (string) $item;
+        }
+    }
+
+    return $vars;
+}
+
+/**
+ * Content hash of the language-variable sources — the self-heal seed stamp.
+ */
+function fn_travel_core_language_seed_hash(): string
+{
+    return md5(
+        (string) @md5_file(__DIR__ . '/addon.xml')
+        . (string) @md5_file(__DIR__ . '/lang_keys.php')
+    );
+}

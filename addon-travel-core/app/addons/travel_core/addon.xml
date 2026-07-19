@@ -489,10 +489,12 @@
         <item lang="ro" id="travel_core.children"><![CDATA[Copii]]></item>
         <item lang="en" id="travel_core.children_label"><![CDATA[Children]]></item>
         <item lang="ro" id="travel_core.children_label"><![CDATA[Copii]]></item>
-        <item lang="en" id="travel_core.childrens_ages"><![CDATA[Children's ages]]></item>
-        <item lang="ro" id="travel_core.childrens_ages"><![CDATA[Vârstele copiilor]]></item>
+        <item lang="en" id="travel_core.childrens_ages"><![CDATA[Children's ages at check-in]]></item>
+        <item lang="ro" id="travel_core.childrens_ages"><![CDATA[Vârsta copilului la check-in]]></item>
         <item lang="en" id="travel_core.child_age"><![CDATA[Child's age]]></item>
         <item lang="ro" id="travel_core.child_age"><![CDATA[Vârsta copilului]]></item>
+        <item lang="en" id="travel_core.child_n_age"><![CDATA[Select child [n] age]]></item>
+        <item lang="ro" id="travel_core.child_n_age"><![CDATA[Selectează vârsta copilului [n]]]></item>
         <item lang="en" id="travel_core.select_age"><![CDATA[Select age]]></item>
         <item lang="ro" id="travel_core.select_age"><![CDATA[Selectează vârsta]]></item>
         <item lang="en" id="travel_core.select_missing_ages"><![CDATA[Select age ([count] missing)]]></item>
