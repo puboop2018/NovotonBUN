@@ -46,13 +46,14 @@ final class RoomType
         self::STUDIO => 'Studio',
         self::APARTMENT => 'Apartament',
         self::SUITE => 'Suită',
-        self::JUNIOR_SUITE => 'Junior Suită',
+        self::JUNIOR_SUITE => 'Suită Junior',
         self::VILLA => 'Vilă',
         self::BUNGALOW => 'Bungalou',
-        self::MAISONETTE => 'Maisonetă',
+        // No Romanian form exists for maisonette — keep the international spelling.
+        self::MAISONETTE => 'Maisonette',
         self::PENTHOUSE => 'Penthouse',
         self::DELUXE => 'Cameră Deluxe',
-        self::SUPERIOR => 'Cameră Superior',
+        self::SUPERIOR => 'Cameră Superioară',
     ];
 
     private const array ALIASES = [
@@ -145,7 +146,7 @@ final class RoomType
         // diacritics change persist labels like "Camera Dubla (DBL 2+1)" and
         // re-enter this function; dropping the legacy prefixes would double-wrap
         // them ("... (DBL 2+1) (DBL 2+1)"). /u so /i also case-folds ă/Ă.
-        $formatted_pattern = '/^(Camera|Cameră|Apartament|Studio|Suita|Suită|Vila|Vilă|Bungalou|Maisoneta|Maisonetă|Penthouse|Junior Suita|Junior Suită)\s.*\(.+\)$/iu';
+        $formatted_pattern = '/^(Camera|Cameră|Apartament|Studio|Suita|Suită|Vila|Vilă|Bungalou|Maisoneta|Maisonetă|Maisonette|Penthouse|Junior Suita|Junior Suită)\s.*\(.+\)$/iu';
         if (!empty($roomType) && preg_match($formatted_pattern, $roomType) === 1) {
             return $roomType;
         }

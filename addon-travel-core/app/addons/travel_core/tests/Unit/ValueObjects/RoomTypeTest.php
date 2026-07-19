@@ -22,10 +22,12 @@ final class RoomTypeTest extends TestCase
         self::assertSame('Cameră Triplă', RoomType::toDisplayName('TRP'));
         self::assertSame('Cameră Cvadruplă', RoomType::toDisplayName('QUA'));
         self::assertSame('Suită', RoomType::toDisplayName('SUITE'));
-        self::assertSame('Junior Suită', RoomType::toDisplayName('JST'));
+        self::assertSame('Suită Junior', RoomType::toDisplayName('JST'));
         self::assertSame('Vilă', RoomType::toDisplayName('VILLA'));
-        self::assertSame('Maisonetă', RoomType::toDisplayName('MAISONETTE'));
+        // Deliberately NOT Romanianized — the word has no Romanian form.
+        self::assertSame('Maisonette', RoomType::toDisplayName('MAISONETTE'));
         self::assertSame('Cameră Familială', RoomType::toDisplayName('FAM'));
+        self::assertSame('Cameră Superioară', RoomType::toDisplayName('SUP'));
     }
 
     public function testAliasCodesResolveToTheSameDiacriticNames(): void
@@ -62,6 +64,15 @@ final class RoomTypeTest extends TestCase
         self::assertSame(
             'Suită Deluxe (STE A)',
             RoomType::formatRoomLabel('STE A', 'Suită Deluxe (STE A)'),
+        );
+        // New word order and the international maisonette both short-circuit.
+        self::assertSame(
+            'Suită Junior (JST A)',
+            RoomType::formatRoomLabel('JST A', 'Suită Junior (JST A)'),
+        );
+        self::assertSame(
+            'Maisonette (MAI 1)',
+            RoomType::formatRoomLabel('MAI 1', 'Maisonette (MAI 1)'),
         );
     }
 
