@@ -14,12 +14,13 @@
      data-search-id="{$sphinx_search_id|escape:html}"
      data-search-status="{$sphinx_search_status|default:'idle'}">
 
-    {* Availability badge — same format as novoton's badge:
-       "✓ Available: N room(s), M offer(s) for X adults[, Y children]".
+    {* Availability status — same split layout as novoton's: a compact
+       "✓ Available" pill with the guest-count confirmation as plain text
+       below it ("N room(s), M offer(s) for X adults[, Y children]").
        Rooms = DISTINCT room types (two boards of one room count once); the
-       party suffix ties availability to the searched guests. Text is
-       (re)written by the poll JS as offers stream in; data-party-suffix
-       carries the server-rendered party for that JS. *}
+       party suffix ties availability to the searched guests. The COUNT LINE
+       is (re)written by the poll JS as offers stream in (the pill is static);
+       data-party-suffix carries the server-rendered party for that JS. *}
     {$sx_badge_room_keys = []}
     {foreach from=$sphinx_search_results item=__sx_r}
         {$__sx_rk = $__sx_r.room_name|default:$__sx_r.room_type|default:''}
@@ -31,7 +32,7 @@
     {$sx_badge_adults = $sphinx_search_params.adults|default:0}
     {$sx_badge_children = $sphinx_search_params.children|default:0}
     {capture assign="sx_badge_party_suffix"} {__("sphinx_holidays.for")|default:"for"} {$sx_badge_adults} {if $sx_badge_adults == 1}{__("sphinx_holidays.adult")|default:"adult"|lower}{else}{__("sphinx_holidays.adults")|default:"adults"|lower}{/if}{if $sx_badge_children > 0}, {$sx_badge_children} {if $sx_badge_children == 1}{__("sphinx_holidays.child")|default:"child"|lower}{else}{__("sphinx_holidays.children")|default:"children"|lower}{/if}{/if}{/capture}
-    {capture assign="sx_badge_html"}<div class="travel-availability-badge sphinx-results-title" id="sphinx-results-title" data-party-suffix="{$sx_badge_party_suffix|escape:html}"{if !$sphinx_search_results} style="display: none;"{/if}>{if $sphinx_search_results}✓ {__("sphinx_holidays.available")|default:"Available"}: {$sx_badge_rooms} {if $sx_badge_rooms == 1}{__("sphinx_holidays.room")|default:"room"|lower}{else}{__("sphinx_holidays.rooms")|default:"rooms"|lower}{/if}, {$sx_badge_offers} {if $sx_badge_offers == 1}{__("sphinx_holidays.offer")|default:"offer"|lower}{else}{__("sphinx_holidays.offers")|default:"offers"|lower}{/if}{$sx_badge_party_suffix}{/if}</div>{/capture}
+    {capture assign="sx_badge_html"}<div class="travel-availability-block sphinx-results-title" id="sphinx-results-title" data-party-suffix="{$sx_badge_party_suffix|escape:html}"{if !$sphinx_search_results} style="display: none;"{/if}><span class="travel-availability-badge">✓ {__("sphinx_holidays.available")|default:"Available"}</span><div class="travel-availability-details" id="sphinx-availability-details">{if $sphinx_search_results}{$sx_badge_rooms} {if $sx_badge_rooms == 1}{__("sphinx_holidays.room")|default:"room"|lower}{else}{__("sphinx_holidays.rooms")|default:"rooms"|lower}{/if}, {$sx_badge_offers} {if $sx_badge_offers == 1}{__("sphinx_holidays.offer")|default:"offer"|lower}{else}{__("sphinx_holidays.offers")|default:"offers"|lower}{/if}{$sx_badge_party_suffix}{/if}</div></div>{/capture}
 
     {* ===== HOTEL HEADER — placed ABOVE the search form (novoton parity);
        availability badge on the right, same row layout as novoton ===== *}
@@ -281,18 +282,21 @@ window.__sphinxConfig = {
     var seenRoomKeys = {};
     var seenRoomCount = 0;
 
-    // Rebuild the badge in the shared novoton/sphinx format:
-    // "✓ Available: N room(s), M offer(s) for X adults[, Y children]".
-    // The party suffix is server-rendered into data-party-suffix.
+    // Update the guest-count line under the compact "✓ Available" pill:
+    // "N room(s), M offer(s) for X adults[, Y children]". The pill itself is
+    // static server-rendered markup — only the count line changes as offers
+    // stream in. The party suffix is server-rendered into data-party-suffix.
     function updateBadgeText() {
         if (!title) return;
         var l = (window.__sphinxConfig && window.__sphinxConfig.labels) || {};
         var roomLabel = (seenRoomCount === 1) ? (l.room || 'room') : (l.rooms || 'rooms');
         var offerLabel = (accumulated === 1) ? (l.offer || 'offer') : (l.offers || 'offers');
         var partySuffix = title.getAttribute('data-party-suffix') || '';
-        title.textContent = '✓ ' + (l.available || 'Available') + ': '
-            + seenRoomCount + ' ' + roomLabel + ', '
-            + accumulated + ' ' + offerLabel + partySuffix;
+        var details = document.getElementById('sphinx-availability-details');
+        if (details) {
+            details.textContent = seenRoomCount + ' ' + roomLabel + ', '
+                + accumulated + ' ' + offerLabel + partySuffix;
+        }
     }
     var skeleton = document.querySelector('.sphinx-loading-skeleton');
     var noResults = document.getElementById('sphinx-no-results');

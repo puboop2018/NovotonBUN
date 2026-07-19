@@ -10,8 +10,7 @@
  * - Styling: shared classes from travel_core search-results.css + the
  *   novoton-specific classes in novoton-results.css (loaded via the
  *   styles.post.tpl hook). No {style}/<link>/<style> loads in this file.
- * - JS contract preserved: #novoton-availability-badge (text rewritten by
- *   updateAvailabilityBadge), #multi-room-selection + data attrs,
+ * - JS contract preserved: #multi-room-selection + data attrs,
  *   #room-N-price, #total-combined-price, #book-multi-room-btn,
  *   #multi-room-booking-form (multiroom-booking.js), #info-modal +
  *   #modal-content-N (openInfoModal), #request-alternatives-form.
@@ -75,9 +74,12 @@
                     {$badge_adults = $novoton_params.adults|default:0}
                     {$badge_children = $novoton_params.children_count|default:0}
                     {capture assign="badge_party_suffix"} {__("novoton_holidays.for")|default:"for"} {$badge_adults} {if $badge_adults == 1}{__("novoton_holidays.adult")|default:"adult"|lower}{else}{__("novoton_holidays.adults")|default:"adults"|lower}{/if}{if $badge_children > 0}, {$badge_children} {if $badge_children == 1}{__("novoton_holidays.child")|default:"child"|lower}{else}{__("novoton_holidays.children")|default:"children"|lower}{/if}{/if}{/capture}
-                    <span id="novoton-availability-badge" class="travel-availability-badge" data-rooms-count="{$badge_rooms_count}" data-offers-count="{$badge_offers_count}" data-party-suffix="{$badge_party_suffix|escape:html}">
-                        ✓ {__("novoton_holidays.available")}: {$badge_rooms_count} {if $badge_rooms_count == 1}{__("novoton_holidays.room")|default:"room"|lower}{else}{__("novoton_holidays.rooms")|default:"rooms"|lower}{/if}, {$badge_offers_count} {if $badge_offers_count == 1}{__("novoton_holidays.offer")|default:"offer"|lower}{else}{__("novoton_holidays.offers")|default:"offers"|lower}{/if}{$badge_party_suffix}
-                    </span>
+                    {* Split hierarchy: compact status pill (the "is it available?"
+                       signal) with the guest-count confirmation as plain text below. *}
+                    <div class="travel-availability-block">
+                        <span class="travel-availability-badge">✓ {__("novoton_holidays.available")}</span>
+                        <div class="travel-availability-details">{$badge_rooms_count} {if $badge_rooms_count == 1}{__("novoton_holidays.room")|default:"room"|lower}{else}{__("novoton_holidays.rooms")|default:"rooms"|lower}{/if}, {$badge_offers_count} {if $badge_offers_count == 1}{__("novoton_holidays.offer")|default:"offer"|lower}{else}{__("novoton_holidays.offers")|default:"offers"|lower}{/if}{$badge_party_suffix}</div>
+                    </div>
                     {/if}
                 </div>
             </div>
@@ -763,23 +765,6 @@ function closeInfoModal() {
 }
 document.getElementById('info-modal').addEventListener('click', function(e) { if (e.target === this) closeInfoModal(); });
 document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeInfoModal(); });
-
-/**
- * Dynamically update the availability badge text without page reload.
- * Call updateAvailabilityBadge(roomsCount, offersCount) from anywhere.
- */
-window.updateAvailabilityBadge = function(roomsCount, offersCount) {
-    var badge = document.getElementById('novoton-availability-badge');
-    if (!badge) return;
-    var tr = window.NovotonTranslations || {};
-    var roomLabel = ((roomsCount === 1) ? (tr.room || 'room') : (tr.rooms || 'rooms')).toLowerCase();
-    var offerLabel = ((offersCount === 1) ? (tr.offer || 'offer') : (tr.offers || 'offers')).toLowerCase();
-    var availableLabel = tr.available || 'Available';
-    var partySuffix = badge.getAttribute('data-party-suffix') || '';
-    badge.textContent = '✓ ' + availableLabel + ': ' + roomsCount + ' ' + roomLabel + ', ' + offersCount + ' ' + offerLabel + partySuffix;
-    badge.setAttribute('data-rooms-count', roomsCount);
-    badge.setAttribute('data-offers-count', offersCount);
-};
 </script>
 
 {* Client i18n for the booking engine — shared travel_core partial
