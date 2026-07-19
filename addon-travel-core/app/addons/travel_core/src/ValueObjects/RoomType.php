@@ -33,23 +33,26 @@ final class RoomType
     public const string DELUXE = 'DLX';
     public const string SUPERIOR = 'SUP';
 
+    // Romanian display names WITH proper diacritics ("Cameră Dublă", not
+    // "Camera Dubla") — matches the booking form's .po labels. Keys are API
+    // codes; matching everywhere is by code, so these are display-only.
     private const array DISPLAY_NAMES = [
-        self::SINGLE => 'Camera Single',
-        self::DOUBLE => 'Camera Dubla',
-        self::TWIN => 'Camera Twin',
-        self::TRIPLE => 'Camera Tripla',
-        self::QUAD => 'Camera Cvadrupla',
-        self::FAMILY => 'Camera Familie',
+        self::SINGLE => 'Cameră Single',
+        self::DOUBLE => 'Cameră Dublă',
+        self::TWIN => 'Cameră Twin',
+        self::TRIPLE => 'Cameră Triplă',
+        self::QUAD => 'Cameră Cvadruplă',
+        self::FAMILY => 'Cameră Familială',
         self::STUDIO => 'Studio',
         self::APARTMENT => 'Apartament',
-        self::SUITE => 'Suita',
-        self::JUNIOR_SUITE => 'Junior Suita',
-        self::VILLA => 'Vila',
+        self::SUITE => 'Suită',
+        self::JUNIOR_SUITE => 'Junior Suită',
+        self::VILLA => 'Vilă',
         self::BUNGALOW => 'Bungalou',
-        self::MAISONETTE => 'Maisoneta',
+        self::MAISONETTE => 'Maisonetă',
         self::PENTHOUSE => 'Penthouse',
-        self::DELUXE => 'Camera Deluxe',
-        self::SUPERIOR => 'Camera Superior',
+        self::DELUXE => 'Cameră Deluxe',
+        self::SUPERIOR => 'Cameră Superior',
     ];
 
     private const array ALIASES = [
@@ -137,7 +140,12 @@ final class RoomType
     {
         $roomId = self::normalizeRoomCode($roomId);
 
-        $formatted_pattern = '/^(Camera|Apartament|Studio|Suita|Vila|Bungalou|Maisoneta|Penthouse|Junior Suita)\s.*\(.+\)$/i';
+        // Idempotency guard: an already-formatted label passes through untouched.
+        // Both spellings must match — orders/bookings created BEFORE the
+        // diacritics change persist labels like "Camera Dubla (DBL 2+1)" and
+        // re-enter this function; dropping the legacy prefixes would double-wrap
+        // them ("... (DBL 2+1) (DBL 2+1)"). /u so /i also case-folds ă/Ă.
+        $formatted_pattern = '/^(Camera|Cameră|Apartament|Studio|Suita|Suită|Vila|Vilă|Bungalou|Maisoneta|Maisonetă|Penthouse|Junior Suita|Junior Suită)\s.*\(.+\)$/iu';
         if (!empty($roomType) && preg_match($formatted_pattern, $roomType) === 1) {
             return $roomType;
         }
