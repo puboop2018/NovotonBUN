@@ -57,7 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $submitted = RequestCoerce::stringMap($_REQUEST, 'appearance');
         $colorMap = _travel_styles_color_map();
         $errors = [];
-        $saved = 0;
+        $toSave = [];
 
         foreach ($colorMap as $settingName => $info) {
             $value = TypeCoerce::toString($submitted[$settingName] ?? '');
@@ -69,15 +69,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             // Normalize to lowercase hex
-            $value = ($value !== '') ? strtolower($value) : '';
-
-            // Use CS-Cart's Settings API — handles DB write + cache invalidation
-            $settings = Settings::instance();
-            if ($settings instanceof Settings) {
-                $settings->updateValue($settingName, $value, 'travel_core');
-            }
-            $saved++;
+            $toSave[$settingName] = ($value !== '') ? strtolower($value) : '';
         }
+
+        $settings = Settings::instance();
+        if ($settings instanceof Settings) {
+            foreach ($toSave as $settingName => $value) {
+                // auto_create=true so setting rows missing from ?:settings_objects
+                // (addon installed before the appearance section existed) are
+                // inserted on first save rather than silently discarded — the
+                // same idiom as every other settings write in this repo.
+                $settings->updateValue($settingName, $value, 'travel_core', true);
+            }
+        }
+
+        // Refresh the in-request Registry so subsequent hooks in this request
+        // see the new values; the redirect below reloads them from the DB.
+        $existing = Registry::get('addons.travel_core');
+        Registry::set('addons.travel_core', array_merge(is_array($existing) ? $existing : [], $toSave));
 
         if (!empty($errors)) {
             foreach ($errors as $err) {
