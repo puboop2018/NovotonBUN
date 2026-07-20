@@ -69,133 +69,16 @@ require_once __DIR__ . '/src/Services/ServiceLoader.php';
 // Force load hooks.php
 require_once __DIR__ . '/hooks.php';
 
-// ── Smarty modifier functions ──────────────────────────────────────────
-// Named using Smarty's auto-discovery convention: smarty_modifier_{name}
-// Smarty finds these by function name WITHOUT needing registerPlugin().
-// This eliminates the timing issue where registerPlugin() fails because
-// $app['view'] isn't ready yet during init.php loading.
-//
-// CRITICAL: each function is wrapped in try/catch. If a modifier throws
-// inside a {capture} block, Smarty's output buffer breaks and the ENTIRE
-// page crashes with "unexpected {/capture}". These modifiers are cosmetic
-// (format a code to a display name) — they must NEVER crash the page.
-
-/**
- * Smarty modifier: {$room_id|novoton_format_room_type}
- *
- * @param mixed $room_id
- */
-function smarty_modifier_novoton_format_room_type($room_id): string
-{
-    try {
-        if (empty($room_id) || !is_string($room_id)) {
-            return is_string($room_id) ? $room_id : '';
-        }
-        if (preg_match('/[ăîâșț]/iu', $room_id) === 1) {
-            return $room_id;
-        }
-        return \Tygh\Addons\TravelCore\ValueObjects\RoomType::formatRoomLabel($room_id);
-    } catch (\Throwable) {
-        return is_string($room_id) ? $room_id : '';
-    }
-}
-
-/**
- * Smarty modifier: {$board_id|novoton_format_board}
- *
- * @param mixed $board_id
- */
-function smarty_modifier_novoton_format_board($board_id): string
-{
-    try {
-        if (empty($board_id) || !is_string($board_id)) {
-            return is_string($board_id) ? $board_id : '';
-        }
-        return fn_novoton_holidays_board_label($board_id);
-    } catch (\Throwable) {
-        return is_string($board_id) ? $board_id : '';
-    }
-}
-
-/**
- * Smarty modifier: {$value|novoton_trace:"label"}
- *
- * Diagnostic breadcrumb for isolating template-render crashes (e.g. the
- * "Not matching {capture}{/capture}" error on order details). When a hook
- * template aborts mid-render inside a core {capture} block, the capture is
- * left unbalanced and the real culprit is masked. Placing ENTER/EXIT markers
- * around each hook template's body makes the failure point obvious: after a
- * crash, the LAST "ENTER" with no matching "EXIT" in the trace log names the
- * exact template that blew up.
- *
- * Transparent: returns $value unchanged so it can wrap a real value, or be
- * used standalone as {''|novoton_trace:"..."} to emit nothing. Gated behind
- * the addon's Debug mode (default OFF) so there is zero overhead in
- * production until an admin explicitly enables it. Never throws — a broken
- * diagnostic must not break the page it is diagnosing.
- *
- * Log file: var/novoton_tpl_trace.log
- *
- * @param mixed $value
- * @param mixed $label
- * @return mixed
- */
-function smarty_modifier_novoton_trace($value, $label = '')
-{
-    try {
-        if (\Tygh\Addons\NovotonHolidays\Services\ConfigProvider::isDebugMode()) {
-            $rootRaw = \Tygh\Registry::get('config.dir.root');
-            $root = is_scalar($rootRaw) ? (string) $rootRaw : '';
-            $file = rtrim($root, '/') . '/var/novoton_tpl_trace.log';
-            $area = defined('AREA') && is_string(AREA) ? AREA : '?';
-            $line = '[' . date('Y-m-d H:i:s') . '] '
-                . $area . ' '
-                . (is_scalar($label) ? (string) $label : '') . PHP_EOL;
-            @file_put_contents($file, $line, FILE_APPEND);
-        }
-    } catch (\Throwable) {
-        // A diagnostic must never crash the page it is diagnosing.
-    }
-
-    return $value;
-}
-
-/**
- * Register Smarty modifiers explicitly as backup.
- * The smarty_modifier_{name} naming convention handles auto-discovery,
- * but explicit registration ensures CS-Cart's Smarty also knows about them.
- */
-function fn_novoton_holidays_register_smarty_modifiers(): void
-{
-    static $registered = false;
-
-    if ($registered) {
-        return;
-    }
-
-    try {
-        $app = class_exists('Tygh\Tygh') ? \Tygh\Tygh::$app : null;
-        $smarty = null;
-        if ($app instanceof \ArrayAccess && $app->offsetExists('view')) {
-            $smarty = $app['view'];
-        } elseif (is_array($app) && isset($app['view'])) {
-            $smarty = $app['view'];
-        }
-        {
-            if (is_object($smarty) && method_exists($smarty, 'registerPlugin')) {
-                $smarty->registerPlugin('modifier', 'novoton_format_room_type', 'smarty_modifier_novoton_format_room_type');
-                $smarty->registerPlugin('modifier', 'novoton_format_board', 'smarty_modifier_novoton_format_board');
-                $smarty->registerPlugin('modifier', 'novoton_trace', 'smarty_modifier_novoton_trace');
-                $registered = true;
-            }
-        }
-    } catch (\Throwable) {
-        // Registration failed — auto-discovery will still work
-    }
-}
-
-// Try to register immediately if possible (may fail early in bootstrap — that's OK)
-fn_novoton_holidays_register_smarty_modifiers();
+// ── Smarty modifiers: none — deliberately ──────────────────────────────
+// Smarty 5 resolves modifiers at COMPILE time from registered plugins and
+// real PHP function names only. Auto-discovery of smarty_modifier_* globals
+// no longer exists, and registerPlugin() timing is not guaranteed when a
+// template recompiles (a |novoton_* pipe threw a CompilerException that
+// 500'd novoton_booking.booking_form storewide — a runtime try/catch inside
+// the modifier can never catch a compile-time error). Templates call the
+// plain helpers directly instead, e.g.
+// {fn_novoton_holidays_format_board_name($x|default:'')} — enforced by
+// SmartyCompatTest::testNoCustomModifierPipesInTemplates.
 
 // Register with shared travel provider registry (guard against travel_core not being loaded)
 if (class_exists(\Tygh\Addons\TravelCore\Services\TravelProviderRegistry::class)) {

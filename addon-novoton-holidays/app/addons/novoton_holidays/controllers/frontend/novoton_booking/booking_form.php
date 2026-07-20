@@ -237,7 +237,19 @@ use Tygh\Addons\TravelCore\Services\CurrencyService;
     if (empty($age_categories) || empty($room_limits)) {
         $api = fn_novoton_holidays_get_api();
         if ($api !== null) {
-            $hotelInfoResponse = $api->hotels()->getHotelInfo(TypeCoerce::toString($booking['hotel_id']));
+            // A provider hiccup must not 500 this customer-facing page —
+            // degrade to the default age/room limits below, same as the
+            // no-API-configured path.
+            try {
+                $hotelInfoResponse = $api->hotels()->getHotelInfo(TypeCoerce::toString($booking['hotel_id']));
+            } catch (\Throwable $e) {
+                $hotelInfoResponse = null;
+                fn_log_event('general', 'runtime', [
+                    'message' => 'Novoton booking_form: getHotelInfo failed — using default age/room limits',
+                    'hotel_id' => TypeCoerce::toString($booking['hotel_id']),
+                    'error' => $e->getMessage(),
+                ]);
+            }
             if ((bool) $hotelInfoResponse && isset($hotelInfoResponse->hotels->hotel)) {
                 $h = $hotelInfoResponse->hotels->hotel;
 
