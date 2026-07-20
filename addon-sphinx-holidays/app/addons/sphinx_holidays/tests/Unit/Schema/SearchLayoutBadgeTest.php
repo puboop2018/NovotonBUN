@@ -63,6 +63,25 @@ final class SearchLayoutBadgeTest extends TestCase
         self::assertStringContainsString("\$hotelRow['address']", $controller);
     }
 
+    public function testHotelHeaderMatchesPdpTypographyAndTextPipeline(): void
+    {
+        $tpl = self::searchTpl();
+
+        // Name parity: the theme's PDP title class on the heading.
+        self::assertStringContainsString('<h1 class="ty-product-block-title sphinx-hotel-header-name">', $tpl);
+        // Location parity: the PDP's " - " separator before the map link.
+        self::assertStringContainsString('{if $sphinx_hotel_location} - {/if}', $tpl);
+
+        // The TEXT comes from the shared PDP pipeline (HotelLocationLine) with
+        // the provider's field mapping — not an inline implode.
+        $controller = (string) file_get_contents(
+            dirname(__DIR__, 3) . '/controllers/frontend/sphinx_booking/search.php',
+        );
+        self::assertStringContainsString('HotelLocationLine::build', $controller);
+        self::assertStringContainsString("\$hotelRow['region_name']", $controller);
+        self::assertStringNotContainsString("implode(', ', \$locationParts)", $controller);
+    }
+
     public function testServerBadgeMatchesNovotonFormat(): void
     {
         $tpl = self::searchTpl();

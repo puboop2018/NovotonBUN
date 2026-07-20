@@ -178,6 +178,7 @@ class SearchResultFormatter implements SearchResultFormatterInterface
         $hotelCity = '';
         $hotelRegion = '';
         $hotelCountry = '';
+        $hotelStreet = '';
         $hotelLat = 0.0;
         $hotelLng = 0.0;
 
@@ -190,6 +191,7 @@ class SearchResultFormatter implements SearchResultFormatterInterface
                 $hotelCity = $hotelInfo['city'] ?? '';
                 $hotelRegion = $hotelInfo['region'] ?? '';
                 $hotelCountry = $hotelInfo['country'] ?? '';
+                $hotelStreet = $hotelInfo['street_address'] ?? '';
                 $hotelLat = TypeCoerce::toFloat($hotelInfo['latitude'] ?? 0);
                 $hotelLng = TypeCoerce::toFloat($hotelInfo['longitude'] ?? 0);
 
@@ -231,6 +233,8 @@ class SearchResultFormatter implements SearchResultFormatterInterface
 
         // Same sanitizer as the PDP: Title-Cases single-case labels and dedups
         // city==region, so "DURRES, DURRES, ALBANIA" renders "Durres, Albania".
+        // street_address (opt-in geocoding) flips it to the PDP's postal style,
+        // keeping search text == PDP text on geocoded installs too.
         $view->assign('hotel_location_line', HotelLocationLine::build(new HotelSeoData(
             hotelId: TypeCoerce::toString($hotelId),
             providerName: 'novoton',
@@ -238,6 +242,7 @@ class SearchResultFormatter implements SearchResultFormatterInterface
             city: TypeCoerce::toString($hotelCity),
             region: TypeCoerce::toString($hotelRegion),
             country: TypeCoerce::toString($hotelCountry),
+            address: TypeCoerce::toString($hotelStreet),
         )));
     }
 

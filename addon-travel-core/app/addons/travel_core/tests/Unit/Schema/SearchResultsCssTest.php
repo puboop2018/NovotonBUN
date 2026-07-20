@@ -56,6 +56,42 @@ final class SearchResultsCssTest extends TestCase
         }
     }
 
+    public function testHotelHeaderTypographyDefersToThePdpTitleClass(): void
+    {
+        $css = self::css('responsive');
+
+        $rule = self::extractRule($css, '.travel-search-results-page .travel-hotel-header h1');
+        self::assertStringContainsString('margin: 0', $rule);
+        foreach (['font-size', 'font-weight', 'color'] as $prop) {
+            self::assertStringNotContainsString(
+                $prop,
+                $rule,
+                "{$prop} must come from ty-product-block-title (PDP parity), not this rule",
+            );
+        }
+    }
+
+    public function testLocationLineAndMapLinkMatchThePdpSpec(): void
+    {
+        $css = self::css('responsive');
+
+        // main_info_title.post.tpl inline spec: 14px / 1.4 / normal / #666 / 4px gap.
+        $rule = self::extractRule($css, '.travel-search-results-page .travel-hotel-location');
+        self::assertStringContainsString('margin: 4px 0 0', $rule);
+        self::assertStringContainsString('font-size: 14px', $rule);
+        self::assertStringContainsString('line-height: 1.4', $rule);
+        self::assertStringContainsString('font-weight: normal', $rule);
+        self::assertStringContainsString('color: #666', $rule);
+
+        $mapRule = self::extractRule($css, '.travel-search-results-page .travel-hotel-map-link');
+        self::assertStringContainsString('font-size: 13px', $mapRule);
+        self::assertStringNotContainsString(
+            'margin-left',
+            $mapRule,
+            'spacing comes from the " - " separator in the markup, like the PDP',
+        );
+    }
+
     /** The body of the FIRST css block whose selector line contains $selector. */
     private static function extractRule(string $css, string $selector): string
     {

@@ -26,9 +26,10 @@
     border-radius: 8px;
     margin-bottom: 12px;
 }
-/* "Location - show map" link next to the hotel address (Google Maps) */
+/* "Location - show map" link next to the hotel address (Google Maps).
+   No margin: the " - " separator in the markup provides the spacing,
+   exactly like the PDP (main_info_title.post.tpl). */
 .travel-search-results-page .travel-hotel-map-link {
-    margin-left: 10px;
     font-size: 13px;
     white-space: nowrap;
 }
@@ -49,22 +50,31 @@
     gap: 16px;
     flex-wrap: wrap;
 }
+/* Hotel name typography (font/size/weight/color) comes from the theme's
+   PDP product-title class (ty-product-block-title) carried on the heading
+   markup — PDP parity by construction, never by copied values. Only the
+   card-fit margin is scoped here (out-specifies the theme class). */
 .travel-search-results-page .travel-hotel-header h1,
 .travel-search-results-page .travel-hotel-header h2 {
     margin: 0;
-    font-size: 22px;
-    font-weight: 600;
-    color: var(--nvt-primary, #003580);
 }
 .travel-search-results-page .travel-hotel-stars {
     color: var(--nvt-stars, #f5a623);
     margin-left: 6px;
     letter-spacing: 1px;
+    /* Pinned: the heading now carries the (larger) PDP title size; without
+       this the stars would inherit it and silently grow past today's 22px. */
+    font-size: 22px;
 }
+/* PDP spec (main_info_title.post.tpl inline styles), literal #666 on
+   purpose: the PDP hardcodes #666, while --nvt-text-light resolves to
+   lighten(@font, 35%) — NOT #666 on stock themes. */
 .travel-search-results-page .travel-hotel-location {
-    margin: 5px 0 0;
+    margin: 4px 0 0;
     font-size: 14px;
-    color: var(--nvt-text-light, #666);
+    line-height: 1.4;
+    font-weight: normal;
+    color: #666;
 }
 
 /* ── Availability status: compact pill + guest-count line below ───────── */
