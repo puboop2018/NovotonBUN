@@ -18,6 +18,67 @@ if (!defined('BOOTSTRAP')) {
 }
 
 /**
+ * Canonical read of the booking-form appearance colors.
+ *
+ * Source of truth is CS-Cart's ?:storage_data KV (survives cache clears and
+ * is shared by both areas), because Settings::updateValue() proved unreliable
+ * for these addon-section settings on live installs: values "saved" via the
+ * Settings API landed only in the per-area registry cache — the admin form
+ * kept showing them while the storefront (a separate cache) and any
+ * cache-cleared request fell back to the defaults. Registry values are read
+ * first as legacy fallback for installs where the API did write; storage
+ * wins whenever it has a value.
+ *
+ * @return array<string, string> color_* => hex ('' = theme default)
+ */
+function fn_travel_core_get_appearance_colors(): array
+{
+    $out = [];
+
+    $tc = \Tygh\Registry::get('addons.travel_core');
+    if (is_array($tc)) {
+        foreach ($tc as $k => $v) {
+            if (is_string($k) && str_starts_with($k, 'color_') && is_scalar($v)) {
+                $out[$k] = (string) $v;
+            }
+        }
+    }
+
+    if (function_exists('fn_get_storage_data')) {
+        $raw = fn_get_storage_data('travel_core_appearance');
+        if (is_string($raw) && $raw !== '') {
+            $stored = json_decode($raw, true);
+            if (is_array($stored)) {
+                foreach ($stored as $k => $v) {
+                    if (is_string($k) && str_starts_with($k, 'color_') && is_scalar($v)) {
+                        $out[$k] = (string) $v;
+                    }
+                }
+            }
+        }
+    }
+
+    return $out;
+}
+
+/**
+ * Persist the appearance colors to ?:storage_data (see the reader above for
+ * why storage is the source of truth) and refresh the in-request Registry so
+ * hooks later in the same request already see the new values.
+ *
+ * @param array<string, string> $colors color_* => hex ('' = theme default)
+ */
+function fn_travel_core_save_appearance_colors(array $colors): void
+{
+    if (function_exists('fn_set_storage_data')) {
+        fn_set_storage_data('travel_core_appearance', (string) json_encode($colors));
+    }
+
+    $existing = \Tygh\Registry::get('addons.travel_core');
+    \Tygh\Registry::set('addons.travel_core', array_merge(is_array($existing) ? $existing : [], $colors));
+}
+
+/**
  * Render the React booking engine mount-point HTML entirely in PHP.
  *
  * This replaces $view->fetch('booking_engine.tpl') and Smarty {include} for
@@ -57,9 +118,8 @@ function fn_travel_core_render_booking_engine(array $params = []): string
     $calPricesJson = $vh::toString($params['calendar_prices_json'] ?? '');
     $calPricesCurr = $vh::toString($params['calendar_prices_currency'] ?? '');
 
-    // Colors from addon settings (bypasses Smarty completely)
-    /** @var array<string, mixed> $tc */
-    $tc = is_array(\Tygh\Registry::get('addons.travel_core')) ? \Tygh\Registry::get('addons.travel_core') : [];
+    // Colors from the canonical appearance store (bypasses Smarty completely)
+    $tc = fn_travel_core_get_appearance_colors();
     $colors = json_encode([
         'primary' => $vh::toString($tc['color_primary'] ?? ''),
         'accent' => $vh::toString($tc['color_accent'] ?? ''),

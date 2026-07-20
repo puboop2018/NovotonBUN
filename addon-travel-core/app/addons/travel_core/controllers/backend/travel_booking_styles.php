@@ -4,19 +4,17 @@ declare(strict_types=1);
  * Travel Core - Booking Form Appearance Settings Controller
  *
  * Dedicated admin page for customizing the React booking engine colors.
- * Color values are stored as travel_core addon settings (defined in addon.xml
- * under the 'appearance' section) and injected at runtime via CSS custom
- * properties in booking_engine.tpl.
- *
- * Uses the CS-Cart Settings API (Settings::instance()->updateValue()) for
- * saves — this handles both the database update and cache invalidation.
+ * Color values live in CS-Cart's ?:storage_data KV
+ * (fn_travel_core_save/get_appearance_colors — survives cache clears,
+ * shared by both areas) and are injected at runtime via the data-colors
+ * JSON in booking_engine.tpl / fn_travel_core_render_booking_engine.
+ * The Settings API write is kept as a best-effort secondary sync only.
  *
  * @package TravelCore
  * @since   1.2.0
  */
 
 use Tygh\Tygh;
-use Tygh\Registry;
 use Tygh\Settings;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
@@ -72,21 +70,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $toSave[$settingName] = ($value !== '') ? strtolower($value) : '';
         }
 
+        // Source of truth: ?:storage_data (survives cache clears, shared by
+        // both areas). The Settings API proved unreliable for these rows on
+        // live installs — values landed only in the per-area registry cache,
+        // so the admin form "kept" them while the storefront showed defaults
+        // and any cache clear reset the form too.
+        fn_travel_core_save_appearance_colors($toSave);
+
+        // Best-effort secondary write so ?:settings_objects stays in sync on
+        // installs where the Settings API does persist these rows.
         $settings = Settings::instance();
         if ($settings instanceof Settings) {
             foreach ($toSave as $settingName => $value) {
-                // auto_create=true so setting rows missing from ?:settings_objects
-                // (addon installed before the appearance section existed) are
-                // inserted on first save rather than silently discarded — the
-                // same idiom as every other settings write in this repo.
                 $settings->updateValue($settingName, $value, 'travel_core', true);
             }
         }
-
-        // Refresh the in-request Registry so subsequent hooks in this request
-        // see the new values; the redirect below reloads them from the DB.
-        $existing = Registry::get('addons.travel_core');
-        Registry::set('addons.travel_core', array_merge(is_array($existing) ? $existing : [], $toSave));
 
         if (!empty($errors)) {
             foreach ($errors as $err) {
@@ -105,8 +103,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 if ($mode === 'manage') {
     $colorMap = _travel_styles_color_map();
 
-    // Read current values via Registry (reliable — Settings API manages cache)
-    $tc = TypeCoerce::toStringMap(Registry::get('addons.travel_core'));
+    // Canonical read: storage-backed colors merged over any legacy
+    // settings/registry values — the same source the storefront renders from.
+    $tc = fn_travel_core_get_appearance_colors();
 
     $color_groups = [
         'base' => [
