@@ -36,4 +36,14 @@ interface HotelProductProviderInterface
      * (not throw) for ids this provider does not recognise.
      */
     public function ownsHotelId(string $hotelId): bool;
+
+    /**
+     * The CS-Cart product_id linked to a (provider-native) hotel id.
+     *
+     * Reverse of resolveProduct(): lets admin surfaces (e.g. the unified
+     * Travel Bookings pages) link a booking's hotel to its storefront
+     * product page. Must return null (not throw) when the hotel is unknown
+     * or has no linked product.
+     */
+    public function productIdForHotelId(string $hotelId): ?int;
 }

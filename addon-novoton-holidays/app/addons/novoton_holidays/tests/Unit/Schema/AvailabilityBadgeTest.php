@@ -103,6 +103,25 @@ final class AvailabilityBadgeTest extends TestCase
         self::assertStringContainsString('novoton_holidays.location_show_map', $tpl);
     }
 
+    public function testHotelNameReusesThePdpTitleClass(): void
+    {
+        $tpl = self::themeTpl('responsive');
+
+        // Font/size/weight/color parity with the product page comes from
+        // REUSING the theme's PDP title class, not from copied CSS values.
+        self::assertStringContainsString('<h1 class="ty-product-block-title">', $tpl);
+        self::assertStringNotContainsString('<h2>', $tpl, 'the header heading is an h1 now (PDP tag parity)');
+    }
+
+    public function testLocationLineUsesThePdpSeparatorBeforeTheMapLink(): void
+    {
+        $tpl = self::themeTpl('responsive');
+
+        // " - " between the location text and the map link, only when both
+        // render — exactly like main_info_title.post.tpl on the PDP.
+        self::assertStringContainsString('{if $hotel_location_line} - {/if}', $tpl);
+    }
+
     public function testThemeCopiesAreByteIdentical(): void
     {
         self::assertSame(

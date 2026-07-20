@@ -70,6 +70,21 @@ final class NovotonHotelProductProvider implements HotelProductProviderInterface
         );
     }
 
+    #[\Override]
+    public function productIdForHotelId(string $hotelId): ?int
+    {
+        if ($hotelId === '' || !ctype_digit($hotelId)) {
+            return null;
+        }
+
+        $productId = TypeCoerce::toInt(db_get_field(
+            'SELECT product_id FROM ?:novoton_hotels WHERE hotel_id = ?i LIMIT 1',
+            (int) $hotelId,
+        ));
+
+        return $productId > 0 ? $productId : null;
+    }
+
     private static function optString(mixed $v): ?string
     {
         if ($v === null) {

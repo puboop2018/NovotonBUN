@@ -40,7 +40,9 @@
         <div class="travel-hotel-header sphinx-hotel-header">
             <div class="travel-hotel-header-row">
                 <div>
-                    <h1 class="sphinx-hotel-header-name">
+                    {* PDP-parity name: the theme's product-title class carries the
+                       exact font/size/weight/color the product page uses. *}
+                    <h1 class="ty-product-block-title sphinx-hotel-header-name">
                         {if $sphinx_search_params.product_id}
                             <a href="{"products.view?product_id=`$sphinx_search_params.product_id`"|fn_url}" class="travel-hotel-name-link">{$sphinx_hotel_name|escape:html}</a>
                         {else}
@@ -50,10 +52,9 @@
                     </h1>
                     {if $sphinx_hotel_location || ($sphinx_hotel_lat && $sphinx_hotel_lng)}
                         <p class="travel-hotel-location sphinx-hotel-header-location">
-                            {$sphinx_hotel_location|escape:html}
-                            {if $sphinx_hotel_lat && $sphinx_hotel_lng}
-                                <a href="https://www.google.com/maps?q={$sphinx_hotel_lat},{$sphinx_hotel_lng}" target="_blank" rel="noopener" class="travel-hotel-map-link">{__("sphinx_holidays.location_show_map")|default:"Location - show map"}</a>
-                            {/if}
+                            {* Text from HotelLocationLine (PDP pipeline); the " - "
+                               separator mirrors main_info_title.post.tpl *}
+                            {$sphinx_hotel_location|escape:html}{if $sphinx_hotel_lat && $sphinx_hotel_lng}{if $sphinx_hotel_location} - {/if}<a href="https://www.google.com/maps?q={$sphinx_hotel_lat},{$sphinx_hotel_lng}" target="_blank" rel="noopener" class="travel-hotel-map-link">{__("sphinx_holidays.location_show_map")|default:"Location - show map"}</a>{/if}
                         </p>
                     {/if}
                 </div>

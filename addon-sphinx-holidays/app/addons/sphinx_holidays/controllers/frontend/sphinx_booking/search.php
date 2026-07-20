@@ -26,8 +26,10 @@ use Tygh\Addons\SphinxHolidays\Helpers\SearchOfferNormalizer;
 use Tygh\Addons\SphinxHolidays\Services\CacheService;
 use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
 use Tygh\Addons\SphinxHolidays\Services\Container;
+use Tygh\Addons\TravelCore\Dto\Hotel\HotelSeoData;
 use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+use Tygh\Addons\TravelCore\Services\HotelLocationLine;
 use Tygh\Tygh;
 
 try {
@@ -65,21 +67,23 @@ try {
     $hotel_lat = 0.0;
     $hotel_lng = 0.0;
     if ($hotelRow !== null) {
-        // Full postal-style line: street, city, country (API address fields),
-        // falling back to the destination-tree names when address is missing.
-        $locationParts = array_filter(
-            [
-                trim(TypeCoerce::toString($hotelRow['address'] ?? '')),
-                trim(TypeCoerce::toString($hotelRow['address_city'] ?? '')) !== ''
-                    ? trim(TypeCoerce::toString($hotelRow['address_city'] ?? ''))
-                    : TypeCoerce::toString($hotelRow['destination_name'] ?? ''),
-                trim(TypeCoerce::toString($hotelRow['address_country'] ?? '')) !== ''
-                    ? trim(TypeCoerce::toString($hotelRow['address_country'] ?? ''))
-                    : TypeCoerce::toString($hotelRow['country_name'] ?? ''),
-            ],
-            static fn (string $part): bool => $part !== '',
-        );
-        $hotel_location = implode(', ', $locationParts);
+        // Same text pipeline as the PDP (SphinxHotelProductProvider →
+        // HotelLocationLine): postal "street, city, country" when the API
+        // address exists, else "city, region, country", with the PDP's
+        // Title-Casing and dedup. The field mapping mirrors the provider's
+        // SQL: city = COALESCE(NULLIF(address_city, ''), destination_name),
+        // country = COALESCE(NULLIF(address_country, ''), country_name).
+        $addressCity = trim(TypeCoerce::toString($hotelRow['address_city'] ?? ''));
+        $addressCountry = trim(TypeCoerce::toString($hotelRow['address_country'] ?? ''));
+        $hotel_location = HotelLocationLine::build(new HotelSeoData(
+            hotelId: $hotel_id,
+            providerName: 'sphinx',
+            name: $hotel_name,
+            city: $addressCity !== '' ? $addressCity : TypeCoerce::toString($hotelRow['destination_name'] ?? ''),
+            region: TypeCoerce::toString($hotelRow['region_name'] ?? ''),
+            country: $addressCountry !== '' ? $addressCountry : TypeCoerce::toString($hotelRow['country_name'] ?? ''),
+            address: TypeCoerce::toString($hotelRow['address'] ?? ''),
+        ));
         $hotel_lat = TypeCoerce::toFloat($hotelRow['latitude'] ?? 0);
         $hotel_lng = TypeCoerce::toFloat($hotelRow['longitude'] ?? 0);
     }

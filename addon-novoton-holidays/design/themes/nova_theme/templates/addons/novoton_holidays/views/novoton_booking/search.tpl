@@ -37,20 +37,20 @@
         <div class="travel-hotel-header novoton-hotel-header">
             <div class="novoton-hotel-header-row">
                 <div>
-                    <h2>
+                    {* PDP-parity name: the theme's product-title class carries the
+                       exact font/size/weight/color the product page uses. *}
+                    <h1 class="ty-product-block-title">
                         {if $novoton_params.product_id}
                             <a href="{"products.view?product_id=`$novoton_params.product_id`"|fn_url}" class="travel-hotel-name-link">{$hotel_name|default:'Hotel'}</a>
                         {else}
                             {$hotel_name|default:'Hotel'}
                         {/if}
                         <span class="travel-hotel-stars" aria-hidden="true">{$hotel_stars|default:'****'}</span>
-                    </h2>
+                    </h1>
                     <p class="travel-hotel-location">
-                         {* Sanitized by HotelLocationLine (Title Case + dedup), same as the PDP *}
-                         {$hotel_location_line|default:''}
-                        {if $hotel_lat && $hotel_lng}
-                            <a href="https://www.google.com/maps?q={$hotel_lat},{$hotel_lng}" target="_blank" rel="noopener" class="travel-hotel-map-link">{__("novoton_holidays.location_show_map")|default:"Location - show map"}</a>
-                        {/if}
+                        {* Sanitized by HotelLocationLine (Title Case + dedup), same as the PDP;
+                           the " - " separator before the map link mirrors main_info_title.post.tpl *}
+                        {$hotel_location_line|default:''}{if $hotel_lat && $hotel_lng}{if $hotel_location_line} - {/if}<a href="https://www.google.com/maps?q={$hotel_lat},{$hotel_lng}" target="_blank" rel="noopener" class="travel-hotel-map-link">{__("novoton_holidays.location_show_map")|default:"Location - show map"}</a>{/if}
                     </p>
                     {if $hotel_season_from && $hotel_season_to}
                     <p class="novoton-season-note">

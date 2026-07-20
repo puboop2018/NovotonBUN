@@ -52,6 +52,22 @@ function _travel_bookings_enrich(array $booking): array
         return $booking;
     }
 
+    // Storefront product page for the booking's hotel — resolved through the
+    // provider's HotelProductProvider (no provider SQL in this controller).
+    // Runs before the admin-provider guards below so the link renders even
+    // for bookings the admin provider cannot enrich.
+    $hotelId = TypeCoerce::toString($booking['hotel_id'] ?? '');
+    $productProvider = TravelProviderRegistry::getHotelProductProvider($providerName);
+    if ($hotelId !== '' && $productProvider !== null) {
+        $productId = $productProvider->productIdForHotelId($hotelId);
+        if ($productId !== null) {
+            // Area 'C' → customer storefront URL (the admin grid links out).
+            $booking['hotel_product_url'] = TypeCoerce::toString(
+                fn_url('products.view?product_id=' . $productId, 'C')
+            );
+        }
+    }
+
     $adminProvider = TravelProviderRegistry::getBookingAdminProvider($providerName);
     if ($adminProvider === null) {
         return $booking;
