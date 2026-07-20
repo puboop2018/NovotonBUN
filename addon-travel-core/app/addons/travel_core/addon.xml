@@ -391,6 +391,8 @@
         <item lang="ro" id="travel_core.invalid_status"><![CDATA[Status invalid.]]></item>
         <item lang="en" id="travel_core.hotel"><![CDATA[Hotel]]></item>
         <item lang="ro" id="travel_core.hotel"><![CDATA[Hotel]]></item>
+        <item lang="en" id="travel_core.hotel_name"><![CDATA[Hotel name]]></item>
+        <item lang="ro" id="travel_core.hotel_name"><![CDATA[Nume hotel]]></item>
         <item lang="en" id="travel_core.rooms_short"><![CDATA[room(s)]]></item>
         <item lang="ro" id="travel_core.rooms_short"><![CDATA[cam.]]></item>
         <item lang="en" id="travel_core.provider_ref"><![CDATA[provider ref]]></item>

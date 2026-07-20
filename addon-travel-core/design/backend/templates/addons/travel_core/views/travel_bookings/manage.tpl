@@ -42,7 +42,7 @@
         </div>
 
         <div class="control-group">
-            <label class="control-label" for="search_hotel_name">{__("hotel_name")}:</label>
+            <label class="control-label" for="search_hotel_name">{__("travel_core.hotel_name")}:</label>
             <div class="controls">
                 <input type="text" name="hotel_name" id="search_hotel_name" value="{$search.hotel_name|escape:html}" size="20" />
             </div>
@@ -106,7 +106,7 @@
                     </a>
                 </th>
                 <th width="80">{__("provider")}</th>
-                <th>{__("hotel")}</th>
+                <th>{__("travel_core.hotel")}</th>
                 <th>{__("travel_core.room")}</th>
                 <th>
                     <a href="{"travel_bookings.manage?sort_by=check_in&sort_order=`$sort_order_toggle`"|fn_url}">
@@ -154,9 +154,14 @@
                     {/if}
                 </td>
 
-                {* Hotel *}
+                {* Hotel — links to the storefront product page when the
+                   provider resolved one (hotel_product_url, new window). *}
                 <td>
-                    {if $booking.hotel_name}
+                    {if $booking.hotel_product_url}
+                        <a href="{$booking.hotel_product_url|escape:html}" target="_blank" rel="noopener">
+                            <strong>{if $booking.hotel_name}{$booking.hotel_name|escape:html}{else}Hotel #{$booking.hotel_id|escape:html}{/if}</strong>
+                        </a>
+                    {elseif $booking.hotel_name}
                         <strong>{$booking.hotel_name|escape:html}</strong>
                     {else}
                         <strong>Hotel #{$booking.hotel_id|escape:html}</strong>

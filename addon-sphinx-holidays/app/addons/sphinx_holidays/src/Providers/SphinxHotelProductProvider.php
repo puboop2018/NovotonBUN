@@ -71,6 +71,21 @@ final class SphinxHotelProductProvider implements HotelProductProviderInterface
         );
     }
 
+    #[\Override]
+    public function productIdForHotelId(string $hotelId): ?int
+    {
+        if ($hotelId === '') {
+            return null;
+        }
+
+        $productId = TypeCoerce::toInt(db_get_field(
+            'SELECT product_id FROM ?:sphinx_hotels WHERE hotel_id = ?s LIMIT 1',
+            $hotelId,
+        ));
+
+        return $productId > 0 ? $productId : null;
+    }
+
     private static function optString(mixed $v): ?string
     {
         if ($v === null) {

@@ -14,6 +14,14 @@
             <div class="span6">
                 <h4 style="margin: 0;">
                     Booking #{$booking.booking_id}
+                    {if $booking.hotel_name}
+                        &mdash;
+                        {if $booking.hotel_product_url}
+                            <a href="{$booking.hotel_product_url|escape:html}" target="_blank" rel="noopener">{$booking.hotel_name|escape:html}</a>
+                        {else}
+                            {$booking.hotel_name|escape:html}
+                        {/if}
+                    {/if}
                     {if $booking.provider == 'novoton'}
                         <span class="label label-info">Novoton</span>
                     {elseif $booking.provider == 'sphinx'}
@@ -57,8 +65,14 @@
                     </td>
                 </tr>
                 <tr>
-                    <td><strong>{__("hotel_name")}:</strong></td>
-                    <td>{$booking.hotel_name|escape:html}</td>
+                    <td><strong>{__("travel_core.hotel_name")}:</strong></td>
+                    <td>
+                        {if $booking.hotel_product_url}
+                            <a href="{$booking.hotel_product_url|escape:html}" target="_blank" rel="noopener">{$booking.hotel_name|escape:html}</a>
+                        {else}
+                            {$booking.hotel_name|escape:html}
+                        {/if}
+                    </td>
                 </tr>
                 {if $booking.destination}
                 <tr>
