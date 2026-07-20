@@ -749,7 +749,11 @@ if ($mode === 'manage') {
 
     $view->assign('counts_by_type', $countsByType);
     $view->assign('total_destinations', $totalDestinations);
-    $view->assign('countries', $countryData);
+    // Namespaced: 'countries' is a CS-Cart core Smarty global ([code => name]
+    // map present on every admin page); assigning our numeric whitelist rows
+    // to it clobbered core data page-wide (same defect class as novoton
+    // 33f15ad). Guarded by ReservedSmartyGlobalsTest.
+    $view->assign('sphinx_whitelist_countries', $countryData);
     $view->assign('whitelist_map', $whitelistMap);
     $view->assign('whitelisted_country_count', $whitelistedCountryCount);
     $view->assign('whitelisted_region_count', $whitelistedRegionCount);
