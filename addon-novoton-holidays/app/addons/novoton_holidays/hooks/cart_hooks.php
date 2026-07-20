@@ -164,13 +164,16 @@ function fn_novoton_holidays_checkout_pre_dispatch(array &$cart, array &$auth, ?
 
 /**
  * Hook: dispatch_before_display - Ensure meta variables are never null,
- * register Smarty modifiers, and load frontend CSS.
+ * register the json_decode modifier, and load frontend CSS.
  */
 function fn_novoton_holidays_dispatch_before_display(): void
 {
-    // Register Smarty modifiers for ALL dispatches.
-    // Explicit registration ensures Smarty 5 finds the modifier even if
-    // auto-discovery of smarty_modifier_* functions is disabled.
+    // Register the json_decode modifier for ALL dispatches. Safe because the
+    // name is a NATIVE PHP function — the Smarty 5 compiler resolves it via
+    // the PHP-function fallback even before this registration runs; the
+    // registration only swaps in the assoc-defaulting wrapper below. Custom
+    // (non-native) modifier names are banned outright: their resolution is
+    // compile-time and timing-fragile (see init.php + SmartyCompatTest).
     try {
         $view = fn_novoton_holidays_get_view();
         if (method_exists($view, 'registerPlugin')) {
@@ -178,9 +181,6 @@ function fn_novoton_holidays_dispatch_before_display(): void
         }
     } catch (\Throwable) {
         // Silently ignore if already registered or view not available
-    }
-    if (function_exists('fn_novoton_holidays_register_smarty_modifiers')) {
-        fn_novoton_holidays_register_smarty_modifiers();
     }
 
     $dispatch = RequestCoerce::string($_REQUEST, 'dispatch');

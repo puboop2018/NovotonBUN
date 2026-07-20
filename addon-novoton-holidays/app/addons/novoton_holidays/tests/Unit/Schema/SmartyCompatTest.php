@@ -86,6 +86,77 @@ final class SmartyCompatTest extends TestCase
     }
 
     /**
+     * Custom addon Smarty modifier pipes ({$x|novoton_format_board}) are a
+     * Smarty 5 COMPILE-time CompilerException: the compiler resolves a
+     * modifier from registered plugins and real PHP function names only —
+     * auto-discovery of global smarty_modifier_* functions no longer exists,
+     * and registerPlugin() timing is not guaranteed at recompile (regression:
+     * booking_form.tpl's first recompile after the board-label change 500'd
+     * dispatch=novoton_booking.booking_form storewide; the try/catch inside
+     * the modifier function can never catch a compile-time error).
+     * Call the plain helper directly instead — the idiom proven live by
+     * fn_novoton_holidays_format_price() on the same pages:
+     *   {fn_novoton_holidays_format_board_name($x|default:'')}
+     * Modifiers named after real PHP functions (|json_decode, |count,
+     * |date_format) stay allowed — the engine resolves them via the
+     * PHP-function fallback, proven by the many working templates piping them.
+     */
+    public function testNoCustomModifierPipesInTemplates(): void
+    {
+        // Source 1 (self-maintaining): every modifier name this addon
+        // registers via registerPlugin('modifier', ...) that is NOT a native
+        // PHP function.
+        $addonRoot = dirname(__DIR__, 3);
+        $registered = [];
+        $iterator = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator($addonRoot, \FilesystemIterator::SKIP_DOTS),
+        );
+        foreach ($iterator as $file) {
+            if (!$file instanceof \SplFileInfo || $file->getExtension() !== 'php') {
+                continue;
+            }
+            $path = $file->getPathname();
+            if (str_contains($path, '/vendor/') || str_contains($path, '/tests/')) {
+                continue;
+            }
+            $source = (string) file_get_contents($path);
+            if (preg_match_all('/registerPlugin\(\s*[\'"]modifier[\'"]\s*,\s*[\'"](\w+)[\'"]/', $source, $m)) {
+                foreach ($m[1] as $name) {
+                    if (!\function_exists($name)) {
+                        $registered[$name] = true;
+                    }
+                }
+            }
+        }
+
+        // Source 2: any addon-prefixed pipe is custom by definition — keeps
+        // the pin alive even after all registrations are deleted.
+        $offenders = [];
+        foreach (self::designTemplates() as $path) {
+            $source = (string) preg_replace('/\{\*.*?\*\}/s', '', (string) file_get_contents($path));
+            $source = (string) preg_replace('~<script\b.*?</script>~is', '', $source);
+
+            foreach (array_keys($registered) as $name) {
+                if (preg_match('/\|\s*' . preg_quote($name, '/') . '\b/', $source)) {
+                    $offenders[] = basename($path) . ' (|' . $name . ')';
+                }
+            }
+            if (preg_match_all('/\|\s*((?:novoton|sphinx|travel)_\w+)/', $source, $m)) {
+                foreach (array_unique($m[1]) as $name) {
+                    $offenders[] = basename($path) . ' (|' . $name . ')';
+                }
+            }
+        }
+
+        self::assertSame(
+            [],
+            array_values(array_unique($offenders)),
+            'templates piping through custom Smarty modifiers — a Smarty 5 compile-time fatal; '
+                . "call the plain fn_* helper directly, e.g. {fn_novoton_holidays_format_board_name(\$x|default:'')}",
+        );
+    }
+
+    /**
      * The migrated booking surfaces (search results + guest-entry form) must
      * carry NO embedded <style> block and NO inline style= attributes in their
      * Smarty markup — styling lives in travel_core's shared stylesheets +

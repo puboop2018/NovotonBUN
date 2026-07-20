@@ -151,7 +151,7 @@
                         <span class="travel-info-key">{__("novoton_holidays.board")}:</span>
                         {* Localized label with the raw code in parens, e.g.
                            "Demipensiune (HB +)" — same as the search card. *}
-                        <span class="travel-info-val">{$booking_data.board_id|novoton_format_board}</span>
+                        <span class="travel-info-val">{fn_novoton_holidays_format_board_name($booking_data.board_id|default:'')}</span>
                     {/if}
                 </div>
                 
