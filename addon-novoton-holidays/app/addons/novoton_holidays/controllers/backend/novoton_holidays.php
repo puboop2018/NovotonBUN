@@ -409,7 +409,9 @@ if ($mode === 'manage' || empty($mode)) {
     $xml_feed_url = $base_url . "index.php?dispatch=novoton_export.hotel_features_xml&access_key={$cron_key}";
 
     $view->assign('stats', $stats);
-    $view->assign('countries', $countries);
+    // NOTE: deliberately NOT assigned as 'countries' — that is a CS-Cart core
+    // Smarty global ([code => name] map) and overwriting it with our numeric
+    // list shadows core data on the whole admin page. No template consumed it.
     $view->assign('recent_syncs', $recent_syncs);
     $view->assign('last_syncs', $last_syncs);
     $view->assign('cron_urls', $cron_urls);
@@ -465,13 +467,11 @@ if ($mode === 'hotels') {
     $hotels = $hotelRepo->findAll($filters, $items_per_page, $offset);
     $total = $hotelRepo->count($filters);
 
-    $countries = $hotelRepo->getCountries();
-
     $view->assign('hotels', $hotels);
     $view->assign('total', $total);
     $view->assign('page', $page);
     $view->assign('items_per_page', $items_per_page);
-    $view->assign('countries', $countries);
+    // 'countries' deliberately not assigned — core Smarty global; no consumer.
     $view->assign('filters', $filters);
 }
 
