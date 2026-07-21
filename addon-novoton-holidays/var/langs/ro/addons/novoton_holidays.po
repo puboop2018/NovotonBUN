@@ -448,6 +448,10 @@ msgctxt "Languages::novoton_holidays.n_nights"
 msgid "[n] Night|[n] Nights"
 msgstr "[n] Noapte|[n] Nopți"
 
+msgctxt "Languages::novoton_holidays.n_offers"
+msgid "[n] Offer|[n] Offers"
+msgstr "[n] Ofertă|[n] Oferte"
+
 msgctxt "Languages::novoton_holidays.n_rooms"
 msgid "[n] Room|[n] Rooms"
 msgstr "[n] Cameră|[n] Camere"

@@ -34,8 +34,9 @@
     {* Guests bullet (what was searched) — the party WITHOUT the "for" connector,
        since it now sits on its own line. Carried in data-party-suffix so the
        poll JS can rebuild the same bullet as offers stream in. *}
-    {capture assign="sx_badge_guests"}{$sx_badge_adults} {if $sx_badge_adults == 1}{__("sphinx_holidays.adult")|default:"adult"|lower}{else}{__("sphinx_holidays.adults")|default:"adults"|lower}{/if}{if $sx_badge_children > 0}, {$sx_badge_children} {if $sx_badge_children == 1}{__("sphinx_holidays.child")|default:"child"|lower}{else}{__("sphinx_holidays.children")|default:"children"|lower}{/if}{/if}{/capture}
-    {capture assign="sx_badge_html"}<div class="travel-availability-block sphinx-results-title" id="sphinx-results-title" data-party-suffix="{$sx_badge_guests|escape:html}"{if !$sphinx_search_results} style="display: none;"{/if}><span class="travel-availability-badge">✓ {__("sphinx_holidays.available")|default:"Available"}</span><div class="travel-availability-details" id="sphinx-availability-details"><span class="travel-availability-line" id="sphinx-availability-guests">{if $sphinx_search_results}{$sx_badge_guests}{/if}</span><span class="travel-availability-line" id="sphinx-availability-rooms">{if $sphinx_search_results}{$sx_badge_rooms} {if $sx_badge_rooms == 1}{__("sphinx_holidays.room")|default:"room"|lower}{else}{__("sphinx_holidays.rooms")|default:"rooms"|lower}{/if} ({$sx_badge_offers} {if $sx_badge_offers == 1}{__("sphinx_holidays.offer")|default:"offer"|lower}{else}{__("sphinx_holidays.offers")|default:"offers"|lower}{/if}){/if}</span></div></div>{/capture}
+    {* CS-Cart plural forms so Romanian renders "1 adult"/"2 adulți" correctly. *}
+    {capture assign="sx_badge_guests"}{__("sphinx_holidays.n_adults", [$sx_badge_adults])|lower}{if $sx_badge_children > 0}, {__("sphinx_holidays.n_children", [$sx_badge_children])|lower}{/if}{/capture}
+    {capture assign="sx_badge_html"}<div class="travel-availability-block sphinx-results-title" id="sphinx-results-title" data-party-suffix="{$sx_badge_guests|escape:html}"{if !$sphinx_search_results} style="display: none;"{/if}><span class="travel-availability-badge">✓ {__("sphinx_holidays.available")|default:"Available"}</span><div class="travel-availability-details" id="sphinx-availability-details"><span class="travel-availability-line" id="sphinx-availability-guests">{if $sphinx_search_results}{$sx_badge_guests}{/if}</span><span class="travel-availability-line" id="sphinx-availability-rooms">{if $sphinx_search_results}{__("sphinx_holidays.n_rooms", [$sx_badge_rooms])|lower} ({__("sphinx_holidays.n_offers", [$sx_badge_offers])|lower}){/if}</span></div></div>{/capture}
 
     {* ===== HOTEL HEADER — placed ABOVE the search form (novoton parity);
        availability badge on the right, same row layout as novoton ===== *}
@@ -43,11 +44,12 @@
         <div class="travel-hotel-header sphinx-hotel-header">
             <div class="travel-hotel-header-row">
                 <div>
-                    {* PDP-parity name: the theme's product-title class carries the
-                       exact font/size/weight/color the product page uses. *}
-                    <h1 class="ty-product-block-title sphinx-hotel-header-name">
+                    {* Product-listing name style (ty-product-list__item-name
+                       wrapper + product-title link) — reuses the theme's
+                       listing-name look, cleaner than the big PDP block title. *}
+                    <h1 class="ty-product-list__item-name sphinx-hotel-header-name">
                         {if $sphinx_search_params.product_id}
-                            <a href="{"products.view?product_id=`$sphinx_search_params.product_id`"|fn_url}" class="travel-hotel-name-link"><bdi>{$sphinx_hotel_name|escape:html}</bdi></a>
+                            <bdi><a href="{"products.view?product_id=`$sphinx_search_params.product_id`"|fn_url}" class="product-title travel-hotel-name-link" title="{$sphinx_hotel_name|escape:html}">{$sphinx_hotel_name|escape:html}</a></bdi>
                         {else}
                             <bdi>{$sphinx_hotel_name|escape:html}</bdi>
                         {/if}

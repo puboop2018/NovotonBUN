@@ -77,10 +77,16 @@ final class BookingFormInitialRecalcTest extends TestCase
     {
         $tpl = self::themeTpl('responsive');
 
-        // PDP title + bidi isolation (parity with the search card), gold stars,
-        // and the shared .travel-hotel-location (not the old white-on-gradient
-        // .travel-hero-location hero).
-        self::assertStringContainsString('<h1 class="ty-product-block-title"><bdi>{$hotel_name|default:\'Hotel\'}</bdi>', $tpl);
+        // Product-listing name (ty-product-list__item-name + product-title link)
+        // with bidi isolation — parity with the search card. The name links to the
+        // product page in a new tab (so the in-progress form is never lost), gold
+        // stars, and the shared .travel-hotel-location (not the old
+        // white-on-gradient .travel-hero-location hero).
+        self::assertStringContainsString('<h1 class="ty-product-list__item-name">', $tpl);
+        self::assertStringContainsString('class="product-title travel-hotel-name-link"', $tpl);
+        self::assertStringContainsString('target="_blank" rel="noopener"', $tpl);
+        self::assertStringContainsString('<bdi>{$hotel_name|default:\'Hotel\'}</bdi>', $tpl);
+        self::assertStringNotContainsString('ty-product-block-title', $tpl, 'the big PDP block title is replaced by the listing name');
         self::assertStringContainsString('class="travel-hotel-stars"', $tpl);
         self::assertStringContainsString('class="travel-hotel-location"', $tpl);
         self::assertStringNotContainsString('travel-hero-location', $tpl, 'the blue-gradient hero location is gone');

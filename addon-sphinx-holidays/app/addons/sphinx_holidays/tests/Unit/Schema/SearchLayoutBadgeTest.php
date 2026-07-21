@@ -78,8 +78,12 @@ final class SearchLayoutBadgeTest extends TestCase
     {
         $tpl = self::searchTpl();
 
-        // Name parity: the theme's PDP title class on the heading.
-        self::assertStringContainsString('<h1 class="ty-product-block-title sphinx-hotel-header-name">', $tpl);
+        // Name parity: the theme's product-listing name classes on the heading
+        // (ty-product-list__item-name wrapper + product-title link) — the cleaner
+        // listing look, not the big PDP block title.
+        self::assertStringContainsString('<h1 class="ty-product-list__item-name sphinx-hotel-header-name">', $tpl);
+        self::assertStringContainsString('class="product-title travel-hotel-name-link"', $tpl);
+        self::assertStringNotContainsString('ty-product-block-title', $tpl);
         // Location parity: the PDP's " - " separator before the map link.
         self::assertStringContainsString('{if $sphinx_hotel_location} - {/if}', $tpl);
 
@@ -109,6 +113,10 @@ final class SearchLayoutBadgeTest extends TestCase
         );
         self::assertStringContainsString('data-party-suffix', $tpl);
         self::assertStringNotContainsString('sphinx_holidays.for', $tpl, 'the "for" connector is gone with the split');
+        // Server badge uses CS-Cart plural forms ("1 ofertă" / "2 oferte").
+        self::assertStringContainsString('sphinx_holidays.n_offers', $tpl);
+        self::assertStringContainsString('sphinx_holidays.n_rooms', $tpl);
+        self::assertStringContainsString('sphinx_holidays.n_adults', $tpl);
         // The old "N results found" count span is gone.
         self::assertStringNotContainsString('sphinx-results-count', $tpl);
     }

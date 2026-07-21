@@ -43,7 +43,9 @@
     color: var(--nvt-stars, #f5a623);
     margin-left: 6px;
     letter-spacing: 1px;
-    font-size: 22px;
+    /* Balanced beside the compact product-listing name (was 22px for the large
+       PDP title), matching the search-results header. */
+    font-size: 18px;
 }
 .travel-booking-page .travel-hotel-location {
     flex-basis: 100%;

@@ -33,15 +33,10 @@
     font-size: 13px;
     white-space: nowrap;
 }
-/* Hotel name links to the product detail page — keep the heading look */
-.travel-search-results-page .travel-hotel-name-link {
-    color: inherit;
-    text-decoration: none;
-}
-.travel-search-results-page .travel-hotel-name-link:hover,
-.travel-search-results-page .travel-hotel-name-link:focus {
-    text-decoration: underline;
-}
+/* Hotel name links to the product detail page. Color/decoration/hover all come
+   from the theme's product-listing link class (product-title) carried on the
+   anchor — deferring to that listing style is the whole point, so no override
+   here. */
 /* Header row: hotel identity left, availability badge right (novoton parity) */
 .travel-search-results-page .travel-hotel-header-row {
     display: flex;
@@ -51,9 +46,9 @@
     flex-wrap: wrap;
 }
 /* Hotel name typography (font/size/weight/color) comes from the theme's
-   PDP product-title class (ty-product-block-title) carried on the heading
-   markup — PDP parity by construction, never by copied values. Only the
-   card-fit margin is scoped here (out-specifies the theme class). */
+   product-listing name class (ty-product-list__item-name + product-title)
+   carried on the heading markup — listing-style parity by construction, never
+   by copied values. Only the card-fit margin is scoped here. */
 .travel-search-results-page .travel-hotel-header h1,
 .travel-search-results-page .travel-hotel-header h2 {
     margin: 0;
@@ -62,9 +57,9 @@
     color: var(--nvt-stars, #f5a623);
     margin-left: 6px;
     letter-spacing: 1px;
-    /* Pinned: the heading now carries the (larger) PDP title size; without
-       this the stars would inherit it and silently grow past today's 22px. */
-    font-size: 22px;
+    /* Sized to the (compact) product-listing name, not the old large PDP title
+       — 18px keeps the stars balanced beside the smaller heading. */
+    font-size: 18px;
 }
 /* PDP spec (main_info_title.post.tpl inline styles), literal #666 on
    purpose: the PDP hardcodes #666, while --nvt-text-light resolves to

@@ -136,6 +136,20 @@ if (defined('AREA') && AREA === 'A') {
     unset($__mapLabel);
 }
 
+// Language self-seed: on admin load, reseed ?:language_values from
+// lang_keys.php + addon.xml when their combined hash changes — so labels
+// added after install (CS-Cart imports .po only at install time) render on
+// already-installed stores instead of showing raw "_novoton_holidays.*".
+if (defined('AREA') && AREA === 'A' && function_exists('fn_novoton_holidays_seed_language_keys')) {
+    $__nvtSeedStamp = db_get_field(
+        "SELECT value FROM ?:language_values WHERE name = 'novoton_holidays._lang_seed_hash' AND lang_code = 'en' LIMIT 1"
+    );
+    if ($__nvtSeedStamp !== fn_novoton_holidays_language_seed_hash()) {
+        fn_novoton_holidays_seed_language_keys();
+    }
+    unset($__nvtSeedStamp);
+}
+
 // Register addon hooks
 fn_register_hooks(
     'get_products_post',                       // Batch prefetch hotel data for product listings

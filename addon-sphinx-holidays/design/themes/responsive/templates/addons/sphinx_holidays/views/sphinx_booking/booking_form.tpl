@@ -18,9 +18,19 @@
 
     {* Hotel & booking summary header — minimalist light card (parity with the
        search results header): the light .travel-booking-summary base (no --hero
-       gradient), PDP title + bdi, gold stars, location line with map-pin. *}
+       gradient), product-listing name + bdi, gold stars, location line with map-pin. *}
     <div class="travel-booking-summary booking-summary-header">
-        <h1 class="ty-product-block-title sphinx-hotel-header-name"><bdi>{$sphinx_booking_data.hotel_name|escape:html}</bdi>{if $sphinx_booking_data.hotel_stars} <span class="travel-hotel-stars sphinx-stars" role="img" aria-label="{__("sphinx_holidays.stars_rating", ["[rating]" => $sphinx_booking_data.hotel_stars])|escape:html}">{"★"|str_repeat:$sphinx_booking_data.hotel_stars}</span>{/if}</h1>
+        {* Product-listing name style (ty-product-list__item-name + product-title),
+           parity with the search card. The name links to the product page in a NEW
+           tab so an in-progress booking form is never lost. *}
+        <h1 class="ty-product-list__item-name sphinx-hotel-header-name">
+            {if $sphinx_booking_data.product_id}
+                <bdi><a href="{"products.view?product_id=`$sphinx_booking_data.product_id`"|fn_url}" target="_blank" rel="noopener" class="product-title travel-hotel-name-link" title="{$sphinx_booking_data.hotel_name|escape:html}">{$sphinx_booking_data.hotel_name|escape:html}</a></bdi>
+            {else}
+                <bdi>{$sphinx_booking_data.hotel_name|escape:html}</bdi>
+            {/if}
+            {if $sphinx_booking_data.hotel_stars} <span class="travel-hotel-stars sphinx-stars" role="img" aria-label="{__("sphinx_holidays.stars_rating", ["[rating]" => $sphinx_booking_data.hotel_stars])|escape:html}">{"★"|str_repeat:$sphinx_booking_data.hotel_stars}</span>{/if}
+        </h1>
         {if $sphinx_booking_data.hotel_location_line || $sphinx_booking_data.hotel_map_url}
             {* Sanitized location line + map link, same as the search card / PDP;
                the " - " separator mirrors main_info_title.post.tpl. *}

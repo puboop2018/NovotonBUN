@@ -62,10 +62,20 @@
         {* Terms are now fetched directly from API at checkout - no need for hidden fields *}
         
         {* Header — minimalist light card (parity with the search results
-           header): PDP title + bdi, gold stars, inline availability pill,
-           location line with map-pin. *}
+           header): product-listing name + bdi, gold stars, inline availability
+           pill, location line with map-pin. *}
         <div class="travel-reservation-header">
-            <h1 class="ty-product-block-title"><bdi>{$hotel_name|default:'Hotel'}</bdi>{if $hotel_stars} <span class="travel-hotel-stars" aria-hidden="true">{$hotel_stars}</span>{/if}</h1>
+            {* Product-listing name style (ty-product-list__item-name + product-title),
+               parity with the search card. The name links to the product page in a
+               NEW tab so an in-progress booking form is never lost. *}
+            <h1 class="ty-product-list__item-name">
+                {if $product_id}
+                    <bdi><a href="{"products.view?product_id=`$product_id`"|fn_url}" target="_blank" rel="noopener" class="product-title travel-hotel-name-link" title="{$hotel_name|default:'Hotel'|escape:html}">{$hotel_name|default:'Hotel'}</a></bdi>
+                {else}
+                    <bdi>{$hotel_name|default:'Hotel'}</bdi>
+                {/if}
+                {if $hotel_stars} <span class="travel-hotel-stars" aria-hidden="true">{$hotel_stars}</span>{/if}
+            </h1>
             <span class="travel-hero-badge" id="availability-badge">
                 {if $booking_data.is_on_request}
                     {__("novoton_holidays.on_request")}

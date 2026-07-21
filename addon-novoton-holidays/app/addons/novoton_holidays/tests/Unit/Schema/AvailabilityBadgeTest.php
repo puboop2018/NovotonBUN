@@ -55,9 +55,11 @@ final class AvailabilityBadgeTest extends TestCase
             substr_count($tpl, 'class="travel-availability-line"'),
             'the count line splits into exactly two bullet lines (guests, rooms/offers)',
         );
-        self::assertStringContainsString('novoton_holidays.adults', $tpl);
-        self::assertStringContainsString('novoton_holidays.rooms', $tpl);
-        self::assertStringContainsString('novoton_holidays.offers', $tpl);
+        // CS-Cart plural-form keys ("1 ofertă" / "2 oferte"), not the old
+        // {if count==1}{singular}{else}{plural}{/if} conditionals.
+        self::assertStringContainsString('novoton_holidays.n_adults', $tpl);
+        self::assertStringContainsString('novoton_holidays.n_rooms', $tpl);
+        self::assertStringContainsString('novoton_holidays.n_offers', $tpl);
         self::assertStringNotContainsString('novoton_holidays.for', $tpl, 'the "for" connector is gone with the split');
         // The dead JS badge rewriter and its data-attribute contract are gone.
         self::assertStringNotContainsString('updateAvailabilityBadge', $tpl);
@@ -146,14 +148,18 @@ final class AvailabilityBadgeTest extends TestCase
         self::assertStringContainsString('latitude: $hotelLat', $php);
     }
 
-    public function testHotelNameReusesThePdpTitleClass(): void
+    public function testHotelNameUsesTheProductListingClass(): void
     {
         $tpl = self::themeTpl('responsive');
 
-        // Font/size/weight/color parity with the product page comes from
-        // REUSING the theme's PDP title class, not from copied CSS values.
-        self::assertStringContainsString('<h1 class="ty-product-block-title">', $tpl);
-        self::assertStringNotContainsString('<h2>', $tpl, 'the header heading is an h1 now (PDP tag parity)');
+        // Font/size/weight/color come from REUSING the theme's product-listing
+        // name classes (ty-product-list__item-name wrapper + product-title link),
+        // the cleaner listing look — not copied CSS values. h1 kept for the
+        // single-hotel page semantics.
+        self::assertStringContainsString('<h1 class="ty-product-list__item-name">', $tpl);
+        self::assertStringContainsString('class="product-title travel-hotel-name-link"', $tpl);
+        self::assertStringNotContainsString('ty-product-block-title', $tpl, 'the big PDP block title is replaced by the listing name');
+        self::assertStringNotContainsString('<h2>', $tpl, 'the header heading is an h1 (single-hotel page semantics)');
     }
 
     public function testLocationLineUsesThePdpSeparatorBeforeTheMapLink(): void

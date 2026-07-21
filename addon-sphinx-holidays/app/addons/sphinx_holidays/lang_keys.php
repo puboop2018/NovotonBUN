@@ -759,4 +759,24 @@ return [
         'en' => 'from',
         'ro' => 'de la',
     ],
+
+    // Availability badge counts — CS-Cart plural forms ([n] singular|[n] plural)
+    // so Romanian renders "1 ofertă" / "2 oferte" correctly. Rendered with
+    // {__("sphinx_holidays.n_offers", [$count])}.
+    'sphinx_holidays.n_rooms' => [
+        'en' => '[n] Room|[n] Rooms',
+        'ro' => '[n] Cameră|[n] Camere',
+    ],
+    'sphinx_holidays.n_offers' => [
+        'en' => '[n] Offer|[n] Offers',
+        'ro' => '[n] Ofertă|[n] Oferte',
+    ],
+    'sphinx_holidays.n_adults' => [
+        'en' => '[n] Adult|[n] Adults',
+        'ro' => '[n] Adult|[n] Adulți',
+    ],
+    'sphinx_holidays.n_children' => [
+        'en' => '[n] Child|[n] Children',
+        'ro' => '[n] Copil|[n] Copii',
+    ],
 ];
