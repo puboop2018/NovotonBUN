@@ -19,35 +19,51 @@
 /* A gradient hero header with an absolutely-positioned availability chip,
    over a bordered white body. Shared so any provider's booking form can use
    the same shell; lifted out of novoton's embedded <style>. */
+/* Minimalist light header — parity with the search-results card. Replaces the
+   old blue-gradient "hero": white card, dark text, inline green availability
+   pill, gold stars, location line with the shared map-pin. */
 .travel-booking-page .travel-reservation-header {
-    position: relative;
-    background: linear-gradient(135deg, var(--nvt-primary, #003580) 0%, #0056b3 100%);
-    color: #fff;
-    padding: 20px 25px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 16px;
+    background: var(--nvt-bg, #fff);
+    color: var(--nvt-text, #333);
+    padding: 18px 20px;
+    border: 1px solid var(--nvt-border, #e0e0e0);
     border-radius: 8px 8px 0 0;
 }
 .travel-booking-page .travel-reservation-header h1 {
     margin: 0;
-    font-size: 24px;
-    font-weight: 600;
-    color: #fff;
-    padding-right: 150px;
+    flex: 1 1 auto;
 }
-.travel-booking-page .travel-hero-location {
+/* Gold ★ stars + dark location on the booking-form header. The search-page
+   rules are scoped to .travel-search-results-page, so mirror them here. */
+.travel-booking-page .travel-hotel-stars {
+    color: var(--nvt-stars, #f5a623);
+    margin-left: 6px;
+    letter-spacing: 1px;
+    font-size: 22px;
+}
+.travel-booking-page .travel-hotel-location {
+    flex-basis: 100%;
+    margin: 4px 0 0;
     font-size: 14px;
-    color: rgba(255, 255, 255, 0.9);
-    margin-top: 5px;
+    line-height: 1.4;
+    color: #444;
 }
+/* Availability pill inline (no longer absolutely positioned on a gradient). */
 .travel-booking-page .travel-hero-badge {
-    position: absolute;
-    top: 25px;
-    right: 25px;
-    background: var(--nvt-success, #28a745);
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: var(--nvt-success-strong, #1e7e34);
     color: #fff;
-    padding: 8px 16px;
-    border-radius: 20px;
-    font-size: 14px;
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 12.5px;
     font-weight: 600;
+    letter-spacing: 0.2px;
 }
 .travel-booking-page .travel-reservation-body {
     background: var(--nvt-bg, #fff);

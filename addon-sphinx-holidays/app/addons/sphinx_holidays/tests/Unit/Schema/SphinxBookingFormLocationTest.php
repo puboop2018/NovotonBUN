@@ -56,4 +56,21 @@ final class SphinxBookingFormLocationTest extends TestCase
         self::assertStringContainsString('HotelMapUrl::build($bookingHotelSeo', $controller);
         self::assertStringContainsString("'hotel_map_url' => \$hotelMapUrl", $controller);
     }
+
+    public function testHeaderIsTheMinimalistSearchStyleCard(): void
+    {
+        $tpl = self::tpl();
+
+        // PDP title + bidi isolation, gold stars from the classification — the
+        // light .travel-booking-summary card (no --hero blue gradient), parity
+        // with the search results header.
+        self::assertStringContainsString('<h1 class="ty-product-block-title sphinx-hotel-header-name"><bdi>', $tpl);
+        self::assertStringNotContainsString('travel-booking-summary--hero', $tpl, 'the blue-gradient hero is gone');
+        self::assertStringNotContainsString('<h2>', $tpl, 'the header heading is an h1 now (PDP tag parity)');
+        self::assertStringContainsString('travel-hotel-stars sphinx-stars', $tpl);
+
+        // Stars come from the hotel classification via the controller.
+        self::assertStringContainsString("'hotel_stars' =>", self::controller());
+        self::assertStringContainsString("\$hotelRow['classification']", self::controller());
+    }
 }

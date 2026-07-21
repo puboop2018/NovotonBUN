@@ -16,9 +16,11 @@
 
 <div class="travel-booking-page sphinx-booking-form">
 
-    {* Hotel & booking summary header *}
-    <div class="travel-booking-summary travel-booking-summary--hero booking-summary-header">
-        <h2>{$sphinx_booking_data.hotel_name|escape:html}</h2>
+    {* Hotel & booking summary header — minimalist light card (parity with the
+       search results header): the light .travel-booking-summary base (no --hero
+       gradient), PDP title + bdi, gold stars, location line with map-pin. *}
+    <div class="travel-booking-summary booking-summary-header">
+        <h1 class="ty-product-block-title sphinx-hotel-header-name"><bdi>{$sphinx_booking_data.hotel_name|escape:html}</bdi>{if $sphinx_booking_data.hotel_stars} <span class="travel-hotel-stars sphinx-stars" role="img" aria-label="{__("sphinx_holidays.stars_rating", ["[rating]" => $sphinx_booking_data.hotel_stars])|escape:html}">{"★"|str_repeat:$sphinx_booking_data.hotel_stars}</span>{/if}</h1>
         {if $sphinx_booking_data.hotel_location_line || $sphinx_booking_data.hotel_map_url}
             {* Sanitized location line + map link, same as the search card / PDP;
                the " - " separator mirrors main_info_title.post.tpl. *}
