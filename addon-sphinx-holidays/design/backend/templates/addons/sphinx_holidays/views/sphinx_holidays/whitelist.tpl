@@ -59,7 +59,7 @@
             <input type="hidden" name="security_hash" value="{$security_hash}" />
 
             <div id="wl_country_list">
-                {foreach from=$countries item=c name=cloop}
+                {foreach from=$sphinx_whitelist_countries item=c name=cloop}
                 <div class="wl-country" data-country-id="{$c.destination_id}" data-cc="{$c.country_code}" data-name="{$c.name|lower}">
                     <div style="display: flex; align-items: center; padding: 6px 0; border-bottom: 1px solid #eee;">
                         {* Expand arrow *}
@@ -194,7 +194,7 @@
     var searchTimeout = null;
 
     // Initialize state from server data
-    {foreach from=$countries item=c}
+    {foreach from=$sphinx_whitelist_countries item=c}
     {if $c.is_whitelisted}
     state[{$c.destination_id}] = {ldelim}
         type: '{$c.selection_type}',

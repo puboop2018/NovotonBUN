@@ -125,6 +125,17 @@ function fn_travel_core_dispatch_before_display(): void
                 $view->assign('travel_booking_product_id', $productId);
                 $view->assign('travel_booking_product_code', $productCode);
 
+                // Booking-form colors for the PDP block: booking_engine.tpl
+                // prefers $_addons_travel_core over the $addons Smarty global,
+                // so inject the canonical appearance store here — the global
+                // only mirrors the per-area registry cache, which loses
+                // storage-backed colors (see fn_travel_core_get_appearance_colors).
+                $tcMap = Registry::get('addons.travel_core');
+                $view->assign('_addons_travel_core', array_merge(
+                    is_array($tcMap) ? $tcMap : [],
+                    fn_travel_core_get_appearance_colors(),
+                ));
+
                 // Register the React scripts via CS-Cart's inline script mechanism
                 $cacheVer = TypeCoerce::toString(defined('TRAVEL_CACHE_VER') ? TRAVEL_CACHE_VER : '1');
                 $baseUrl = TypeCoerce::toString(Registry::get('config.current_location'));

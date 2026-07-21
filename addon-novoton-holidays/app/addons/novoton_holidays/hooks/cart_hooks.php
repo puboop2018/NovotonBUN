@@ -9,7 +9,8 @@ declare(strict_types=1);
  *   - calculate_cart_items: Inject booking data from DB into cart products
  *   - calculate_cart_items_post: Ensure rooms_data is preserved as array
  *   - checkout_pre_dispatch: Debug info on checkout pages
- *   - dispatch_before_display: Meta variables, Smarty modifiers, CSS loading
+ *   - dispatch_before_display: Meta variables, Smarty modifiers, CSS loading,
+ *     admin-side "Array to string conversion" trap
  *
  * Also contains the fn_novoton_holidays_add_booking_display_data() helper that formats
  * booking details for display in cart/checkout.
@@ -185,6 +186,18 @@ function fn_novoton_holidays_dispatch_before_display(): void
 
     $dispatch = RequestCoerce::string($_REQUEST, 'dispatch');
 
+    // Self-diagnosis for the literal "Array" rendered at the bottom of our
+    // admin pages: every render surface in this repo is proven
+    // array-echo-free (33f15ad + audits), so the emitter lives in the site's
+    // customized CS-Cart kit (core/admin skin — not in this repo). The PHP
+    // "Array to string conversion" warning fired during render names the
+    // exact kit file:line; trap it into var/novoton_tpl_trace.log.
+    // Always on for novoton admin dispatches — log-only, zero output,
+    // zero config: the whole point is diagnosis without touching the kit.
+    if (str_starts_with($dispatch, 'novoton_') && defined('AREA') && AREA === 'A') {
+        fn_novoton_holidays_install_array_warning_trap();
+    }
+
     // Meta variable null-safety for our frontend controllers only.
     // Admin pages do not render meta.tpl and must not receive array-typed
     // Smarty variables (e.g. hreflang_links) that CS-Cart head templates
@@ -212,6 +225,76 @@ function fn_novoton_holidays_dispatch_before_display(): void
                 Registry::set('runtime.styles', $styles);
             }
         }
+    }
+}
+
+/**
+ * Install a CHAINING error handler that appends "Array to string conversion"
+ * warnings — with the emitting file:line — to var/novoton_tpl_trace.log.
+ *
+ * Why: admin.php?dispatch=novoton_holidays.manage renders a literal "Array"
+ * that no addon in this repo emits (all render surfaces audited clean; the
+ * preceding "Inline script moved..." marker is generated at runtime by core's
+ * move-JS post-processor). The emitter is in the site's CS-Cart kit; the
+ * warning PHP fires during render carries its exact file:line, and this trap
+ * pins it without modifying kit code.
+ *
+ * Chaining contract: the previously active handler (CS-Cart's) is captured
+ * up front and EVERY error is delegated to it unchanged; with no previous
+ * handler we return false so PHP's standard handling proceeds. The trap only
+ * adds a log line for matching warnings — it never suppresses, outputs, or
+ * throws. E_USER_* variants are trapped too: correct in production and the
+ * only levels trigger_error() can raise, which keeps the trap unit-testable.
+ */
+function fn_novoton_holidays_install_array_warning_trap(): void
+{
+    static $installed = false;
+    if ($installed) {
+        return;
+    }
+    $installed = true;
+
+    // Fetch the currently active handler without disturbing it.
+    $prev = set_error_handler(null);
+    restore_error_handler();
+
+    set_error_handler(
+        static function (int $errno, string $errstr, string $errfile = '', int $errline = 0) use ($prev): bool {
+            $trapped = E_WARNING | E_USER_WARNING | E_DEPRECATED | E_USER_DEPRECATED;
+            if (($errno & $trapped) !== 0 && str_contains($errstr, 'Array to string conversion')) {
+                fn_novoton_holidays_log_array_conversion_warning($errstr, $errfile, $errline);
+            }
+
+            if ($prev !== null) {
+                // Defensive cast: a kit handler mis-declared to return
+                // null/void must not TypeError inside the error handler.
+                return (bool) $prev($errno, $errstr, $errfile, $errline);
+            }
+
+            return false; // No previous handler — PHP standard handling.
+        },
+    );
+}
+
+/**
+ * Append "[Y-m-d H:i:s] <message> in <file>:<line>" to
+ * var/novoton_tpl_trace.log under the CS-Cart root — the same log the
+ * removed smarty_modifier_novoton_trace diagnostic used. Never throws:
+ * a diagnostic must not break the page it is diagnosing.
+ */
+function fn_novoton_holidays_log_array_conversion_warning(string $errstr, string $errfile, int $errline): void
+{
+    try {
+        $rootRaw = Registry::get('config.dir.root');
+        $root = is_scalar($rootRaw) ? (string) $rootRaw : '';
+        if ($root === '') {
+            return;
+        }
+
+        $line = sprintf('[%s] %s in %s:%d', date('Y-m-d H:i:s'), $errstr, $errfile, $errline) . PHP_EOL;
+        @file_put_contents(rtrim($root, '/') . '/var/novoton_tpl_trace.log', $line, FILE_APPEND);
+    } catch (\Throwable) {
+        // A diagnostic must never crash the page it is diagnosing.
     }
 }
 
