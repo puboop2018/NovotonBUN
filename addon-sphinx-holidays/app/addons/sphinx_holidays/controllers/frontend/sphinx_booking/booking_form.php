@@ -14,8 +14,11 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 use Tygh\Tygh;
 use Tygh\Addons\SphinxHolidays\Services\Container;
 use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
+use Tygh\Addons\TravelCore\Dto\Hotel\HotelSeoData;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
+use Tygh\Addons\TravelCore\Services\HotelLocationLine;
+use Tygh\Addons\TravelCore\Services\HotelMapUrl;
 
 /** @var \Smarty $view */
 $view = Tygh::$app['view'];
@@ -90,11 +93,43 @@ try {
     $children = TypeCoerce::toInt($verifiedOffer['children'] ?? RequestCoerce::int($_REQUEST, 'children'));
     $childrenAges = TypeCoerce::toString($verifiedOffer['children_ages'] ?? RequestCoerce::string($_REQUEST, 'children_ages'));
 
+    // Load the hotel row for the location line + map link (same source as the
+    // search card and PDP). The verify response gives the display name but no
+    // address/coordinates, so read them from ?:sphinx_hotels.
+    $hotelRow = $hotel_id !== ''
+        ? Container::getHotelRepository()->findById($hotel_id)
+        : null;
+
     if (empty($product_id) && !empty($hotel_id)) {
-        $product_id = TypeCoerce::toInt(db_get_field(
-            "SELECT product_id FROM ?:sphinx_hotels WHERE hotel_id = ?s",
-            $hotel_id
-        ));
+        $product_id = $hotelRow !== null
+            ? TypeCoerce::toInt($hotelRow['product_id'] ?? 0)
+            : TypeCoerce::toInt(db_get_field(
+                "SELECT product_id FROM ?:sphinx_hotels WHERE hotel_id = ?s",
+                $hotel_id
+            ));
+    }
+
+    $hotelLocationLine = '';
+    $hotelMapUrl = '';
+    if ($hotelRow !== null) {
+        // Field mapping mirrors the sphinx search page: city =
+        // COALESCE(address_city, destination_name), country =
+        // COALESCE(address_country, country_name).
+        $bfAddressCity = trim(TypeCoerce::toString($hotelRow['address_city'] ?? ''));
+        $bfAddressCountry = trim(TypeCoerce::toString($hotelRow['address_country'] ?? ''));
+        $bookingHotelSeo = new HotelSeoData(
+            hotelId: $hotel_id,
+            providerName: 'sphinx',
+            name: $hotelName !== '' ? $hotelName : TypeCoerce::toString($hotelRow['name'] ?? ''),
+            city: $bfAddressCity !== '' ? $bfAddressCity : TypeCoerce::toString($hotelRow['destination_name'] ?? ''),
+            region: TypeCoerce::toString($hotelRow['region_name'] ?? ''),
+            country: $bfAddressCountry !== '' ? $bfAddressCountry : TypeCoerce::toString($hotelRow['country_name'] ?? ''),
+            latitude: TypeCoerce::toFloat($hotelRow['latitude'] ?? 0),
+            longitude: TypeCoerce::toFloat($hotelRow['longitude'] ?? 0),
+            address: TypeCoerce::toString($hotelRow['address'] ?? ''),
+        );
+        $hotelLocationLine = HotelLocationLine::build($bookingHotelSeo);
+        $hotelMapUrl = HotelMapUrl::build($bookingHotelSeo, $hotelLocationLine) ?? '';
     }
 
     // Build the single-room rooms_data the guest-card template iterates over
@@ -127,6 +162,8 @@ try {
         'hotel_id' => $hotel_id,
         'product_id' => $product_id,
         'hotel_name' => $hotelName,
+        'hotel_location_line' => $hotelLocationLine,
+        'hotel_map_url' => $hotelMapUrl,
         'room_name' => $roomName,
         'board_name' => $boardName,
         'check_in' => $checkIn,

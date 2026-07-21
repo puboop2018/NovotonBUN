@@ -19,6 +19,7 @@ use Tygh\Addons\TravelCore\Dto\Hotel\HotelSeoData;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Services\CurrencyService;
 use Tygh\Addons\TravelCore\Services\HotelLocationLine;
+use Tygh\Addons\TravelCore\Services\HotelMapUrl;
 
 class SearchResultFormatter implements SearchResultFormatterInterface
 {
@@ -235,15 +236,26 @@ class SearchResultFormatter implements SearchResultFormatterInterface
         // city==region, so "DURRES, DURRES, ALBANIA" renders "Durres, Albania".
         // street_address (opt-in geocoding) flips it to the PDP's postal style,
         // keeping search text == PDP text on geocoded installs too.
-        $view->assign('hotel_location_line', HotelLocationLine::build(new HotelSeoData(
+        $hotelSeo = new HotelSeoData(
             hotelId: TypeCoerce::toString($hotelId),
             providerName: 'novoton',
             name: TypeCoerce::toString($hotelName),
             city: TypeCoerce::toString($hotelCity),
             region: TypeCoerce::toString($hotelRegion),
             country: TypeCoerce::toString($hotelCountry),
+            latitude: $hotelLat,
+            longitude: $hotelLng,
             address: TypeCoerce::toString($hotelStreet),
-        )));
+        );
+        $locationLine = HotelLocationLine::build($hotelSeo);
+        $view->assign('hotel_location_line', $locationLine);
+
+        // Map URL from the shared PDP builder: a coordinate pin when the hotel
+        // has coordinates, otherwise a Google place-search on "name, location".
+        // Gating the template on this URL (not on raw lat/lng) keeps the
+        // "Locație - arată pe hartă" link present for every hotel — coordinate-
+        // less hotels previously lost the link entirely.
+        $view->assign('hotel_map_url', HotelMapUrl::build($hotelSeo, $locationLine) ?? '');
     }
 
     /**

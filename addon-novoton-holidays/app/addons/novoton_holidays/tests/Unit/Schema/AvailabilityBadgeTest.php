@@ -94,13 +94,37 @@ final class AvailabilityBadgeTest extends TestCase
         );
     }
 
-    public function testHeaderShowsMapLinkFromCoordinates(): void
+    public function testHeaderShowsMapLinkFromTheBuiltUrl(): void
     {
         $tpl = self::themeTpl('responsive');
 
+        // The map link is gated on a pre-built URL (HotelMapUrl::build), NOT on
+        // raw coordinates: coordinate-less hotels previously lost the link
+        // entirely; now they get a Google place-search fallback. So the map
+        // link is present for every hotel — matching the PDP.
         self::assertStringContainsString('travel-hotel-map-link', $tpl);
-        self::assertStringContainsString('https://www.google.com/maps?q={$hotel_lat},{$hotel_lng}', $tpl);
+        self::assertStringContainsString('href="{$hotel_map_url|escape:html}"', $tpl);
+        self::assertStringContainsString('{if $hotel_map_url}', $tpl);
+        self::assertStringNotContainsString(
+            'https://www.google.com/maps?q={$hotel_lat},{$hotel_lng}',
+            $tpl,
+            'the hardcoded coordinate URL is gone — the link must survive without coordinates',
+        );
         self::assertStringContainsString('novoton_holidays.location_show_map', $tpl);
+    }
+
+    public function testSearchFormatterBuildsTheMapUrlViaTheSharedBuilder(): void
+    {
+        $php = (string) file_get_contents(
+            dirname(__DIR__, 3) . '/src/Services/SearchResultFormatter.php',
+        );
+
+        // The controller must build hotel_map_url via HotelMapUrl::build with
+        // coordinates fed into the DTO (so the coordinate pin still wins when
+        // available and the place-search fallback fires otherwise).
+        self::assertStringContainsString("assign('hotel_map_url'", $php);
+        self::assertStringContainsString('HotelMapUrl::build($hotelSeo', $php);
+        self::assertStringContainsString('latitude: $hotelLat', $php);
     }
 
     public function testHotelNameReusesThePdpTitleClass(): void

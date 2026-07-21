@@ -71,7 +71,11 @@
                 {/if}
             </span>
             <h1>{$hotel_name|default:'Hotel'} {if $hotel_stars}{$hotel_stars}{/if}</h1>
-            <div class="travel-hero-location"> {$hotel_city|default:'GOLDEN SANDS'}{if $hotel_region}, {$hotel_region}{/if}, {$hotel_country|default:'BULGARIA'}</div>
+            {* Sanitized location line + map link (HotelLocationLine/HotelMapUrl),
+               same as the search card and the PDP; the " - " separator mirrors
+               main_info_title.post.tpl. Falls back to city/region/country when
+               the sanitized line is empty. *}
+            <div class="travel-hero-location">{if $hotel_location_line}{$hotel_location_line|escape:html}{else}{$hotel_city}{if $hotel_region}, {$hotel_region}{/if}{if $hotel_country}, {$hotel_country}{/if}{/if}{if $hotel_map_url}{if $hotel_location_line || $hotel_city} - {/if}<a href="{$hotel_map_url|escape:html}" target="_blank" rel="noopener" class="travel-hotel-map-link">{__("novoton_holidays.location_show_map")|default:"Location - show map"}</a>{/if}</div>
         </div>
         
         {* Body *}

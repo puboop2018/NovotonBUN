@@ -50,11 +50,11 @@
                         {/if}
                         {if $sphinx_hotel_stars}<span class="travel-hotel-stars sphinx-stars" role="img" aria-label="{__("sphinx_holidays.stars_rating", ["[rating]" => $sphinx_hotel_stars])|escape:html}">{"★"|str_repeat:$sphinx_hotel_stars}</span>{/if}
                     </h1>
-                    {if $sphinx_hotel_location || ($sphinx_hotel_lat && $sphinx_hotel_lng)}
+                    {if $sphinx_hotel_location || $sphinx_hotel_map_url}
                         <p class="travel-hotel-location sphinx-hotel-header-location">
                             {* Text from HotelLocationLine (PDP pipeline); the " - "
                                separator mirrors main_info_title.post.tpl *}
-                            {$sphinx_hotel_location|escape:html}{if $sphinx_hotel_lat && $sphinx_hotel_lng}{if $sphinx_hotel_location} - {/if}<a href="https://www.google.com/maps?q={$sphinx_hotel_lat},{$sphinx_hotel_lng}" target="_blank" rel="noopener" class="travel-hotel-map-link">{__("sphinx_holidays.location_show_map")|default:"Location - show map"}</a>{/if}
+                            {$sphinx_hotel_location|escape:html}{if $sphinx_hotel_map_url}{if $sphinx_hotel_location} - {/if}<a href="{$sphinx_hotel_map_url|escape:html}" target="_blank" rel="noopener" class="travel-hotel-map-link">{__("sphinx_holidays.location_show_map")|default:"Location - show map"}</a>{/if}
                         </p>
                     {/if}
                 </div>

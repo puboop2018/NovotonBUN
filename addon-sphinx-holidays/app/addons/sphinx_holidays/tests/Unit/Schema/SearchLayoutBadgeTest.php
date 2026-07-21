@@ -47,19 +47,30 @@ final class SearchLayoutBadgeTest extends TestCase
         self::assertStringContainsString('products.view?product_id=`$sphinx_search_params.product_id`', $tpl);
     }
 
-    public function testHeaderShowsMapLinkFromCoordinates(): void
+    public function testHeaderShowsMapLinkFromTheBuiltUrl(): void
     {
         $tpl = self::searchTpl();
 
+        // The map link is gated on a pre-built URL (HotelMapUrl::build), NOT on
+        // raw coordinates — so coordinate-less hotels keep the link (Google
+        // place-search fallback), matching the PDP.
         self::assertStringContainsString('travel-hotel-map-link', $tpl);
-        self::assertStringContainsString('https://www.google.com/maps?q={$sphinx_hotel_lat},{$sphinx_hotel_lng}', $tpl);
+        self::assertStringContainsString('href="{$sphinx_hotel_map_url|escape:html}"', $tpl);
+        self::assertStringContainsString('{if $sphinx_hotel_map_url}', $tpl);
+        self::assertStringNotContainsString(
+            'https://www.google.com/maps?q={$sphinx_hotel_lat},{$sphinx_hotel_lng}',
+            $tpl,
+            'the hardcoded coordinate URL is gone — the link must survive without coordinates',
+        );
         self::assertStringContainsString('sphinx_holidays.location_show_map', $tpl);
 
-        // The controller feeds street+city+country and coordinates.
+        // The controller builds the URL via the shared builder and still reads
+        // the address field into the DTO.
         $controller = (string) file_get_contents(
             dirname(__DIR__, 3) . '/controllers/frontend/sphinx_booking/search.php',
         );
-        self::assertStringContainsString("sphinx_hotel_lat", $controller);
+        self::assertStringContainsString('HotelMapUrl::build($hotelSeo', $controller);
+        self::assertStringContainsString("sphinx_hotel_map_url", $controller);
         self::assertStringContainsString("\$hotelRow['address']", $controller);
     }
 
