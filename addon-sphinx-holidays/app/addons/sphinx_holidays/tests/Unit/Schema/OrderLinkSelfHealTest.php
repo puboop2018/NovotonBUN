@@ -47,4 +47,41 @@ final class OrderLinkSelfHealTest extends TestCase
             'the combined guard must be split so empty-cart invocations still link',
         );
     }
+
+    public function testPrePlaceOrderDeletesTheBookingOfARemovedUnavailableOffer(): void
+    {
+        // When pre_place_order drops an unavailable offer from the cart, its
+        // add-to-cart booking row leaves the order forever — no reconciler
+        // can ever link it, so it would sit in the admin grid as a permanent
+        // "Order ID -" row. The hook must delete it (repo delete() clears
+        // ?:sphinx_bookings AND the shared ?:travel_bookings mirror).
+        $source = (string) file_get_contents(dirname(__DIR__, 3) . '/func.php');
+
+        $start = strpos($source, 'function fn_sphinx_holidays_pre_place_order');
+        self::assertNotFalse($start, 'pre_place_order hook function exists');
+        $end = strpos($source, "unset(\$cart['products'][\$cartId]);", $start);
+        self::assertNotFalse($end, 'the unavailable-offer removal exists');
+        $beforeRemoval = substr($source, $start, $end - $start);
+
+        self::assertStringContainsString("['travel_booking_id']", $beforeRemoval);
+        self::assertStringContainsString('getBookingRepository()->delete(', $beforeRemoval);
+    }
+
+    public function testCleanupPurgesTheSharedMirrorViaTheRepository(): void
+    {
+        // The inline DELETE only purged ?:sphinx_bookings and left
+        // mirror-only "Order ID -" rows in the unified grid forever;
+        // deleteOrphans() removes both.
+        $source = (string) file_get_contents(
+            dirname(__DIR__, 3) . '/src/Cron/Commands/CleanupCommand.php',
+        );
+
+        self::assertStringContainsString('getBookingRepository()', $source);
+        self::assertStringContainsString('->deleteOrphans(48)', $source);
+        self::assertStringNotContainsString(
+            'DELETE FROM ?:sphinx_bookings WHERE order_id = 0',
+            $source,
+            'orphan cleanup must go through the repository so the travel_bookings mirror is purged too',
+        );
+    }
 }

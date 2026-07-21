@@ -47,11 +47,13 @@ class CleanupCommand extends AbstractSyncCommand
         ];
         $errors = 0;
 
-        // 1. Remove orphan bookings (order_id = 0, created more than 48h ago)
+        // 1. Remove orphan bookings (order_id = 0, created more than 48h ago).
+        // Via the repository so the shared ?:travel_bookings MIRROR rows go
+        // too — the previous inline DELETE only purged ?:sphinx_bookings and
+        // left mirror-only "Order ID -" rows in the admin grid forever.
         try {
-            $cleaned['orphan_bookings'] = TypeCoerce::toInt(db_query(
-                'DELETE FROM ?:sphinx_bookings WHERE order_id = 0 AND created_at < DATE_SUB(NOW(), INTERVAL 48 HOUR)',
-            ));
+            $cleaned['orphan_bookings'] = \Tygh\Addons\SphinxHolidays\Services\Container::getBookingRepository()
+                ->deleteOrphans(48);
             $this->output("Orphan bookings removed: {$cleaned['orphan_bookings']}");
         } catch (\Throwable $e) {
             $errors++;
