@@ -133,7 +133,7 @@
                     <td><strong>{$booking.total_price_formatted|default:'0.00'} {$booking.currency|default:'EUR'}</strong></td>
                 </tr>
                 <tr>
-                    <td><strong>{__("created_at")}:</strong></td>
+                    <td><strong>{__("travel_core.created")}:</strong></td>
                     <td>{$booking.created_at}</td>
                 </tr>
                 <tr>
@@ -207,7 +207,7 @@
 
     {* Action Buttons *}
     <div class="buttons-container">
-        <a href="{"travel_bookings.manage"|fn_url}" class="btn">{__("back")}</a>
+        <a href="{"travel_bookings.manage"|fn_url}" class="btn">{__("travel_core.back")}</a>
 
         {* Check Status button *}
         <form action="{"travel_bookings.check_status"|fn_url}" method="post" style="display: inline;">
@@ -265,7 +265,7 @@
 {/capture}
 
 {capture name="buttons"}
-    <a href="{"travel_bookings.manage"|fn_url}" class="btn">{__("back")}</a>
+    <a href="{"travel_bookings.manage"|fn_url}" class="btn">{__("travel_core.back")}</a>
 {/capture}
 
 {$_bk_title = "Booking #`$booking.booking_id` - `$booking.hotel_name`"}

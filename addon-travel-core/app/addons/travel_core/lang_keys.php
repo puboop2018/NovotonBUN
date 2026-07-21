@@ -28,4 +28,48 @@ return [
         'en' => 'Select child [n] age',
         'ro' => 'Selectează vârsta copilului [n]',
     ],
+
+    // Admin labels seeded here (not just addon.xml/.po) so the init.php hash
+    // probe reseeds them on every store's next admin load — CS-Cart imports
+    // addon.xml/.po only at install, so a label added later renders raw
+    // ("_travel_core.hotel_name") on already-installed/upgraded stores until a
+    // lang_keys.php change bumps the seed hash. Enforced by
+    // Schema/AdminLangKeysSeededTest (every {__("travel_core.X")} in a backend
+    // template must live in addon.xml or here).
+    'travel_core.hotel_name' => [
+        'en' => 'Hotel name',
+        'ro' => 'Nume hotel',
+    ],
+    'travel_core.back' => [
+        'en' => 'Back',
+        'ro' => 'Înapoi',
+    ],
+    'travel_core.theme_default' => [
+        'en' => '(theme default)',
+        'ro' => '(implicit temă)',
+    ],
+    'travel_core.reset_to_default' => [
+        'en' => 'Reset to default',
+        'ro' => 'Resetare la implicit',
+    ],
+    'travel_core.default' => [
+        'en' => 'Default',
+        'ro' => 'Implicit',
+    ],
+    'travel_core.inherited_from_theme' => [
+        'en' => 'Inherited from theme',
+        'ro' => 'Moștenit din temă',
+    ],
+    'travel_core.appearance_preview' => [
+        'en' => 'Live Preview',
+        'ro' => 'Previzualizare',
+    ],
+    'travel_core.color_danger' => [
+        'en' => 'Error / validation',
+        'ro' => 'Eroare / validare',
+    ],
+    'travel_core.appearance_page_title' => [
+        'en' => 'Booking Form Colors',
+        'ro' => 'Culori formular rezervare',
+    ],
 ];

@@ -55,4 +55,25 @@ final class BookingConfigTranslationsTest extends TestCase
         self::assertSame('Vârsta copilului la check-in', $vars['travel_core.childrens_ages']['ro']);
         self::assertSame('Selectează vârsta copilului [n]', $vars['travel_core.child_n_age']['ro']);
     }
+
+    public function testLangKeysSeedTheRawAdminLabels(): void
+    {
+        $vars = require self::addonRoot() . '/lang_keys.php';
+        self::assertIsArray($vars);
+
+        // Keys that rendered raw ("_travel_core.hotel_name" / "_back") until
+        // seeded here — lang_keys.php membership bumps the seed hash so the
+        // init.php probe reseeds them onto already-installed stores.
+        $expected = [
+            'travel_core.hotel_name' => 'Nume hotel',
+            'travel_core.back'       => 'Înapoi',
+            'travel_core.appearance_page_title' => 'Culori formular rezervare',
+        ];
+        foreach ($expected as $key => $ro) {
+            self::assertArrayHasKey($key, $vars, "{$key} must be seeded via lang_keys.php");
+            self::assertIsArray($vars[$key]);
+            self::assertNotSame('', trim((string) ($vars[$key]['en'] ?? '')));
+            self::assertSame($ro, $vars[$key]['ro']);
+        }
+    }
 }

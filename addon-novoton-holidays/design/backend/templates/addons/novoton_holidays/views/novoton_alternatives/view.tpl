@@ -134,7 +134,7 @@
 {/capture}
 
 {capture name="buttons"}
-<a href="{fn_url('novoton_alternatives.manage')}" class="btn">{__("back")}</a>
+<a href="{fn_url('novoton_alternatives.manage')}" class="btn">{__("travel_core.back")}</a>
 {/capture}
 
 {include file="common/mainbox.tpl" 

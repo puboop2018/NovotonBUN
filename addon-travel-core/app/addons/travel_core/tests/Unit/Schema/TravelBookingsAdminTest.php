@@ -54,6 +54,21 @@ final class TravelBookingsAdminTest extends TestCase
         self::assertStringContainsString('{__("travel_core.hotel_name")}', self::backendTpl('view.tpl'));
     }
 
+    public function testViewLabelsUseSeededTravelCoreKeysNotBareOnes(): void
+    {
+        $view = self::backendTpl('view.tpl');
+
+        // Bare "created_at" is NOT a CS-Cart core var (it's a DB column name),
+        // and "back" is a core var the kit may not ship — both rendered raw
+        // ("_created_at" / "_back"). Use the addon's own seeded keys.
+        self::assertStringNotContainsString('{__("created_at")}', $view,
+            'bare created_at is not a lang var — renders "_created_at"; use travel_core.created');
+        self::assertStringNotContainsString('{__("back")}', $view,
+            'bare back depends on the kit shipping the core var — renders "_back"; use travel_core.back');
+        self::assertStringContainsString('{__("travel_core.created")}', $view);
+        self::assertStringContainsString('{__("travel_core.back")}', $view);
+    }
+
     public function testHotelNameLangKeyIsDeclaredForSeeding(): void
     {
         $xml = (string) file_get_contents(dirname(__DIR__, 3) . '/addon.xml');
