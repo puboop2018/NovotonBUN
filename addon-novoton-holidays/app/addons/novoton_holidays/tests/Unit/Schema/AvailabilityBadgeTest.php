@@ -55,9 +55,11 @@ final class AvailabilityBadgeTest extends TestCase
             substr_count($tpl, 'class="travel-availability-line"'),
             'the count line splits into exactly two bullet lines (guests, rooms/offers)',
         );
-        self::assertStringContainsString('novoton_holidays.adults', $tpl);
-        self::assertStringContainsString('novoton_holidays.rooms', $tpl);
-        self::assertStringContainsString('novoton_holidays.offers', $tpl);
+        // CS-Cart plural-form keys ("1 ofertă" / "2 oferte"), not the old
+        // {if count==1}{singular}{else}{plural}{/if} conditionals.
+        self::assertStringContainsString('novoton_holidays.n_adults', $tpl);
+        self::assertStringContainsString('novoton_holidays.n_rooms', $tpl);
+        self::assertStringContainsString('novoton_holidays.n_offers', $tpl);
         self::assertStringNotContainsString('novoton_holidays.for', $tpl, 'the "for" connector is gone with the split');
         // The dead JS badge rewriter and its data-attribute contract are gone.
         self::assertStringNotContainsString('updateAvailabilityBadge', $tpl);

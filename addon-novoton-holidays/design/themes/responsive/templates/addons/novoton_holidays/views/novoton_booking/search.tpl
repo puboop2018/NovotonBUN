@@ -76,8 +76,11 @@
                     {* Two-bullet hierarchy: the compact pill answers "available?",
                        then guests (what was searched) and rooms/offers (what was
                        found) sit on their own lines — same wording, just split. *}
-                    {capture assign="badge_guests"}{$badge_adults} {if $badge_adults == 1}{__("novoton_holidays.adult")|default:"adult"|lower}{else}{__("novoton_holidays.adults")|default:"adults"|lower}{/if}{if $badge_children > 0}, {$badge_children} {if $badge_children == 1}{__("novoton_holidays.child")|default:"child"|lower}{else}{__("novoton_holidays.children")|default:"children"|lower}{/if}{/if}{/capture}
-                    {capture assign="badge_rooms"}{$badge_rooms_count} {if $badge_rooms_count == 1}{__("novoton_holidays.room")|default:"room"|lower}{else}{__("novoton_holidays.rooms")|default:"rooms"|lower}{/if} ({$badge_offers_count} {if $badge_offers_count == 1}{__("novoton_holidays.offer")|default:"offer"|lower}{else}{__("novoton_holidays.offers")|default:"offers"|lower}{/if}){/capture}
+                    {* CS-Cart plural forms ([n] singular|[n] plural) so Romanian
+                       renders "1 ofertă" / "2 oferte" correctly; |lower matches
+                       the badge's lowercase style. *}
+                    {capture assign="badge_guests"}{__("novoton_holidays.n_adults", [$badge_adults])|lower}{if $badge_children > 0}, {__("novoton_holidays.n_children", [$badge_children])|lower}{/if}{/capture}
+                    {capture assign="badge_rooms"}{__("novoton_holidays.n_rooms", [$badge_rooms_count])|lower} ({__("novoton_holidays.n_offers", [$badge_offers_count])|lower}){/capture}
                     <div class="travel-availability-block">
                         <span class="travel-availability-badge">✓ {__("novoton_holidays.available")}</span>
                         <div class="travel-availability-details">

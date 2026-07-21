@@ -1044,6 +1044,10 @@ msgctxt "Languages::novoton_holidays.n_nights"
 msgid "[n] Night|[n] Nights"
 msgstr "[n] Night|[n] Nights"
 
+msgctxt "Languages::novoton_holidays.n_offers"
+msgid "[n] Offer|[n] Offers"
+msgstr "[n] Offer|[n] Offers"
+
 msgctxt "Languages::novoton_holidays.n_rooms"
 msgid "[n] Room|[n] Rooms"
 msgstr "[n] Room|[n] Rooms"

@@ -109,6 +109,10 @@ final class SearchLayoutBadgeTest extends TestCase
         );
         self::assertStringContainsString('data-party-suffix', $tpl);
         self::assertStringNotContainsString('sphinx_holidays.for', $tpl, 'the "for" connector is gone with the split');
+        // Server badge uses CS-Cart plural forms ("1 ofertă" / "2 oferte").
+        self::assertStringContainsString('sphinx_holidays.n_offers', $tpl);
+        self::assertStringContainsString('sphinx_holidays.n_rooms', $tpl);
+        self::assertStringContainsString('sphinx_holidays.n_adults', $tpl);
         // The old "N results found" count span is gone.
         self::assertStringNotContainsString('sphinx-results-count', $tpl);
     }

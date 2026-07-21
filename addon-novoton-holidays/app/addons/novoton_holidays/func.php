@@ -45,6 +45,71 @@ foreach ($function_files as $file) {
 }
 
 /**
+ * Merge the runtime language keys (lang_keys.php) so already-installed stores
+ * pick up NEW or CHANGED labels — CS-Cart imports the .po files only at install
+ * time. addon.xml <language_variables>, if present, is merged on top.
+ *
+ * @return array<string, array<string, string>> key => [lang_code => value]
+ */
+function fn_novoton_holidays_language_variables(): array
+{
+    $keysFile = __DIR__ . '/lang_keys.php';
+    /** @var array<string, array<string, string>> $vars */
+    $vars = file_exists($keysFile) ? require $keysFile : [];
+
+    $xml = @simplexml_load_file(__DIR__ . '/addon.xml');
+    if ($xml !== false && isset($xml->language_variables)) {
+        foreach ($xml->language_variables->item as $item) {
+            $name = (string) $item['id'];
+            $lang_code = (string) $item['lang'];
+            if ($name === '' || $lang_code === '') {
+                continue;
+            }
+            $vars[$name][$lang_code] = (string) $item;
+        }
+    }
+
+    return $vars;
+}
+
+/** Content fingerprint — the init.php probe re-seeds when this changes. */
+function fn_novoton_holidays_language_seed_hash(): string
+{
+    return md5(
+        (string) @md5_file(__DIR__ . '/addon.xml')
+        . (string) @md5_file(__DIR__ . '/lang_keys.php')
+    );
+}
+
+/**
+ * UPSERT every runtime language key into ?:language_values, stamp the seed
+ * hash, and clear the cache so labels render on the next page load.
+ */
+function fn_novoton_holidays_seed_language_keys(): void
+{
+    foreach (fn_novoton_holidays_language_variables() as $name => $translations) {
+        foreach ($translations as $lang_code => $value) {
+            db_query(
+                "INSERT INTO ?:language_values (name, lang_code, value) VALUES (?s, ?s, ?s)
+                 ON DUPLICATE KEY UPDATE value = ?s",
+                $name, $lang_code, $value, $value
+            );
+        }
+    }
+
+    $hash = fn_novoton_holidays_language_seed_hash();
+    db_query(
+        "INSERT INTO ?:language_values (name, lang_code, value) VALUES (?s, 'en', ?s)
+         ON DUPLICATE KEY UPDATE value = ?s",
+        'novoton_holidays._lang_seed_hash', $hash, $hash
+    );
+
+    if (function_exists('fn_clear_cache')) {
+        fn_clear_cache();
+    }
+}
+
+/**
  * Variants function for the api_currency addon setting.
  * Pulls currencies from CS-Cart's configured currencies.
  * Called only from admin settings page where Registry is always populated.
