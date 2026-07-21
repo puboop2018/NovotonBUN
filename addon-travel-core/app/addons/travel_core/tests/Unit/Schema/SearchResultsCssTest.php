@@ -56,7 +56,7 @@ final class SearchResultsCssTest extends TestCase
         }
     }
 
-    public function testHotelHeaderTypographyDefersToThePdpTitleClass(): void
+    public function testHotelHeaderTypographyDefersToTheListingNameClass(): void
     {
         $css = self::css('responsive');
 
@@ -66,7 +66,7 @@ final class SearchResultsCssTest extends TestCase
             self::assertStringNotContainsString(
                 $prop,
                 $rule,
-                "{$prop} must come from ty-product-block-title (PDP parity), not this rule",
+                "{$prop} must come from ty-product-list__item-name/product-title (listing parity), not this rule",
             );
         }
     }

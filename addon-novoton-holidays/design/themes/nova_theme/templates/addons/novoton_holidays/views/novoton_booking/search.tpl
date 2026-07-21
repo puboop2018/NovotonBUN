@@ -37,11 +37,13 @@
         <div class="travel-hotel-header novoton-hotel-header">
             <div class="novoton-hotel-header-row">
                 <div>
-                    {* PDP-parity name: the theme's product-title class carries the
-                       exact font/size/weight/color the product page uses. *}
-                    <h1 class="ty-product-block-title">
+                    {* Product-listing name style (ty-product-list__item-name
+                       wrapper + product-title link) — reuses the theme's
+                       listing-name look, which reads cleaner than the big PDP
+                       block title. h1 kept for the single-hotel page semantics. *}
+                    <h1 class="ty-product-list__item-name">
                         {if $novoton_params.product_id}
-                            <a href="{"products.view?product_id=`$novoton_params.product_id`"|fn_url}" class="travel-hotel-name-link"><bdi>{$hotel_name|default:'Hotel'}</bdi></a>
+                            <bdi><a href="{"products.view?product_id=`$novoton_params.product_id`"|fn_url}" class="product-title travel-hotel-name-link" title="{$hotel_name|default:'Hotel'|escape:html}">{$hotel_name|default:'Hotel'}</a></bdi>
                         {else}
                             <bdi>{$hotel_name|default:'Hotel'}</bdi>
                         {/if}

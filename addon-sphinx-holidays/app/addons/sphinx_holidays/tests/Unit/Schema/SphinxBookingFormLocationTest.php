@@ -61,12 +61,16 @@ final class SphinxBookingFormLocationTest extends TestCase
     {
         $tpl = self::tpl();
 
-        // PDP title + bidi isolation, gold stars from the classification — the
-        // light .travel-booking-summary card (no --hero blue gradient), parity
-        // with the search results header.
-        self::assertStringContainsString('<h1 class="ty-product-block-title sphinx-hotel-header-name"><bdi>', $tpl);
+        // Product-listing name (ty-product-list__item-name + product-title link)
+        // with bidi isolation, gold stars from the classification — the light
+        // .travel-booking-summary card (no --hero blue gradient), parity with the
+        // search results header. The name links to the product page in a new tab.
+        self::assertStringContainsString('<h1 class="ty-product-list__item-name sphinx-hotel-header-name">', $tpl);
+        self::assertStringContainsString('class="product-title travel-hotel-name-link"', $tpl);
+        self::assertStringContainsString('target="_blank" rel="noopener"', $tpl);
+        self::assertStringNotContainsString('ty-product-block-title', $tpl, 'the big PDP block title is replaced by the listing name');
         self::assertStringNotContainsString('travel-booking-summary--hero', $tpl, 'the blue-gradient hero is gone');
-        self::assertStringNotContainsString('<h2>', $tpl, 'the header heading is an h1 now (PDP tag parity)');
+        self::assertStringNotContainsString('<h2>', $tpl, 'the header heading is an h1 (single-hotel page semantics)');
         self::assertStringContainsString('travel-hotel-stars sphinx-stars', $tpl);
 
         // Stars come from the hotel classification via the controller.

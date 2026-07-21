@@ -44,11 +44,12 @@
         <div class="travel-hotel-header sphinx-hotel-header">
             <div class="travel-hotel-header-row">
                 <div>
-                    {* PDP-parity name: the theme's product-title class carries the
-                       exact font/size/weight/color the product page uses. *}
-                    <h1 class="ty-product-block-title sphinx-hotel-header-name">
+                    {* Product-listing name style (ty-product-list__item-name
+                       wrapper + product-title link) — reuses the theme's
+                       listing-name look, cleaner than the big PDP block title. *}
+                    <h1 class="ty-product-list__item-name sphinx-hotel-header-name">
                         {if $sphinx_search_params.product_id}
-                            <a href="{"products.view?product_id=`$sphinx_search_params.product_id`"|fn_url}" class="travel-hotel-name-link"><bdi>{$sphinx_hotel_name|escape:html}</bdi></a>
+                            <bdi><a href="{"products.view?product_id=`$sphinx_search_params.product_id`"|fn_url}" class="product-title travel-hotel-name-link" title="{$sphinx_hotel_name|escape:html}">{$sphinx_hotel_name|escape:html}</a></bdi>
                         {else}
                             <bdi>{$sphinx_hotel_name|escape:html}</bdi>
                         {/if}
