@@ -61,8 +61,11 @@
         {/if}
         {* Terms are now fetched directly from API at checkout - no need for hidden fields *}
         
-        {* Header *}
+        {* Header — minimalist light card (parity with the search results
+           header): PDP title + bdi, gold stars, inline availability pill,
+           location line with map-pin. *}
         <div class="travel-reservation-header">
+            <h1 class="ty-product-block-title"><bdi>{$hotel_name|default:'Hotel'}</bdi>{if $hotel_stars} <span class="travel-hotel-stars" aria-hidden="true">{$hotel_stars}</span>{/if}</h1>
             <span class="travel-hero-badge" id="availability-badge">
                 {if $booking_data.is_on_request}
                     {__("novoton_holidays.on_request")}
@@ -70,12 +73,11 @@
                     ✓ {__("novoton_holidays.available")}
                 {/if}
             </span>
-            <h1>{$hotel_name|default:'Hotel'} {if $hotel_stars}{$hotel_stars}{/if}</h1>
             {* Sanitized location line + map link (HotelLocationLine/HotelMapUrl),
                same as the search card and the PDP; the " - " separator mirrors
                main_info_title.post.tpl. Falls back to city/region/country when
                the sanitized line is empty. *}
-            <div class="travel-hero-location">{if $hotel_location_line}{$hotel_location_line|escape:html}{else}{$hotel_city}{if $hotel_region}, {$hotel_region}{/if}{if $hotel_country}, {$hotel_country}{/if}{/if}{if $hotel_map_url}{if $hotel_location_line || $hotel_city} - {/if}<a href="{$hotel_map_url|escape:html}" target="_blank" rel="noopener" class="travel-hotel-map-link">{__("novoton_holidays.location_show_map")|default:"Location - show map"}</a>{/if}</div>
+            <div class="travel-hotel-location">{if $hotel_location_line}{$hotel_location_line|escape:html}{else}{$hotel_city}{if $hotel_region}, {$hotel_region}{/if}{if $hotel_country}, {$hotel_country}{/if}{/if}{if $hotel_map_url}{if $hotel_location_line || $hotel_city} - {/if}<a href="{$hotel_map_url|escape:html}" target="_blank" rel="noopener" class="travel-hotel-map-link">{__("novoton_holidays.location_show_map")|default:"Location - show map"}</a>{/if}</div>
         </div>
         
         {* Body *}

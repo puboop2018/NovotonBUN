@@ -73,6 +73,29 @@ final class BookingFormInitialRecalcTest extends TestCase
         );
     }
 
+    public function testBookingFormHeaderIsTheMinimalistSearchStyleCard(): void
+    {
+        $tpl = self::themeTpl('responsive');
+
+        // PDP title + bidi isolation (parity with the search card), gold stars,
+        // and the shared .travel-hotel-location (not the old white-on-gradient
+        // .travel-hero-location hero).
+        self::assertStringContainsString('<h1 class="ty-product-block-title"><bdi>{$hotel_name|default:\'Hotel\'}</bdi>', $tpl);
+        self::assertStringContainsString('class="travel-hotel-stars"', $tpl);
+        self::assertStringContainsString('class="travel-hotel-location"', $tpl);
+        self::assertStringNotContainsString('travel-hero-location', $tpl, 'the blue-gradient hero location is gone');
+
+        // The reservation-header rule is now a light card, not the blue hero.
+        $css = (string) file_get_contents(
+            dirname(__DIR__, 7) . '/addon-travel-core/design/themes/responsive/css/addons/travel_core/booking-pages.css',
+        );
+        $start = strpos($css, '.travel-booking-page .travel-reservation-header {');
+        self::assertNotFalse($start);
+        $rule = substr($css, $start, (int) strpos($css, '}', $start) - $start);
+        self::assertStringContainsString('background: var(--nvt-bg', $rule);
+        self::assertStringNotContainsString('linear-gradient', $rule, 'the header must be a light card, not the blue hero');
+    }
+
     public function testBookingFormShowsTheLocationMapLink(): void
     {
         $tpl = self::themeTpl('responsive');

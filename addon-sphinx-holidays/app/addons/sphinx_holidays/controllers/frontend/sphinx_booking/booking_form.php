@@ -162,6 +162,11 @@ try {
         'hotel_id' => $hotel_id,
         'product_id' => $product_id,
         'hotel_name' => $hotelName,
+        // Star rating (classification column) → gold ★ glyphs in the header,
+        // parity with the search card.
+        'hotel_stars' => $hotelRow !== null
+            ? min(5, max(0, TypeCoerce::toInt($hotelRow['classification'] ?? 0)))
+            : 0,
         'hotel_location_line' => $hotelLocationLine,
         'hotel_map_url' => $hotelMapUrl,
         'room_name' => $roomName,

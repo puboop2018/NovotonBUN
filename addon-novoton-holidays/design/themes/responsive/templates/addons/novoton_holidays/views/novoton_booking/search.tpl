@@ -41,11 +41,11 @@
                        exact font/size/weight/color the product page uses. *}
                     <h1 class="ty-product-block-title">
                         {if $novoton_params.product_id}
-                            <a href="{"products.view?product_id=`$novoton_params.product_id`"|fn_url}" class="travel-hotel-name-link">{$hotel_name|default:'Hotel'}</a>
+                            <a href="{"products.view?product_id=`$novoton_params.product_id`"|fn_url}" class="travel-hotel-name-link"><bdi>{$hotel_name|default:'Hotel'}</bdi></a>
                         {else}
-                            {$hotel_name|default:'Hotel'}
+                            <bdi>{$hotel_name|default:'Hotel'}</bdi>
                         {/if}
-                        <span class="travel-hotel-stars" aria-hidden="true">{$hotel_stars|default:'****'}</span>
+                        {if $hotel_stars}<span class="travel-hotel-stars" aria-hidden="true">{$hotel_stars}</span>{/if}
                     </h1>
                     <p class="travel-hotel-location">
                         {* Sanitized by HotelLocationLine (Title Case + dedup), same as the PDP;
@@ -73,12 +73,17 @@
                     {$badge_offers_count = $novoton_results|count}
                     {$badge_adults = $novoton_params.adults|default:0}
                     {$badge_children = $novoton_params.children_count|default:0}
-                    {capture assign="badge_party_suffix"} {__("novoton_holidays.for")|default:"for"} {$badge_adults} {if $badge_adults == 1}{__("novoton_holidays.adult")|default:"adult"|lower}{else}{__("novoton_holidays.adults")|default:"adults"|lower}{/if}{if $badge_children > 0}, {$badge_children} {if $badge_children == 1}{__("novoton_holidays.child")|default:"child"|lower}{else}{__("novoton_holidays.children")|default:"children"|lower}{/if}{/if}{/capture}
-                    {* Split hierarchy: compact status pill (the "is it available?"
-                       signal) with the guest-count confirmation as plain text below. *}
+                    {* Two-bullet hierarchy: the compact pill answers "available?",
+                       then guests (what was searched) and rooms/offers (what was
+                       found) sit on their own lines — same wording, just split. *}
+                    {capture assign="badge_guests"}{$badge_adults} {if $badge_adults == 1}{__("novoton_holidays.adult")|default:"adult"|lower}{else}{__("novoton_holidays.adults")|default:"adults"|lower}{/if}{if $badge_children > 0}, {$badge_children} {if $badge_children == 1}{__("novoton_holidays.child")|default:"child"|lower}{else}{__("novoton_holidays.children")|default:"children"|lower}{/if}{/if}{/capture}
+                    {capture assign="badge_rooms"}{$badge_rooms_count} {if $badge_rooms_count == 1}{__("novoton_holidays.room")|default:"room"|lower}{else}{__("novoton_holidays.rooms")|default:"rooms"|lower}{/if} ({$badge_offers_count} {if $badge_offers_count == 1}{__("novoton_holidays.offer")|default:"offer"|lower}{else}{__("novoton_holidays.offers")|default:"offers"|lower}{/if}){/capture}
                     <div class="travel-availability-block">
                         <span class="travel-availability-badge">✓ {__("novoton_holidays.available")}</span>
-                        <div class="travel-availability-details">{$badge_rooms_count} {if $badge_rooms_count == 1}{__("novoton_holidays.room")|default:"room"|lower}{else}{__("novoton_holidays.rooms")|default:"rooms"|lower}{/if}, {$badge_offers_count} {if $badge_offers_count == 1}{__("novoton_holidays.offer")|default:"offer"|lower}{else}{__("novoton_holidays.offers")|default:"offers"|lower}{/if}{$badge_party_suffix}</div>
+                        <div class="travel-availability-details">
+                            <span class="travel-availability-line">{$badge_guests}</span>
+                            <span class="travel-availability-line">{$badge_rooms}</span>
+                        </div>
                     </div>
                     {/if}
                 </div>

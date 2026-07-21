@@ -182,6 +182,7 @@ class SearchResultFormatter implements SearchResultFormatterInterface
         $hotelStreet = '';
         $hotelLat = 0.0;
         $hotelLng = 0.0;
+        $hotelStars = '';
 
         if (!empty($hotelId)) {
             $hotelRepo = Container::getInstance()->hotelRepository();
@@ -195,6 +196,11 @@ class SearchResultFormatter implements SearchResultFormatterInterface
                 $hotelStreet = $hotelInfo['street_address'] ?? '';
                 $hotelLat = TypeCoerce::toFloat($hotelInfo['latitude'] ?? 0);
                 $hotelLng = TypeCoerce::toFloat($hotelInfo['longitude'] ?? 0);
+                // Gold ★ glyphs (styled by .travel-hotel-stars) — the search
+                // header previously showed a hardcoded "****" placeholder
+                // because no rating was ever assigned.
+                $starCount = min(5, max(0, TypeCoerce::toInt($hotelInfo['star_rating'] ?? 0)));
+                $hotelStars = str_repeat('★', $starCount);
 
                 // Fetch packages once, reuse across sub-methods
                 $packageRepo = Container::getInstance()->hotelPackageRepository();
@@ -229,6 +235,7 @@ class SearchResultFormatter implements SearchResultFormatterInterface
         $view->assign('hotel_city', $hotelCity);
         $view->assign('hotel_region', $hotelRegion);
         $view->assign('hotel_country', $hotelCountry);
+        $view->assign('hotel_stars', $hotelStars);
         $view->assign('hotel_lat', $hotelLat);
         $view->assign('hotel_lng', $hotelLng);
 
