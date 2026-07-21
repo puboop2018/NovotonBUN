@@ -75,13 +75,14 @@ final class SearchResultsCssTest extends TestCase
     {
         $css = self::css('responsive');
 
-        // main_info_title.post.tpl inline spec: 14px / 1.4 / normal / #666 / 4px gap.
+        // 14px / 1.4 / normal / 4px gap; darkened to #444 for accessible
+        // contrast (was #666 — the address is primary info, not a muted note).
         $rule = self::extractRule($css, '.travel-search-results-page .travel-hotel-location');
         self::assertStringContainsString('margin: 4px 0 0', $rule);
         self::assertStringContainsString('font-size: 14px', $rule);
         self::assertStringContainsString('line-height: 1.4', $rule);
         self::assertStringContainsString('font-weight: normal', $rule);
-        self::assertStringContainsString('color: #666', $rule);
+        self::assertStringContainsString('color: #444', $rule);
 
         $mapRule = self::extractRule($css, '.travel-search-results-page .travel-hotel-map-link');
         self::assertStringContainsString('font-size: 13px', $mapRule);
@@ -90,6 +91,21 @@ final class SearchResultsCssTest extends TestCase
             $mapRule,
             'spacing comes from the " - " separator in the markup, like the PDP',
         );
+    }
+
+    public function testMapLinkHasAPinIconAndBadgeSplitsIntoTwoLines(): void
+    {
+        $css = self::css('responsive');
+
+        // Map-pin before the "show map" link: a masked inline SVG tinted with
+        // currentColor (no external request), attached via ::before.
+        self::assertStringContainsString('.travel-hotel-map-link::before', $css);
+        self::assertStringContainsString('mask:', $css);
+
+        // The availability count splits into two stacked bullet lines.
+        $details = self::extractRule($css, '.travel-search-results-page .travel-availability-details');
+        self::assertStringContainsString('flex-direction: column', $details);
+        self::assertStringContainsString('.travel-availability-line', $css);
     }
 
     /** The body of the FIRST css block whose selector line contains $selector. */

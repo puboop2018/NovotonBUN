@@ -74,7 +74,25 @@
     font-size: 14px;
     line-height: 1.4;
     font-weight: normal;
-    color: #666;
+    /* Darkened from #666 to #444 for stronger contrast (~9:1 on #fff,
+       WCAG AAA) — the address is primary information, not a muted note. */
+    color: #444;
+}
+/* Small map-pin before the "Location - show map" link (masked inline SVG,
+   currentColor so it follows the link color; no external request). Attached
+   via ::before + margin-right — .travel-hotel-map-link must not carry
+   margin-left (pinned by SearchResultsCssTest). */
+.travel-search-results-page .travel-hotel-map-link::before,
+.travel-booking-page .travel-hotel-map-link::before {
+    content: "";
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    margin-right: 4px;
+    vertical-align: -1px;
+    background-color: currentColor;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z'/%3E%3C/svg%3E") center / contain no-repeat;
 }
 
 /* ── Availability status: compact pill + guest-count line below ───────── */
@@ -92,17 +110,36 @@
    is too light for white text (fails WCAG AA); -strong is a hardcoded
    AA-safe surface (≥ 4.5:1 with #fff). */
 .travel-search-results-page .travel-availability-badge {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
     background: var(--nvt-success-strong, #1e7e34);
     color: #fff;
-    padding: 4px 12px;
-    border-radius: 20px;
+    /* Cleaner pill: roomier padding + slight letter-spacing. */
+    padding: 6px 14px;
+    border-radius: 999px;
     font-size: 12.5px;
     font-weight: 600;
+    letter-spacing: 0.2px;
+    line-height: 1.2;
 }
+/* Two stacked bullet lines below the pill: guests (what was searched) and
+   rooms/offers (what was found) — a clearer hierarchy than one flat sentence
+   and a controlled break instead of unpredictable wrapping. */
 .travel-search-results-page .travel-availability-details {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
     font-size: 14px;
     color: var(--nvt-text, #333);
+}
+.travel-search-results-page .travel-availability-line {
+    display: block;
+}
+.travel-search-results-page .travel-availability-line::before {
+    content: "\2022";
+    color: var(--nvt-text-light, #888);
+    margin-right: 6px;
 }
 
 /* ── Offer card (3 zones: hotel / details / price+action) ─────────────── */

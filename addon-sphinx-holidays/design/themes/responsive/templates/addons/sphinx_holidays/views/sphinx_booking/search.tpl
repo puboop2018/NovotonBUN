@@ -31,8 +31,11 @@
     {$sx_badge_offers = $sphinx_search_results|count}
     {$sx_badge_adults = $sphinx_search_params.adults|default:0}
     {$sx_badge_children = $sphinx_search_params.children|default:0}
-    {capture assign="sx_badge_party_suffix"} {__("sphinx_holidays.for")|default:"for"} {$sx_badge_adults} {if $sx_badge_adults == 1}{__("sphinx_holidays.adult")|default:"adult"|lower}{else}{__("sphinx_holidays.adults")|default:"adults"|lower}{/if}{if $sx_badge_children > 0}, {$sx_badge_children} {if $sx_badge_children == 1}{__("sphinx_holidays.child")|default:"child"|lower}{else}{__("sphinx_holidays.children")|default:"children"|lower}{/if}{/if}{/capture}
-    {capture assign="sx_badge_html"}<div class="travel-availability-block sphinx-results-title" id="sphinx-results-title" data-party-suffix="{$sx_badge_party_suffix|escape:html}"{if !$sphinx_search_results} style="display: none;"{/if}><span class="travel-availability-badge">✓ {__("sphinx_holidays.available")|default:"Available"}</span><div class="travel-availability-details" id="sphinx-availability-details">{if $sphinx_search_results}{$sx_badge_rooms} {if $sx_badge_rooms == 1}{__("sphinx_holidays.room")|default:"room"|lower}{else}{__("sphinx_holidays.rooms")|default:"rooms"|lower}{/if}, {$sx_badge_offers} {if $sx_badge_offers == 1}{__("sphinx_holidays.offer")|default:"offer"|lower}{else}{__("sphinx_holidays.offers")|default:"offers"|lower}{/if}{$sx_badge_party_suffix}{/if}</div></div>{/capture}
+    {* Guests bullet (what was searched) — the party WITHOUT the "for" connector,
+       since it now sits on its own line. Carried in data-party-suffix so the
+       poll JS can rebuild the same bullet as offers stream in. *}
+    {capture assign="sx_badge_guests"}{$sx_badge_adults} {if $sx_badge_adults == 1}{__("sphinx_holidays.adult")|default:"adult"|lower}{else}{__("sphinx_holidays.adults")|default:"adults"|lower}{/if}{if $sx_badge_children > 0}, {$sx_badge_children} {if $sx_badge_children == 1}{__("sphinx_holidays.child")|default:"child"|lower}{else}{__("sphinx_holidays.children")|default:"children"|lower}{/if}{/if}{/capture}
+    {capture assign="sx_badge_html"}<div class="travel-availability-block sphinx-results-title" id="sphinx-results-title" data-party-suffix="{$sx_badge_guests|escape:html}"{if !$sphinx_search_results} style="display: none;"{/if}><span class="travel-availability-badge">✓ {__("sphinx_holidays.available")|default:"Available"}</span><div class="travel-availability-details" id="sphinx-availability-details"><span class="travel-availability-line" id="sphinx-availability-guests">{if $sphinx_search_results}{$sx_badge_guests}{/if}</span><span class="travel-availability-line" id="sphinx-availability-rooms">{if $sphinx_search_results}{$sx_badge_rooms} {if $sx_badge_rooms == 1}{__("sphinx_holidays.room")|default:"room"|lower}{else}{__("sphinx_holidays.rooms")|default:"rooms"|lower}{/if} ({$sx_badge_offers} {if $sx_badge_offers == 1}{__("sphinx_holidays.offer")|default:"offer"|lower}{else}{__("sphinx_holidays.offers")|default:"offers"|lower}{/if}){/if}</span></div></div>{/capture}
 
     {* ===== HOTEL HEADER — placed ABOVE the search form (novoton parity);
        availability badge on the right, same row layout as novoton ===== *}
@@ -44,9 +47,9 @@
                        exact font/size/weight/color the product page uses. *}
                     <h1 class="ty-product-block-title sphinx-hotel-header-name">
                         {if $sphinx_search_params.product_id}
-                            <a href="{"products.view?product_id=`$sphinx_search_params.product_id`"|fn_url}" class="travel-hotel-name-link">{$sphinx_hotel_name|escape:html}</a>
+                            <a href="{"products.view?product_id=`$sphinx_search_params.product_id`"|fn_url}" class="travel-hotel-name-link"><bdi>{$sphinx_hotel_name|escape:html}</bdi></a>
                         {else}
-                            {$sphinx_hotel_name|escape:html}
+                            <bdi>{$sphinx_hotel_name|escape:html}</bdi>
                         {/if}
                         {if $sphinx_hotel_stars}<span class="travel-hotel-stars sphinx-stars" role="img" aria-label="{__("sphinx_holidays.stars_rating", ["[rating]" => $sphinx_hotel_stars])|escape:html}">{"★"|str_repeat:$sphinx_hotel_stars}</span>{/if}
                     </h1>
@@ -283,20 +286,24 @@ window.__sphinxConfig = {
     var seenRoomKeys = {};
     var seenRoomCount = 0;
 
-    // Update the guest-count line under the compact "✓ Available" pill:
-    // "N room(s), M offer(s) for X adults[, Y children]". The pill itself is
-    // static server-rendered markup — only the count line changes as offers
-    // stream in. The party suffix is server-rendered into data-party-suffix.
+    // Rebuild the two bullet lines under the compact "✓ Available" pill as
+    // offers stream in: guests ("X adults[, Y children]", from the
+    // server-rendered data-party-suffix) and rooms/offers
+    // ("N rooms (M offers)"). The pill itself is static server markup.
     function updateBadgeText() {
         if (!title) return;
         var l = (window.__sphinxConfig && window.__sphinxConfig.labels) || {};
         var roomLabel = (seenRoomCount === 1) ? (l.room || 'room') : (l.rooms || 'rooms');
         var offerLabel = (accumulated === 1) ? (l.offer || 'offer') : (l.offers || 'offers');
-        var partySuffix = title.getAttribute('data-party-suffix') || '';
-        var details = document.getElementById('sphinx-availability-details');
-        if (details) {
-            details.textContent = seenRoomCount + ' ' + roomLabel + ', '
-                + accumulated + ' ' + offerLabel + partySuffix;
+        var guests = title.getAttribute('data-party-suffix') || '';
+        var guestsEl = document.getElementById('sphinx-availability-guests');
+        var roomsEl = document.getElementById('sphinx-availability-rooms');
+        if (guestsEl) {
+            guestsEl.textContent = guests;
+        }
+        if (roomsEl) {
+            roomsEl.textContent = seenRoomCount + ' ' + roomLabel
+                + ' (' + accumulated + ' ' + offerLabel + ')';
         }
     }
     var skeleton = document.querySelector('.sphinx-loading-skeleton');

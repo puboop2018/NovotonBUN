@@ -43,15 +43,34 @@ final class AvailabilityBadgeTest extends TestCase
     {
         $tpl = self::themeTpl('responsive');
 
-        // Split hierarchy: compact status pill, then the count/party line below.
+        // Three-tier hierarchy: the compact pill, then TWO bullet lines —
+        // guests (searched) and rooms/offers (found), each its own
+        // travel-availability-line. The "for" connector is dropped (the lines
+        // are separate now); the guest + room/offer words are unchanged.
         self::assertStringContainsString('travel-availability-block', $tpl);
         self::assertStringContainsString('travel-availability-badge', $tpl);
         self::assertStringContainsString('travel-availability-details', $tpl);
-        // The party suffix still renders (now inside the details line).
-        self::assertStringContainsString('novoton_holidays.for', $tpl);
+        self::assertSame(
+            2,
+            substr_count($tpl, 'class="travel-availability-line"'),
+            'the count line splits into exactly two bullet lines (guests, rooms/offers)',
+        );
+        self::assertStringContainsString('novoton_holidays.adults', $tpl);
+        self::assertStringContainsString('novoton_holidays.rooms', $tpl);
+        self::assertStringContainsString('novoton_holidays.offers', $tpl);
+        self::assertStringNotContainsString('novoton_holidays.for', $tpl, 'the "for" connector is gone with the split');
         // The dead JS badge rewriter and its data-attribute contract are gone.
         self::assertStringNotContainsString('updateAvailabilityBadge', $tpl);
         self::assertStringNotContainsString('data-party-suffix', $tpl);
+    }
+
+    public function testHotelNameIsBidiIsolated(): void
+    {
+        $tpl = self::themeTpl('responsive');
+
+        // <bdi> around the hotel name (PDP parity) isolates mixed-script /
+        // RTL hotel names from the surrounding LTR layout.
+        self::assertStringContainsString('<bdi>{$hotel_name|default:\'Hotel\'}</bdi>', $tpl);
     }
 
     public function testHotelHeaderRendersAboveTheBookingForm(): void

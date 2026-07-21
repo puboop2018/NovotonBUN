@@ -99,22 +99,40 @@ final class SearchLayoutBadgeTest extends TestCase
 
         self::assertStringContainsString('$sx_badge_room_keys', $tpl, 'rooms are counted as distinct room types');
         self::assertStringContainsString('sphinx_holidays.available', $tpl);
-        self::assertStringContainsString('sphinx_holidays.for', $tpl);
+        // Two-bullet split (novoton parity): guests + rooms/offers on their own
+        // lines; the "for" connector is dropped. data-party-suffix now carries
+        // the guests-only string for the poll JS.
+        self::assertSame(
+            2,
+            substr_count($tpl, 'class="travel-availability-line"'),
+            'the count line splits into exactly two bullet lines (guests, rooms/offers)',
+        );
         self::assertStringContainsString('data-party-suffix', $tpl);
+        self::assertStringNotContainsString('sphinx_holidays.for', $tpl, 'the "for" connector is gone with the split');
         // The old "N results found" count span is gone.
         self::assertStringNotContainsString('sphinx-results-count', $tpl);
     }
 
-    public function testPollJsRebuildsTheBadgeInTheSameFormat(): void
+    public function testPollJsRebuildsTheTwoBulletLines(): void
     {
         $tpl = self::searchTpl();
 
         self::assertStringContainsString('updateBadgeText', $tpl);
         self::assertStringContainsString('seenRoomKeys', $tpl, 'the poll path deduplicates room types too');
         self::assertStringContainsString("title.getAttribute('data-party-suffix')", $tpl);
+        // The poll JS fills the two bullet spans by id.
+        self::assertStringContainsString('sphinx-availability-guests', $tpl);
+        self::assertStringContainsString('sphinx-availability-rooms', $tpl);
         // Badge vocabulary is exported to the poll JS.
         foreach (['available:', 'room:', 'rooms:', 'offer:', 'offers:'] as $label) {
             self::assertStringContainsString($label, $tpl, "__sphinxConfig.labels must carry {$label}");
         }
+    }
+
+    public function testHotelNameIsBidiIsolated(): void
+    {
+        $tpl = self::searchTpl();
+
+        self::assertStringContainsString('<bdi>{$sphinx_hotel_name|escape:html}</bdi>', $tpl);
     }
 }
