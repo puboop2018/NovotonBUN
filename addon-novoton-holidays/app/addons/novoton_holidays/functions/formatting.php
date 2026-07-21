@@ -127,6 +127,27 @@ function fn_novoton_holidays_format_board_name(string $boardId): string
 }
 
 /**
+ * Resolve the storefront display language for provider-text localization:
+ * explicit override → CART_LANGUAGE → 'ro' (the store's primary language).
+ *
+ * @param string|null $lang Explicit language override (mainly for tests)
+ */
+function fn_novoton_holidays_display_lang(?string $lang = null): string
+{
+    if ($lang !== null && $lang !== '') {
+        return strtolower($lang);
+    }
+    if (defined('CART_LANGUAGE')) {
+        $cartLang = strtolower(\Tygh\Addons\TravelCore\Helpers\TypeCoerce::toString(CART_LANGUAGE));
+        if ($cartLang !== '') {
+            return $cartLang;
+        }
+    }
+
+    return 'ro';
+}
+
+/**
  * Localize the provider "MoreInfo" free-text shown on the search card and in
  * the terms modal ("Informații suplimentare").
  *
@@ -135,10 +156,18 @@ function fn_novoton_holidays_format_board_name(string $boardId): string
  * Romanian, anything unrecognized passes through UNCHANGED. Keyed on the
  * whitespace-collapsed lowercase value so minor spacing variants still resolve.
  *
- * @param string $text Raw MoreInfo value (e.g. "Beach included")
+ * The provider text is English, so it is only localized on the Romanian
+ * storefront; every other language (including English) keeps the original.
+ *
+ * @param string      $text Raw MoreInfo value (e.g. "Beach included")
+ * @param string|null $lang Storefront language (defaults to CART_LANGUAGE)
  */
-function fn_novoton_holidays_more_info_label(string $text): string
+function fn_novoton_holidays_more_info_label(string $text, ?string $lang = null): string
 {
+    if (fn_novoton_holidays_display_lang($lang) !== 'ro') {
+        return $text;
+    }
+
     $raw = trim($text);
     if ($raw === '') {
         return '';
@@ -163,14 +192,16 @@ function fn_novoton_holidays_more_info_label(string $text): string
  *   → "Minim 2 nopți de cazare în perioada 25.04.2026 - 24.05.2026"
  * Everything else (the "EDART *** +BEACH 2026 / dates" package header, the
  * numeric date ranges) is provider proper-name/locale-neutral and passes
- * through unchanged.
+ * through unchanged. Only applied on the Romanian storefront; English (and any
+ * other language) keeps the provider's original wording.
  *
- * @param string $remark Raw remark blob
+ * @param string      $remark Raw remark blob
+ * @param string|null $lang   Storefront language (defaults to CART_LANGUAGE)
  */
-function fn_novoton_holidays_format_remark(string $remark): string
+function fn_novoton_holidays_format_remark(string $remark, ?string $lang = null): string
 {
-    if ($remark === '') {
-        return '';
+    if ($remark === '' || fn_novoton_holidays_display_lang($lang) !== 'ro') {
+        return $remark;
     }
 
     return (string) preg_replace(
