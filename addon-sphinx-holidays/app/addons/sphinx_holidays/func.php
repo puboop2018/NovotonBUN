@@ -770,6 +770,24 @@ function fn_sphinx_holidays_pre_place_order(&$cart, &$allow, &$product_groups): 
                 'hotel_name' => $hotelName,
             ]);
 
+            // The pending booking row created at add-to-cart would otherwise
+            // be stranded forever (order_id=0, unreachable by the order-link
+            // reconcilers since the item leaves the order) and show as a
+            // permanent "Order ID -" row in the admin grid. delete() clears
+            // both ?:sphinx_bookings and the shared mirror.
+            $strandedBookingId = 0;
+            if (is_array($cart)) {
+                $cartProducts = $cart['products'] ?? null;
+                $removedProduct = is_array($cartProducts) ? ($cartProducts[$cartId] ?? null) : null;
+                $removedExtra = is_array($removedProduct) ? ($removedProduct['extra'] ?? null) : null;
+                if (is_array($removedExtra)) {
+                    $strandedBookingId = \Tygh\Addons\TravelCore\Helpers\TypeCoerce::toInt($removedExtra['travel_booking_id'] ?? 0);
+                }
+            }
+            if ($strandedBookingId > 0) {
+                \Tygh\Addons\SphinxHolidays\Services\Container::getBookingRepository()->delete($strandedBookingId);
+            }
+
             unset($cart['products'][$cartId]);
         }
 

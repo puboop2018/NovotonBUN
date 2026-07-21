@@ -66,8 +66,17 @@ class BookingSyncRepositoryTest extends TestCase
             $captured[0],
         );
 
-        // db_query is called with the record twice (?e and ?u use the same array).
-        $this->assertSame($captured[1][0], $captured[1][1]);
+        // The duplicate-key update-set is the insert record MINUS order_id:
+        // a re-upsert must never reset a linked booking's order_id back to 0
+        // ("Order ID -" in the grid) — the IF() clause only moves it forward.
+        $this->assertSame(
+            array_diff_key($captured[1][0], ['order_id' => true]),
+            $captured[1][1],
+        );
+        $this->assertStringContainsString(
+            'order_id = IF(VALUES(order_id) > 0, VALUES(order_id), order_id)',
+            $captured[0],
+        );
 
         $this->assertSame([
             'provider' => 'novoton',

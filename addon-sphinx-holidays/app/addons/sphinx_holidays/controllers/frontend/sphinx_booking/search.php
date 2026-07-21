@@ -30,6 +30,7 @@ use Tygh\Addons\TravelCore\Dto\Hotel\HotelSeoData;
 use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Services\HotelLocationLine;
+use Tygh\Addons\TravelCore\Services\HotelMapUrl;
 use Tygh\Tygh;
 
 try {
@@ -64,6 +65,7 @@ try {
     $hotel_name = $hotelRow !== null ? TypeCoerce::toString($hotelRow['name'] ?? '') : '';
     $hotel_stars = $hotelRow !== null ? TypeCoerce::toString($hotelRow['classification'] ?? '') : '';
     $hotel_location = '';
+    $hotel_map_url = '';
     $hotel_lat = 0.0;
     $hotel_lng = 0.0;
     if ($hotelRow !== null) {
@@ -75,17 +77,24 @@ try {
         // country = COALESCE(NULLIF(address_country, ''), country_name).
         $addressCity = trim(TypeCoerce::toString($hotelRow['address_city'] ?? ''));
         $addressCountry = trim(TypeCoerce::toString($hotelRow['address_country'] ?? ''));
-        $hotel_location = HotelLocationLine::build(new HotelSeoData(
+        $hotel_lat = TypeCoerce::toFloat($hotelRow['latitude'] ?? 0);
+        $hotel_lng = TypeCoerce::toFloat($hotelRow['longitude'] ?? 0);
+        $hotelSeo = new HotelSeoData(
             hotelId: $hotel_id,
             providerName: 'sphinx',
             name: $hotel_name,
             city: $addressCity !== '' ? $addressCity : TypeCoerce::toString($hotelRow['destination_name'] ?? ''),
             region: TypeCoerce::toString($hotelRow['region_name'] ?? ''),
             country: $addressCountry !== '' ? $addressCountry : TypeCoerce::toString($hotelRow['country_name'] ?? ''),
+            latitude: $hotel_lat,
+            longitude: $hotel_lng,
             address: TypeCoerce::toString($hotelRow['address'] ?? ''),
-        ));
-        $hotel_lat = TypeCoerce::toFloat($hotelRow['latitude'] ?? 0);
-        $hotel_lng = TypeCoerce::toFloat($hotelRow['longitude'] ?? 0);
+        );
+        $hotel_location = HotelLocationLine::build($hotelSeo);
+        // Map URL via the shared PDP builder: coordinate pin when available,
+        // otherwise a place-search on "name, location" — so the map link is
+        // present for every hotel, not only geocoded ones.
+        $hotel_map_url = HotelMapUrl::build($hotelSeo, $hotel_location) ?? '';
     }
 
     $templateParams = [
@@ -135,6 +144,7 @@ try {
     $view->assign('sphinx_hotel_name', $hotel_name);
     $view->assign('sphinx_hotel_stars', $hotel_stars);
     $view->assign('sphinx_hotel_location', $hotel_location);
+    $view->assign('sphinx_hotel_map_url', $hotel_map_url);
     $view->assign('sphinx_hotel_lat', $hotel_lat);
     $view->assign('sphinx_hotel_lng', $hotel_lng);
     $view->assign('sphinx_search_results', []);

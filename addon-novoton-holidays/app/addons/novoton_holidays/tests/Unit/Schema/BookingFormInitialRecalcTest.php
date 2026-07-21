@@ -73,6 +73,25 @@ final class BookingFormInitialRecalcTest extends TestCase
         );
     }
 
+    public function testBookingFormShowsTheLocationMapLink(): void
+    {
+        $tpl = self::themeTpl('responsive');
+
+        // The guest form must carry the "Locație - arată pe hartă" link like the
+        // search card and PDP, gated on the built URL (always present).
+        self::assertStringContainsString('travel-hotel-map-link', $tpl);
+        self::assertStringContainsString('href="{$hotel_map_url|escape:html}"', $tpl);
+        self::assertStringContainsString('{if $hotel_map_url}', $tpl);
+        self::assertStringContainsString('novoton_holidays.location_show_map', $tpl);
+
+        // The controller builds it via the shared HotelMapUrl builder.
+        $controller = (string) file_get_contents(
+            dirname(__DIR__, 3) . '/controllers/frontend/novoton_booking/booking_form.php',
+        );
+        self::assertStringContainsString("assign('hotel_map_url'", $controller);
+        self::assertStringContainsString('HotelMapUrl::build($bookingHotelSeo', $controller);
+    }
+
     public function testRecalcDebugGateUsesARealSettingKey(): void
     {
         $path = dirname(__DIR__, 3) . '/controllers/frontend/novoton_booking/ajax_recalculate_price.php';

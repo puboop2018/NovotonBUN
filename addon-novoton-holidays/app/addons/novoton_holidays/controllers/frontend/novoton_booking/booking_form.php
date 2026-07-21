@@ -12,8 +12,11 @@ use Tygh\Tygh;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Services\Container;
 use Tygh\Addons\NovotonHolidays\Services\PriceInfoFormatter;
+use Tygh\Addons\TravelCore\Dto\Hotel\HotelSeoData;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Services\CurrencyService;
+use Tygh\Addons\TravelCore\Services\HotelLocationLine;
+use Tygh\Addons\TravelCore\Services\HotelMapUrl;
 
     $bookingData = TypeCoerce::toStringMap($_REQUEST);
 
@@ -326,6 +329,26 @@ use Tygh\Addons\TravelCore\Services\CurrencyService;
     $view->assign('hotel_region', $hotel_info['region'] ?? '');
     $view->assign('hotel_country', $hotel_info['country'] ?? 'BULGARIA');
     $view->assign('hotel_stars', $hotel_stars);
+
+    // Sanitized location line + map link, same as the search card and PDP
+    // ($hotel_info is loaded via findById = SELECT *, so the coordinate/address
+    // columns are already present). The map URL comes from the shared builder
+    // so the "Locație - arată pe hartă" link is present for every hotel —
+    // coordinate pin when geocoded, place-search on "name, location" otherwise.
+    $bookingHotelSeo = new HotelSeoData(
+        hotelId: TypeCoerce::toString($booking['hotel_id']),
+        providerName: 'novoton',
+        name: TypeCoerce::toString($hotel_info['hotel_name'] ?? ''),
+        city: TypeCoerce::toString($hotel_info['city'] ?? ''),
+        region: TypeCoerce::toString($hotel_info['region'] ?? ''),
+        country: TypeCoerce::toString($hotel_info['country'] ?? ''),
+        latitude: TypeCoerce::toFloat($hotel_info['latitude'] ?? 0),
+        longitude: TypeCoerce::toFloat($hotel_info['longitude'] ?? 0),
+        address: TypeCoerce::toString($hotel_info['street_address'] ?? ''),
+    );
+    $bookingLocationLine = HotelLocationLine::build($bookingHotelSeo);
+    $view->assign('hotel_location_line', $bookingLocationLine);
+    $view->assign('hotel_map_url', HotelMapUrl::build($bookingHotelSeo, $bookingLocationLine) ?? '');
     $view->assign('package_name', $package_name);
     $view->assign('hotel_all_packages', $all_packages);
     $session = Tygh::$app['session'];

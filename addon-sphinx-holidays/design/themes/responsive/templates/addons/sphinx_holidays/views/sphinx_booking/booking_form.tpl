@@ -19,6 +19,11 @@
     {* Hotel & booking summary header *}
     <div class="travel-booking-summary travel-booking-summary--hero booking-summary-header">
         <h2>{$sphinx_booking_data.hotel_name|escape:html}</h2>
+        {if $sphinx_booking_data.hotel_location_line || $sphinx_booking_data.hotel_map_url}
+            {* Sanitized location line + map link, same as the search card / PDP;
+               the " - " separator mirrors main_info_title.post.tpl. *}
+            <div class="travel-hotel-location sphinx-hotel-header-location">{$sphinx_booking_data.hotel_location_line|escape:html}{if $sphinx_booking_data.hotel_map_url}{if $sphinx_booking_data.hotel_location_line} - {/if}<a href="{$sphinx_booking_data.hotel_map_url|escape:html}" target="_blank" rel="noopener" class="travel-hotel-map-link">{__("sphinx_holidays.location_show_map")|default:"Location - show map"}</a>{/if}</div>
+        {/if}
         <div class="travel-booking-meta">
             <span><i class="icon-calendar"></i> {$sphinx_booking_data.check_in|date_format:"%d.%m.%Y"} - {$sphinx_booking_data.check_out|date_format:"%d.%m.%Y"}</span>
             <span><i class="icon-moon"></i> {$sphinx_booking_data.nights} {__("travel_core.nights")|default:"nights"}</span>

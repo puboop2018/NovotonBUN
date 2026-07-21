@@ -50,11 +50,11 @@
                         {/if}
                         {if $sphinx_hotel_stars}<span class="travel-hotel-stars sphinx-stars" role="img" aria-label="{__("sphinx_holidays.stars_rating", ["[rating]" => $sphinx_hotel_stars])|escape:html}">{"★"|str_repeat:$sphinx_hotel_stars}</span>{/if}
                     </h1>
-                    {if $sphinx_hotel_location || ($sphinx_hotel_lat && $sphinx_hotel_lng)}
+                    {if $sphinx_hotel_location || $sphinx_hotel_map_url}
                         <p class="travel-hotel-location sphinx-hotel-header-location">
                             {* Text from HotelLocationLine (PDP pipeline); the " - "
                                separator mirrors main_info_title.post.tpl *}
-                            {$sphinx_hotel_location|escape:html}{if $sphinx_hotel_lat && $sphinx_hotel_lng}{if $sphinx_hotel_location} - {/if}<a href="https://www.google.com/maps?q={$sphinx_hotel_lat},{$sphinx_hotel_lng}" target="_blank" rel="noopener" class="travel-hotel-map-link">{__("sphinx_holidays.location_show_map")|default:"Location - show map"}</a>{/if}
+                            {$sphinx_hotel_location|escape:html}{if $sphinx_hotel_map_url}{if $sphinx_hotel_location} - {/if}<a href="{$sphinx_hotel_map_url|escape:html}" target="_blank" rel="noopener" class="travel-hotel-map-link">{__("sphinx_holidays.location_show_map")|default:"Location - show map"}</a>{/if}
                         </p>
                     {/if}
                 </div>
@@ -582,7 +582,7 @@ window.__sphinxConfig = {
         if (!rules || !rules.length) return '';
         // Each node is headed by ITS DATE at the timeline dot ("P\u00e2n\u0103 la
         // 20.06.2026" / "De la 01.07.2026"), with a terse amount row below.
-        var dateLabel = kind === 'pay' ? (cfg.termsUntil || 'p\u00e2n\u0103 la') : (cfg.termsFrom || 'de la');
+        var dateLabel = kind === 'pay' ? lbl(cfg.termsUntil, 'p\u00e2n\u0103 la') : lbl(cfg.termsFrom, 'de la');
         var html = '<p class="travel-terms-timeline__heading">' + esc(heading) + '</p>';
         html += '<ul class="travel-terms-timeline">';
         for (var i = 0; i < rules.length; i++) {
@@ -593,18 +593,18 @@ window.__sphinxConfig = {
             html += '<div class="travel-terms-timeline__date">' + esc(cap(dateLabel)) + ' <strong>' + esc(r.date) + '</strong></div>';
             if (kind === 'pay') {
                 html += '<div class="travel-terms-timeline__row travel-terms-timeline__row--pay">'
-                    + esc(cfg.termsDueBy || 'De achitat') + ': <strong>'
+                    + esc(lbl(cfg.termsDueBy, 'De achitat')) + ': <strong>'
                     + esc(fmtAmount(r.amount, cur)) + '</strong>' + fmtPct(r.percent) + '</div>';
             } else {
                 var nonref = total > 0 && parseFloat(r.amount) >= total
-                    ? ' <span class="travel-terms-timeline__tag--nonref">' + esc(cfg.termsNonRefundable || 'Nerambursabil') + '</span>'
+                    ? ' <span class="travel-terms-timeline__tag--nonref">' + esc(lbl(cfg.termsNonRefundable, 'Nerambursabil')) + '</span>'
                     : '';
                 // Penalty severity leads: "Penalizare 20%: 763 EUR" — the
                 // percent is the instantly comparable signal; the amount is
                 // the consequence detail (payment rows stay amount-first).
                 var pctLead = pctNum(r.percent);
                 html += '<div class="travel-terms-timeline__row travel-terms-timeline__row--cancel">'
-                    + esc(cfg.termsPenalty || 'Penalizare') + (pctLead !== '' ? ' <strong>' + esc(pctLead) + '%</strong>' : '') + ': <strong>'
+                    + esc(lbl(cfg.termsPenalty, 'Penalizare')) + (pctLead !== '' ? ' <strong>' + esc(pctLead) + '%</strong>' : '') + ': <strong>'
                     + esc(fmtAmount(r.amount, cur)) + '</strong>' + nonref + '</div>';
             }
             html += '</li>';

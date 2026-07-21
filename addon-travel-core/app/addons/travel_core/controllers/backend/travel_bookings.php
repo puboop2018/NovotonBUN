@@ -38,6 +38,53 @@ if (fn_allowed_for('MULTIVENDOR') || (defined('RESTRICTED_ADMIN') && RESTRICTED_
 // Do NOT overwrite $mode from $_REQUEST — that causes 404 errors.
 
 /**
+ * Replay the providers' order-link reconcilers when the listing contains
+ * unlinked bookings, so any booking whose order EXISTS gets its Order ID
+ * before the grid renders (same travel_link_order_bookings hook as the
+ * Travel Tools "Reconcile booking–order links" button, over the newest 100
+ * orders). Throttled to once per 5 minutes via ?:storage_data. Returns true
+ * when at least one booking was linked (caller re-fetches the listing).
+ *
+ * @param list<array<string, mixed>> $bookings The current page's rows
+ */
+function _travel_bookings_autolink_if_needed(array $bookings): bool
+{
+    $hasUnlinked = false;
+    foreach ($bookings as $b) {
+        if (TypeCoerce::toInt($b['order_id'] ?? 0) <= 0) {
+            $hasUnlinked = true;
+            break;
+        }
+    }
+    if (!$hasUnlinked || !function_exists('fn_set_hook')) {
+        return false;
+    }
+
+    $lastRun = function_exists('fn_get_storage_data')
+        ? TypeCoerce::toInt(fn_get_storage_data('travel_bookings_autolink_ts'))
+        : 0;
+    if (time() - $lastRun < 300) {
+        return false;
+    }
+    if (function_exists('fn_set_storage_data')) {
+        fn_set_storage_data('travel_bookings_autolink_ts', (string) time());
+    }
+
+    $orderIds = TypeCoerce::toIntList(db_get_fields(
+        'SELECT order_id FROM ?:orders ORDER BY order_id DESC LIMIT 100',
+    ));
+    $linked = 0;
+    foreach ($orderIds as $autolink_order_id) {
+        fn_set_hook('travel_link_order_bookings', $autolink_order_id, $linked);
+    }
+
+    // fn_set_hook mutates $linked by reference (invisible to static
+    // analysis); the pass ran at most once per throttle window, so always
+    // report it — one extra listing re-fetch is cheap.
+    return true;
+}
+
+/**
  * Enrich a booking row with provider-specific display data and actions.
  *
  * Uses the BookingAdminProviderInterface registered for the booking's provider.
@@ -241,6 +288,19 @@ if ($mode === 'manage') {
     $paginatedResult = $bookingRepo->getPaginated($condition, $sortColumn, $sortOrder, $offset, $limit);
     $total = $paginatedResult['total'];
     $bookings = $paginatedResult['items'];
+
+    // Self-heal: when the page shows unlinked bookings, replay the
+    // providers' order-link reconcilers (the same travel_link_order_bookings
+    // hook the Travel Tools button fires) over the newest orders, then
+    // re-fetch so healed Order IDs render on THIS page load. Throttled via
+    // ?:storage_data so busy admins don't rescan orders on every refresh;
+    // bookings whose checkout never completed legitimately stay at "-" and
+    // never trigger a write.
+    if (_travel_bookings_autolink_if_needed($bookings)) {
+        $paginatedResult = $bookingRepo->getPaginated($condition, $sortColumn, $sortOrder, $offset, $limit);
+        $total = $paginatedResult['total'];
+        $bookings = $paginatedResult['items'];
+    }
 
     // Enrich each booking with provider-specific display data and actions.
     // Also pre-format dates in PHP — the list template wraps its rows in

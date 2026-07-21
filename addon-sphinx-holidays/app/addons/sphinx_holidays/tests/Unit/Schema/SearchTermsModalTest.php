@@ -117,6 +117,16 @@ final class SearchTermsModalTest extends TestCase
         // vars, so labels go through lbl() — a raw key can never render.
         self::assertStringContainsString('function lbl(', $tpl);
         self::assertStringContainsString("charAt(0) === '_'", $tpl);
+        // Every timeline label the renderer CONSUMES must route through lbl(),
+        // not `cfg.x || fallback`: the raw "_sphinx_holidays.terms_due_by" is a
+        // truthy string so `||` never fires and the key renders raw on an
+        // unseeded store (the exact regression). lbl() strips the "_" prefix.
+        foreach (['termsDueBy', 'termsPenalty', 'termsNonRefundable', 'termsUntil', 'termsFrom'] as $label) {
+            self::assertStringContainsString('lbl(cfg.' . $label . ',', $tpl,
+                "timeline label {$label} must go through lbl(), not `cfg.{$label} || …`");
+            self::assertStringNotContainsString('cfg.' . $label . ' ||', $tpl,
+                "the `cfg.{$label} || fallback` anti-pattern renders the raw key on unseeded stores");
+        }
     }
 
     /**
