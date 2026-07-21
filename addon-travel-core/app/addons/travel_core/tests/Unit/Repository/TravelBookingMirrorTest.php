@@ -11,10 +11,13 @@ use Tygh\Addons\TravelCore\Tests\Support\DbStub;
 
 /**
  * The consolidated provider → travel_bookings dual-write. Pins the upsert
- * shape (record passed twice for ?e / ?u), the provider-parameterized
- * partial update with field-map translation, the no-op guard, delete, and
- * the guests_json string-coercion guard on BOTH paths — the update-path
- * guard is new (it existed only on sphinx's insert path before the hoist).
+ * shape (full record for ?e; the ?u update-set EXCLUDES order_id, which only
+ * moves forward via the IF(VALUES(order_id) > 0, ...) clause — a re-upsert
+ * must never reset a linked booking back to "Order ID -"), the
+ * provider-parameterized partial update with field-map translation, the
+ * no-op guard, delete, and the guests_json string-coercion guard on BOTH
+ * paths — the update-path guard is new (it existed only on sphinx's insert
+ * path before the hoist).
  */
 #[CoversClass(TravelBookingMirror::class)]
 final class TravelBookingMirrorTest extends TestCase
@@ -44,7 +47,6 @@ final class TravelBookingMirrorTest extends TestCase
 
         [$sql, $params] = $this->queries[0];
         self::assertStringContainsString('INSERT INTO ?:travel_bookings ?e ON DUPLICATE KEY UPDATE ?u', $sql);
-        self::assertSame($params[0], $params[1]);
         self::assertSame('sphinx', $params[0]['provider']);
         self::assertSame('9', $params[0]['provider_booking_id']);
         self::assertSame('Falez', $params[0]['hotel_name']);
@@ -52,6 +54,35 @@ final class TravelBookingMirrorTest extends TestCase
         self::assertSame('EUR', $params[0]['currency']);
         self::assertSame('pending', $params[0]['status']);
         self::assertSame('{}', $params[0]['guests_json']);
+    }
+
+    public function testUpsertNeverResetsALinkedOrderId(): void
+    {
+        // Bookings are born unlinked (order_id=0 at add-to-cart) and linked
+        // later; a re-upsert without order_id in $data must NOT blank the
+        // mirror's linked value — order_id only moves forward here.
+        (new TravelBookingMirror('novoton'))->upsert(7, ['hotel_name' => 'Edart']);
+
+        [$sql, $params] = $this->queries[0];
+        // Insert row still carries the full record (order_id defaults to 0)…
+        self::assertSame(0, $params[0]['order_id']);
+        // …but the duplicate-key update-set excludes it; the preserving IF()
+        // clause is the only writer.
+        self::assertArrayNotHasKey('order_id', $params[1]);
+        self::assertSame(
+            array_diff_key($params[0], ['order_id' => true]),
+            $params[1],
+            'update-set must be the insert record minus order_id',
+        );
+        self::assertStringContainsString(
+            'order_id = IF(VALUES(order_id) > 0, VALUES(order_id), order_id)',
+            $sql,
+        );
+
+        // A caller that DOES pass a positive order_id forwards it on insert.
+        (new TravelBookingMirror('novoton'))->upsert(8, ['order_id' => 12]);
+        self::assertSame(12, $this->queries[1][1][0]['order_id']);
+        self::assertArrayNotHasKey('order_id', $this->queries[1][1][1]);
     }
 
     public function testGuestsJsonGuardCoercesArraysOnBothPaths(): void

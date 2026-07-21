@@ -79,10 +79,21 @@ final class TravelBookingMirror
             'guests_json' => self::coerceGuestsJson($data['guests_data'] ?? '{}'),
         ];
 
+        // On re-upsert of an existing row, a positive order_id must never be
+        // reset to 0: bookings are born unlinked (order_id=0 at add-to-cart)
+        // and linked later, so a caller re-upserting without order_id in $data
+        // would silently un-link the mirror row while the provider table keeps
+        // the real order ("Order ID -" in the admin grid). order_id only moves
+        // forward here; it is cleared/changed exclusively via applyUpdate().
+        $update_record = $travel_record;
+        unset($update_record['order_id']);
+
         db_query(
-            'INSERT INTO ?:travel_bookings ?e ON DUPLICATE KEY UPDATE ?u',
+            'INSERT INTO ?:travel_bookings ?e'
+                . ' ON DUPLICATE KEY UPDATE ?u,'
+                . ' order_id = IF(VALUES(order_id) > 0, VALUES(order_id), order_id)',
             $travel_record,
-            $travel_record,
+            $update_record,
         );
     }
 
