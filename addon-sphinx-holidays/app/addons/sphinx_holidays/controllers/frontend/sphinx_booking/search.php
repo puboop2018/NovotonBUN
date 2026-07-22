@@ -31,6 +31,7 @@ use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Services\HotelLocationLine;
 use Tygh\Addons\TravelCore\Services\HotelMapUrl;
+use Tygh\Addons\TravelCore\ViewModels\HotelHeaderViewModel;
 use Tygh\Tygh;
 
 try {
@@ -145,6 +146,17 @@ try {
     $view->assign('sphinx_hotel_stars', $hotel_stars);
     $view->assign('sphinx_hotel_location', $hotel_location);
     $view->assign('sphinx_hotel_map_url', $hotel_map_url);
+
+    // Shared hotel-identity header component (travel_core
+    // components/hotel_header.tpl) — same variable name and shape on all
+    // four provider surfaces.
+    $view->assign('travel_hotel_header', (new HotelHeaderViewModel(
+        name: $hotel_name,
+        stars: TypeCoerce::toInt($hotel_stars),
+        locationLine: $hotel_location,
+        mapUrl: $hotel_map_url,
+        productId: TypeCoerce::toInt($product_id),
+    ))->toViewArray());
     $view->assign('sphinx_hotel_lat', $hotel_lat);
     $view->assign('sphinx_hotel_lng', $hotel_lng);
     $view->assign('sphinx_search_results', []);
@@ -241,9 +253,9 @@ try {
     if ($cacheEnabled && $cacheTtl > 0) {
         $cacheKey = CacheService::buildSearchKey($cacheParams);
         if ($forceRefresh) {
-            CacheService::delete($cacheKey);
+            Container::getCacheService()->delete($cacheKey);
         }
-        $cached = $forceRefresh ? null : CacheService::get($cacheKey);
+        $cached = $forceRefresh ? null : Container::getCacheService()->get($cacheKey);
         if ($cached !== null) {
             $cachedMap = TypeCoerce::toStringMap($cached);
             $cachedResults = TypeCoerce::toRowList($cachedMap['results'] ?? []);
@@ -367,7 +379,7 @@ try {
         unset($result);
 
         if ($cacheEnabled && $cacheTtl > 0) {
-            CacheService::set(CacheService::buildSearchKey($cacheParams), [
+            Container::getCacheService()->set(CacheService::buildSearchKey($cacheParams), [
                 'results' => $initialResults,
                 'search_id' => $searchIdStr,
                 'complete' => true,

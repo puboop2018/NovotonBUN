@@ -81,7 +81,7 @@ try {
 
     if ($cacheEnabled && $cacheTtl > 0) {
         $cacheKey = CacheService::buildSearchKey(array_merge(['_type' => 'package'], $searchParams));
-        $cached = CacheService::get($cacheKey);
+        $cached = Container::getCacheService()->get($cacheKey);
         if ($cached !== null) {
             $allResults = TypeCoerce::toRowList($cached['results'] ?? []);
             $fromCache = true;
@@ -124,7 +124,7 @@ try {
 
         // Cache raw results
         if ($cacheEnabled && $cacheTtl > 0 && !empty($allResults)) {
-            CacheService::set($cacheKey, ['results' => $allResults], $cacheTtl);
+            Container::getCacheService()->set($cacheKey, ['results' => $allResults], $cacheTtl);
         }
     }
 

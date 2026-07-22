@@ -49,6 +49,10 @@
 }
 .travel-booking-page .travel-hotel-location {
     flex-basis: 100%;
+    /* The shared hotel_header component emits name + location together, so
+       the location precedes the availability pill in the DOM; order pushes
+       it below the pill row (h1 + pill on line 1, location on line 2). */
+    order: 10;
     margin: 4px 0 0;
     font-size: 14px;
     line-height: 1.4;

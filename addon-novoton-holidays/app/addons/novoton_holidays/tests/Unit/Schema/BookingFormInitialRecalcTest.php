@@ -29,37 +29,60 @@ final class BookingFormInitialRecalcTest extends TestCase
         return (string) file_get_contents($path);
     }
 
-    public function testInitialLoadRecalcSendsCollectedChildrenAges(): void
+    private static function bookingFormJs(): string
+    {
+        // The behavioral JS is a real module now (vitest imports it); the
+        // template keeps the markup + Smarty config and loads it via {script}.
+        $path = dirname(__DIR__, 6) . '/js/addons/novoton_holidays/booking-form.js';
+        self::assertFileExists($path);
+
+        return (string) file_get_contents($path);
+    }
+
+    public function testTemplateLoadsTheModuleAndKeepsConfigOnly(): void
     {
         $tpl = self::themeTpl('responsive');
 
+        self::assertStringContainsString('{script src="js/addons/novoton_holidays/booking-form.js"}', $tpl);
+        self::assertStringContainsString('window.bookingData', $tpl);
+        self::assertStringContainsString('window.NovotonBookingI18n', $tpl);
+        self::assertStringContainsString('ajaxRecalculateUrl', $tpl);
+        // No behavioral JS left inline — the config assignments only.
+        self::assertStringNotContainsString('function triggerPriceRecalculationInline', $tpl);
+        self::assertStringNotContainsString('function validateAndCheckAge', $tpl);
+    }
+
+    public function testInitialLoadRecalcSendsCollectedChildrenAges(): void
+    {
+        $js = self::bookingFormJs();
+
         self::assertStringNotContainsString(
             'triggerPriceRecalculationInline([]',
-            $tpl,
+            $js,
             'the on-load binding-price call must never hardcode an empty children list — '
             . 'it re-quotes for adults-only occupancy and triggers a bogus room substitution',
         );
-        self::assertStringContainsString('function collectChildrenAges(', $tpl);
+        self::assertStringContainsString('function collectChildrenAges(', $js);
         // Both DOMContentLoaded branches (multi-room + single-room) pass real ages.
-        self::assertStringContainsString('triggerPriceRecalculationInline(collectChildrenAges(roomNum), roomNum, true)', $tpl);
-        self::assertStringContainsString('triggerPriceRecalculationInline(collectChildrenAges(1), 1, true)', $tpl);
+        self::assertStringContainsString('triggerPriceRecalculationInline(collectChildrenAges(roomNum), roomNum, true)', $js);
+        self::assertStringContainsString('triggerPriceRecalculationInline(collectChildrenAges(1), 1, true)', $js);
     }
 
     public function testPriceCommitIsGatedOnRoomChangeDecision(): void
     {
-        $tpl = self::themeTpl('responsive');
+        $js = self::bookingFormJs();
 
-        self::assertStringContainsString('function applyRecalculatedPrice(', $tpl);
+        self::assertStringContainsString('function applyRecalculatedPrice(', $js);
 
         // The success handler applies the price only when the room is unchanged...
-        self::assertStringContainsString('applyRecalculatedPrice(data, roomNum, isMultiRoom, isInitialLoad)', $tpl);
+        self::assertStringContainsString('applyRecalculatedPrice(data, roomNum, isMultiRoom, isInitialLoad)', $js);
 
         // ...and a room change defers the commit to the accept handler.
-        $acceptPos = strpos($tpl, 'function acceptRoomChangeInline()');
+        $acceptPos = strpos($js, 'function acceptRoomChangeInline()');
         self::assertIsInt($acceptPos);
         self::assertStringContainsString(
             'applyRecalculatedPrice(',
-            substr($tpl, $acceptPos),
+            substr($js, $acceptPos),
             'accepting a room change must commit price + room together',
         );
     }
@@ -77,21 +100,18 @@ final class BookingFormInitialRecalcTest extends TestCase
     {
         $tpl = self::themeTpl('responsive');
 
-        // Product-listing name (ty-product-list__item-name + product-title link)
-        // with bidi isolation — parity with the search card. The name links to the
-        // product page in a new tab (so the in-progress form is never lost), gold
-        // stars, and the shared .travel-hotel-location (not the old
-        // white-on-gradient .travel-hero-location hero).
-        self::assertStringContainsString('<h1 class="ty-product-list__item-name">', $tpl);
-        self::assertStringContainsString('class="product-title travel-hotel-name-link"', $tpl);
-        self::assertStringContainsString('target="_blank" rel="noopener"', $tpl);
-        self::assertStringContainsString('<bdi>{$hotel_name|default:\'Hotel\'}</bdi>', $tpl);
-        self::assertStringNotContainsString('ty-product-block-title', $tpl, 'the big PDP block title is replaced by the listing name');
-        self::assertStringContainsString('class="travel-hotel-stars"', $tpl);
-        self::assertStringContainsString('class="travel-hotel-location"', $tpl);
+        // The hotel identity (name/stars/location/map link) comes from the
+        // shared travel_core component — new-tab link so an in-progress form
+        // is never lost — inside the light reservation-header card with the
+        // inline availability pill.
+        self::assertStringContainsString('{include file="addons/travel_core/components/hotel_header.tpl" hh_new_tab=true}', $tpl);
+        self::assertStringContainsString('class="travel-hero-badge" id="availability-badge"', $tpl);
         self::assertStringNotContainsString('travel-hero-location', $tpl, 'the blue-gradient hero location is gone');
+        self::assertStringNotContainsString('ty-product-block-title', $tpl, 'the big PDP block title stays retired');
 
-        // The reservation-header rule is now a light card, not the blue hero.
+        // The reservation-header rule is now a light card, not the blue hero;
+        // the location line (emitted by the component before the pill) is
+        // pushed below the pill row via flex order.
         $css = (string) file_get_contents(
             dirname(__DIR__, 7) . '/addon-travel-core/design/themes/responsive/css/addons/travel_core/booking-pages.css',
         );
@@ -100,25 +120,26 @@ final class BookingFormInitialRecalcTest extends TestCase
         $rule = substr($css, $start, (int) strpos($css, '}', $start) - $start);
         self::assertStringContainsString('background: var(--nvt-bg', $rule);
         self::assertStringNotContainsString('linear-gradient', $rule, 'the header must be a light card, not the blue hero');
+
+        $locStart = strpos($css, '.travel-booking-page .travel-hotel-location {');
+        self::assertNotFalse($locStart);
+        $locRule = substr($css, $locStart, (int) strpos($css, '}', $locStart) - $locStart);
+        self::assertStringContainsString('order: 10', $locRule);
     }
 
-    public function testBookingFormShowsTheLocationMapLink(): void
+    public function testBookingFormFeedsTheSharedHeaderViewModel(): void
     {
-        $tpl = self::themeTpl('responsive');
-
-        // The guest form must carry the "Locație - arată pe hartă" link like the
-        // search card and PDP, gated on the built URL (always present).
-        self::assertStringContainsString('travel-hotel-map-link', $tpl);
-        self::assertStringContainsString('href="{$hotel_map_url|escape:html}"', $tpl);
-        self::assertStringContainsString('{if $hotel_map_url}', $tpl);
-        self::assertStringContainsString('novoton_holidays.location_show_map', $tpl);
-
-        // The controller builds it via the shared HotelMapUrl builder.
+        // The controller builds the header data (map URL via the shared
+        // HotelMapUrl builder) and hands it to the component through
+        // HotelHeaderViewModel under the shared variable name.
         $controller = (string) file_get_contents(
             dirname(__DIR__, 3) . '/controllers/frontend/novoton_booking/booking_form.php',
         );
-        self::assertStringContainsString("assign('hotel_map_url'", $controller);
         self::assertStringContainsString('HotelMapUrl::build($bookingHotelSeo', $controller);
+        self::assertStringContainsString('new HotelHeaderViewModel(', $controller);
+        self::assertStringContainsString("assign('travel_hotel_header'", $controller);
+        // The old template's city/region/country fallback lives on in the VM.
+        self::assertStringContainsString('$headerLocationLine', $controller);
     }
 
     public function testRecalcDebugGateUsesARealSettingKey(): void

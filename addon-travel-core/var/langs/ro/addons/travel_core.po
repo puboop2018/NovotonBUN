@@ -861,3 +861,15 @@ msgstr "Vă rugăm așteptați un moment înainte de a trimite o nouă cerere."
 msgctxt "Languages::travel_core.location_show_map"
 msgid "Location - show map"
 msgstr "Locație - arată pe hartă"
+
+msgctxt "Languages::travel_core.stars_rating"
+msgid "[rating]-star rating"
+msgstr "Clasificare [rating] stele"
+
+msgctxt "Languages::travel_core.hotel_name"
+msgid "Hotel name"
+msgstr "Nume hotel"
+
+msgctxt "Languages::travel_core.back"
+msgid "Back"
+msgstr "Înapoi"

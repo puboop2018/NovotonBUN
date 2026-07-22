@@ -37,23 +37,11 @@
         <div class="travel-hotel-header novoton-hotel-header">
             <div class="novoton-hotel-header-row">
                 <div>
-                    {* Product-listing name style (ty-product-list__item-name
-                       wrapper + product-title link) — reuses the theme's
-                       listing-name look, which reads cleaner than the big PDP
-                       block title. h1 kept for the single-hotel page semantics. *}
-                    <h1 class="ty-product-list__item-name">
-                        {if $novoton_params.product_id}
-                            <bdi><a href="{"products.view?product_id=`$novoton_params.product_id`"|fn_url}" class="product-title travel-hotel-name-link" title="{$hotel_name|default:'Hotel'|escape:html}">{$hotel_name|default:'Hotel'}</a></bdi>
-                        {else}
-                            <bdi>{$hotel_name|default:'Hotel'}</bdi>
-                        {/if}
-                        {if $hotel_stars}<span class="travel-hotel-stars" aria-hidden="true">{$hotel_stars}</span>{/if}
-                    </h1>
-                    <p class="travel-hotel-location">
-                        {* Sanitized by HotelLocationLine (Title Case + dedup), same as the PDP;
-                           the " - " separator before the map link mirrors main_info_title.post.tpl *}
-                        {$hotel_location_line|default:''}{if $hotel_map_url}{if $hotel_location_line} - {/if}<a href="{$hotel_map_url|escape:html}" target="_blank" rel="noopener" class="travel-hotel-map-link">{__("novoton_holidays.location_show_map")|default:"Location - show map"}</a>{/if}
-                    </p>
+                    {* Shared hotel-identity header (name + stars + location +
+                       map link) — travel_core component, ONE copy for all four
+                       provider surfaces. Data: $travel_hotel_header
+                       (HotelHeaderViewModel, assigned by SearchResultFormatter). *}
+                    {include file="addons/travel_core/components/hotel_header.tpl"}
                     {if $hotel_season_from && $hotel_season_to}
                     <p class="novoton-season-note">
                         {__("novoton_holidays.accommodation_period")|default:"This hotel offers accommodation from"} {$hotel_season_from|date_format:"%d %b"} {__("novoton_holidays.to")|default:"to"} {$hotel_season_to|date_format:"%d %b %Y"}
@@ -760,22 +748,9 @@
     </div>
 </div>
 
-<script>
-function openInfoModal(rowId) {
-    var content = document.getElementById('modal-content-' + rowId);
-    if (content) {
-        document.getElementById('info-modal-content').innerHTML = content.innerHTML;
-        document.getElementById('info-modal').style.display = 'flex';
-        document.body.style.overflow = 'hidden';
-    }
-}
-function closeInfoModal() {
-    document.getElementById('info-modal').style.display = 'none';
-    document.body.style.overflow = '';
-}
-document.getElementById('info-modal').addEventListener('click', function(e) { if (e.target === this) closeInfoModal(); });
-document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeInfoModal(); });
-</script>
+{* Modal behavior lives in a real JS file (vitest imports it directly —
+   tests/js/novoton-search-results.test.mjs). *}
+{script src="js/addons/novoton_holidays/search-results.js"}
 
 {* Client i18n for the booking engine — shared travel_core partial
    (replaces the hand-maintained window.NovotonTranslations block). *}

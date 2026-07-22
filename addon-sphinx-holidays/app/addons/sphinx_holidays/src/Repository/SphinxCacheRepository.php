@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays\Repository;
 
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Repository\RowNarrowingTrait;
 
 /**
@@ -39,13 +40,15 @@ class SphinxCacheRepository
         );
     }
 
-    public function deleteByKey(string $key): void
+    /** @return int Rows removed (db_query returns affected rows for DML). */
+    public function deleteByKey(string $key): int
     {
-        db_query('DELETE FROM ?:sphinx_cache WHERE cache_key = ?s', $key);
+        return TypeCoerce::toInt(db_query('DELETE FROM ?:sphinx_cache WHERE cache_key = ?s', $key));
     }
 
-    public function deleteExpired(): void
+    /** @return int Expired rows removed. */
+    public function deleteExpired(): int
     {
-        db_query('DELETE FROM ?:sphinx_cache WHERE expires_at < ?i', time());
+        return TypeCoerce::toInt(db_query('DELETE FROM ?:sphinx_cache WHERE expires_at < ?i', time()));
     }
 }

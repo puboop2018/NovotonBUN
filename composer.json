@@ -30,6 +30,8 @@
         "hooks:install":   "grumphp git:init",
         "hooks:uninstall": "grumphp git:deinit",
 
+        "mirror": "@php scripts/mirror-themes.php",
+
         "stan": "phpstan analyse --memory-limit=1G",
         "stan:baseline": "phpstan analyse --memory-limit=1G --generate-baseline=phpstan-baseline.neon --allow-empty-baseline",
 

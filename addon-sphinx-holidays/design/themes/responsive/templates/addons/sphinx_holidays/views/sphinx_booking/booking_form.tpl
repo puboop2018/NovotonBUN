@@ -18,24 +18,15 @@
 
     {* Hotel & booking summary header — minimalist light card (parity with the
        search results header): the light .travel-booking-summary base (no --hero
-       gradient), product-listing name + bdi, gold stars, location line with map-pin. *}
+       gradient) around the shared travel_core hotel-identity component (the
+       name links to the product page in a NEW tab so an in-progress form is
+       never lost). Data: $travel_hotel_header (HotelHeaderViewModel, assigned
+       by the booking_form controller). *}
     <div class="travel-booking-summary booking-summary-header">
-        {* Product-listing name style (ty-product-list__item-name + product-title),
-           parity with the search card. The name links to the product page in a NEW
-           tab so an in-progress booking form is never lost. *}
-        <h1 class="ty-product-list__item-name sphinx-hotel-header-name">
-            {if $sphinx_booking_data.product_id}
-                <bdi><a href="{"products.view?product_id=`$sphinx_booking_data.product_id`"|fn_url}" target="_blank" rel="noopener" class="product-title travel-hotel-name-link" title="{$sphinx_booking_data.hotel_name|escape:html}">{$sphinx_booking_data.hotel_name|escape:html}</a></bdi>
-            {else}
-                <bdi>{$sphinx_booking_data.hotel_name|escape:html}</bdi>
-            {/if}
-            {if $sphinx_booking_data.hotel_stars} <span class="travel-hotel-stars sphinx-stars" role="img" aria-label="{__("sphinx_holidays.stars_rating", ["[rating]" => $sphinx_booking_data.hotel_stars])|escape:html}">{"★"|str_repeat:$sphinx_booking_data.hotel_stars}</span>{/if}
-        </h1>
-        {if $sphinx_booking_data.hotel_location_line || $sphinx_booking_data.hotel_map_url}
-            {* Sanitized location line + map link, same as the search card / PDP;
-               the " - " separator mirrors main_info_title.post.tpl. *}
-            <div class="travel-hotel-location sphinx-hotel-header-location">{$sphinx_booking_data.hotel_location_line|escape:html}{if $sphinx_booking_data.hotel_map_url}{if $sphinx_booking_data.hotel_location_line} - {/if}<a href="{$sphinx_booking_data.hotel_map_url|escape:html}" target="_blank" rel="noopener" class="travel-hotel-map-link">{__("sphinx_holidays.location_show_map")|default:"Location - show map"}</a>{/if}</div>
-        {/if}
+        {include file="addons/travel_core/components/hotel_header.tpl"
+            hh_extra_class="sphinx-hotel-header-name"
+            hh_location_class="sphinx-hotel-header-location"
+            hh_new_tab=true}
         <div class="travel-booking-meta">
             <span><i class="icon-calendar"></i> {$sphinx_booking_data.check_in|date_format:"%d.%m.%Y"} - {$sphinx_booking_data.check_out|date_format:"%d.%m.%Y"}</span>
             <span><i class="icon-moon"></i> {$sphinx_booking_data.nights} {__("travel_core.nights")|default:"nights"}</span>

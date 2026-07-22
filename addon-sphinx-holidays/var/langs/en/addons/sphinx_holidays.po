@@ -623,3 +623,663 @@ msgstr "Penalty"
 msgctxt "Languages::sphinx_holidays.terms_non_refundable"
 msgid "Non-refundable"
 msgstr "Non-refundable"
+
+msgctxt "Languages::sphinx_holidays.circuits_category_id"
+msgid "CS-Cart category ID for circuits"
+msgstr "CS-Cart category ID for circuits"
+
+msgctxt "Languages::sphinx_holidays.circuits_category_id.tooltip"
+msgid "Root category under which circuit products are created. Country sub-categories are generated automatically."
+msgstr "Root category under which circuit products are created. Country sub-categories are generated automatically."
+
+msgctxt "Languages::sphinx_holidays.experiences_category_id"
+msgid "CS-Cart category ID for experiences"
+msgstr "CS-Cart category ID for experiences"
+
+msgctxt "Languages::sphinx_holidays.experiences_category_id.tooltip"
+msgid "Root category under which experience products are created. Country sub-categories are generated automatically."
+msgstr "Root category under which experience products are created. Country sub-categories are generated automatically."
+
+msgctxt "Languages::sphinx_holidays.product_languages"
+msgid "Product languages"
+msgstr "Product languages"
+
+msgctxt "Languages::sphinx_holidays.product_languages.tooltip"
+msgid "Select which CS-Cart languages to create hotel product descriptions for. Hotels will only appear in the storefront for selected languages."
+msgstr "Select which CS-Cart languages to create hotel product descriptions for. Hotels will only appear in the storefront for selected languages."
+
+msgctxt "Languages::sphinx_holidays.product_code_prefix"
+msgid "Product code prefix"
+msgstr "Product code prefix"
+
+msgctxt "Languages::sphinx_holidays.product_code_prefix.tooltip"
+msgid "Prefix for CS-Cart product codes created from Sphinx hotels (e.g. SPX). The hotel ID is appended to form the full code (e.g. SPX12345)."
+msgstr "Prefix for CS-Cart product codes created from Sphinx hotels (e.g. SPX). The hotel ID is appended to form the full code (e.g. SPX12345)."
+
+msgctxt "Languages::sphinx_holidays.default_product_quantity"
+msgid "Default product quantity"
+msgstr "Default product quantity"
+
+msgctxt "Languages::sphinx_holidays.default_product_quantity.tooltip"
+msgid "Inventory quantity assigned to hotel products on creation. Set high to prevent 'zero inventory' errors."
+msgstr "Inventory quantity assigned to hotel products on creation. Set high to prevent 'zero inventory' errors."
+
+msgctxt "Languages::sphinx_holidays.skip_no_description"
+msgid "Skip hotels without description (do not create products for hotels with empty description)"
+msgstr "Skip hotels without description (do not create products for hotels with empty description)"
+
+msgctxt "Languages::sphinx_holidays.skip_no_description.tooltip"
+msgid "Do not create CS-Cart products for hotels that have an empty description from the API."
+msgstr "Do not create CS-Cart products for hotels that have an empty description from the API."
+
+msgctxt "Languages::sphinx_holidays.require_immediate_availability"
+msgid "Require immediate availability (sync gate + storefront offers)"
+msgstr "Require immediate availability (sync gate + storefront offers)"
+
+msgctxt "Languages::sphinx_holidays.require_immediate_availability.tooltip"
+msgid "When enabled, the hotels cron only adds hotels that have at least one offer with confirmation=immediate, and the storefront search shows only immediate-confirmation offers. The hotels cron accepts a per-run override: &availability_gate=0 to skip the gate, &availability_gate=1 to force it."
+msgstr "When enabled, the hotels cron only adds hotels that have at least one offer with confirmation=immediate, and the storefront search shows only immediate-confirmation offers. The hotels cron accepts a per-run override: &availability_gate=0 to skip the gate, &availability_gate=1 to force it."
+
+msgctxt "Languages::sphinx_holidays.api_header"
+msgid "Sphinx API Settings"
+msgstr "Sphinx API Settings"
+
+msgctxt "Languages::sphinx_holidays.api_base_url"
+msgid "API Base URL"
+msgstr "API Base URL"
+
+msgctxt "Languages::sphinx_holidays.api_key"
+msgid "API Key (Bearer Token)"
+msgstr "API Key (Bearer Token)"
+
+msgctxt "Languages::sphinx_holidays.enable_api_cache"
+msgid "Enable API response caching"
+msgstr "Enable API response caching"
+
+msgctxt "Languages::sphinx_holidays.cache_ttl_search"
+msgid "Search cache TTL (seconds)"
+msgstr "Search cache TTL (seconds)"
+
+msgctxt "Languages::sphinx_holidays.search_header"
+msgid "Search Settings"
+msgstr "Search Settings"
+
+msgctxt "Languages::sphinx_holidays.default_currency"
+msgid "Default search currency"
+msgstr "Default search currency"
+
+msgctxt "Languages::sphinx_holidays.ignore_domains"
+msgid "Ignore domains (comma-separated supplier IDs to skip)"
+msgstr "Ignore domains (comma-separated supplier IDs to skip)"
+
+msgctxt "Languages::sphinx_holidays.search_poll_interval"
+msgid "Search poll interval (seconds)"
+msgstr "Search poll interval (seconds)"
+
+msgctxt "Languages::sphinx_holidays.search_max_polls"
+msgid "Maximum search polls before timeout"
+msgstr "Maximum search polls before timeout"
+
+msgctxt "Languages::sphinx_holidays.pricing_header"
+msgid "Pricing"
+msgstr "Pricing"
+
+msgctxt "Languages::sphinx_holidays.commission"
+msgid "Commission percentage"
+msgstr "Commission percentage"
+
+msgctxt "Languages::sphinx_holidays.product_header"
+msgid "Product Creation & Mapping"
+msgstr "Product Creation & Mapping"
+
+msgctxt "Languages::sphinx_holidays.hotels_category_id"
+msgid "CS-Cart category ID for Sphinx hotels"
+msgstr "CS-Cart category ID for Sphinx hotels"
+
+msgctxt "Languages::sphinx_holidays.hotels_category_id.tooltip"
+msgid "Root category under which hotel products are created. Country sub-categories are generated automatically."
+msgstr "Root category under which hotel products are created. Country sub-categories are generated automatically."
+
+msgctxt "Languages::sphinx_holidays.packages_category_id"
+msgid "CS-Cart category ID for Sphinx packages"
+msgstr "CS-Cart category ID for Sphinx packages"
+
+msgctxt "Languages::sphinx_holidays.packages_category_id.tooltip"
+msgid "Root category under which package products are created. Country sub-categories are generated automatically."
+msgstr "Root category under which package products are created. Country sub-categories are generated automatically."
+
+msgctxt "Languages::sphinx_holidays.resilience_header"
+msgid "API Resilience"
+msgstr "API Resilience"
+
+msgctxt "Languages::sphinx_holidays.api_max_retries"
+msgid "Maximum retries on failure"
+msgstr "Maximum retries on failure"
+
+msgctxt "Languages::sphinx_holidays.api_retry_delay_ms"
+msgid "Initial retry delay (ms)"
+msgstr "Initial retry delay (ms)"
+
+msgctxt "Languages::sphinx_holidays.api_retry_multiplier"
+msgid "Retry delay multiplier"
+msgstr "Retry delay multiplier"
+
+msgctxt "Languages::sphinx_holidays.circuit_breaker_threshold"
+msgid "Circuit breaker threshold (failures before open)"
+msgstr "Circuit breaker threshold (failures before open)"
+
+msgctxt "Languages::sphinx_holidays.circuit_breaker_timeout"
+msgid "Circuit breaker timeout (seconds)"
+msgstr "Circuit breaker timeout (seconds)"
+
+msgctxt "Languages::sphinx_holidays.cron_header"
+msgid "Cron Settings"
+msgstr "Cron Settings"
+
+msgctxt "Languages::sphinx_holidays.cron_access_key"
+msgid "Cron access key (URL: index.php?dispatch=sphinx_cron.run&access_key=KEY&mode=hotels)"
+msgstr "Cron access key (URL: index.php?dispatch=sphinx_cron.run&access_key=KEY&mode=hotels)"
+
+msgctxt "Languages::sphinx_holidays.cron_access_key.tooltip"
+msgid "Access key for cron URL: index.php?dispatch=sphinx_cron.run&access_key=KEY&cron_mode=hotels"
+msgstr "Access key for cron URL: index.php?dispatch=sphinx_cron.run&access_key=KEY&cron_mode=hotels"
+
+msgctxt "Languages::sphinx_holidays.cron_commands"
+msgid "Cron Commands"
+msgstr "Cron Commands"
+
+msgctxt "Languages::sphinx_holidays.debug_header"
+msgid "Debug"
+msgstr "Debug"
+
+msgctxt "Languages::sphinx_holidays.debug_logging"
+msgid "Enable debug logging"
+msgstr "Enable debug logging"
+
+msgctxt "Languages::sphinx_holidays.search_metrics"
+msgid "Enable search timing metrics"
+msgstr "Enable search timing metrics"
+
+msgctxt "Languages::sphinx_holidays.addon_settings"
+msgid "Settings"
+msgstr "Settings"
+
+msgctxt "Languages::sphinx_holidays.show_whitelisted_only"
+msgid "Show whitelisted only"
+msgstr "Show whitelisted only"
+
+msgctxt "Languages::sphinx_holidays.classification"
+msgid "Classification"
+msgstr "Classification"
+
+msgctxt "Languages::sphinx_holidays.link_status"
+msgid "Link Status"
+msgstr "Link Status"
+
+msgctxt "Languages::sphinx_holidays.linked"
+msgid "Linked"
+msgstr "Linked"
+
+msgctxt "Languages::sphinx_holidays.orphan"
+msgid "Orphan"
+msgstr "Orphan"
+
+msgctxt "Languages::sphinx_holidays.product"
+msgid "Product"
+msgstr "Product"
+
+msgctxt "Languages::sphinx_holidays.unclassified"
+msgid "Unclassified"
+msgstr "Unclassified"
+
+msgctxt "Languages::sphinx_holidays.bulk_activate"
+msgid "Activate Selected"
+msgstr "Activate Selected"
+
+msgctxt "Languages::sphinx_holidays.bulk_deactivate"
+msgid "Deactivate Selected"
+msgstr "Deactivate Selected"
+
+msgctxt "Languages::sphinx_holidays.bulk_delete"
+msgid "Delete Selected"
+msgstr "Delete Selected"
+
+msgctxt "Languages::sphinx_holidays.bulk_sync_images"
+msgid "Sync Images"
+msgstr "Sync Images"
+
+msgctxt "Languages::sphinx_holidays.bulk_delete_confirm"
+msgid "Are you sure you want to delete the selected hotels?"
+msgstr "Are you sure you want to delete the selected hotels?"
+
+msgctxt "Languages::sphinx_holidays.selected_count_label"
+msgid "selected"
+msgstr "selected"
+
+msgctxt "Languages::sphinx_holidays.deselect_all"
+msgid "Deselect all"
+msgstr "Deselect all"
+
+msgctxt "Languages::sphinx_holidays.images_synced"
+msgid "Images synced"
+msgstr "Images synced"
+
+msgctxt "Languages::sphinx_holidays.hotels_updated"
+msgid "Hotels updated"
+msgstr "Hotels updated"
+
+msgctxt "Languages::sphinx_holidays.hotels_deleted"
+msgid "Hotels deleted"
+msgstr "Hotels deleted"
+
+msgctxt "Languages::sphinx_holidays.no_hotels_selected"
+msgid "No hotels selected"
+msgstr "No hotels selected"
+
+msgctxt "Languages::sphinx_holidays.all_classifications"
+msgid "All classifications"
+msgstr "All classifications"
+
+msgctxt "Languages::sphinx_holidays.all_property_types"
+msgid "All types"
+msgstr "All types"
+
+msgctxt "Languages::sphinx_holidays.all_link_statuses"
+msgid "All"
+msgstr "All"
+
+msgctxt "Languages::sphinx_holidays.with_selected"
+msgid "With selected"
+msgstr "With selected"
+
+msgctxt "Languages::sphinx_holidays.skipped_hotels"
+msgid "Skipped hotels"
+msgstr "Skipped hotels"
+
+msgctxt "Languages::sphinx_holidays.retry_skipped"
+msgid "Retry skipped hotels"
+msgstr "Retry skipped hotels"
+
+msgctxt "Languages::sphinx_holidays.retry_skipped_confirm"
+msgid "This will reset all skipped hotels so they can be processed again. Continue?"
+msgstr "This will reset all skipped hotels so they can be processed again. Continue?"
+
+msgctxt "Languages::sphinx_holidays.skipped_reset"
+msgid "[count] skipped hotel(s) have been reset and are now eligible for product creation."
+msgstr "[count] skipped hotel(s) have been reset and are now eligible for product creation."
+
+msgctxt "Languages::sphinx_holidays.no_skipped_hotels"
+msgid "No skipped hotels found."
+msgstr "No skipped hotels found."
+
+msgctxt "Languages::sphinx_holidays.seo_templates"
+msgid "SEO Templates"
+msgstr "SEO Templates"
+
+msgctxt "Languages::sphinx_holidays.seo_placeholders_info"
+msgid "Use the placeholders listed in the sidebar to build your SEO templates."
+msgstr "Use the placeholders listed in the sidebar to build your SEO templates."
+
+msgctxt "Languages::sphinx_holidays.available_placeholders"
+msgid "Available Placeholders"
+msgstr "Available Placeholders"
+
+msgctxt "Languages::sphinx_holidays.seo_placeholders_title"
+msgid "Sphinx placeholders to use"
+msgstr "Sphinx placeholders to use"
+
+msgctxt "Languages::sphinx_holidays.placeholders_hint"
+msgid "Use these tags in your SEO templates:"
+msgstr "Use these tags in your SEO templates:"
+
+msgctxt "Languages::sphinx_holidays.placeholders_example"
+msgid "Example: Book {{name}} in {{city}}, {{country}}. {{classification}}-star {{property_type}} with {{facilities}}."
+msgstr "Example: Book {{name}} in {{city}}, {{country}}. {{classification}}-star {{property_type}} with {{facilities}}."
+
+msgctxt "Languages::sphinx_holidays.ph_name"
+msgid "Hotel name"
+msgstr "Hotel name"
+
+msgctxt "Languages::sphinx_holidays.ph_classification"
+msgid "Star rating"
+msgstr "Star rating"
+
+msgctxt "Languages::sphinx_holidays.ph_city"
+msgid "City / resort"
+msgstr "City / resort"
+
+msgctxt "Languages::sphinx_holidays.ph_country"
+msgid "Country"
+msgstr "Country"
+
+msgctxt "Languages::sphinx_holidays.ph_region"
+msgid "Region"
+msgstr "Region"
+
+msgctxt "Languages::sphinx_holidays.ph_property_type"
+msgid "Hotel / villa / apt"
+msgstr "Hotel / villa / apt"
+
+msgctxt "Languages::sphinx_holidays.ph_description"
+msgid "API description"
+msgstr "API description"
+
+msgctxt "Languages::sphinx_holidays.ph_rating"
+msgid "Guest rating"
+msgstr "Guest rating"
+
+msgctxt "Languages::sphinx_holidays.ph_facilities"
+msgid "Top 3 facilities"
+msgstr "Top 3 facilities"
+
+msgctxt "Languages::sphinx_holidays.ph_boards"
+msgid "Meal plans"
+msgstr "Meal plans"
+
+msgctxt "Languages::sphinx_holidays.ph_image_url"
+msgid "Main image URL"
+msgstr "Main image URL"
+
+msgctxt "Languages::sphinx_holidays.ph_address"
+msgid "Street address"
+msgstr "Street address"
+
+msgctxt "Languages::sphinx_holidays.ph_phone"
+msgid "Phone number"
+msgstr "Phone number"
+
+msgctxt "Languages::sphinx_holidays.ph_email"
+msgid "Email address"
+msgstr "Email address"
+
+msgctxt "Languages::sphinx_holidays.ph_website"
+msgid "Website URL"
+msgstr "Website URL"
+
+msgctxt "Languages::sphinx_holidays.seo_product_name"
+msgid "Product name"
+msgstr "Product name"
+
+msgctxt "Languages::sphinx_holidays.seo_product_name.tooltip"
+msgid "Template for the product name."
+msgstr "Template for the product name."
+
+msgctxt "Languages::sphinx_holidays.seo_page_title"
+msgid "Page title"
+msgstr "Page title"
+
+msgctxt "Languages::sphinx_holidays.seo_page_title.tooltip"
+msgid "Template for the HTML page title (SEO). Google typically truncates around 60 characters."
+msgstr "Template for the HTML page title (SEO). Google typically truncates around 60 characters."
+
+msgctxt "Languages::sphinx_holidays.seo_meta_description"
+msgid "Meta description"
+msgstr "Meta description"
+
+msgctxt "Languages::sphinx_holidays.seo_meta_description.tooltip"
+msgid "Template for the meta description tag. Google truncates around 160 characters."
+msgstr "Template for the meta description tag. Google truncates around 160 characters."
+
+msgctxt "Languages::sphinx_holidays.seo_meta_keywords"
+msgid "Meta keywords"
+msgstr "Meta keywords"
+
+msgctxt "Languages::sphinx_holidays.seo_meta_keywords.tooltip"
+msgid "Template for the meta keywords tag."
+msgstr "Template for the meta keywords tag."
+
+msgctxt "Languages::sphinx_holidays.seo_name_slug"
+msgid "SEO URL slug"
+msgstr "SEO URL slug"
+
+msgctxt "Languages::sphinx_holidays.seo_name_slug.tooltip"
+msgid "Template for the SEO-friendly URL slug. Result is automatically sanitized."
+msgstr "Template for the SEO-friendly URL slug. Result is automatically sanitized."
+
+msgctxt "Languages::sphinx_holidays.seo_full_description"
+msgid "Full description (optional)"
+msgstr "Full description (optional)"
+
+msgctxt "Languages::sphinx_holidays.seo_full_description.tooltip"
+msgid "Optional template to wrap or replace the API description. Leave empty to use the raw API description as-is."
+msgstr "Optional template to wrap or replace the API description. Leave empty to use the raw API description as-is."
+
+msgctxt "Languages::sphinx_holidays.per_night"
+msgid "night"
+msgstr "night"
+
+msgctxt "Languages::sphinx_holidays.add_to_cart_btn"
+msgid "Add to Cart"
+msgstr "Add to Cart"
+
+msgctxt "Languages::sphinx_holidays.added_to_cart"
+msgid "Hotel booking added to cart."
+msgstr "Hotel booking added to cart."
+
+msgctxt "Languages::sphinx_holidays.additional_services"
+msgid "Additional Services"
+msgstr "Additional Services"
+
+msgctxt "Languages::sphinx_holidays.addon_name"
+msgid "Sphinx Holidays"
+msgstr "Sphinx Holidays"
+
+msgctxt "Languages::sphinx_holidays.booking_data_missing"
+msgid "Booking data not available. Please search again."
+msgstr "Booking data not available. Please search again."
+
+msgctxt "Languages::sphinx_holidays.booking_error"
+msgid "An error occurred. Please try again."
+msgstr "An error occurred. Please try again."
+
+msgctxt "Languages::sphinx_holidays.bus_transport"
+msgid "Bus transport"
+msgstr "Bus transport"
+
+msgctxt "Languages::sphinx_holidays.check_availability"
+msgid "Check Availability"
+msgstr "Check Availability"
+
+msgctxt "Languages::sphinx_holidays.circuit_added_to_cart"
+msgid "Circuit booking added to cart."
+msgstr "Circuit booking added to cart."
+
+msgctxt "Languages::sphinx_holidays.circuits_found"
+msgid "Circuits found"
+msgstr "Circuits found"
+
+msgctxt "Languages::sphinx_holidays.cron_key_not_set"
+msgid "Cron key not set"
+msgstr "Cron key not set"
+
+msgctxt "Languages::sphinx_holidays.date"
+msgid "Date"
+msgstr "Date"
+
+msgctxt "Languages::sphinx_holidays.departure_from"
+msgid "Departure from"
+msgstr "Departure from"
+
+msgctxt "Languages::sphinx_holidays.duplicate_booking"
+msgid "A booking for this offer is already pending."
+msgstr "A booking for this offer is already pending."
+
+msgctxt "Languages::sphinx_holidays.experience_added_to_cart"
+msgid "Experience booking added to cart."
+msgstr "Experience booking added to cart."
+
+msgctxt "Languages::sphinx_holidays.experiences_found"
+msgid "Experiences found"
+msgstr "Experiences found"
+
+msgctxt "Languages::sphinx_holidays.flight_info"
+msgid "Flight Information"
+msgstr "Flight Information"
+
+msgctxt "Languages::sphinx_holidays.from"
+msgid "from"
+msgstr "from"
+
+msgctxt "Languages::sphinx_holidays.get_quote"
+msgid "Get Quote"
+msgstr "Get Quote"
+
+msgctxt "Languages::sphinx_holidays.hours"
+msgid "hours"
+msgstr "hours"
+
+msgctxt "Languages::sphinx_holidays.inbound"
+msgid "Return"
+msgstr "Return"
+
+msgctxt "Languages::sphinx_holidays.included"
+msgid "Included"
+msgstr "Included"
+
+msgctxt "Languages::sphinx_holidays.instant_confirmation"
+msgid "Instant confirmation"
+msgstr "Instant confirmation"
+
+msgctxt "Languages::sphinx_holidays.invalid_circuit"
+msgid "Invalid circuit selection."
+msgstr "Invalid circuit selection."
+
+msgctxt "Languages::sphinx_holidays.invalid_experience"
+msgid "Invalid experience selection."
+msgstr "Invalid experience selection."
+
+msgctxt "Languages::sphinx_holidays.invalid_offer"
+msgid "Invalid offer selected."
+msgstr "Invalid offer selected."
+
+msgctxt "Languages::sphinx_holidays.loading_deals"
+msgid "Loading deals..."
+msgstr "Loading deals..."
+
+msgctxt "Languages::sphinx_holidays.mandatory"
+msgid "Mandatory"
+msgstr "Mandatory"
+
+msgctxt "Languages::sphinx_holidays.meal"
+msgid "Meal"
+msgstr "Meal"
+
+msgctxt "Languages::sphinx_holidays.next_dates"
+msgid "Next dates"
+msgstr "Next dates"
+
+msgctxt "Languages::sphinx_holidays.no_circuit_quotes"
+msgid "No quotes available for this circuit. Please try different dates."
+msgstr "No quotes available for this circuit. Please try different dates."
+
+msgctxt "Languages::sphinx_holidays.no_circuits_found"
+msgid "No circuits found. Please try different filters."
+msgstr "No circuits found. Please try different filters."
+
+msgctxt "Languages::sphinx_holidays.no_deals_available"
+msgid "No deals available at this time."
+msgstr "No deals available at this time."
+
+msgctxt "Languages::sphinx_holidays.no_experience_quotes"
+msgid "No quotes available for this experience. Please try a different date."
+msgstr "No quotes available for this experience. Please try a different date."
+
+msgctxt "Languages::sphinx_holidays.no_experiences_found"
+msgid "No experiences found. Please try different filters."
+msgstr "No experiences found. Please try different filters."
+
+msgctxt "Languages::sphinx_holidays.no_packages_found"
+msgid "No packages found for your search criteria. Please try different dates or destination."
+msgstr "No packages found for your search criteria. Please try different dates or destination."
+
+msgctxt "Languages::sphinx_holidays.not_included"
+msgid "Not Included"
+msgstr "Not Included"
+
+msgctxt "Languages::sphinx_holidays.offer_no_longer_available"
+msgid "This offer is no longer available. Please search again."
+msgstr "This offer is no longer available. Please search again."
+
+msgctxt "Languages::sphinx_holidays.offer_unavailable"
+msgid "This offer is no longer available."
+msgstr "This offer is no longer available."
+
+msgctxt "Languages::sphinx_holidays.outbound"
+msgid "Outbound"
+msgstr "Outbound"
+
+msgctxt "Languages::sphinx_holidays.package_added_to_cart"
+msgid "Package booking added to cart."
+msgstr "Package booking added to cart."
+
+msgctxt "Languages::sphinx_holidays.packages_found"
+msgid "Packages found"
+msgstr "Packages found"
+
+msgctxt "Languages::sphinx_holidays.participant_details"
+msgid "Participant Details"
+msgstr "Participant Details"
+
+msgctxt "Languages::sphinx_holidays.participants"
+msgid "Participants"
+msgstr "Participants"
+
+msgctxt "Languages::sphinx_holidays.price_unavailable"
+msgid "Price not available."
+msgstr "Price not available."
+
+msgctxt "Languages::sphinx_holidays.product_not_found"
+msgid "Experience product not found."
+msgstr "Experience product not found."
+
+msgctxt "Languages::sphinx_holidays.rate_limit_exceeded"
+msgid "Too many booking requests. Please try again later."
+msgstr "Too many booking requests. Please try again later."
+
+msgctxt "Languages::sphinx_holidays.return"
+msgid "Return"
+msgstr "Return"
+
+msgctxt "Languages::sphinx_holidays.searching_please_wait"
+msgid "Searching for live offers…"
+msgstr "Searching for live offers…"
+
+msgctxt "Languages::sphinx_holidays.total_price"
+msgid "Total price"
+msgstr "Total price"
+
+msgctxt "Languages::sphinx_holidays.transfers"
+msgid "Transfers"
+msgstr "Transfers"
+
+msgctxt "Languages::sphinx_holidays.transport"
+msgid "Transport"
+msgstr "Transport"
+
+msgctxt "Languages::sphinx_holidays.whitelist_save_failed"
+msgid "Whitelist save failed"
+msgstr "Whitelist save failed"
+
+msgctxt "Languages::sphinx_holidays.includes_taxes"
+msgid "Includes taxes and commissions"
+msgstr "Includes taxes and commissions"
+
+msgctxt "Languages::sphinx_holidays.stars_rating"
+msgid "[rating]-star rating"
+msgstr "[rating]-star rating"
+
+msgctxt "Languages::sphinx_holidays.n_rooms"
+msgid "[n] Room|[n] Rooms"
+msgstr "[n] Room|[n] Rooms"
+
+msgctxt "Languages::sphinx_holidays.n_offers"
+msgid "[n] Offer|[n] Offers"
+msgstr "[n] Offer|[n] Offers"
+
+msgctxt "Languages::sphinx_holidays.n_adults"
+msgid "[n] Adult|[n] Adults"
+msgstr "[n] Adult|[n] Adults"
+
+msgctxt "Languages::sphinx_holidays.n_children"
+msgid "[n] Child|[n] Children"
+msgstr "[n] Child|[n] Children"

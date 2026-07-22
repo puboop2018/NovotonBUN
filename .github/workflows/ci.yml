@@ -255,13 +255,35 @@ jobs:
         with:
           php-version: '8.3'
           extensions: simplexml, curl, mbstring
+          coverage: pcov
           tools: composer:v2
 
       - name: Install addon dependencies
         run: composer install --no-progress --no-interaction
 
-      - name: Run PHPUnit
-        run: vendor/bin/phpunit --colors=always --no-coverage
+      - name: Run PHPUnit (with coverage)
+        run: vendor/bin/phpunit --colors=always --coverage-text=coverage.txt --coverage-clover=coverage.xml
+
+      # ── Coverage floor (same ratchet as novoton's): travel_core is the
+      # shared kernel — a regression here hits BOTH storefronts, so it gets
+      # a floor too. Floor = measured coverage at introduction (30.36% on
+      # 2026-07-22) minus a small margin. Raise the floor as coverage grows —
+      # never lower it to make a PR pass; write the missing tests instead.
+      - name: Enforce coverage floor
+        run: |
+          floor=29.0
+          pct=$(python3 -c "
+          import xml.etree.ElementTree as ET
+          m = ET.parse('coverage.xml').getroot().find('./project/metrics')
+          total = int(m.get('statements')); covered = int(m.get('coveredstatements'))
+          print(f'{covered / total * 100:.2f}' if total else '0.00')
+          ")
+          echo "travel_core line coverage: ${pct}% (floor: ${floor}%)"
+          awk -v p="$pct" -v f="$floor" 'BEGIN { exit !(p+0 < f+0) }' && {
+            echo "::error::Line coverage ${pct}% fell below the ${floor}% floor — add tests for the code this PR touches."
+            exit 1
+          }
+          echo "OK: coverage >= floor."
 
   # ── PHPUnit (sphinx_holidays suite) ──
   phpunit-sphinx:
@@ -278,13 +300,34 @@ jobs:
         with:
           php-version: '8.3'
           extensions: simplexml, curl, mbstring
+          coverage: pcov
           tools: composer:v2
 
       - name: Install addon dependencies
         run: composer install --no-progress --no-interaction
 
-      - name: Run PHPUnit
-        run: vendor/bin/phpunit --colors=always --no-coverage
+      - name: Run PHPUnit (with coverage)
+        run: vendor/bin/phpunit --colors=always --coverage-text=coverage.txt --coverage-clover=coverage.xml
+
+      # ── Coverage floor (same ratchet as novoton's). Floor = measured
+      # coverage at introduction (28.71% on 2026-07-22) minus a small margin.
+      # Raise the floor as coverage grows — never lower it to make a PR pass;
+      # write the missing tests instead.
+      - name: Enforce coverage floor
+        run: |
+          floor=27.0
+          pct=$(python3 -c "
+          import xml.etree.ElementTree as ET
+          m = ET.parse('coverage.xml').getroot().find('./project/metrics')
+          total = int(m.get('statements')); covered = int(m.get('coveredstatements'))
+          print(f'{covered / total * 100:.2f}' if total else '0.00')
+          ")
+          echo "sphinx_holidays line coverage: ${pct}% (floor: ${floor}%)"
+          awk -v p="$pct" -v f="$floor" 'BEGIN { exit !(p+0 < f+0) }' && {
+            echo "::error::Line coverage ${pct}% fell below the ${floor}% floor — add tests for the code this PR touches."
+            exit 1
+          }
+          echo "OK: coverage >= floor."
 
   # ── PHPUnit (fgo_invoicing suite) ──
   phpunit-fgo:

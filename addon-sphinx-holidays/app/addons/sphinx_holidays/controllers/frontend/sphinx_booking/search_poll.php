@@ -24,7 +24,6 @@ use Tygh\Addons\SphinxHolidays\Helpers\OfferAvailability;
 use Tygh\Addons\SphinxHolidays\Helpers\SearchMetrics;
 use Tygh\Addons\SphinxHolidays\Helpers\SearchOfferNormalizer;
 use Tygh\Addons\SphinxHolidays\Services\AlternativeDateProber;
-use Tygh\Addons\SphinxHolidays\Services\CacheService;
 use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
 use Tygh\Addons\SphinxHolidays\Services\Container;
 use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
@@ -234,7 +233,7 @@ try {
             $altCacheKey = 'alt:v1:' . md5((string) json_encode([
                 $altDestinationId, $filterHotelId, $altCheckIn, $altNights, $altAdults,
             ]));
-            $cachedAlts = CacheService::get($altCacheKey);
+            $cachedAlts = Container::getCacheService()->get($altCacheKey);
             if (is_array($cachedAlts)) {
                 $alternatives = TypeCoerce::toRowList($cachedAlts['alternatives'] ?? []);
             } else {
@@ -254,7 +253,7 @@ try {
                         'message' => 'Sphinx alternative-date probe failed: ' . $altError->getMessage(),
                     ]);
                 }
-                CacheService::set($altCacheKey, ['alternatives' => $alternatives], 600);
+                Container::getCacheService()->set($altCacheKey, ['alternatives' => $alternatives], 600);
             }
         }
     }
@@ -262,7 +261,7 @@ try {
     // Never cache an empty set, so a hotel with no availability is not cached as
     // "no offers". `complete` marks the entry as the full, authoritative set.
     if ($terminal && !empty($accumulated) && !empty($searchMeta['cache_key']) && !empty($searchMeta['cache_ttl'])) {
-        CacheService::set(TypeCoerce::toString($searchMeta['cache_key']), [
+        Container::getCacheService()->set(TypeCoerce::toString($searchMeta['cache_key']), [
             'results' => $accumulated,
             'search_id' => $searchId,
             'complete' => true,

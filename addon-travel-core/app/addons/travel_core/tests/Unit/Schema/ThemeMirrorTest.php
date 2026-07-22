@@ -7,106 +7,123 @@ namespace Tygh\Addons\TravelCore\Tests\Unit\Schema;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Guards template mirrors against silent drift.
+ * Guards template/asset mirrors against silent drift.
  *
  * Two mirror families exist:
  *  1. THEME mirrors — novoton and travel_core ship nova_theme copies of their
- *     responsive templates. Editing only the responsive copy silently ships a
- *     stale nova_theme page (exactly this had already happened to 4 novoton
- *     templates when this guard was written — see DRIFT_ALLOWLIST).
+ *     responsive templates AND assets (css). Editing only the responsive copy
+ *     silently ships a stale nova_theme page (exactly this had already
+ *     happened to 4 novoton templates when this guard was written).
  *  2. AREA copies — travel_core's order_booking_details.tpl must exist
  *     identically in the storefront theme, the admin backend and the mail
  *     tree (Smarty resolves templates per area; an include across areas
  *     cannot resolve).
  *
- * To change a mirrored template: change ALL copies (a straight file copy).
- * To intentionally fork a nova_theme file, add it to DRIFT_ALLOWLIST with a
+ * The mirror SET lives in scripts/mirror-manifest.php — shared with the
+ * `composer mirror` sync tool, so the tool and this guard can never
+ * disagree. To fix a drift failure: run `composer mirror`. To intentionally
+ * fork a nova_theme file, add it to the manifest's drift_allowlist with a
  * short reason.
  */
 class ThemeMirrorTest extends TestCase
 {
-    /**
-     * nova_theme files allowed to differ from their responsive counterpart.
-     * These 4 were already divergent when the guard landed (2026-07-10) and
-     * need a deliberate review: either re-sync them or record here WHY nova
-     * gets a different version.
-     *
-     * @var array<string, string> relative path (below templates/) => reason
-     */
-    private const DRIFT_ALLOWLIST = [
-        'addons/novoton_holidays/blocks/booking_summary.tpl' => 'pre-existing divergence (64 lines) — pending review',
-        'addons/novoton_holidays/hooks/index/styles.post.tpl' => 'pre-existing divergence — pending review',
-        'addons/novoton_holidays/hooks/index/scripts.post.tpl' => 'pre-existing divergence — pending review',
-        'addons/novoton_holidays/blocks/product_tabs/novoton_hotel_prices.tpl' => 'pre-existing divergence — pending review',
-    ];
+    /** @return array{theme_roots: list<string>, drift_allowlist: array<string, string>, area_copy_sets: list<list<string>>} */
+    private static function manifest(): array
+    {
+        $manifest = require self::repoRoot() . '/scripts/mirror-manifest.php';
+        self::assertIsArray($manifest);
+        self::assertArrayHasKey('theme_roots', $manifest);
+        self::assertArrayHasKey('drift_allowlist', $manifest);
+        self::assertArrayHasKey('area_copy_sets', $manifest);
 
-    private const THEME_MIRROR_ADDONS = [
-        'addon-novoton-holidays/design/themes',
-        'addon-travel-core/design/themes',
-    ];
+        /** @var array{theme_roots: list<string>, drift_allowlist: array<string, string>, area_copy_sets: list<list<string>>} $manifest */
+        return $manifest;
+    }
 
-    /** Area copies that must stay byte-identical (paths from repo root). */
-    private const AREA_COPY_SETS = [
-        [
-            'addon-travel-core/design/themes/responsive/templates/addons/travel_core/components/order_booking_details.tpl',
-            'addon-travel-core/design/backend/templates/addons/travel_core/components/order_booking_details.tpl',
-            'addon-travel-core/design/backend/mail/templates/addons/travel_core/components/order_booking_details.tpl',
-        ],
-    ];
+    private static function repoRoot(): string
+    {
+        return dirname(__DIR__, 7);
+    }
 
     public function testNovaThemeMirrorsMatchResponsive(): void
     {
-        $repoRoot = dirname(__DIR__, 7);
+        $manifest = self::manifest();
+        $repoRoot = self::repoRoot();
         $drifted = [];
         $orphans = [];
         $checked = 0;
 
-        foreach (self::THEME_MIRROR_ADDONS as $themesRoot) {
-            $novaTemplates = $repoRoot . '/' . $themesRoot . '/nova_theme/templates';
-            $responsiveTemplates = $repoRoot . '/' . $themesRoot . '/responsive/templates';
-            if (!is_dir($novaTemplates)) {
-                continue;
-            }
+        foreach ($manifest['theme_roots'] as $themesRoot) {
+            $novaDir = $repoRoot . '/' . $themesRoot . '/nova_theme';
+            $responsiveDir = $repoRoot . '/' . $themesRoot . '/responsive';
+            self::assertDirectoryExists($novaDir, "manifest theme root without a nova_theme tree: {$themesRoot}");
 
             $iterator = new \RecursiveIteratorIterator(
-                new \RecursiveDirectoryIterator($novaTemplates, \FilesystemIterator::SKIP_DOTS),
+                new \RecursiveDirectoryIterator($novaDir, \FilesystemIterator::SKIP_DOTS),
             );
             foreach ($iterator as $file) {
-                if (!$file instanceof \SplFileInfo || $file->getExtension() !== 'tpl') {
+                if (!$file instanceof \SplFileInfo || !$file->isFile()) {
                     continue;
                 }
-                $relative = ltrim(substr($file->getPathname(), strlen($novaTemplates)), '/');
-                $responsiveTwin = $responsiveTemplates . '/' . $relative;
+                $relative = ltrim(substr($file->getPathname(), strlen($novaDir)), '/');
                 $checked++;
 
-                if (!is_file($responsiveTwin)) {
-                    $orphans[] = $relative;
+                if (isset($manifest['drift_allowlist'][$relative])) {
                     continue;
                 }
-                if (isset(self::DRIFT_ALLOWLIST[$relative])) {
+                $responsiveTwin = $responsiveDir . '/' . $relative;
+                if (!is_file($responsiveTwin)) {
+                    $orphans[] = $themesRoot . '/nova_theme/' . $relative;
                     continue;
                 }
                 if (file_get_contents($file->getPathname()) !== file_get_contents($responsiveTwin)) {
-                    $drifted[] = $relative;
+                    $drifted[] = $themesRoot . '/nova_theme/' . $relative;
                 }
             }
         }
 
         self::assertGreaterThan(0, $checked, 'no nova_theme mirrors found — layout changed?');
-        self::assertSame([], $orphans, "nova_theme templates with NO responsive counterpart (dead copies?):\n" . implode("\n", $orphans));
+        self::assertSame([], $orphans, "nova_theme files with NO responsive counterpart (dead copies?):\n" . implode("\n", $orphans));
         self::assertSame(
             [],
             $drifted,
-            "nova_theme mirrors drifted from responsive — copy the responsive file over, or "
-            . "add to DRIFT_ALLOWLIST with a reason:\n" . implode("\n", $drifted),
+            "nova_theme mirrors drifted from responsive — run `composer mirror`, or "
+            . "add to the manifest drift_allowlist with a reason:\n" . implode("\n", $drifted),
         );
+    }
+
+    public function testDriftAllowlistEntriesStillExistAndStillDiffer(): void
+    {
+        // A stale allowlist entry (file deleted, or re-synced) silently
+        // shrinks the guard — prune it from the manifest when it resolves.
+        $manifest = self::manifest();
+        $repoRoot = self::repoRoot();
+
+        foreach ($manifest['drift_allowlist'] as $relative => $reason) {
+            self::assertNotSame('', $reason, "drift_allowlist entry needs a reason: {$relative}");
+            $found = false;
+            foreach ($manifest['theme_roots'] as $themesRoot) {
+                $nova = $repoRoot . '/' . $themesRoot . '/nova_theme/' . $relative;
+                $responsive = $repoRoot . '/' . $themesRoot . '/responsive/' . $relative;
+                if (is_file($nova) && is_file($responsive)) {
+                    $found = true;
+                    self::assertNotSame(
+                        (string) file_get_contents($responsive),
+                        (string) file_get_contents($nova),
+                        "allowlisted file no longer differs — remove it from drift_allowlist: {$relative}",
+                    );
+                }
+            }
+            self::assertTrue($found, "allowlisted file missing from every theme root — prune the entry: {$relative}");
+        }
     }
 
     public function testAreaCopiesAreIdentical(): void
     {
-        $repoRoot = dirname(__DIR__, 7);
+        $manifest = self::manifest();
+        $repoRoot = self::repoRoot();
 
-        foreach (self::AREA_COPY_SETS as $set) {
+        foreach ($manifest['area_copy_sets'] as $set) {
             $reference = null;
             foreach ($set as $relPath) {
                 $path = $repoRoot . '/' . $relPath;
@@ -119,9 +136,28 @@ class ThemeMirrorTest extends TestCase
                 self::assertSame(
                     $reference,
                     $content,
-                    "area copy drifted from its reference (first path in the set): {$relPath}",
+                    "area copy drifted from its reference (first path in the set): {$relPath} — run `composer mirror`",
                 );
             }
         }
+    }
+
+    public function testComposerMirrorScriptIsWired(): void
+    {
+        $repoRoot = self::repoRoot();
+
+        self::assertFileExists($repoRoot . '/scripts/mirror-themes.php');
+        self::assertFileExists($repoRoot . '/scripts/mirror-manifest.php');
+
+        $composer = (string) file_get_contents($repoRoot . '/composer.json');
+        self::assertStringContainsString(
+            '"mirror": "@php scripts/mirror-themes.php"',
+            $composer,
+            'the composer "mirror" script must run scripts/mirror-themes.php',
+        );
+
+        // The sync tool consumes the same manifest this guard reads.
+        $script = (string) file_get_contents($repoRoot . '/scripts/mirror-themes.php');
+        self::assertStringContainsString("require __DIR__ . '/mirror-manifest.php'", $script);
     }
 }
