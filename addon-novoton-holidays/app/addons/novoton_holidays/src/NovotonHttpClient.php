@@ -13,6 +13,7 @@ namespace Tygh\Addons\NovotonHolidays;
 
 use Tygh\Addons\NovotonHolidays\Exceptions\ApiException;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+use Tygh\Addons\TravelCore\Http\ResiliencePolicy;
 
 class NovotonHttpClient implements HttpClientInterface
 {
@@ -25,15 +26,13 @@ class NovotonHttpClient implements HttpClientInterface
 
     // Retry configuration
     private int $maxRetries;
-    private int $retryDelayMs;
-    private int $retryMultiplier;
 
-    // Circuit breaker configuration
+    // Shared retry-backoff + circuit-breaker state machine (travel_core).
+    // Half-open KEEPS the failure count (this client's historical behavior:
+    // one failure after cooldown re-opens the circuit immediately).
+    private ResiliencePolicy $resilience;
     private int $circuitBreakerThreshold;
     private int $circuitBreakerTimeout;
-    private int $failureCount = 0;
-    private int $lastFailureTime = 0;
-    private bool $circuitOpen = false;
 
     // Debug properties
     public int $lastHttpCode = 0;
@@ -43,7 +42,7 @@ class NovotonHttpClient implements HttpClientInterface
     /**
      * @param array<string, mixed> $settings
      */
-    public function __construct(array $settings)
+    public function __construct(array $settings, ?ResiliencePolicy $resilience = null)
     {
         if (empty($settings['api_url'])) {
             throw new \InvalidArgumentException(
@@ -100,10 +99,15 @@ class NovotonHttpClient implements HttpClientInterface
         }
 
         $this->maxRetries = TypeCoerce::toInt($settings['api_max_retries'] ?? 3);
-        $this->retryDelayMs = TypeCoerce::toInt($settings['api_retry_delay_ms'] ?? 1000);
-        $this->retryMultiplier = max(1, TypeCoerce::toInt($settings['api_retry_multiplier'] ?? 2));
         $this->circuitBreakerThreshold = TypeCoerce::toInt($settings['circuit_breaker_threshold'] ?? 5);
         $this->circuitBreakerTimeout = TypeCoerce::toInt($settings['circuit_breaker_timeout'] ?? 60);
+        $this->resilience = $resilience ?? new ResiliencePolicy(
+            failureThreshold: $this->circuitBreakerThreshold,
+            cooldownSeconds: $this->circuitBreakerTimeout,
+            initialDelayMs: TypeCoerce::toInt($settings['api_retry_delay_ms'] ?? 1000),
+            delayMultiplier: (float) max(1, TypeCoerce::toInt($settings['api_retry_multiplier'] ?? 2)),
+            resetCountAtHalfOpen: false,
+        );
     }
 
     /**
@@ -134,7 +138,7 @@ class NovotonHttpClient implements HttpClientInterface
     public function sendRequest(string $function, string $xml = '', string $lang = 'UK'): string
     {
         if (!$this->isCircuitClosed()) {
-            $secondsUntilRetry = $this->circuitBreakerTimeout - (time() - $this->lastFailureTime);
+            $secondsUntilRetry = $this->resilience->secondsUntilRetry();
             fn_log_event('general', 'runtime', [
                 'message' => 'Novoton API request blocked by circuit breaker',
                 'function' => $function,
@@ -188,10 +192,10 @@ class NovotonHttpClient implements HttpClientInterface
                 break;
             }
 
-            $isRetryable = $this->isRetryableError($lastError, $lastHttpCode);
+            $isRetryable = ResiliencePolicy::isRetryableTransportError($lastError, $lastHttpCode);
 
             if ($isRetryable && $attempt < $this->maxRetries) {
-                $delayMs = $this->retryDelayMs * $this->retryMultiplier ** ($attempt - 1);
+                $delayMs = $this->resilience->delayMsForRetry($attempt);
 
                 fn_log_event('general', 'runtime', [
                     'message' => "Novoton API retry attempt $attempt/$this->maxRetries",
@@ -316,16 +320,7 @@ class NovotonHttpClient implements HttpClientInterface
      */
     public function isCircuitClosed(): bool
     {
-        if (!$this->circuitOpen) {
-            return true;
-        }
-
-        if (time() - $this->lastFailureTime >= $this->circuitBreakerTimeout) {
-            $this->circuitOpen = false;
-            return true;
-        }
-
-        return false;
+        return !$this->resilience->isOpen();
     }
 
     /**
@@ -333,13 +328,9 @@ class NovotonHttpClient implements HttpClientInterface
      */
     public function recordFailure(): void
     {
-        $this->failureCount++;
-        $this->lastFailureTime = time();
-
-        if ($this->failureCount >= $this->circuitBreakerThreshold) {
-            $this->circuitOpen = true;
+        if ($this->resilience->recordFailure()) {
             fn_log_event('general', 'runtime', [
-                'message' => 'Novoton API circuit breaker OPENED after ' . $this->failureCount . ' failures',
+                'message' => 'Novoton API circuit breaker OPENED after ' . $this->resilience->failureCount() . ' failures',
                 'threshold' => $this->circuitBreakerThreshold,
                 'timeout_seconds' => $this->circuitBreakerTimeout,
             ]);
@@ -351,14 +342,13 @@ class NovotonHttpClient implements HttpClientInterface
      */
     public function recordSuccess(): void
     {
-        if ($this->failureCount > 0 || $this->circuitOpen) {
+        $previousFailures = $this->resilience->failureCount();
+        if ($this->resilience->recordSuccess()) {
             fn_log_event('general', 'runtime', [
                 'message' => 'Novoton API circuit breaker RESET after success',
-                'previous_failures' => $this->failureCount,
+                'previous_failures' => $previousFailures,
             ]);
         }
-        $this->failureCount = 0;
-        $this->circuitOpen = false;
     }
 
     /**
@@ -367,13 +357,15 @@ class NovotonHttpClient implements HttpClientInterface
      */
     public function getCircuitStatus(): array
     {
+        $lastFailureAt = $this->resilience->lastFailureAt();
+
         return [
-            'is_open' => $this->circuitOpen,
-            'failure_count' => $this->failureCount,
+            'is_open' => $this->resilience->isOpen(),
+            'failure_count' => $this->resilience->failureCount(),
             'threshold' => $this->circuitBreakerThreshold,
-            'last_failure' => $this->lastFailureTime > 0 ? date('Y-m-d H:i:s', $this->lastFailureTime) : null,
+            'last_failure' => $lastFailureAt > 0 ? date('Y-m-d H:i:s', $lastFailureAt) : null,
             'timeout_seconds' => $this->circuitBreakerTimeout,
-            'seconds_until_retry' => $this->circuitOpen ? max(0, $this->circuitBreakerTimeout - (time() - $this->lastFailureTime)) : 0,
+            'seconds_until_retry' => $this->resilience->secondsUntilRetry(),
         ];
     }
 
@@ -382,53 +374,15 @@ class NovotonHttpClient implements HttpClientInterface
      */
     public function resetCircuitBreaker(): void
     {
-        $wasOpen = $this->circuitOpen;
-        $previousFailures = $this->failureCount;
+        $wasOpen = $this->resilience->isOpen();
+        $previousFailures = $this->resilience->failureCount();
 
-        $this->failureCount = 0;
-        $this->lastFailureTime = 0;
-        $this->circuitOpen = false;
+        $this->resilience->forceReset();
 
         fn_log_event('general', 'runtime', [
             'message' => 'Novoton API circuit breaker manually reset',
             'was_open' => $wasOpen,
             'previous_failures' => $previousFailures,
         ]);
-    }
-
-    /**
-     * Determine if an error is retryable
-     */
-    private function isRetryableError(string $error, int $httpCode): bool
-    {
-        $retryableErrors = [
-            'Connection timed out',
-            'Connection refused',
-            'Could not resolve host',
-            'Operation timed out',
-            'SSL connection timeout',
-            'Network is unreachable',
-            'Empty reply from server',
-        ];
-
-        foreach ($retryableErrors as $retryable) {
-            if (str_contains(strtolower($error), strtolower($retryable))) {
-                return true;
-            }
-        }
-
-        if ($httpCode >= 500 && $httpCode < 600) {
-            return true;
-        }
-
-        if ($httpCode === 429) {
-            return true;
-        }
-
-        if ($httpCode === 0 && !empty($error)) {
-            return true;
-        }
-
-        return false;
     }
 }
