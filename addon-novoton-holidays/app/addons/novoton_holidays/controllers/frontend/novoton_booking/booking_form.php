@@ -15,6 +15,7 @@ use Tygh\Addons\NovotonHolidays\Services\PriceInfoFormatter;
 use Tygh\Addons\TravelCore\Dto\Hotel\HotelSeoData;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Services\CurrencyService;
+use Tygh\Addons\TravelCore\ViewModels\HotelHeaderFactory;
 
     $bookingData = TypeCoerce::toStringMap($_REQUEST);
 

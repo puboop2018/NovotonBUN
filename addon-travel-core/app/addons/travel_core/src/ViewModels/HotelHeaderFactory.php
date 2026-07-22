@@ -20,9 +20,9 @@ final class HotelHeaderFactory
 {
     /**
      * @param string $locationLineFallback Shown when the sanitizer produces
-     *        nothing (e.g. the novoton booking form's raw "City, Region,
-     *        Country" join). The map URL is always derived from the SANITIZED
-     *        line, before the fallback applies — same as the old call sites.
+     *                                     nothing (e.g. the novoton booking form's raw "City, Region,
+     *                                     Country" join). The map URL is always derived from the SANITIZED
+     *                                     line, before the fallback applies — same as the old call sites.
      */
     public static function fromSeo(
         HotelSeoData $seo,
