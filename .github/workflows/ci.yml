@@ -353,12 +353,13 @@ jobs:
       - name: Run PHPUnit (with coverage)
         run: vendor/bin/phpunit --colors=always --coverage-text=coverage.txt --coverage-clover=coverage.xml
 
-      # ── Coverage floor (same ratchet as the other suites). 5.0 is the
-      # BOOTSTRAP value — raise it to measured-minus-margin once this job's
-      # first run prints the real number. Never lower it to make a PR pass.
+      # ── Coverage floor (same ratchet as the other suites). Floor =
+      # measured coverage at introduction (52.53% on 2026-07-22) minus a
+      # small margin. Raise the floor as coverage grows — never lower it to
+      # make a PR pass; write the missing tests instead.
       - name: Enforce coverage floor
         run: |
-          floor=5.0
+          floor=51.0
           pct=$(python3 -c "
           import xml.etree.ElementTree as ET
           m = ET.parse('coverage.xml').getroot().find('./project/metrics')
