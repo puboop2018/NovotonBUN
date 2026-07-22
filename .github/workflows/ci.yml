@@ -266,12 +266,12 @@ jobs:
 
       # ── Coverage floor (same ratchet as novoton's): travel_core is the
       # shared kernel — a regression here hits BOTH storefronts, so it gets
-      # a floor too. 5.0 is the BOOTSTRAP value (no local coverage driver to
-      # measure against) — raise it to measured-minus-margin once this job's
-      # first run prints the real number. Never lower it to make a PR pass.
+      # a floor too. Floor = measured coverage at introduction (30.36% on
+      # 2026-07-22) minus a small margin. Raise the floor as coverage grows —
+      # never lower it to make a PR pass; write the missing tests instead.
       - name: Enforce coverage floor
         run: |
-          floor=5.0
+          floor=29.0
           pct=$(python3 -c "
           import xml.etree.ElementTree as ET
           m = ET.parse('coverage.xml').getroot().find('./project/metrics')
@@ -309,13 +309,13 @@ jobs:
       - name: Run PHPUnit (with coverage)
         run: vendor/bin/phpunit --colors=always --coverage-text=coverage.txt --coverage-clover=coverage.xml
 
-      # ── Coverage floor (same ratchet as novoton's). 5.0 is the BOOTSTRAP
-      # value (no local coverage driver to measure against) — raise it to
-      # measured-minus-margin once this job's first run prints the real
-      # number. Never lower it to make a PR pass.
+      # ── Coverage floor (same ratchet as novoton's). Floor = measured
+      # coverage at introduction (28.71% on 2026-07-22) minus a small margin.
+      # Raise the floor as coverage grows — never lower it to make a PR pass;
+      # write the missing tests instead.
       - name: Enforce coverage floor
         run: |
-          floor=5.0
+          floor=27.0
           pct=$(python3 -c "
           import xml.etree.ElementTree as ET
           m = ET.parse('coverage.xml').getroot().find('./project/metrics')
