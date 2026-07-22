@@ -108,6 +108,12 @@ class Container
         return self::resolve('cartService', static fn (): \Tygh\Addons\SphinxHolidays\Services\CartService => new CartService());
     }
 
+    public static function getCacheService(): CacheService
+    {
+        /** @var CacheService */
+        return self::resolve('cacheService', static fn (): \Tygh\Addons\SphinxHolidays\Services\CacheService => new CacheService());
+    }
+
     // ═══════════════════════════════════════════════════════════════════
     // REPOSITORIES
     // ═══════════════════════════════════════════════════════════════════

@@ -37,7 +37,7 @@ class CacheEndpointService implements CacheEndpointServiceInterface
     public function getHotelDeals(array $filters = []): array
     {
         $cacheKey = 'deals:hotels:' . md5((string) json_encode($filters));
-        $cached = CacheService::get($cacheKey);
+        $cached = Container::getCacheService()->get($cacheKey);
         if ($cached !== null) {
             return TypeCoerce::toRowList($cached);
         }
@@ -50,7 +50,7 @@ class CacheEndpointService implements CacheEndpointServiceInterface
         $deals = $this->normalizeDeals(TypeCoerce::toRowList($response['results'] ?? []));
 
         if (!empty($deals)) {
-            CacheService::set($cacheKey, $deals, self::DEALS_CACHE_TTL);
+            Container::getCacheService()->set($cacheKey, $deals, self::DEALS_CACHE_TTL);
         }
 
         return $deals;
@@ -66,7 +66,7 @@ class CacheEndpointService implements CacheEndpointServiceInterface
     public function getPackageDeals(array $filters = []): array
     {
         $cacheKey = 'deals:packages:' . md5((string) json_encode($filters));
-        $cached = CacheService::get($cacheKey);
+        $cached = Container::getCacheService()->get($cacheKey);
         if ($cached !== null) {
             return TypeCoerce::toRowList($cached);
         }
@@ -79,7 +79,7 @@ class CacheEndpointService implements CacheEndpointServiceInterface
         $deals = $this->normalizeDeals(TypeCoerce::toRowList($response['results'] ?? []));
 
         if (!empty($deals)) {
-            CacheService::set($cacheKey, $deals, self::DEALS_CACHE_TTL);
+            Container::getCacheService()->set($cacheKey, $deals, self::DEALS_CACHE_TTL);
         }
 
         return $deals;

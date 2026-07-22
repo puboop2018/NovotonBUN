@@ -253,9 +253,9 @@ try {
     if ($cacheEnabled && $cacheTtl > 0) {
         $cacheKey = CacheService::buildSearchKey($cacheParams);
         if ($forceRefresh) {
-            CacheService::delete($cacheKey);
+            Container::getCacheService()->delete($cacheKey);
         }
-        $cached = $forceRefresh ? null : CacheService::get($cacheKey);
+        $cached = $forceRefresh ? null : Container::getCacheService()->get($cacheKey);
         if ($cached !== null) {
             $cachedMap = TypeCoerce::toStringMap($cached);
             $cachedResults = TypeCoerce::toRowList($cachedMap['results'] ?? []);
@@ -379,7 +379,7 @@ try {
         unset($result);
 
         if ($cacheEnabled && $cacheTtl > 0) {
-            CacheService::set(CacheService::buildSearchKey($cacheParams), [
+            Container::getCacheService()->set(CacheService::buildSearchKey($cacheParams), [
                 'results' => $initialResults,
                 'search_id' => $searchIdStr,
                 'complete' => true,

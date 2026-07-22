@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\SphinxHolidays\Services;
 
-use Tygh\Addons\SphinxHolidays\Contracts\CacheServiceInterface;
 use Tygh\Addons\SphinxHolidays\Repository\SphinxCacheRepository;
+use Tygh\Addons\TravelCore\Contracts\CacheServiceInterface;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 /**
@@ -13,14 +13,23 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
  *
  * Provides key-value caching with TTL for short-lived data (search results).
  * NOT for static data (destinations/hotels) — those use dedicated DB tables.
+ *
+ * Implements the provider-neutral travel_core cache contract (get/set/
+ * delete/cleanup) as an instance service obtained via
+ * Container::getCacheService() — this closed the last documented hold-out of
+ * the shared contract (the service was previously all-static, and a static
+ * API cannot implement an instance contract). Only arrays are cacheable on
+ * this backend (values are stored as JSON rows).
  */
 class CacheService implements CacheServiceInterface
 {
-    private static ?SphinxCacheRepository $repo = null;
+    private const int DEFAULT_TTL = 300;
 
-    private static function repo(): SphinxCacheRepository
+    private SphinxCacheRepository $repo;
+
+    public function __construct(?SphinxCacheRepository $repo = null)
     {
-        return self::$repo ??= new SphinxCacheRepository();
+        $this->repo = $repo ?? new SphinxCacheRepository();
     }
 
     /**
@@ -28,14 +37,14 @@ class CacheService implements CacheServiceInterface
      *
      * @return array<string, mixed>|null Decoded data or null if missing/expired
      */
-    public static function get(string $key): ?array
+    public function get(string $key): ?array
     {
         // Probabilistic cleanup: ~1% of reads trigger expired entry removal
         if (random_int(1, 100) === 1) {
-            self::cleanup();
+            $this->cleanup();
         }
 
-        $row = self::repo()->findByKey($key);
+        $row = $this->repo->findByKey($key);
 
         if ($row === null || TypeCoerce::toInt($row['expires_at']) < time()) {
             return null;
@@ -46,36 +55,43 @@ class CacheService implements CacheServiceInterface
     }
 
     /**
-     * Store a value in cache with a TTL.
+     * Store a value in cache with a TTL. Non-array values are rejected
+     * (this backend stores JSON rows of search-result shapes).
      *
-     * @param string $key Cache key
-     * @param array<int|string, mixed> $data Data to cache (must be JSON-serializable)
-     * @param int $ttl Time-to-live in seconds
+     * @param int|null $ttl Time-to-live in seconds (null = 300s default)
      */
-    public static function set(string $key, array $data, int $ttl): void
+    public function set(string $key, mixed $value, ?int $ttl = null): bool
     {
-        $encoded = json_encode($data, JSON_UNESCAPED_UNICODE);
-        if ($encoded === false) {
-            return;
+        if (!is_array($value)) {
+            return false;
         }
 
-        self::repo()->upsert($key, $encoded, time() + $ttl);
+        $encoded = json_encode($value, JSON_UNESCAPED_UNICODE);
+        if ($encoded === false) {
+            return false;
+        }
+
+        $this->repo->upsert($key, $encoded, time() + ($ttl ?? self::DEFAULT_TTL));
+
+        return true;
     }
 
     /**
      * Delete a specific cache entry.
      */
-    public static function delete(string $key): void
+    public function delete(string $key): bool
     {
-        self::repo()->deleteByKey($key);
+        return $this->repo->deleteByKey($key) > 0;
     }
 
     /**
      * Remove all expired entries.
+     *
+     * @return int Number of expired entries removed
      */
-    public static function cleanup(): void
+    public function cleanup(): int
     {
-        self::repo()->deleteExpired();
+        return $this->repo->deleteExpired();
     }
 
     /**

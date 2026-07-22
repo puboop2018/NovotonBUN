@@ -11,10 +11,9 @@ namespace Tygh\Addons\TravelCore\Contracts;
  *
  * Novoton's CacheService is the reference implementation; its richer
  * clear() / remember() / getStats() extras live in its own extending interface.
- *
- * Sphinx's cache is intentionally NOT a consumer: it is a static,
- * search-result-only API, and a static API cannot implement an instance
- * contract. That divergence is deliberate — see ARCHITECTURE_PLAN.md §3.
+ * Sphinx's CacheService implements this contract directly (instance service
+ * via Container::getCacheService(); its static-API divergence was closed —
+ * only buildSearchKey() remains static, as a pure key builder).
  */
 interface CacheServiceInterface
 {
