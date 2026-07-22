@@ -15,11 +15,8 @@
  * uncustomized markup keeps rendering.
  */
 
-/* ── Reservation shell (novoton booking form: hero header + card body) ── */
-/* A gradient hero header with an absolutely-positioned availability chip,
-   over a bordered white body. Shared so any provider's booking form can use
-   the same shell; lifted out of novoton's embedded <style>. */
-/* Minimalist light header — parity with the search-results card. Replaces the
+/* ── Reservation shell (novoton booking form: header + card body) ─────── */
+/* Minimalist light header — parity with the search-results card. Replaced the
    old blue-gradient "hero": white card, dark text, inline green availability
    pill, gold stars, location line with the shared map-pin. */
 .travel-booking-page .travel-reservation-header {
@@ -94,15 +91,6 @@
 .travel-booking-page .travel-detail-info {
     flex: 1;
     padding: 20px;
-}
-.travel-booking-page .travel-detail-price {
-    flex: 0 0 180px;
-    padding: 20px;
-    text-align: right;
-    border-left: 1px solid var(--nvt-border, #e0e0e0);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
 }
 /* Guest sublabel (small muted line under a guest header, e.g. "regular bed") */
 .travel-booking-page .travel-guest-sublabel {
@@ -188,21 +176,13 @@
     margin-top: 5px;
 }
 
-/* ── Booking summary (flat box; --hero = gradient banner) ─────────────── */
+/* ── Booking summary (flat box) ───────────────────────────────────────── */
 .travel-booking-page .travel-booking-summary,
 .travel-booking-page .sphinx-booking-summary {
     background: var(--nvt-surface-info, #f5f9fc);
     padding: 20px;
     border-radius: 8px;
     margin-bottom: 20px;
-}
-.travel-booking-page .travel-booking-summary--hero {
-    background: linear-gradient(135deg, var(--nvt-primary, #003580) 0%, #0056b3 100%);
-    color: #fff;
-}
-.travel-booking-page .travel-booking-summary--hero h2 {
-    margin: 0 0 10px;
-    color: #fff;
 }
 .travel-booking-page .travel-booking-row {
     display: flex;
@@ -223,9 +203,6 @@
     gap: 15px;
     font-size: 14px;
     color: var(--nvt-text-light, #555);
-}
-.travel-booking-page .travel-booking-summary--hero .travel-booking-meta {
-    color: #fff;
 }
 .travel-booking-page .travel-booking-sub {
     color: var(--nvt-text-light, #666);
@@ -363,10 +340,6 @@
     flex-wrap: wrap;
     gap: 8px;
 }
-.travel-booking-page .travel-room-banner .travel-room-price {
-    font-weight: 600;
-}
-
 /* Two-column info grid (label / value), from novoton's booking summary */
 .travel-booking-page .travel-info-summary {
     display: grid;
@@ -435,8 +408,7 @@
 .travel-booking-page .travel-guest-field--dob {
     flex: 0 0 150px;
 }
-.travel-booking-page .travel-age-display,
-.travel-booking-page .sphinx-age-display {
+.travel-booking-page .travel-age-display {
     font-size: 12px;
     color: var(--nvt-text-light, #666);
 }
@@ -482,9 +454,7 @@
     border-color: var(--nvt-primary, #003580);
 }
 /* Field labels */
-.travel-booking-page .travel-guest-field > label,
-.travel-booking-page .travel-contact-section label,
-.travel-booking-page .field-group > label {
+.travel-booking-page .travel-guest-field > label {
     display: block;
     font-size: 13px;
     font-weight: 500;
@@ -502,8 +472,7 @@
     font-size: 12px;
     margin-top: 4px;
 }
-/* Required-field asterisk (.travel-required, or legacy .required) */
-.travel-booking-page .travel-required,
+/* Required-field asterisk */
 .travel-booking-page .required {
     color: var(--nvt-danger, #dc3545);
     margin-left: 2px;
@@ -597,13 +566,6 @@
 }
 
 /* ── Contact + submit ─────────────────────────────────────────────────── */
-.travel-booking-page .travel-contact-section,
-.travel-booking-page .contact-section {
-    margin-top: 20px;
-    padding: 15px;
-    background: var(--nvt-surface-info, #f5f9fc);
-    border-radius: 6px;
-}
 .travel-booking-page .travel-booking-submit,
 .travel-booking-page .sphinx-booking-submit {
     margin-top: 20px;
@@ -621,36 +583,10 @@
    Works on the shared .travel-btn--primary and the form submit buttons. */
 .travel-booking-page .travel-btn--primary:disabled,
 .travel-booking-page .travel-offer-book-btn:disabled,
-.travel-booking-page .sphinx-offer-book-btn:disabled,
-.travel-booking-page .travel-btn--primary.is-disabled {
+.travel-booking-page .sphinx-offer-book-btn:disabled {
     opacity: 0.6;
     cursor: not-allowed;
 }
-.travel-booking-page .travel-btn--loading {
-    position: relative;
-    color: transparent !important;
-    pointer-events: none;
-}
-.travel-booking-page .travel-btn--loading::after {
-    content: "";
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 18px;
-    height: 18px;
-    margin: -9px 0 0 -9px;
-    border: 2px solid rgba(255, 255, 255, 0.5);
-    border-top-color: #fff;
-    border-radius: 50%;
-    /* travel-spin keyframe is defined in search-results.css (loaded first) */
-    animation: travel-spin 0.7s linear infinite;
-}
-@media (prefers-reduced-motion: reduce) {
-    .travel-booking-page .travel-btn--loading::after {
-        animation: none;
-    }
-}
-
 /* ── Responsive ───────────────────────────────────────────────────────── */
 @media (max-width: 767px) {
     .travel-booking-page .travel-booking-price-col {
@@ -666,15 +602,6 @@
        the responsive rules that lived in the removed embedded <style>. */
     .travel-booking-page .travel-detail-row {
         flex-direction: column;
-    }
-    .travel-booking-page .travel-detail-image,
-    .travel-booking-page .travel-detail-price {
-        flex: none;
-    }
-    .travel-booking-page .travel-detail-price {
-        text-align: center;
-        border-left: none;
-        border-top: 1px solid var(--nvt-border, #e0e0e0);
     }
     .travel-booking-page .travel-reservation-header h1 {
         padding-right: 0;
