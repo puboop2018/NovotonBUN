@@ -99,18 +99,33 @@ final class SearchLayoutBadgeTest extends TestCase
 
     public function testPollJsRebuildsTheTwoBulletLines(): void
     {
+        // The poll behavior lives in the extracted JS module (loaded via
+        // {script}, imported directly by vitest); the template keeps only the
+        // config prelude with the translated badge vocabulary.
         $tpl = self::searchTpl();
+        $js = self::searchJs();
 
-        self::assertStringContainsString('updateBadgeText', $tpl);
-        self::assertStringContainsString('seenRoomKeys', $tpl, 'the poll path deduplicates room types too');
-        self::assertStringContainsString("title.getAttribute('data-party-suffix')", $tpl);
+        self::assertStringContainsString('{script src="js/addons/sphinx_holidays/search-results.js"}', $tpl);
+        self::assertStringContainsString('updateBadgeText', $js);
+        self::assertStringContainsString('seenRoomKeys', $js, 'the poll path deduplicates room types too');
+        self::assertStringContainsString("title.getAttribute('data-party-suffix')", $js);
         // The poll JS fills the two bullet spans by id.
-        self::assertStringContainsString('sphinx-availability-guests', $tpl);
-        self::assertStringContainsString('sphinx-availability-rooms', $tpl);
-        // Badge vocabulary is exported to the poll JS.
+        self::assertStringContainsString('sphinx-availability-guests', $js);
+        self::assertStringContainsString('sphinx-availability-rooms', $js);
+        // Badge vocabulary is exported to the poll JS from the template.
         foreach (['available:', 'room:', 'rooms:', 'offer:', 'offers:'] as $label) {
             self::assertStringContainsString($label, $tpl, "__sphinxConfig.labels must carry {$label}");
         }
+        // No behavioral JS left inline — config objects only.
+        self::assertStringNotContainsString('{literal}', $tpl, 'inline JS bodies are extracted to the module');
+    }
+
+    private static function searchJs(): string
+    {
+        $path = dirname(__DIR__, 6) . '/js/addons/sphinx_holidays/search-results.js';
+        self::assertFileExists($path);
+
+        return (string) file_get_contents($path);
     }
 
 }

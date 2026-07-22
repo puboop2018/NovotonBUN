@@ -27,32 +27,38 @@ final class SearchTermsModalTest extends TestCase
         return (string) file_get_contents($path);
     }
 
+    private static function searchJs(): string
+    {
+        // The behavioral JS is a real module now (vitest imports it); the
+        // template keeps the markup + config prelude and loads it via {script}.
+        $path = dirname(__DIR__, 6) . '/js/addons/sphinx_holidays/search-results.js';
+        self::assertFileExists($path);
+
+        return (string) file_get_contents($path);
+    }
+
     public function testTermsLinkPresentOnBothCardRenderPaths(): void
     {
-        $tpl = self::searchTpl();
-
         // Server card (Smarty) + JS renderCard() card both emit the trigger.
-        self::assertGreaterThanOrEqual(
-            2,
-            substr_count($tpl, 'sphinx-terms-link'),
-            'the terms link must be on both the server-rendered and poll-rendered cards',
-        );
+        self::assertStringContainsString('sphinx-terms-link', self::searchTpl());
+        self::assertStringContainsString('sphinx-terms-link', self::searchJs());
         // Server card uses the lang key; the JS card uses the labels config.
-        self::assertStringContainsString('sphinx_holidays.cancellation_and_payment_terms', $tpl);
-        self::assertStringContainsString('labels.cancellationAndPaymentTerms', $tpl);
+        self::assertStringContainsString('sphinx_holidays.cancellation_and_payment_terms', self::searchTpl());
+        self::assertStringContainsString('labels.cancellationAndPaymentTerms', self::searchJs());
     }
 
     public function testModalShellAndOnDemandFetchPresent(): void
     {
         $tpl = self::searchTpl();
+        $js = self::searchJs();
 
         self::assertStringContainsString('id="sphinx-terms-modal"', $tpl);
         self::assertStringContainsString('id="sphinx-terms-modal-body"', $tpl);
         self::assertStringContainsString('role="dialog"', $tpl);
         // Terms are loaded on demand from the verify-backed endpoint.
-        self::assertStringContainsString('sphinx_booking.offer_terms', $tpl);
+        self::assertStringContainsString('sphinx_booking.offer_terms', $js);
         // The free-cancellation line is rendered in the modal.
-        self::assertStringContainsString('travel-terms-modal__free', $tpl);
+        self::assertStringContainsString('travel-terms-modal__free', $js);
     }
 
     public function testOfferTermsEndpointExists(): void
@@ -89,42 +95,43 @@ final class SearchTermsModalTest extends TestCase
     public function testTimelineRendererAndListFallbackCoexist(): void
     {
         $tpl = self::searchTpl();
+        $js = self::searchJs();
 
-        // One track per schedule — the per-schedule renderer is the split.
-        self::assertStringContainsString('function renderTrack(', $tpl);
-        self::assertStringContainsString('schedule_total', $tpl);
-        self::assertStringContainsString('travel-terms-timeline__node', $tpl);
-        self::assertStringContainsString('travel-terms-timeline__tag--nonref', $tpl);
-        // PER-TRACK gates: each schedule branches on ITS OWN rules, with the
-        // section() list as that track's text fallback.
-        self::assertStringContainsString('data.payment_rules && data.payment_rules.length', $tpl);
-        self::assertStringContainsString('data.cancellation_rules && data.cancellation_rules.length', $tpl);
-        self::assertStringContainsString('section(payHeading, data.payment_terms)', $tpl);
-        self::assertStringContainsString('section(cancelHeading, data.cancellation_fees)', $tpl);
-        // The old all-or-nothing wrapper must not come back.
-        self::assertStringNotContainsString('function renderTimeline(', $tpl);
-        // Fallback list renderer intact.
-        self::assertStringContainsString('function section(', $tpl);
-        self::assertStringContainsString('travel-terms-modal__section', $tpl);
-        // Timeline labels wired through the Smarty labels map: terse row
-        // labels + the date-gutter prepositions (until/from).
+        // Config prelude still exports the timeline labels to the module.
         foreach (['termsDueBy', 'termsPenalty', 'termsNonRefundable', 'termsUntil', 'termsFrom'] as $label) {
             self::assertStringContainsString($label . ':', $tpl);
         }
+
+        // One track per schedule — the per-schedule renderer is the split.
+        self::assertStringContainsString('function renderTrack(', $js);
+        self::assertStringContainsString('schedule_total', $js);
+        self::assertStringContainsString('travel-terms-timeline__node', $js);
+        self::assertStringContainsString('travel-terms-timeline__tag--nonref', $js);
+        // PER-TRACK gates: each schedule branches on ITS OWN rules, with the
+        // section() list as that track's text fallback.
+        self::assertStringContainsString('data.payment_rules && data.payment_rules.length', $js);
+        self::assertStringContainsString('data.cancellation_rules && data.cancellation_rules.length', $js);
+        self::assertStringContainsString('section(payHeading, data.payment_terms)', $js);
+        self::assertStringContainsString('section(cancelHeading, data.cancellation_fees)', $js);
+        // The old all-or-nothing wrapper must not come back.
+        self::assertStringNotContainsString('function renderTimeline(', $js);
+        // Fallback list renderer intact.
+        self::assertStringContainsString('function section(', $js);
+        self::assertStringContainsString('travel-terms-modal__section', $js);
         // Dates render in the gutter beside the rail (tracker style).
-        self::assertStringContainsString('travel-terms-timeline__date', $tpl);
+        self::assertStringContainsString('travel-terms-timeline__date', $js);
         // Missing-lang-var guard: CS-Cart returns "_key" (truthy) for missing
         // vars, so labels go through lbl() — a raw key can never render.
-        self::assertStringContainsString('function lbl(', $tpl);
-        self::assertStringContainsString("charAt(0) === '_'", $tpl);
+        self::assertStringContainsString('function lbl(', $js);
+        self::assertStringContainsString("charAt(0) === '_'", $js);
         // Every timeline label the renderer CONSUMES must route through lbl(),
         // not `cfg.x || fallback`: the raw "_sphinx_holidays.terms_due_by" is a
         // truthy string so `||` never fires and the key renders raw on an
         // unseeded store (the exact regression). lbl() strips the "_" prefix.
         foreach (['termsDueBy', 'termsPenalty', 'termsNonRefundable', 'termsUntil', 'termsFrom'] as $label) {
-            self::assertStringContainsString('lbl(cfg.' . $label . ',', $tpl,
+            self::assertStringContainsString('lbl(cfg.' . $label . ',', $js,
                 "timeline label {$label} must go through lbl(), not `cfg.{$label} || …`");
-            self::assertStringNotContainsString('cfg.' . $label . ' ||', $tpl,
+            self::assertStringNotContainsString('cfg.' . $label . ' ||', $js,
                 "the `cfg.{$label} || fallback` anti-pattern renders the raw key on unseeded stores");
         }
     }
