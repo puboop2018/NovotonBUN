@@ -18,9 +18,7 @@ namespace Tygh\Addons\NovotonHolidays\Services;
 use Tygh\Addons\TravelCore\Dto\Hotel\HotelSeoData;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Services\CurrencyService;
-use Tygh\Addons\TravelCore\Services\HotelLocationLine;
-use Tygh\Addons\TravelCore\Services\HotelMapUrl;
-use Tygh\Addons\TravelCore\ViewModels\HotelHeaderViewModel;
+use Tygh\Addons\TravelCore\ViewModels\HotelHeaderFactory;
 
 class SearchResultFormatter implements SearchResultFormatterInterface
 {
@@ -256,27 +254,14 @@ class SearchResultFormatter implements SearchResultFormatterInterface
             longitude: $hotelLng,
             address: TypeCoerce::toString($hotelStreet),
         );
-        $locationLine = HotelLocationLine::build($hotelSeo);
-        $view->assign('hotel_location_line', $locationLine);
-
-        // Map URL from the shared PDP builder: a coordinate pin when the hotel
-        // has coordinates, otherwise a Google place-search on "name, location".
-        // Gating the template on this URL (not on raw lat/lng) keeps the
-        // "Locație - arată pe hartă" link present for every hotel — coordinate-
-        // less hotels previously lost the link entirely.
-        $mapUrl = HotelMapUrl::build($hotelSeo, $locationLine) ?? '';
-        $view->assign('hotel_map_url', $mapUrl);
-
-        // The shared hotel-identity header component (travel_core
-        // components/hotel_header.tpl) renders from this one view model —
-        // same variable name and shape on all four provider surfaces.
-        $view->assign('travel_hotel_header', (new HotelHeaderViewModel(
-            name: TypeCoerce::toString($hotelName),
-            stars: $hotelStarCount,
-            locationLine: $locationLine,
-            mapUrl: $mapUrl,
-            productId: $productId,
-        ))->toViewArray());
+        // Shared header derivation (travel_core): sanitized location line +
+        // always-present map URL (coordinate pin when available, place-search
+        // fallback otherwise) + the view model the hotel_header component
+        // renders — one factory for all four provider surfaces.
+        $headerVm = HotelHeaderFactory::fromSeo($hotelSeo, $hotelStarCount, $productId);
+        $view->assign('hotel_location_line', $headerVm->locationLine);
+        $view->assign('hotel_map_url', $headerVm->mapUrl);
+        $view->assign('travel_hotel_header', $headerVm->toViewArray());
     }
 
     /**

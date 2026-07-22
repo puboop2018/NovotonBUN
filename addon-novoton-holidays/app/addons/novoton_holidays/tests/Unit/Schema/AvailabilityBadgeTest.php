@@ -96,8 +96,7 @@ final class AvailabilityBadgeTest extends TestCase
         $php = (string) file_get_contents(
             dirname(__DIR__, 3) . '/src/Services/SearchResultFormatter.php',
         );
-        self::assertStringContainsString('new HotelHeaderViewModel(', $php);
-        self::assertStringContainsString('productId: $productId', $php);
+        self::assertStringContainsString('HotelHeaderFactory::fromSeo($hotelSeo, $hotelStarCount, $productId)', $php);
         self::assertStringContainsString("assign('travel_hotel_header'", $php);
     }
 
@@ -128,13 +127,15 @@ final class AvailabilityBadgeTest extends TestCase
             dirname(__DIR__, 3) . '/src/Services/SearchResultFormatter.php',
         );
 
-        // The formatter must build the map URL via HotelMapUrl::build with
-        // coordinates fed into the DTO (coordinate pin when available,
-        // place-search fallback otherwise) and hand it to the shared header
-        // through the view model.
-        self::assertStringContainsString('HotelMapUrl::build($hotelSeo', $php);
+        // The map URL derivation lives in the shared HotelHeaderFactory now
+        // (coordinate pin when available, place-search fallback otherwise);
+        // the formatter feeds it the DTO with real coordinates.
         self::assertStringContainsString('latitude: $hotelLat', $php);
-        self::assertStringContainsString('mapUrl: $mapUrl', $php);
+        self::assertStringContainsString('HotelHeaderFactory::fromSeo', $php);
+        $factory = (string) file_get_contents(
+            dirname(__DIR__, 7) . '/addon-travel-core/app/addons/travel_core/src/ViewModels/HotelHeaderFactory.php',
+        );
+        self::assertStringContainsString('HotelMapUrl::build($seo', $factory);
     }
 
     public function testThemeCopiesAreByteIdentical(): void

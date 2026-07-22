@@ -15,9 +15,6 @@ use Tygh\Addons\NovotonHolidays\Services\PriceInfoFormatter;
 use Tygh\Addons\TravelCore\Dto\Hotel\HotelSeoData;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Services\CurrencyService;
-use Tygh\Addons\TravelCore\Services\HotelLocationLine;
-use Tygh\Addons\TravelCore\Services\HotelMapUrl;
-use Tygh\Addons\TravelCore\ViewModels\HotelHeaderViewModel;
 
     $bookingData = TypeCoerce::toStringMap($_REQUEST);
 
@@ -347,28 +344,25 @@ use Tygh\Addons\TravelCore\ViewModels\HotelHeaderViewModel;
         longitude: TypeCoerce::toFloat($hotel_info['longitude'] ?? 0),
         address: TypeCoerce::toString($hotel_info['street_address'] ?? ''),
     );
-    $bookingLocationLine = HotelLocationLine::build($bookingHotelSeo);
-    $bookingMapUrl = HotelMapUrl::build($bookingHotelSeo, $bookingLocationLine) ?? '';
-    $view->assign('hotel_location_line', $bookingLocationLine);
-    $view->assign('hotel_map_url', $bookingMapUrl);
-
-    // Shared hotel-identity header (travel_core components/hotel_header.tpl).
-    // Location line keeps the old template's city/region/country fallback for
-    // when the sanitizer has nothing to work with.
-    $headerLocationLine = $bookingLocationLine !== '' ? $bookingLocationLine : implode(', ', array_filter([
-        TypeCoerce::toString($hotel_info['city'] ?? ''),
-        TypeCoerce::toString($hotel_info['region'] ?? ''),
-        TypeCoerce::toString($hotel_info['country'] ?? ''),
-    ], static fn (string $part): bool => $part !== ''));
-    $view->assign('travel_hotel_header', (new HotelHeaderViewModel(
-        name: TypeCoerce::toString($hotel_info['hotel_name'] ?? ''),
-        // $hotel_stars is ★ glyphs from star_rating, or raw "*"s parsed out
-        // of the hotel name (legacy fallback) — count either form.
-        stars: mb_substr_count($hotel_stars, '★') + substr_count($hotel_stars, '*'),
-        locationLine: $headerLocationLine,
-        mapUrl: $bookingMapUrl,
-        productId: PriceInfoFormatter::toInt($product_id),
-    ))->toViewArray());
+    // Shared header derivation (travel_core factory): sanitized line +
+    // always-present map URL + the hotel_header component's view model. The
+    // city/region/country join keeps the old template's fallback for when the
+    // sanitizer has nothing to work with (the map URL still derives from the
+    // sanitized line, as before). $hotel_stars is ★ glyphs from star_rating,
+    // or raw "*"s parsed out of the hotel name (legacy) — count either form.
+    $headerVm = HotelHeaderFactory::fromSeo(
+        $bookingHotelSeo,
+        mb_substr_count($hotel_stars, '★') + substr_count($hotel_stars, '*'),
+        PriceInfoFormatter::toInt($product_id),
+        implode(', ', array_filter([
+            TypeCoerce::toString($hotel_info['city'] ?? ''),
+            TypeCoerce::toString($hotel_info['region'] ?? ''),
+            TypeCoerce::toString($hotel_info['country'] ?? ''),
+        ], static fn (string $part): bool => $part !== '')),
+    );
+    $view->assign('hotel_location_line', $headerVm->locationLine);
+    $view->assign('hotel_map_url', $headerVm->mapUrl);
+    $view->assign('travel_hotel_header', $headerVm->toViewArray());
     $view->assign('package_name', $package_name);
     $view->assign('hotel_all_packages', $all_packages);
     $session = Tygh::$app['session'];
