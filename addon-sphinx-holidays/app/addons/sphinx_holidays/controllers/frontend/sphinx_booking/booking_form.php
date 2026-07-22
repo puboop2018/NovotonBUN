@@ -19,6 +19,7 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 use Tygh\Addons\TravelCore\Services\HotelLocationLine;
 use Tygh\Addons\TravelCore\Services\HotelMapUrl;
+use Tygh\Addons\TravelCore\ViewModels\HotelHeaderViewModel;
 
 /** @var \Smarty $view */
 $view = Tygh::$app['view'];
@@ -154,6 +155,17 @@ try {
         'board_name'   => $boardName,
         'price'        => $verifiedPrice,
     ]];
+
+    // Shared hotel-identity header component (travel_core
+    // components/hotel_header.tpl) — same variable name and shape on all
+    // four provider surfaces.
+    $view->assign('travel_hotel_header', (new HotelHeaderViewModel(
+        name: $hotelName,
+        stars: $hotelRow !== null ? TypeCoerce::toInt($hotelRow['classification'] ?? 0) : 0,
+        locationLine: $hotelLocationLine,
+        mapUrl: $hotelMapUrl,
+        productId: TypeCoerce::toInt($product_id),
+    ))->toViewArray());
 
     $view->assign('sphinx_booking_data', [
         'offer_id' => $offer_id,

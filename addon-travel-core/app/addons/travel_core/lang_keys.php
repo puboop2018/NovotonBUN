@@ -72,4 +72,15 @@ return [
         'en' => 'Booking Form Colors',
         'ro' => 'Culori formular rezervare',
     ],
+
+    // Shared hotel-identity header (components/hotel_header.tpl) — one key
+    // pair for all four consuming surfaces instead of per-provider copies.
+    'travel_core.location_show_map' => [
+        'en' => 'Location - show map',
+        'ro' => 'Locație - arată pe hartă',
+    ],
+    'travel_core.stars_rating' => [
+        'en' => '[rating]-star rating',
+        'ro' => 'Clasificare [rating] stele',
+    ],
 ];

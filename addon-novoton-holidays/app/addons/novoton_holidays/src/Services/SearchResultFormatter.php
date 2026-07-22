@@ -20,6 +20,7 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Services\CurrencyService;
 use Tygh\Addons\TravelCore\Services\HotelLocationLine;
 use Tygh\Addons\TravelCore\Services\HotelMapUrl;
+use Tygh\Addons\TravelCore\ViewModels\HotelHeaderViewModel;
 
 class SearchResultFormatter implements SearchResultFormatterInterface
 {
@@ -183,6 +184,7 @@ class SearchResultFormatter implements SearchResultFormatterInterface
         $hotelLat = 0.0;
         $hotelLng = 0.0;
         $hotelStars = '';
+        $hotelStarCount = 0;
 
         if (!empty($hotelId)) {
             $hotelRepo = Container::getInstance()->hotelRepository();
@@ -199,8 +201,8 @@ class SearchResultFormatter implements SearchResultFormatterInterface
                 // Gold ★ glyphs (styled by .travel-hotel-stars) — the search
                 // header previously showed a hardcoded "****" placeholder
                 // because no rating was ever assigned.
-                $starCount = min(5, max(0, TypeCoerce::toInt($hotelInfo['star_rating'] ?? 0)));
-                $hotelStars = str_repeat('★', $starCount);
+                $hotelStarCount = min(5, max(0, TypeCoerce::toInt($hotelInfo['star_rating'] ?? 0)));
+                $hotelStars = str_repeat('★', $hotelStarCount);
 
                 // Fetch packages once, reuse across sub-methods
                 $packageRepo = Container::getInstance()->hotelPackageRepository();
@@ -262,7 +264,19 @@ class SearchResultFormatter implements SearchResultFormatterInterface
         // Gating the template on this URL (not on raw lat/lng) keeps the
         // "Locație - arată pe hartă" link present for every hotel — coordinate-
         // less hotels previously lost the link entirely.
-        $view->assign('hotel_map_url', HotelMapUrl::build($hotelSeo, $locationLine) ?? '');
+        $mapUrl = HotelMapUrl::build($hotelSeo, $locationLine) ?? '';
+        $view->assign('hotel_map_url', $mapUrl);
+
+        // The shared hotel-identity header component (travel_core
+        // components/hotel_header.tpl) renders from this one view model —
+        // same variable name and shape on all four provider surfaces.
+        $view->assign('travel_hotel_header', (new HotelHeaderViewModel(
+            name: TypeCoerce::toString($hotelName),
+            stars: $hotelStarCount,
+            locationLine: $locationLine,
+            mapUrl: $mapUrl,
+            productId: $productId,
+        ))->toViewArray());
     }
 
     /**

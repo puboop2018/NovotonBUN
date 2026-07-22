@@ -32,17 +32,24 @@ final class SphinxBookingFormLocationTest extends TestCase
         return (string) file_get_contents($path);
     }
 
-    public function testTemplateRendersTheLocationLineAndMapLink(): void
+    public function testHotelIdentityComesFromTheSharedComponent(): void
     {
         $tpl = self::tpl();
 
-        self::assertStringContainsString('travel-hotel-map-link', $tpl);
-        self::assertStringContainsString(
-            'href="{$sphinx_booking_data.hotel_map_url|escape:html}"',
-            $tpl,
-        );
-        self::assertStringContainsString('$sphinx_booking_data.hotel_location_line', $tpl);
-        self::assertStringContainsString('sphinx_holidays.location_show_map', $tpl);
+        // Name/stars/location/map-link markup lives ONCE in travel_core's
+        // hotel_header.tpl (pinned by HotelHeaderComponentTest); this page
+        // only includes it — new-tab link so an in-progress form is never
+        // lost, sphinx-* hook classes via params, inside the light
+        // .travel-booking-summary card (no --hero blue gradient).
+        self::assertStringContainsString('addons/travel_core/components/hotel_header.tpl', $tpl);
+        self::assertStringContainsString('hh_extra_class="sphinx-hotel-header-name"', $tpl);
+        self::assertStringContainsString('hh_location_class="sphinx-hotel-header-location"', $tpl);
+        self::assertStringContainsString('hh_new_tab=true', $tpl);
+        self::assertStringNotContainsString('travel-hotel-name-link', $tpl, 'no locally duplicated name markup');
+        self::assertStringNotContainsString('travel-hotel-map-link', $tpl, 'no locally duplicated map-link markup');
+        self::assertStringNotContainsString('ty-product-block-title', $tpl);
+        self::assertStringNotContainsString('travel-booking-summary--hero', $tpl, 'the blue-gradient hero is gone');
+        self::assertStringNotContainsString('<h2>', $tpl, 'the header heading is an h1 (single-hotel page semantics)');
     }
 
     public function testControllerBuildsTheLineAndUrlViaSharedServices(): void
@@ -50,31 +57,14 @@ final class SphinxBookingFormLocationTest extends TestCase
         $controller = self::controller();
 
         // Hotel row loaded for the address/coordinates, then the shared
-        // builders produce the sanitized line + always-present map URL.
+        // builders produce the sanitized line + always-present map URL,
+        // handed to the component through HotelHeaderViewModel; stars come
+        // from the classification column.
         self::assertStringContainsString('Container::getHotelRepository()->findById', $controller);
         self::assertStringContainsString('HotelLocationLine::build($bookingHotelSeo', $controller);
         self::assertStringContainsString('HotelMapUrl::build($bookingHotelSeo', $controller);
-        self::assertStringContainsString("'hotel_map_url' => \$hotelMapUrl", $controller);
-    }
-
-    public function testHeaderIsTheMinimalistSearchStyleCard(): void
-    {
-        $tpl = self::tpl();
-
-        // Product-listing name (ty-product-list__item-name + product-title link)
-        // with bidi isolation, gold stars from the classification — the light
-        // .travel-booking-summary card (no --hero blue gradient), parity with the
-        // search results header. The name links to the product page in a new tab.
-        self::assertStringContainsString('<h1 class="ty-product-list__item-name sphinx-hotel-header-name">', $tpl);
-        self::assertStringContainsString('class="product-title travel-hotel-name-link"', $tpl);
-        self::assertStringContainsString('target="_blank" rel="noopener"', $tpl);
-        self::assertStringNotContainsString('ty-product-block-title', $tpl, 'the big PDP block title is replaced by the listing name');
-        self::assertStringNotContainsString('travel-booking-summary--hero', $tpl, 'the blue-gradient hero is gone');
-        self::assertStringNotContainsString('<h2>', $tpl, 'the header heading is an h1 (single-hotel page semantics)');
-        self::assertStringContainsString('travel-hotel-stars sphinx-stars', $tpl);
-
-        // Stars come from the hotel classification via the controller.
-        self::assertStringContainsString("'hotel_stars' =>", self::controller());
-        self::assertStringContainsString("\$hotelRow['classification']", self::controller());
+        self::assertStringContainsString('new HotelHeaderViewModel(', $controller);
+        self::assertStringContainsString("assign('travel_hotel_header'", $controller);
+        self::assertStringContainsString("\$hotelRow['classification']", $controller);
     }
 }

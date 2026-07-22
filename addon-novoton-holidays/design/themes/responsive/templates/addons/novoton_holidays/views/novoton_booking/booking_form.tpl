@@ -62,20 +62,15 @@
         {* Terms are now fetched directly from API at checkout - no need for hidden fields *}
         
         {* Header — minimalist light card (parity with the search results
-           header): product-listing name + bdi, gold stars, inline availability
-           pill, location line with map-pin. *}
+           header): shared travel_core hotel-identity component (name links to
+           the product page in a NEW tab so an in-progress form is never lost)
+           plus the inline availability pill. The location line sits after the
+           pill in the DOM but renders below it (flex order in
+           booking-pages.css). Data: $travel_hotel_header (HotelHeaderViewModel,
+           assigned by the booking_form controller — its location line carries
+           the city/region/country fallback). *}
         <div class="travel-reservation-header">
-            {* Product-listing name style (ty-product-list__item-name + product-title),
-               parity with the search card. The name links to the product page in a
-               NEW tab so an in-progress booking form is never lost. *}
-            <h1 class="ty-product-list__item-name">
-                {if $product_id}
-                    <bdi><a href="{"products.view?product_id=`$product_id`"|fn_url}" target="_blank" rel="noopener" class="product-title travel-hotel-name-link" title="{$hotel_name|default:'Hotel'|escape:html}">{$hotel_name|default:'Hotel'}</a></bdi>
-                {else}
-                    <bdi>{$hotel_name|default:'Hotel'}</bdi>
-                {/if}
-                {if $hotel_stars} <span class="travel-hotel-stars" aria-hidden="true">{$hotel_stars}</span>{/if}
-            </h1>
+            {include file="addons/travel_core/components/hotel_header.tpl" hh_new_tab=true}
             <span class="travel-hero-badge" id="availability-badge">
                 {if $booking_data.is_on_request}
                     {__("novoton_holidays.on_request")}
@@ -83,11 +78,6 @@
                     ✓ {__("novoton_holidays.available")}
                 {/if}
             </span>
-            {* Sanitized location line + map link (HotelLocationLine/HotelMapUrl),
-               same as the search card and the PDP; the " - " separator mirrors
-               main_info_title.post.tpl. Falls back to city/region/country when
-               the sanitized line is empty. *}
-            <div class="travel-hotel-location">{if $hotel_location_line}{$hotel_location_line|escape:html}{else}{$hotel_city}{if $hotel_region}, {$hotel_region}{/if}{if $hotel_country}, {$hotel_country}{/if}{/if}{if $hotel_map_url}{if $hotel_location_line || $hotel_city} - {/if}<a href="{$hotel_map_url|escape:html}" target="_blank" rel="noopener" class="travel-hotel-map-link">{__("novoton_holidays.location_show_map")|default:"Location - show map"}</a>{/if}</div>
         </div>
         
         {* Body *}

@@ -66,13 +66,16 @@ final class AvailabilityBadgeTest extends TestCase
         self::assertStringNotContainsString('data-party-suffix', $tpl);
     }
 
-    public function testHotelNameIsBidiIsolated(): void
+    public function testHotelIdentityComesFromTheSharedComponent(): void
     {
         $tpl = self::themeTpl('responsive');
 
-        // <bdi> around the hotel name (PDP parity) isolates mixed-script /
-        // RTL hotel names from the surrounding LTR layout.
-        self::assertStringContainsString('<bdi>{$hotel_name|default:\'Hotel\'}</bdi>', $tpl);
+        // Name/stars/location/map-link markup lives ONCE in travel_core's
+        // hotel_header.tpl (pinned by HotelHeaderComponentTest); this page
+        // only includes it. No hh_new_tab: search links stay same-tab.
+        self::assertStringContainsString('{include file="addons/travel_core/components/hotel_header.tpl"}', $tpl);
+        self::assertStringNotContainsString('travel-hotel-name-link', $tpl, 'no locally duplicated name markup');
+        self::assertStringNotContainsString('travel-hotel-map-link', $tpl, 'no locally duplicated map-link markup');
     }
 
     public function testHotelHeaderRendersAboveTheBookingForm(): void
@@ -88,10 +91,14 @@ final class AvailabilityBadgeTest extends TestCase
 
     public function testHotelNameLinksToTheProductPage(): void
     {
-        $tpl = self::themeTpl('responsive');
-
-        self::assertStringContainsString('travel-hotel-name-link', $tpl);
-        self::assertStringContainsString('products.view?product_id=`$novoton_params.product_id`', $tpl);
+        // The link markup lives in the shared component; the formatter feeds
+        // it the product id through the view model.
+        $php = (string) file_get_contents(
+            dirname(__DIR__, 3) . '/src/Services/SearchResultFormatter.php',
+        );
+        self::assertStringContainsString('new HotelHeaderViewModel(', $php);
+        self::assertStringContainsString('productId: $productId', $php);
+        self::assertStringContainsString("assign('travel_hotel_header'", $php);
     }
 
     public function testHeaderShownWheneverHotelKnownBadgeOnlyWithResults(): void
@@ -115,60 +122,19 @@ final class AvailabilityBadgeTest extends TestCase
         );
     }
 
-    public function testHeaderShowsMapLinkFromTheBuiltUrl(): void
-    {
-        $tpl = self::themeTpl('responsive');
-
-        // The map link is gated on a pre-built URL (HotelMapUrl::build), NOT on
-        // raw coordinates: coordinate-less hotels previously lost the link
-        // entirely; now they get a Google place-search fallback. So the map
-        // link is present for every hotel — matching the PDP.
-        self::assertStringContainsString('travel-hotel-map-link', $tpl);
-        self::assertStringContainsString('href="{$hotel_map_url|escape:html}"', $tpl);
-        self::assertStringContainsString('{if $hotel_map_url}', $tpl);
-        self::assertStringNotContainsString(
-            'https://www.google.com/maps?q={$hotel_lat},{$hotel_lng}',
-            $tpl,
-            'the hardcoded coordinate URL is gone — the link must survive without coordinates',
-        );
-        self::assertStringContainsString('novoton_holidays.location_show_map', $tpl);
-    }
-
     public function testSearchFormatterBuildsTheMapUrlViaTheSharedBuilder(): void
     {
         $php = (string) file_get_contents(
             dirname(__DIR__, 3) . '/src/Services/SearchResultFormatter.php',
         );
 
-        // The controller must build hotel_map_url via HotelMapUrl::build with
-        // coordinates fed into the DTO (so the coordinate pin still wins when
-        // available and the place-search fallback fires otherwise).
-        self::assertStringContainsString("assign('hotel_map_url'", $php);
+        // The formatter must build the map URL via HotelMapUrl::build with
+        // coordinates fed into the DTO (coordinate pin when available,
+        // place-search fallback otherwise) and hand it to the shared header
+        // through the view model.
         self::assertStringContainsString('HotelMapUrl::build($hotelSeo', $php);
         self::assertStringContainsString('latitude: $hotelLat', $php);
-    }
-
-    public function testHotelNameUsesTheProductListingClass(): void
-    {
-        $tpl = self::themeTpl('responsive');
-
-        // Font/size/weight/color come from REUSING the theme's product-listing
-        // name classes (ty-product-list__item-name wrapper + product-title link),
-        // the cleaner listing look — not copied CSS values. h1 kept for the
-        // single-hotel page semantics.
-        self::assertStringContainsString('<h1 class="ty-product-list__item-name">', $tpl);
-        self::assertStringContainsString('class="product-title travel-hotel-name-link"', $tpl);
-        self::assertStringNotContainsString('ty-product-block-title', $tpl, 'the big PDP block title is replaced by the listing name');
-        self::assertStringNotContainsString('<h2>', $tpl, 'the header heading is an h1 (single-hotel page semantics)');
-    }
-
-    public function testLocationLineUsesThePdpSeparatorBeforeTheMapLink(): void
-    {
-        $tpl = self::themeTpl('responsive');
-
-        // " - " between the location text and the map link, only when both
-        // render — exactly like main_info_title.post.tpl on the PDP.
-        self::assertStringContainsString('{if $hotel_location_line} - {/if}', $tpl);
+        self::assertStringContainsString('mapUrl: $mapUrl', $php);
     }
 
     public function testThemeCopiesAreByteIdentical(): void

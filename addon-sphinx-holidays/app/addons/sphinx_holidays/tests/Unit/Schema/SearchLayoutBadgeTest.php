@@ -39,62 +39,38 @@ final class SearchLayoutBadgeTest extends TestCase
         self::assertStringContainsString('travel-hotel-header-row', $tpl);
     }
 
-    public function testHotelNameLinksToTheProductPage(): void
+    public function testHotelIdentityComesFromTheSharedComponent(): void
     {
         $tpl = self::searchTpl();
 
-        self::assertStringContainsString('travel-hotel-name-link', $tpl);
-        self::assertStringContainsString('products.view?product_id=`$sphinx_search_params.product_id`', $tpl);
-    }
-
-    public function testHeaderShowsMapLinkFromTheBuiltUrl(): void
-    {
-        $tpl = self::searchTpl();
-
-        // The map link is gated on a pre-built URL (HotelMapUrl::build), NOT on
-        // raw coordinates — so coordinate-less hotels keep the link (Google
-        // place-search fallback), matching the PDP.
-        self::assertStringContainsString('travel-hotel-map-link', $tpl);
-        self::assertStringContainsString('href="{$sphinx_hotel_map_url|escape:html}"', $tpl);
-        self::assertStringContainsString('{if $sphinx_hotel_map_url}', $tpl);
-        self::assertStringNotContainsString(
-            'https://www.google.com/maps?q={$sphinx_hotel_lat},{$sphinx_hotel_lng}',
-            $tpl,
-            'the hardcoded coordinate URL is gone — the link must survive without coordinates',
-        );
-        self::assertStringContainsString('sphinx_holidays.location_show_map', $tpl);
-
-        // The controller builds the URL via the shared builder and still reads
-        // the address field into the DTO.
-        $controller = (string) file_get_contents(
-            dirname(__DIR__, 3) . '/controllers/frontend/sphinx_booking/search.php',
-        );
-        self::assertStringContainsString('HotelMapUrl::build($hotelSeo', $controller);
-        self::assertStringContainsString("sphinx_hotel_map_url", $controller);
-        self::assertStringContainsString("\$hotelRow['address']", $controller);
-    }
-
-    public function testHotelHeaderMatchesPdpTypographyAndTextPipeline(): void
-    {
-        $tpl = self::searchTpl();
-
-        // Name parity: the theme's product-listing name classes on the heading
-        // (ty-product-list__item-name wrapper + product-title link) — the cleaner
-        // listing look, not the big PDP block title.
-        self::assertStringContainsString('<h1 class="ty-product-list__item-name sphinx-hotel-header-name">', $tpl);
-        self::assertStringContainsString('class="product-title travel-hotel-name-link"', $tpl);
+        // Name/stars/location/map-link markup lives ONCE in travel_core's
+        // hotel_header.tpl (pinned by HotelHeaderComponentTest); this page
+        // only includes it, keeping its sphinx-* hook classes via params.
+        self::assertStringContainsString('addons/travel_core/components/hotel_header.tpl', $tpl);
+        self::assertStringContainsString('hh_extra_class="sphinx-hotel-header-name"', $tpl);
+        self::assertStringContainsString('hh_location_class="sphinx-hotel-header-location"', $tpl);
+        self::assertStringNotContainsString('travel-hotel-name-link', $tpl, 'no locally duplicated name markup');
+        self::assertStringNotContainsString('travel-hotel-map-link', $tpl, 'no locally duplicated map-link markup');
         self::assertStringNotContainsString('ty-product-block-title', $tpl);
-        // Location parity: the PDP's " - " separator before the map link.
-        self::assertStringContainsString('{if $sphinx_hotel_location} - {/if}', $tpl);
+    }
 
-        // The TEXT comes from the shared PDP pipeline (HotelLocationLine) with
-        // the provider's field mapping — not an inline implode.
+    public function testControllerFeedsTheSharedHeaderViewModel(): void
+    {
+        // Header data still comes from the shared PDP pipeline — sanitized
+        // line via HotelLocationLine (provider field mapping, no inline
+        // implode), always-present map URL via HotelMapUrl — handed to the
+        // component through HotelHeaderViewModel under the shared name.
         $controller = (string) file_get_contents(
             dirname(__DIR__, 3) . '/controllers/frontend/sphinx_booking/search.php',
         );
         self::assertStringContainsString('HotelLocationLine::build', $controller);
+        self::assertStringContainsString('HotelMapUrl::build($hotelSeo', $controller);
+        self::assertStringContainsString("\$hotelRow['address']", $controller);
         self::assertStringContainsString("\$hotelRow['region_name']", $controller);
         self::assertStringNotContainsString("implode(', ', \$locationParts)", $controller);
+        self::assertStringContainsString('new HotelHeaderViewModel(', $controller);
+        self::assertStringContainsString("assign('travel_hotel_header'", $controller);
+        self::assertStringContainsString('productId: TypeCoerce::toInt($product_id)', $controller);
     }
 
     public function testServerBadgeMatchesNovotonFormat(): void
@@ -137,10 +113,4 @@ final class SearchLayoutBadgeTest extends TestCase
         }
     }
 
-    public function testHotelNameIsBidiIsolated(): void
-    {
-        $tpl = self::searchTpl();
-
-        self::assertStringContainsString('<bdi>{$sphinx_hotel_name|escape:html}</bdi>', $tpl);
-    }
 }

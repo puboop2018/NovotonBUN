@@ -44,24 +44,13 @@
         <div class="travel-hotel-header sphinx-hotel-header">
             <div class="travel-hotel-header-row">
                 <div>
-                    {* Product-listing name style (ty-product-list__item-name
-                       wrapper + product-title link) — reuses the theme's
-                       listing-name look, cleaner than the big PDP block title. *}
-                    <h1 class="ty-product-list__item-name sphinx-hotel-header-name">
-                        {if $sphinx_search_params.product_id}
-                            <bdi><a href="{"products.view?product_id=`$sphinx_search_params.product_id`"|fn_url}" class="product-title travel-hotel-name-link" title="{$sphinx_hotel_name|escape:html}">{$sphinx_hotel_name|escape:html}</a></bdi>
-                        {else}
-                            <bdi>{$sphinx_hotel_name|escape:html}</bdi>
-                        {/if}
-                        {if $sphinx_hotel_stars}<span class="travel-hotel-stars sphinx-stars" role="img" aria-label="{__("sphinx_holidays.stars_rating", ["[rating]" => $sphinx_hotel_stars])|escape:html}">{"★"|str_repeat:$sphinx_hotel_stars}</span>{/if}
-                    </h1>
-                    {if $sphinx_hotel_location || $sphinx_hotel_map_url}
-                        <p class="travel-hotel-location sphinx-hotel-header-location">
-                            {* Text from HotelLocationLine (PDP pipeline); the " - "
-                               separator mirrors main_info_title.post.tpl *}
-                            {$sphinx_hotel_location|escape:html}{if $sphinx_hotel_map_url}{if $sphinx_hotel_location} - {/if}<a href="{$sphinx_hotel_map_url|escape:html}" target="_blank" rel="noopener" class="travel-hotel-map-link">{__("sphinx_holidays.location_show_map")|default:"Location - show map"}</a>{/if}
-                        </p>
-                    {/if}
+                    {* Shared hotel-identity header (name + stars + location +
+                       map link) — travel_core component, ONE copy for all four
+                       provider surfaces. Data: $travel_hotel_header
+                       (HotelHeaderViewModel, assigned by the search controller). *}
+                    {include file="addons/travel_core/components/hotel_header.tpl"
+                        hh_extra_class="sphinx-hotel-header-name"
+                        hh_location_class="sphinx-hotel-header-location"}
                 </div>
                 <div>
                     {$sx_badge_html nofilter}

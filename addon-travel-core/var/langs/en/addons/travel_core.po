@@ -861,3 +861,7 @@ msgstr "Please wait a moment before sending another request."
 msgctxt "Languages::travel_core.location_show_map"
 msgid "Location - show map"
 msgstr "Location - show map"
+
+msgctxt "Languages::travel_core.stars_rating"
+msgid "[rating]-star rating"
+msgstr "[rating]-star rating"
