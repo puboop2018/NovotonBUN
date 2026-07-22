@@ -865,3 +865,11 @@ msgstr "Location - show map"
 msgctxt "Languages::travel_core.stars_rating"
 msgid "[rating]-star rating"
 msgstr "[rating]-star rating"
+
+msgctxt "Languages::travel_core.hotel_name"
+msgid "Hotel name"
+msgstr "Hotel name"
+
+msgctxt "Languages::travel_core.back"
+msgid "Back"
+msgstr "Back"

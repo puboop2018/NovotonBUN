@@ -623,3 +623,663 @@ msgstr "Penalizare"
 msgctxt "Languages::sphinx_holidays.terms_non_refundable"
 msgid "Non-refundable"
 msgstr "Nerambursabil"
+
+msgctxt "Languages::sphinx_holidays.circuits_category_id"
+msgid "CS-Cart category ID for circuits"
+msgstr "ID categorie CS-Cart pentru circuite"
+
+msgctxt "Languages::sphinx_holidays.circuits_category_id.tooltip"
+msgid "Root category under which circuit products are created. Country sub-categories are generated automatically."
+msgstr "Categorie rădăcină pentru produse circuite. Sub-categoriile pe țări se generează automat."
+
+msgctxt "Languages::sphinx_holidays.experiences_category_id"
+msgid "CS-Cart category ID for experiences"
+msgstr "ID categorie CS-Cart pentru experiențe"
+
+msgctxt "Languages::sphinx_holidays.experiences_category_id.tooltip"
+msgid "Root category under which experience products are created. Country sub-categories are generated automatically."
+msgstr "Categorie rădăcină pentru produse experiențe. Sub-categoriile pe țări se generează automat."
+
+msgctxt "Languages::sphinx_holidays.product_languages"
+msgid "Product languages"
+msgstr "Limbi produse"
+
+msgctxt "Languages::sphinx_holidays.product_languages.tooltip"
+msgid "Select which CS-Cart languages to create hotel product descriptions for. Hotels will only appear in the storefront for selected languages."
+msgstr "Selectați pentru care limbi CS-Cart să se creeze descrierile produselor hoteliere. Hotelurile vor apărea în magazin doar pentru limbile selectate."
+
+msgctxt "Languages::sphinx_holidays.product_code_prefix"
+msgid "Product code prefix"
+msgstr "Prefix cod produs"
+
+msgctxt "Languages::sphinx_holidays.product_code_prefix.tooltip"
+msgid "Prefix for CS-Cart product codes created from Sphinx hotels (e.g. SPX). The hotel ID is appended to form the full code (e.g. SPX12345)."
+msgstr "Prefix pentru codurile de produs CS-Cart create din hoteluri Sphinx (ex. SPX). ID-ul hotelului se adaugă pentru codul complet (ex. SPX12345)."
+
+msgctxt "Languages::sphinx_holidays.default_product_quantity"
+msgid "Default product quantity"
+msgstr "Cantitate implicită produs"
+
+msgctxt "Languages::sphinx_holidays.default_product_quantity.tooltip"
+msgid "Inventory quantity assigned to hotel products on creation. Set high to prevent 'zero inventory' errors."
+msgstr "Cantitatea de inventar atribuită produselor hotel la creare. Setați o valoare mare pentru a preveni erorile de 'inventar zero'."
+
+msgctxt "Languages::sphinx_holidays.skip_no_description"
+msgid "Skip hotels without description (do not create products for hotels with empty description)"
+msgstr "Omite hoteluri fără descriere (nu crea produse pentru hoteluri fără descriere)"
+
+msgctxt "Languages::sphinx_holidays.skip_no_description.tooltip"
+msgid "Do not create CS-Cart products for hotels that have an empty description from the API."
+msgstr "Nu crea produse CS-Cart pentru hoteluri care nu au descriere din API."
+
+msgctxt "Languages::sphinx_holidays.require_immediate_availability"
+msgid "Require immediate availability (sync gate + storefront offers)"
+msgstr "Necesită disponibilitate imediată (filtru sync + oferte storefront)"
+
+msgctxt "Languages::sphinx_holidays.require_immediate_availability.tooltip"
+msgid "When enabled, the hotels cron only adds hotels that have at least one offer with confirmation=immediate, and the storefront search shows only immediate-confirmation offers. The hotels cron accepts a per-run override: &availability_gate=0 to skip the gate, &availability_gate=1 to force it."
+msgstr "Când este activ, cronul de hoteluri adaugă doar hotelurile care au cel puțin o ofertă cu confirmation=immediate, iar căutarea din storefront afișează doar ofertele cu confirmare imediată. Cronul de hoteluri acceptă o suprascriere per rulare: &availability_gate=0 pentru a omite filtrul, &availability_gate=1 pentru a-l forța."
+
+msgctxt "Languages::sphinx_holidays.api_header"
+msgid "Sphinx API Settings"
+msgstr "Setări API Sphinx"
+
+msgctxt "Languages::sphinx_holidays.api_base_url"
+msgid "API Base URL"
+msgstr "URL bază API"
+
+msgctxt "Languages::sphinx_holidays.api_key"
+msgid "API Key (Bearer Token)"
+msgstr "Cheie API (Bearer Token)"
+
+msgctxt "Languages::sphinx_holidays.enable_api_cache"
+msgid "Enable API response caching"
+msgstr "Activează cache-ul răspunsurilor API"
+
+msgctxt "Languages::sphinx_holidays.cache_ttl_search"
+msgid "Search cache TTL (seconds)"
+msgstr "TTL cache căutare (secunde)"
+
+msgctxt "Languages::sphinx_holidays.search_header"
+msgid "Search Settings"
+msgstr "Setări Căutare"
+
+msgctxt "Languages::sphinx_holidays.default_currency"
+msgid "Default search currency"
+msgstr "Monedă implicită căutare"
+
+msgctxt "Languages::sphinx_holidays.ignore_domains"
+msgid "Ignore domains (comma-separated supplier IDs to skip)"
+msgstr "Domenii ignorate (ID-uri furnizori separați prin virgulă)"
+
+msgctxt "Languages::sphinx_holidays.search_poll_interval"
+msgid "Search poll interval (seconds)"
+msgstr "Interval verificare căutare (secunde)"
+
+msgctxt "Languages::sphinx_holidays.search_max_polls"
+msgid "Maximum search polls before timeout"
+msgstr "Număr maxim de verificări înainte de timeout"
+
+msgctxt "Languages::sphinx_holidays.pricing_header"
+msgid "Pricing"
+msgstr "Prețuri"
+
+msgctxt "Languages::sphinx_holidays.commission"
+msgid "Commission percentage"
+msgstr "Procentaj comision"
+
+msgctxt "Languages::sphinx_holidays.product_header"
+msgid "Product Creation & Mapping"
+msgstr "Creare & Mapare Produse"
+
+msgctxt "Languages::sphinx_holidays.hotels_category_id"
+msgid "CS-Cart category ID for Sphinx hotels"
+msgstr "ID categorie CS-Cart pentru hoteluri Sphinx"
+
+msgctxt "Languages::sphinx_holidays.hotels_category_id.tooltip"
+msgid "Root category under which hotel products are created. Country sub-categories are generated automatically."
+msgstr "Categorie rădăcină în care se creează produsele hoteliere. Sub-categoriile pe țări se generează automat."
+
+msgctxt "Languages::sphinx_holidays.packages_category_id"
+msgid "CS-Cart category ID for Sphinx packages"
+msgstr "ID categorie CS-Cart pentru pachete Sphinx"
+
+msgctxt "Languages::sphinx_holidays.packages_category_id.tooltip"
+msgid "Root category under which package products are created. Country sub-categories are generated automatically."
+msgstr "Categorie rădăcină pentru produse pachete. Sub-categoriile pe țări se generează automat."
+
+msgctxt "Languages::sphinx_holidays.resilience_header"
+msgid "API Resilience"
+msgstr "Reziliență API"
+
+msgctxt "Languages::sphinx_holidays.api_max_retries"
+msgid "Maximum retries on failure"
+msgstr "Număr maxim de reîncercări"
+
+msgctxt "Languages::sphinx_holidays.api_retry_delay_ms"
+msgid "Initial retry delay (ms)"
+msgstr "Întârziere inițială reîncercare (ms)"
+
+msgctxt "Languages::sphinx_holidays.api_retry_multiplier"
+msgid "Retry delay multiplier"
+msgstr "Multiplicator întârziere reîncercare"
+
+msgctxt "Languages::sphinx_holidays.circuit_breaker_threshold"
+msgid "Circuit breaker threshold (failures before open)"
+msgstr "Prag circuit breaker (eșecuri înainte de deschidere)"
+
+msgctxt "Languages::sphinx_holidays.circuit_breaker_timeout"
+msgid "Circuit breaker timeout (seconds)"
+msgstr "Timeout circuit breaker (secunde)"
+
+msgctxt "Languages::sphinx_holidays.cron_header"
+msgid "Cron Settings"
+msgstr "Setări Cron"
+
+msgctxt "Languages::sphinx_holidays.cron_access_key"
+msgid "Cron access key (URL: index.php?dispatch=sphinx_cron.run&access_key=KEY&mode=hotels)"
+msgstr "Cheie acces cron (URL: index.php?dispatch=sphinx_cron.run&access_key=KEY&mode=hotels)"
+
+msgctxt "Languages::sphinx_holidays.cron_access_key.tooltip"
+msgid "Access key for cron URL: index.php?dispatch=sphinx_cron.run&access_key=KEY&cron_mode=hotels"
+msgstr "Cheie acces pentru URL cron: index.php?dispatch=sphinx_cron.run&access_key=KEY&cron_mode=hotels"
+
+msgctxt "Languages::sphinx_holidays.cron_commands"
+msgid "Cron Commands"
+msgstr "Comenzi Cron"
+
+msgctxt "Languages::sphinx_holidays.debug_header"
+msgid "Debug"
+msgstr "Depanare"
+
+msgctxt "Languages::sphinx_holidays.debug_logging"
+msgid "Enable debug logging"
+msgstr "Activează logare depanare"
+
+msgctxt "Languages::sphinx_holidays.search_metrics"
+msgid "Enable search timing metrics"
+msgstr "Activează metrici de timp pentru căutare"
+
+msgctxt "Languages::sphinx_holidays.addon_settings"
+msgid "Settings"
+msgstr "Setări"
+
+msgctxt "Languages::sphinx_holidays.show_whitelisted_only"
+msgid "Show whitelisted only"
+msgstr "Arată doar cele din whitelist"
+
+msgctxt "Languages::sphinx_holidays.classification"
+msgid "Classification"
+msgstr "Clasificare"
+
+msgctxt "Languages::sphinx_holidays.link_status"
+msgid "Link Status"
+msgstr "Status Legătură"
+
+msgctxt "Languages::sphinx_holidays.linked"
+msgid "Linked"
+msgstr "Legat"
+
+msgctxt "Languages::sphinx_holidays.orphan"
+msgid "Orphan"
+msgstr "Orfan"
+
+msgctxt "Languages::sphinx_holidays.product"
+msgid "Product"
+msgstr "Produs"
+
+msgctxt "Languages::sphinx_holidays.unclassified"
+msgid "Unclassified"
+msgstr "Neclasificat"
+
+msgctxt "Languages::sphinx_holidays.bulk_activate"
+msgid "Activate Selected"
+msgstr "Activează Selectate"
+
+msgctxt "Languages::sphinx_holidays.bulk_deactivate"
+msgid "Deactivate Selected"
+msgstr "Dezactivează Selectate"
+
+msgctxt "Languages::sphinx_holidays.bulk_delete"
+msgid "Delete Selected"
+msgstr "Șterge Selectate"
+
+msgctxt "Languages::sphinx_holidays.bulk_sync_images"
+msgid "Sync Images"
+msgstr "Sincronizează Imagini"
+
+msgctxt "Languages::sphinx_holidays.bulk_delete_confirm"
+msgid "Are you sure you want to delete the selected hotels?"
+msgstr "Sigur doriți să ștergeți hotelurile selectate?"
+
+msgctxt "Languages::sphinx_holidays.selected_count_label"
+msgid "selected"
+msgstr "selectate"
+
+msgctxt "Languages::sphinx_holidays.deselect_all"
+msgid "Deselect all"
+msgstr "Deselectează tot"
+
+msgctxt "Languages::sphinx_holidays.images_synced"
+msgid "Images synced"
+msgstr "Imagini sincronizate"
+
+msgctxt "Languages::sphinx_holidays.hotels_updated"
+msgid "Hotels updated"
+msgstr "Hoteluri actualizate"
+
+msgctxt "Languages::sphinx_holidays.hotels_deleted"
+msgid "Hotels deleted"
+msgstr "Hoteluri șterse"
+
+msgctxt "Languages::sphinx_holidays.no_hotels_selected"
+msgid "No hotels selected"
+msgstr "Niciun hotel selectat"
+
+msgctxt "Languages::sphinx_holidays.all_classifications"
+msgid "All classifications"
+msgstr "Toate clasificările"
+
+msgctxt "Languages::sphinx_holidays.all_property_types"
+msgid "All types"
+msgstr "Toate tipurile"
+
+msgctxt "Languages::sphinx_holidays.all_link_statuses"
+msgid "All"
+msgstr "Toate"
+
+msgctxt "Languages::sphinx_holidays.with_selected"
+msgid "With selected"
+msgstr "Cu cele selectate"
+
+msgctxt "Languages::sphinx_holidays.skipped_hotels"
+msgid "Skipped hotels"
+msgstr "Hoteluri omise"
+
+msgctxt "Languages::sphinx_holidays.retry_skipped"
+msgid "Retry skipped hotels"
+msgstr "Reîncearcă hotelurile omise"
+
+msgctxt "Languages::sphinx_holidays.retry_skipped_confirm"
+msgid "This will reset all skipped hotels so they can be processed again. Continue?"
+msgstr "Aceasta va reseta toate hotelurile omise pentru a fi procesate din nou. Continuați?"
+
+msgctxt "Languages::sphinx_holidays.skipped_reset"
+msgid "[count] skipped hotel(s) have been reset and are now eligible for product creation."
+msgstr "[count] hotel(uri) omise au fost resetate și sunt acum eligibile pentru crearea de produse."
+
+msgctxt "Languages::sphinx_holidays.no_skipped_hotels"
+msgid "No skipped hotels found."
+msgstr "Nu s-au găsit hoteluri omise."
+
+msgctxt "Languages::sphinx_holidays.seo_templates"
+msgid "SEO Templates"
+msgstr "Șabloane SEO"
+
+msgctxt "Languages::sphinx_holidays.seo_placeholders_info"
+msgid "Use the placeholders listed in the sidebar to build your SEO templates."
+msgstr "Folosiți placeholder-ele din bara laterală pentru a construi șabloanele SEO."
+
+msgctxt "Languages::sphinx_holidays.available_placeholders"
+msgid "Available Placeholders"
+msgstr "Placeholder-e Disponibile"
+
+msgctxt "Languages::sphinx_holidays.seo_placeholders_title"
+msgid "Sphinx placeholders to use"
+msgstr "Placeholder-e Sphinx disponibile"
+
+msgctxt "Languages::sphinx_holidays.placeholders_hint"
+msgid "Use these tags in your SEO templates:"
+msgstr "Folosiți aceste tag-uri în șabloanele SEO:"
+
+msgctxt "Languages::sphinx_holidays.placeholders_example"
+msgid "Example: Book {{name}} in {{city}}, {{country}}. {{classification}}-star {{property_type}} with {{facilities}}."
+msgstr "Exemplu: Rezervă {{name}} în {{city}}, {{country}}. {{property_type}} {{classification}} stele cu {{facilities}}."
+
+msgctxt "Languages::sphinx_holidays.ph_name"
+msgid "Hotel name"
+msgstr "Nume hotel"
+
+msgctxt "Languages::sphinx_holidays.ph_classification"
+msgid "Star rating"
+msgstr "Clasificare stele"
+
+msgctxt "Languages::sphinx_holidays.ph_city"
+msgid "City / resort"
+msgstr "Oraș / stațiune"
+
+msgctxt "Languages::sphinx_holidays.ph_country"
+msgid "Country"
+msgstr "Țară"
+
+msgctxt "Languages::sphinx_holidays.ph_region"
+msgid "Region"
+msgstr "Regiune"
+
+msgctxt "Languages::sphinx_holidays.ph_property_type"
+msgid "Hotel / villa / apt"
+msgstr "Hotel / vilă / apt"
+
+msgctxt "Languages::sphinx_holidays.ph_description"
+msgid "API description"
+msgstr "Descriere API"
+
+msgctxt "Languages::sphinx_holidays.ph_rating"
+msgid "Guest rating"
+msgstr "Rating oaspeți"
+
+msgctxt "Languages::sphinx_holidays.ph_facilities"
+msgid "Top 3 facilities"
+msgstr "Top 3 facilități"
+
+msgctxt "Languages::sphinx_holidays.ph_boards"
+msgid "Meal plans"
+msgstr "Tipuri masă"
+
+msgctxt "Languages::sphinx_holidays.ph_image_url"
+msgid "Main image URL"
+msgstr "URL imagine principală"
+
+msgctxt "Languages::sphinx_holidays.ph_address"
+msgid "Street address"
+msgstr "Adresă stradă"
+
+msgctxt "Languages::sphinx_holidays.ph_phone"
+msgid "Phone number"
+msgstr "Număr telefon"
+
+msgctxt "Languages::sphinx_holidays.ph_email"
+msgid "Email address"
+msgstr "Adresă email"
+
+msgctxt "Languages::sphinx_holidays.ph_website"
+msgid "Website URL"
+msgstr "URL website"
+
+msgctxt "Languages::sphinx_holidays.seo_product_name"
+msgid "Product name"
+msgstr "Nume produs"
+
+msgctxt "Languages::sphinx_holidays.seo_product_name.tooltip"
+msgid "Template for the product name."
+msgstr "Șablon pentru numele produsului."
+
+msgctxt "Languages::sphinx_holidays.seo_page_title"
+msgid "Page title"
+msgstr "Titlu pagină"
+
+msgctxt "Languages::sphinx_holidays.seo_page_title.tooltip"
+msgid "Template for the HTML page title (SEO). Google typically truncates around 60 characters."
+msgstr "Șablon pentru titlul paginii HTML (SEO). Google trunchiază de obicei la ~60 caractere."
+
+msgctxt "Languages::sphinx_holidays.seo_meta_description"
+msgid "Meta description"
+msgstr "Meta descriere"
+
+msgctxt "Languages::sphinx_holidays.seo_meta_description.tooltip"
+msgid "Template for the meta description tag. Google truncates around 160 characters."
+msgstr "Șablon pentru tag-ul meta description. Google trunchiază la ~160 caractere."
+
+msgctxt "Languages::sphinx_holidays.seo_meta_keywords"
+msgid "Meta keywords"
+msgstr "Meta cuvinte cheie"
+
+msgctxt "Languages::sphinx_holidays.seo_meta_keywords.tooltip"
+msgid "Template for the meta keywords tag."
+msgstr "Șablon pentru tag-ul meta keywords."
+
+msgctxt "Languages::sphinx_holidays.seo_name_slug"
+msgid "SEO URL slug"
+msgstr "URL SEO (slug)"
+
+msgctxt "Languages::sphinx_holidays.seo_name_slug.tooltip"
+msgid "Template for the SEO-friendly URL slug. Result is automatically sanitized."
+msgstr "Șablon pentru slug-ul URL SEO. Rezultatul este sanitizat automat."
+
+msgctxt "Languages::sphinx_holidays.seo_full_description"
+msgid "Full description (optional)"
+msgstr "Descriere completă (opțional)"
+
+msgctxt "Languages::sphinx_holidays.seo_full_description.tooltip"
+msgid "Optional template to wrap or replace the API description. Leave empty to use the raw API description as-is."
+msgstr "Șablon opțional pentru a înfășura sau înlocui descrierea API. Lăsați gol pentru a folosi descrierea API în forma originală."
+
+msgctxt "Languages::sphinx_holidays.per_night"
+msgid "night"
+msgstr "noapte"
+
+msgctxt "Languages::sphinx_holidays.add_to_cart_btn"
+msgid "Add to Cart"
+msgstr "Adaugă în coș"
+
+msgctxt "Languages::sphinx_holidays.added_to_cart"
+msgid "Hotel booking added to cart."
+msgstr "Rezervarea hotelului a fost adăugată în coș."
+
+msgctxt "Languages::sphinx_holidays.additional_services"
+msgid "Additional Services"
+msgstr "Servicii adiționale"
+
+msgctxt "Languages::sphinx_holidays.addon_name"
+msgid "Sphinx Holidays"
+msgstr "Sphinx Holidays"
+
+msgctxt "Languages::sphinx_holidays.booking_data_missing"
+msgid "Booking data not available. Please search again."
+msgstr "Datele rezervării nu sunt disponibile. Vă rugăm căutați din nou."
+
+msgctxt "Languages::sphinx_holidays.booking_error"
+msgid "An error occurred. Please try again."
+msgstr "A apărut o eroare. Vă rugăm încercați din nou."
+
+msgctxt "Languages::sphinx_holidays.bus_transport"
+msgid "Bus transport"
+msgstr "Transport cu autocarul"
+
+msgctxt "Languages::sphinx_holidays.check_availability"
+msgid "Check Availability"
+msgstr "Verifică disponibilitatea"
+
+msgctxt "Languages::sphinx_holidays.circuit_added_to_cart"
+msgid "Circuit booking added to cart."
+msgstr "Rezervarea circuitului a fost adăugată în coș."
+
+msgctxt "Languages::sphinx_holidays.circuits_found"
+msgid "Circuits found"
+msgstr "Circuite găsite"
+
+msgctxt "Languages::sphinx_holidays.cron_key_not_set"
+msgid "Cron key not set"
+msgstr "Cheia cron nu este setată"
+
+msgctxt "Languages::sphinx_holidays.date"
+msgid "Date"
+msgstr "Data"
+
+msgctxt "Languages::sphinx_holidays.departure_from"
+msgid "Departure from"
+msgstr "Plecare din"
+
+msgctxt "Languages::sphinx_holidays.duplicate_booking"
+msgid "A booking for this offer is already pending."
+msgstr "O rezervare pentru această ofertă este deja în curs."
+
+msgctxt "Languages::sphinx_holidays.experience_added_to_cart"
+msgid "Experience booking added to cart."
+msgstr "Rezervarea experienței a fost adăugată în coș."
+
+msgctxt "Languages::sphinx_holidays.experiences_found"
+msgid "Experiences found"
+msgstr "Experiențe găsite"
+
+msgctxt "Languages::sphinx_holidays.flight_info"
+msgid "Flight Information"
+msgstr "Informații zbor"
+
+msgctxt "Languages::sphinx_holidays.from"
+msgid "from"
+msgstr "de la"
+
+msgctxt "Languages::sphinx_holidays.get_quote"
+msgid "Get Quote"
+msgstr "Cere ofertă"
+
+msgctxt "Languages::sphinx_holidays.hours"
+msgid "hours"
+msgstr "ore"
+
+msgctxt "Languages::sphinx_holidays.inbound"
+msgid "Return"
+msgstr "Retur"
+
+msgctxt "Languages::sphinx_holidays.included"
+msgid "Included"
+msgstr "Inclus"
+
+msgctxt "Languages::sphinx_holidays.instant_confirmation"
+msgid "Instant confirmation"
+msgstr "Confirmare instantă"
+
+msgctxt "Languages::sphinx_holidays.invalid_circuit"
+msgid "Invalid circuit selection."
+msgstr "Selecție circuit invalidă."
+
+msgctxt "Languages::sphinx_holidays.invalid_experience"
+msgid "Invalid experience selection."
+msgstr "Selecție experiență invalidă."
+
+msgctxt "Languages::sphinx_holidays.invalid_offer"
+msgid "Invalid offer selected."
+msgstr "Ofertă selectată invalidă."
+
+msgctxt "Languages::sphinx_holidays.loading_deals"
+msgid "Loading deals..."
+msgstr "Se încarcă ofertele..."
+
+msgctxt "Languages::sphinx_holidays.mandatory"
+msgid "Mandatory"
+msgstr "Obligatoriu"
+
+msgctxt "Languages::sphinx_holidays.meal"
+msgid "Meal"
+msgstr "Masă"
+
+msgctxt "Languages::sphinx_holidays.next_dates"
+msgid "Next dates"
+msgstr "Următoarele date"
+
+msgctxt "Languages::sphinx_holidays.no_circuit_quotes"
+msgid "No quotes available for this circuit. Please try different dates."
+msgstr "Nu există oferte pentru acest circuit. Încercați alte date."
+
+msgctxt "Languages::sphinx_holidays.no_circuits_found"
+msgid "No circuits found. Please try different filters."
+msgstr "Nu s-au găsit circuite. Încercați alte filtre."
+
+msgctxt "Languages::sphinx_holidays.no_deals_available"
+msgid "No deals available at this time."
+msgstr "Nu există oferte disponibile momentan."
+
+msgctxt "Languages::sphinx_holidays.no_experience_quotes"
+msgid "No quotes available for this experience. Please try a different date."
+msgstr "Nu există oferte pentru această experiență. Încercați o altă dată."
+
+msgctxt "Languages::sphinx_holidays.no_experiences_found"
+msgid "No experiences found. Please try different filters."
+msgstr "Nu s-au găsit experiențe. Încercați alte filtre."
+
+msgctxt "Languages::sphinx_holidays.no_packages_found"
+msgid "No packages found for your search criteria. Please try different dates or destination."
+msgstr "Nu s-au găsit pachete pentru criteriile dvs. Încercați alte date sau altă destinație."
+
+msgctxt "Languages::sphinx_holidays.not_included"
+msgid "Not Included"
+msgstr "Neinclus"
+
+msgctxt "Languages::sphinx_holidays.offer_no_longer_available"
+msgid "This offer is no longer available. Please search again."
+msgstr "Această ofertă nu mai este disponibilă. Vă rugăm căutați din nou."
+
+msgctxt "Languages::sphinx_holidays.offer_unavailable"
+msgid "This offer is no longer available."
+msgstr "Această ofertă nu mai este disponibilă."
+
+msgctxt "Languages::sphinx_holidays.outbound"
+msgid "Outbound"
+msgstr "Dus"
+
+msgctxt "Languages::sphinx_holidays.package_added_to_cart"
+msgid "Package booking added to cart."
+msgstr "Rezervarea pachetului a fost adăugată în coș."
+
+msgctxt "Languages::sphinx_holidays.packages_found"
+msgid "Packages found"
+msgstr "Pachete găsite"
+
+msgctxt "Languages::sphinx_holidays.participant_details"
+msgid "Participant Details"
+msgstr "Detalii participanți"
+
+msgctxt "Languages::sphinx_holidays.participants"
+msgid "Participants"
+msgstr "Participanți"
+
+msgctxt "Languages::sphinx_holidays.price_unavailable"
+msgid "Price not available."
+msgstr "Prețul nu este disponibil."
+
+msgctxt "Languages::sphinx_holidays.product_not_found"
+msgid "Experience product not found."
+msgstr "Produsul nu a fost găsit."
+
+msgctxt "Languages::sphinx_holidays.rate_limit_exceeded"
+msgid "Too many booking requests. Please try again later."
+msgstr "Prea multe cereri de rezervare. Încercați mai târziu."
+
+msgctxt "Languages::sphinx_holidays.return"
+msgid "Return"
+msgstr "Retur"
+
+msgctxt "Languages::sphinx_holidays.searching_please_wait"
+msgid "Searching for live offers…"
+msgstr "Căutăm oferte în timp real…"
+
+msgctxt "Languages::sphinx_holidays.total_price"
+msgid "Total price"
+msgstr "Preț total"
+
+msgctxt "Languages::sphinx_holidays.transfers"
+msgid "Transfers"
+msgstr "Transferuri"
+
+msgctxt "Languages::sphinx_holidays.transport"
+msgid "Transport"
+msgstr "Transport"
+
+msgctxt "Languages::sphinx_holidays.whitelist_save_failed"
+msgid "Whitelist save failed"
+msgstr "Salvarea whitelist-ului a eșuat"
+
+msgctxt "Languages::sphinx_holidays.includes_taxes"
+msgid "Includes taxes and commissions"
+msgstr "Include taxe și comisioane"
+
+msgctxt "Languages::sphinx_holidays.stars_rating"
+msgid "[rating]-star rating"
+msgstr "Clasificare [rating] stele"
+
+msgctxt "Languages::sphinx_holidays.n_rooms"
+msgid "[n] Room|[n] Rooms"
+msgstr "[n] Cameră|[n] Camere"
+
+msgctxt "Languages::sphinx_holidays.n_offers"
+msgid "[n] Offer|[n] Offers"
+msgstr "[n] Ofertă|[n] Oferte"
+
+msgctxt "Languages::sphinx_holidays.n_adults"
+msgid "[n] Adult|[n] Adults"
+msgstr "[n] Adult|[n] Adulți"
+
+msgctxt "Languages::sphinx_holidays.n_children"
+msgid "[n] Child|[n] Children"
+msgstr "[n] Copil|[n] Copii"

@@ -32,7 +32,7 @@ return [
     ],
     'sphinx_holidays.product_languages.tooltip' => [
         'en' => 'Select which CS-Cart languages to create hotel product descriptions for. Hotels will only appear in the storefront for selected languages.',
-        'ro' => 'Selectati pentru care limbi CS-Cart sa se creeze descrierile produselor hoteliere. Hotelurile vor aparea in magazin doar pentru limbile selectate.',
+        'ro' => 'Selectați pentru care limbi CS-Cart să se creeze descrierile produselor hoteliere. Hotelurile vor apărea în magazin doar pentru limbile selectate.',
     ],
     'sphinx_holidays.product_code_prefix' => [
         'en' => 'Product code prefix',
@@ -47,12 +47,12 @@ return [
         'ro' => 'Cantitate implicită produs',
     ],
     'sphinx_holidays.default_product_quantity.tooltip' => [
-        'en' => 'Inventory quantity assigned to hotel products on creation. Set high to prevent "zero inventory" errors.',
-        'ro' => 'Cantitatea de inventar atribuită produselor hotel la creare. Setați o valoare mare pentru a preveni erorile de "inventar zero".',
+        'en' => 'Inventory quantity assigned to hotel products on creation. Set high to prevent \'zero inventory\' errors.',
+        'ro' => 'Cantitatea de inventar atribuită produselor hotel la creare. Setați o valoare mare pentru a preveni erorile de \'inventar zero\'.',
     ],
     'sphinx_holidays.skip_no_description' => [
-        'en' => 'Skip hotels without description',
-        'ro' => 'Omite hoteluri fără descriere',
+        'en' => 'Skip hotels without description (do not create products for hotels with empty description)',
+        'ro' => 'Omite hoteluri fără descriere (nu crea produse pentru hoteluri fără descriere)',
     ],
     'sphinx_holidays.skip_no_description.tooltip' => [
         'en' => 'Do not create CS-Cart products for hotels that have an empty description from the API.',
@@ -82,7 +82,7 @@ return [
     'sphinx_holidays.product_header' => ['en' => 'Product Creation & Mapping', 'ro' => 'Creare & Mapare Produse'],
     'sphinx_holidays.hotels_category_id' => ['en' => 'CS-Cart category ID for Sphinx hotels', 'ro' => 'ID categorie CS-Cart pentru hoteluri Sphinx'],
     'sphinx_holidays.hotels_category_id.tooltip' => ['en' => 'Root category under which hotel products are created. Country sub-categories are generated automatically.', 'ro' => 'Categorie rădăcină în care se creează produsele hoteliere. Sub-categoriile pe țări se generează automat.'],
-    'sphinx_holidays.packages_category_id' => ['en' => 'CS-Cart category ID for packages', 'ro' => 'ID categorie CS-Cart pentru pachete'],
+    'sphinx_holidays.packages_category_id' => ['en' => 'CS-Cart category ID for Sphinx packages', 'ro' => 'ID categorie CS-Cart pentru pachete Sphinx'],
     'sphinx_holidays.packages_category_id.tooltip' => ['en' => 'Root category under which package products are created. Country sub-categories are generated automatically.', 'ro' => 'Categorie rădăcină pentru produse pachete. Sub-categoriile pe țări se generează automat.'],
     'sphinx_holidays.resilience_header' => ['en' => 'API Resilience', 'ro' => 'Reziliență API'],
     'sphinx_holidays.api_max_retries' => ['en' => 'Maximum retries on failure', 'ro' => 'Număr maxim de reîncercări'],
@@ -91,7 +91,7 @@ return [
     'sphinx_holidays.circuit_breaker_threshold' => ['en' => 'Circuit breaker threshold (failures before open)', 'ro' => 'Prag circuit breaker (eșecuri înainte de deschidere)'],
     'sphinx_holidays.circuit_breaker_timeout' => ['en' => 'Circuit breaker timeout (seconds)', 'ro' => 'Timeout circuit breaker (secunde)'],
     'sphinx_holidays.cron_header' => ['en' => 'Cron Settings', 'ro' => 'Setări Cron'],
-    'sphinx_holidays.cron_access_key' => ['en' => 'Cron access key', 'ro' => 'Cheie acces cron'],
+    'sphinx_holidays.cron_access_key' => ['en' => 'Cron access key (URL: index.php?dispatch=sphinx_cron.run&access_key=KEY&mode=hotels)', 'ro' => 'Cheie acces cron (URL: index.php?dispatch=sphinx_cron.run&access_key=KEY&mode=hotels)'],
     'sphinx_holidays.cron_access_key.tooltip' => ['en' => 'Access key for cron URL: index.php?dispatch=sphinx_cron.run&access_key=KEY&cron_mode=hotels', 'ro' => 'Cheie acces pentru URL cron: index.php?dispatch=sphinx_cron.run&access_key=KEY&cron_mode=hotels'],
     'sphinx_holidays.cron_commands' => ['en' => 'Cron Commands', 'ro' => 'Comenzi Cron'],
     'sphinx_holidays.debug_header' => ['en' => 'Debug', 'ro' => 'Depanare'],
