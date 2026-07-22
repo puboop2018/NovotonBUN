@@ -559,12 +559,6 @@ parameters:
 			path: addon-sphinx-holidays/app/addons/sphinx_holidays/func.php
 
 		-
-			message: '#^Parameter \#2 \$ref of method Tygh\\Addons\\SphinxHolidays\\Repository\\SphinxBookingRepository\:\:updateApiResponse\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: addon-sphinx-holidays/app/addons/sphinx_holidays/func.php
-
-		-
 			message: '#^Parameter \#3 \$response of method Tygh\\Addons\\SphinxHolidays\\Repository\\SphinxBookingRepository\:\:updateApiResponse\(\) expects string, string\|false given\.$#'
 			identifier: argument.type
 			count: 1

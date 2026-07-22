@@ -18,6 +18,10 @@ declare(strict_types=1);
 
 $repoRoot = dirname(__DIR__);
 
+// --check: report drift and exit non-zero WITHOUT writing — used by the
+// grumphp pre-commit task so a commit can't ship un-mirrored copies.
+$checkOnly = in_array('--check', $argv ?? [], true);
+
 /** @var array{theme_roots: list<string>, drift_allowlist: array<string, string>, area_copy_sets: list<list<string>>} $manifest */
 $manifest = require __DIR__ . '/mirror-manifest.php';
 
@@ -54,7 +58,7 @@ foreach ($manifest['theme_roots'] as $themesRoot) {
             $inSync++;
             continue;
         }
-        if (!copy($twin, $file->getPathname())) {
+        if (!$checkOnly && !copy($twin, $file->getPathname())) {
             fwrite(STDERR, "error: failed to copy {$twin}\n");
             exit(1);
         }
@@ -74,7 +78,7 @@ foreach ($manifest['area_copy_sets'] as $set) {
             $inSync++;
             continue;
         }
-        if (!copy($reference, $target)) {
+        if (!$checkOnly && !copy($reference, $target)) {
             fwrite(STDERR, "error: failed to copy over {$relPath}\n");
             exit(1);
         }
@@ -83,9 +87,17 @@ foreach ($manifest['area_copy_sets'] as $set) {
 }
 
 foreach ($synced as $path) {
-    echo "synced  {$path}\n";
+    echo ($checkOnly ? 'DRIFTED ' : 'synced  ') . $path . "\n";
 }
 foreach ($orphans as $path) {
     echo "orphan  {$path}  (no responsive counterpart — ThemeMirrorTest will fail this)\n";
+}
+if ($checkOnly) {
+    echo sprintf("mirror --check: %d drifted, %d in sync, %d orphans\n", count($synced), $inSync, count($orphans));
+    if ($synced !== []) {
+        fwrite(STDERR, "mirror drift — run `composer mirror` and stage the synced copies.\n");
+        exit(1);
+    }
+    exit(0);
 }
 echo sprintf("mirror: %d synced, %d already in sync, %d orphans\n", count($synced), $inSync, count($orphans));
