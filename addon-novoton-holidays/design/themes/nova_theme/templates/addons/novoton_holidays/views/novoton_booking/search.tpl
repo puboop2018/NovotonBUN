@@ -748,22 +748,9 @@
     </div>
 </div>
 
-<script>
-function openInfoModal(rowId) {
-    var content = document.getElementById('modal-content-' + rowId);
-    if (content) {
-        document.getElementById('info-modal-content').innerHTML = content.innerHTML;
-        document.getElementById('info-modal').style.display = 'flex';
-        document.body.style.overflow = 'hidden';
-    }
-}
-function closeInfoModal() {
-    document.getElementById('info-modal').style.display = 'none';
-    document.body.style.overflow = '';
-}
-document.getElementById('info-modal').addEventListener('click', function(e) { if (e.target === this) closeInfoModal(); });
-document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeInfoModal(); });
-</script>
+{* Modal behavior lives in a real JS file (vitest imports it directly —
+   tests/js/novoton-search-results.test.mjs). *}
+{script src="js/addons/novoton_holidays/search-results.js"}
 
 {* Client i18n for the booking engine — shared travel_core partial
    (replaces the hand-maintained window.NovotonTranslations block). *}

@@ -29,37 +29,60 @@ final class BookingFormInitialRecalcTest extends TestCase
         return (string) file_get_contents($path);
     }
 
-    public function testInitialLoadRecalcSendsCollectedChildrenAges(): void
+    private static function bookingFormJs(): string
+    {
+        // The behavioral JS is a real module now (vitest imports it); the
+        // template keeps the markup + Smarty config and loads it via {script}.
+        $path = dirname(__DIR__, 6) . '/js/addons/novoton_holidays/booking-form.js';
+        self::assertFileExists($path);
+
+        return (string) file_get_contents($path);
+    }
+
+    public function testTemplateLoadsTheModuleAndKeepsConfigOnly(): void
     {
         $tpl = self::themeTpl('responsive');
 
+        self::assertStringContainsString('{script src="js/addons/novoton_holidays/booking-form.js"}', $tpl);
+        self::assertStringContainsString('window.bookingData', $tpl);
+        self::assertStringContainsString('window.NovotonBookingI18n', $tpl);
+        self::assertStringContainsString('ajaxRecalculateUrl', $tpl);
+        // No behavioral JS left inline — the config assignments only.
+        self::assertStringNotContainsString('function triggerPriceRecalculationInline', $tpl);
+        self::assertStringNotContainsString('function validateAndCheckAge', $tpl);
+    }
+
+    public function testInitialLoadRecalcSendsCollectedChildrenAges(): void
+    {
+        $js = self::bookingFormJs();
+
         self::assertStringNotContainsString(
             'triggerPriceRecalculationInline([]',
-            $tpl,
+            $js,
             'the on-load binding-price call must never hardcode an empty children list — '
             . 'it re-quotes for adults-only occupancy and triggers a bogus room substitution',
         );
-        self::assertStringContainsString('function collectChildrenAges(', $tpl);
+        self::assertStringContainsString('function collectChildrenAges(', $js);
         // Both DOMContentLoaded branches (multi-room + single-room) pass real ages.
-        self::assertStringContainsString('triggerPriceRecalculationInline(collectChildrenAges(roomNum), roomNum, true)', $tpl);
-        self::assertStringContainsString('triggerPriceRecalculationInline(collectChildrenAges(1), 1, true)', $tpl);
+        self::assertStringContainsString('triggerPriceRecalculationInline(collectChildrenAges(roomNum), roomNum, true)', $js);
+        self::assertStringContainsString('triggerPriceRecalculationInline(collectChildrenAges(1), 1, true)', $js);
     }
 
     public function testPriceCommitIsGatedOnRoomChangeDecision(): void
     {
-        $tpl = self::themeTpl('responsive');
+        $js = self::bookingFormJs();
 
-        self::assertStringContainsString('function applyRecalculatedPrice(', $tpl);
+        self::assertStringContainsString('function applyRecalculatedPrice(', $js);
 
         // The success handler applies the price only when the room is unchanged...
-        self::assertStringContainsString('applyRecalculatedPrice(data, roomNum, isMultiRoom, isInitialLoad)', $tpl);
+        self::assertStringContainsString('applyRecalculatedPrice(data, roomNum, isMultiRoom, isInitialLoad)', $js);
 
         // ...and a room change defers the commit to the accept handler.
-        $acceptPos = strpos($tpl, 'function acceptRoomChangeInline()');
+        $acceptPos = strpos($js, 'function acceptRoomChangeInline()');
         self::assertIsInt($acceptPos);
         self::assertStringContainsString(
             'applyRecalculatedPrice(',
-            substr($tpl, $acceptPos),
+            substr($js, $acceptPos),
             'accepting a room change must commit price + room together',
         );
     }
