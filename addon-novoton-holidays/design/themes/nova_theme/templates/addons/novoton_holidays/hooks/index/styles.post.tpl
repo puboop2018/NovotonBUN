@@ -1,14 +1,12 @@
 {**
  * Novoton Holidays - CSS Styles Connection Hook
- * 
- * This hook properly connects addon CSS files following CS-Cart conventions.
- * Location: design/themes/responsive/templates/addons/novoton_holidays/hooks/index/styles.post.tpl
- * 
- * CS-Cart will automatically compile LESS files and cache all styles together.
- * All addon styles are collected into one cached file for performance.
+ *
+ * Loads novoton-specific styles only.
+ * Shared booking-engine.css and booking-form-react.css are loaded
+ * by travel_core's hooks/index/styles.post.tpl.
  *}
 
-{* Main addon styles (LESS - will be compiled by CS-Cart) *}
+{* Novoton-specific addon styles (LESS - will be compiled by CS-Cart) *}
 {style src="addons/novoton_holidays/styles.less"}
 
 {* Search-results page: novoton-specific classes (multi-room grid, quota
@@ -18,4 +16,4 @@
 
 {* NOTE: novoton's own booking-engine.css was deleted — it was a stale fork
    of travel_core's booking-engine.css and, loaded here, its older rules
-   overrode the shared (newer) stylesheet on this theme. *}
+   overrode the shared (newer) stylesheet. *}

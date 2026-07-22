@@ -1,7 +1,7 @@
 {**
  * Novoton Holidays - JavaScript Connection Hook
  *
- * Sets provider-specific config ONLY on Novoton pages to avoid
+ * Sets provider-specific config ONLY on Novoton or shared pages to avoid
  * overwriting Sphinx config (both hooks run on every page).
  * Shared JS (utils, multiroom, dob-validation, booking-form-validation)
  * is loaded by travel_core's hooks/index/scripts.post.tpl.
