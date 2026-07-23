@@ -20,7 +20,7 @@ final class GodFileRatchetTest extends TestCase
         'controllers/backend/novoton_price_compare.php' => 1130,
         'functions/hotels.php' => 855,
         'functions/formatting.php' => 825,
-        'functions/install.php' => 800,
+        'functions/install.php' => 720,
     ];
 
     public function testGodFilesNeverGrowPastTheirCeiling(): void

@@ -215,43 +215,10 @@ function fn_novoton_holidays_seed_travel_aliases(): void
     $featureMapper = \Tygh\Addons\TravelCore\Services\FeatureMapper::class;
 
     // Board/Meal aliases (Novoton XML API values)
-    $boardAliases = [
-        'AI'                   => 'AI',
-        'AIL'                  => 'AIL',
-        'ALL INCL'             => 'AI',
-        'ALL INCLUSIVE'        => 'AI',
-        'ALL INCLUSIVE LIGHT'  => 'AIL',
-        'ALL INCLUSIVE SOFT'   => 'AIL',
-        'ALLINC'               => 'AI',
-        'UAI'                  => 'UAI',
-        'ULTRA ALL INCL'       => 'UAI',
-        'ULTRA ALL INCLUSIVE'   => 'UAI',
-        'FB'                   => 'FB',
-        'FULL BOARD'           => 'FB',
-        'FB+'                  => 'FB',
-        'HB'                   => 'HB',
-        'HALF BOARD'           => 'HB',
-        'HB+'                  => 'HB',
-        'BB'                   => 'BB',
-        'BED AND BREAKFAST'    => 'BB',
-        'B&B'                  => 'BB',
-        'RO'                   => 'RO',
-        'ROOM ONLY'            => 'RO',
-        'SC'                   => 'SC',
-        'SELF CATERING'        => 'SC',
-    ];
+    $boardAliases = \Tygh\Addons\NovotonHolidays\Install\NovotonAliasSeedData::boardAliases();
 
     // Room type aliases (Novoton uses short codes)
-    $roomAliases = [
-        'SGL'     => 'SGL',
-        'DBL'     => 'DBL',
-        'TWIN'    => 'TWIN',
-        'TRP'     => 'TRP',
-        'QUAD'    => 'QUAD',
-        'SUITE'   => 'SUITE',
-        'APT'     => 'APT',
-        'STUDIO'  => 'STUDIO',
-    ];
+    $roomAliases = \Tygh\Addons\NovotonHolidays\Install\NovotonAliasSeedData::roomAliases();
 
     // Guard: travel_feature_map table may not exist if travel_core isn't installed yet
     $tableExists = db_get_field(
@@ -269,18 +236,7 @@ function fn_novoton_holidays_seed_travel_aliases(): void
     $starAliases = ['1' => '1', '2' => '2', '3' => '3', '4' => '4', '5' => '5'];
 
     // Property type aliases (Novoton canonical codes match travel_core)
-    $propertyTypeAliases = [
-        'hotel'          => 'hotel',
-        'villa'          => 'villa',
-        'apartment'      => 'apartment',
-        'resort'         => 'resort',
-        'hostel'         => 'hostel',
-        'guest_house'    => 'guest_house',
-        'chalet'         => 'chalet',
-        'motel'          => 'motel',
-        'boarding_house' => 'boarding_house',
-        'cabin'          => 'cabin',
-    ];
+    $propertyTypeAliases = \Tygh\Addons\NovotonHolidays\Install\NovotonAliasSeedData::propertyTypeAliases();
 
     // Batch-load canonical_code → map_id per feature type (4 queries instead of ~43)
     $seedAliasGroup = static function (string $featureType, array $aliases, string $matchType = 'exact') use ($featureMapper): void {
@@ -298,47 +254,13 @@ function fn_novoton_holidays_seed_travel_aliases(): void
     };
 
     // Hotel facility aliases (Novoton API facility IDs → canonical codes)
-    $hotelFacilityAliases = [
-        '2'  => 'free_parking',          // Parking
-        '3'  => 'pets_allowed',          // Pets
-        '6'  => 'entertainment',         // Entertainment
-        '7'  => 'pool',                  // Outdoor swimming pool
-        '8'  => 'pool',                  // Indoor swimming pool
-        '9'  => 'aqua_park',             // Own aquapark
-        '10' => 'spa',                   // SPA Center
-        '11' => 'sauna',                 // Sauna
-        '12' => 'fitness',               // Fitness
-        '13' => 'balneology',            // Balneology
-        '15' => 'terrace',              // Terrace/Balcony
-        '18' => 'kids_club',            // Kids Club
-        '19' => 'kids_menu',            // Childrens menu
-        '20' => 'kids_pool',            // Childrens pool
-        '21' => 'playground',           // Playground
-        '23' => 'disabled_access',       // Suitable for people with disabilities
-        '25' => 'ski_lift_transfer',     // Transport to the lift
-        '26' => 'family_rooms',          // Suitable for families with children
-        // 27 = All Inclusive — skipped (board type, not a facility)
-        '29' => 'ev_charger',            // Electric Car Charger
-        '30' => 'travel_sustainable',    // Travel Sustainable
-    ];
+    $hotelFacilityAliases = \Tygh\Addons\NovotonHolidays\Install\NovotonAliasSeedData::hotelFacilityAliases();
 
     // Room facility aliases — in-room amenities
-    $roomFacilityAliases = [
-        '4'  => 'free_wifi',             // Wi-Fi
-        '5'  => 'ski_storage',           // ski wardrobe
-        '14' => 'kitchenette',           // Kitchenette
-        '16' => 'air_conditioning',      // Air conditioning/Heating
-        '17' => 'bathtub',              // Bathtub
-        '22' => 'baby_crib',            // Baby crib
-    ];
+    $roomFacilityAliases = \Tygh\Addons\NovotonHolidays\Install\NovotonAliasSeedData::roomFacilityAliases();
 
     // Beach access aliases
-    $beachAccessAliases = [
-        '1'  => 'free_beach_equipment',  // Free umbrella and sunbed
-        '24' => 'beach_bar',            // Beach bar
-        '28' => 'blue_flag_beach',       // Blue Flag beach
-        '31' => 'first_line',            // First line
-    ];
+    $beachAccessAliases = \Tygh\Addons\NovotonHolidays\Install\NovotonAliasSeedData::beachAccessAliases();
 
     // Travel groups are NOT seeded as aliases — they're derived from facilities
     // at runtime via TravelGroupResolver::derive(). No API value mapping needed.
