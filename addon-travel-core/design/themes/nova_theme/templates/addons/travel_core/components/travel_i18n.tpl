@@ -116,7 +116,10 @@ window.TravelTranslations = Object.assign(window.TravelTranslations || {ldelim}{
     calendarPriceFooter: '{__("novoton_holidays.calendar_price_footer")|default:"Approximate prices in %s for a 1-night stay"|escape:"javascript"}',
     childAgeMismatch: '{__("travel_core.child_age_mismatch")|default:"The child [guest] will be [actual] years old at check-in, but the offer was priced for age [declared]. The search was re-run with the correct ages — please choose an offer again."|escape:"javascript"}',
     currency: '{$travel_i18n_currency|default:$smarty.const.CART_PRIMARY_CURRENCY|escape:"javascript"}',
-    currencyCoeff: {$travel_i18n_coeff|default:1}
+    currencyCoeff: {$travel_i18n_coeff|default:1},
+    {* Round hotel prices (travel_core setting): client-side price writes must
+       mirror the server formatter — whole numbers when on. *}
+    roundPrices: {if $addons.travel_core.round_prices == 'Y'}true{else}false{/if}
 {rdelim});
 {* Back-compat alias — legacy code reads window.NovotonTranslations directly *}
 window.NovotonTranslations = window.TravelTranslations;

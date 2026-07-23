@@ -29,6 +29,20 @@ function escapeHtml(str) {
     return div.innerHTML;
 }
 
+// Display-price formatter mirroring the server's fn_novoton_holidays_format_price:
+// convert to the display currency, round to a whole number when the
+// travel_core "Round hotel prices" setting is on, ALWAYS append the currency
+// symbol. (Regression: the recalc used to write a bare toFixed(2) number —
+// "452.73" replacing the server-rendered "453 £".)
+function formatDisplayPrice(amount) {
+    var t = window.NovotonTranslations || {};
+    var coeff = t.currencyCoeff || 1;
+    var sym = t.currency || 'EUR';
+    var display = amount * coeff;
+    var text = t.roundPrices ? String(Math.round(display)) : display.toFixed(2);
+    return text + ' ' + sym;
+}
+
 // Debug logging - enabled via NovotonConfig.debug or ?novoton_debug=1 in URL
 var novotonDebug = (window.NovotonConfig && window.NovotonConfig.debug) || (window.location.search.indexOf('novoton_debug') !== -1);
 function novotonLog(message, data) {
@@ -405,7 +419,7 @@ function applyRecalculatedPrice(data, roomNum, isMultiRoom, isInitialLoad) {
         // Update the room card price display (converted to display currency)
         var roomPriceEl = document.querySelector('.room-card[data-room-num="' + roomNum + '"] .room-price');
         if (roomPriceEl) {
-            roomPriceEl.textContent = Math.round(newPrice * coeff) + ' ' + currSym;
+            roomPriceEl.textContent = formatDisplayPrice(newPrice);
         }
 
         // Recalculate total from all rooms (in EUR)
@@ -416,8 +430,10 @@ function applyRecalculatedPrice(data, roomNum, isMultiRoom, isInitialLoad) {
 
         novotonLog('New total price: ' + totalPrice);
 
-        // Update total price display (converted to display currency)
-        var displayTotal = (totalPrice * coeff).toFixed(2);
+        // Update total price display: converted, round-setting-aware, WITH
+        // the currency symbol (the total is client-summed, so no server
+        // formatted_price exists for it).
+        var displayTotal = formatDisplayPrice(totalPrice);
         document.querySelectorAll('.price-total').forEach(function(el) {
             el.textContent = displayTotal;
         });
@@ -438,10 +454,16 @@ function applyRecalculatedPrice(data, roomNum, isMultiRoom, isInitialLoad) {
             showPriceNotification(priceDiff * coeff);
         }
     } else {
-        // Single room: Update total price display (converted to display currency)
-        var displayPrice = (newPrice * coeff).toFixed(2);
+        // Single room: prefer the SERVER-formatted price (rounding setting +
+        // currency symbol + <sup> decimals handled by
+        // fn_novoton_holidays_format_price); fall back to the client
+        // formatter when the endpoint omits it.
         document.querySelectorAll('.price-total').forEach(function(el) {
-            el.textContent = displayPrice;
+            if (data.formatted_price) {
+                el.innerHTML = data.formatted_price;
+            } else {
+                el.textContent = formatDisplayPrice(newPrice);
+            }
         });
 
         // A76i: Update hidden total_price input for form submission (EUR)
@@ -765,6 +787,7 @@ document.addEventListener('DOMContentLoaded', function() {
 // explicit makes both loaders behave identically.
 window.nvtLabel = nvtLabel;
 window.escapeHtml = escapeHtml;
+window.formatDisplayPrice = formatDisplayPrice;
 window.validateAndCheckAge = validateAndCheckAge;
 window.collectChildrenAges = collectChildrenAges;
 window.triggerPriceRecalculationInline = triggerPriceRecalculationInline;
