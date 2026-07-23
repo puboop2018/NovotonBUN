@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\SphinxHolidays\Api;
 
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+use Tygh\Addons\TravelCore\Http\ResiliencePolicy;
 
 /**
  * HTTP client for the Sphinx REST API.
@@ -23,14 +24,13 @@ class SphinxHttpClient
     private string $baseUrl;
     private string $apiKey;
     private int $maxRetries;
-    private int $retryDelayMs;
-    private float $retryMultiplier;
-    private int $cbThreshold;
     private int $cbTimeout;
     private bool $debugLogging;
 
-    private int $failureCount = 0;
-    private int $circuitOpenedAt = 0;
+    // Shared retry-backoff + circuit-breaker state machine (travel_core).
+    // Half-open RESETS the failure count (this client's historical behavior:
+    // after cooldown it takes a full new threshold of failures to re-open).
+    private ResiliencePolicy $resilience;
 
     private int $lastHttpCode = 0;
     private string $lastError = '';
@@ -50,15 +50,20 @@ class SphinxHttpClient
         int $cbThreshold = 5,
         int $cbTimeout = 60,
         bool $debugLogging = false,
+        ?ResiliencePolicy $resilience = null,
     ) {
         $this->baseUrl = rtrim($baseUrl, '/');
         $this->apiKey = $apiKey;
         $this->maxRetries = $maxRetries;
-        $this->retryDelayMs = $retryDelayMs;
-        $this->retryMultiplier = $retryMultiplier;
-        $this->cbThreshold = $cbThreshold;
         $this->cbTimeout = $cbTimeout;
         $this->debugLogging = $debugLogging;
+        $this->resilience = $resilience ?? new ResiliencePolicy(
+            failureThreshold: $cbThreshold,
+            cooldownSeconds: $cbTimeout,
+            initialDelayMs: $retryDelayMs,
+            delayMultiplier: $retryMultiplier,
+            resetCountAtHalfOpen: true,
+        );
     }
 
     /**
@@ -105,7 +110,7 @@ class SphinxHttpClient
         }
 
         $attempt = 0;
-        $delayMs = $this->retryDelayMs;
+        $delaysTaken = 0;
 
         while ($attempt <= $this->maxRetries) {
             // Proactive throttle: pause when approaching rate limit
@@ -163,8 +168,7 @@ class SphinxHttpClient
                 $this->recordFailure();
                 $attempt++;
                 if ($attempt <= $this->maxRetries) {
-                    usleep($delayMs * 1000);
-                    $delayMs = (int) ($delayMs * $this->retryMultiplier);
+                    usleep($this->resilience->delayMsForRetry(++$delaysTaken) * 1000);
                 }
                 continue;
             }
@@ -201,8 +205,7 @@ class SphinxHttpClient
                 $this->recordFailure();
                 $attempt++;
                 if ($attempt <= $this->maxRetries) {
-                    usleep($delayMs * 1000);
-                    $delayMs = (int) ($delayMs * $this->retryMultiplier);
+                    usleep($this->resilience->delayMsForRetry(++$delaysTaken) * 1000);
                 }
                 continue;
             }
@@ -267,28 +270,17 @@ class SphinxHttpClient
 
     public function isCircuitOpen(): bool
     {
-        if ($this->failureCount >= $this->cbThreshold) {
-            if (time() - $this->circuitOpenedAt < $this->cbTimeout) {
-                return true;
-            }
-            // Half-open: reset and allow one request through
-            $this->failureCount = 0;
-        }
-        return false;
+        return $this->resilience->isOpen();
     }
 
     private function recordFailure(): void
     {
-        $this->failureCount++;
-        if ($this->failureCount >= $this->cbThreshold) {
-            $this->circuitOpenedAt = time();
-        }
+        $this->resilience->recordFailure();
     }
 
     private function resetFailures(): void
     {
-        $this->failureCount = 0;
-        $this->circuitOpenedAt = 0;
+        $this->resilience->recordSuccess();
     }
 
     private function log(string $message): void

@@ -73,34 +73,65 @@ class SphinxHttpClientTest extends TestCase
         $this->assertSame(0, $client->getRateLimitHitCount());
     }
 
-    // ── isCircuitOpen ───────────────────────────────────────────────────────
+    // ── isCircuitOpen (state lives in the shared travel_core policy now;
+    //    the client is constructed with an injected policy + fake clock) ──
+
+    private int $now = 1_000_000;
+
+    private function clientWithPolicy(): SphinxHttpClient
+    {
+        return new SphinxHttpClient(
+            baseUrl: 'https://api.example.com',
+            apiKey: 'test-key',
+            cbThreshold: self::CB_THRESHOLD,
+            cbTimeout: self::CB_TIMEOUT,
+            resilience: new \Tygh\Addons\TravelCore\Http\ResiliencePolicy(
+                failureThreshold: self::CB_THRESHOLD,
+                cooldownSeconds: self::CB_TIMEOUT,
+                initialDelayMs: 500,
+                delayMultiplier: 2.0,
+                resetCountAtHalfOpen: true,
+                clock: fn (): int => $this->now,
+            ),
+        );
+    }
+
+    /** Drive the client's private recordFailure() (the policy's only writer here). */
+    private function recordFailures(SphinxHttpClient $client, int $times): void
+    {
+        $m = new \ReflectionMethod($client, 'recordFailure');
+        for ($i = 0; $i < $times; $i++) {
+            $m->invoke($client);
+        }
+    }
 
     public function testIsCircuitOpenFalseWhenFailureCountBelowThreshold(): void
     {
-        $client = $this->makeClient();
-        $this->setPrivate($client, 'failureCount', self::CB_THRESHOLD - 1);
+        $client = $this->clientWithPolicy();
+        $this->recordFailures($client, self::CB_THRESHOLD - 1);
         $this->assertFalse($client->isCircuitOpen());
     }
 
     public function testIsCircuitOpenTrueWhenThresholdReachedAndWithinTimeout(): void
     {
-        $client = $this->makeClient();
-        $this->setPrivate($client, 'failureCount', self::CB_THRESHOLD);
-        // Opened one second ago — well inside the 60s timeout.
-        $this->setPrivate($client, 'circuitOpenedAt', time() - 1);
+        $client = $this->clientWithPolicy();
+        $this->recordFailures($client, self::CB_THRESHOLD);
+        $this->now += 1;
 
         $this->assertTrue($client->isCircuitOpen());
     }
 
-    public function testIsCircuitOpenResetsFailureCountAfterTimeout(): void
+    public function testIsCircuitOpenHalfOpensAfterTimeoutAndNeedsAFullThresholdToReopen(): void
     {
-        $client = $this->makeClient();
-        $this->setPrivate($client, 'failureCount', self::CB_THRESHOLD);
-        // Opened long before the timeout window — should half-open.
-        $this->setPrivate($client, 'circuitOpenedAt', time() - (self::CB_TIMEOUT + 5));
+        $client = $this->clientWithPolicy();
+        $this->recordFailures($client, self::CB_THRESHOLD);
+        $this->now += self::CB_TIMEOUT + 5;
 
         $this->assertFalse($client->isCircuitOpen());
-        $this->assertSame(0, $this->getPrivate($client, 'failureCount'));
+        // Historical sphinx half-open behavior: the count was reset — one new
+        // failure must NOT reopen the circuit.
+        $this->recordFailures($client, 1);
+        $this->assertFalse($client->isCircuitOpen());
     }
 
     // ── parseResponseHeaders (private, invoked via reflection) ──────────────

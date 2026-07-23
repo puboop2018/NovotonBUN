@@ -17,9 +17,7 @@ use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
 use Tygh\Addons\TravelCore\Dto\Hotel\HotelSeoData;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
-use Tygh\Addons\TravelCore\Services\HotelLocationLine;
-use Tygh\Addons\TravelCore\Services\HotelMapUrl;
-use Tygh\Addons\TravelCore\ViewModels\HotelHeaderViewModel;
+use Tygh\Addons\TravelCore\ViewModels\HotelHeaderFactory;
 
 /** @var \Smarty $view */
 $view = Tygh::$app['view'];
@@ -112,6 +110,7 @@ try {
 
     $hotelLocationLine = '';
     $hotelMapUrl = '';
+    $bfHeaderVm = null;
     if ($hotelRow !== null) {
         // Field mapping mirrors the sphinx search page: city =
         // COALESCE(address_city, destination_name), country =
@@ -129,8 +128,14 @@ try {
             longitude: TypeCoerce::toFloat($hotelRow['longitude'] ?? 0),
             address: TypeCoerce::toString($hotelRow['address'] ?? ''),
         );
-        $hotelLocationLine = HotelLocationLine::build($bookingHotelSeo);
-        $hotelMapUrl = HotelMapUrl::build($bookingHotelSeo, $hotelLocationLine) ?? '';
+        // Shared header derivation via the travel_core factory.
+        $bfHeaderVm = HotelHeaderFactory::fromSeo(
+            $bookingHotelSeo,
+            TypeCoerce::toInt($hotelRow['classification'] ?? 0),
+            TypeCoerce::toInt($product_id),
+        );
+        $hotelLocationLine = $bfHeaderVm->locationLine;
+        $hotelMapUrl = $bfHeaderVm->mapUrl;
     }
 
     // Build the single-room rooms_data the guest-card template iterates over
@@ -158,13 +163,12 @@ try {
 
     // Shared hotel-identity header component (travel_core
     // components/hotel_header.tpl) — same variable name and shape on all
-    // four provider surfaces.
-    $view->assign('travel_hotel_header', (new HotelHeaderViewModel(
-        name: $hotelName,
-        stars: $hotelRow !== null ? TypeCoerce::toInt($hotelRow['classification'] ?? 0) : 0,
-        locationLine: $hotelLocationLine,
-        mapUrl: $hotelMapUrl,
-        productId: TypeCoerce::toInt($product_id),
+    // four provider surfaces. The factory VM's name comes from the SEO DTO
+    // (verify-name with row-name fallback); bare header when no hotel row.
+    $view->assign('travel_hotel_header', ($bfHeaderVm ?? HotelHeaderFactory::bare(
+        $hotelName,
+        0,
+        TypeCoerce::toInt($product_id),
     ))->toViewArray());
 
     $view->assign('sphinx_booking_data', [

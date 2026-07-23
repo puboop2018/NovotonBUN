@@ -61,9 +61,7 @@ final class SphinxBookingFormLocationTest extends TestCase
         // handed to the component through HotelHeaderViewModel; stars come
         // from the classification column.
         self::assertStringContainsString('Container::getHotelRepository()->findById', $controller);
-        self::assertStringContainsString('HotelLocationLine::build($bookingHotelSeo', $controller);
-        self::assertStringContainsString('HotelMapUrl::build($bookingHotelSeo', $controller);
-        self::assertStringContainsString('new HotelHeaderViewModel(', $controller);
+        self::assertStringContainsString('HotelHeaderFactory::fromSeo(', $controller);
         self::assertStringContainsString("assign('travel_hotel_header'", $controller);
         self::assertStringContainsString("\$hotelRow['classification']", $controller);
     }

@@ -21,12 +21,12 @@ return [
     // nova_theme files allowed to differ from their responsive counterpart
     // (path relative to the nova_theme dir => reason). To intentionally fork
     // a file for nova_theme, add it here with a short WHY.
-    'drift_allowlist' => [
-        'templates/addons/novoton_holidays/blocks/booking_summary.tpl' => 'pre-existing divergence (64 lines) — pending review',
-        'templates/addons/novoton_holidays/hooks/index/styles.post.tpl' => 'pre-existing divergence — pending review',
-        'templates/addons/novoton_holidays/hooks/index/scripts.post.tpl' => 'pre-existing divergence — pending review',
-        'templates/addons/novoton_holidays/blocks/product_tabs/novoton_hotel_prices.tpl' => 'pre-existing divergence — pending review',
-    ],
+    // 2026-07-22 review resolved all four pending entries: two were
+    // comment-only forks (better wording merged into responsive), one was
+    // comment-identical code, and blocks/booking_summary.tpl was a STALE
+    // 62-line fork of the shared travel_core block — re-synced to the thin
+    // wrapper so nova stops shipping outdated markup.
+    'drift_allowlist' => [],
 
     // Sets of repo-relative paths that must stay byte-identical across
     // AREAS (storefront / admin / mail — Smarty resolves templates per

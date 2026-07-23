@@ -29,9 +29,7 @@ use Tygh\Addons\SphinxHolidays\Services\Container;
 use Tygh\Addons\TravelCore\Dto\Hotel\HotelSeoData;
 use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
-use Tygh\Addons\TravelCore\Services\HotelLocationLine;
-use Tygh\Addons\TravelCore\Services\HotelMapUrl;
-use Tygh\Addons\TravelCore\ViewModels\HotelHeaderViewModel;
+use Tygh\Addons\TravelCore\ViewModels\HotelHeaderFactory;
 use Tygh\Tygh;
 
 try {
@@ -69,6 +67,7 @@ try {
     $hotel_map_url = '';
     $hotel_lat = 0.0;
     $hotel_lng = 0.0;
+    $headerVm = null;
     if ($hotelRow !== null) {
         // Same text pipeline as the PDP (SphinxHotelProductProvider →
         // HotelLocationLine): postal "street, city, country" when the API
@@ -91,11 +90,12 @@ try {
             longitude: $hotel_lng,
             address: TypeCoerce::toString($hotelRow['address'] ?? ''),
         );
-        $hotel_location = HotelLocationLine::build($hotelSeo);
-        // Map URL via the shared PDP builder: coordinate pin when available,
-        // otherwise a place-search on "name, location" — so the map link is
-        // present for every hotel, not only geocoded ones.
-        $hotel_map_url = HotelMapUrl::build($hotelSeo, $hotel_location) ?? '';
+        // Shared header derivation (travel_core factory): sanitized line +
+        // always-present map URL (coordinate pin when available, place-search
+        // otherwise) + the hotel_header component's view model.
+        $headerVm = HotelHeaderFactory::fromSeo($hotelSeo, TypeCoerce::toInt($hotel_stars), $product_id);
+        $hotel_location = $headerVm->locationLine;
+        $hotel_map_url = $headerVm->mapUrl;
     }
 
     $templateParams = [
@@ -149,13 +149,12 @@ try {
 
     // Shared hotel-identity header component (travel_core
     // components/hotel_header.tpl) — same variable name and shape on all
-    // four provider surfaces.
-    $view->assign('travel_hotel_header', (new HotelHeaderViewModel(
-        name: $hotel_name,
-        stars: TypeCoerce::toInt($hotel_stars),
-        locationLine: $hotel_location,
-        mapUrl: $hotel_map_url,
-        productId: TypeCoerce::toInt($product_id),
+    // four provider surfaces. Bare header (name/stars/link only) when the
+    // hotel row is unknown.
+    $view->assign('travel_hotel_header', ($headerVm ?? HotelHeaderFactory::bare(
+        $hotel_name,
+        TypeCoerce::toInt($hotel_stars),
+        $product_id,
     ))->toViewArray());
     $view->assign('sphinx_hotel_lat', $hotel_lat);
     $view->assign('sphinx_hotel_lng', $hotel_lng);

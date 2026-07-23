@@ -63,14 +63,11 @@ final class SearchLayoutBadgeTest extends TestCase
         $controller = (string) file_get_contents(
             dirname(__DIR__, 3) . '/controllers/frontend/sphinx_booking/search.php',
         );
-        self::assertStringContainsString('HotelLocationLine::build', $controller);
-        self::assertStringContainsString('HotelMapUrl::build($hotelSeo', $controller);
+        self::assertStringContainsString('HotelHeaderFactory::fromSeo($hotelSeo', $controller);
         self::assertStringContainsString("\$hotelRow['address']", $controller);
         self::assertStringContainsString("\$hotelRow['region_name']", $controller);
         self::assertStringNotContainsString("implode(', ', \$locationParts)", $controller);
-        self::assertStringContainsString('new HotelHeaderViewModel(', $controller);
         self::assertStringContainsString("assign('travel_hotel_header'", $controller);
-        self::assertStringContainsString('productId: TypeCoerce::toInt($product_id)', $controller);
     }
 
     public function testServerBadgeMatchesNovotonFormat(): void

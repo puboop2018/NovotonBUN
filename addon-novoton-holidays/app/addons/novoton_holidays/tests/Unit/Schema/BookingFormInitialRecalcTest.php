@@ -135,11 +135,11 @@ final class BookingFormInitialRecalcTest extends TestCase
         $controller = (string) file_get_contents(
             dirname(__DIR__, 3) . '/controllers/frontend/novoton_booking/booking_form.php',
         );
-        self::assertStringContainsString('HotelMapUrl::build($bookingHotelSeo', $controller);
-        self::assertStringContainsString('new HotelHeaderViewModel(', $controller);
+        self::assertStringContainsString('HotelHeaderFactory::fromSeo(', $controller);
         self::assertStringContainsString("assign('travel_hotel_header'", $controller);
-        // The old template's city/region/country fallback lives on in the VM.
-        self::assertStringContainsString('$headerLocationLine', $controller);
+        // The old template's city/region/country fallback rides in as the
+        // factory's locationLineFallback argument.
+        self::assertStringContainsString("implode(', ', array_filter([", $controller);
     }
 
     public function testRecalcDebugGateUsesARealSettingKey(): void
