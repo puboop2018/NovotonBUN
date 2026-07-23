@@ -30,7 +30,8 @@ class CronDispatcher implements CronDispatcherInterface
     private static bool $registered = false;
 
     /**
-     * Auto-discover and register all command classes from the Commands/ directory.
+     * Auto-discover and register all command classes from the Commands/
+     * directory (shared travel_core CommandDiscovery).
      */
     private static function registerCommands(): void
     {
@@ -38,24 +39,11 @@ class CronDispatcher implements CronDispatcherInterface
             return;
         }
 
-        $namespace = 'Tygh\\Addons\\SphinxHolidays\\Cron\\Commands\\';
-
-        foreach (glob(__DIR__ . '/Commands/*Command.php') ?: [] as $file) {
-            $className = $namespace . basename($file, '.php');
-
-            if (!class_exists($className)) {
-                require_once $file;
-            }
-
-            if (!class_exists($className) || !is_subclass_of($className, AbstractSyncCommand::class)) {
-                continue;
-            }
-
-            foreach ($className::getModes() as $mode) {
-                self::$commandMap[TypeCoerce::toString($mode)] = $className;
-            }
-        }
-
+        self::$commandMap = \Tygh\Addons\TravelCore\Cron\CommandDiscovery::map(
+            __DIR__ . '/Commands/',
+            'Tygh\\Addons\\SphinxHolidays\\Cron\\Commands\\',
+            AbstractSyncCommand::class,
+        );
         self::$registered = true;
     }
 

@@ -33,7 +33,8 @@ class CronDispatcher implements CronDispatcherInterface
     }
 
     /**
-     * Auto-discover and register all command classes from the Commands/ directory.
+     * Auto-discover and register all command classes from the Commands/
+     * directory (shared travel_core CommandDiscovery).
      */
     private static function registerCommands(): void
     {
@@ -41,30 +42,11 @@ class CronDispatcher implements CronDispatcherInterface
             return;
         }
 
-        $commandsDir = __DIR__ . '/Commands/';
-        if (!is_dir($commandsDir)) {
-            self::$registered = true;
-            return;
-        }
-
-        $namespace = 'Tygh\\Addons\\NovotonHolidays\\Cron\\Commands\\';
-
-        foreach (glob($commandsDir . '*Command.php') ?: [] as $file) {
-            $className = $namespace . basename($file, '.php');
-
-            if (!class_exists($className)) {
-                require_once $file;
-            }
-
-            if (!class_exists($className) || !is_subclass_of($className, AbstractCronCommand::class)) {
-                continue;
-            }
-
-            foreach ($className::getModes() as $mode) {
-                self::$commandMap[$mode] = $className;
-            }
-        }
-
+        self::$commandMap = \Tygh\Addons\TravelCore\Cron\CommandDiscovery::map(
+            __DIR__ . '/Commands/',
+            'Tygh\\Addons\\NovotonHolidays\\Cron\\Commands\\',
+            AbstractCronCommand::class,
+        );
         self::$registered = true;
     }
 
