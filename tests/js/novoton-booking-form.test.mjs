@@ -70,6 +70,46 @@ describe('collectChildrenAges', () => {
     });
 });
 
+describe('formatDisplayPrice (round setting + currency symbol)', () => {
+    it('rounds to a whole number WITH the symbol when roundPrices is on', () => {
+        window.NovotonTranslations = { currency: '£', currencyCoeff: 0.9994, roundPrices: true };
+        // 453 EUR × 0.9994 = 452.7282 → rounded 453, symbol always present
+        expect(window.formatDisplayPrice(453)).toBe('453 £');
+    });
+
+    it('keeps two decimals WITH the symbol when roundPrices is off', () => {
+        window.NovotonTranslations = { currency: '£', currencyCoeff: 0.9994, roundPrices: false };
+        expect(window.formatDisplayPrice(453)).toBe('452.73 £');
+    });
+});
+
+describe('applyRecalculatedPrice price display', () => {
+    beforeEach(() => {
+        document.querySelectorAll('.price-total, input[name="total_price"]').forEach((el) => el.remove());
+        document.body.insertAdjacentHTML('beforeend', `
+            <div class="price-total">453 £</div>
+            <input type="hidden" name="total_price" value="453">`);
+        window.NovotonTranslations = { currency: '£', currencyCoeff: 0.9994, roundPrices: true };
+        window.bookingData.numRooms = 1;
+        window.bookingData.currentPrice = 453;
+    });
+
+    it('uses the SERVER-formatted price (rounding + symbol) when provided', () => {
+        window.applyRecalculatedPrice(
+            { new_price: 452.9, formatted_price: '453 £' },
+            1, false, true,
+        );
+        expect(document.querySelector('.price-total').innerHTML).toBe('453 £');
+    });
+
+    it('falls back to the client formatter — never a bare number', () => {
+        window.applyRecalculatedPrice({ new_price: 452.9 }, 1, false, true);
+        const shown = document.querySelector('.price-total').textContent;
+        expect(shown).toBe('453 £');
+        expect(shown).toContain('£');
+    });
+});
+
 describe('submit validation', () => {
     it('blocks submit and alerts when a required field is empty', () => {
         const form = document.getElementById('novoton-booking-form');
