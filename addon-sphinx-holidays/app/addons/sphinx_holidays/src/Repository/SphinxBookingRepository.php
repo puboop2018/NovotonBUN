@@ -33,6 +33,26 @@ class SphinxBookingRepository
     }
 
     /**
+     * Cart-stage booking with ownership check (user OR session match) — the
+     * guard behind the guest-facing edit_booking/update_booking modes.
+     * order_id = 0 only: a booking already attached to an order must not be
+     * editable through a stale cart link.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function findByIdWithOwnership(int $booking_id, int $user_id, string $session_id): ?array
+    {
+        $row = self::asRow(db_get_row(
+            'SELECT * FROM ?:sphinx_bookings WHERE booking_id = ?i AND order_id = 0 AND (user_id = ?i OR session_id = ?s)',
+            $booking_id,
+            $user_id,
+            $session_id,
+        ));
+
+        return $row === [] ? null : $row;
+    }
+
+    /**
      * Find bookings by order ID.
      * @return list<array<string, mixed>>
      */

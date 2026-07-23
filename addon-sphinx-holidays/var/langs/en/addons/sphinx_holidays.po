@@ -1283,3 +1283,11 @@ msgstr "[n] Adult|[n] Adults"
 msgctxt "Languages::sphinx_holidays.n_children"
 msgid "[n] Child|[n] Children"
 msgstr "[n] Child|[n] Children"
+
+msgctxt "Languages::sphinx_holidays.edit_booking"
+msgid "Edit booking"
+msgstr "Edit booking"
+
+msgctxt "Languages::sphinx_holidays.booking_updated"
+msgid "Booking details updated."
+msgstr "Booking details updated."

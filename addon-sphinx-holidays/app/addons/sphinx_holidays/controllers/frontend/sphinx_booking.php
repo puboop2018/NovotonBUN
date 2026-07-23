@@ -58,6 +58,8 @@ $_sphinx_modes = [
     'search_poll',
     'booking_form',
     'add_to_cart',
+    'edit_booking',
+    'update_booking',
     'ajax_recalculate_price',
     'offer_terms',
     'request_alternatives',

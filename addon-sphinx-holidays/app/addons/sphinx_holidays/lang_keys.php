@@ -779,4 +779,13 @@ return [
         'en' => '[n] Child|[n] Children',
         'ro' => '[n] Copil|[n] Copii',
     ],
+
+    'sphinx_holidays.edit_booking' => [
+        'en' => 'Edit booking',
+        'ro' => 'Editează rezervarea',
+    ],
+    'sphinx_holidays.booking_updated' => [
+        'en' => 'Booking details updated.',
+        'ro' => 'Detaliile rezervării au fost actualizate.',
+    ],
 ];
