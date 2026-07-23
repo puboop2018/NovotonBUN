@@ -40,6 +40,10 @@
 {$_num_rooms = $guest_num_rooms|default:1}
 {$_extra_class = $guest_extra_class|default:''}
 {$_roomless = $guest_roomless|default:false}
+{* Optional name prefill (edit mode): map keyed like the input names —
+   "{npfx}adult_1" / "{npfx}child_2" => [last_name, first_name]. Empty by
+   default, so non-edit renders are byte-identical. *}
+{$_prefill = $guest_prefill|default:[]}
 
 {foreach $guest_rooms as $room_idx => $room}
     {assign var="room_num" value=$room_idx+1}
@@ -67,8 +71,10 @@
                 {* Nume (last name) FIRST, Prenume second — novoton field order *}
                 <div class="travel-guest-field">
                     <label for="guest_r{$room_num}_a{$smarty.section.adult.index}_last">{__("`$_gp`.last_name")|default:"Last Name"}</label>
+                    {$_pf_key = "`$_npfx`adult_`$smarty.section.adult.index`"}
                     <input type="text" id="guest_r{$room_num}_a{$smarty.section.adult.index}_last"
                            name="guests[{$_npfx}adult_{$smarty.section.adult.index}][last_name]"
+                           value="{$_prefill.$_pf_key.last_name|default:''|escape:html}"
                            class="ty-input-text" required aria-required="true" placeholder="{__("`$_gp`.last_name")|default:"Last Name"}">
                     <input type="hidden" name="guests[{$_npfx}adult_{$smarty.section.adult.index}][type]" value="adult">
                     {if !$_roomless}
@@ -82,6 +88,7 @@
                     <label for="guest_r{$room_num}_a{$smarty.section.adult.index}_first">{__("`$_gp`.first_name")|default:"First Name"}</label>
                     <input type="text" id="guest_r{$room_num}_a{$smarty.section.adult.index}_first"
                            name="guests[{$_npfx}adult_{$smarty.section.adult.index}][first_name]"
+                           value="{$_prefill.$_pf_key.first_name|default:''|escape:html}"
                            class="ty-input-text" required aria-required="true" placeholder="{__("`$_gp`.first_name")|default:"First Name"}">
                 </div>
                 {if $_show_adult_dob}
@@ -115,8 +122,10 @@
                     {* Nume (last name) FIRST, Prenume second — novoton field order *}
                     <div class="travel-guest-field">
                         <label for="guest_r{$room_num}_c{$smarty.section.child.index}_last">{__("`$_gp`.last_name")|default:"Last Name"}</label>
+                        {$_pf_key = "`$_npfx`child_`$smarty.section.child.index`"}
                         <input type="text" id="guest_r{$room_num}_c{$smarty.section.child.index}_last"
                                name="guests[{$_npfx}child_{$smarty.section.child.index}][last_name]"
+                               value="{$_prefill.$_pf_key.last_name|default:''|escape:html}"
                                class="ty-input-text" required aria-required="true" placeholder="{__("`$_gp`.last_name")|default:"Last Name"}">
                         <input type="hidden" name="guests[{$_npfx}child_{$smarty.section.child.index}][type]" value="child">
                         <input type="hidden" name="guests[{$_npfx}child_{$smarty.section.child.index}][age]" value="{$child_age}">
@@ -128,6 +137,7 @@
                         <label for="guest_r{$room_num}_c{$smarty.section.child.index}_first">{__("`$_gp`.first_name")|default:"First Name"}</label>
                         <input type="text" id="guest_r{$room_num}_c{$smarty.section.child.index}_first"
                                name="guests[{$_npfx}child_{$smarty.section.child.index}][first_name]"
+                               value="{$_prefill.$_pf_key.first_name|default:''|escape:html}"
                                class="ty-input-text" required aria-required="true" placeholder="{__("`$_gp`.first_name")|default:"First Name"}">
                     </div>
                     <div class="travel-guest-field travel-guest-field--dob">

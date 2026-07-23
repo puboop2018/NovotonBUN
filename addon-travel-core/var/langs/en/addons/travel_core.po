@@ -873,3 +873,39 @@ msgstr "Hotel name"
 msgctxt "Languages::travel_core.back"
 msgid "Back"
 msgstr "Back"
+
+msgctxt "Languages::travel_core.your_booking_details"
+msgid "Your booking details"
+msgstr "Your booking details"
+
+msgctxt "Languages::travel_core.total_stay"
+msgid "Total stay"
+msgstr "Total stay"
+
+msgctxt "Languages::travel_core.for"
+msgid "for"
+msgstr "for"
+
+msgctxt "Languages::travel_core.occupancy"
+msgid "Occupancy"
+msgstr "Occupancy"
+
+msgctxt "Languages::travel_core.guest_names"
+msgid "Guest names"
+msgstr "Guest names"
+
+msgctxt "Languages::travel_core.holder"
+msgid "Holder"
+msgstr "Holder"
+
+msgctxt "Languages::travel_core.meal_plan"
+msgid "Meal plan"
+msgstr "Meal plan"
+
+msgctxt "Languages::travel_core.save_changes"
+msgid "Save changes"
+msgstr "Save changes"
+
+msgctxt "Languages::travel_core.guest_details_invalid"
+msgid "Please fill in all guest names."
+msgstr "Please fill in all guest names."

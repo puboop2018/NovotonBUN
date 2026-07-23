@@ -83,4 +83,43 @@ return [
         'en' => '[rating]-star rating',
         'ro' => 'Clasificare [rating] stele',
     ],
+
+    // Shared cart booking-details card (components/cart_booking_details.tpl)
+    // — one key set for both providers' cart/checkout cards.
+    'travel_core.your_booking_details' => [
+        'en' => 'Your booking details',
+        'ro' => 'Detaliile rezervării',
+    ],
+    'travel_core.total_stay' => [
+        'en' => 'Total stay',
+        'ro' => 'Durata totală a sejurului',
+    ],
+    'travel_core.for' => [
+        'en' => 'for',
+        'ro' => 'pentru',
+    ],
+    'travel_core.occupancy' => [
+        'en' => 'Occupancy',
+        'ro' => 'Turiști',
+    ],
+    'travel_core.guest_names' => [
+        'en' => 'Guest names',
+        'ro' => 'Nume turiști',
+    ],
+    'travel_core.holder' => [
+        'en' => 'Holder',
+        'ro' => 'Lider rezervare',
+    ],
+    'travel_core.meal_plan' => [
+        'en' => 'Meal plan',
+        'ro' => 'Masă',
+    ],
+    'travel_core.save_changes' => [
+        'en' => 'Save changes',
+        'ro' => 'Salvează modificările',
+    ],
+    'travel_core.guest_details_invalid' => [
+        'en' => 'Please fill in all guest names.',
+        'ro' => 'Vă rugăm completați numele tuturor turiștilor.',
+    ],
 ];
