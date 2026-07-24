@@ -181,10 +181,9 @@ class DiagnoseImagesCommand extends AbstractSyncCommand
             }
 
             $ch = curl_init($downloadUrl);
-            // array_values() ensures integer keys, satisfying curl's CURLOPT_HTTPHEADER type
             curl_setopt_array($ch, [
                 CURLOPT_FILE => $fp,
-                CURLOPT_HTTPHEADER => array_values($headers),
+                CURLOPT_HTTPHEADER => $headers,
                 CURLOPT_USERAGENT => 'CS-Cart/SphinxHolidays ImageSync/1.0',
                 CURLOPT_TIMEOUT => 30,
                 CURLOPT_CONNECTTIMEOUT => 10,
