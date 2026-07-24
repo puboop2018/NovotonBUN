@@ -11,7 +11,6 @@ use Tygh\Registry;
 use Tygh\Tygh;
 use Tygh\Addons\NovotonHolidays\Services\PriceInfoFormatter;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
-use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
 use Tygh\Addons\TravelCore\Services\CurrencyService;
 use Tygh\Addons\NovotonHolidays\Helpers\JsonDecoder;
 
@@ -95,41 +94,12 @@ use Tygh\Addons\NovotonHolidays\Helpers\JsonDecoder;
     // Guests: ALWAYS read from DB — it's the single source of truth.
     // The cart copy is unreliable: fn_calculate_cart_content() can overwrite it,
     // session expiry loses it, and cart_id hash changes can make it stale.
-    // update_booking.php writes to DB first (line 127), so DB always has the
-    // latest guest data regardless of cart state.
+    // update_booking.php writes to DB first, so DB always has the latest
+    // guest data regardless of cart state. The shared builder normalizes the
+    // stored shape and converts birthday -> DD/MM/YYYY dob for the form mask.
     $rawGuestsData = $booking_record['guests_data'] ?? '';
     $guestsInput = is_array($rawGuestsData) ? TypeCoerce::toStringMap($rawGuestsData) : TypeCoerce::toString($rawGuestsData);
-    $guests_data = (new GuestDataNormalizer())->normalize($guestsInput);
-
-    // Ensure dob field is in DD/MM/YYYY format for each guest (template expects this format)
-    foreach ($guests_data as $key => &$guest) {
-        if (!is_array($guest)) {
-            continue;
-        }
-        if (empty($guest['dob']) && !empty($guest['birthday'])) {
-            // Convert YYYY-MM-DD to DD/MM/YYYY
-            $ts = strtotime(PriceInfoFormatter::toScalar($guest['birthday']));
-            if ($ts !== false && $ts !== 0) {
-                $guest['dob'] = date('d/m/Y', $ts);
-            }
-        }
-    }
-    unset($guest);
-
-    // Prefill map for the shared guest cards (booking_guest_room_body.tpl),
-    // keyed exactly like the input names — the normalizer already emits
-    // room{N}_{type}_{i} keys, so this is a straight field projection.
-    $guest_prefill = [];
-    foreach ($guests_data as $gkey => $gval) {
-        if (!is_array($gval)) {
-            continue;
-        }
-        $guest_prefill[(string) $gkey] = [
-            'last_name' => PriceInfoFormatter::toScalar($gval['last_name'] ?? ''),
-            'first_name' => PriceInfoFormatter::toScalar($gval['first_name'] ?? ''),
-            'dob' => PriceInfoFormatter::toScalar($gval['dob'] ?? ''),
-        ];
-    }
+    $guest_prefill = \Tygh\Addons\TravelCore\Services\GuestPrefillBuilder::build($guestsInput);
 
     $booking = [
         'hotel_id' => $brHotelId,

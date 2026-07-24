@@ -72,25 +72,13 @@ if (is_string($roomsDataRaw)) {
 }
 $roomsData = TypeCoerce::toRowList($roomsDataRaw);
 
-// guests_data for name prefill: JSON string in both sources.
+// Prefill map keyed exactly like the shared guest-card input names
+// (room{N}_adult_{i} / room{N}_child_{i}) — the shared builder handles the
+// JSON-string vs array shapes and the birthday->DOB conversion.
 $guestsRaw = $src('guests_data', []);
-if (is_string($guestsRaw)) {
-    $decoded = json_decode($guestsRaw, true);
-    $guestsRaw = is_array($decoded) ? $decoded : [];
-}
-// Prefill map keyed exactly like the shared guest-card input names:
-// room{N}_adult_{i} / room{N}_child_{i} (i is 1-based per type per room).
-$guest_prefill = [];
-$counters = [];
-foreach (TypeCoerce::toRowList($guestsRaw) as $guest) {
-    $type = strtolower(TypeCoerce::toString($guest['type'] ?? 'adult')) === 'child' ? 'child' : 'adult';
-    $room = max(1, TypeCoerce::toInt($guest['room'] ?? 1));
-    $counters[$room][$type] = ($counters[$room][$type] ?? 0) + 1;
-    $guest_prefill["room{$room}_{$type}_" . $counters[$room][$type]] = [
-        'last_name' => TypeCoerce::toString($guest['last_name'] ?? ''),
-        'first_name' => TypeCoerce::toString($guest['first_name'] ?? ''),
-    ];
-}
+$guest_prefill = \Tygh\Addons\TravelCore\Services\GuestPrefillBuilder::build(
+    is_string($guestsRaw) || is_array($guestsRaw) ? $guestsRaw : [],
+);
 
 // Header identity (same derivation as booking_form — repository row + the
 // shared factory; bare header when the hotel row is missing).

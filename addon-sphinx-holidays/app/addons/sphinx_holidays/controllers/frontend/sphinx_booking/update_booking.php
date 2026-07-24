@@ -67,24 +67,13 @@ $repo->update($booking_id, [
 ]);
 
 // 2. Cart extras — so the cart card + order pipeline show the new names.
-// Reference-narrowing dance mirrors novoton's update_booking (PHPStan-clean
-// writes through the live session container).
-$cart = &$_SESSION['cart'];
-if ($cart_id !== '' && is_array($cart) && is_array($cart['products'] ?? null) && is_array($cart['products'][$cart_id] ?? null)) {
-    $target_product = &$cart['products'][$cart_id];
-    $target_product['extra'] = is_array($target_product['extra'] ?? null) ? $target_product['extra'] : [];
-    $target_extra = &$target_product['extra'];
-    // Integrity: the cart line must belong to THIS booking.
-    if (TypeCoerce::toInt($target_extra['travel_booking_id'] ?? 0) === $booking_id) {
-        $target_extra['guest_names'] = $guest_list;
-        $target_extra['holder_name'] = $holder_name;
-        $target_extra['guests_data'] = $guests_json !== false ? $guests_json : '[]';
-        unset($target_product, $target_extra);
-        fn_save_cart_content($cart, $current_user_id);
-    } else {
-        unset($target_product, $target_extra);
-    }
-}
+// Shared travel_core refresh: integrity-checked against the booking id, with
+// the rebuilt-cart fallback scan when the cart_id hash went stale.
+fn_travel_core_update_cart_guest_extras($cart_id, $booking_id, 'travel_booking_id', [
+    'guest_names' => $guest_list,
+    'holder_name' => $holder_name,
+    'guests_data' => $guests_json !== false ? $guests_json : '[]',
+]);
 
 fn_set_notification('N', __('notice'), __('sphinx_holidays.booking_updated', ['[default]' => 'Booking details updated.']));
 

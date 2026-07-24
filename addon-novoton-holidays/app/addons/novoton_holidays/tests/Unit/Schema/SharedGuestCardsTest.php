@@ -68,9 +68,9 @@ final class SharedGuestCardsTest extends TestCase
         );
 
         self::assertStringContainsString("assign('guest_prefill', \$guest_prefill)", $src);
-        // Keys come straight from the normalizer (room{N}_{type}_{i}) with
-        // the DD/MM/YYYY dob conversion applied before projection.
-        self::assertStringContainsString("'dob' => PriceInfoFormatter::toScalar(\$gval['dob'] ?? '')", $src);
+        // The map comes from the SHARED travel_core builder (normalized keys
+        // + the birthday -> DD/MM/YYYY dob conversion live there now).
+        self::assertStringContainsString('GuestPrefillBuilder::build(', $src);
     }
 
     public function testBookingFormJsUsesTheSharedDobIdScheme(): void

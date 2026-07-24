@@ -30,8 +30,9 @@ final class SphinxEditBookingTest extends TestCase
         self::assertStringNotContainsString('verifyHotelOffer', $src, 'edit mode must not re-verify — the carted offer/price stays');
         self::assertStringContainsString("assign('is_edit_mode', true)", $src);
         self::assertStringContainsString("assign('guest_prefill', \$guest_prefill)", $src);
-        // Prefill keys match the shared guest-card input names.
-        self::assertStringContainsString('"room{$room}_{$type}_"', $src);
+        // Prefill comes from the SHARED builder (keys match the guest-card
+        // input names; the shape handling is travel_core's, not a local fork).
+        self::assertStringContainsString('GuestPrefillBuilder::build(', $src);
     }
 
     public function testOwnershipQueryIsScopedToCartStageBookings(): void
@@ -51,9 +52,9 @@ final class SphinxEditBookingTest extends TestCase
         self::assertStringContainsString('parseGuests', $src, 'same validation pipeline as add_to_cart');
         self::assertStringNotContainsString('verifyHotelOffer', $src);
         self::assertStringNotContainsString("'total_price'", $src, 'price must be untouchable through the edit path');
-        // Cart extras refresh is integrity-checked against the booking id.
-        self::assertStringContainsString("travel_booking_id'] ?? 0) === \$booking_id", $src);
-        self::assertStringContainsString('fn_save_cart_content', $src);
+        // Cart extras refresh goes through the SHARED travel_core function,
+        // keyed to THIS booking (it integrity-checks and persists).
+        self::assertStringContainsString("fn_travel_core_update_cart_guest_extras(\$cart_id, \$booking_id, 'travel_booking_id'", $src);
     }
 
     public function testBookingFormSwitchesToUpdateModeWithHiddenIds(): void
