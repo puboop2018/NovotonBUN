@@ -74,13 +74,16 @@ touching devx.
   ```
 - **Shell into the store**: `docker compose exec app bash`
 - **Logs**: `docker compose logs -f app`
-- **Sphinx API probes** (the `sphinx_api_dev/` folder) are **bind-mounted** straight
-  into the web root as real files, so they're served directly:
-  `http://localhost:8080/sphinx_api_dev/GetHotelbyId.php?id=3612` and
-  `http://localhost:8080/sphinx_api_dev/HotelSearchResults.php`. Edits to the scripts
-  show up live (it's a bind mount), and new files in the folder need no restart. If a
-  probe 404s, the mount just isn't in your container yet — `docker compose up -d`
-  recreates it to pick up the mount (no image rebuild; DB/docroot volumes persist).
+- **Provider API probes** (the `dev/` folder — `dev/novoton`, `dev/sphinx` and the
+  `dev/sphinx_api_dev` sandbox) are **bind-mounted** straight into the web root as
+  real files, so they're served directly:
+  `http://localhost:8080/dev/sphinx/ping.php`,
+  `http://localhost:8080/dev/novoton/hotel_list.php?country=BULGARIA&limit=20` and
+  `http://localhost:8080/dev/sphinx_api_dev/GetHotelbyId.php?id=3612`. Edits to the
+  scripts show up live (it's a bind mount), and new files in the folder need no
+  restart. If a probe 404s, the mount just isn't in your container yet —
+  `docker compose up -d` recreates it to pick up the mount (no image rebuild;
+  DB/docroot volumes persist).
 
 ## Getting your changes to show up (update & verify)
 
@@ -96,7 +99,7 @@ from your repo (`/repo`) and opcache re-checks the file every request.
 | Novoton / travel_core language, a **new DB table**, or an `addon.xml` scheme change | **re-install** the addon (Admin → Add-ons, or `install-addons.php` once it's inactive) |
 | DB column covered by an addon's auto-heal map | load any **admin page** once (it runs the `ALTER TABLE`) |
 | `link-addons.sh` / `entrypoint.sh` / `install-addons.php` / `php-dev.ini` / `apache-cscart.conf` / `Dockerfile` | **`docker compose up -d --build`** — these are baked into the image |
-| A new `sphinx_api_dev/` probe **file** | live (bind mount); a brand-new file → **`docker compose up -d`** |
+| A new `dev/` probe **file** (novoton / sphinx / sphinx_api_dev) | live (bind mount); a brand-new file → **`docker compose up -d`** |
 | Provider **data** already stored (e.g. hotel coordinates from an earlier sync) | **re-run the provider sync** — see *Stale coordinates* under Troubleshooting |
 
 Two gotchas that make people think an update "didn't take":

@@ -8,13 +8,14 @@ addons, the cart, or the database.
 
 ```
 dev/
-├── novoton/   XML-over-HTTP API (b2b.allinclusivebg.com)
-└── sphinx/    REST/JSON API (Bearer auth)
+├── novoton/         XML-over-HTTP API (b2b.allinclusivebg.com)
+├── sphinx/          REST/JSON API (Bearer auth)
+└── sphinx_api_dev/  older focused Sphinx investigation tools (coordinates, raw search dump)
 ```
 
 Each folder has a shared `_*_client.php` (the standalone HTTP client +
 pretty-printer) plus one probe file per API feature. This mirrors the existing
-`sphinx_api_dev/` sandbox — **not part of any addon**, no bootstrap, no
+`dev/sphinx_api_dev/` sandbox — **not part of any addon**, no bootstrap, no
 autoload, no DB, and outside the CI gate (nothing here is analysed or tested).
 
 ## Running
@@ -52,7 +53,7 @@ readable:
 ## Credentials
 
 Both suites default to the **non-production DEV/staging** credentials already
-committed in the addons' `addon.xml` (and in `sphinx_api_dev/`). Override with
+committed in the addons' `addon.xml` (and in `dev/sphinx_api_dev/`). Override with
 environment variables when you have other keys:
 
 | Novoton | Sphinx |

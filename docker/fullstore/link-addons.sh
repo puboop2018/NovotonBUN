@@ -60,10 +60,10 @@ for id in "${!ADDONS[@]}"; do
     done
 done
 
-# NOTE: the standalone sphinx_api_dev/ probes are NOT linked here. They are served
-# as real files via a docker-compose bind mount straight into the docroot
-# (../../sphinx_api_dev -> /var/www/html/sphinx_api_dev). Linking them here would be
-# both redundant and unsafe: link()'s `rm -rf "$dest"` against that bind-mount point
-# would delete the mounted host files. See docker-compose.yml.
+# NOTE: the standalone dev/ probes (dev/novoton, dev/sphinx, dev/sphinx_api_dev)
+# are NOT linked here. They are served as real files via a docker-compose bind
+# mount straight into the docroot (../../dev -> /var/www/html/dev). Linking them
+# here would be both redundant and unsafe: link()'s `rm -rf "$dest"` against that
+# bind-mount point would delete the mounted host files. See docker-compose.yml.
 
 echo "[link-addons] done"

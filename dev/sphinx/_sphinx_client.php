@@ -16,7 +16,7 @@ declare(strict_types=1);
  *     Content-Type: application/json   (POST body is JSON)
  *
  * Credentials default to the Sphinx DEV/staging values already committed in
- * the sphinx_holidays addon.xml and sphinx_api_dev/ (non-production). Override:
+ * the sphinx_holidays addon.xml and dev/sphinx_api_dev/ (non-production). Override:
  *   SPHINX_API_URL       base URL (default the committed dev host)
  *   SPHINX_API_TOKEN     bearer token (default the committed dev token)
  *   SPHINX_API_INSECURE  1 to skip TLS verify (dev only)
