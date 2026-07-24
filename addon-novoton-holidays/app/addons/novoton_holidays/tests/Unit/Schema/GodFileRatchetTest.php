@@ -19,7 +19,7 @@ final class GodFileRatchetTest extends TestCase
     private const CEILINGS = [
         'controllers/backend/novoton_price_compare.php' => 1130,
         'functions/hotels.php' => 855,
-        'functions/formatting.php' => 825,
+        'functions/formatting.php' => 340,
         'functions/install.php' => 720,
     ];
 
