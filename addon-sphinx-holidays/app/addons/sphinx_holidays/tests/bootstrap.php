@@ -116,6 +116,14 @@ if (!function_exists('db_get_fields')) {
     }
 }
 
+if (!function_exists('db_get_hash_single_array')) {
+    function db_get_hash_single_array(string $query, array $fields, ...$params)
+    {
+        $fn = \Tygh\Addons\SphinxHolidays\Tests\Support\DbStub::$getHashSingleArray;
+        return $fn !== null ? $fn($query, $fields, ...$params) : [];
+    }
+}
+
 // db_quote interpolates parameters into a SQL fragment and returns the string.
 // CS-Cart isn't loaded in tests, so emulate enough of it (left-to-right
 // placeholder substitution) for repositories that build conditional WHERE
@@ -126,7 +134,7 @@ if (!function_exists('db_quote')) {
         $i = 0;
 
         return (string) preg_replace_callback(
-            '/\?[sidanp]/',
+            '/\?[sidanpl]/',
             static function (array $m) use (&$i, $params): string {
                 $value = $params[$i] ?? null;
                 $i++;
