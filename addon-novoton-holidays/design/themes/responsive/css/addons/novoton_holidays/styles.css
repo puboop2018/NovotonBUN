@@ -2847,13 +2847,6 @@ sup.price-decimal {
     margin: 0;
 }
 
-/* Child age display in header */
-.child-age-display {
-    font-weight: normal;
-    color: #666;
-    font-size: 14px;
-}
-
 /* DOB info/warning message styling */
 .dob-info-message {
     line-height: 1.5;

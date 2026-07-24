@@ -408,10 +408,6 @@
 .travel-booking-page .travel-guest-field--dob {
     flex: 0 0 150px;
 }
-.travel-booking-page .travel-age-display {
-    font-size: 12px;
-    color: var(--nvt-text-light, #666);
-}
 
 /* ── Form controls (inputs, selects, textareas) ───────────────────────── */
 /* The booking forms previously fell back to bare CS-Cart .ty-input-text with

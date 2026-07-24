@@ -79,13 +79,20 @@ final class CartBookingDetailsTest extends TestCase
 
     public function testGuestCardsSupportOptionalPrefillWithoutChangingDefaults(): void
     {
+        // The outer component owns the prefill parameter and delegates each
+        // room to the shared room body (which novoton also includes directly
+        // around its own per-room banners).
         $cards = self::tpl('components/booking_guest_cards.tpl');
+        self::assertStringContainsString('{$_prefill = $guest_prefill|default:[]}', $cards);
+        self::assertStringContainsString('components/booking_guest_room_body.tpl', $cards);
+        self::assertStringContainsString('gb_prefill=$_prefill', $cards);
 
         // Edit mode passes guest_prefill keyed like the input names; absent,
         // the value attributes resolve to '' (non-edit renders unchanged).
-        self::assertStringContainsString('{$_prefill = $guest_prefill|default:[]}', $cards);
-        self::assertStringContainsString("value=\"{\$_prefill.\$_pf_key.last_name|default:''|escape:html}\"", $cards);
-        self::assertStringContainsString("value=\"{\$_prefill.\$_pf_key.first_name|default:''|escape:html}\"", $cards);
+        $body = self::tpl('components/booking_guest_room_body.tpl');
+        self::assertStringContainsString("value=\"{\$_prefill.\$_pf_key.last_name|default:''|escape:html}\"", $body);
+        self::assertStringContainsString("value=\"{\$_prefill.\$_pf_key.first_name|default:''|escape:html}\"", $body);
+        self::assertStringContainsString("value=\"{\$_prefill.\$_pf_key.dob|default:''|escape:html}\"", $body);
     }
 
     public function testCardLangKeysAreSeeded(): void

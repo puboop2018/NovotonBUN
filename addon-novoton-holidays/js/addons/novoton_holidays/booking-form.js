@@ -106,7 +106,8 @@ if (document.readyState === 'loading') {
 
 // Main validation function for DOB fields
 function validateAndCheckAge(id, originalAge) {
-    var dobInput = document.getElementById('child_dob_' + id);
+    // Shared guest cards (booking_guest_room_body.tpl) id scheme: dob_r{N}_c{i}
+    var dobInput = document.getElementById('dob_' + id);
     var errorDiv = document.getElementById('dob_error_' + id);
     var infoDiv = document.getElementById('dob_info_' + id);
     var calcAgeInput = document.getElementById('child_age_' + id);
@@ -114,7 +115,7 @@ function validateAndCheckAge(id, originalAge) {
 
     novotonLog('validateAndCheckAge called', { id: id, originalAge: originalAge });
 
-    if (!dobInput) { novotonLog('DOB input not found: child_dob_' + id); return; }
+    if (!dobInput) { novotonLog('DOB input not found: dob_' + id); return; }
 
     var dobValue = dobInput.value;
     novotonLog('DOB value', dobValue);

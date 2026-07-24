@@ -116,6 +116,21 @@ use Tygh\Addons\NovotonHolidays\Helpers\JsonDecoder;
     }
     unset($guest);
 
+    // Prefill map for the shared guest cards (booking_guest_room_body.tpl),
+    // keyed exactly like the input names — the normalizer already emits
+    // room{N}_{type}_{i} keys, so this is a straight field projection.
+    $guest_prefill = [];
+    foreach ($guests_data as $gkey => $gval) {
+        if (!is_array($gval)) {
+            continue;
+        }
+        $guest_prefill[(string) $gkey] = [
+            'last_name' => PriceInfoFormatter::toScalar($gval['last_name'] ?? ''),
+            'first_name' => PriceInfoFormatter::toScalar($gval['first_name'] ?? ''),
+            'dob' => PriceInfoFormatter::toScalar($gval['dob'] ?? ''),
+        ];
+    }
+
     $booking = [
         'hotel_id' => $brHotelId,
         'room_id' => PriceInfoFormatter::toScalar($booking_record['room_id'] ?? ''),
@@ -130,7 +145,6 @@ use Tygh\Addons\NovotonHolidays\Helpers\JsonDecoder;
         'package_name' => PriceInfoFormatter::toScalar($booking_record['package_name'] ?? ''),
         'num_rooms' => PriceInfoFormatter::toInt($booking_record['num_rooms'] ?? 0) ?: 1,
         'rooms_data' => $rooms_data,
-        'guests_data' => $guests_data,
     ];
 
     // Ensure rooms_data is not empty for single room bookings
@@ -212,6 +226,7 @@ use Tygh\Addons\NovotonHolidays\Helpers\JsonDecoder;
     $view->assign('booking_id', $booking_id);
     $view->assign('cart_id', $cart_id);
     $view->assign('is_edit_mode', true);
+    $view->assign('guest_prefill', $guest_prefill);
     $view->assign('product_id', $booking_record['product_id']);
     $view->assign('hotel_name', $hotel_name);
     $view->assign('hotel_city', $hotel_info['city'] ?? $booking_record['hotel_city'] ?? '');
