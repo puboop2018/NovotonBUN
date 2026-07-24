@@ -23,54 +23,7 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
  */
 function fn_novoton_holidays_normalize_package(array $pkg, bool $include_priceinfo_details = false): array
 {
-    $pif = \Tygh\Addons\NovotonHolidays\Services\PriceInfoFormatter::class;
-    $packageData = [
-        'IdCont' => $pif::toScalar($pkg['package_id'] ?? ''),
-        'PackageName' => $pif::toScalar($pkg['package_name'] ?? ''),
-        'min_price' => $pif::toFloat($pkg['min_price'] ?? 0),
-        'has_early_booking' => $pkg['has_early_booking'] ?? false,
-        'seasons_count' => $pif::toInt($pkg['seasons_count'] ?? 0),
-        'synced_at' => $pif::toScalar($pkg['synced_at'] ?? '')
-    ];
-
-    // Decode priceinfo only when detailed extraction is requested.
-    // When called from prefetch (false), priceinfo_data is excluded from
-    // the SELECT to avoid transferring 50-200KB of JSON per package row.
-    if ($include_priceinfo_details && !empty($pkg['priceinfo_data'])) {
-        $piJson = $pif::toScalar($pkg['priceinfo_data']);
-        $priceinfo = TypeCoerce::toStringMap(json_decode($piJson, true));
-        if ($priceinfo === []) return $packageData;
-        $packageData['priceinfo'] = $priceinfo;
-
-        // Extract detailed priceinfo components if requested
-        // Extract seasons for display
-        $seasons = $priceinfo['seasons'] ?? null;
-        if (is_array($seasons) && isset($seasons['season'])) {
-            $seasonData = $seasons['season'];
-            // Normalize single season to array
-            if (is_array($seasonData) && isset($seasonData['IdSeason'])) {
-                $seasonData = [$seasonData];
-            }
-            $packageData['seasons'] = $seasonData;
-        }
-
-        // Extract early booking for display
-        if (isset($priceinfo['early_booking'])) {
-            $packageData['early_booking'] = $priceinfo['early_booking'];
-        }
-
-        // Extract season prices for display
-        if (isset($priceinfo['season_price'])) {
-            $seasonPrice = $priceinfo['season_price'];
-            // Normalize single entry to array
-            if (is_array($seasonPrice) && isset($seasonPrice['IdRoom'])) {
-                $seasonPrice = [$seasonPrice];
-            }
-            $packageData['season_price'] = $seasonPrice;
-        }
-    }
-
-    return $packageData;
+    return \Tygh\Addons\NovotonHolidays\Services\PackageNormalizer::normalize($pkg, $include_priceinfo_details);
 }
 
 /**

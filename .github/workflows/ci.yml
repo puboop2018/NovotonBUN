@@ -121,12 +121,13 @@ jobs:
         run: vendor/bin/phpunit --colors=always --coverage-text=coverage.txt --coverage-clover=coverage.xml
 
       # ── Coverage floor: line coverage may not drop below the floor ──
-      # Floor = measured coverage at introduction (19.43% on 2026-07-10)
+      # Floor = measured coverage minus a small margin (novoton measured
+      # 22.69%, sphinx 28.13%, travel_core 34.00% on 2026-07-24)
       # minus a small margin. Raise the floor as coverage grows — never lower
       # it to make a PR pass; write the missing tests instead.
       - name: Enforce coverage floor
         run: |
-          floor=18.0
+          floor=21.5
           pct=$(python3 -c "
           import xml.etree.ElementTree as ET
           m = ET.parse('coverage.xml').getroot().find('./project/metrics')
@@ -271,7 +272,7 @@ jobs:
       # never lower it to make a PR pass; write the missing tests instead.
       - name: Enforce coverage floor
         run: |
-          floor=29.0
+          floor=33.0
           pct=$(python3 -c "
           import xml.etree.ElementTree as ET
           m = ET.parse('coverage.xml').getroot().find('./project/metrics')
@@ -315,7 +316,7 @@ jobs:
       # write the missing tests instead.
       - name: Enforce coverage floor
         run: |
-          floor=27.0
+          floor=27.5
           pct=$(python3 -c "
           import xml.etree.ElementTree as ET
           m = ET.parse('coverage.xml').getroot().find('./project/metrics')
