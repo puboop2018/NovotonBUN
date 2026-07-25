@@ -111,8 +111,13 @@ network. The code is PHPStan level-10 clean and PSR-12 formatted.
 
 ## Graduation (next steps, in order)
 
-1. **Install & smoke-test** against a real Eurosite endpoint (a `dev/eurosite/`
-   standalone probe like `dev/sphinx` would exercise it without CS-Cart).
+1. **Install & smoke-test** against the real endpoint — the `dev/eurosite/`
+   standalone probes exist for exactly this (countries/cities/rooms/own
+   hotels/search/product info/booking lookup; see `dev/eurosite/README.md`).
+   Caveat verified live: the server IP-allowlists callers — from a
+   non-whitelisted host every request answers `ErrorId -1000` regardless of
+   credentials, so probe from the store server or a whitelisted IP. Per the
+   operator, the static-data services then answer without a real account.
 2. **Storefront**: a `TravelProviderRegistry` hotel-product provider + a search
    controller/template, reusing the shared travel_core search UI.
 3. **Cart + order pipeline**: `BookingRepository` (the `eurosite_bookings`

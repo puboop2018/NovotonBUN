@@ -68,6 +68,21 @@ final class EurositeXmlParser
             return $raw === '' ? 'Empty response' : 'Unparseable response';
         }
 
+        // Structured <Error><ErrorId/><ErrorText/></Error> — the live
+        // server's shape (e.g. the -1000 IP-allowlist refusal every
+        // non-whitelisted caller gets). The bare-tag scan below misses it
+        // because the <Error> element's own text is only whitespace.
+        $errorText = $xml->xpath('//ErrorText');
+        if (is_array($errorText) && $errorText !== []) {
+            $text = trim((string) $errorText[0]);
+            if ($text !== '') {
+                $ids = $xml->xpath('//ErrorId');
+                $id = is_array($ids) && $ids !== [] ? trim((string) $ids[0]) : '';
+
+                return $id !== '' ? $id . ': ' . $text : $text;
+            }
+        }
+
         foreach (['Error', 'Errors', 'ErrorMessage', 'Message'] as $tag) {
             $found = $xml->xpath('//' . $tag);
             if (is_array($found) && $found !== []) {
