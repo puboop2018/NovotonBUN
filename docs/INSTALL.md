@@ -211,7 +211,10 @@ runbook, including the `gh secret set` / `gh variable set` commands, is in
 ## 8. Future schema changes (post-install rule)
 
 Every schema change must land in **both** places: the `addon.xml`
-CREATE TABLE (fresh installs) **and** an upgrade item / `setup_db()` step
-(installed sites) — and applying deltas to installed environments is an
-explicit deploy-checklist step until a migration runner exists
-(see `AUDIT_2026-07-01.md`, roadmap item #2).
+CREATE TABLE (fresh installs) **and** the addon's self-heal path
+(installed sites): travel_core's `fn_travel_core_ensure_schema()` or
+sphinx's `Install\SchemaMigrator` column/index maps. The self-heals run
+automatically on the first admin request after a deploy (stamp-gated in
+`?:storage_data`, re-armed whenever the defining file changes), so no
+manual deploy-checklist step is needed. (Historical context:
+`docs/archive/AUDIT_2026-07-01.md`, roadmap item #2.)
