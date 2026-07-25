@@ -19,6 +19,7 @@ final class GodFileRatchetTest extends TestCase
     private const CEILINGS = [
         'func.php' => 560,
         'controllers/backend/sphinx_holidays.php' => 830,
+        'src/Cron/Commands/DiagnoseSearchCommand.php' => 665,
     ];
 
     public function testGodFilesNeverGrowPastTheirCeiling(): void

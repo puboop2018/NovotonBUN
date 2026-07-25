@@ -17,7 +17,7 @@ shared contract fails the suite).
 | Cron command discovery | `Cron\CommandDiscovery` (both dispatchers delegate) | C1 |
 | Cron command base | `Cron\AbstractCronCommand` (both addon bases extend it) | earlier |
 | Cron run lock | `Helpers\CronRunLock` | earlier |
-| Booking mirror | `Services\TravelBookingMirror` | earlier |
+| Booking mirror | `Repository\TravelBookingMirror` | earlier |
 | Hotel header assembly | `ViewModels\HotelHeaderFactory` + `HotelHeaderViewModel` + shared component tpl | R2 / Arch #3 |
 | Location line / map URL | `Services\HotelLocationLine` / `HotelMapUrl` | earlier |
 | Cache contract + sphinx impl | `Contracts\CacheServiceInterface` (novoton extends it; sphinx implements it as an instance service) | Arch #2 |
