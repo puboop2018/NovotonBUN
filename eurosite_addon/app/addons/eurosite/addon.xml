@@ -55,10 +55,11 @@
                         <type>header</type>
                         <variants/>
                     </item>
-                    <!-- The web-service endpoint the Touroperator gives you. -->
+                    <!-- The Eurosite XML web-service endpoint (single URL for
+                         every RequestType; provided by the Touroperator). -->
                     <item id="api_url">
                         <type>input</type>
-                        <default_value></default_value>
+                        <default_value>https://laguna.touringit.ro/server_xml/server.php</default_value>
                         <variants/>
                     </item>
                     <item id="api_user">

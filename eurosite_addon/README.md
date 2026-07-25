@@ -81,7 +81,9 @@ these — they're additional `EurositeApiClient` methods.
 
 Addon settings (Admin → Add-ons → Eurosite), read via `ConfigProvider`:
 
-- `api_url` — the web-service endpoint the Touroperator gives you (required)
+- `api_url` — the XML web-service endpoint (default:
+  `https://laguna.touringit.ro/server_xml/server.php` — the single URL every
+  RequestType is POSTed to)
 - `api_user` / `api_password` — the credentials embedded in `<AuditInfo>`
 - `tourop_code` — the operator code in payloads (default `EU`)
 - `default_currency` (EUR) / `default_language` (RO)
@@ -89,8 +91,10 @@ Addon settings (Admin → Add-ons → Eurosite), read via `ConfigProvider`:
 - retry / timeout / circuit-breaker tuning
 
 There are **no default credentials** — the spec ships placeholders
-(`YourUser`/`YourPassword`) and no live endpoint, so nothing here calls out
-until you configure a real URL + keys.
+(`YourUser`/`YourPassword`), so nothing here authenticates until you enter
+the real account keys. The endpoint URL ships as the default above
+(HTTPS, on the touringit.ro platform Eurosite runs on); the spec's sample
+payloads reference the same platform (`EU.touringit.ro` asset links).
 
 ## Testing
 
