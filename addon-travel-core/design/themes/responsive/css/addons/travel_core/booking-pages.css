@@ -747,6 +747,49 @@
     font-size: 13px;
     text-decoration: none;
 }
+.travel-bcard-price-change {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 10px 16px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    background: #fafafa;
+    border: 1px dashed #ddd;
+    font-size: 13px;
+    flex-wrap: wrap;
+}
+.travel-bcard-price-change__old {
+    text-decoration: line-through;
+    color: #999;
+    font-weight: 500;
+}
+.travel-bcard-price-change__arrow {
+    color: #888;
+    font-size: 12px;
+}
+.travel-bcard-price-change__new {
+    font-weight: 700;
+    color: #1a1a1a;
+}
+.travel-bcard-price-change__badge {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    margin-left: 4px;
+}
+.travel-bcard-price-change__badge--warning {
+    background: #f0a830;
+    color: #fff;
+}
+.travel-bcard-price-change__badge--success {
+    background: #4caf50;
+    color: #fff;
+}
 .travel-bcard-line {
     margin-bottom: 10px;
 }

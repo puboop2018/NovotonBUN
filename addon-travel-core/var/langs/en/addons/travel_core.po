@@ -878,6 +878,14 @@ msgctxt "Languages::travel_core.your_booking_details"
 msgid "Your booking details"
 msgstr "Your booking details"
 
+msgctxt "Languages::travel_core.price_updated_badge"
+msgid "Price Updated"
+msgstr "Price Updated"
+
+msgctxt "Languages::travel_core.price_dropped_badge"
+msgid "Price Dropped!"
+msgstr "Price Dropped!"
+
 msgctxt "Languages::travel_core.total_stay"
 msgid "Total stay"
 msgstr "Total stay"

@@ -28,7 +28,6 @@ final class InlineStyleRatchetTest extends TestCase
     /** @var array<string, int> repo-relative template path => max styling attrs */
     private const ALLOWLIST = [
         'addon-novoton-holidays/design/themes/responsive/templates/addons/novoton_holidays/blocks/homepage_booking.tpl' => 2,
-        'addon-novoton-holidays/design/themes/responsive/templates/addons/novoton_holidays/hooks/cart_content/product_info.post.tpl' => 17,
         'addon-novoton-holidays/design/themes/responsive/templates/addons/novoton_holidays/hooks/checkout/order_info.post.tpl' => 10,
         'addon-novoton-holidays/design/themes/responsive/templates/addons/novoton_holidays/hooks/checkout/summary_extra.post.tpl' => 3,
         'addon-novoton-holidays/design/themes/responsive/templates/addons/novoton_holidays/hooks/common/product_info.post.tpl' => 9,
@@ -46,7 +45,6 @@ final class InlineStyleRatchetTest extends TestCase
         'addon-travel-core/design/themes/responsive/templates/addons/travel_core/blocks/booking_summary.tpl' => 11,
         'addon-travel-core/design/themes/responsive/templates/addons/travel_core/components/booking_form_mount.tpl' => 1,
         'addon-travel-core/design/themes/responsive/templates/addons/travel_core/components/order_booking_details.tpl' => 2,
-        'addon-travel-core/design/themes/responsive/templates/addons/travel_core/hooks/cart_content/product_info.post.tpl' => 15,
         'addon-travel-core/design/themes/responsive/templates/addons/travel_core/hooks/products/main_info_title.post.tpl' => 2,
         'addon-travel-core/design/themes/responsive/templates/addons/travel_core/hooks/products/product_detail_bottom.post.tpl' => 15,
     ];

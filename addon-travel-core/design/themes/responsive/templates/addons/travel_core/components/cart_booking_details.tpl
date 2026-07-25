@@ -121,6 +121,22 @@
         </div>
     {/if}
 
+    {* Line-item price change: the pre-order verifier corrected this line —
+       cross out the old price, show the new one (both providers write
+       extra.price_before_correction on correction). *}
+    {if !empty($product.extra.price_before_correction) && $product.extra.price_before_correction != $product.extra.total_price}
+        <div class="travel-bcard-price-change">
+            <span class="travel-bcard-price-change__old">{$product.extra.price_before_correction|fn_format_price} {$smarty.const.CART_PRIMARY_CURRENCY}</span>
+            <span class="travel-bcard-price-change__arrow">&rarr;</span>
+            <span class="travel-bcard-price-change__new">{$product.extra.total_price|fn_format_price} {$smarty.const.CART_PRIMARY_CURRENCY}</span>
+            {if $product.extra.total_price > $product.extra.price_before_correction}
+                <span class="travel-bcard-price-change__badge travel-bcard-price-change__badge--warning">{__("travel_core.price_updated_badge")|default:"Price Updated"}</span>
+            {else}
+                <span class="travel-bcard-price-change__badge travel-bcard-price-change__badge--success">{__("travel_core.price_dropped_badge")|default:"Price Dropped!"}</span>
+            {/if}
+        </div>
+    {/if}
+
     {* Edit link *}
     {if $_edit_booking_id}
         <div class="travel-bcard-footer">

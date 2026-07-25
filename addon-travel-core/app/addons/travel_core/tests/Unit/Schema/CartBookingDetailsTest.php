@@ -60,6 +60,7 @@ final class CartBookingDetailsTest extends TestCase
         foreach ([
             'hooks/checkout/product_info.post.tpl',
             'hooks/block_checkout/product_extra.post.tpl',
+            'hooks/cart_content/product_info.post.tpl',
         ] as $hook) {
             self::assertStringContainsString(
                 'addons/travel_core/components/cart_booking_details.tpl',
@@ -72,9 +73,24 @@ final class CartBookingDetailsTest extends TestCase
         foreach ([
             'addon-novoton-holidays/design/themes/responsive/templates/addons/novoton_holidays/hooks/checkout/product_info.post.tpl',
             'addon-novoton-holidays/design/themes/responsive/templates/addons/novoton_holidays/hooks/block_checkout/product_extra.post.tpl',
+            // With this twin present alongside travel_core's cart_content
+            // hook, every novoton cart line rendered TWO stacked cards.
+            'addon-novoton-holidays/design/themes/responsive/templates/addons/novoton_holidays/hooks/cart_content/product_info.post.tpl',
         ] as $gone) {
             self::assertFileDoesNotExist($repoRoot . '/' . $gone, 'the per-provider hook copy must stay deleted');
         }
+    }
+
+    public function testPriceCorrectionDisplayIsSharedAndProviderNeutral(): void
+    {
+        $card = self::tpl('components/cart_booking_details.tpl');
+
+        // Both providers' pre-order verifiers write price_before_correction;
+        // the crossed-out old price + badge renders from the shared card.
+        self::assertStringContainsString('$product.extra.price_before_correction', $card);
+        self::assertStringContainsString('travel-bcard-price-change__old', $card);
+        self::assertStringContainsString('travel_core.price_updated_badge', $card);
+        self::assertStringContainsString('travel_core.price_dropped_badge', $card);
     }
 
     public function testGuestCardsSupportOptionalPrefillWithoutChangingDefaults(): void

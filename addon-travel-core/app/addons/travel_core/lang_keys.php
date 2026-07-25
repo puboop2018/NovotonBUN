@@ -90,6 +90,14 @@ return [
         'en' => 'Your booking details',
         'ro' => 'Detaliile rezervării',
     ],
+    'travel_core.price_updated_badge' => [
+        'en' => 'Price Updated',
+        'ro' => 'Preț actualizat',
+    ],
+    'travel_core.price_dropped_badge' => [
+        'en' => 'Price Dropped!',
+        'ro' => 'Preț redus!',
+    ],
     'travel_core.total_stay' => [
         'en' => 'Total stay',
         'ro' => 'Durata totală a sejurului',
