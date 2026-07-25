@@ -152,7 +152,6 @@ if (defined('AREA') && AREA === 'A' && function_exists('fn_novoton_holidays_seed
 
 // Register addon hooks
 fn_register_hooks(
-    'get_products_post',                       // Batch prefetch hotel data for product listings
     'get_product_data_post',                   // Add hotel data to products
     'gather_additional_product_data_post',     // Pass data to templates (for tabs)
     'get_product_tabs_post',                   // Hide Hotel Prices tab on non-Novoton products

@@ -105,6 +105,11 @@ function _novoton_enrich_hotel_row(array $hotel, ?array $packages = null): array
  * for any number of hotels. Subsequent calls to fn_novoton_holidays_get_hotel_data()
  * for these IDs will be O(1) cache hits.
  *
+ * Call this ONLY right before genuinely batch-reading the enriched data
+ * (the email builders do). It pulls full rows — hotel_data is the entire
+ * hotelinfo API response as JSON — so wiring it into a broad hook again
+ * (the removed get_products_post listing prefetch) just taxes every page.
+ *
  * @param list<string> $hotel_ids List of Novoton hotel IDs to prefetch
  */
 function fn_novoton_holidays_prefetch_hotel_data(array $hotel_ids): void
