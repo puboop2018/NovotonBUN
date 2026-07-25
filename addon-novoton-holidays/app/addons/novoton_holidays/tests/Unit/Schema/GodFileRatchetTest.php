@@ -17,7 +17,7 @@ final class GodFileRatchetTest extends TestCase
 {
     /** @var array<string, int> repo-relative path (from addon root) => max lines */
     private const CEILINGS = [
-        'controllers/backend/novoton_price_compare.php' => 1130,
+        'controllers/backend/novoton_price_compare.php' => 1104,
         'functions/hotels.php' => 800,
         'functions/formatting.php' => 340,
         'functions/install.php' => 720,

@@ -11,6 +11,7 @@ declare(strict_types=1);
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
 use Tygh\Registry;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 // =========================================================================
 // CS-Cart calls every fn_* below BY NAME (hook dispatch, settings variants,
@@ -22,6 +23,8 @@ use Tygh\Registry;
 /**
  * Variants function for the default_currency addon setting.
  * Pulls currencies from CS-Cart's configured currencies.
+ *
+ * @return array<string, string>
  */
 function fn_settings_variants_addons_sphinx_holidays_default_currency(): array
 {
@@ -33,7 +36,9 @@ function fn_settings_variants_addons_sphinx_holidays_default_currency(): array
     }
 
     foreach ($currencies as $code => $currency) {
-        $result[$code] = $code . (!empty($currency['symbol']) ? ' (' . $currency['symbol'] . ')' : '');
+        $symbol = is_array($currency) ? TypeCoerce::toString($currency['symbol'] ?? '') : '';
+        $label = (string) $code;
+        $result[$label] = $label . ($symbol !== '' ? ' (' . $symbol . ')' : '');
     }
 
     return $result;
@@ -42,13 +47,21 @@ function fn_settings_variants_addons_sphinx_holidays_default_currency(): array
 /**
  * Dynamic variants for the "Product languages" multiple checkboxes setting.
  * Lists all active CS-Cart languages.
+ *
+ * @return array<string, string>
  */
 function fn_settings_variants_addons_sphinx_holidays_product_languages(): array
 {
-    $languages = db_get_array("SELECT lang_code, name FROM ?:languages WHERE status = 'A' ORDER BY name");
+    $languages = TypeCoerce::toRowList(
+        db_get_array("SELECT lang_code, name FROM ?:languages WHERE status = 'A' ORDER BY name"),
+    );
     $result = [];
     foreach ($languages as $lang) {
-        $result[$lang['lang_code']] = $lang['name'] . ' (' . strtoupper($lang['lang_code']) . ')';
+        $code = TypeCoerce::toString($lang['lang_code'] ?? '');
+        if ($code === '') {
+            continue;
+        }
+        $result[$code] = TypeCoerce::toString($lang['name'] ?? '') . ' (' . strtoupper($code) . ')';
     }
     return $result;
 }
@@ -110,7 +123,7 @@ function fn_settings_variants_addons_sphinx_holidays_experiences_category_id(): 
 function fn_sphinx_holidays_uninstall(): bool
 {
     // Remove Sphinx aliases from shared feature mapping (table may not exist if travel_core already uninstalled)
-    $tablePrefix = \Tygh\Registry::get('config.table_prefix');
+    $tablePrefix = fn_sphinx_holidays_table_prefix();
     $aliasTableExists = db_get_field(
         "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?s",
         $tablePrefix . 'travel_api_alias'
@@ -243,8 +256,12 @@ function fn_sphinx_holidays_seed_seo_defaults(): void
 {
     $defaults = fn_sphinx_holidays_seo_defaults();
 
-    $current  = \Tygh\Registry::get('addons.sphinx_holidays') ?: [];
+    $currentRaw = \Tygh\Registry::get('addons.sphinx_holidays');
+    $current  = is_array($currentRaw) ? $currentRaw : [];
     $settings = \Tygh\Settings::instance();
+    if (!is_object($settings) || !method_exists($settings, 'updateValue')) {
+        return;
+    }
     $toMerge  = [];
 
     foreach ($defaults as $key => $value) {
@@ -298,6 +315,10 @@ function fn_sphinx_holidays_seed_region_mappings(): void
  * Re-verify Sphinx offer prices before the order is placed; unavailable
  * offers are removed (their stranded booking rows deleted) instead of
  * blocking mixed-provider orders. Body in Hooks\OrderHooks.
+ *
+ * @param mixed $cart           Cart array (by ref)
+ * @param mixed $allow          Set to false to block placement (by ref)
+ * @param mixed $product_groups Unused (hook signature)
  */
 function fn_sphinx_holidays_pre_place_order(&$cart, &$allow, &$product_groups): void
 {
@@ -308,6 +329,12 @@ function fn_sphinx_holidays_pre_place_order(&$cart, &$allow, &$product_groups): 
  * Hook: place_order_post
  * Submit the placed order's bookings to the Sphinx API and self-heal
  * booking–order links on both paths. Body in Hooks\OrderHooks.
+ *
+ * @param mixed $order_id     Order id (Multi-Vendor may pass an array)
+ * @param mixed $action       Unused (hook signature)
+ * @param mixed $order_status Unused (hook signature)
+ * @param mixed $cart         Cart array (by ref)
+ * @param mixed $auth         Unused (hook signature)
  */
 function fn_sphinx_holidays_place_order_post(&$order_id, &$action, &$order_status, &$cart, &$auth): void
 {
@@ -339,25 +366,25 @@ function fn_sphinx_holidays_travel_link_order_bookings($order_id, &$linked): voi
 
 /**
  * Hook: calculate_cart_items
- * Preserve stored price for Sphinx bookings.
+ * Preserve stored price for Sphinx bookings. Body in Hooks\OrderHooks.
+ *
+ * @param mixed $cart          Cart array (by ref — prices rewritten in place)
+ * @param mixed $cart_products Unused (hook signature)
+ * @param mixed $auth          Unused (hook signature)
  */
 function fn_sphinx_holidays_calculate_cart_items(&$cart, &$cart_products, &$auth): void
 {
-    if (empty($cart['products'])) {
-        return;
-    }
-
-    foreach ($cart['products'] as &$product) {
-        if (!empty($product['extra']['sphinx_booking']) && !empty($product['stored_price'])) {
-            $product['price'] = $product['base_price'] ?? $product['price'];
-        }
-    }
-    unset($product);
+    \Tygh\Addons\SphinxHolidays\Hooks\OrderHooks::preserveStoredPrices($cart);
 }
 
 /**
  * Hook: get_product_data_post
  * Attach booking engine config to Sphinx hotel products.
+ *
+ * @param mixed $product_data Untouched (see body note)
+ * @param mixed $auth         Unused (hook signature)
+ * @param mixed $preview      Unused (hook signature)
+ * @param mixed $lang_code    Unused (hook signature)
  */
 function fn_sphinx_holidays_get_product_data_post(&$product_data, &$auth, $preview, $lang_code): void
 {
@@ -372,6 +399,10 @@ function fn_sphinx_holidays_get_product_data_post(&$product_data, &$auth, $previ
  * Hook: gather_additional_product_data_post
  * Complete no-op for Smarty 5 compatibility.
  * Templates detect Sphinx products from $product.product_code prefix (SPX).
+ *
+ * @param mixed $product Untouched (see body note)
+ * @param mixed $auth    Unused (hook signature)
+ * @param mixed $params  Unused (hook signature)
  */
 function fn_sphinx_holidays_gather_additional_product_data_post(&$product, $auth, $params): void
 {
@@ -383,45 +414,39 @@ function fn_sphinx_holidays_gather_additional_product_data_post(&$product, $auth
 /**
  * Hook: user_login_post
  * Link session-based sphinx bookings to the logged-in user.
+ * Body in Hooks\UserHooks.
+ *
+ * @param mixed $user_data Unused (hook signature)
+ * @param mixed $auth      Auth array (by ref)
  */
 function fn_sphinx_holidays_user_login_post($user_data, &$auth): void
 {
-    if (empty($auth['user_id'])) {
-        return;
-    }
-
-    $session_id = session_id();
-    if (empty($session_id)) {
-        return;
-    }
-
-    $repo = \Tygh\Addons\SphinxHolidays\Services\Container::getBookingRepository();
-    $repo->linkToUserBySession((int)$auth['user_id'], $session_id);
+    \Tygh\Addons\SphinxHolidays\Hooks\UserHooks::linkSessionBookings(
+        is_array($auth) ? ($auth['user_id'] ?? 0) : 0,
+    );
 }
 
 /**
  * Hook: create_user_post
  * Link session-based sphinx bookings to the newly created user.
+ * Body in Hooks\UserHooks.
+ *
+ * @param mixed $user_id   New user's id
+ * @param mixed $user_data Unused (hook signature)
+ * @param mixed $auth      Unused (hook signature)
  */
 function fn_sphinx_holidays_create_user_post($user_id, $user_data, &$auth): void
 {
-    if (empty($user_id)) {
-        return;
-    }
-
-    $session_id = session_id();
-    if (empty($session_id)) {
-        return;
-    }
-
-    $repo = \Tygh\Addons\SphinxHolidays\Services\Container::getBookingRepository();
-    $repo->linkToUserBySession((int)$user_id, $session_id);
+    \Tygh\Addons\SphinxHolidays\Hooks\UserHooks::linkSessionBookings($user_id);
 }
 
 /**
  * Hook: get_order_info
  * Admin-panel decoration for orders containing sphinx bookings (surrogate
  * "View Booking" ids + failed-booking warning). Body in Hooks\OrderHooks.
+ *
+ * @param mixed $order           Order array (by ref)
+ * @param mixed $additional_data Unused (hook signature)
  */
 function fn_sphinx_holidays_get_order_info(&$order, $additional_data): void
 {
@@ -434,7 +459,7 @@ function fn_sphinx_holidays_get_order_info(&$order, $additional_data): void
  * Logs the exchange rate update result from travel_core to sphinx_sync_log
  * so the admin panel can display "last updated" timestamps.
  *
- * @param array $result Full result from fn_travel_core_update_exchange_rates()
+ * @param array<string, mixed> $result Full result from fn_travel_core_update_exchange_rates()
  */
 function fn_sphinx_holidays_travel_core_exchange_rates_updated(array &$result): void
 {
@@ -477,7 +502,7 @@ function fn_sphinx_holidays_add_product_image(int $product_id, string $image_url
  * pattern). Body in Repository\HotelAdminListingRepository.
  *
  * @param array<array-key, mixed> $params Search/filter/sort parameters from $_REQUEST
- * @return array{0: array, 1: array} [$hotels, $search_params]
+ * @return array{0: list<array<string, mixed>>, 1: array<string, mixed>} [$hotels, $search_params]
  */
 function fn_sphinx_holidays_get_hotels(array $params = []): array
 {
@@ -493,25 +518,32 @@ function fn_sphinx_holidays_get_hotels(array $params = []): array
  * then trigger CS-Cart's calculate + save trio.
  *
  * Thin wrapper that absorbs the reference-based `$cart`/`$auth` handling
- * required by CS-Cart's procedural cart API. Living at the func.php boundary
- * keeps `\Tygh::\$app` out of `src/Services/CartService`.
+ * required by CS-Cart's procedural cart API. Binds $_SESSION directly — the
+ * authoritative session store (see travel_core's SessionAccessor): the
+ * `Tygh::$app['session']` binding is just an ArrayAccess wrapper over it.
  *
  * @param array<string, mixed> $row Pre-assembled cart-product entry (shape:
  *                                  product_id, amount, price, extra, …).
  */
 function fn_sphinx_holidays_write_cart_row(string $cartId, array $row): void
 {
-    $cart = &\Tygh\Tygh::$app['session']['cart'];
-    $auth = &\Tygh\Tygh::$app['session']['auth'];
+    $cart = &$_SESSION['cart'];
+    $auth = &$_SESSION['auth'];
 
-    if (empty($cart)) {
+    if (!is_array($cart) || $cart === []) {
         fn_clear_cart($cart);
     }
+    if (!is_array($cart)) {
+        return; // cart bootstrap failed — nothing safe to write into
+    }
 
-    $cart['products'][$cartId] = $row;
+    $products = is_array($cart['products'] ?? null) ? $cart['products'] : [];
+    $products[$cartId] = $row;
+    $cart['products'] = $products;
 
+    $user_id = is_array($auth) ? TypeCoerce::toInt($auth['user_id'] ?? 0) : 0;
     fn_calculate_cart_content($cart, $auth, 'S', true, 'F', true);
-    fn_save_cart_content($cart, $auth['user_id'] ?? 0);
+    fn_save_cart_content($cart, $user_id);
 }
 
 /**

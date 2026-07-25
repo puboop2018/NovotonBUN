@@ -292,6 +292,40 @@ final class OrderHooks
     }
 
     /**
+     * Hook body: calculate_cart_items — preserve the stored price for sphinx
+     * booking lines (CS-Cart recalculates from product data; a booking's
+     * price is the verified offer price, not the catalog price).
+     *
+     * @param mixed $cart Cart array (by ref — prices rewritten in place)
+     */
+    public static function preserveStoredPrices(mixed &$cart): void
+    {
+        if (!is_array($cart) || empty($cart['products']) || !is_array($cart['products'])) {
+            return;
+        }
+
+        // Mutate a typed copy and write it back wholesale — same end state
+        // as a by-ref foreach, without offset-writes through the mixed cart.
+        $products = $cart['products'];
+        $changed = false;
+        foreach ($products as $cartId => $product) {
+            if (!is_array($product)) {
+                continue;
+            }
+            $extra = is_array($product['extra'] ?? null) ? $product['extra'] : [];
+            if (empty($extra['sphinx_booking']) || empty($product['stored_price'])) {
+                continue;
+            }
+            $product['price'] = $product['base_price'] ?? $product['price'];
+            $products[$cartId] = $product;
+            $changed = true;
+        }
+        if ($changed) {
+            $cart['products'] = $products;
+        }
+    }
+
+    /**
      * Link any unlinked sphinx bookings referenced by an order's items to that
      * order. Idempotent: bookings already linked are left untouched; status is
      * NOT changed (a reconciliation must not reset a confirmed booking).
