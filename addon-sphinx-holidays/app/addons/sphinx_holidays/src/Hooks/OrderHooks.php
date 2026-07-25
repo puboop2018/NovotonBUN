@@ -52,8 +52,7 @@ final class OrderHooks
         // Remove unavailable Sphinx offers from cart instead of blocking the entire order
         $unavailable = $result['unavailable'];
         if ($unavailable !== []) {
-            foreach ($unavailable as $cartId => $infoRaw) {
-                $info = is_array($infoRaw) ? $infoRaw : [];
+            foreach ($unavailable as $cartId => $info) {
                 $hotelName = TypeCoerce::toString(!empty($info['hotel_name']) ? $info['hotel_name'] : ($info['offer_id'] ?? ''));
 
                 fn_set_notification(
@@ -104,8 +103,7 @@ final class OrderHooks
 
         $corrections = $result['corrections'];
         if ($corrections !== []) {
-            foreach ($corrections as $cartId => $correctionRaw) {
-                $correction = is_array($correctionRaw) ? $correctionRaw : [];
+            foreach ($corrections as $cartId => $correction) {
                 $line = is_array($products[$cartId] ?? null) ? $products[$cartId] : null;
                 if ($line === null) {
                     continue;

@@ -66,6 +66,14 @@ return [
         'en' => 'When enabled, the hotels cron only adds hotels that have at least one offer with confirmation=immediate, and the storefront search shows only immediate-confirmation offers. The hotels cron accepts a per-run override: &availability_gate=0 to skip the gate, &availability_gate=1 to force it.',
         'ro' => 'Când este activ, cronul de hoteluri adaugă doar hotelurile care au cel puțin o ofertă cu confirmation=immediate, iar căutarea din storefront afișează doar ofertele cu confirmare imediată. Cronul de hoteluri acceptă o suprascriere per rulare: &availability_gate=0 pentru a omite filtrul, &availability_gate=1 pentru a-l forța.',
     ],
+    'sphinx_holidays.preorder_cache_ttl' => [
+        'en' => 'Checkout verify cache TTL (seconds)',
+        'ro' => 'TTL cache verificare la checkout (secunde)',
+    ],
+    'sphinx_holidays.preorder_cache_ttl.tooltip' => [
+        'en' => 'Reuse the price verified at add-to-cart for this many seconds when the customer clicks Place Order — the checkout skips one API call per hotel in the cart. 0 = always re-verify live.',
+        'ro' => 'Refolosește prețul verificat la adăugarea în coș pentru acest număr de secunde când clientul apasă Plasează comanda — checkout-ul omite un apel API pentru fiecare hotel din coș. 0 = re-verifică mereu live.',
+    ],
     // General Settings section headers & fields
     'sphinx_holidays.api_header' => ['en' => 'Sphinx API Settings', 'ro' => 'Setări API Sphinx'],
     'sphinx_holidays.api_base_url' => ['en' => 'API Base URL', 'ro' => 'URL bază API'],

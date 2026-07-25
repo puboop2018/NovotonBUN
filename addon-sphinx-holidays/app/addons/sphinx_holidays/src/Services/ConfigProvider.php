@@ -205,6 +205,17 @@ class ConfigProvider extends AbstractConfigProvider implements ConfigProviderInt
     }
 
     /**
+     * Seconds to trust the add-to-cart verified price at Place Order
+     * ("Silent Sync" — the same knob novoton's checkout has). Within the
+     * TTL the pre-order verifier skips its API round-trip; 0 disables the
+     * cache so every Place Order click re-verifies live.
+     */
+    public static function getPreorderCacheTtl(): int
+    {
+        return max(0, TypeCoerce::toInt(self::getSetting('preorder_cache_ttl', '180')));
+    }
+
+    /**
      * Get the configured languages for hotel product descriptions.
      *
      * CS-Cart stores "multiple checkboxes" values as comma-separated string.
