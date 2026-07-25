@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Tygh\Addons\NovotonHolidays\Cron\Commands;
 
 use Tygh\Addons\NovotonHolidays\Cron\AbstractCronCommand;
+use Tygh\Addons\NovotonHolidays\Repository\CacheRepository;
 use Tygh\Addons\NovotonHolidays\Services\Container;
-use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 class CleanupCommand extends AbstractCronCommand
 {
@@ -49,19 +49,26 @@ class CleanupCommand extends AbstractCronCommand
         $this->output("   Total: {$total_logs}, Kept: {$logs_to_keep}, Deleted: {$logs_deleted}");
         $this->output('');
 
-        // 3. Clean expired cache entries
+        // 3. Clean expired cache entries — both storage surfaces, every run.
+        // CacheService prunes its CONFIGURED backend (the var/cache/novoton
+        // file tree by default); the direct table sweep also runs because
+        // rows written while 'database' storage was configured must not
+        // linger after a switch back to 'file'. deleteExpired() compares
+        // expires_at (an INT unix stamp) against time() — the old inline
+        // `expires_at < NOW()` compared the stamp numerically against
+        // NOW()'s 20260101000000-style DATETIME form, which is always true:
+        // it wiped LIVE cache entries on every run and never touched the
+        // file cache at all.
         $this->output('3. Cleaning expired cache...');
-        $expired_count = TypeCoerce::toInt(db_get_field(
-            'SELECT COUNT(*) FROM ?:novoton_cache WHERE expires_at < NOW()',
-        ));
-        db_query('DELETE FROM ?:novoton_cache WHERE expires_at < NOW()');
-        $this->output("   Expired cache entries deleted: {$expired_count}");
+        $storage_removed = Container::getInstance()->cacheService()->cleanup();
+        $db_removed = (new CacheRepository())->deleteExpired();
+        $this->output("   Expired cache entries removed: {$storage_removed} (configured storage), {$db_removed} (database table)");
         $this->output('');
 
         $stats = [
             'orphans_deleted' => $orphan_count,
             'logs_deleted' => $logs_deleted,
-            'cache_deleted' => $expired_count,
+            'cache_deleted' => $storage_removed + $db_removed,
         ];
         $this->logComplete('cleanup', $stats);
 
