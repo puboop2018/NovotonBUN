@@ -47,15 +47,23 @@ spl_autoload_register(function ($class): void {
 require_once __DIR__ . '/functions/cart_guests.php';
 require_once __DIR__ . '/functions/exchange_rates.php';
 require_once __DIR__ . '/functions/hotels.php';
+require_once __DIR__ . '/functions/self_heal.php';
 
 // Load hook functions
 require_once __DIR__ . '/hooks.php';
 
-// Self-heal: ensure travel_api_alias has the composite unique key (api_source,
-// api_value, map_id) so star and facility aliases with colliding numeric values
-// can coexist. The function is idempotent and guards itself with a static flag.
+// Self-heal: ensure the tables that predate a migration get it (alias unique
+// key, bookings-grid index, unmapped-values table). The heal is idempotent
+// but costs catalog queries + a CREATE IF NOT EXISTS, so it is stamp-gated:
+// it runs once per deployed version of func.php (where its migrations live)
+// and every later admin request pays one ?:storage_data read.
 if (defined('AREA') && AREA === 'A' && function_exists('fn_travel_core_ensure_schema')) {
-    fn_travel_core_ensure_schema();
+    $__tc_heal_fp = (string) @md5_file(__DIR__ . '/func.php');
+    if (fn_travel_core_self_heal_due('travel_core_schema', $__tc_heal_fp)) {
+        fn_travel_core_ensure_schema();
+        fn_travel_core_self_heal_stamp('travel_core_schema', $__tc_heal_fp);
+    }
+    unset($__tc_heal_fp);
 }
 
 // Self-heal language keys: addon.xml/.po are only imported at install, so new

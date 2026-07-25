@@ -118,14 +118,22 @@ final class LanguageSeeder
     }
 
     /**
-     * Content hash of the language-variable sources — the self-heal seed stamp.
+     * Fingerprint of the language-variable sources — the self-heal seed stamp.
+     *
+     * stat-based (size + mtime), not a content hash: the init.php probe runs
+     * it on every admin request and addon.xml alone is hundreds of KB. Real
+     * edits always touch size or mtime; a deploy that resets mtimes merely
+     * re-arms one idempotent reseed.
      */
     public static function seedHash(): string
     {
-        return md5(
-            (string) @md5_file(self::addonRoot() . '/addon.xml')
-            . (string) @md5_file(self::addonRoot() . '/lang_keys.php'),
-        );
+        $parts = [];
+        foreach ([self::addonRoot() . '/addon.xml', self::addonRoot() . '/lang_keys.php'] as $file) {
+            $stat = @stat($file);
+            $parts[] = $file . '|' . (is_array($stat) ? $stat['size'] . '|' . $stat['mtime'] : 'absent');
+        }
+
+        return md5(implode(';', $parts));
     }
 
     private static function addonRoot(): string

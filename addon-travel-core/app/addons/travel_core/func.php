@@ -561,12 +561,20 @@ function fn_travel_core_language_variables(): array
 }
 
 /**
- * Content hash of the language-variable sources — the self-heal seed stamp.
+ * Fingerprint of the language-variable sources — the self-heal seed stamp.
+ *
+ * stat-based (size + mtime), not a content hash: this runs on every admin
+ * request and addon.xml alone is hundreds of KB — hashing it each time was
+ * measurable. Real edits always touch size or mtime; a deploy that resets
+ * mtimes merely re-arms one idempotent reseed.
  */
 function fn_travel_core_language_seed_hash(): string
 {
-    return md5(
-        (string) @md5_file(__DIR__ . '/addon.xml')
-        . (string) @md5_file(__DIR__ . '/lang_keys.php')
-    );
+    $parts = [];
+    foreach ([__DIR__ . '/addon.xml', __DIR__ . '/lang_keys.php'] as $file) {
+        $stat = @stat($file);
+        $parts[] = $file . '|' . (is_array($stat) ? $stat['size'] . '|' . $stat['mtime'] : 'absent');
+    }
+
+    return md5(implode(';', $parts));
 }
