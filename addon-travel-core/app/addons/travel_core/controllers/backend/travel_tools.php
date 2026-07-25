@@ -13,6 +13,7 @@ declare(strict_types=1);
 use Tygh\Registry;
 use Tygh\Tygh;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+use Tygh\Addons\TravelCore\Repository\OrderLinkCandidateRepository;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
@@ -52,11 +53,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // booking rows during place_order_post, but a booking placed while a
         // submission bug (or older code) was live stays orphaned forever —
         // the Travel Bookings grid then shows "Order ID: -" although the
-        // CS-Cart order exists. Walk recent orders and fire the provider
-        // reconcilers (idempotent: already-linked bookings are untouched).
-        $orderIds = TypeCoerce::toIntList(db_get_fields(
-            'SELECT order_id FROM ?:orders ORDER BY order_id DESC LIMIT 500',
-        ));
+        // CS-Cart order exists. Walk the newest orders that actually contain
+        // provider-booking items (OrderLinkCandidateRepository pre-filters —
+        // each hook replay costs a full fn_get_order_info() per provider) and
+        // fire the reconcilers (idempotent: linked bookings are untouched).
+        $orderIds = (new OrderLinkCandidateRepository())->findSweepCandidates(500);
 
         $linked = 0;
         foreach ($orderIds as $reconcile_order_id) {
