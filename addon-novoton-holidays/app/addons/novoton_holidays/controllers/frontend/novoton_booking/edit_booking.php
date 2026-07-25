@@ -47,7 +47,10 @@ use Tygh\Addons\NovotonHolidays\Helpers\JsonDecoder;
 
     // Also try to get data from cart session (more up-to-date)
     $cart = $session['cart'] ?? null;
-    $cart_products = is_array($cart) ? TypeCoerce::toStringMap($cart['products'] ?? null) : [];
+    // toArrayMap, NOT toStringMap: cart product ids are numeric (int keys)
+    // and toStringMap drops int-keyed entries — the live-cart preference
+    // below would silently never fire.
+    $cart_products = is_array($cart) ? TypeCoerce::toArrayMap($cart['products'] ?? null) : [];
     /** @var array<string, mixed>|null $cart_item */
     $cart_item = null;
     if (!empty($cart_id) && !empty($cart_products[$cart_id]) && is_array($cart_products[$cart_id])) {

@@ -51,7 +51,10 @@ if ($booking_record === null) {
 // Prefer the live cart extras (fresher than the booking row); fall back to
 // the booking row's stored fields.
 $cart = (is_array($session) || $session instanceof \ArrayAccess) ? ($session['cart'] ?? null) : null;
-$cart_products = is_array($cart) ? TypeCoerce::toStringMap($cart['products'] ?? null) : [];
+// toArrayMap, NOT toStringMap: cart product ids are numeric (int keys) and
+// toStringMap drops int-keyed entries — the live-cart preference below would
+// silently never fire and every field would come from the stale booking row.
+$cart_products = is_array($cart) ? TypeCoerce::toArrayMap($cart['products'] ?? null) : [];
 $cart_extra = [];
 if ($cart_id !== '' && is_array($cart_products[$cart_id] ?? null)) {
     $cart_item = TypeCoerce::toStringMap($cart_products[$cart_id]);
