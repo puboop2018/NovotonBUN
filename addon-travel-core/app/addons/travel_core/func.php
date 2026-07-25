@@ -131,6 +131,27 @@ function fn_travel_core_ensure_schema(): void
         }
     }
 
+    // Bookings grid sorts by created_at DESC by default — backfill the index
+    // on installs that predate it (the addon.xml CREATE only covers fresh
+    // installs; without it every grid load filesorts the whole table).
+    $bookingsTable = $tablePrefix . 'travel_bookings';
+    $bookingsExists = \Tygh\Addons\TravelCore\Helpers\TypeCoerce::toInt(db_get_field(
+        'SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?s',
+        $bookingsTable,
+    ));
+    if ($bookingsExists > 0) {
+        $hasCreatedAtIdx = \Tygh\Addons\TravelCore\Helpers\TypeCoerce::toInt(db_get_field(
+            "SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS
+             WHERE TABLE_SCHEMA = DATABASE()
+               AND TABLE_NAME = ?s
+               AND INDEX_NAME = 'idx_created_at'",
+            $bookingsTable,
+        ));
+        if ($hasCreatedAtIdx === 0) {
+            db_query('ALTER TABLE ?:travel_bookings ADD KEY `idx_created_at` (`created_at`)');
+        }
+    }
+
     // Ensure travel_unmapped_values table exists
     db_query(
         'CREATE TABLE IF NOT EXISTS `?:travel_unmapped_values` (

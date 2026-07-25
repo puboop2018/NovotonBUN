@@ -288,7 +288,8 @@
                 KEY `idx_sync_status` (`sync_status`),
                 KEY `idx_sync_product` (`sync_status`, `product_id`),
                 KEY `idx_sync_country` (`sync_status`, `country_code`),
-                KEY `idx_country_sync_synced` (`country_code`, `sync_status`, `last_synced_at`)
+                KEY `idx_country_sync_synced` (`country_code`, `sync_status`, `last_synced_at`),
+                KEY `idx_name` (`name`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
         </item>
 

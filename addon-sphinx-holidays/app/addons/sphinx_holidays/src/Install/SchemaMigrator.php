@@ -70,6 +70,9 @@ final class SchemaMigrator
                 'idx_sync_product' => 'ADD KEY `idx_sync_product` (`sync_status`, `product_id`)',
                 'idx_sync_country' => 'ADD KEY `idx_sync_country` (`sync_status`, `country_code`)',
                 'idx_country_sync_synced' => 'ADD KEY `idx_country_sync_synced` (`country_code`, `sync_status`, `last_synced_at`)',
+                // Hotels admin grid sorts by name by default — without this,
+                // every page load filesorts the whole table.
+                'idx_name' => 'ADD KEY `idx_name` (`name`)',
             ],
             'sphinx_destinations' => [
                 'idx_full_path' => 'ADD KEY `idx_full_path` (`full_path`(100))',
