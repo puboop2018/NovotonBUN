@@ -21,19 +21,35 @@ final class SphinxHotelProductProvider implements HotelProductProviderInterface
     #[\Override]
     public function resolveProduct(int $productId, string $productCode): ?HotelSeoData
     {
-        // City/country prefer the hotel's own API address fields (clean,
-        // per-hotel) over the destination-tree names, which are irregular.
-        $row = TypeCoerce::toStringMap(db_get_row(
-            'SELECT hotel_id, name, classification, property_type,
-                    COALESCE(NULLIF(address_city, ?s), destination_name) AS city,
-                    region_name AS region,
-                    COALESCE(NULLIF(address_country, ?s), country_name) AS country,
-                    latitude, longitude, image_url, address, phone, email, website
-             FROM ?:sphinx_hotels WHERE product_id = ?i LIMIT 1',
-            '',
-            '',
-            $productId,
-        ));
+        $row = $this->fetchHotelRow('product_id = ?i', $productId);
+
+        // Self-heal a lost product link. Sphinx product codes are
+        // <ISO-2 country><hotel_id> (TR3612), so the code alone identifies
+        // the hotel even when ?:sphinx_hotels.product_id was wiped (fresh
+        // reinstall, table re-sync) — without this, such hotels render as
+        // plain products forever: no booking form, no location line.
+        if ($row === [] && preg_match('/^[A-Z]{2}(\d+)$/', $productCode, $m) === 1) {
+            $row = $this->fetchHotelRow('hotel_id = ?s', $m[1]);
+            if ($row !== []) {
+                $linked = TypeCoerce::toInt($row['product_id'] ?? 0);
+                if ($linked <= 0) {
+                    db_query(
+                        'UPDATE ?:sphinx_hotels SET product_id = ?i WHERE hotel_id = ?s',
+                        $productId,
+                        $m[1],
+                    );
+                } elseif ($linked !== $productId) {
+                    // Another product already owns this hotel — serve the PDP
+                    // but leave the link alone and make the conflict visible.
+                    fn_log_event('general', 'runtime', [
+                        'message' => 'Sphinx: hotel linked to a different product; code-based resolve served without relinking',
+                        'hotel_id' => $m[1],
+                        'linked_product_id' => $linked,
+                        'requested_product_id' => $productId,
+                    ]);
+                }
+            }
+        }
 
         if ($row === []) {
             return null;
@@ -56,6 +72,28 @@ final class SphinxHotelProductProvider implements HotelProductProviderInterface
             email: self::optString($row['email'] ?? null),
             website: self::optString($row['website'] ?? null),
         );
+    }
+
+    /**
+     * One row from ?:sphinx_hotels by a single-placeholder WHERE clause.
+     * City/country prefer the hotel's own API address fields (clean,
+     * per-hotel) over the destination-tree names, which are irregular.
+     *
+     * @return array<string, mixed>
+     */
+    private function fetchHotelRow(string $where, int|string $value): array
+    {
+        return TypeCoerce::toStringMap(db_get_row(
+            'SELECT hotel_id, product_id, name, classification, property_type,
+                    COALESCE(NULLIF(address_city, ?s), destination_name) AS city,
+                    region_name AS region,
+                    COALESCE(NULLIF(address_country, ?s), country_name) AS country,
+                    latitude, longitude, image_url, address, phone, email, website
+             FROM ?:sphinx_hotels WHERE ' . $where . ' LIMIT 1',
+            '',
+            '',
+            $value,
+        ));
     }
 
     #[\Override]
