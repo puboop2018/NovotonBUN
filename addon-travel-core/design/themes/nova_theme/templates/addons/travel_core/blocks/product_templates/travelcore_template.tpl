@@ -154,6 +154,16 @@
                 </div>
                 {* /Travel header *}
 
+                {* #95. Travel columns: OUR flex container owns the
+                   image-left / info-right layout (.travel-pdp-columns in
+                   booking-pages.css). The theme styles the wrapper's DIRECT
+                   children — with the header injected as a new first child
+                   the stock grid/float rules misplaced every sibling, so
+                   the gallery and the info column move one level down where
+                   only our flexbox applies. Core class names untouched
+                   (previewer JS + capture contracts). *}
+                <div class="travel-pdp-columns">
+
                 {* #100. Product image *}
                 <div
                     class="ty-product-block__img-wrapper"
@@ -511,6 +521,9 @@
 
                 </div>
                 {* /Product info *}
+
+                </div>
+                {* /Travel columns *}
             {/if}
 
         {/hook}

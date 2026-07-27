@@ -57,19 +57,28 @@ final class TravelcoreProductTemplateTest extends TestCase
         $header = strpos($src, '<div class="travel-pdp-header">');
         $hook = strpos($src, '{hook name="products:main_info_title"}');
         $title = strpos($src, 'ty-product-block-title');
+        $travelColumns = strpos($src, '<div class="travel-pdp-columns">');
         $gallery = strpos($src, 'ty-product-block__img-wrapper');
+        $left = strpos($src, 'ty-product-block__left');
         $columns = strpos($src, 'ty-product-block__columns-wrapper');
 
         self::assertNotFalse($header);
         self::assertNotFalse($hook);
         self::assertNotFalse($title);
+        self::assertNotFalse($travelColumns);
         self::assertNotFalse($gallery);
+        self::assertNotFalse($left);
         self::assertNotFalse($columns);
 
         self::assertGreaterThan($header, $hook, 'hook lives inside the header');
         self::assertGreaterThan($hook, $title, 'h1 renders inside the hook');
-        self::assertLessThan($gallery, $header, 'header must precede the image gallery');
-        self::assertLessThan($columns, $gallery, 'gallery still precedes the info columns');
+        // Row order: header, then OUR columns container wrapping gallery +
+        // info column — the theme's wrapper rules only reach direct children,
+        // so both columns must live inside .travel-pdp-columns.
+        self::assertLessThan($travelColumns, $header, 'header precedes the columns container');
+        self::assertLessThan($gallery, $travelColumns, 'gallery lives inside .travel-pdp-columns');
+        self::assertLessThan($left, $gallery, 'gallery precedes the info column');
+        self::assertLessThan($columns, $left, 'info column wraps the stock columns-wrapper');
     }
 
     public function testHeaderCssShipsInBothThemeStylesheets(): void
@@ -79,6 +88,7 @@ final class TravelcoreProductTemplateTest extends TestCase
                 dirname(__DIR__, 6) . '/design/themes/' . $theme . '/css/addons/travel_core/booking-pages.css',
             );
             self::assertStringContainsString('.travel-pdp-header {', $css, $theme);
+            self::assertStringContainsString('.travel-pdp-columns {', $css, $theme);
         }
     }
 
@@ -100,5 +110,15 @@ final class TravelcoreProductTemplateTest extends TestCase
             $po = (string) file_get_contents($repoAddonRoot . '/var/langs/' . $lang . '/addons/travel_core.po');
             self::assertStringContainsString('msgctxt "Languages::travelcore_template"', $po, $lang . '.po');
         }
+
+        // Belt and braces: the key also ships in addon.xml language_variables
+        // (install-time import + it wins in the runtime seeder union), with
+        // the IDENTICAL value so the .po parity rule holds.
+        $xml = (string) file_get_contents($addonRoot . '/addon.xml');
+        self::assertSame(
+            2,
+            substr_count($xml, 'id="travelcore_template"'),
+            'en + ro language_variables entries in addon.xml',
+        );
     }
 }

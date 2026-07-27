@@ -570,6 +570,12 @@
         <!-- Cart/checkout -->
         <item lang="en" id="travel_core.edit_guest_details"><![CDATA[Edit Guest Details]]></item>
         <item lang="ro" id="travel_core.edit_guest_details"><![CDATA[Editează detalii turiști]]></item>
+        <!-- BARE key by CS-Cart convention: labels the Appearance "Product
+             detailed page view" entry for blocks/product_templates/
+             travelcore_template.tpl. Value must stay IDENTICAL to the
+             lang_keys.php entry (addon.xml wins at seed time). -->
+        <item lang="en" id="travelcore_template"><![CDATA[Travel Core Template]]></item>
+        <item lang="ro" id="travelcore_template"><![CDATA[Travel Core Template]]></item>
         <!-- Exchange rates -->
         <item lang="en" id="travel_core.exchange_rates"><![CDATA[Exchange Rates]]></item>
         <item lang="ro" id="travel_core.exchange_rates"><![CDATA[Cursuri Valutare]]></item>
