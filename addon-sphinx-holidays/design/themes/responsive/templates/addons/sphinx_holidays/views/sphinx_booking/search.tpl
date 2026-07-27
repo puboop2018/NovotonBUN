@@ -10,56 +10,15 @@
  * @since 1.0.0
  *}
 
-<div class="travel-search-results-page sphinx-search-results"
-     data-search-id="{$sphinx_search_id|escape:html}"
-     data-search-status="{$sphinx_search_status|default:'idle'}">
+<div class="travel-search-results-page sphinx-search-results">
 
-    {* Availability status — same split layout as novoton's: a compact
-       "✓ Available" pill with the guest-count confirmation as plain text
-       below it ("N room(s), M offer(s) for X adults[, Y children]").
-       Rooms = DISTINCT room types (two boards of one room count once); the
-       party suffix ties availability to the searched guests. The COUNT LINE
-       is (re)written by the poll JS as offers stream in (the pill is static);
-       data-party-suffix carries the server-rendered party for that JS. *}
-    {$sx_badge_room_keys = []}
-    {foreach from=$sphinx_search_results item=__sx_r}
-        {$__sx_rk = $__sx_r.room_name|default:$__sx_r.room_type|default:''}
-        {$__sx_rk = $__sx_rk|trim|lower}
-        {$sx_badge_room_keys[$__sx_rk] = 1}
-    {/foreach}
-    {$sx_badge_rooms = $sx_badge_room_keys|count}
-    {$sx_badge_offers = $sphinx_search_results|count}
-    {$sx_badge_adults = $sphinx_search_params.adults|default:0}
-    {$sx_badge_children = $sphinx_search_params.children|default:0}
-    {* Guests bullet (what was searched) — the party WITHOUT the "for" connector,
-       since it now sits on its own line. Carried in data-party-suffix so the
-       poll JS can rebuild the same bullet as offers stream in. *}
-    {* CS-Cart plural forms so Romanian renders "1 adult"/"2 adulți" correctly. *}
-    {capture assign="sx_badge_guests"}{__("sphinx_holidays.n_adults", [$sx_badge_adults])|lower}{if $sx_badge_children > 0}, {__("sphinx_holidays.n_children", [$sx_badge_children])|lower}{/if}{/capture}
-    {capture assign="sx_badge_html"}<div class="travel-availability-block sphinx-results-title" id="sphinx-results-title" data-party-suffix="{$sx_badge_guests|escape:html}"{if !$sphinx_search_results} style="display: none;"{/if}><span class="travel-availability-badge">✓ {__("sphinx_holidays.available")|default:"Available"}</span><div class="travel-availability-details" id="sphinx-availability-details"><span class="travel-availability-line" id="sphinx-availability-guests">{if $sphinx_search_results}{$sx_badge_guests}{/if}</span><span class="travel-availability-line" id="sphinx-availability-rooms">{if $sphinx_search_results}{__("sphinx_holidays.n_rooms", [$sx_badge_rooms])|lower} ({__("sphinx_holidays.n_offers", [$sx_badge_offers])|lower}){/if}</span></div></div>{/capture}
-
-    {* ===== HOTEL HEADER — placed ABOVE the search form (novoton parity);
-       availability badge on the right, same row layout as novoton ===== *}
-    {if $sphinx_hotel_name}
-        <div class="travel-hotel-header sphinx-hotel-header">
-            <div class="travel-hotel-header-row">
-                <div>
-                    {* Shared hotel-identity header (name + stars + location +
-                       map link) — travel_core component, ONE copy for all four
-                       provider surfaces. Data: $travel_hotel_header
-                       (HotelHeaderViewModel, assigned by the search controller). *}
-                    {include file="addons/travel_core/components/hotel_header.tpl"
-                        hh_extra_class="sphinx-hotel-header-name"
-                        hh_location_class="sphinx-hotel-header-location"}
-                </div>
-                <div>
-                    {$sx_badge_html nofilter}
-                </div>
-            </div>
-        </div>
-    {else}
-        {$sx_badge_html nofilter}
-    {/if}
+    {* ===== NO HOTEL HEADER / BADGE =====
+       Results render inline on the product page, which already shows the
+       hotel identity — the old header strip (shared hotel_header include +
+       the "✓ Available" badge block) was removed with it. The search
+       id/status the poll JS needs moved onto #sphinx-results-container,
+       INSIDE the swap region, so an inline search delivers a fresh id to
+       the product page. *}
 
     {* ===== BOOKING FORM — Pre-rendered in controller to prevent OOM ===== *}
     <div class="travel-search-form-wrapper">
@@ -99,8 +58,13 @@
         {/foreach}
     </div>
 
-    {* Results container — the availability badge lives in the hotel header above *}
-    <div class="sphinx-results-container" id="sphinx-results-container">
+    {* Results container — carries the poll handshake (search id + status)
+       INSIDE the swap region: the engine's inline search copies this node
+       into the product page and fires travel:results-swapped, which re-arms
+       the poll in search-results.js against the fresh id. *}
+    <div class="sphinx-results-container" id="sphinx-results-container"
+         data-search-id="{$sphinx_search_id|escape:html}"
+         data-search-status="{$sphinx_search_status|default:'idle'}">
         {foreach from=$sphinx_search_results item=result name=results}
             <div class="travel-offer-card sphinx-offer-card" data-offer-id="{$result.offer_id|default:''}">
 
@@ -206,21 +170,25 @@
         </div>
     </div>
 
-</div>
-
-{* On-demand payment/cancellation terms modal (loaded via sphinx_booking.offer_terms) *}
-<div id="sphinx-terms-modal" class="travel-terms-modal" role="dialog" aria-modal="true" aria-labelledby="sphinx-terms-modal-title" style="display: none;">
-    <div class="travel-terms-modal__box">
-        <div class="travel-terms-modal__head">
-            <h3 id="sphinx-terms-modal-title">{__("sphinx_holidays.cancellation_and_payment_terms")|default:"Condiții de Plată și Anulare"}</h3>
-            <button type="button" class="travel-terms-modal__close" aria-label="{__("close")|default:"Close"}">&times;</button>
+    {* On-demand payment/cancellation terms modal (sphinx_booking.offer_terms).
+       INSIDE .travel-search-results-page on purpose: the inline search copies
+       everything after the form wrapper into the product page, so the modal
+       must travel WITH the results. Its handlers are document-delegated in
+       search-results.js — the swapped-in copy needs no rebinding. *}
+    <div id="sphinx-terms-modal" class="travel-terms-modal" role="dialog" aria-modal="true" aria-labelledby="sphinx-terms-modal-title" style="display: none;">
+        <div class="travel-terms-modal__box">
+            <div class="travel-terms-modal__head">
+                <h3 id="sphinx-terms-modal-title">{__("sphinx_holidays.cancellation_and_payment_terms")|default:"Condiții de Plată și Anulare"}</h3>
+                <button type="button" class="travel-terms-modal__close" aria-label="{__("close")|default:"Close"}">&times;</button>
+            </div>
+            <div class="travel-terms-modal__body" id="sphinx-terms-modal-body"></div>
         </div>
-        <div class="travel-terms-modal__body" id="sphinx-terms-modal-body"></div>
     </div>
-</div>
 
-{* Async polling logic *}
-<script>
+    {* Async polling config — also INSIDE the wrapper: the engine re-executes
+       swapped-in scripts, so every inline search refreshes these globals
+       before travel:results-swapped re-arms the poll. *}
+    <script>
 window.__sphinxSearchParams = {
     check_in: "{$sphinx_search_params.check_in|default:''|escape:javascript}",
     check_out: "{$sphinx_search_params.check_out|default:''|escape:javascript}",
@@ -263,6 +231,9 @@ window.__sphinxConfig = {
     }
 };
 </script>
+
+</div>
+
 {* Poll + terms-modal behavior lives in a real JS file (vitest imports it
    directly — tests/js/sphinx-search-results.test.mjs); the config objects
    above are its only Smarty-fed input. *}

@@ -154,6 +154,10 @@ if ($mode === 'booking_config') {
                 'productId' => TypeCoerce::toInt($product_id),
                 'searchDispatch' => $searchDispatch,
                 'mode' => 'product',
+                // Search results render inline on the product page: the engine
+                // AJAX-swaps them into the mount's .travel-search-results-page
+                // shell instead of navigating to the standalone results page.
+                'inlineResults' => true,
                 'colors' => $colors,
                 'translations' => $translations,
             ];

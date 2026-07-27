@@ -28,61 +28,12 @@
     </div>
     {/if}
 
-    {* ===== HOTEL HEADER — placed ABOVE the search form (sphinx parity).
-       Shown whenever the hotel is KNOWN, results or not: on a
-       zero-availability search the guest still needs to see which hotel this
-       is (name → product page, address, map link). Only the badge is
-       results-gated — it never shows "0 offers". ===== *}
-    {if $hotel_name}
-        <div class="travel-hotel-header novoton-hotel-header">
-            <div class="novoton-hotel-header-row">
-                <div>
-                    {* Shared hotel-identity header (name + stars + location +
-                       map link) — travel_core component, ONE copy for all four
-                       provider surfaces. Data: $travel_hotel_header
-                       (HotelHeaderViewModel, assigned by SearchResultFormatter). *}
-                    {include file="addons/travel_core/components/hotel_header.tpl"}
-                    {if $hotel_season_from && $hotel_season_to}
-                    <p class="novoton-season-note">
-                        {__("novoton_holidays.accommodation_period")|default:"This hotel offers accommodation from"} {$hotel_season_from|date_format:"%d %b"} {__("novoton_holidays.to")|default:"to"} {$hotel_season_to|date_format:"%d %b %Y"}
-                    </p>
-                    {/if}
-                </div>
-                <div>
-                    {if $novoton_results && $novoton_results|count > 0}
-                    {* Rooms = DISTINCT room types, not availability quota: two
-                       board variants of the same room count as ONE room. The
-                       party suffix ties "availability" to the searched guests. *}
-                    {$badge_room_keys = []}
-                    {foreach from=$novoton_results item=r}
-                        {$__badge_rk = $r.room_id|default:$r.room_name|default:''}
-                        {$__badge_rk = $__badge_rk|trim|lower}
-                        {$badge_room_keys[$__badge_rk] = 1}
-                    {/foreach}
-                    {$badge_rooms_count = $badge_room_keys|count}
-                    {$badge_offers_count = $novoton_results|count}
-                    {$badge_adults = $novoton_params.adults|default:0}
-                    {$badge_children = $novoton_params.children_count|default:0}
-                    {* Two-bullet hierarchy: the compact pill answers "available?",
-                       then guests (what was searched) and rooms/offers (what was
-                       found) sit on their own lines — same wording, just split. *}
-                    {* CS-Cart plural forms ([n] singular|[n] plural) so Romanian
-                       renders "1 ofertă" / "2 oferte" correctly; |lower matches
-                       the badge's lowercase style. *}
-                    {capture assign="badge_guests"}{__("novoton_holidays.n_adults", [$badge_adults])|lower}{if $badge_children > 0}, {__("novoton_holidays.n_children", [$badge_children])|lower}{/if}{/capture}
-                    {capture assign="badge_rooms"}{__("novoton_holidays.n_rooms", [$badge_rooms_count])|lower} ({__("novoton_holidays.n_offers", [$badge_offers_count])|lower}){/capture}
-                    <div class="travel-availability-block">
-                        <span class="travel-availability-badge">✓ {__("novoton_holidays.available")}</span>
-                        <div class="travel-availability-details">
-                            <span class="travel-availability-line">{$badge_guests}</span>
-                            <span class="travel-availability-line">{$badge_rooms}</span>
-                        </div>
-                    </div>
-                    {/if}
-                </div>
-            </div>
-        </div>
-    {/if}
+    {* ===== NO HOTEL HEADER =====
+       Results render inline on the product page, which already shows the
+       hotel identity (name, stars, location, map) — the old header strip
+       (shared hotel_header include, season note, availability badge) was
+       removed with it. The standalone page (direct URL / no-JS fallback)
+       intentionally renders headerless too. *}
 
     {* ===== BOOKING FORM — Pre-rendered in controller to prevent OOM ===== *}
     {* Rendered to string in search.php BEFORE heavy results are assigned.
@@ -595,53 +546,9 @@
             {/foreach}
         </div>
 
-        {* ===== TERMS & CONDITIONS ===== *}
-        {if $terms_of_payment || $terms_of_cancellation || $parsed_payment_terms || $parsed_cancellation_terms || $terms_of_payment_raw || $terms_of_cancellation_raw}
-        <div class="travel-terms-panels">
-
-            {if $parsed_payment_terms|count > 0 || $terms_of_payment || $terms_of_payment_raw}
-            <div class="travel-terms-panel">
-                <h4 class="novoton-terms-title">
-                    💳 {__("novoton_holidays.payment_terms")|default:"Condiții de plată"}
-                </h4>
-                {if $parsed_payment_terms && $parsed_payment_terms|count > 0}
-                    <ul class="novoton-terms-list">
-                    {foreach from=$parsed_payment_terms item=term}
-                        <li>
-                            {if $term.is_on_booking}
-                                {$term.percent|string_format:"%d"}% {__("novoton_holidays.on_booking")|default:"la rezervare"}
-                            {elseif $term.date_formatted}
-                                {$term.percent|string_format:"%d"}% {__("novoton_holidays.until")|default:"până la"} {$term.date_formatted}
-                            {elseif $term.date}
-                                {$term.percent|string_format:"%d"}% {__("novoton_holidays.until")|default:"până la"} {$term.date}
-                            {else}
-                                {$term.percent|string_format:"%d"}%
-                            {/if}
-                        </li>
-                    {/foreach}
-                    </ul>
-                {elseif $terms_of_payment}
-                    <div class="novoton-terms-text">{$terms_of_payment|escape:'html'|nl2br nofilter}</div>
-                {else}
-                    <div class="novoton-terms-text">Condiții de plată disponibile</div>
-                {/if}
-            </div>
-            {/if}
-
-            {if $terms_of_cancellation || $terms_of_cancellation_raw}
-            <div class="travel-terms-panel">
-                <h4 class="novoton-terms-title">
-                    📋 {__("novoton_holidays.cancellation_terms")|default:"Condiții de anulare"}
-                </h4>
-                {if $terms_of_cancellation}
-                    <div class="novoton-terms-text">{$terms_of_cancellation|escape:'html'|nl2br nofilter}</div>
-                {else}
-                    <div class="novoton-terms-text">{__("novoton_holidays.cancellation_terms_available")|default:"Condiții de anulare disponibile"}</div>
-                {/if}
-            </div>
-            {/if}
-        </div>
-        {/if}
+        {* Below-list "Condiții de plată" / "Condiții de anulare" panels were
+           removed: every offer row links its own payment/cancellation terms,
+           so the page-level duplicates only added noise under the results. *}
 
         {/if}
 
@@ -735,17 +642,22 @@
         </div>
     {/if}
 
-</div>
-
-{* Modal for More Info *}
-<div id="info-modal" class="novoton-info-modal">
-    <div class="novoton-info-modal-box">
-        <div class="novoton-info-modal-head">
-            <h3>{__("novoton_holidays.room_details")}</h3>
-            <button onclick="closeInfoModal()" class="novoton-info-modal-close" aria-label="{__("close")|default:"Close"}">&times;</button>
+    {* Modal for More Info — INSIDE .travel-search-results-page on purpose:
+       the engine's inline search copies everything after the form wrapper
+       into the product page, so the modal must travel WITH the results
+       (outside the wrapper it would never exist on the PDP). Handlers are
+       document-delegated in search-results.js, so the swapped-in copy
+       needs no rebinding. *}
+    <div id="info-modal" class="novoton-info-modal">
+        <div class="novoton-info-modal-box">
+            <div class="novoton-info-modal-head">
+                <h3>{__("novoton_holidays.room_details")}</h3>
+                <button onclick="closeInfoModal()" class="novoton-info-modal-close" aria-label="{__("close")|default:"Close"}">&times;</button>
+            </div>
+            <div id="info-modal-content" class="novoton-info-modal-body"></div>
         </div>
-        <div id="info-modal-content" class="novoton-info-modal-body"></div>
     </div>
+
 </div>
 
 {* Modal behavior lives in a real JS file (vitest imports it directly —

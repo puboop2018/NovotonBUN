@@ -15,10 +15,8 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\NovotonHolidays\Services;
 
-use Tygh\Addons\TravelCore\Dto\Hotel\HotelSeoData;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Services\CurrencyService;
-use Tygh\Addons\TravelCore\ViewModels\HotelHeaderFactory;
 
 class SearchResultFormatter implements SearchResultFormatterInterface
 {
@@ -81,9 +79,6 @@ class SearchResultFormatter implements SearchResultFormatterInterface
         $hotelId = PriceInfoFormatter::toScalar($novotonParams['hotel_id'] ?? '');
         $productId = PriceInfoFormatter::toInt($novotonParams['product_id'] ?? 0);
         $this->assignHotelDisplay($view, $hotelId, $productId);
-
-        // ── Terms & early-booking tooltip ────────────────────────────
-        $this->assignTerms($view, $results, $searchParams, $hotelId);
 
         // ── Hotel URL ────────────────────────────────────────────────
         $view->assign('hotel_url', !empty($productId)
@@ -178,7 +173,6 @@ class SearchResultFormatter implements SearchResultFormatterInterface
         $hotelCity = '';
         $hotelRegion = '';
         $hotelCountry = '';
-        $hotelStreet = '';
         $hotelLat = 0.0;
         $hotelLng = 0.0;
         $hotelStars = '';
@@ -193,7 +187,6 @@ class SearchResultFormatter implements SearchResultFormatterInterface
                 $hotelCity = $hotelInfo['city'] ?? '';
                 $hotelRegion = $hotelInfo['region'] ?? '';
                 $hotelCountry = $hotelInfo['country'] ?? '';
-                $hotelStreet = $hotelInfo['street_address'] ?? '';
                 $hotelLat = TypeCoerce::toFloat($hotelInfo['latitude'] ?? 0);
                 $hotelLng = TypeCoerce::toFloat($hotelInfo['longitude'] ?? 0);
                 // Gold ★ glyphs (styled by .travel-hotel-stars) — the search
@@ -239,29 +232,9 @@ class SearchResultFormatter implements SearchResultFormatterInterface
         $view->assign('hotel_lat', $hotelLat);
         $view->assign('hotel_lng', $hotelLng);
 
-        // Same sanitizer as the PDP: Title-Cases single-case labels and dedups
-        // city==region, so "DURRES, DURRES, ALBANIA" renders "Durres, Albania".
-        // street_address (opt-in geocoding) flips it to the PDP's postal style,
-        // keeping search text == PDP text on geocoded installs too.
-        $hotelSeo = new HotelSeoData(
-            hotelId: TypeCoerce::toString($hotelId),
-            providerName: 'novoton',
-            name: TypeCoerce::toString($hotelName),
-            city: TypeCoerce::toString($hotelCity),
-            region: TypeCoerce::toString($hotelRegion),
-            country: TypeCoerce::toString($hotelCountry),
-            latitude: $hotelLat,
-            longitude: $hotelLng,
-            address: TypeCoerce::toString($hotelStreet),
-        );
-        // Shared header derivation (travel_core): sanitized location line +
-        // always-present map URL (coordinate pin when available, place-search
-        // fallback otherwise) + the view model the hotel_header component
-        // renders — one factory for all four provider surfaces.
-        $headerVm = HotelHeaderFactory::fromSeo($hotelSeo, $hotelStarCount, $productId);
-        $view->assign('hotel_location_line', $headerVm->locationLine);
-        $view->assign('hotel_map_url', $headerVm->mapUrl);
-        $view->assign('travel_hotel_header', $headerVm->toViewArray());
+        // The hotel-header view model is gone from this surface: results
+        // render inline on the product page (or headerless standalone), so
+        // search.tpl no longer includes the shared hotel_header component.
     }
 
     /**
@@ -387,73 +360,6 @@ class SearchResultFormatter implements SearchResultFormatterInterface
 
         $view->assign('hotel_season_from', $seasonFrom);
         $view->assign('hotel_season_to', $seasonTo);
-    }
-
-    /**
-     * @param \Smarty $view
-     * @param list<array<string, mixed>> $results
-     * @param array<string, mixed> $searchParams
-     */
-    private function assignTerms($view, array $results, array $searchParams, string $hotelId): void
-    {
-        $termsPaymentRaw = '';
-        $termsCancellationRaw = '';
-
-        foreach ($results as $r) {
-            if (!empty($r['terms_of_payment']) && empty($termsPaymentRaw)) {
-                $termsPaymentRaw = PriceInfoFormatter::toScalar($r['terms_of_payment']);
-            }
-            if (!empty($r['terms_of_cancellation']) && empty($termsCancellationRaw)) {
-                $termsCancellationRaw = PriceInfoFormatter::toScalar($r['terms_of_cancellation']);
-            }
-        }
-
-        $checkInForTerms = PriceInfoFormatter::toScalar($searchParams['check_in'] ?? '');
-
-        $view->assign('terms_of_payment', TermsFormatter::formatPaymentTerms($termsPaymentRaw));
-        $view->assign('terms_of_cancellation', TermsFormatter::formatCancellationTerms($termsCancellationRaw, $checkInForTerms));
-        $view->assign('terms_of_payment_raw', $termsPaymentRaw);
-        $view->assign('terms_of_cancellation_raw', $termsCancellationRaw);
-        $view->assign('parsed_payment_terms', TermsFormatter::parsePaymentTerms($termsPaymentRaw));
-        $view->assign('parsed_cancellation_terms', TermsFormatter::parseCancellationTerms($termsCancellationRaw, $checkInForTerms));
-
-        // Early-booking tooltip details
-        $ebDetails = '';
-        if (!empty($hotelId)) {
-            $packageRepo = Container::getInstance()->hotelPackageRepository();
-            $ebPackage = $packageRepo->findEarlyBookingPackage($hotelId);
-
-            if (!empty($ebPackage['priceinfo_data'])) {
-                $priceinfo = json_decode(PriceInfoFormatter::toScalar($ebPackage['priceinfo_data']), true);
-                if (is_array($priceinfo) && !empty($priceinfo['early_booking'])) {
-                    $ebData = $priceinfo['early_booking'];
-                    if (!is_array($ebData)) {
-                        $ebData = [];
-                    } elseif (isset($ebData['Reduction'])) {
-                        $ebData = [$ebData];
-                    }
-
-                    $lines = [];
-                    foreach ($ebData as $eb) {
-                        if (!is_array($eb)) {
-                            continue;
-                        }
-                        $reduction = PriceInfoFormatter::toScalar($eb['Reduction'] ?? 0);
-                        $bookTo = PriceInfoFormatter::toScalar($eb['BookTo'] ?? '');
-                        $stayFrom = PriceInfoFormatter::toScalar($eb['StayFrom'] ?? '');
-                        $stayTo = PriceInfoFormatter::toScalar($eb['StayTo'] ?? '');
-                        $paymentDate = !empty($bookTo)
-                            ? date('d.m.Y', (int) strtotime($bookTo . ' +5 days'))
-                            : 'N/A';
-                        $lines[] = "-{$reduction}% Early Booking discount till {$bookTo}"
-                            . " -- PAYMENT till {$paymentDate}"
-                            . " -- STAY in {$stayFrom} - {$stayTo}";
-                    }
-                    $ebDetails = implode("\n", $lines);
-                }
-            }
-        }
-        $view->assign('early_booking_details', $ebDetails);
     }
 
     /** @param \Smarty $view */

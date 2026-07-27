@@ -31,6 +31,7 @@ export default function BookingEngine({ config }) {
         hotelId = '',
         productId = '',
         mode = 'product',
+        inlineResults = false,
         searchDispatch = '',
         initialCheckIn = '',
         initialCheckOut = '',
@@ -270,16 +271,6 @@ export default function BookingEngine({ config }) {
                     }
                     curPage.appendChild(fragment);
 
-                    // The hotel header (name, location line, availability badge)
-                    // renders BEFORE the search form, so the post-form swap above
-                    // never touches it — refresh it too, or the badge keeps the
-                    // previous search's room/offer counts and party text.
-                    const curHeader = curPage.querySelector('.travel-hotel-header');
-                    const newHeader = newPage.querySelector('.travel-hotel-header');
-                    if (curHeader && newHeader) {
-                        curHeader.replaceWith(document.importNode(newHeader, true));
-                    }
-
                     // Re-execute scripts from the fetched same-origin page.
                     curPage.querySelectorAll('script').forEach(oldScript => {
                         if (oldScript.closest('.travel-search-form-wrapper')) return;
@@ -309,7 +300,29 @@ export default function BookingEngine({ config }) {
                     const resultsTop = curForm.getBoundingClientRect().bottom + window.pageYOffset - 20;
                     window.scrollTo({ top: resultsTop, behavior: 'smooth' });
 
-                    window.history.pushState({}, '', url);
+                    // Inline mode keeps the visitor on the product page: write
+                    // the booking params onto the CURRENT (products.view / SEO)
+                    // URL instead of the results dispatch, so reload restores
+                    // the same inline view via the auto-restore effect.
+                    let historyUrl = url;
+                    if (inlineResults) {
+                        const cur = new URL(window.location.href);
+                        const next = new URL(url, window.location.origin);
+                        ['check_in', 'check_out', 'adults', 'children', 'rooms', 'rooms_data', 'children_ages'].forEach((k) => {
+                            const v = next.searchParams.get(k);
+                            if (v === null) {
+                                cur.searchParams.delete(k);
+                            } else {
+                                cur.searchParams.set(k, v);
+                            }
+                        });
+                        historyUrl = cur.toString();
+                    }
+                    window.history.pushState({}, '', historyUrl);
+
+                    // Swapped-in provider markup may need re-arming (sphinx
+                    // polling reads its fresh search-id from the new nodes).
+                    document.dispatchEvent(new CustomEvent('travel:results-swapped'));
 
                     setHasSearched(true);
                     setParamsChanged(false);
@@ -332,7 +345,7 @@ export default function BookingEngine({ config }) {
         };
 
         attemptFetch(0);
-    }, []);
+    }, [inlineResults]);
 
     const handleSearch = useCallback(() => {
         setFetchError('');
@@ -365,18 +378,33 @@ export default function BookingEngine({ config }) {
 
         const url = buildSearchUrl();
 
-        if (mode === 'search') {
+        if (mode === 'search' || inlineResults) {
             performAjaxSearch(url);
             return;
         }
 
         window.location.href = url + '&_t=' + Date.now();
-    }, [checkIn, checkOut, rooms, mode, buildSearchUrl, performAjaxSearch]);
+    }, [checkIn, checkOut, rooms, mode, inlineResults, buildSearchUrl, performAjaxSearch]);
 
     const handleButtonClick = useCallback(() => {
         if (isSearching) return;
         handleSearch();
     }, [handleSearch, isSearching]);
+
+    // Inline-mode restore: a product URL carrying both dates is a pushed or
+    // shared search URL (plain product visits never have them) — re-run that
+    // search once on mount so a reload shows the results again instead of
+    // just the prefilled form. Bypasses handleSearch validation on purpose:
+    // the params already passed it when the URL was created.
+    const didAutoSearchRef = useRef(false);
+    useEffect(() => {
+        if (!inlineResults || didAutoSearchRef.current) return;
+        if (!checkIn || !checkOut) return;
+        didAutoSearchRef.current = true;
+        performAjaxSearch(buildSearchUrl());
+        // Mount-only by design (empty deps): the initial dates come from the
+        // URL via config and must fire exactly once.
+    }, []);
 
     // -----------------------------------------------------------------------
     // Render helpers

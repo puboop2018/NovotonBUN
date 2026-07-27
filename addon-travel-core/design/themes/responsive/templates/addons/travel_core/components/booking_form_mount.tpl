@@ -16,15 +16,23 @@
 
 {if $travel_booking_product_id}
 <!-- [travel_core] BOOKING FORM RENDERING for product_id={$travel_booking_product_id} -->
-<div id="travel-booking-root"
-     data-travel-booking
-     data-product-id="{$travel_booking_product_id}"
-     style="margin-bottom: 20px; min-height: 60px;">
-    <div class="travel-loading-state">
-        <div class="nvt-skeleton-row">
-            <div class="nvt-skeleton-field nvt-skeleton-field--wide"></div>
-            <div class="nvt-skeleton-field"></div>
-            <div class="nvt-skeleton-field nvt-skeleton-field--btn"></div>
+{* The engine's inline search swaps results into the SAME shell the
+   standalone results pages use: everything after .travel-search-form-wrapper
+   inside .travel-search-results-page gets replaced by the fetched offers.
+   .travel-pdp-results scopes any PDP-specific layout neutralization. *}
+<div class="travel-search-results-page travel-pdp-results">
+    <div class="travel-search-form-wrapper">
+        <div id="travel-booking-root"
+             data-travel-booking
+             data-product-id="{$travel_booking_product_id}"
+             style="margin-bottom: 20px; min-height: 60px;">
+            <div class="travel-loading-state">
+                <div class="nvt-skeleton-row">
+                    <div class="nvt-skeleton-field nvt-skeleton-field--wide"></div>
+                    <div class="nvt-skeleton-field"></div>
+                    <div class="nvt-skeleton-field nvt-skeleton-field--btn"></div>
+                </div>
+            </div>
         </div>
     </div>
 </div>

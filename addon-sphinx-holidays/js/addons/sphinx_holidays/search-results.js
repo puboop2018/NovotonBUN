@@ -35,37 +35,25 @@ window.SphinxSearch.onReady = function (fn) {
 };
 
 // ── Async result polling ────────────────────────────────────────────────
-window.SphinxSearch.onReady(function () {
-    var root = document.querySelector('.sphinx-search-results');
-    if (!root) return;
+// ── Async result polling ────────────────────────────────────────────────
+// Armed at DOM-ready for the server-rendered results page AND re-armed on
+// travel:results-swapped, fired by the booking engine after it swaps a fresh
+// inline search into the page (product pages included). The search id/status
+// handshake lives on #sphinx-results-container — INSIDE the swap region — so
+// every swap delivers a fresh id; arming twice for one id is a no-op.
+(function () {
+    var armedSearchId = null;
 
-    var searchId = root.getAttribute('data-search-id');
-    var status = root.getAttribute('data-search-status');
-    if (!searchId || status !== 'pending') return;
-
+    function armPoll() {
     var container = document.getElementById('sphinx-results-container');
-    var title = document.getElementById('sphinx-results-title');
-    // Distinct room types seen so far — the badge counts room TYPES, not offers.
-    var seenRoomKeys = {};
-    var seenRoomCount = 0;
+    if (!container) return;
 
-    // Rebuild the two bullet lines under the compact "✓ Available" pill as
-    // offers stream in: guests ("X adults[, Y children]", from the
-    // server-rendered data-party-suffix) and rooms/offers
-    // ("N rooms (M offers)"). The pill itself is static server markup.
-    function updateBadgeText() {
-        if (!title) return;
-        var l = (window.__sphinxConfig && window.__sphinxConfig.labels) || {};
-        var guests = title.getAttribute('data-party-suffix') || '';
-        var guestsEl = document.getElementById('sphinx-availability-guests');
-        var roomsEl = document.getElementById('sphinx-availability-rooms');
-        if (guestsEl) {
-            guestsEl.textContent = guests;
-        }
-        if (roomsEl) {
-            roomsEl.textContent = window.SphinxSearch.badgeRoomsLine(seenRoomCount, accumulated, l);
-        }
-    }
+    var searchId = container.getAttribute('data-search-id');
+    var status = container.getAttribute('data-search-status');
+    if (!searchId || status !== 'pending') return;
+    if (searchId === armedSearchId) return;
+    armedSearchId = searchId;
+
     var skeleton = document.querySelector('.sphinx-loading-skeleton');
     var noResults = document.getElementById('sphinx-no-results');
 
@@ -80,10 +68,6 @@ window.SphinxSearch.onReady(function () {
     var cfg = window.__sphinxConfig || {};
     var maxPolls = cfg.maxPolls || 30;
     var pollInterval = cfg.pollInterval || 250;
-    var pollUrl = window.TravelBookingConfig && window.TravelBookingConfig.searchPollDispatch
-        ? window.TravelBookingConfig.searchPollDispatch
-        : (document.body.getAttribute('data-fn-search-poll-url') || '');
-
     var searchParams = window.__sphinxSearchParams || {};
 
     function renderCard(result) {
@@ -169,17 +153,8 @@ window.SphinxSearch.onReady(function () {
     function appendResults(results) {
         if (!results || !results.length) return;
         for (var i = 0; i < results.length; i++) {
-            var roomKey = String(results[i].room_name || results[i].room_type || '').trim().toLowerCase();
-            if (!seenRoomKeys[roomKey]) {
-                seenRoomKeys[roomKey] = true;
-                seenRoomCount++;
-            }
             container.appendChild(renderCard(results[i]));
             accumulated++;
-        }
-        if (title) {
-            title.style.display = '';
-            updateBadgeText();
         }
     }
 
@@ -276,7 +251,11 @@ window.SphinxSearch.onReady(function () {
 
     // Kick off polling
     poll();
-});
+    }
+
+    window.SphinxSearch.onReady(armPoll);
+    document.addEventListener('travel:results-swapped', armPoll);
+})();
 
 // ── Payment/cancellation terms modal ────────────────────────────────────
 window.SphinxSearch.onReady(function () {
