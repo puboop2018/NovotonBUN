@@ -835,14 +835,18 @@
 }
 
 /* ── Travel Core product template (blocks/product_templates/travelcore_template.tpl) ──
-   Full-width header (hotel name + location line) rendered above the image
-   gallery. flex-basis 100% forces its own row whether the theme lays the
-   product wrapper out with flex or floats; text-align covers themes that
-   center the stock title. */
+   Row 1: full-width, left-aligned header (hotel name + location line).
+   Row 2: .travel-pdp-columns — OUR flex container that owns the
+   image-left / info-right layout, because the theme's wrapper rules only
+   style its DIRECT children (grid or floats depending on theme) and were
+   misplacing the gallery once the header became the first child. The
+   grid-column / flex / float resets make both rows behave under any of
+   those layout models. */
 .travel-pdp-header {
     display: block;
     width: 100%;
     flex: 0 0 100%;
+    grid-column: 1 / -1;
     float: none;
     clear: both;
     text-align: left;
@@ -852,4 +856,32 @@
     margin: 0 0 2px;
     padding: 0;
     text-align: left;
+}
+.travel-pdp-columns {
+    display: flex;
+    align-items: flex-start;
+    gap: 24px;
+    width: 100%;
+    flex: 0 0 100%;
+    grid-column: 1 / -1;
+}
+.travel-pdp-columns > .ty-product-block__img-wrapper {
+    flex: 0 0 auto;
+    float: none;
+    margin: 0;
+    max-width: 100%;
+}
+.travel-pdp-columns > .ty-product-block__left {
+    flex: 1 1 0;
+    min-width: 0;
+    float: none;
+    margin-left: 0;
+}
+@media (max-width: 767px) {
+    .travel-pdp-columns {
+        flex-direction: column;
+    }
+    .travel-pdp-columns > .ty-product-block__img-wrapper {
+        width: 100%;
+    }
 }
