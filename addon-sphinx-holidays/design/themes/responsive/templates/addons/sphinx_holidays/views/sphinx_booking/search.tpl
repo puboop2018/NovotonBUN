@@ -64,7 +64,9 @@
        the poll in search-results.js against the fresh id. *}
     <div class="sphinx-results-container" id="sphinx-results-container"
          data-search-id="{$sphinx_search_id|escape:html}"
-         data-search-status="{$sphinx_search_status|default:'idle'}">
+         data-search-status="{$sphinx_search_status|default:'idle'}"
+         data-client-params="{$sphinx_client_params_json|default:''|escape:html}"
+         data-client-config="{$sphinx_client_config_json|default:''|escape:html}">
         {foreach from=$sphinx_search_results item=result name=results}
             <div class="travel-offer-card sphinx-offer-card" data-offer-id="{$result.offer_id|default:''}">
 
@@ -185,53 +187,11 @@
         </div>
     </div>
 
-    {* Async polling config — also INSIDE the wrapper: the engine re-executes
-       swapped-in scripts, so every inline search refreshes these globals
-       before travel:results-swapped re-arms the poll. *}
-    <script>
-window.__sphinxSearchParams = {
-    check_in: "{$sphinx_search_params.check_in|default:''|escape:javascript}",
-    check_out: "{$sphinx_search_params.check_out|default:''|escape:javascript}",
-    nights: {$sphinx_search_params.nights|default:0},
-    currency: "{$sphinx_search_params.currency|default:'EUR'|escape:javascript}",
-    adults: {$sphinx_search_params.adults|default:2},
-    children: {$sphinx_search_params.children|default:0},
-    children_ages: "{$sphinx_search_params.children_ages|default:''|escape:javascript}",
-    rooms: {$sphinx_search_params.rooms|default:1},
-    product_id: "{$sphinx_search_params.product_id|default:''|escape:javascript}"
-};
-window.__sphinxConfig = {
-    maxPolls: {$sphinx_max_polls|default:30},
-    pollInterval: 250,
-    labels: {
-        perNight: "{__("sphinx_holidays.per_night")|default:"night"|escape:javascript}",
-        instantConfirmation: "{__("sphinx_holidays.instant_confirmation")|default:"Instant confirmation"|escape:javascript}",
-        includesTaxes: "{__("sphinx_holidays.includes_taxes")|default:"Includes taxes and commissions"|escape:javascript}",
-        bookNow: "{__("sphinx_holidays.book_now")|default:"Book now"|escape:javascript}",
-        nights: "{__("travel_core.nights")|default:"nights"|escape:javascript}",
-        starsRating: "{__("sphinx_holidays.stars_rating", ["[rating]" => "%s"])|default:"%s-star rating"|escape:javascript}",
-        cancellationAndPaymentTerms: "{__("sphinx_holidays.cancellation_and_payment_terms")|default:"Condiții de Plată și Anulare"|escape:javascript}",
-        paymentTerms: "{__("sphinx_holidays.payment_terms")|default:"Termeni de plată"|escape:javascript}",
-        cancellationPolicy: "{__("sphinx_holidays.cancellation_policy")|default:"Politica de anulare"|escape:javascript}",
-        freeCancellationUntil: "{__("sphinx_holidays.free_cancellation_until")|default:"Anulare gratuită înainte de"|escape:javascript}",
-        freeCancellation: "{__("sphinx_holidays.free_cancellation")|default:"Anulare gratuită"|escape:javascript}",
-        termsLoading: "{__("sphinx_holidays.terms_loading")|default:"Se încarcă condițiile..."|escape:javascript}",
-        termsUnavailable: "{__("sphinx_holidays.terms_unavailable")|default:"Condițiile nu sunt disponibile. Vă rugăm căutați din nou."|escape:javascript}",
-        noTermsInfo: "{__("sphinx_holidays.no_terms_info")|default:"Nu există condiții specifice pentru această ofertă."|escape:javascript}",
-        termsDueBy: "{__("sphinx_holidays.terms_due_by")|default:"De achitat"|escape:javascript}",
-        termsPenalty: "{__("sphinx_holidays.terms_penalty")|default:"Penalizare"|escape:javascript}",
-        termsNonRefundable: "{__("sphinx_holidays.terms_non_refundable")|default:"Nerambursabil"|escape:javascript}",
-        termsUntil: "{__("sphinx_holidays.terms_until")|default:"până la"|escape:javascript}",
-        termsFrom: "{__("sphinx_holidays.terms_from")|default:"de la"|escape:javascript}",
-        close: "{__("close")|default:"Close"|escape:javascript}",
-        available: "{__("sphinx_holidays.available")|default:"Available"|escape:javascript}",
-        room: "{__("sphinx_holidays.room")|default:"room"|lower|escape:javascript}",
-        rooms: "{__("sphinx_holidays.rooms")|default:"rooms"|lower|escape:javascript}",
-        offer: "{__("sphinx_holidays.offer")|default:"offer"|lower|escape:javascript}",
-        offers: "{__("sphinx_holidays.offers")|default:"offers"|lower|escape:javascript}"
-    }
-};
-</script>
+    {* The poll params + labels ride #sphinx-results-container's
+       data-client-params / data-client-config attributes (built in
+       search.php) — attributes travel WITH the swapped node, unlike the old
+       window.__sphinx* globals whose inline script tag did not reliably
+       re-execute after the engine's inline swap. *}
 
 </div>
 

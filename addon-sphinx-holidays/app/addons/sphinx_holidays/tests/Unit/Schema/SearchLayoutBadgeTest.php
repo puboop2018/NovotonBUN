@@ -62,17 +62,19 @@ final class SearchLayoutBadgeTest extends TestCase
             'the wrapper must not carry the handshake (it never reaches the PDP)',
         );
 
-        // The params/config script and the terms modal must also sit AFTER
-        // the form wrapper (inside the swap region): the engine re-executes
-        // swapped-in scripts, refreshing the globals per search.
+        // The terms modal must also sit AFTER the form wrapper (inside the
+        // swap region). The poll params/labels ride data attributes on the
+        // results container — an inline-script transport must not return
+        // (its re-execution after the inline swap proved unreliable).
         $formPos = strpos($tpl, 'travel-search-form-wrapper');
         $modalPos = strpos($tpl, 'id="sphinx-terms-modal"');
-        $paramsPos = strpos($tpl, 'window.__sphinxSearchParams');
+        $paramsPos = strpos($tpl, 'data-client-params=');
         self::assertIsInt($formPos);
         self::assertIsInt($modalPos);
         self::assertIsInt($paramsPos);
         self::assertGreaterThan($formPos, $modalPos);
         self::assertGreaterThan($formPos, $paramsPos);
+        self::assertStringNotContainsString('window.__sphinxSearchParams', $tpl);
         self::assertStringContainsString('INSIDE .travel-search-results-page', $tpl);
     }
 

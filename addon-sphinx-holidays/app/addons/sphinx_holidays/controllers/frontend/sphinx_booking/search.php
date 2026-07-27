@@ -109,12 +109,69 @@ try {
         'calendar_prices_currency' => ConfigProvider::getDefaultCurrency(),
     ]));
     $view->assign('sphinx_search_params', $templateParams);
+
+    // Client payloads for search-results.js, carried as DATA ATTRIBUTES on
+    // #sphinx-results-container (search.tpl) — the same node that already
+    // carries the search-id/status handshake. The old window.__sphinx*
+    // globals lived in an inline <script> whose re-execution after the
+    // engine's inline swap proved unreliable in the field (poll-rendered
+    // cards shipped "check_in=undefined" Book URLs and English fallback
+    // labels on product pages); attributes travel with the node itself, so
+    // they are atomically consistent with the search they describe.
+    // Same missing-key guard as the JS lbl(): CS-Cart returns "_key" for an
+    // unseeded language variable — never ship that to the storefront.
+    $sxLbl = static function (string $key, string $fallback, array $vars = []): string {
+        $v = TypeCoerce::toString(__($key, $vars));
+        return ($v === '' || str_starts_with($v, '_')) ? $fallback : $v;
+    };
+    $view->assign('sphinx_client_params_json', json_encode([
+        'check_in' => $templateParams['check_in'],
+        'check_out' => $templateParams['check_out'],
+        'nights' => $templateParams['nights'],
+        'currency' => ConfigProvider::getDefaultCurrency(),
+        'adults' => $templateParams['adults'],
+        'children' => $templateParams['children'],
+        'children_ages' => $templateParams['children_ages'],
+        'rooms' => $templateParams['rooms'],
+        'product_id' => (string) $templateParams['product_id'],
+    ], JSON_UNESCAPED_UNICODE));
+    $view->assign('sphinx_client_config_json', json_encode([
+        'maxPolls' => ConfigProvider::getSearchMaxPolls(),
+        'pollInterval' => 250,
+        'labels' => [
+            'perNight' => $sxLbl('sphinx_holidays.per_night', 'night'),
+            'instantConfirmation' => $sxLbl('sphinx_holidays.instant_confirmation', 'Instant confirmation'),
+            'includesTaxes' => $sxLbl('sphinx_holidays.includes_taxes', 'Includes taxes and commissions'),
+            'bookNow' => $sxLbl('sphinx_holidays.book_now', 'Book now'),
+            'nights' => $sxLbl('travel_core.nights', 'nights'),
+            'starsRating' => $sxLbl('sphinx_holidays.stars_rating', '%s-star rating', ['[rating]' => '%s']),
+            'cancellationAndPaymentTerms' => $sxLbl('sphinx_holidays.cancellation_and_payment_terms', 'Condiții de Plată și Anulare'),
+            'paymentTerms' => $sxLbl('sphinx_holidays.payment_terms', 'Termeni de plată'),
+            'cancellationPolicy' => $sxLbl('sphinx_holidays.cancellation_policy', 'Politica de anulare'),
+            'freeCancellationUntil' => $sxLbl('sphinx_holidays.free_cancellation_until', 'Anulare gratuită înainte de'),
+            'freeCancellation' => $sxLbl('sphinx_holidays.free_cancellation', 'Anulare gratuită'),
+            'termsLoading' => $sxLbl('sphinx_holidays.terms_loading', 'Se încarcă condițiile...'),
+            'termsUnavailable' => $sxLbl('sphinx_holidays.terms_unavailable', 'Condițiile nu sunt disponibile. Vă rugăm căutați din nou.'),
+            'noTermsInfo' => $sxLbl('sphinx_holidays.no_terms_info', 'Nu există condiții specifice pentru această ofertă.'),
+            'termsDueBy' => $sxLbl('sphinx_holidays.terms_due_by', 'De achitat'),
+            'termsPenalty' => $sxLbl('sphinx_holidays.terms_penalty', 'Penalizare'),
+            'termsNonRefundable' => $sxLbl('sphinx_holidays.terms_non_refundable', 'Nerambursabil'),
+            'termsUntil' => $sxLbl('sphinx_holidays.terms_until', 'până la'),
+            'termsFrom' => $sxLbl('sphinx_holidays.terms_from', 'de la'),
+            'close' => $sxLbl('close', 'Close'),
+            'available' => $sxLbl('sphinx_holidays.available', 'Available'),
+            'room' => mb_strtolower($sxLbl('sphinx_holidays.room', 'room')),
+            'rooms' => mb_strtolower($sxLbl('sphinx_holidays.rooms', 'rooms')),
+            'offer' => mb_strtolower($sxLbl('sphinx_holidays.offer', 'offer')),
+            'offers' => mb_strtolower($sxLbl('sphinx_holidays.offers', 'offers')),
+        ],
+    ], JSON_UNESCAPED_UNICODE));
+
     $view->assign('sphinx_hotel_name', $hotel_name);
     $view->assign('sphinx_search_results', []);
     $view->assign('sphinx_search_id', '');
     $view->assign('sphinx_search_status', 'idle');
     $view->assign('sphinx_from_price', null);
-    $view->assign('sphinx_max_polls', ConfigProvider::getSearchMaxPolls());
 
     if (empty($check_in)) {
         fn_set_notification(

@@ -33,7 +33,6 @@ final class InlineScriptRatchetTest extends TestCase
         'addon-sphinx-holidays/design/themes/responsive/templates/addons/sphinx_holidays/blocks/best_deals.tpl' => 1,
         'addon-sphinx-holidays/design/themes/responsive/templates/addons/sphinx_holidays/blocks/package_search.tpl' => 1,
         'addon-sphinx-holidays/design/themes/responsive/templates/addons/sphinx_holidays/hooks/index/scripts.post.tpl' => 1,
-        'addon-sphinx-holidays/design/themes/responsive/templates/addons/sphinx_holidays/views/sphinx_booking/search.tpl' => 1,
         'addon-travel-core/design/backend/templates/addons/travel_core/views/travel_booking_styles/manage.tpl' => 1,
         'addon-travel-core/design/backend/templates/addons/travel_core/views/travel_feature_mappings/edit.tpl' => 1,
         'addon-travel-core/design/backend/templates/addons/travel_core/views/travel_feature_mappings/manage.tpl' => 1,

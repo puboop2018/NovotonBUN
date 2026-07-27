@@ -65,8 +65,11 @@ $body = [
     'currency'       => $currency,
     'occupancy'      => [
         [
-            'adults'   => $adults,
-            'children' => $childrenAges,
+            // The API's SearchRoomOccupancy DTO REQUIRES children_ages (it
+            // 500s without it, even for zero children) — same contract the
+            // addon's SearchOccupancyResolver has always sent.
+            'adults'        => $adults,
+            'children_ages' => $childrenAges,
         ],
     ],
 ];
