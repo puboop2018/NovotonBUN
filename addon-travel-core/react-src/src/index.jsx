@@ -259,6 +259,7 @@ function init() {
                     hotelId:             url.get('hotel_id') || serverConfig.hotelId,
                     productId:           String(serverConfig.productId),
                     mode:                serverConfig.mode || 'product',
+                    inlineResults:       !!serverConfig.inlineResults,
                     searchDispatch:      serverConfig.searchDispatch,
                     initialCheckIn:      url.get('check_in') || '',
                     initialCheckOut:     url.get('check_out') || '',

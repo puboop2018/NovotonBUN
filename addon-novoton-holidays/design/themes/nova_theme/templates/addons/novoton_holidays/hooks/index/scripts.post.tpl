@@ -23,3 +23,11 @@ window.NovotonConfig = window.TravelBookingConfig;
 
 {* Legacy jQuery booking engine (novoton-only, uses $.ceEvent / $.ceAjax) *}
 <script src="{$config.current_location}/js/addons/novoton_holidays/booking_engine.js?v={$smarty.const.NOVOTON_CACHE_VER}" defer></script>
+
+{* Product pages get the search-results modal helpers too: the booking
+   engine swaps novoton offers INLINE into the PDP, and the swapped rows
+   call openInfoModal()/closeInfoModal() from this file. Results pages keep
+   loading it via their own {script} tag — CS-Cart dedupes the asset. *}
+{if $_nvt_dispatch|substr:0:9 == 'products.'}
+    {script src="js/addons/novoton_holidays/search-results.js"}
+{/if}

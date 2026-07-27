@@ -26,10 +26,8 @@ use Tygh\Addons\SphinxHolidays\Helpers\SearchOfferNormalizer;
 use Tygh\Addons\SphinxHolidays\Services\CacheService;
 use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
 use Tygh\Addons\SphinxHolidays\Services\Container;
-use Tygh\Addons\TravelCore\Dto\Hotel\HotelSeoData;
 use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
-use Tygh\Addons\TravelCore\ViewModels\HotelHeaderFactory;
 use Tygh\Tygh;
 
 try {
@@ -62,41 +60,10 @@ try {
         : null;
 
     $hotel_name = $hotelRow !== null ? TypeCoerce::toString($hotelRow['name'] ?? '') : '';
-    $hotel_stars = $hotelRow !== null ? TypeCoerce::toString($hotelRow['classification'] ?? '') : '';
-    $hotel_location = '';
-    $hotel_map_url = '';
-    $hotel_lat = 0.0;
-    $hotel_lng = 0.0;
-    $headerVm = null;
-    if ($hotelRow !== null) {
-        // Same text pipeline as the PDP (SphinxHotelProductProvider →
-        // HotelLocationLine): postal "street, city, country" when the API
-        // address exists, else "city, region, country", with the PDP's
-        // Title-Casing and dedup. The field mapping mirrors the provider's
-        // SQL: city = COALESCE(NULLIF(address_city, ''), destination_name),
-        // country = COALESCE(NULLIF(address_country, ''), country_name).
-        $addressCity = trim(TypeCoerce::toString($hotelRow['address_city'] ?? ''));
-        $addressCountry = trim(TypeCoerce::toString($hotelRow['address_country'] ?? ''));
-        $hotel_lat = TypeCoerce::toFloat($hotelRow['latitude'] ?? 0);
-        $hotel_lng = TypeCoerce::toFloat($hotelRow['longitude'] ?? 0);
-        $hotelSeo = new HotelSeoData(
-            hotelId: $hotel_id,
-            providerName: 'sphinx',
-            name: $hotel_name,
-            city: $addressCity !== '' ? $addressCity : TypeCoerce::toString($hotelRow['destination_name'] ?? ''),
-            region: TypeCoerce::toString($hotelRow['region_name'] ?? ''),
-            country: $addressCountry !== '' ? $addressCountry : TypeCoerce::toString($hotelRow['country_name'] ?? ''),
-            latitude: $hotel_lat,
-            longitude: $hotel_lng,
-            address: TypeCoerce::toString($hotelRow['address'] ?? ''),
-        );
-        // Shared header derivation (travel_core factory): sanitized line +
-        // always-present map URL (coordinate pin when available, place-search
-        // otherwise) + the hotel_header component's view model.
-        $headerVm = HotelHeaderFactory::fromSeo($hotelSeo, TypeCoerce::toInt($hotel_stars), $product_id);
-        $hotel_location = $headerVm->locationLine;
-        $hotel_map_url = $headerVm->mapUrl;
-    }
+    // The hotel-header view model is gone from this surface: results render
+    // inline on the product page (or headerless standalone), so search.tpl
+    // no longer includes the shared hotel_header component. Only the hotel
+    // NAME survives — the no-results request form posts it.
 
     $templateParams = [
         'hotel_id' => $hotel_id,
@@ -143,21 +110,6 @@ try {
     ]));
     $view->assign('sphinx_search_params', $templateParams);
     $view->assign('sphinx_hotel_name', $hotel_name);
-    $view->assign('sphinx_hotel_stars', $hotel_stars);
-    $view->assign('sphinx_hotel_location', $hotel_location);
-    $view->assign('sphinx_hotel_map_url', $hotel_map_url);
-
-    // Shared hotel-identity header component (travel_core
-    // components/hotel_header.tpl) — same variable name and shape on all
-    // four provider surfaces. Bare header (name/stars/link only) when the
-    // hotel row is unknown.
-    $view->assign('travel_hotel_header', ($headerVm ?? HotelHeaderFactory::bare(
-        $hotel_name,
-        TypeCoerce::toInt($hotel_stars),
-        $product_id,
-    ))->toViewArray());
-    $view->assign('sphinx_hotel_lat', $hotel_lat);
-    $view->assign('sphinx_hotel_lng', $hotel_lng);
     $view->assign('sphinx_search_results', []);
     $view->assign('sphinx_search_id', '');
     $view->assign('sphinx_search_status', 'idle');

@@ -87,16 +87,17 @@ final class HotelHeaderComponentTest extends TestCase
         self::assertStringContainsString('class="travel-hotel-location{if $hh_location_class} {$hh_location_class}{/if}"', $tpl);
     }
 
-    public function testAllFourProviderSurfacesIncludeTheComponent(): void
+    public function testBookingFormSurfacesIncludeTheComponentAndSearchPagesDoNot(): void
     {
         $repoRoot = dirname(__DIR__, 7);
+
+        // Since the inline-results change, search results render on the
+        // product page (which shows the hotel identity itself) — only the
+        // two guest booking forms still open with the shared header.
         $surfaces = [
-            'addon-novoton-holidays/design/themes/responsive/templates/addons/novoton_holidays/views/novoton_booking/search.tpl',
             'addon-novoton-holidays/design/themes/responsive/templates/addons/novoton_holidays/views/novoton_booking/booking_form.tpl',
-            'addon-sphinx-holidays/design/themes/responsive/templates/addons/sphinx_holidays/views/sphinx_booking/search.tpl',
             'addon-sphinx-holidays/design/themes/responsive/templates/addons/sphinx_holidays/views/sphinx_booking/booking_form.tpl',
         ];
-
         foreach ($surfaces as $surface) {
             $page = (string) file_get_contents($repoRoot . '/' . $surface);
             self::assertStringContainsString(
@@ -108,6 +109,19 @@ final class HotelHeaderComponentTest extends TestCase
                 'ty-product-list__item-name',
                 $page,
                 "surface must not duplicate the header markup locally: {$surface}",
+            );
+        }
+
+        $searchPages = [
+            'addon-novoton-holidays/design/themes/responsive/templates/addons/novoton_holidays/views/novoton_booking/search.tpl',
+            'addon-sphinx-holidays/design/themes/responsive/templates/addons/sphinx_holidays/views/sphinx_booking/search.tpl',
+        ];
+        foreach ($searchPages as $surface) {
+            $page = (string) file_get_contents($repoRoot . '/' . $surface);
+            self::assertStringNotContainsString(
+                'addons/travel_core/components/hotel_header.tpl',
+                $page,
+                "search results must stay headerless (inline on the PDP): {$surface}",
             );
         }
     }

@@ -26,19 +26,15 @@ window.closeInfoModal = function () {
 };
 
 (function () {
-    function init() {
+    // Document-delegated on purpose: the inline-results swap REPLACES the
+    // modal node on every search (and on product pages the modal only
+    // arrives with the first swapped-in results), so an element-bound
+    // backdrop handler would die with the old node.
+    document.addEventListener('click', function (e) {
         var modal = document.getElementById('info-modal');
-        if (!modal) return;
-        modal.addEventListener('click', function (e) {
-            if (e.target === this) window.closeInfoModal();
-        });
-        document.addEventListener('keydown', function (e) {
-            if (e.key === 'Escape') window.closeInfoModal();
-        });
-    }
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
-    } else {
-        init();
-    }
+        if (modal && e.target === modal) window.closeInfoModal();
+    });
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') window.closeInfoModal();
+    });
 })();
