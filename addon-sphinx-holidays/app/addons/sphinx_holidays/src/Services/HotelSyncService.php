@@ -397,9 +397,17 @@ class HotelSyncService extends AbstractSyncService implements HotelSyncServiceIn
         $prefix = ConfigProvider::getProductCodePrefix();
         $prefixLen = strlen($prefix);
 
+        // SphinxProductFactory writes <ISO-2 country><hotel_id> codes
+        // (TR3612, HR59843) — the configured prefix ('SPX') is a legacy
+        // shape kept for products minted before the country prefixes.
+        // Scanning only the legacy prefix silently relinked NOTHING, which
+        // left every unlinked hotel product without a booking form.
+        // The 2-letter regexp cannot swallow novoton's NVT+digits codes.
         $spxProducts = TypeCoerce::toRowList(db_get_array(
-            'SELECT product_id, product_code FROM ?:products WHERE product_code LIKE ?l',
+            'SELECT product_id, product_code FROM ?:products'
+            . ' WHERE product_code LIKE ?l OR product_code REGEXP ?s',
             $prefix . '%',
+            '^[A-Z]{2}[0-9]+$',
         ));
 
         $stats = ['total' => count($spxProducts), 'linked' => 0, 'skipped' => 0, 'not_found' => 0, 'errors' => 0];
@@ -409,7 +417,10 @@ class HotelSyncService extends AbstractSyncService implements HotelSyncServiceIn
         }
 
         foreach ($spxProducts as $i => $product) {
-            $hotelId = substr(TypeCoerce::toString($product['product_code'] ?? ''), $prefixLen);
+            $code = TypeCoerce::toString($product['product_code'] ?? '');
+            $hotelId = str_starts_with($code, $prefix)
+                ? substr($code, $prefixLen)
+                : (string) preg_replace('/^[A-Z]{2}/', '', $code);
             if ($progressCallback !== null) {
                 $progressCallback($i + 1, $stats['total'], $hotelId);
             }
