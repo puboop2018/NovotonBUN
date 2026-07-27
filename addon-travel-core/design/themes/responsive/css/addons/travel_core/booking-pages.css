@@ -833,3 +833,23 @@
     align-items: center;
     gap: 10px;
 }
+
+/* ── Travel Core product template (blocks/product_templates/travelcore_template.tpl) ──
+   Full-width header (hotel name + location line) rendered above the image
+   gallery. flex-basis 100% forces its own row whether the theme lays the
+   product wrapper out with flex or floats; text-align covers themes that
+   center the stock title. */
+.travel-pdp-header {
+    display: block;
+    width: 100%;
+    flex: 0 0 100%;
+    float: none;
+    clear: both;
+    text-align: left;
+    margin: 0 0 16px;
+}
+.travel-pdp-header .ty-product-block-title {
+    margin: 0 0 2px;
+    padding: 0;
+    text-align: left;
+}

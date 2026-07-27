@@ -18,6 +18,13 @@ declare(strict_types=1);
  */
 
 return [
+    // BARE key by CS-Cart convention: the Appearance "Product detailed page
+    // view" dropdown labels each blocks/product_templates/<file>.tpl with the
+    // lang var named exactly after the file (no addon prefix).
+    'travelcore_template' => [
+        'en' => 'Travel Core Template',
+        'ro' => 'Travel Core Template',
+    ],
     // Guest picker (React booking engine). The JS keys childrenAges / childNAge
     // resolve to these via the booking_config controller and functions/hotels.php.
     'travel_core.childrens_ages' => [
