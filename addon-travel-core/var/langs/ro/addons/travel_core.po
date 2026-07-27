@@ -878,6 +878,10 @@ msgctxt "Languages::travel_core.your_booking_details"
 msgid "Your booking details"
 msgstr "Detaliile rezervării"
 
+msgctxt "Languages::travelcore_template"
+msgid "Travel Core Template"
+msgstr "Travel Core Template"
+
 msgctxt "Languages::travel_core.price_updated_badge"
 msgid "Price Updated"
 msgstr "Preț actualizat"

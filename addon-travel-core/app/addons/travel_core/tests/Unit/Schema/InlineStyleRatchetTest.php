@@ -43,6 +43,10 @@ final class InlineStyleRatchetTest extends TestCase
         'addon-sphinx-holidays/design/themes/responsive/templates/addons/sphinx_holidays/views/sphinx_booking/package_search.tpl' => 5,
         'addon-sphinx-holidays/design/themes/responsive/templates/addons/sphinx_holidays/views/sphinx_booking/search.tpl' => 1,
         'addon-travel-core/design/themes/responsive/templates/addons/travel_core/blocks/booking_summary.tpl' => 11,
+        // Verbatim copy of the stock default_template.tpl wrapper: the ONE
+        // style attr is a settings-driven CSS custom property
+        // (--ty-product-block-image-width) that cannot move to static CSS.
+        'addon-travel-core/design/themes/responsive/templates/addons/travel_core/blocks/product_templates/travelcore_template.tpl' => 1,
         'addon-travel-core/design/themes/responsive/templates/addons/travel_core/components/booking_form_mount.tpl' => 1,
         'addon-travel-core/design/themes/responsive/templates/addons/travel_core/components/order_booking_details.tpl' => 2,
         'addon-travel-core/design/themes/responsive/templates/addons/travel_core/hooks/products/main_info_title.post.tpl' => 2,
