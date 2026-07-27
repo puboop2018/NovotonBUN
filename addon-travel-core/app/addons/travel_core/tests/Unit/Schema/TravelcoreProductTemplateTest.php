@@ -79,6 +79,19 @@ final class TravelcoreProductTemplateTest extends TestCase
         self::assertLessThan($gallery, $travelColumns, 'gallery lives inside .travel-pdp-columns');
         self::assertLessThan($left, $gallery, 'gallery precedes the info column');
         self::assertLessThan($columns, $left, 'info column wraps the stock columns-wrapper');
+
+        // The product code moved into the header, right of the title — the
+        // sku capture carries element ids, so it must render exactly once,
+        // between the title hook and the columns container.
+        self::assertSame(
+            1,
+            substr_count($src, '{$smarty.capture.$sku nofilter}'),
+            'the sku capture renders once (moved, not copied)',
+        );
+        $code = strpos($src, '<div class="travel-pdp-header__code ty-product-block__sku">');
+        self::assertNotFalse($code);
+        self::assertGreaterThan($hook, $code, 'code box sits after the title hook');
+        self::assertLessThan($travelColumns, $code, 'code box lives inside the header row');
     }
 
     public function testHeaderCssShipsInBothThemeStylesheets(): void
@@ -89,6 +102,7 @@ final class TravelcoreProductTemplateTest extends TestCase
             );
             self::assertStringContainsString('.travel-pdp-header {', $css, $theme);
             self::assertStringContainsString('.travel-pdp-columns {', $css, $theme);
+            self::assertStringContainsString('.travel-pdp-header__code {', $css, $theme);
         }
     }
 

@@ -111,46 +111,57 @@
                     product=$product
                 }
 
-                {* #90. Travel header: hotel name + location line, full width
-                   above the gallery, left-aligned (.travel-pdp-header in
+                {* #90. Travel header: hotel name + location line (left) and
+                   product code (right, same line — Unitheme-style), full
+                   width above the gallery (.travel-pdp-header in
                    addons/travel_core/booking-pages.css). The location line is
-                   contributed by travel_core's main_info_title POST hook. *}
+                   contributed by travel_core's main_info_title POST hook.
+                   The sku capture MOVED here from info column 1 — it carries
+                   element ids, so it must render exactly once. *}
                 <div class="travel-pdp-header">
-                    {*
-                        Addons:
-                        - Product stars, reviews, and write a review (product_reviews)
-                        - Product stars, reviews, and write a review (discussion)
-                        - etc...
-                    *}
-                    {hook name="products:main_info_title"}
-                        {* Product title *}
-                        {if !$hide_title}
-                            <h1 class="ty-product-block-title" {live_edit name="product:product:{$product.product_id}"}>
-                                <bdi>{$product.product nofilter}</bdi>
-                            </h1>
-                        {/if}
-                        {* /Product title *}
+                    <div class="travel-pdp-header__main">
+                        {*
+                            Addons:
+                            - Product stars, reviews, and write a review (product_reviews)
+                            - Product stars, reviews, and write a review (discussion)
+                            - etc...
+                        *}
+                        {hook name="products:main_info_title"}
+                            {* Product title *}
+                            {if !$hide_title}
+                                <h1 class="ty-product-block-title" {live_edit name="product:product:{$product.product_id}"}>
+                                    <bdi>{$product.product nofilter}</bdi>
+                                </h1>
+                            {/if}
+                            {* /Product title *}
 
-                        {* Product brand and features short list *}
-                        {hook name="products:brand"}
-                            {hook name="products:brand_default"}
-                                {if $show_product_features_short_list}
-                                    <div class="brand">
-                                        {include file="views/products/components/product_features_short_list.tpl"
-                                            features=$product.header_features
-                                            feature_image=$feature_image
-                                            product=$product
-                                            image_size=$image_size
-                                            no_container=$no_container
-                                            settings=$settings
-                                            smarty=$smarty
-                                        }
-                                    </div>
-                                {/if}
+                            {* Product brand and features short list *}
+                            {hook name="products:brand"}
+                                {hook name="products:brand_default"}
+                                    {if $show_product_features_short_list}
+                                        <div class="brand">
+                                            {include file="views/products/components/product_features_short_list.tpl"
+                                                features=$product.header_features
+                                                feature_image=$feature_image
+                                                product=$product
+                                                image_size=$image_size
+                                                no_container=$no_container
+                                                settings=$settings
+                                                smarty=$smarty
+                                            }
+                                        </div>
+                                    {/if}
+                                {/hook}
                             {/hook}
+                            {* /Product brand and features short list *}
                         {/hook}
-                        {* /Product brand and features short list *}
-                    {/hook}
+                    </div>
+
+                    {* Product CODE (the stock #350 sku block, relocated) *}
+                    <div class="travel-pdp-header__code ty-product-block__sku">
+                        {$sku = "sku_`$obj_id`"}
+                        {$smarty.capture.$sku nofilter}
+                    </div>
                 </div>
                 {* /Travel header *}
 
@@ -254,12 +265,8 @@
                                 </div>
                                 {* /Advanced product info *}
 
-                                {* #350. Product CODE *}
-                                <div class="ty-product-block__sku">
-                                    {$sku = "sku_`$obj_id`"}
-                                    {$smarty.capture.$sku nofilter}
-                                </div>
-                                {* /Product CODE *}
+                                {* #350. Product CODE — moved into the travel
+                                   header (#90), right-aligned on the title line. *}
 
                                 {* #360. Product electronically distributed *}
                                 {$product_edp = "product_edp_`$obj_id`"}
