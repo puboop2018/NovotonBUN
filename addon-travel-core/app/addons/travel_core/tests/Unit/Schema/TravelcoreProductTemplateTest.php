@@ -94,6 +94,20 @@ final class TravelcoreProductTemplateTest extends TestCase
         self::assertLessThan($travelColumns, $code, 'code box lives inside the header row');
     }
 
+    public function testCatalogPriceAndQtyStayHidden(): void
+    {
+        $src = (string) file_get_contents(self::themePath('responsive'));
+
+        // Hotel pricing is date-driven: the cached catalog price (#430), the
+        // old-price strike-through (#440) and the qty stepper (#490) must
+        // not render, on the page or via the sticky bottom bar.
+        self::assertStringNotContainsString('{$smarty.capture.$price nofilter}', $src);
+        self::assertStringNotContainsString('{$smarty.capture.$old_price nofilter}', $src);
+        self::assertStringNotContainsString('{$smarty.capture.$qty nofilter}', $src);
+        self::assertStringContainsString('$show_price_product_bottom_fixed|default:false', $src);
+        self::assertStringContainsString('$show_list_price_product_bottom_fixed|default:false', $src);
+    }
+
     public function testHeaderCssShipsInBothThemeStylesheets(): void
     {
         foreach (['responsive', 'nova_theme'] as $theme) {
