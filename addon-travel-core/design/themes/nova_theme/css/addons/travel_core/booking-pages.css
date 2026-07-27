@@ -927,7 +927,14 @@
 }
 /* Hotel PDPs: the Reserve anchor replaces the stock add-to-cart submit
    (scoped to the modifier the template sets only for hotel products —
-   wishlist/compare in the same capture stay visible). */
+   wishlist/compare in the same capture stay visible). The container goes
+   flex-column with a gap: theme button rules can override child margins,
+   but they cannot cancel the parent's gap. */
+.travel-pdp-reserve-mode {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
 .travel-pdp-reserve-mode .ty-btn__add-to-cart {
     display: none;
 }
@@ -935,7 +942,6 @@
     display: block;
     width: 100%;
     text-align: center;
-    margin-bottom: 16px;
 }
 /* Anchor target of the Reserve button — land clear of sticky headers. */
 #travel-booking-root {
