@@ -68,9 +68,12 @@ if (defined('AREA') && AREA === 'A' && function_exists('fn_travel_core_ensure_sc
 
 // Self-heal language keys: addon.xml/.po are only imported at install, so new
 // or changed labels never reach existing stores on their own. Compare a stored
-// stamp against the current content hash of addon.xml + lang_keys.php and
-// reseed on any change; the seeder is idempotent (same pattern as sphinx).
-if (defined('AREA') && AREA === 'A' && function_exists('fn_travel_core_seed_language_keys')) {
+// stamp against the current fingerprint of addon.xml + lang_keys.php and
+// reseed on any change; the seeder is idempotent. Deliberately NOT gated to
+// the admin area: a deploy followed by storefront-only traffic used to show
+// customers raw "_travel_core.…" keys until someone opened an admin page.
+// Steady-state cost is one indexed stamp SELECT per request.
+if (function_exists('fn_travel_core_seed_language_keys')) {
     $__stamp = db_get_field(
         "SELECT value FROM ?:language_values WHERE name = ?s AND lang_code = ?s LIMIT 1",
         'travel_core._lang_seed_hash', 'en'
