@@ -40,13 +40,13 @@
     #400. Product info. Column 2
     #410. Product offer
     #420. Product price container
-    #430. Product price
-    #440. Product list price (old_price)
+    #430. Product price                 (OMITTED — date-driven hotel pricing)
+    #440. Product list price (old_price) (OMITTED — same)
     #450. Product price without taxes (clean_price) and You save (list_discount)
     #460. Product promo text
     #470. Product availability and quantity
     #480. Product availability
-    #490. Product quantity
+    #490. Product quantity              (OMITTED — rooms/guests come from search)
     #500. Product minimum quantity
     #510. Product buttons
     #520. Product buttons: Add to cart and addons
@@ -90,9 +90,12 @@
 {$show_full_description_link = $show_full_description_link|default:true}
 {$show_details_button = $show_details_button|default:false}
 {$show_product_bottom_fixed = $show_product_bottom_fixed|default:true}
-{$show_price_product_bottom_fixed = $show_price_product_bottom_fixed|default:true}
-{$show_list_price_product_bottom_fixed = $show_list_price_product_bottom_fixed|default:true}
-{$show_clean_price_product_bottom_fixed = $show_clean_price_product_bottom_fixed|default:true}
+{* The sticky bottom bar must not resurrect the catalog price the template
+   deliberately hides (#430/#440) — hotel prices are date-driven. *}
+{$show_price_product_bottom_fixed = $show_price_product_bottom_fixed|default:false}
+{$show_list_price_product_bottom_fixed = $show_list_price_product_bottom_fixed|default:false}
+{$show_clean_price_product_bottom_fixed = $show_clean_price_product_bottom_fixed|default:false}
+{$show_add_to_cart_product_bottom_fixed = $show_add_to_cart_product_bottom_fixed|default:true}
 {* /Default template *}
 
 {* #10. Product details outer with tabs *}
@@ -354,37 +357,13 @@
                                                 <div class="ty-product-prices">
                                             {/if}
 
-                                            {* #430. Product price *}
-                                            {*
-                                                Addons:
-                                                - Price per unit (price_per_unit)
-                                                - etc...
-                                            *}
-                                            {hook name="products:main_price"}
-                                                {if $smarty.capture.$price|trim}
-                                                    <div class="ty-product-block__price-actual">
-                                                        {* (Hooks) products:prices_block *}
-                                                        {*
-                                                            Addons:
-                                                            - Divido calculator (divido)
-                                                            - And other offers (master_products)
-                                                            - etc...
-                                                        *}
-                                                        {$smarty.capture.$price nofilter}
-                                                    </div>
-                                                {/if}
-                                            {/hook}
-                                            {* /Product price *}
+                                            {* #430. Product price — INTENTIONALLY NOT RENDERED on the
+                                               travel template: a hotel's price is date-driven; the real
+                                               total comes from the availability search below, and the
+                                               cached catalog number reads as a false promise. *}
 
-                                            {* #440. Product list price (old_price) *}
-                                            {if $smarty.capture.$old_price|trim
-                                                || $smarty.capture.$clean_price|trim
-                                                || $smarty.capture.$list_discount|trim
-                                            }
-                                                {* (Hooks) products:old_price *}
-                                                {if $smarty.capture.$old_price|trim}{$smarty.capture.$old_price nofilter}{/if}
-                                            {/if}
-                                            {* /Product list price (old_price) *}
+                                            {* #440. Product list price (old_price) — intentionally not
+                                               rendered (same reason as #430). *}
 
                                             {* #450. Product price without taxes (clean_price) and You save (list_discount) *}
                                             {if $smarty.capture.$old_price|trim
@@ -423,11 +402,9 @@
                                             {$smarty.capture.$product_amount nofilter}
                                             {* /Product availability *}
 
-                                            {* #490. Product quantity *}
-                                            {$qty = "qty_`$obj_id`"}
-                                            {* (Hooks) products:qty *}
-                                            {$smarty.capture.$qty nofilter}
-                                            {* /Product quantity *}
+                                            {* #490. Product quantity — INTENTIONALLY NOT RENDERED: a
+                                               hotel booking's "quantity" is rooms/guests, chosen in the
+                                               availability search, never a cart qty stepper. *}
 
                                             {* #500. Product minimum quantity *}
                                             {$min_qty = "min_qty_`$obj_id`"}
