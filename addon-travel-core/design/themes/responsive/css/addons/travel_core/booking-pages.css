@@ -885,7 +885,7 @@
     color: #666;
 }
 .travel-pdp-header__code .ty-control-group__item {
-    font-weight: 600;
+    font-weight: 400;
     color: #1a1a1a;
     margin-left: 4px;
 }
@@ -924,4 +924,20 @@
     .travel-pdp-columns > .ty-product-block__img-wrapper {
         width: 100%;
     }
+}
+/* Hotel PDPs: the Reserve anchor replaces the stock add-to-cart submit
+   (scoped to the modifier the template sets only for hotel products —
+   wishlist/compare in the same capture stay visible). */
+.travel-pdp-reserve-mode .ty-btn__add-to-cart {
+    display: none;
+}
+.travel-pdp-reserve-btn {
+    display: block;
+    width: 100%;
+    text-align: center;
+    margin-bottom: 10px;
+}
+/* Anchor target of the Reserve button — land clear of sticky headers. */
+#travel-booking-root {
+    scroll-margin-top: 90px;
 }

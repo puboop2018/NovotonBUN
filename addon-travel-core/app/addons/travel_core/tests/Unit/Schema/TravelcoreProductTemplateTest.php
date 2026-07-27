@@ -94,6 +94,53 @@ final class TravelcoreProductTemplateTest extends TestCase
         self::assertLessThan($travelColumns, $code, 'code box lives inside the header row');
     }
 
+    public function testHotelsGetAReserveButtonInsteadOfAddToCart(): void
+    {
+        $src = (string) file_get_contents(self::themePath('responsive'));
+
+        // Hotel-gated: $travel_booking_product_id is assigned only for hotel
+        // products, so non-hotel products keep the stock purchase button.
+        self::assertStringContainsString(
+            '{$travel_is_hotel_pdp = $travel_booking_product_id && $travel_booking_product_id == $product.product_id}',
+            $src,
+        );
+        self::assertStringContainsString('travel-pdp-reserve-mode', $src);
+        // Same spot, theme-primary styling, anchors to the availability widget.
+        self::assertStringContainsString(
+            '<a href="#travel-booking-root" class="ty-btn ty-btn__primary ty-btn__big travel-pdp-reserve-btn">{__("travel_core.reserve_now")}</a>',
+            $src,
+        );
+
+        // Lang key seeded through every parity-checked source.
+        $addonRoot = dirname(__DIR__, 3);
+        $langKeys = require $addonRoot . '/lang_keys.php';
+        self::assertSame('Reserve', $langKeys['travel_core.reserve_now']['en'] ?? null);
+        self::assertSame('Rezervați acum', $langKeys['travel_core.reserve_now']['ro'] ?? null);
+        $xml = (string) file_get_contents($addonRoot . '/addon.xml');
+        self::assertSame(2, substr_count($xml, 'id="travel_core.reserve_now"'));
+        foreach (['en', 'ro'] as $lang) {
+            $po = (string) file_get_contents(dirname(__DIR__, 6) . '/var/langs/' . $lang . '/addons/travel_core.po');
+            self::assertStringContainsString('msgctxt "Languages::travel_core.reserve_now"', $po, $lang . '.po');
+        }
+
+        // CSS contract: the stock submit hides ONLY under the modifier; the
+        // reserve button fills the card; the anchor target clears sticky
+        // headers; the code value is regular weight.
+        foreach (['responsive', 'nova_theme'] as $theme) {
+            $css = (string) file_get_contents(
+                dirname(__DIR__, 6) . '/design/themes/' . $theme . '/css/addons/travel_core/booking-pages.css',
+            );
+            self::assertStringContainsString('.travel-pdp-reserve-mode .ty-btn__add-to-cart', $css, $theme);
+            self::assertStringContainsString('.travel-pdp-reserve-btn {', $css, $theme);
+            self::assertStringContainsString('scroll-margin-top', $css, $theme);
+            self::assertStringContainsString(
+                ".travel-pdp-header__code .ty-control-group__item {\n    font-weight: 400;",
+                $css,
+                $theme . ': code value must be regular weight',
+            );
+        }
+    }
+
     public function testCatalogPriceAndQtyStayHidden(): void
     {
         $src = (string) file_get_contents(self::themePath('responsive'));

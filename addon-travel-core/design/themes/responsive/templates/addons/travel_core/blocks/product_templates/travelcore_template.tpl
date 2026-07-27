@@ -415,7 +415,21 @@
                                         {* /Product availability and quantity *}
 
                                         {* #510. Product buttons *}
-                                        <div class="ty-product-block__button">
+                                        {* Hotels get a RESERVE button (same theme-primary style,
+                                           same spot) that anchors to the on-page availability
+                                           search (#travel-booking-root); the stock add-to-cart
+                                           submit is hidden via the modifier class — a hotel cart
+                                           line without a booking payload is meaningless. The
+                                           capture still renders (wishlist/compare live inside
+                                           it). $travel_booking_product_id is assigned by
+                                           travel_core's dispatch_before_display ONLY for hotel
+                                           products, so non-hotel products keep stock behavior. *}
+                                        {$travel_is_hotel_pdp = $travel_booking_product_id && $travel_booking_product_id == $product.product_id}
+                                        <div class="ty-product-block__button{if $travel_is_hotel_pdp} travel-pdp-reserve-mode{/if}">
+                                            {if $travel_is_hotel_pdp}
+                                                <a href="#travel-booking-root" class="ty-btn ty-btn__primary ty-btn__big travel-pdp-reserve-btn">{__("travel_core.reserve_now")}</a>
+                                            {/if}
+
                                             {* #520. Product buttons: Add to cart and addons *}
                                             {$add_to_cart = "add_to_cart_`$obj_id`"}
                                             {*
