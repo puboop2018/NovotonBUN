@@ -197,7 +197,8 @@ window.__sphinxSearchParams = {
     adults: {$sphinx_search_params.adults|default:2},
     children: {$sphinx_search_params.children|default:0},
     children_ages: "{$sphinx_search_params.children_ages|default:''|escape:javascript}",
-    rooms: {$sphinx_search_params.rooms|default:1}
+    rooms: {$sphinx_search_params.rooms|default:1},
+    product_id: "{$sphinx_search_params.product_id|default:''|escape:javascript}"
 };
 window.__sphinxConfig = {
     maxPolls: {$sphinx_max_polls|default:30},
