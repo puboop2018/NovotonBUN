@@ -86,7 +86,7 @@ window.SphinxSearch.onReady = function (fn) {
         var bookingUrl = 'index.php?dispatch=sphinx_booking.booking_form' +
             '&offer_id=' + encodeURIComponent(result.offer_id || '') +
             '&hotel_id=' + encodeURIComponent(result.hotel_id || '') +
-            '&product_id=' + encodeURIComponent(result.product_id || '') +
+            '&product_id=' + encodeURIComponent(result.product_id || searchParams.product_id || '') +
             '&check_in=' + encodeURIComponent(searchParams.check_in) +
             '&check_out=' + encodeURIComponent(searchParams.check_out) +
             '&adults=' + searchParams.adults +
@@ -259,8 +259,16 @@ window.SphinxSearch.onReady = function (fn) {
 
 // ── Payment/cancellation terms modal ────────────────────────────────────
 window.SphinxSearch.onReady(function () {
-    var cfg = (window.__sphinxConfig && window.__sphinxConfig.labels) || {};
-    var modal = document.getElementById('sphinx-terms-modal');
+    // Everything is looked up LAZILY (at click/render time): on a product
+    // page the modal, the offer cards and the __sphinxConfig labels only
+    // enter the DOM with the first inline-results swap, AFTER this script
+    // has run — an element captured here would be null forever, and an
+    // early return would never bind the delegated handlers below.
+    function labels() {
+        return (window.__sphinxConfig && window.__sphinxConfig.labels) || {};
+    }
+    function modalEl() { return document.getElementById('sphinx-terms-modal'); }
+    function bodyEl() { return document.getElementById('sphinx-terms-modal-body'); }
     // Test seam: the pure display helpers (hoisted declarations), reachable
     // even on pages without the modal markup.
     window.SphinxSearch.terms = {
@@ -270,8 +278,6 @@ window.SphinxSearch.onReady(function () {
         fmtPct: fmtPct,
         renderTerms: renderTerms
     };
-    if (!modal) return;
-    var body = document.getElementById('sphinx-terms-modal-body');
     var lastFocus = null;
     var cache = {};
 
@@ -288,6 +294,8 @@ window.SphinxSearch.onReady(function () {
         return (v === '' || v.charAt(0) === '_') ? fb : v;
     }
     function openModal() {
+        var modal = modalEl();
+        if (!modal) return;
         lastFocus = document.activeElement;
         modal.style.display = 'flex';
         document.body.style.overflow = 'hidden';
@@ -295,7 +303,8 @@ window.SphinxSearch.onReady(function () {
         if (c) c.focus();
     }
     function closeModal() {
-        modal.style.display = 'none';
+        var modal = modalEl();
+        if (modal) modal.style.display = 'none';
         document.body.style.overflow = '';
         if (lastFocus && lastFocus.focus) { try { lastFocus.focus(); } catch (e) {} }
     }
@@ -330,6 +339,7 @@ window.SphinxSearch.onReady(function () {
     }
     function renderTrack(rules, heading, kind, total, cur) {
         if (!rules || !rules.length) return '';
+        var cfg = labels();
         // Each node is headed by ITS DATE at the timeline dot ("P\u00e2n\u0103 la
         // 20.06.2026" / "De la 01.07.2026"), with a terse amount row below.
         var dateLabel = kind === 'pay' ? lbl(cfg.termsUntil, 'p\u00e2n\u0103 la') : lbl(cfg.termsFrom, 'de la');
@@ -363,6 +373,9 @@ window.SphinxSearch.onReady(function () {
         return html;
     }
     function renderTerms(data) {
+        var cfg = labels();
+        var body = bodyEl();
+        if (!body) return;
         var html = '';
         if (data.is_free && !data.free_until) {
             html += '<div class="travel-terms-modal__free">\u2713 ' + esc(lbl(cfg.freeCancellation, 'Anulare gratuit\u0103')) + '</div>';
@@ -391,22 +404,28 @@ window.SphinxSearch.onReady(function () {
         if (html === '') html = '<p>' + esc(lbl(cfg.noTermsInfo, 'Nu exist\u0103 condi\u021bii specifice pentru aceast\u0103 ofert\u0103.')) + '</p>';
         body.innerHTML = html;
     }
+    function showUnavailable() {
+        var body = bodyEl();
+        if (!body) return;
+        body.innerHTML = '<p class="travel-terms-modal__unavailable">' + esc(lbl(labels().termsUnavailable, 'Condi\u021biile nu sunt disponibile. V\u0103 rug\u0103m c\u0103uta\u021bi din nou.')) + '</p>';
+    }
     function loadTerms(offerId) {
         if (cache[offerId]) { renderTerms(cache[offerId]); return; }
-        body.innerHTML = '<div class="travel-terms-modal__loading"><span class="travel-spinner"></span> ' + esc(lbl(cfg.termsLoading, 'Se \u00eencarc\u0103 condi\u021biile...')) + '</div>';
+        var body = bodyEl();
+        if (body) {
+            body.innerHTML = '<div class="travel-terms-modal__loading"><span class="travel-spinner"></span> ' + esc(lbl(labels().termsLoading, 'Se \u00eencarc\u0103 condi\u021biile...')) + '</div>';
+        }
         fetch('index.php?dispatch=sphinx_booking.offer_terms&offer_id=' + encodeURIComponent(offerId), { credentials: 'same-origin' })
             .then(function(r) { return r.json(); })
             .then(function(data) {
                 if (!data || data.status !== 'ok') {
-                    body.innerHTML = '<p class="travel-terms-modal__unavailable">' + esc(lbl(cfg.termsUnavailable, 'Condi\u021biile nu sunt disponibile. V\u0103 rug\u0103m c\u0103uta\u021bi din nou.')) + '</p>';
+                    showUnavailable();
                     return;
                 }
                 cache[offerId] = data;
                 renderTerms(data);
             })
-            .catch(function() {
-                body.innerHTML = '<p class="travel-terms-modal__unavailable">' + esc(lbl(cfg.termsUnavailable, 'Condi\u021biile nu sunt disponibile. V\u0103 rug\u0103m c\u0103uta\u021bi din nou.')) + '</p>';
-            });
+            .catch(showUnavailable);
     }
 
     document.addEventListener('click', function(e) {
@@ -420,11 +439,12 @@ window.SphinxSearch.onReady(function () {
             loadTerms(offerId);
             return;
         }
-        if (e.target === modal || (e.target.closest && e.target.closest('.travel-terms-modal__close'))) {
+        if (e.target === modalEl() || (e.target.closest && e.target.closest('.travel-terms-modal__close'))) {
             closeModal();
         }
     });
     document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape' && modal.style.display === 'flex') closeModal();
+        var modal = modalEl();
+        if (e.key === 'Escape' && modal && modal.style.display === 'flex') closeModal();
     });
 });

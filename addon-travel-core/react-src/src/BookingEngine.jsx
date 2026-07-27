@@ -316,6 +316,10 @@ export default function BookingEngine({ config }) {
                                 cur.searchParams.set(k, v);
                             }
                         });
+                        // One-shot cache-eviction flag (expired-offer redirects
+                        // land with refresh=1) — never persist it in history or
+                        // every later reload would force a live re-search.
+                        cur.searchParams.delete('refresh');
                         historyUrl = cur.toString();
                     }
                     window.history.pushState({}, '', historyUrl);
@@ -401,7 +405,11 @@ export default function BookingEngine({ config }) {
         if (!inlineResults || didAutoSearchRef.current) return;
         if (!checkIn || !checkOut) return;
         didAutoSearchRef.current = true;
-        performAjaxSearch(buildSearchUrl());
+        // refresh=1 arrives on expired-offer redirects from the booking form:
+        // forward it once so the provider search evicts its cached result set
+        // and runs live (the history writer drops it again afterwards).
+        const wantsRefresh = new URLSearchParams(window.location.search).get('refresh') === '1';
+        performAjaxSearch(buildSearchUrl() + (wantsRefresh ? '&refresh=1' : ''));
         // Mount-only by design (empty deps): the initial dates come from the
         // URL via config and must fire exactly once.
     }, []);

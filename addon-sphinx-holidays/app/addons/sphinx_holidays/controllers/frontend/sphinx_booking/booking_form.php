@@ -48,17 +48,27 @@ try {
         ]);
         fn_set_notification('W', __('warning'),
             __('sphinx_holidays.offer_no_longer_available', ['[default]' => 'This offer is no longer available. Please search again.']));
-        // refresh=1 → the search page bypasses + evicts its cached result set,
-        // so the customer lands on a LIVE re-search instead of the same stale offers.
-        return [CONTROLLER_STATUS_REDIRECT, 'sphinx_booking.search?' . http_build_query([
-            'hotel_id' => $hotel_id,
-            'product_id' => $product_id,
+        // refresh=1 → the next search bypasses + evicts the cached result set,
+        // so the customer lands on a LIVE re-search instead of the same stale
+        // offers. With a known product the customer came from (or belongs on)
+        // the product page, where the booking engine auto-runs the search
+        // inline; the headerless standalone results page is only the fallback
+        // for searches with no product context.
+        $redirectParams = [
             'check_in' => RequestCoerce::string($_REQUEST, 'check_in'),
             'check_out' => RequestCoerce::string($_REQUEST, 'check_out'),
             'adults' => RequestCoerce::int($_REQUEST, 'adults', 2),
             'children' => RequestCoerce::int($_REQUEST, 'children'),
             'refresh' => 1,
-        ])];
+        ];
+        if ($product_id > 0) {
+            return [CONTROLLER_STATUS_REDIRECT, 'products.view?' . http_build_query(
+                ['product_id' => $product_id] + $redirectParams,
+            )];
+        }
+        return [CONTROLLER_STATUS_REDIRECT, 'sphinx_booking.search?' . http_build_query(
+            ['hotel_id' => $hotel_id, 'product_id' => $product_id] + $redirectParams,
+        )];
     }
 
     // Read offer fields from the unwrapped payload — the live verify endpoint

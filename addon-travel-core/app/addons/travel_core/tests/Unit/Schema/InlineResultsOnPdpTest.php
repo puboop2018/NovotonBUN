@@ -81,6 +81,51 @@ final class InlineResultsOnPdpTest extends TestCase
         self::assertStringNotContainsString('travel-hotel-header', $engine);
     }
 
+    public function testExpiredOfferLoopReturnsToTheProductPage(): void
+    {
+        $sphinxAddon = self::repoAddonRoot() . '/../addon-sphinx-holidays';
+
+        // The sphinx terms modal + offer cards only enter a product page WITH
+        // the first swap, AFTER search-results.js has run — so the modal and
+        // the labels must be looked up lazily, never captured at load time.
+        $js = (string) file_get_contents(
+            $sphinxAddon . '/js/addons/sphinx_holidays/search-results.js',
+        );
+        self::assertStringContainsString('function modalEl()', $js);
+        self::assertStringContainsString('function bodyEl()', $js);
+        // The regression was a LOAD-TIME capture (var modal = …) whose early
+        // return skipped binding the delegated handlers entirely.
+        self::assertStringNotContainsString(
+            "var modal = document.getElementById('sphinx-terms-modal')",
+            $js,
+        );
+        // Poll-rendered cards fall back to the searched product for their
+        // Book-now URL — result rows may omit product_id.
+        self::assertStringContainsString('result.product_id || searchParams.product_id', $js);
+
+        $tpl = (string) file_get_contents(
+            $sphinxAddon . '/design/themes/responsive/templates/addons/sphinx_holidays/views/sphinx_booking/search.tpl',
+        );
+        self::assertStringContainsString('product_id: "{$sphinx_search_params.product_id', $tpl);
+
+        // An expired offer sends the customer BACK to the product page (live
+        // inline re-search via refresh=1); the standalone results page is the
+        // fallback only when no product is known.
+        $bookingForm = (string) file_get_contents(
+            $sphinxAddon . '/app/addons/sphinx_holidays/controllers/frontend/sphinx_booking/booking_form.php',
+        );
+        self::assertStringContainsString("'products.view?' . http_build_query", $bookingForm);
+        self::assertStringContainsString("'refresh' => 1", $bookingForm);
+
+        // The engine forwards refresh=1 once on auto-restore and never writes
+        // it into history (or every reload would force a live re-search).
+        $engine = (string) file_get_contents(
+            self::addonRoot() . '/../../../react-src/src/BookingEngine.jsx',
+        );
+        self::assertStringContainsString("cur.searchParams.delete('refresh')", $engine);
+        self::assertStringContainsString('wantsRefresh', $engine);
+    }
+
     public function testCommittedBundleWasRebuiltWithTheContract(): void
     {
         // CI never rebuilds the bundles — a stale committed artifact would
