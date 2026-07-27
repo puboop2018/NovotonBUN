@@ -97,9 +97,13 @@ final class SearchTermsModalTest extends TestCase
         $tpl = self::searchTpl();
         $js = self::searchJs();
 
-        // Config prelude still exports the timeline labels to the module.
+        // The timeline labels reach the module via the data-client-config
+        // attribute JSON, built in the search controller.
+        $controller = (string) file_get_contents(
+            dirname(__DIR__, 3) . '/controllers/frontend/sphinx_booking/search.php',
+        );
         foreach (['termsDueBy', 'termsPenalty', 'termsNonRefundable', 'termsUntil', 'termsFrom'] as $label) {
-            self::assertStringContainsString($label . ':', $tpl);
+            self::assertStringContainsString("'" . $label . "' =>", $controller);
         }
 
         // One track per schedule — the per-schedule renderer is the split.

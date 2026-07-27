@@ -26,6 +26,17 @@ window.SphinxSearch.badgeRoomsLine = function (roomCount, offerCount, labels) {
 
 // The inline originals ran exactly where the markup already existed; as an
 // external file the placement is the loader's choice, so run at DOM-ready.
+// Parse a JSON data-attribute; null on absence or bad JSON. The search
+// params + poll config ride #sphinx-results-container attributes so they
+// travel WITH the node through the engine's inline swap (the old inline
+// <script> globals did not reliably re-execute after a swap).
+window.SphinxSearch.readJsonAttr = function (el, name) {
+    if (!el) return null;
+    var raw = el.getAttribute(name);
+    if (!raw) return null;
+    try { return JSON.parse(raw); } catch (e) { return null; }
+};
+
 window.SphinxSearch.onReady = function (fn) {
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', fn);
@@ -65,10 +76,12 @@ window.SphinxSearch.onReady = function (fn) {
     var cursor = null;
     var pollCount = 0;
     var lastAlternatives = [];
-    var cfg = window.__sphinxConfig || {};
+    var cfg = window.SphinxSearch.readJsonAttr(container, 'data-client-config')
+        || window.__sphinxConfig || {};
     var maxPolls = cfg.maxPolls || 30;
     var pollInterval = cfg.pollInterval || 250;
-    var searchParams = window.__sphinxSearchParams || {};
+    var searchParams = window.SphinxSearch.readJsonAttr(container, 'data-client-params')
+        || window.__sphinxSearchParams || {};
 
     function renderCard(result) {
         var stars = '';
@@ -265,7 +278,11 @@ window.SphinxSearch.onReady(function () {
     // has run — an element captured here would be null forever, and an
     // early return would never bind the delegated handlers below.
     function labels() {
-        return (window.__sphinxConfig && window.__sphinxConfig.labels) || {};
+        var cfg = window.SphinxSearch.readJsonAttr(
+            document.getElementById('sphinx-results-container'),
+            'data-client-config'
+        ) || window.__sphinxConfig || {};
+        return cfg.labels || {};
     }
     function modalEl() { return document.getElementById('sphinx-terms-modal'); }
     function bodyEl() { return document.getElementById('sphinx-terms-modal-body'); }

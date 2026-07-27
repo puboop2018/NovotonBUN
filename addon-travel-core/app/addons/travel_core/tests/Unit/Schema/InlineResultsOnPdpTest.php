@@ -103,10 +103,21 @@ final class InlineResultsOnPdpTest extends TestCase
         // Book-now URL — result rows may omit product_id.
         self::assertStringContainsString('result.product_id || searchParams.product_id', $js);
 
+        // Params + labels ride data-attributes on the results container (the
+        // node the swap copies) — inline-script globals did not survive the
+        // swap reliably. No window.__sphinx* script may return to the tpl.
         $tpl = (string) file_get_contents(
             $sphinxAddon . '/design/themes/responsive/templates/addons/sphinx_holidays/views/sphinx_booking/search.tpl',
         );
-        self::assertStringContainsString('product_id: "{$sphinx_search_params.product_id', $tpl);
+        self::assertStringContainsString('data-client-params="{$sphinx_client_params_json', $tpl);
+        self::assertStringContainsString('data-client-config="{$sphinx_client_config_json', $tpl);
+        self::assertStringNotContainsString('window.__sphinxSearchParams', $tpl);
+        self::assertStringContainsString("readJsonAttr(container, 'data-client-params')", $js);
+        $searchController = (string) file_get_contents(
+            $sphinxAddon . '/app/addons/sphinx_holidays/controllers/frontend/sphinx_booking/search.php',
+        );
+        self::assertStringContainsString("'sphinx_client_params_json'", $searchController);
+        self::assertStringContainsString("'product_id' => (string) \$templateParams['product_id']", $searchController);
 
         // An expired offer sends the customer BACK to the product page (live
         // inline re-search via refresh=1); the standalone results page is the
