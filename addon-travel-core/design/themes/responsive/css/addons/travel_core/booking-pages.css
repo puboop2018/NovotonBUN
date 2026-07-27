@@ -843,19 +843,51 @@
    grid-column / flex / float resets make both rows behave under any of
    those layout models. */
 .travel-pdp-header {
-    display: block;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px 16px;
     width: 100%;
-    flex: 0 0 100%;
+    flex-basis: 100%;
     grid-column: 1 / -1;
     float: none;
     clear: both;
     text-align: left;
     margin: 0 0 16px;
 }
+.travel-pdp-header__main {
+    flex: 1 1 auto;
+    min-width: 0;
+}
 .travel-pdp-header .ty-product-block-title {
     margin: 0 0 2px;
     padding: 0;
     text-align: left;
+}
+/* Product code, right-aligned on the title line (stock sku capture markup:
+   .ty-control-group with a label + value span — flattened inline here). */
+.travel-pdp-header__code {
+    flex: 0 0 auto;
+    margin-left: auto;
+    text-align: right;
+    white-space: nowrap;
+    color: #666;
+    font-size: 13px;
+}
+.travel-pdp-header__code .ty-control-group,
+.travel-pdp-header__code .ty-control-group__label,
+.travel-pdp-header__code .ty-control-group__item {
+    display: inline;
+    margin: 0;
+    padding: 0;
+    font-size: 13px;
+    color: #666;
+}
+.travel-pdp-header__code .ty-control-group__item {
+    font-weight: 600;
+    color: #1a1a1a;
+    margin-left: 4px;
 }
 .travel-pdp-columns {
     display: flex;
