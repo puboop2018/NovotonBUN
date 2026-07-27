@@ -866,10 +866,18 @@
     grid-column: 1 / -1;
 }
 .travel-pdp-columns > .ty-product-block__img-wrapper {
-    flex: 0 0 auto;
+    /* The theme's width rule targets the wrapper's DIRECT children only, so
+       as a grandchild the gallery lost its width cap and expanded to the
+       images' natural size (crushing the info column to a sliver). The
+       custom property INHERITS from the wrapper's inline style, so we apply
+       it ourselves; 400px covers stores with the thumbnail setting unset. */
+    flex: 0 0 var(--ty-product-block-image-width, 400px);
+    width: var(--ty-product-block-image-width, 400px);
+    min-width: 0;
     float: none;
     margin: 0;
     max-width: 100%;
+    overflow: hidden;
 }
 .travel-pdp-columns > .ty-product-block__left {
     flex: 1 1 0;
