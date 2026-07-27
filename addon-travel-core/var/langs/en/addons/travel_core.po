@@ -882,6 +882,10 @@ msgctxt "Languages::travelcore_template"
 msgid "Travel Core Template"
 msgstr "Travel Core Template"
 
+msgctxt "Languages::travel_core.reserve_now"
+msgid "Reserve"
+msgstr "Reserve"
+
 msgctxt "Languages::travel_core.price_updated_badge"
 msgid "Price Updated"
 msgstr "Price Updated"

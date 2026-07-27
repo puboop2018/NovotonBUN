@@ -25,6 +25,12 @@ return [
         'en' => 'Travel Core Template',
         'ro' => 'Travel Core Template',
     ],
+    // Reserve button on the Travel Core product template (replaces
+    // add-to-cart for hotel products; anchors to the availability search).
+    'travel_core.reserve_now' => [
+        'en' => 'Reserve',
+        'ro' => 'Rezervați acum',
+    ],
     // Guest picker (React booking engine). The JS keys childrenAges / childNAge
     // resolve to these via the booking_config controller and functions/hotels.php.
     'travel_core.childrens_ages' => [
