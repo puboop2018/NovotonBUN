@@ -162,70 +162,18 @@ use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
         return [CONTROLLER_STATUS_REDIRECT, "novoton_booking.edit_booking?booking_id={$booking_id}&cart_id={$cart_id}"];
     }
 
-    // Update cart item if cart_id provided
+    // Update cart item if cart_id provided — the shared travel_core refresh
+    // resolves the line (integrity-checked exact hit, else the rebuilt-cart
+    // fallback scan by booking id) and runs the save -> recalc -> save
+    // sequence so the extras survive fn_calculate_cart_content's reload.
     if (!empty($cart_id)) {
-        // By-ref bind into $_SESSION — the authoritative session store (see
-        // travel_core SessionAccessor). Never assign to Tygh::$app['session']:
-        // it is a frozen Pimple service and offsetSet throws
-        // FrozenServiceException. Narrowing happens THROUGH the reference.
-        $cart = &$_SESSION['cart'];
-        if (!is_array($cart)) {
-            $cart = [];
-        }
-        $cart['products'] = is_array($cart['products'] ?? null) ? $cart['products'] : [];
-
-        // Find the cart item — try exact cart_id first, then fall back to
-        // searching by booking_id (handles cases where cart was rebuilt
-        // and the cart_id hash changed, e.g. after session expiry)
-        $target_cart_id = null;
-        if (isset($cart['products'][$cart_id])) {
-            $target_cart_id = $cart_id;
-        } else {
-            // Fallback: find cart item by novoton_booking_id
-            $cartProducts = $cart['products'];
-            foreach ($cartProducts as $cid => $item) {
-                if (!is_array($item)) {
-                    continue;
-                }
-                $itemExtra = is_array($item['extra'] ?? null) ? $item['extra'] : [];
-                if (!empty($itemExtra['novoton_booking_id']) && PriceInfoFormatter::toInt($itemExtra['novoton_booking_id']) === $booking_id) {
-                    $target_cart_id = $cid;
-                    break;
-                }
-            }
-        }
-
-        if ($target_cart_id !== null) {
-            // Bind a live reference into the target product's extra bag so the
-            // mutations below persist on the session cart, then ensure the
-            // nested 'extra' slot is an array before writing keyed values.
-            $target_product = &$cart['products'][$target_cart_id];
-            if (!is_array($target_product)) {
-                $target_product = [];
-            }
-            $target_product['extra'] = is_array($target_product['extra'] ?? null) ? $target_product['extra'] : [];
-            $target_extra = &$target_product['extra'];
-            $target_extra['guest_names'] = $guest_list;
-            $target_extra['holder_name'] = $holder_name;
-            $target_extra['guests_data'] = (new GuestDataNormalizer())->toJson($guests_data);
-            $target_extra['contact_email'] = $contact['email'] ?: '';
-            $target_extra['contact_phone'] = $contact['phone'] ?? '';
-            unset($target_product, $target_extra);
-
-            // Persist extras to DB BEFORE recalculating — fn_calculate_cart_content()
-            // reloads product data from the stored cart, which would overwrite the
-            // extras we just set if they haven't been saved first.
-            $auth = &$_SESSION['auth'];
-            if (!is_array($auth)) {
-                $auth = [];
-            }
-            $authUserId = PriceInfoFormatter::toInt($auth['user_id'] ?? 0);
-            fn_save_cart_content($cart, $authUserId);
-
-            // Now recalculate (reloads extras from DB — our saved values survive)
-            fn_calculate_cart_content($cart, $auth, 'S', true, 'F', true);
-            fn_save_cart_content($cart, $authUserId);
-        }
+        fn_travel_core_update_cart_guest_extras((string) $cart_id, $booking_id, 'novoton_booking_id', [
+            'guest_names' => TypeCoerce::toString($guest_list),
+            'holder_name' => TypeCoerce::toString($holder_name),
+            'guests_data' => (new GuestDataNormalizer())->toJson($guests_data),
+            'contact_email' => TypeCoerce::toString($contact['email'] ?: ''),
+            'contact_phone' => TypeCoerce::toString($contact['phone'] ?? ''),
+        ], true);
     }
 
     fn_set_notification('N', __('success'), __('novoton_holidays.booking_updated'));

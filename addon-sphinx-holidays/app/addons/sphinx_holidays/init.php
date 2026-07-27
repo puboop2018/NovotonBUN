@@ -99,9 +99,21 @@ if (defined('AREA') && AREA === 'A' && function_exists('fn_sphinx_holidays_seed_
 // Self-heal schema deltas on existing installs (mirrors travel_core). The
 // addon.xml for="upgrade" ALTERs never auto-apply (version pinned, no upgrade
 // scheme), so columns/indexes added after the initial install only reached
-// sites via a manual deploy step — until this.
+// sites via a manual deploy step — until this. Stamp-gated (travel_core
+// helpers): the catalog reads + conditional ALTERs run once per deployed
+// version of SchemaMigrator.php, then every admin request pays a single
+// ?:storage_data read.
 if (defined('AREA') && AREA === 'A' && function_exists('fn_sphinx_holidays_ensure_schema')) {
-    fn_sphinx_holidays_ensure_schema();
+    $__spx_heal_fp = (string) @md5_file(__DIR__ . '/src/Install/SchemaMigrator.php');
+    if (!function_exists('fn_travel_core_self_heal_due')
+        || fn_travel_core_self_heal_due('sphinx_schema', $__spx_heal_fp)
+    ) {
+        fn_sphinx_holidays_ensure_schema();
+        if (function_exists('fn_travel_core_self_heal_stamp')) {
+            fn_travel_core_self_heal_stamp('sphinx_schema', $__spx_heal_fp);
+        }
+    }
+    unset($__spx_heal_fp);
 }
 
 // Register addon hooks

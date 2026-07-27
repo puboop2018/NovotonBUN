@@ -21,6 +21,7 @@ declare(strict_types=1);
 use Tygh\Tygh;
 use Tygh\Addons\TravelCore\TravelConstants;
 use Tygh\Addons\TravelCore\Services\TravelProviderRegistry;
+use Tygh\Addons\TravelCore\Repository\OrderLinkCandidateRepository;
 use Tygh\Addons\TravelCore\Repository\TravelBookingRepository;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
@@ -41,9 +42,12 @@ if (fn_allowed_for('MULTIVENDOR') || (defined('RESTRICTED_ADMIN') && RESTRICTED_
  * Replay the providers' order-link reconcilers when the listing contains
  * unlinked bookings, so any booking whose order EXISTS gets its Order ID
  * before the grid renders (same travel_link_order_bookings hook as the
- * Travel Tools "Reconcile booking–order links" button, over the newest 100
- * orders). Throttled to once per 5 minutes via ?:storage_data. Returns true
- * when at least one booking was linked (caller re-fetches the listing).
+ * Travel Tools "Reconcile booking–order links" button). Candidate orders
+ * come pre-filtered from OrderLinkCandidateRepository — only orders inside
+ * the unlinked-booking time window whose items actually reference a
+ * provider booking — because each replay costs a full fn_get_order_info()
+ * per provider. Throttled to once per 5 minutes via ?:storage_data.
+ * Returns true when a replay pass ran (caller re-fetches the listing).
  *
  * @param list<array<string, mixed>> $bookings The current page's rows
  */
@@ -70,9 +74,14 @@ function _travel_bookings_autolink_if_needed(array $bookings): bool
         fn_set_storage_data('travel_bookings_autolink_ts', (string) time());
     }
 
-    $orderIds = TypeCoerce::toIntList(db_get_fields(
-        'SELECT order_id FROM ?:orders ORDER BY order_id DESC LIMIT 100',
-    ));
+    $orderIds = (new OrderLinkCandidateRepository())->findAutoCandidates(100);
+    if ($orderIds === []) {
+        // Nothing the hook could possibly link — skip the replay AND the
+        // listing re-fetch (bookings whose checkout never completed
+        // legitimately stay unlinked and must not re-trigger work).
+        return false;
+    }
+
     $linked = 0;
     foreach ($orderIds as $autolink_order_id) {
         fn_set_hook('travel_link_order_bookings', $autolink_order_id, $linked);

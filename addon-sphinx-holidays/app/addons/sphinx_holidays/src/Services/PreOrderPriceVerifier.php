@@ -9,6 +9,13 @@ declare(strict_types=1);
  * If the offer is no longer available or the price has changed, applies
  * corrections or blocks the order.
  *
+ * "Silent Sync" optimisation (same trust model as novoton): add_to_cart
+ * verifies every offer against the live API moments before checkout and
+ * caches the verified raw price in the session. While that entry is
+ * younger than the configurable TTL (default 180 s), this verifier trusts
+ * it and skips its own API round-trip, so the Place Order click doesn't
+ * pay a provider HTTP call per cart line.
+ *
  * @package SphinxHolidays
  * @since   1.0.0
  */
@@ -18,15 +25,23 @@ namespace Tygh\Addons\SphinxHolidays\Services;
 use Tygh\Addons\SphinxHolidays\Helpers\OfferAvailability;
 use Tygh\Addons\TravelCore\Contracts\PreOrderPriceVerifierInterface;
 use Tygh\Addons\TravelCore\Enums\PriceComparisonOutcome;
+use Tygh\Addons\TravelCore\Helpers\SessionAccessor;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Services\CheckoutPriceGuard;
 
 class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
 {
+    private readonly SessionAccessor $session;
+
+    public function __construct(?SessionAccessor $session = null)
+    {
+        $this->session = $session ?? new SessionAccessor();
+    }
+
     /**
      * {@inheritdoc}
      * @param array<string, mixed> $cart
-     * @return array{allow: bool, corrections: array<string, mixed>, notifications: array<int, array<string, mixed>>, unavailable: array<string, mixed>, reconfirm: bool}
+     * @return array{allow: bool, corrections: array<int|string, array<string, float>>, notifications: array<int, array<string, mixed>>, unavailable: array<int|string, array<string, mixed>>, reconfirm: bool}
      */
     #[\Override]
     public function verify(array $cart): array
@@ -44,8 +59,12 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
         }
 
         $api = null;
+        $cacheTtl = ConfigProvider::getPreorderCacheTtl();
 
-        foreach (TypeCoerce::toStringMap($cart['products']) as $cartId => $product) {
+        // toArrayMap, NOT toStringMap: cart product ids are NUMERIC (PHP int
+        // keys), and toStringMap drops every int-keyed entry — with it this
+        // loop silently verified nothing for real carts.
+        foreach (TypeCoerce::toArrayMap($cart['products']) as $cartId => $product) {
             $productData = TypeCoerce::toStringMap($product);
             $extra = TypeCoerce::toStringMap($productData['extra'] ?? null);
             if (empty($extra['sphinx_booking'])) {
@@ -59,58 +78,63 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
                 continue;
             }
 
-            // Lazy-load the API
-            if ($api === null) {
+            // ── Silent Sync: reuse the raw price verified at add-to-cart ──
+            $apiPriceRaw = $this->getCachedRawPrice($offerId, $cacheTtl);
+
+            if ($apiPriceRaw === null) {
+                // Cache miss / stale — verify against the live API.
+                if ($api === null) {
+                    try {
+                        $api = Container::getApi();
+                    } catch (\Throwable) {
+                        fn_log_event('general', 'runtime', [
+                            'message' => 'Sphinx PreOrderPriceVerifier: API unavailable, skipping',
+                        ]);
+                        return $result;
+                    }
+                }
+
                 try {
-                    $api = Container::getApi();
-                } catch (\Throwable) {
+                    $verifyResult = TypeCoerce::toStringMap($api->verifyHotelOffer($offerId));
+                } catch (\Throwable $e) {
                     fn_log_event('general', 'runtime', [
-                        'message' => 'Sphinx PreOrderPriceVerifier: API unavailable, skipping',
+                        'message' => 'Sphinx PreOrderPriceVerifier: offer verify failed',
+                        'offer_id' => $offerId,
+                        'error' => $e->getMessage(),
                     ]);
-                    return $result;
+                    continue;
+                }
+
+                // If offer is no longer available, mark for removal instead of blocking the entire order.
+                // This allows mixed-provider carts (Novoton + Sphinx) to proceed with the available items.
+                // Tolerant availability semantics (verify responses may carry an explicit
+                // `available`, a `confirmation`, or just a priced offer) — OfferAvailability.
+                if (!OfferAvailability::isVerifiedAvailable(
+                    $verifyResult === [] ? null : $verifyResult,
+                    ConfigProvider::shouldRequireImmediateAvailability(),
+                )) {
+                    fn_log_event('general', 'runtime', [
+                        'message' => 'Sphinx PreOrderPriceVerifier: offer unavailable — marking for removal',
+                        'offer_id' => $offerId,
+                        'hotel_name' => $extra['hotel_name'] ?? '',
+                    ]);
+
+                    $result['unavailable'][$cartId] = [
+                        'offer_id' => $offerId,
+                        'hotel_name' => $extra['hotel_name'] ?? '',
+                    ];
+                    continue;
+                }
+
+                // Shared price chain: price / selling_price / pricing.selling_price
+                $apiPriceRaw = OfferAvailability::extractPrice($verifyResult);
+                if ($apiPriceRaw <= 0) {
+                    continue;
                 }
             }
 
-            try {
-                $verifyResult = TypeCoerce::toStringMap($api->verifyHotelOffer($offerId));
-            } catch (\Throwable $e) {
-                fn_log_event('general', 'runtime', [
-                    'message' => 'Sphinx PreOrderPriceVerifier: offer verify failed',
-                    'offer_id' => $offerId,
-                    'error' => $e->getMessage(),
-                ]);
-                continue;
-            }
-
-            // If offer is no longer available, mark for removal instead of blocking the entire order.
-            // This allows mixed-provider carts (Novoton + Sphinx) to proceed with the available items.
-            // Tolerant availability semantics (verify responses may carry an explicit
-            // `available`, a `confirmation`, or just a priced offer) — OfferAvailability.
-            if (!OfferAvailability::isVerifiedAvailable(
-                $verifyResult === [] ? null : $verifyResult,
-                ConfigProvider::shouldRequireImmediateAvailability(),
-            )) {
-                fn_log_event('general', 'runtime', [
-                    'message' => 'Sphinx PreOrderPriceVerifier: offer unavailable — marking for removal',
-                    'offer_id' => $offerId,
-                    'hotel_name' => $extra['hotel_name'] ?? '',
-                ]);
-
-                $result['unavailable'][$cartId] = [
-                    'offer_id' => $offerId,
-                    'hotel_name' => $extra['hotel_name'] ?? '',
-                ];
-                continue;
-            }
-
-            // Re-calculate price with commission (shared price chain: price /
-            // selling_price / pricing.selling_price)
-            $apiPrice = OfferAvailability::extractPrice($verifyResult);
-            if ($apiPrice <= 0) {
-                continue;
-            }
-
-            $apiPrice = Container::getCartService()->applyCommission($apiPrice);
+            // Re-calculate price with commission
+            $apiPrice = Container::getCartService()->applyCommission($apiPriceRaw);
 
             // Shared "No Surprises" policy — identical knobs for all providers,
             // configured in travel_core settings (CheckoutPriceGuard).
@@ -157,7 +181,7 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
 
                 $result['corrections'][$cartId] = [
                     'api_price' => $apiPrice,
-                    'api_price_raw' => TypeCoerce::toFloat($verifyResult['price'] ?? 0),
+                    'api_price_raw' => $apiPriceRaw,
                 ];
                 $result['notifications'][] = $notificationData;
                 $result['reconfirm'] = true;
@@ -175,5 +199,41 @@ class PreOrderPriceVerifier implements PreOrderPriceVerifierInterface
         }
 
         return $result;
+    }
+
+    /**
+     * Look up the session price cache written by the add_to_cart controller.
+     *
+     * A fresh entry means this exact offer was verified available at that
+     * raw price moments ago (add_to_cart rejects unavailable offers), so
+     * within the TTL the checkout click can trust it — the same window of
+     * trust novoton's Silent Sync gives its session cache.
+     *
+     * @return float|null Raw (pre-commission) verified price; null on miss/stale
+     */
+    private function getCachedRawPrice(string $offerId, int $ttl): ?float
+    {
+        if ($ttl <= 0) {
+            return null;
+        }
+
+        $bag = $this->session->get('sphinx_price_cache');
+        if (!is_array($bag)) {
+            return null;
+        }
+
+        $entry = $bag[md5($offerId)] ?? null;
+        if (!is_array($entry)) {
+            return null;
+        }
+
+        $entry = TypeCoerce::toStringMap($entry);
+        $raw = TypeCoerce::toFloat($entry['api_price_raw'] ?? 0);
+        $age = time() - TypeCoerce::toInt($entry['timestamp'] ?? 0);
+        if ($raw <= 0 || $age > $ttl) {
+            return null;
+        }
+
+        return $raw;
     }
 }

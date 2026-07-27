@@ -11,7 +11,6 @@ use Tygh\Registry;
 use Tygh\Tygh;
 use Tygh\Addons\NovotonHolidays\Services\PriceInfoFormatter;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
-use Tygh\Addons\TravelCore\Services\GuestDataNormalizer;
 use Tygh\Addons\TravelCore\Services\CurrencyService;
 use Tygh\Addons\NovotonHolidays\Helpers\JsonDecoder;
 
@@ -48,7 +47,10 @@ use Tygh\Addons\NovotonHolidays\Helpers\JsonDecoder;
 
     // Also try to get data from cart session (more up-to-date)
     $cart = $session['cart'] ?? null;
-    $cart_products = is_array($cart) ? TypeCoerce::toStringMap($cart['products'] ?? null) : [];
+    // toArrayMap, NOT toStringMap: cart product ids are numeric (int keys)
+    // and toStringMap drops int-keyed entries — the live-cart preference
+    // below would silently never fire.
+    $cart_products = is_array($cart) ? TypeCoerce::toArrayMap($cart['products'] ?? null) : [];
     /** @var array<string, mixed>|null $cart_item */
     $cart_item = null;
     if (!empty($cart_id) && !empty($cart_products[$cart_id]) && is_array($cart_products[$cart_id])) {
@@ -95,26 +97,12 @@ use Tygh\Addons\NovotonHolidays\Helpers\JsonDecoder;
     // Guests: ALWAYS read from DB — it's the single source of truth.
     // The cart copy is unreliable: fn_calculate_cart_content() can overwrite it,
     // session expiry loses it, and cart_id hash changes can make it stale.
-    // update_booking.php writes to DB first (line 127), so DB always has the
-    // latest guest data regardless of cart state.
+    // update_booking.php writes to DB first, so DB always has the latest
+    // guest data regardless of cart state. The shared builder normalizes the
+    // stored shape and converts birthday -> DD/MM/YYYY dob for the form mask.
     $rawGuestsData = $booking_record['guests_data'] ?? '';
     $guestsInput = is_array($rawGuestsData) ? TypeCoerce::toStringMap($rawGuestsData) : TypeCoerce::toString($rawGuestsData);
-    $guests_data = (new GuestDataNormalizer())->normalize($guestsInput);
-
-    // Ensure dob field is in DD/MM/YYYY format for each guest (template expects this format)
-    foreach ($guests_data as $key => &$guest) {
-        if (!is_array($guest)) {
-            continue;
-        }
-        if (empty($guest['dob']) && !empty($guest['birthday'])) {
-            // Convert YYYY-MM-DD to DD/MM/YYYY
-            $ts = strtotime(PriceInfoFormatter::toScalar($guest['birthday']));
-            if ($ts !== false && $ts !== 0) {
-                $guest['dob'] = date('d/m/Y', $ts);
-            }
-        }
-    }
-    unset($guest);
+    $guest_prefill = \Tygh\Addons\TravelCore\Services\GuestPrefillBuilder::build($guestsInput);
 
     $booking = [
         'hotel_id' => $brHotelId,
@@ -130,7 +118,6 @@ use Tygh\Addons\NovotonHolidays\Helpers\JsonDecoder;
         'package_name' => PriceInfoFormatter::toScalar($booking_record['package_name'] ?? ''),
         'num_rooms' => PriceInfoFormatter::toInt($booking_record['num_rooms'] ?? 0) ?: 1,
         'rooms_data' => $rooms_data,
-        'guests_data' => $guests_data,
     ];
 
     // Ensure rooms_data is not empty for single room bookings
@@ -212,6 +199,7 @@ use Tygh\Addons\NovotonHolidays\Helpers\JsonDecoder;
     $view->assign('booking_id', $booking_id);
     $view->assign('cart_id', $cart_id);
     $view->assign('is_edit_mode', true);
+    $view->assign('guest_prefill', $guest_prefill);
     $view->assign('product_id', $booking_record['product_id']);
     $view->assign('hotel_name', $hotel_name);
     $view->assign('hotel_city', $hotel_info['city'] ?? $booking_record['hotel_city'] ?? '');

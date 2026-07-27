@@ -1,7 +1,7 @@
 # ADR-0001 — Early-render availability + search-path metrics
 
 **Status:** Accepted — 2026-06-12
-**Context roadmap:** `ARCHITECTURE_PLAN.md` (Audit §3). This ADR records a P0
+**Context roadmap:** `docs/archive/ARCHITECTURE_PLAN.md` (Audit §3). This ADR records a P0
 hardening increment on the hotel-availability path that sits *ahead* of the §3
 queue because it closes a correctness risk we introduced, not a debt item.
 **Scope:** `sphinx_holidays` hotel product-page availability search.
@@ -87,7 +87,7 @@ polls-to-first-offer, and time-to-complete.
   cost as a miss). Acceptable.
 - `maxPolls` bail does **not** finalize → no partial is cached as complete.
 
-**Follow-ups (deferred, tracked against `ARCHITECTURE_PLAN.md`)**
+**Follow-ups (deferred, tracked against `docs/archive/ARCHITECTURE_PLAN.md`)**
 - **P1 — single-flight lock** on cold popular keys, *if* P0b shows concurrent
   cold misses.
 - **P2 — async warming** of popular (hotel × common dates/occupancy) into the

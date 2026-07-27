@@ -1,0 +1,164 @@
+<?xml version="1.0"?>
+<addon scheme="3.0">
+    <id>eurosite</id>
+    <version>0.1.0</version>
+    <priority>113</priority>
+    <position>3</position>
+    <status>active</status>
+    <has_icon>N</has_icon>
+    <supplier>VacanteLitoral.ro</supplier>
+    <supplier_link>https://vacantelitoral.ro</supplier_link>
+    <default_language>en</default_language>
+    <dependencies>travel_core</dependencies>
+    <!-- Eurosite Holidays: hotel & package booking integration with the
+         Eurosite XML web service (a Touroperator platform, distinct from
+         Novoton and Sphinx). MVP: static data + hotel search + product
+         details + add/get/cancel booking. Requires PHP 8.3+ and travel_core.
+         Protocol: XML over HTTP, <Request RequestType="..."> envelope with
+         <AuditInfo> user/pass/time auth (see Documentation/
+         Specificatii_API_Eurosite.pdf). -->
+
+    <authors>
+        <author>
+            <name>VacanteLitoral.ro</name>
+            <email>office@VacanteLitoral.ro</email>
+            <url>https://vacantelitoral.ro</url>
+        </author>
+    </authors>
+
+    <compatibility>
+        <core_version>
+            <min>4.9.3</min>
+            <max>4.20.1</max>
+        </core_version>
+        <core_edition>ULTIMATE</core_edition>
+        <php_version>
+            <min>8.3.0</min>
+            <max>8.4.99</max>
+        </php_version>
+        <php_extensions>
+            <curl>
+                <supported>Y</supported>
+            </curl>
+            <simplexml>
+                <supported>Y</supported>
+            </simplexml>
+        </php_extensions>
+    </compatibility>
+
+    <settings layout="separate">
+        <sections>
+            <section id="general">
+                <items>
+                    <!-- ── API connection ── -->
+                    <item id="api_header">
+                        <type>header</type>
+                        <variants/>
+                    </item>
+                    <!-- The Eurosite XML web-service endpoint (single URL for
+                         every RequestType; provided by the Touroperator). -->
+                    <item id="api_url">
+                        <type>input</type>
+                        <default_value>https://laguna.touringit.ro/server_xml/server.php</default_value>
+                        <variants/>
+                    </item>
+                    <item id="api_user">
+                        <type>input</type>
+                        <default_value>YourUser</default_value>
+                        <variants/>
+                    </item>
+                    <item id="api_password">
+                        <type>password</type>
+                        <default_value>YourPassword</default_value>
+                        <variants/>
+                    </item>
+                    <!-- Touroperator code embedded in search/booking payloads
+                         (e.g. "EU"). -->
+                    <item id="tourop_code">
+                        <type>input</type>
+                        <default_value>EU</default_value>
+                        <variants/>
+                    </item>
+                    <item id="default_currency">
+                        <type>input</type>
+                        <default_value>EUR</default_value>
+                        <variants/>
+                    </item>
+                    <item id="default_language">
+                        <type>input</type>
+                        <default_value>RO</default_value>
+                        <variants/>
+                    </item>
+                    <!-- Eurosite endpoints may be http:// only; opt-in to allow
+                         sending credentials over unencrypted transport (dev). -->
+                    <item id="allow_insecure_api">
+                        <type>checkbox</type>
+                        <default_value>Y</default_value>
+                        <variants/>
+                    </item>
+
+                    <!-- ── Resilience ── -->
+                    <item id="resilience_header">
+                        <type>header</type>
+                        <variants/>
+                    </item>
+                    <item id="api_max_retries">
+                        <type>input</type>
+                        <default_value>3</default_value>
+                        <variants/>
+                    </item>
+                    <item id="api_timeout">
+                        <type>input</type>
+                        <default_value>60</default_value>
+                        <variants/>
+                    </item>
+                    <item id="circuit_breaker_threshold">
+                        <type>input</type>
+                        <default_value>5</default_value>
+                        <variants/>
+                    </item>
+                    <item id="circuit_breaker_timeout">
+                        <type>input</type>
+                        <default_value>60</default_value>
+                        <variants/>
+                    </item>
+                </items>
+            </section>
+        </sections>
+    </settings>
+
+    <queries>
+        <item for="install">
+            CREATE TABLE IF NOT EXISTS `?:eurosite_bookings` (
+                `booking_id`      INT UNSIGNED NOT NULL AUTO_INCREMENT,
+                `order_id`        INT UNSIGNED NOT NULL DEFAULT 0,
+                `user_id`         INT UNSIGNED NOT NULL DEFAULT 0,
+                `session_id`      VARCHAR(64)  NOT NULL DEFAULT '',
+                `client_ref`      VARCHAR(64)  NOT NULL DEFAULT '' COMMENT 'BookingClientId we sent',
+                `api_ref`         VARCHAR(64)  DEFAULT NULL COMMENT 'BookingReference Source="api" from Eurosite',
+                `product_code`    VARCHAR(32)  NOT NULL DEFAULT '',
+                `hotel_name`      VARCHAR(255) NOT NULL DEFAULT '',
+                `country_code`    VARCHAR(4)   NOT NULL DEFAULT '',
+                `city_code`       VARCHAR(16)  NOT NULL DEFAULT '',
+                `variant_id`      VARCHAR(64)  NOT NULL DEFAULT '' COMMENT 'PackageVariantId from the offer',
+                `check_in`        DATE         DEFAULT NULL,
+                `check_out`       DATE         DEFAULT NULL,
+                `currency`        VARCHAR(4)   NOT NULL DEFAULT 'EUR',
+                `total_price`     DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+                `guests_json`     JSON         DEFAULT NULL,
+                `status`          VARCHAR(24)  NOT NULL DEFAULT 'pending',
+                `api_request`     MEDIUMTEXT   DEFAULT NULL,
+                `api_response`    MEDIUMTEXT   DEFAULT NULL,
+                `created_at`      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (`booking_id`),
+                KEY `idx_order` (`order_id`),
+                KEY `idx_session` (`session_id`),
+                KEY `idx_client_ref` (`client_ref`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        </item>
+    </queries>
+
+    <uninstall>
+        <remove_files>app/addons/eurosite</remove_files>
+    </uninstall>
+</addon>

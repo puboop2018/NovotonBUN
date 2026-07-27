@@ -178,16 +178,16 @@
             <div class="travel-form-section guest-names-section">
                 <h3>{__("novoton_holidays.enter_booking_details")}</h3>
                 
-                {* Track global guest number *}
-                {$guest_num = 0}
-                {$adult_num = 0}
-                {$child_num = 0}
-                {$is_first_adult = true}
-                
+                {* Booking-wide sequential guest numbering ("3. Adult") — the
+                   shared room body offsets its labels by the guests rendered
+                   in earlier rooms. *}
+                {$guest_seq = 0}
+                {capture assign="nvt_adult_sublabel"}{__("novoton_holidays.regular_bed")}{/capture}
+
                 {* Loop through each room *}
                 {foreach from=$booking_data.rooms_data item=room key=room_idx}
                     {$room_num = $room_idx + 1}
-                    
+
                     {* Room wrapper with data attribute for JS targeting *}
                     <div class="room-guest-section" data-room-num="{$room_num}">
                     
@@ -202,157 +202,27 @@
                     </div>
                     {/if}
                     
-                    {* Adults for this room *}
-                    {for $i=1 to $room.adults}
-                        {$adult_num = $adult_num + 1}
-                        {$guest_num = $guest_num + 1}
-                        
-                        {* Get prefilled names from guests_data if in edit mode *}
-                        {$prefilled_first_name = ""}
-                        {$prefilled_last_name = ""}
-                        {$guest_key = "room`$room_num`_adult_`$i`"}
-                        {if $is_edit_mode && $booking_data.guests_data}
-                            {if isset($booking_data.guests_data[$guest_key])}
-                                {$prefilled_last_name = $booking_data.guests_data[$guest_key].last_name|default:''}
-                                {$prefilled_first_name = $booking_data.guests_data[$guest_key].first_name|default:''}
-                            {/if}
-                        {/if}
-                        
-                        <div class="guest-entry guest-entry-adult">
-                            <div class="travel-guest-label">
-                                {$guest_num}. {__("novoton_holidays.adult")}
-                                {if $is_first_adult}
-                                    <span class="travel-holder-tag">{__("novoton_holidays.adult_holder")|regex_replace:"/^.*- /":""}
-                                    </span>
-                                {/if}
-                                {if count($booking_data.rooms_data) > 1}
-                                    <small class="travel-muted-note">({__("novoton_holidays.room_number")} {$room_num})</small>
-                                {/if}
-                            </div>
-                            <div class="travel-guest-sublabel">{__("novoton_holidays.regular_bed")}</div>
-                            
-                            <div class="travel-guest-grid">
-                                <div class="travel-guest-field">
-                                    <label>{__("novoton_holidays.last_name")}<span class="required">*</span></label>
-                                    <input type="text" 
-                                           name="guests[room{$room_num}_adult_{$i}][last_name]" 
-                                           required 
-                                           value="{$prefilled_last_name}"
-                                           placeholder="{__('novoton_holidays.last_name')}" />
-                                </div>
-                                <div class="travel-guest-field">
-                                    <label>{__("novoton_holidays.first_name")}<span class="required">*</span></label>
-                                    <input type="text" 
-                                           name="guests[room{$room_num}_adult_{$i}][first_name]" 
-                                           required 
-                                           value="{$prefilled_first_name}"
-                                           placeholder="{__('novoton_holidays.first_name')}" />
-                                </div>
-                                <input type="hidden" name="guests[room{$room_num}_adult_{$i}][type]" value="adult" />
-                                <input type="hidden" name="guests[room{$room_num}_adult_{$i}][age]" value="30" />
-                                <input type="hidden" name="guests[room{$room_num}_adult_{$i}][room]" value="{$room_num}" />
-                                {if $is_first_adult}
-                                    <input type="hidden" name="guests[room{$room_num}_adult_{$i}][is_holder]" value="1" />
-                                {/if}
-                            </div>
-                        </div>
-                        {$is_first_adult = false}
-                    {/for}
-                    
-                    {* Children for this room *}
-                    {if $room.children > 0}
-                        {$max_children = min($room.children, 5)}
-                        {for $i=1 to $max_children}
-                            {$child_num = $child_num + 1}
-                            {$guest_num = $guest_num + 1}
-                            
-                            {* Get pre-filled age from room's childrenAges array *}
-                            {$prefilled_age = ""}
-                            {if isset($room.childrenAges[$i-1])}
-                                {$prefilled_age = $room.childrenAges[$i-1]}
-                            {/if}
-                            
-                            {* Get prefilled names from guests_data if in edit mode *}
-                            {$prefilled_child_first_name = ""}
-                            {$prefilled_child_last_name = ""}
-                            {$prefilled_child_dob = ""}
-                            {$child_guest_key = "room`$room_num`_child_`$i`"}
-                            {if $is_edit_mode && $booking_data.guests_data}
-                                {if isset($booking_data.guests_data[$child_guest_key])}
-                                    {$prefilled_child_last_name = $booking_data.guests_data[$child_guest_key].last_name|default:''}
-                                    {$prefilled_child_first_name = $booking_data.guests_data[$child_guest_key].first_name|default:''}
-                                    {* Try dob first, then convert birthday if available *}
-                                    {if $booking_data.guests_data[$child_guest_key].dob}
-                                        {$prefilled_child_dob = $booking_data.guests_data[$child_guest_key].dob}
-                                    {elseif $booking_data.guests_data[$child_guest_key].birthday}
-                                        {* Convert YYYY-MM-DD to DD/MM/YYYY *}
-                                        {$prefilled_child_dob = $booking_data.guests_data[$child_guest_key].birthday|date_format:"%d/%m/%Y"}
-                                    {/if}
-                                {/if}
-                            {/if}
-                            
-                            {* Get child age from search - this is the age at check-in *}
-                            {$child_age_at_checkin = $prefilled_age|default:0}
-                            
-                            <div class="guest-entry guest-entry-child" data-room="{$room_num}" data-child="{$i}" data-original-age="{$child_age_at_checkin}">
-                                <div class="travel-guest-label">
-                                    {$guest_num}. {__("novoton_holidays.child")} {$i}
-                                    <span class="child-age-display" id="child_age_display_r{$room_num}_c{$i}">({$child_age_at_checkin} {if $child_age_at_checkin == 1}{__("novoton_holidays.age_label_singular")|default:"an"}{else}{__("novoton_holidays.age_label")|default:"ani"}{/if})</span>
-                                    {if count($booking_data.rooms_data) > 1}
-                                        <small class="travel-muted-note">- {__("novoton_holidays.room_number")} {$room_num}</small>
-                                    {/if}
-                                </div>
-                                
-                                {* DOB age info/warning message area *}
-                                <div id="dob_info_r{$room_num}_c{$i}" class="dob-info-message travel-dob-info" style="display: none;"></div>
-                                
-                                {* Row 1: Last Name + First Name (side by side on desktop, stacked on mobile) *}
-                                <div class="travel-guest-grid">
-                                    <div class="travel-guest-field">
-                                        <label>{__("novoton_holidays.last_name")}<span class="required">*</span></label>
-                                        <input type="text" 
-                                               name="guests[room{$room_num}_child_{$i}][last_name]" 
-                                               required 
-                                               value="{$prefilled_child_last_name}"
-                                               placeholder="{__('novoton_holidays.last_name')}" />
-                                    </div>
-                                    <div class="travel-guest-field">
-                                        <label>{__("novoton_holidays.first_name")}<span class="required">*</span></label>
-                                        <input type="text" 
-                                               name="guests[room{$room_num}_child_{$i}][first_name]" 
-                                               required 
-                                               value="{$prefilled_child_first_name}"
-                                               placeholder="{__('novoton_holidays.first_name')}" />
-                                    </div>
-                                </div>
-                                
-                                {* Row 2: Date of Birth (own row for better visibility) *}
-                                <div class="travel-guest-grid">
-                                    <div class="travel-guest-field travel-guest-field--dob">
-                                        <label>{__("novoton_holidays.date_of_birth")} <span class="travel-muted-note">(ex: 27/05/2020)</span><span class="required">*</span></label>
-                                        <input type="tel" 
-                                               name="guests[room{$room_num}_child_{$i}][dob]" 
-                                               id="child_dob_r{$room_num}_c{$i}" 
-                                               class="dob-masked-input"
-                                               required 
-                                               maxlength="10"
-                                               inputmode="numeric"
-                                               autocomplete="off"
-                                               placeholder="ZZ/LL/AAAA"
-                                               value="{$prefilled_child_dob}"
-                                               onkeydown="TravelBooking.handleDobKeydown(event)"
-                                               oninput="TravelBooking.applyDobMask(this)"
-                                               onblur="validateAndCheckAge('r{$room_num}_c{$i}', {$child_age_at_checkin})" />
-                                    </div>
-                                    {* Hidden fields *}
-                                    <input type="hidden" name="guests[room{$room_num}_child_{$i}][age]" id="child_age_r{$room_num}_c{$i}" value="{$child_age_at_checkin}" />
-                                    <input type="hidden" name="guests[room{$room_num}_child_{$i}][type]" id="child_type_r{$room_num}_c{$i}" value="child" />
-                                    <input type="hidden" name="guests[room{$room_num}_child_{$i}][room]" value="{$room_num}" />
-                                </div>
-                                <div id="dob_error_r{$room_num}_c{$i}" class="dob-validation-error" style="display: none;"></div>
-                            </div>
-                        {/for}
-                    {/if}
+                    {* Shared guest cards (travel_core room body) — novoton
+                       passes its provider machinery: fixed adult age for the
+                       pricing API, the DOB age-recheck that re-prices,
+                       booking-wide sequential labels and the bed-type
+                       sublabel. Name/DOB prefill comes from the guest_prefill
+                       map built by edit_booking.php. *}
+                    {include file="addons/travel_core/components/booking_guest_room_body.tpl"
+                        gb_room=$room
+                        gb_room_num=$room_num
+                        gb_room_idx=$room_idx
+                        gb_label_prefix="travel_core"
+                        gb_prefill=$guest_prefill|default:[]
+                        gb_show_adult_dob=false
+                        gb_child_dob_required=true
+                        gb_adult_age_value="30"
+                        gb_child_dob_onblur="validateAndCheckAge"
+                        gb_seq_offset=$guest_seq
+                        gb_adult_sublabel=$nvt_adult_sublabel}
+                    {$_room_guests = $room.adults|default:1}
+                    {$_room_guests = $_room_guests + $room.children|default:0}
+                    {$guest_seq = $guest_seq + $_room_guests}
                     </div>{* Close room-guest-section *}
                 {/foreach}
             </div>

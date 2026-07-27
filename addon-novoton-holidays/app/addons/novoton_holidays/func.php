@@ -72,13 +72,21 @@ function fn_novoton_holidays_language_variables(): array
     return $vars;
 }
 
-/** Content fingerprint — the init.php probe re-seeds when this changes. */
+/**
+ * Fingerprint of the language sources — the init.php probe re-seeds when it
+ * changes. stat-based (size + mtime), not a content hash: this runs on every
+ * admin request and the sources are hundreds of KB. Real edits touch size or
+ * mtime; a deploy that resets mtimes re-arms one idempotent reseed.
+ */
 function fn_novoton_holidays_language_seed_hash(): string
 {
-    return md5(
-        (string) @md5_file(__DIR__ . '/addon.xml')
-        . (string) @md5_file(__DIR__ . '/lang_keys.php')
-    );
+    $parts = [];
+    foreach ([__DIR__ . '/addon.xml', __DIR__ . '/lang_keys.php'] as $file) {
+        $stat = @stat($file);
+        $parts[] = $file . '|' . (is_array($stat) ? $stat['size'] . '|' . $stat['mtime'] : 'absent');
+    }
+
+    return md5(implode(';', $parts));
 }
 
 /**

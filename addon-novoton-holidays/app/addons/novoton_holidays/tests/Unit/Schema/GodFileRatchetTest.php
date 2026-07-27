@@ -17,10 +17,14 @@ final class GodFileRatchetTest extends TestCase
 {
     /** @var array<string, int> repo-relative path (from addon root) => max lines */
     private const CEILINGS = [
-        'controllers/backend/novoton_price_compare.php' => 1130,
-        'functions/hotels.php' => 855,
-        'functions/formatting.php' => 825,
+        'controllers/backend/novoton_price_compare.php' => 1104,
+        'functions/hotels.php' => 800,
+        'functions/formatting.php' => 340,
         'functions/install.php' => 720,
+        'controllers/backend/novoton_prices.php' => 753,
+        'controllers/frontend/novoton_booking/add_to_cart.php' => 709,
+        'functions/email.php' => 684,
+        'controllers/backend/novoton_tools.php' => 669,
     ];
 
     public function testGodFilesNeverGrowPastTheirCeiling(): void

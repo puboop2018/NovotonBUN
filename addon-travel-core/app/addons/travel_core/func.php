@@ -131,6 +131,27 @@ function fn_travel_core_ensure_schema(): void
         }
     }
 
+    // Bookings grid sorts by created_at DESC by default — backfill the index
+    // on installs that predate it (the addon.xml CREATE only covers fresh
+    // installs; without it every grid load filesorts the whole table).
+    $bookingsTable = $tablePrefix . 'travel_bookings';
+    $bookingsExists = \Tygh\Addons\TravelCore\Helpers\TypeCoerce::toInt(db_get_field(
+        'SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?s',
+        $bookingsTable,
+    ));
+    if ($bookingsExists > 0) {
+        $hasCreatedAtIdx = \Tygh\Addons\TravelCore\Helpers\TypeCoerce::toInt(db_get_field(
+            "SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS
+             WHERE TABLE_SCHEMA = DATABASE()
+               AND TABLE_NAME = ?s
+               AND INDEX_NAME = 'idx_created_at'",
+            $bookingsTable,
+        ));
+        if ($hasCreatedAtIdx === 0) {
+            db_query('ALTER TABLE ?:travel_bookings ADD KEY `idx_created_at` (`created_at`)');
+        }
+    }
+
     // Ensure travel_unmapped_values table exists
     db_query(
         'CREATE TABLE IF NOT EXISTS `?:travel_unmapped_values` (
@@ -540,12 +561,20 @@ function fn_travel_core_language_variables(): array
 }
 
 /**
- * Content hash of the language-variable sources — the self-heal seed stamp.
+ * Fingerprint of the language-variable sources — the self-heal seed stamp.
+ *
+ * stat-based (size + mtime), not a content hash: this runs on every admin
+ * request and addon.xml alone is hundreds of KB — hashing it each time was
+ * measurable. Real edits always touch size or mtime; a deploy that resets
+ * mtimes merely re-arms one idempotent reseed.
  */
 function fn_travel_core_language_seed_hash(): string
 {
-    return md5(
-        (string) @md5_file(__DIR__ . '/addon.xml')
-        . (string) @md5_file(__DIR__ . '/lang_keys.php')
-    );
+    $parts = [];
+    foreach ([__DIR__ . '/addon.xml', __DIR__ . '/lang_keys.php'] as $file) {
+        $stat = @stat($file);
+        $parts[] = $file . '|' . (is_array($stat) ? $stat['size'] . '|' . $stat['mtime'] : 'absent');
+    }
+
+    return md5(implode(';', $parts));
 }

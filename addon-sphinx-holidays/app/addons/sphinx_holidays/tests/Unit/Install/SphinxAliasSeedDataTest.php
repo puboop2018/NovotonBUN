@@ -46,13 +46,18 @@ final class SphinxAliasSeedDataTest extends TestCase
         self::assertSame('UAI', $boards['Ultra All Inclusive']);
     }
 
-    public function testFuncPhpReadsTheDataClassInsteadOfInlineArrays(): void
+    public function testSeederReadsTheDataClassInsteadOfInlineArrays(): void
     {
-        $func = (string) file_get_contents(dirname(__DIR__, 3) . '/func.php');
+        // The seeding body lives in Install\FeatureAliasSeeder (func.php only
+        // keeps the fn_* shell); the data must keep coming from the data class.
+        $seeder = (string) file_get_contents(dirname(__DIR__, 3) . '/src/Install/FeatureAliasSeeder.php');
 
-        self::assertStringContainsString('SphinxAliasSeedData::boardAliases()', $func);
-        self::assertStringContainsString('SphinxAliasSeedData::hotelFacilityAliases()', $func);
-        // The big inline facility map is gone from func.php.
+        self::assertStringContainsString('SphinxAliasSeedData::boardAliases()', $seeder);
+        self::assertStringContainsString('SphinxAliasSeedData::hotelFacilityAliases()', $seeder);
+
+        // The big inline facility map stays gone from both homes.
+        $func = (string) file_get_contents(dirname(__DIR__, 3) . '/func.php');
         self::assertStringNotContainsString("'124' => 'air_conditioning'", $func);
+        self::assertStringNotContainsString("'124' => 'air_conditioning'", $seeder);
     }
 }

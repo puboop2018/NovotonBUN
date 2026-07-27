@@ -74,6 +74,21 @@ use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
         return [CONTROLLER_STATUS_REDIRECT, 'index.index'];
     }
 
+    // Cache the verified raw price in the session for the pre_place_order
+    // "Silent Sync": while the entry is younger than
+    // ConfigProvider::getPreorderCacheTtl(), the checkout verifier trusts
+    // this verify and skips its own API round-trip (novoton's pattern —
+    // availability was confirmed by the gate above).
+    $price_cache = &$_SESSION['sphinx_price_cache'];
+    if (!is_array($price_cache)) {
+        $price_cache = [];
+    }
+    $price_cache[md5($offer_id)] = [
+        'api_price_raw' => $basePrice,
+        'timestamp'     => time(),
+    ];
+    unset($price_cache);
+
     // Resolve product
     $product_id = $cartService->resolveProductId($hotel_id, $product_id);
     if (empty($product_id)) {

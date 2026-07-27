@@ -1,0 +1,107 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Tygh\Addons\Eurosite\Services;
+
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+use Tygh\Addons\TravelCore\Services\AbstractConfigProvider;
+
+/**
+ * Eurosite configuration provider.
+ *
+ * Type-safe getters over the addon settings with sensible defaults. Registry
+ * plumbing (cached settings array, getSetting) comes from the shared
+ * travel_core base — this is the designated Registry-reader for the addon
+ * (allowlisted in phpstan-disallowed-calls.neon).
+ */
+class ConfigProvider extends AbstractConfigProvider
+{
+    private const string ADDON_ID = 'eurosite';
+
+    #[\Override]
+    protected static function addonId(): string
+    {
+        return self::ADDON_ID;
+    }
+
+    public static function getApiUrl(): string
+    {
+        return rtrim(TypeCoerce::toString(self::getSetting('api_url')), '/');
+    }
+
+    public static function getApiUser(): string
+    {
+        return TypeCoerce::toString(self::getSetting('api_user'));
+    }
+
+    public static function getApiPassword(): string
+    {
+        return TypeCoerce::toString(self::getSetting('api_password'));
+    }
+
+    public static function getTourOpCode(): string
+    {
+        $code = TypeCoerce::toString(self::getSetting('tourop_code'));
+        return $code !== '' ? $code : 'EU';
+    }
+
+    public static function getDefaultCurrency(): string
+    {
+        $cur = TypeCoerce::toString(self::getSetting('default_currency'));
+        return $cur !== '' ? $cur : 'EUR';
+    }
+
+    public static function getDefaultLanguage(): string
+    {
+        $lang = TypeCoerce::toString(self::getSetting('default_language'));
+        return $lang !== '' ? $lang : 'RO';
+    }
+
+    public static function allowInsecureApi(): bool
+    {
+        return self::getSetting('allow_insecure_api', 'Y') === 'Y';
+    }
+
+    public static function getMaxRetries(): int
+    {
+        return max(1, TypeCoerce::toInt(self::getSetting('api_max_retries', 3)));
+    }
+
+    public static function getTimeout(): int
+    {
+        return max(5, TypeCoerce::toInt(self::getSetting('api_timeout', 60)));
+    }
+
+    public static function getCircuitBreakerThreshold(): int
+    {
+        return max(1, TypeCoerce::toInt(self::getSetting('circuit_breaker_threshold', 5)));
+    }
+
+    public static function getCircuitBreakerTimeout(): int
+    {
+        return max(1, TypeCoerce::toInt(self::getSetting('circuit_breaker_timeout', 60)));
+    }
+
+    /**
+     * All settings as a plain map, ready to hand to EurositeHttpClient.
+     *
+     * @return array<string, mixed>
+     */
+    public static function toClientSettings(): array
+    {
+        return [
+            'api_url'                   => self::getApiUrl(),
+            'api_user'                  => self::getApiUser(),
+            'api_password'              => self::getApiPassword(),
+            'tourop_code'               => self::getTourOpCode(),
+            'default_currency'          => self::getDefaultCurrency(),
+            'default_language'          => self::getDefaultLanguage(),
+            'allow_insecure_api'        => self::allowInsecureApi(),
+            'api_max_retries'           => self::getMaxRetries(),
+            'api_timeout'               => self::getTimeout(),
+            'circuit_breaker_threshold' => self::getCircuitBreakerThreshold(),
+            'circuit_breaker_timeout'   => self::getCircuitBreakerTimeout(),
+        ];
+    }
+}

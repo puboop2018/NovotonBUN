@@ -680,6 +680,14 @@ msgctxt "Languages::sphinx_holidays.require_immediate_availability.tooltip"
 msgid "When enabled, the hotels cron only adds hotels that have at least one offer with confirmation=immediate, and the storefront search shows only immediate-confirmation offers. The hotels cron accepts a per-run override: &availability_gate=0 to skip the gate, &availability_gate=1 to force it."
 msgstr "When enabled, the hotels cron only adds hotels that have at least one offer with confirmation=immediate, and the storefront search shows only immediate-confirmation offers. The hotels cron accepts a per-run override: &availability_gate=0 to skip the gate, &availability_gate=1 to force it."
 
+msgctxt "Languages::sphinx_holidays.preorder_cache_ttl"
+msgid "Checkout verify cache TTL (seconds)"
+msgstr "Checkout verify cache TTL (seconds)"
+
+msgctxt "Languages::sphinx_holidays.preorder_cache_ttl.tooltip"
+msgid "Reuse the price verified at add-to-cart for this many seconds when the customer clicks Place Order — the checkout skips one API call per hotel in the cart. 0 = always re-verify live."
+msgstr "Reuse the price verified at add-to-cart for this many seconds when the customer clicks Place Order — the checkout skips one API call per hotel in the cart. 0 = always re-verify live."
+
 msgctxt "Languages::sphinx_holidays.api_header"
 msgid "Sphinx API Settings"
 msgstr "Sphinx API Settings"
@@ -1283,3 +1291,11 @@ msgstr "[n] Adult|[n] Adults"
 msgctxt "Languages::sphinx_holidays.n_children"
 msgid "[n] Child|[n] Children"
 msgstr "[n] Child|[n] Children"
+
+msgctxt "Languages::sphinx_holidays.edit_booking"
+msgid "Edit booking"
+msgstr "Edit booking"
+
+msgctxt "Languages::sphinx_holidays.booking_updated"
+msgid "Booking details updated."
+msgstr "Booking details updated."

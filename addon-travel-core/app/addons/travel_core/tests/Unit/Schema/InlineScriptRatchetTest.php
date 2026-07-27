@@ -24,12 +24,8 @@ final class InlineScriptRatchetTest extends TestCase
     /** @var array<string, int> repo-relative tpl path => max inline <script> blocks */
     private const ALLOWLIST = [
         'addon-novoton-holidays/design/backend/templates/addons/novoton_holidays/views/novoton_price_compare/manage.tpl' => 1,
-        'addon-novoton-holidays/design/themes/nova_theme/templates/addons/novoton_holidays/hooks/block_checkout/product_extra.post.tpl' => 1,
-        'addon-novoton-holidays/design/themes/nova_theme/templates/addons/novoton_holidays/hooks/checkout/product_info.post.tpl' => 1,
         'addon-novoton-holidays/design/themes/nova_theme/templates/addons/novoton_holidays/hooks/index/scripts.post.tpl' => 1,
         'addon-novoton-holidays/design/themes/nova_theme/templates/addons/novoton_holidays/views/novoton_booking/booking_form.tpl' => 1,
-        'addon-novoton-holidays/design/themes/responsive/templates/addons/novoton_holidays/hooks/block_checkout/product_extra.post.tpl' => 1,
-        'addon-novoton-holidays/design/themes/responsive/templates/addons/novoton_holidays/hooks/checkout/product_info.post.tpl' => 1,
         'addon-novoton-holidays/design/themes/responsive/templates/addons/novoton_holidays/hooks/index/scripts.post.tpl' => 1,
         'addon-novoton-holidays/design/themes/responsive/templates/addons/novoton_holidays/views/novoton_booking/booking_form.tpl' => 1,
         'addon-sphinx-holidays/design/backend/templates/addons/sphinx_holidays/views/sphinx_holidays/hotels.tpl' => 1,

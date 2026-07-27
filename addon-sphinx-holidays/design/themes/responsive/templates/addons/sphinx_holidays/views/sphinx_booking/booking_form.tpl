@@ -71,7 +71,11 @@
     {/if}
 
     {* Guest entry form *}
-    <form action="{"sphinx_booking.add_to_cart"|fn_url}" method="post" id="sphinx-booking-form">
+    <form action="{if $is_edit_mode}{"sphinx_booking.update_booking"|fn_url}{else}{"sphinx_booking.add_to_cart"|fn_url}{/if}" method="post" id="sphinx-booking-form">
+        {if $is_edit_mode}
+            <input type="hidden" name="booking_id" value="{$edit_booking_id}">
+            <input type="hidden" name="cart_id" value="{$edit_cart_id|escape:html}">
+        {/if}
         <input type="hidden" name="security_hash" value="{$security_hash}" />
         <input type="hidden" name="offer_id" value="{$sphinx_booking_data.offer_id}">
         <input type="hidden" name="hotel_id" value="{$sphinx_booking_data.hotel_id}">
@@ -103,7 +107,8 @@
                      guest_label_prefix="travel_core"
                      show_adult_dob=true
                      child_dob_required=true
-                     guard_expected_ages=true}
+                     guard_expected_ages=true
+                     guest_prefill=$guest_prefill|default:[]}
         </div>
 
         {* Contact (email/phone) is NOT collected here: CS-Cart checkout already
@@ -112,7 +117,7 @@
         {* Submit *}
         <div class="travel-booking-submit sphinx-booking-submit">
             <button type="submit" class="travel-offer-book-btn sphinx-offer-book-btn">
-                <i class="icon-shopping-cart"></i> {__("sphinx_holidays.add_to_cart_btn")|default:"Add to Cart"}
+                {if $is_edit_mode}{__("travel_core.save_changes")|default:"Save changes"}{else}<i class="icon-shopping-cart"></i> {__("sphinx_holidays.add_to_cart_btn")|default:"Add to Cart"}{/if}
             </button>
         </div>
 

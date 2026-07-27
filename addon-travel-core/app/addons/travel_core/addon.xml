@@ -266,7 +266,8 @@
                 UNIQUE KEY `uq_provider_booking` (`provider`, `provider_booking_id`),
                 KEY `idx_order_id` (`order_id`),
                 KEY `idx_status` (`status`),
-                KEY `idx_check_in` (`check_in`)
+                KEY `idx_check_in` (`check_in`),
+                KEY `idx_created_at` (`created_at`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
         </item>
 

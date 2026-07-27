@@ -24,13 +24,14 @@ interface PreOrderPriceVerifierInterface
      * prices against its API, and returns corrections/notifications.
      *
      * @param array<string, mixed> $cart CS-Cart cart data
-     * @return array{allow: bool, corrections: array<string, mixed>, notifications: array<int, array<string, mixed>>, reconfirm: bool}
-     *                                                                                                                                 - allow: whether the order should proceed (typically always true)
-     *                                                                                                                                 - corrections: cart_id => price correction data
-     *                                                                                                                                 - notifications: list of discrepancy data for admin alerts
-     *                                                                                                                                 - reconfirm: a correction exceeded the absorb allowance — the calling
-     *                                                                                                                                 hook must block the current order click so the customer re-confirms
-     *                                                                                                                                 the corrected total (providers may add provider-specific keys)
+     * @return array{allow: bool, corrections: array<int|string, mixed>, notifications: array<int, array<string, mixed>>, reconfirm: bool}
+     *                                                                                                                                     - allow: whether the order should proceed (typically always true)
+     *                                                                                                                                     - corrections: cart_id => price correction data (cart ids are
+     *                                                                                                                                     numeric in real carts, so the keys arrive as PHP ints)
+     *                                                                                                                                     - notifications: list of discrepancy data for admin alerts
+     *                                                                                                                                     - reconfirm: a correction exceeded the absorb allowance — the calling
+     *                                                                                                                                     hook must block the current order click so the customer re-confirms
+     *                                                                                                                                     the corrected total (providers may add provider-specific keys)
      */
     public function verify(array $cart): array;
 }

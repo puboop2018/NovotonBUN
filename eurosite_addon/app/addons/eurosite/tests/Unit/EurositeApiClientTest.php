@@ -1,0 +1,158 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Tygh\Addons\Eurosite\Tests\Unit;
+
+use PHPUnit\Framework\TestCase;
+use Tygh\Addons\Eurosite\Api\EurositeApiClient;
+use Tygh\Addons\Eurosite\EurositeTransportInterface;
+use Tygh\Addons\Eurosite\EurositeXmlBuilder;
+use Tygh\Addons\Eurosite\EurositeXmlParser;
+
+/**
+ * End-to-end (no network) tests for the API facade: a fake transport captures
+ * the request the client BUILDS and returns canned responses copied from the
+ * spec, so both the request payloads and the response mapping are pinned.
+ */
+final class EurositeApiClientTest extends TestCase
+{
+    private function client(FakeTransport $t): EurositeApiClient
+    {
+        return new EurositeApiClient($t, new EurositeXmlBuilder('u', 'p', 'RO'), new EurositeXmlParser(), 'EU');
+    }
+
+    public function testGetCountriesParsesTheResponseList(): void
+    {
+        $t = new FakeTransport(self::wrap('getCountryResponse',
+            '<Country><CountryCode>AL</CountryCode><CountryName>Albania</CountryName></Country>'
+            . '<Country><CountryCode>AD</CountryCode><CountryName>Andorra</CountryName></Country>'));
+
+        $countries = $this->client($t)->getCountries();
+
+        self::assertCount(2, $countries);
+        self::assertSame(['code' => 'AL', 'name' => 'Albania'], $countries[0]);
+        self::assertSame('Andorra', $countries[1]['name']);
+        // The request the client SENT is a proper getCountryRequest envelope.
+        self::assertStringContainsString('RequestType="getCountryRequest"', $t->lastRequest);
+    }
+
+    public function testSearchHotelsBuildsThePayloadAndMapsAnOffer(): void
+    {
+        $t = new FakeTransport(self::wrap('getHotelPriceResponse',
+            '<Hotel><Product>'
+            . '<TourOpCode>EU</TourOpCode><CountryCode>RO</CountryCode><CityCode>ROMM</CityCode>'
+            . '<CityName>Mamaia</CityName><ProductCode>RO0099</ProductCode><ProductName>Condor</ProductName>'
+            . '<ProductCategory>4</ProductCategory><Class>Hotel</Class><Latitude>0</Latitude><Longitude>0</Longitude>'
+            . '</Product><Offers><Offer CurrencyCode="EUR">'
+            . '<OfferType>Normal</OfferType><Availability Code="OR">OnRequest</Availability>'
+            . '<PeriodOfStay><CheckIn>2012-09-14</CheckIn><CheckOut>2012-09-21</CheckOut></PeriodOfStay>'
+            . '<ProductPrice>481.99</ProductPrice><Gross>524</Gross><NET>453.15</NET><Commission>70.85</Commission>'
+            . '<GrilaName>Standard</GrilaName><PackageVariantId>0|1065487_1874_2</PackageVariantId>'
+            . '<BookingRoomTypes><Room Code="40" GCode="DB" Quantity="1" ServicePrice="125.795">Double Room</Room></BookingRoomTypes>'
+            . '<Meals><Meal Type="2" Code="11" ServicePrice="230.4">Mic dejun</Meal></Meals>'
+            . '</Offer></Offers></Hotel>'));
+
+        $offers = $this->client($t)->searchHotels([
+            'country_code' => 'RO',
+            'city_code'    => 'ROMM',
+            'check_in'     => '2012-09-14',
+            'check_out'    => '2012-09-21',
+            'rooms'        => [['code' => 'DB', 'adults' => 2, 'children' => [8]]],
+        ]);
+
+        self::assertCount(1, $offers);
+        $o = $offers[0];
+        self::assertSame('RO0099', $o->productCode);
+        self::assertSame('Condor', $o->productName);
+        self::assertSame(4, $o->category);
+        self::assertSame(481.99, $o->price);
+        self::assertSame('0|1065487_1874_2', $o->variantId);
+        self::assertSame('Double Room', $o->rooms[0]['name']);
+        self::assertSame('Mic dejun', $o->meals[0]['name']);
+
+        // The request carried the search criteria + occupancy.
+        $req = $t->lastRequest;
+        self::assertStringContainsString('RequestType="getHotelPriceRequest"', $req);
+        self::assertStringContainsString('<CityCode>ROMM</CityCode>', $req);
+        self::assertStringContainsString('<Room Code="DB" NoAdults="2" NoChildren="1">', $req);
+        self::assertStringContainsString('<Age>8</Age>', $req);
+    }
+
+    public function testAddBookingExtractsTheApiReference(): void
+    {
+        $t = new FakeTransport(self::wrap('AddBookingResponse',
+            '<BookingReferences>'
+            . '<BookingReference Source="api">EU_XML_12898</BookingReference>'
+            . '<BookingReference Source="client">int1234</BookingReference>'
+            . '</BookingReferences>'));
+
+        $res = $this->client($t)->addBooking([
+            'booking_name' => 'int1234',
+            'client_id'    => 'int1234',
+            'country_code' => 'BG',
+            'city_code'    => 'BGNSPDAR',
+            'product_code' => 'BG0069',
+            'variant_id'   => '0|1067879_1453_1',
+            'check_in'     => '2012-09-22',
+            'check_out'    => '2012-09-29',
+            'rooms'        => [[
+                'code' => '817', 'adults' => 2,
+                'pax'  => [
+                    ['type' => 'adult', 'name' => 'TEST / TEST', 'gender' => 'B', 'dob' => '1980-08-24'],
+                    ['type' => 'child', 'name' => 'kid / kid', 'gender' => 'C', 'child_age' => '5', 'dob' => '2019-07-05'],
+                ],
+            ]],
+        ]);
+
+        self::assertTrue($res['ok']);
+        self::assertSame('EU_XML_12898', $res['api_ref']);
+        self::assertSame('int1234', $res['client_ref']);
+
+        $req = $t->lastRequest;
+        self::assertStringContainsString('RequestType="AddBookingRequest"', $req);
+        self::assertStringContainsString('<ProductCode>BG0069</ProductCode>', $req);
+        self::assertStringContainsString('<VariantId>0|1067879_1453_1</VariantId>', $req);
+        self::assertStringContainsString('PaxType="child"', $req);
+        self::assertStringContainsString('ChildAge="5"', $req);
+    }
+
+    public function testCancelBookingReportsSuccessWhenNoErrorNode(): void
+    {
+        $t = new FakeTransport(self::wrap('CancelBookingResponse', '<Status>Cancelled</Status>'));
+        $res = $this->client($t)->cancelBooking('int1234');
+
+        self::assertTrue($res['ok']);
+        self::assertSame('', $res['error']);
+        self::assertStringContainsString('RequestType="CancelBookingRequest"', $t->lastRequest);
+    }
+
+    private static function wrap(string $responseType, string $inner): string
+    {
+        return '<?xml version="1.0" encoding="utf-8"?>'
+            . '<Response ResponseType="' . $responseType . '">'
+            . '<AuditInfo><ResponseId>1</ResponseId><RequestId>1</RequestId><ResponseTime>t</ResponseTime></AuditInfo>'
+            . '<ResponseDetails><' . $responseType . '>' . $inner . '</' . $responseType . '></ResponseDetails>'
+            . '</Response>';
+    }
+}
+
+/**
+ * Captures the request XML and returns a pre-set response.
+ */
+final class FakeTransport implements EurositeTransportInterface
+{
+    public string $lastRequest = '';
+
+    public function __construct(private readonly string $response)
+    {
+    }
+
+    #[\Override]
+    public function post(string $xml): string
+    {
+        $this->lastRequest = $xml;
+
+        return $this->response;
+    }
+}

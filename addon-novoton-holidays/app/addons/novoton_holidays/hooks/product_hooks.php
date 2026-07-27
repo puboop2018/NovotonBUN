@@ -4,7 +4,6 @@ declare(strict_types=1);
  * Novoton Holidays - Product Hook Functions
  *
  * Responsible for:
- *   - get_products_post: Batch prefetch hotel data for product listings
  *   - gather_additional_product_data_post: No-op (Smarty 5 compatibility)
  *   - get_product_data_post: No-op (Smarty 5 compatibility)
  *   - delete_product_post: Clean up bookings when product is deleted
@@ -13,52 +12,19 @@ declare(strict_types=1);
  * @since   3.0.0
  */
 
-use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Services\Container;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
-/**
- * Hook: after product list is fetched.
- *
- * Batch pre-fetches hotel data for all hotel products on the page so that
- * subsequent per-product gather_additional_product_data_post calls hit the
- * in-memory cache instead of issuing 2 DB queries each (N+1 fix).
- *
- * @param list<array<string, mixed>> $products
- * @param array<string, mixed> $params
- * @param string $lang_code
- */
-function fn_novoton_holidays_get_products_post(&$products, $params = [], $lang_code = ''): void
-{
-    if (empty($products)) {
-        return;
-    }
-
-    try {
-        $addon_settings = ConfigProvider::all();
-        if (empty($addon_settings) || empty($addon_settings['product_code_prefixes'])) {
-            return;
-        }
-
-        $hotel_ids = [];
-        foreach ($products as $product) {
-            if (!empty($product['product_code']) && _nvt_is_hotel_product($product, $addon_settings)) {
-                $hotel_id = _nvt_extract_hotel_id(TypeCoerce::toString($product['product_code']));
-                if (!empty($hotel_id)) {
-                    $hotel_ids[] = $hotel_id;
-                }
-            }
-        }
-
-        if (!empty($hotel_ids)) {
-            fn_novoton_holidays_prefetch_hotel_data($hotel_ids);
-        }
-    } catch (\Throwable) {
-        // Prefetch is optional — don't crash
-    }
-}
+// The former get_products_post hook (batch hotel-data prefetch for product
+// listings) is GONE, deliberately: its only consumer was the per-product
+// gather_additional_product_data_post enrichment below, which became a
+// complete no-op with Smarty 5 — after that, every category/search listing
+// still pulled the full ?:novoton_hotels rows (hotel_data is the entire
+// hotelinfo API response as JSON) into a request cache nothing ever read.
+// fn_novoton_holidays_prefetch_hotel_data() itself lives on for the email
+// builders, which really do batch-read the enriched data afterwards.
 
 /**
  * Hook: gather additional product data - pass prices to templates
@@ -188,32 +154,6 @@ function fn_novoton_holidays_get_product_tabs_post($product_id, &$tabs): void
 // ============================================================================
 // PRODUCT HELPERS (private-by-convention)
 // ============================================================================
-
-/**
- * Check if a product is a hotel product based on product_code prefix.
- *
- * @param array<string, mixed> $product        Product data (must contain 'product_code')
- * @param array<string, mixed> $addon_settings Addon settings (must contain 'product_code_prefixes')
- * @return bool
- */
-function _nvt_is_hotel_product(array $product, array $addon_settings): bool
-{
-    if (empty($product['product_code']) || empty($addon_settings['product_code_prefixes'])) {
-        return false;
-    }
-
-    $product_code = TypeCoerce::toString($product['product_code']);
-    $prefixes = explode(',', TypeCoerce::toString($addon_settings['product_code_prefixes']));
-
-    foreach ($prefixes as $prefix) {
-        $prefix = trim($prefix);
-        if (!empty($prefix) && str_starts_with($product_code, $prefix)) {
-            return true;
-        }
-    }
-
-    return false;
-}
 
 /**
  * Extract hotel ID from product code by stripping known prefixes.
