@@ -94,17 +94,20 @@ final class TravelcoreProductTemplateTest extends TestCase
         self::assertLessThan($travelColumns, $code, 'code box lives inside the header row');
     }
 
-    public function testHotelsGetAReserveButtonInsteadOfAddToCart(): void
+    public function testReserveButtonReplacesAddToCartWheneverTemplateIsSelected(): void
     {
         $src = (string) file_get_contents(self::themePath('responsive'));
 
-        // Hotel-gated: $travel_booking_product_id is assigned only for hotel
-        // products, so non-hotel products keep the stock purchase button.
+        // Selecting the template is the whole switch: like default/bigpicture,
+        // its behavior must not depend on runtime state. The old hotel gate
+        // ($travel_booking_product_id) must not return — only the PHP-side
+        // booking-form injection stays hotel-gated.
+        self::assertStringNotContainsString('$travel_is_hotel_pdp', $src);
         self::assertStringContainsString(
-            '{$travel_is_hotel_pdp = $travel_booking_product_id && $travel_booking_product_id == $product.product_id}',
+            '<div class="ty-product-block__button travel-pdp-reserve-mode">',
             $src,
+            'reserve mode is unconditional on this template',
         );
-        self::assertStringContainsString('travel-pdp-reserve-mode', $src);
         // Same spot, theme-primary styling, anchors to the availability widget.
         self::assertStringContainsString(
             '<a href="#travel-booking-root" class="ty-btn ty-btn__primary ty-btn__big travel-pdp-reserve-btn">{__("travel_core.reserve_now")}</a>',
