@@ -10,8 +10,20 @@ addons, the cart, or the database.
 dev/
 ├── novoton/         XML-over-HTTP API (b2b.allinclusivebg.com)
 ├── sphinx/          REST/JSON API (Bearer auth)
-└── sphinx_api_dev/  older focused Sphinx investigation tools (coordinates, raw search dump)
+├── sphinx_api_dev/  older focused Sphinx investigation tools (coordinates, raw search dump)
+├── eurosite/        Eurosite/TouringIT XML API probes (see eurosite/README.md)
+└── tools/           store-side sandbox tools (bootstrap the CS-Cart in the container)
 ```
+
+Unlike the API probes, `dev/tools/` scripts bootstrap the full CS-Cart from the
+fullstore container (dev/ is bind-mounted into the docroot), so they can read
+and heal the store itself:
+
+- `tools/seed-langs.php` — language self-heal diagnostic. Shows each addon's
+  seed stamp vs live fingerprint, whether the container loads current addon
+  files, and every checkout/PDP label row; `?force=1` reseeds all three addons'
+  language keys and clears the cache. Refuses non-localhost requests.
+  `http://localhost:8080/dev/tools/seed-langs.php`
 
 Each folder has a shared `_*_client.php` (the standalone HTTP client +
 pretty-printer) plus one probe file per API feature. This mirrors the existing
