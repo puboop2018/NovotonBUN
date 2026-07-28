@@ -107,7 +107,19 @@ final class SettingsMigrator
         $created = [];
         foreach ($declared as $item) {
             $name = $item['name'];
-            if ($name === '' || $settings->isExists($name, $addon)) {
+            if ($name === '') {
+                continue;
+            }
+
+            if ($settings->isExists($name, $addon)) {
+                // Present already — but possibly LABEL-LESS. The first heal on
+                // a Windows checkout parsed no labels (CRLF, see below) and
+                // created these fields blank; isExists() alone would then skip
+                // them forever. Repair descriptions when they are missing.
+                if (self::repairDescriptions($addon, $name, $labels)) {
+                    $created[] = $name;
+                }
+
                 continue;
             }
 
@@ -148,6 +160,56 @@ final class SettingsMigrator
         }
 
         return $created;
+    }
+
+    /**
+     * Give an existing setting its label back when it has none.
+     *
+     * Settings created by a heal that could not read the .po (CRLF) exist but
+     * render as blank rows — a field with no name is arguably worse than a
+     * missing one. Only writes when the setting genuinely has no description
+     * in that language, so an admin-edited label is never overwritten.
+     *
+     * @param array<string, array<string, array{value: string, tooltip: string}>> $labels
+     * @return bool whether anything was repaired
+     */
+    private static function repairDescriptions(string $addon, string $name, array $labels): bool
+    {
+        $rows = self::descriptionRows($labels, $name);
+        if ($rows === null) {
+            return false;
+        }
+
+        // Instances are cached by Settings::instance(), so re-fetching here
+        // costs nothing and keeps the signature free of a kit-only type
+        // (the CS-Cart source is not part of this repository).
+        $settings = Settings::instance();
+        if (!$settings instanceof Settings) {
+            return false;
+        }
+
+        $objectId = TypeCoerce::toInt($settings->getId($name, $addon));
+        if ($objectId <= 0) {
+            return false;
+        }
+
+        $repaired = false;
+        foreach ($rows as $row) {
+            $existing = $settings->getDescription(
+                $objectId,
+                TypeCoerce::toString(Settings::SETTING_DESCRIPTION),
+                $row['lang_code'],
+            );
+            if (is_string($existing) && trim($existing) !== '') {
+                continue; // already labelled — leave admin edits alone
+            }
+
+            $row['object_id'] = (string) $objectId;
+            $settings->updateDescription($row);
+            $repaired = true;
+        }
+
+        return $repaired;
     }
 
     /**
@@ -226,8 +288,12 @@ final class SettingsMigrator
             $lang = basename(dirname($file, 2));
             $body = (string) file_get_contents($file);
 
+            // \r?\n, not \n: a Windows checkout stores these files with CRLF
+            // (there is no .gitattributes forcing LF), and a \n-only pattern
+            // silently matches nothing — which is exactly how the first heal
+            // created the settings with blank labels.
             $pattern = '/msgctxt "Settings(Options|Tooltips)::' . preg_quote($addon, '/')
-                . '::([a-zA-Z0-9_]+)"\nmsgid "(?:[^"\\\\]|\\\\.)*"\nmsgstr "((?:[^"\\\\]|\\\\.)*)"/';
+                . '::([a-zA-Z0-9_]+)"\r?\nmsgid "(?:[^"\\\\]|\\\\.)*"\r?\nmsgstr "((?:[^"\\\\]|\\\\.)*)"/';
             if (preg_match_all($pattern, $body, $matches, PREG_SET_ORDER) === false) {
                 continue;
             }
