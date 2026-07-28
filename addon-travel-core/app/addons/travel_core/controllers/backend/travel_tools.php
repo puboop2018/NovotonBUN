@@ -19,6 +19,35 @@ if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
+    // Geocoding configuration lives here rather than in the addon settings
+    // form because CS-Cart only creates settings rows from addon.xml at
+    // install/upgrade time: on every store installed before the geocoding
+    // section existed, that form simply has no such fields. Saved to
+    // ?:storage_data, which needs no upgrade — see functions/geocoding.php.
+    if ($mode === 'save_geocoding') {
+        $submitted = TypeCoerce::toStringMap($_REQUEST['geocoding'] ?? []);
+        $email = trim(TypeCoerce::toString($submitted['contact_email'] ?? ''));
+        $enabled = TypeCoerce::toString($submitted['enabled'] ?? 'N') === 'Y';
+
+        if ($enabled && ($email === '' || filter_var($email, FILTER_VALIDATE_EMAIL) === false)) {
+            // The Nominatim usage policy requires a contact; without one the
+            // geocode crons refuse to run, so block the misleading state here.
+            fn_set_notification('E', __('error'), __('travel_core.geocoding_email_required'));
+
+            return [CONTROLLER_STATUS_REDIRECT, 'travel_tools.manage'];
+        }
+
+        fn_travel_core_save_geocoding_settings([
+            'enabled' => $enabled,
+            'contact_email' => $email,
+            'endpoint' => trim(TypeCoerce::toString($submitted['endpoint'] ?? '')),
+        ]);
+
+        fn_set_notification('N', __('notice'), __('travel_core.geocoding_saved'));
+
+        return [CONTROLLER_STATUS_REDIRECT, 'travel_tools.manage'];
+    }
+
     if ($mode === 'run_exchange_rates') {
         $commission = TypeCoerce::toFloat(Registry::get('addons.travel_core.currency_risk_commission'));
 
@@ -111,5 +140,6 @@ if ($mode === 'manage') {
         $view->assign('cron_jobs', $cron_jobs);
         $view->assign('cron_key', $cron_key);
         $view->assign('base_url', $base_url);
+        $view->assign('geocoding', fn_travel_core_get_geocoding_settings());
     }
 }
