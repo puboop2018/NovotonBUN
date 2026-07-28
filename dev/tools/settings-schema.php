@@ -42,10 +42,18 @@ if (!$ss_is_cli) {
     header('Content-Type: text/plain; charset=utf-8');
 }
 
+// Normally dev/ is mounted INSIDE the docroot, so the store is two levels up.
+// Containers created before that compose line exists have no /var/www/html/dev
+// — but they do mount the repo at /repo, so this file is still reachable as
+// `php /repo/dev/tools/settings-schema.php`. Fall back to the conventional
+// docroot in that case rather than refusing to run.
 $ss_docroot = dirname(__DIR__, 2);
+if (!is_file($ss_docroot . '/init.php') && is_file('/var/www/html/init.php')) {
+    $ss_docroot = '/var/www/html';
+}
 if (!is_file($ss_docroot . '/init.php')) {
-    exit("No CS-Cart init.php at {$ss_docroot} — this tool only works from the fullstore\n"
-        . "container, where dev/ is mounted inside the CS-Cart docroot (see docker/fullstore).\n");
+    exit("No CS-Cart init.php at {$ss_docroot} (nor /var/www/html) — run this from the\n"
+        . "fullstore container: php /repo/dev/tools/settings-schema.php\n");
 }
 
 define('AREA', 'A');
