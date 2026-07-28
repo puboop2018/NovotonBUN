@@ -86,6 +86,34 @@ final class SettingsMigratorTest extends TestCase
         }
     }
 
+    /**
+     * A Windows checkout stores the .po files with CRLF (there is no
+     * .gitattributes forcing LF), so a \n-only pattern matched nothing and the
+     * first heal created the four geocoding fields with BLANK labels. The
+     * parser must tolerate CRLF, and — because isExists() would skip those
+     * rows forever — the heal must also be able to give an existing setting
+     * its label back.
+     */
+    public function testToleratesCrlfPoFilesAndRepairsLabelLessSettings(): void
+    {
+        $m = self::src('src/Install/SettingsMigrator.php');
+
+        self::assertStringContainsString('\r?\nmsgid', $m);
+        self::assertStringContainsString('\r?\nmsgstr', $m);
+
+        self::assertStringContainsString('repairDescriptions(', $m);
+        // Repair must not clobber a label an admin already edited.
+        self::assertStringContainsString('$settings->getDescription(', $m);
+        self::assertStringContainsString('already labelled', $m);
+
+        // The stamp has to include the migrator itself, or a fix to the healer
+        // never re-runs on a store whose addon.xml is unchanged.
+        self::assertStringContainsString(
+            "md5_file(__DIR__ . '/src/Install/SettingsMigrator.php')",
+            self::src('init.php'),
+        );
+    }
+
     public function testHealRunsForEveryTravelAddonAndIsStampGated(): void
     {
         $heal = self::src('functions/self_heal.php');

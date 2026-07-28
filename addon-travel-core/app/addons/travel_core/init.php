@@ -76,7 +76,10 @@ if (defined('AREA') && AREA === 'A' && function_exists('fn_travel_core_ensure_sc
 // any of them declares something new. Admin area only — creating settings is
 // an administrative act and the storefront must never race it.
 if (defined('AREA') && AREA === 'A' && function_exists('fn_travel_core_ensure_all_settings')) {
-    $__tc_set_fp = '';
+    // Fingerprint the migrator itself alongside the addon.xml files: a fix to
+    // the healer (e.g. the CRLF label bug that created blank fields) must
+    // re-arm on stores whose addon.xml has not changed since the bad run.
+    $__tc_set_fp = (string) @md5_file(__DIR__ . '/src/Install/SettingsMigrator.php');
     foreach (['travel_core', 'novoton_holidays', 'sphinx_holidays'] as $__tc_addon) {
         $__tc_set_fp .= (string) @md5_file(dirname(__DIR__) . '/' . $__tc_addon . '/addon.xml');
     }
