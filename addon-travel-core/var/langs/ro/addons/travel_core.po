@@ -858,6 +858,18 @@ msgctxt "Languages::travel_core.request_too_soon"
 msgid "Please wait a moment before sending another request."
 msgstr "Vă rugăm așteptați un moment înainte de a trimite o nouă cerere."
 
+msgctxt "Languages::travel_core.seo_fields_applied"
+msgid "Fields applied on import"
+msgstr "Câmpuri aplicate la import"
+
+msgctxt "Languages::travel_core.seo_fields_applied_hint"
+msgid "Unchecked fields are skipped for every language."
+msgstr "Câmpurile debifate sunt omise pentru toate limbile."
+
+msgctxt "Languages::travel_core.seo_per_language_hint"
+msgid "Each storefront language has its own template set. A language whose template was never saved uses the built-in default."
+msgstr "Fiecare limbă a magazinului are propriul set de șabloane. O limbă fără șablon salvat folosește valoarea implicită."
+
 msgctxt "Languages::travel_core.location_show_map"
 msgid "Location - show map"
 msgstr "Locație - arată pe hartă"

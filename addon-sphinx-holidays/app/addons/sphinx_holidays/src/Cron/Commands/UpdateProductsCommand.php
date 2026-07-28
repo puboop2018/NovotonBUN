@@ -80,52 +80,42 @@ class UpdateProductsCommand extends AbstractSyncCommand
                 $productId = TypeCoerce::toInt($hotel['product_id'] ?? 0);
                 $hotelName = TypeCoerce::toString($hotel['name'] ?? '');
 
-                // Apply SEO templates respecting overwrite mode + field toggles
-                $placeholders = \Tygh\Addons\SphinxHolidays\Helpers\SphinxProductFactory::buildPlaceholders($hotel);
-                $seoFields = fn_travel_core_apply_seo_fields('sphinx_holidays', $placeholders, $productId, $hotelId);
+                // Use configured languages (addon setting) instead of all active
+                $configuredLanguages = array_map(strval(...), ConfigProvider::getProductLanguages());
+                $primaryLang = $configuredLanguages !== []
+                    ? $configuredLanguages[0]
+                    : TypeCoerce::toString(CART_LANGUAGE);
+                $otherLanguages = array_values(array_diff($configuredLanguages, [$primaryLang]));
+                $shortDescription = TypeCoerce::toString($hotel['short_description'] ?? '');
 
-                if (empty($seoFields)) {
+                // Render PER LANGUAGE: each configured language resolves its own
+                // template set (fill-if-empty checks its own current values) —
+                // the old path replicated the primary render verbatim.
+                $placeholders = \Tygh\Addons\SphinxHolidays\Helpers\SphinxProductFactory::buildPlaceholders($hotel);
+                $seoFields = fn_travel_core_apply_seo_fields('sphinx_holidays', $placeholders, $productId, $hotelId, $primaryLang);
+                $wroteOthers = fn_travel_core_seo_localize(
+                    'sphinx_holidays',
+                    $placeholders,
+                    $productId,
+                    $hotelId,
+                    $otherLanguages,
+                    ['short_description' => $shortDescription],
+                );
+
+                if (empty($seoFields) && !$wroteOthers) {
                     // All fields skipped (fill_if_empty and all already filled, or all toggles off)
                     db_query("UPDATE ?:sphinx_hotels SET product_needs_update = 'N' WHERE hotel_id = ?s", $hotelId);
                     $stats['skipped'] = ($stats['skipped'] ?? 0) + 1;
                     continue;
                 }
 
-                $product_data = array_merge([
-                    'short_description' => $hotel['short_description'] ?? '',
-                ], $seoFields);
-
-                // Use configured languages (addon setting) instead of all active
-                $configuredLanguages = ConfigProvider::getProductLanguages();
-                $primaryLang = TypeCoerce::toString(!empty($configuredLanguages) ? $configuredLanguages[0] : CART_LANGUAGE);
-
-                $result = fn_update_product($product_data, $productId, $primaryLang);
-
-                // Replicate descriptions to other configured languages
-                if ($result) {
-                    $otherLanguages = array_diff($configuredLanguages, [$primaryLang]);
-                    foreach ($otherLanguages as $lc) {
-                        $fullDescription = $product_data['full_description'] ?? '';
-                        db_query(
-                            'INSERT INTO ?:product_descriptions (product_id, lang_code, product, full_description, short_description, page_title, meta_description, meta_keywords)
-                             VALUES (?i, ?s, ?s, ?s, ?s, ?s, ?s, ?s)
-                             ON DUPLICATE KEY UPDATE product = ?s, full_description = ?s, short_description = ?s, page_title = ?s, meta_description = ?s, meta_keywords = ?s',
-                            $productId,
-                            $lc,
-                            $product_data['product'],
-                            $fullDescription,
-                            $hotel['short_description'] ?? '',
-                            $product_data['page_title'],
-                            $product_data['meta_description'],
-                            $product_data['meta_keywords'],
-                            $product_data['product'],
-                            $fullDescription,
-                            $hotel['short_description'] ?? '',
-                            $product_data['page_title'],
-                            $product_data['meta_description'],
-                            $product_data['meta_keywords'],
-                        );
-                    }
+                $result = true;
+                if ($seoFields !== []) {
+                    $result = fn_update_product(
+                        array_merge(['short_description' => $shortDescription], $seoFields),
+                        $productId,
+                        $primaryLang,
+                    );
                 }
                 if (!$result) {
                     $this->output("[{$hotelId}] {$hotelName} ... FAILED (product update)");

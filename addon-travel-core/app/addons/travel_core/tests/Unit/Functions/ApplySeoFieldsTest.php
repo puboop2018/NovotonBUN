@@ -27,6 +27,8 @@ namespace {
                 'seo_product_name'           => '{{name}}',
                 'seo_page_title'             => '{{name}} - {{city}}, {{country}} {{year}}',
                 'seo_meta_description'       => 'Book {{name}} in {{city}}, {{country}}.',
+                // Per-language built-in default (see _travel_core_seo_template_for)
+                'seo_meta_description__ro'   => 'Rezervă {{name}} în {{city}}, {{country}}.',
                 'seo_meta_keywords'          => '{{name}}, {{city}}, {{country}}',
                 'seo_name_slug'              => '{{name}}-{{city}}-{{country}}',
                 'seo_full_description'       => '',
@@ -40,7 +42,7 @@ namespace {
         }
     }
 
-    require_once dirname(__DIR__, 3) . '/functions/hotels.php';
+    require_once dirname(__DIR__, 3) . '/functions/seo.php';
 }
 
 namespace Tygh\Addons\TravelCore\Tests\Unit\Functions {
@@ -88,9 +90,10 @@ namespace Tygh\Addons\TravelCore\Tests\Unit\Functions {
 
         public function testStoredSettingTakesPrecedenceOverDefault(): void
         {
-            // An admin-saved page-title template must win over the built-in default.
+            // An admin-saved per-language template must win over the built-in
+            // default (implicit language = CART_LANGUAGE, 'en' in this suite).
             Registry::set('addons.unitseo', [
-                'seo_page_title' => 'Custom {{name}} Title',
+                'seo_page_title__en' => 'Custom {{name}} Title',
             ]);
 
             $result = fn_travel_core_apply_seo_fields('unitseo', $this->placeholders, 0, null);
@@ -111,6 +114,47 @@ namespace Tygh\Addons\TravelCore\Tests\Unit\Functions {
             $this->assertArrayNotHasKey('page_title', $result);
             $this->assertArrayNotHasKey('meta_description', $result);
             $this->assertArrayNotHasKey('meta_keywords', $result);
+        }
+
+        public function testLanguageDefaultRendersForThatLanguageOnly(): void
+        {
+            // 'ro' resolves the addon's __ro default; 'en' (and the implicit
+            // CART_LANGUAGE call) keep the base default.
+            $ro = fn_travel_core_apply_seo_fields('unitseo', $this->placeholders, 0, null, 'ro');
+            $en = fn_travel_core_apply_seo_fields('unitseo', $this->placeholders, 0, null, 'en');
+
+            $this->assertSame('Rezervă Edart Hotel în Durres, Albania.', $ro['meta_description'] ?? null);
+            $this->assertSame('Book Edart Hotel in Durres, Albania.', $en['meta_description'] ?? null);
+        }
+
+        public function testStoredSharedTemplateIsIgnored(): void
+        {
+            // Fresh-addon policy: language-less STORED templates are not part
+            // of the resolution chain — only the per-language keys are admin
+            // truth. A stray shared value must change nothing.
+            Registry::set('addons.unitseo', [
+                'seo_meta_description' => 'Shared {{name}} copy.',
+            ]);
+
+            $ro = fn_travel_core_apply_seo_fields('unitseo', $this->placeholders, 0, null, 'ro');
+            $en = fn_travel_core_apply_seo_fields('unitseo', $this->placeholders, 0, null, 'en');
+
+            $this->assertSame('Rezervă Edart Hotel în Durres, Albania.', $ro['meta_description'] ?? null);
+            $this->assertSame('Book Edart Hotel in Durres, Albania.', $en['meta_description'] ?? null);
+        }
+
+        public function testStoredLanguageValueWinsForItsLanguageOnly(): void
+        {
+            Registry::set('addons.unitseo', [
+                'seo_meta_description__ro' => 'RO specific: {{name}}.',
+            ]);
+
+            $ro = fn_travel_core_apply_seo_fields('unitseo', $this->placeholders, 0, null, 'ro');
+            $en = fn_travel_core_apply_seo_fields('unitseo', $this->placeholders, 0, null, 'en');
+
+            $this->assertSame('RO specific: Edart Hotel.', $ro['meta_description'] ?? null);
+            // The value targets 'ro' only — 'en' keeps its built-in default.
+            $this->assertSame('Book Edart Hotel in Durres, Albania.', $en['meta_description'] ?? null);
         }
 
         public function testDisabledFieldToggleSkipsRendering(): void

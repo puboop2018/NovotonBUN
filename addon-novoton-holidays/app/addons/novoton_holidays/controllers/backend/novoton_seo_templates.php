@@ -66,8 +66,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $defaults  = _novoton_seo_setting_defaults();
         $settings  = Settings::instance();
 
+        // Global keys only: overwrite mode + field toggles. The six template
+        // strings are PER-LANGUAGE now (seo_lang[<lang>][<key>] below) — the
+        // language-less keys stay untouched as the legacy/shared fallback.
+        $templateKeys = _travel_core_seo_template_keys();
         $toSave = [];
         foreach ($defaults as $key => $default) {
+            if (in_array($key, $templateKeys, true)) {
+                continue;
+            }
             if (str_starts_with($key, 'seo_field_')) {
                 $toSave[$key] = !empty($submitted[$key]) ? 'Y' : 'N';
             } else {
@@ -83,6 +90,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $existing = \Tygh\Registry::get('addons.novoton_holidays');
         \Tygh\Registry::set('addons.novoton_holidays', array_merge(is_array($existing) ? $existing : [], $toSave));
+
+        $seoLang = $_REQUEST['seo_lang'] ?? [];
+        fn_travel_core_seo_save_lang_templates('novoton_holidays', is_array($seoLang) ? $seoLang : []);
 
         fn_set_notification('N', __('notice'),
             __('travel_core.seo_templates_saved',
@@ -131,7 +141,17 @@ if ($mode === 'manage' || $mode === '') {
             : ($stored ?? $default);
     }
 
+    // Per-language template values: one section per storefront language,
+    // each showing that language's EFFECTIVE template (override → shared
+    // legacy value → built-in default, incl. the addon's __<lang> defaults).
+    $langData = fn_travel_core_seo_lang_form_data(
+        'novoton_holidays',
+        array_merge(fn_novoton_holidays_seo_defaults(), $defaults),
+    );
+
     /** @var \Smarty $view */
     $view = Tygh::$app['view'];
     $view->assign('seo_values', $values);
+    $view->assign('seo_languages', $langData['languages']);
+    $view->assign('seo_lang_values', $langData['values']);
 }

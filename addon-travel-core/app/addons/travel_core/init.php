@@ -47,6 +47,7 @@ spl_autoload_register(function ($class): void {
 require_once __DIR__ . '/functions/cart_guests.php';
 require_once __DIR__ . '/functions/exchange_rates.php';
 require_once __DIR__ . '/functions/hotels.php';
+require_once __DIR__ . '/functions/seo.php';
 require_once __DIR__ . '/functions/self_heal.php';
 
 // Load hook functions

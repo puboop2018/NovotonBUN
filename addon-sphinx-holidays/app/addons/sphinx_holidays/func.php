@@ -237,6 +237,8 @@ function fn_sphinx_holidays_seo_defaults(): array
         'seo_meta_keywords'          => '{{name}}, {{city}}, {{country}}, {{property_type}}, {{classification}} star',
         'seo_name_slug'              => '{{name}}-{{city}}-{{country}}',
         'seo_full_description'       => '',
+        'seo_meta_description__ro'   => 'Rezervă {{name}} în {{city}}, {{country}}. {{property_type}} de {{classification}} stele cu {{facilities}}.', // "__<lang>" = per-language default (_travel_core_seo_template_for)
+        'seo_meta_keywords__ro'      => '{{name}}, {{city}}, {{country}}, {{property_type}}, {{classification}} stele',
         'seo_field_product_name'     => 'Y',
         'seo_field_page_title'       => 'Y',
         'seo_field_meta_description' => 'Y',

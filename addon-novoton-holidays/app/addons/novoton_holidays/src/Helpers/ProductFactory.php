@@ -104,6 +104,17 @@ class ProductFactory implements ProductFactoryInterface
             return null;
         }
 
+        // CS-Cart replicated the CART_LANGUAGE render into every language row
+        // on create — re-render the OTHER storefront languages with their own
+        // template sets so RO/EN carry their own SEO copy from day one.
+        fn_travel_core_seo_localize(
+            'novoton_holidays',
+            $placeholders,
+            $productId,
+            $hotelId,
+            self::otherStorefrontLanguages(TypeCoerce::toString(CART_LANGUAGE)),
+        );
+
         // Link product to hotel
         db_query(
             'UPDATE ?:novoton_hotels SET product_id = ?i WHERE hotel_id = ?s',
@@ -224,5 +235,24 @@ class ProductFactory implements ProductFactoryInterface
             'latitude' => TypeCoerce::toString($hotel['latitude'] ?? ''),
             'longitude' => TypeCoerce::toString($hotel['longitude'] ?? ''),
         ];
+    }
+
+    /**
+     * Every storefront language except the one a product was just created in
+     * — the set whose SEO copy still needs its own per-language render.
+     *
+     * @return list<string>
+     */
+    public static function otherStorefrontLanguages(string $primaryLang): array
+    {
+        $languages = [];
+        if (function_exists('fn_get_translation_languages')) {
+            $all = fn_get_translation_languages();
+            if (is_array($all)) {
+                $languages = array_map(strval(...), array_keys($all));
+            }
+        }
+
+        return array_values(array_diff($languages, [$primaryLang]));
     }
 }

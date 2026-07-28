@@ -86,6 +86,21 @@ return [
         'ro' => 'Culori formular rezervare',
     ],
 
+    // Per-language SEO Templates admin (components/seo_lang_fields.tpl —
+    // shared by both providers' SEO Templates pages).
+    'travel_core.seo_fields_applied' => [
+        'en' => 'Fields applied on import',
+        'ro' => 'Câmpuri aplicate la import',
+    ],
+    'travel_core.seo_fields_applied_hint' => [
+        'en' => 'Unchecked fields are skipped for every language.',
+        'ro' => 'Câmpurile debifate sunt omise pentru toate limbile.',
+    ],
+    'travel_core.seo_per_language_hint' => [
+        'en' => 'Each storefront language has its own template set. A language whose template was never saved uses the built-in default.',
+        'ro' => 'Fiecare limbă a magazinului are propriul set de șabloane. O limbă fără șablon salvat folosește valoarea implicită.',
+    ],
+
     // Shared hotel-identity header (components/hotel_header.tpl) — one key
     // pair for all four consuming surfaces instead of per-provider copies.
     'travel_core.location_show_map' => [
