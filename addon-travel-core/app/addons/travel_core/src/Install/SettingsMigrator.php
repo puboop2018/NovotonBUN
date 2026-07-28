@@ -66,6 +66,34 @@ final class SettingsMigrator
         'hidden' => SettingTypes::HIDDEN,
     ];
 
+    /**
+     * Settings deleted from an addon.xml that must also LEAVE the database.
+     *
+     * Dropping an <item> only stops FUTURE installs from getting it. CS-Cart
+     * renders the settings page from ?:settings_objects, so on a store that
+     * was installed while the item existed the field keeps rendering forever —
+     * which is how geocoding ended up configurable in two places at once, the
+     * novoton copy able to contradict the shared Travel Core one.
+     *
+     * The list is EXPLICIT on purpose. "Delete everything absent from
+     * addon.xml" would be catastrophic: settings created by other means, or by
+     * a newer addon version than the deployed code, would silently vanish
+     * along with their values.
+     *
+     * @var array<string, list<string>> addon => setting names to delete
+     */
+    private const array RETIRED = [
+        // Geocoding lives once, in Travel Core: the Nominatim usage policy
+        // caps requests per APPLICATION and both provider addons share
+        // GeocodeBacklogRunner.
+        'novoton_holidays' => [
+            'geocoding_header',
+            'geocoding_enabled',
+            'geocoding_contact_email',
+            'geocoding_endpoint',
+        ],
+    ];
+
     /** @var array<string, true> one attempt per addon per request */
     private static array $done = [];
 
@@ -75,7 +103,8 @@ final class SettingsMigrator
      * @param string $addon Addon name, e.g. 'travel_core'
      * @param string $addonDir Directory holding addon.xml
      * @param string $langsDir var/langs root that holds <lc>/addons/<addon>.po
-     * @return list<string> names of the settings created (empty when in sync)
+     * @return list<string> names of the settings created or removed (empty
+     *                      when in sync)
      */
     public static function ensure(string $addon, string $addonDir, string $langsDir): array
     {
@@ -94,17 +123,19 @@ final class SettingsMigrator
             return [];
         }
 
+        $retired = self::retire($addon);
+
         $section = $settings->getSectionByName($addon, Settings::ADDON_SECTION);
         $sectionId = is_array($section) ? TypeCoerce::toInt($section['section_id'] ?? 0) : 0;
         if ($sectionId <= 0) {
-            return []; // addon not installed — nothing to heal into
+            return $retired; // addon not installed — nothing to heal into
         }
 
         $template = self::siblingTemplate($sectionId);
         $position = TypeCoerce::toInt($template['position'] ?? 0);
         $labels = self::parsePoLabels($langsDir, $addon);
 
-        $created = [];
+        $created = $retired;
         foreach ($declared as $item) {
             $name = $item['name'];
             if ($name === '') {
@@ -163,6 +194,57 @@ final class SettingsMigrator
         }
 
         return $created;
+    }
+
+    /**
+     * Delete the addon's RETIRED settings from a store that still has them.
+     *
+     * Runs before the create loop so a retired name can never be re-created in
+     * the same pass, and is idempotent: getId() returns 0 once the row is
+     * gone, so every later request short-circuits.
+     *
+     * removeById() is called through Reflection guards because the CS-Cart kit
+     * is licensed software supplied by the operator and is NOT part of this
+     * repository — its exact signature cannot be pinned here. If the deployed
+     * kit disagrees, the setting is simply left in place; a stale row is a
+     * cosmetic duplicate, whereas an ArgumentCountError on a self-heal that
+     * runs on every admin page load would take the admin down.
+     *
+     * @return list<string> names actually removed
+     */
+    private static function retire(string $addon): array
+    {
+        $names = self::RETIRED[$addon] ?? [];
+        if ($names === []) {
+            return [];
+        }
+
+        $settings = Settings::instance();
+        if (!$settings instanceof Settings || !method_exists($settings, 'removeById')) {
+            return [];
+        }
+
+        try {
+            $method = new \ReflectionMethod($settings, 'removeById');
+        } catch (\ReflectionException) {
+            return [];
+        }
+        if ($method->getNumberOfRequiredParameters() > 1) {
+            return [];
+        }
+
+        $removed = [];
+        foreach ($names as $name) {
+            $objectId = TypeCoerce::toInt($settings->getId($name, $addon));
+            if ($objectId <= 0) {
+                continue; // already gone, or never existed on this store
+            }
+
+            $settings->removeById($objectId);
+            $removed[] = $name;
+        }
+
+        return $removed;
     }
 
     /**

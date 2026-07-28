@@ -39,10 +39,12 @@ final class GeocodeAddressesCommandTest extends TestCase
         $this->queries = [];
         $this->sleeps = 0;
 
-        Registry::set('addons.novoton_holidays', [
-            'geocoding_enabled' => 'Y',
-            'geocoding_contact_email' => 'ops@example.com',
-        ]);
+        // Geocoding is configured in Travel Core only — one switch, one
+        // contact, one endpoint for every provider addon (the Nominatim
+        // policy caps requests per APPLICATION).
+        Registry::set('addons.travel_core.geocoding_enabled', 'Y');
+        Registry::set('addons.travel_core.geocoding_contact_email', 'ops@example.com');
+        Registry::set('addons.novoton_holidays', []);
         ConfigProvider::reset();
 
         DbStub::$query = function (string $query, ...$params): int {
@@ -57,6 +59,8 @@ final class GeocodeAddressesCommandTest extends TestCase
     {
         DbStub::reset();
         Registry::set('addons.novoton_holidays', []);
+        Registry::set('addons.travel_core.geocoding_enabled', 'N');
+        Registry::set('addons.travel_core.geocoding_contact_email', '');
         ConfigProvider::reset();
     }
 
@@ -125,7 +129,7 @@ final class GeocodeAddressesCommandTest extends TestCase
 
     public function testDisabledSettingExitsWithoutTouchingAnything(): void
     {
-        Registry::set('addons.novoton_holidays', ['geocoding_enabled' => 'N']);
+        Registry::set('addons.travel_core.geocoding_enabled', 'N');
         ConfigProvider::reset();
 
         $result = $this->command()->execute();
@@ -137,7 +141,8 @@ final class GeocodeAddressesCommandTest extends TestCase
 
     public function testMissingContactEmailRefusesToRun(): void
     {
-        Registry::set('addons.novoton_holidays', ['geocoding_enabled' => 'Y']);
+        Registry::set('addons.travel_core.geocoding_enabled', 'Y');
+        Registry::set('addons.travel_core.geocoding_contact_email', '');
         ConfigProvider::reset();
 
         $result = $this->command()->execute();

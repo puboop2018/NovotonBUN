@@ -159,6 +159,40 @@ final class SettingsMigratorTest extends TestCase
         self::assertStringContainsString("fn_travel_core_self_heal_stamp('travel_settings'", $init);
     }
 
+    /**
+     * The mirror image of the creation path: a setting deleted from addon.xml
+     * keeps rendering on stores that already have the row, because CS-Cart
+     * builds the page from ?:settings_objects. That is how geocoding became
+     * configurable in two places at once, with novoton's copy able to
+     * contradict the shared Travel Core one.
+     */
+    public function testRetiredSettingsAreDeletedFromStoresThatStillHaveThem(): void
+    {
+        $m = self::src('src/Install/SettingsMigrator.php');
+
+        // Explicit list only — "delete anything absent from addon.xml" would
+        // destroy settings created by other means or by a newer version.
+        self::assertStringContainsString('private const array RETIRED', $m);
+        self::assertStringContainsString("'novoton_holidays' => [", $m);
+        foreach (['geocoding_header', 'geocoding_enabled', 'geocoding_contact_email', 'geocoding_endpoint'] as $name) {
+            self::assertStringContainsString("'{$name}',", $m);
+        }
+
+        // Removal runs BEFORE the create loop, so a retired name can never be
+        // re-created in the same pass.
+        $retirePos = strpos($m, '$retired = self::retire($addon);');
+        $createPos = strpos($m, 'foreach ($declared as $item)');
+        self::assertIsInt($retirePos);
+        self::assertIsInt($createPos);
+        self::assertLessThan($createPos, $retirePos);
+
+        // The kit is not in this repository, so the call is signature-guarded
+        // rather than assumed — a wrong guess would fatal on every admin page.
+        self::assertStringContainsString("method_exists(\$settings, 'removeById')", $m);
+        self::assertStringContainsString('getNumberOfRequiredParameters() > 1', $m);
+        self::assertStringContainsString('$settings->removeById($objectId)', $m);
+    }
+
     public function testLabelsComeFromThePoFilesTheImporterWouldHaveRead(): void
     {
         $m = self::src('src/Install/SettingsMigrator.php');

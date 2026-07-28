@@ -195,29 +195,12 @@
                         <variants/>
                     </item>
 
-                    <!-- Geocoding Header (reverse geocoding of hotel
-                         coordinates via OSM Nominatim — fills
-                         novoton_hotels.street_address for the PDP location
-                         line; the API itself has no street field) -->
-                    <item id="geocoding_header">
-                        <type>header</type>
-                        <variants/>
-                    </item>
-                    <item id="geocoding_enabled">
-                        <type>checkbox</type>
-                        <default_value>N</default_value>
-                        <variants/>
-                    </item>
-                    <item id="geocoding_contact_email">
-                        <type>input</type>
-                        <default_value></default_value>
-                        <variants/>
-                    </item>
-                    <item id="geocoding_endpoint">
-                        <type>input</type>
-                        <default_value>https://nominatim.openstreetmap.org</default_value>
-                        <variants/>
-                    </item>
+                    <!-- Geocoding is NOT declared here. The switch, the contact
+                         email and the endpoint live in Settings -> Travel Core
+                         -> Geocoding, once, because the Nominatim usage policy
+                         caps requests per APPLICATION and both provider addons
+                         share GeocodeBacklogRunner. A second copy here would be
+                         a second switch for one behaviour. -->
 
                     <!-- Display Header
                          (show_booking_form + booking_form_position moved to
