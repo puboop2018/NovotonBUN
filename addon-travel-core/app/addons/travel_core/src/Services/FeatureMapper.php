@@ -330,6 +330,7 @@ class FeatureMapper implements FeatureMapperInterface
 
         self::$cache = [];
         self::$trackedUnmapped = [];
+        self::$featureIdCache = [];
     }
 
     // ── Convenience methods ──
@@ -391,17 +392,60 @@ class FeatureMapper implements FeatureMapperInterface
     }
 
     /**
+     * Known display names of the OPEN-ENDED location features. City/region
+     * values are assigned by NAME (no canonical mapping), so when the
+     * feature_id_* setting was never configured we can still bind to the
+     * store's existing feature by its description — and persist the id so
+     * the lookup runs once, not per call.
+     */
+    private const array LOCATION_FEATURE_NAMES = [
+        'city' => ['City', 'Oraș', 'Oras'],
+        'region' => ['Region', 'Regiune'],
+    ];
+
+    /** @var array<string, int> In-request feature-id cache */
+    private static array $featureIdCache = [];
+
+    /**
      * Get CS-Cart feature_id for a travel feature type from addon settings.
+     *
+     * For the location types (city/region) an unset setting self-heals from
+     * the feature's display name — without it, every location assignment
+     * silently no-ops on stores where those settings were never filled.
      *
      * @return int feature_id or 0 if not configured
      */
     #[\Override]
     public static function getFeatureId(string $featureType): int
     {
+        if (isset(self::$featureIdCache[$featureType])) {
+            return self::$featureIdCache[$featureType];
+        }
+
         $settingKey = self::FEATURE_SETTING_KEYS[$featureType]
                       ?? ('feature_id_' . $featureType);
         $value = TravelCoreConfig::getSetting($settingKey);
-        return is_numeric($value) ? (int) $value : 0;
+        $featureId = is_numeric($value) ? (int) $value : 0;
+
+        if ($featureId <= 0 && isset(self::LOCATION_FEATURE_NAMES[$featureType])) {
+            $featureId = TypeCoerce::toInt(db_get_field(
+                'SELECT fd.feature_id FROM ?:product_features_descriptions fd
+                 JOIN ?:product_features f ON f.feature_id = fd.feature_id
+                 WHERE fd.description IN (?a)
+                 ORDER BY fd.feature_id ASC LIMIT 1',
+                self::LOCATION_FEATURE_NAMES[$featureType],
+            ));
+            if ($featureId > 0) {
+                // Persist for future requests; $featureIdCache covers the
+                // rest of this one (Registry stays untouched — src/ boundary).
+                $settings = \Tygh\Settings::instance();
+                if (is_object($settings) && method_exists($settings, 'updateValue')) {
+                    $settings->updateValue($settingKey, (string) $featureId, 'travel_core', true);
+                }
+            }
+        }
+
+        return self::$featureIdCache[$featureType] = $featureId;
     }
 
     /**

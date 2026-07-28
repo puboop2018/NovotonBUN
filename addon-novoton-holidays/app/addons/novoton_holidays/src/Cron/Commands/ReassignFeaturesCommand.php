@@ -155,9 +155,12 @@ class ReassignFeaturesCommand extends AbstractCronCommand
     }
 
     /**
+     * Protected so DiagnoseFeaturesCommand can run the EXACT same assignment
+     * for one hotel while narrating every input around it.
+     *
      * @param array<string, mixed> $hotel
      */
-    private function assignFeatures(
+    protected function assignFeatures(
         int $productId,
         string $hotelId,
         array $hotel,
