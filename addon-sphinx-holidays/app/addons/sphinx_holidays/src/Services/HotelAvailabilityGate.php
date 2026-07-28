@@ -14,19 +14,21 @@ use Tygh\Addons\TravelCore\Helpers\ValidationHelpers;
  * Gates product-less hotels on immediate availability.
  *
  * For each destination with candidate hotels (no product yet, unflagged or
- * already flagged no_availability), runs a live search per probe window
- * (PROBE_WINDOWS_DAYS_AHEAD) and marks hotels with no immediate-confirmation
- * offer in ANY window as 'no_availability' (so AddProductsCommand skips
- * them), and clears that flag from hotels that have become bookable again.
- * Linked products and hotels skipped for other reasons are never touched.
+ * carrying a legacy no_availability flag), runs a live search per probe
+ * window (PROBE_WINDOWS_DAYS_AHEAD) and DELETES hotels with no
+ * immediate-confirmation offer in ANY window — the hotel list only stores
+ * bookable hotels ("Hotels with immediate confirmation"); it also clears the
+ * legacy flag from hotels that have become bookable again. Hotels linked to
+ * CS-Cart products and hotels skipped for other reasons are never touched
+ * (the delete re-checks the product link in SQL).
  *
- * Marking is scoped to destinations that were probed successfully, so an API
- * error never mass-flags hotels — only clearing (always safe) still applies.
+ * Deletion is scoped to destinations that were probed successfully, so an API
+ * error never mass-deletes hotels — only clearing (always safe) still applies.
  *
  * Extracted from HotelSyncService so the availability concern lives behind its
  * own collaborator, paired with HotelSkipRepository. The inter-destination and
  * poll delays are injectable (defaulting to the production constants) so tests
- * can run without real sleeps. Behaviour is preserved verbatim.
+ * can run without real sleeps.
  */
 class HotelAvailabilityGate
 {
@@ -170,8 +172,11 @@ class HotelAvailabilityGate
             }
         }
 
-        // Partition candidates into mark / clear operations.
-        $toMark = [];
+        // Partition candidates into delete / clear operations. Unavailable
+        // hotels in successfully-probed destinations are removed outright
+        // (legacy-flagged rows included, so old flag-mode leftovers purge on
+        // the first run); available hotels get any legacy flag cleared.
+        $toDelete = [];
         $toClear = [];
         foreach ($candidates as $row) {
             $hid = TypeCoerce::toString($row['hotel_id'] ?? '');
@@ -185,26 +190,24 @@ class HotelAvailabilityGate
                 }
                 continue;
             }
-            // Unavailable: only flag when this destination was actually probed
-            // and the hotel carries no skip reason yet.
             $destId = ValidationHelpers::toInt($row['destination_id'] ?? 0);
-            if ($reason === '' && isset($probedDestinations[$destId])) {
-                $toMark[] = $hid;
+            if (isset($probedDestinations[$destId])) {
+                $toDelete[] = $hid;
             }
         }
 
-        $marked = $this->skipRepo->markSkippedBatch($toMark, HotelSkipRepository::SKIP_REASON_NO_AVAILABILITY);
+        $deleted = $this->skipRepo->deleteUnlinkedBatch($toDelete);
         $cleared = $this->skipRepo->clearSkipReasonBatch($toClear, HotelSkipRepository::SKIP_REASON_NO_AVAILABILITY);
 
         $stats['availability_probed'] = count($probedDestinations);
-        $stats['availability_gated'] = $marked;
+        $stats['availability_deleted'] = $deleted;
         $stats['availability_cleared'] = $cleared;
         $stats['availability_errors'] = $errors;
 
         $output(sprintf(
-            '    %s: availability gate — %d marked no_availability, %d cleared, %d search error(s)',
+            '    %s: availability gate — %d removed (no immediate-confirmation offer), %d cleared, %d search error(s)',
             $countryCode,
-            $marked,
+            $deleted,
             $cleared,
             $errors,
         ));

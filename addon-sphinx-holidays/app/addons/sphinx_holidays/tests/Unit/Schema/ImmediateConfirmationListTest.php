@@ -12,10 +12,10 @@ use PHPUnit\Framework\TestCase;
  * The confirmation field exists only on live search offers
  * (/api/v1/hotels/results), never in the static hotel catalog the sync
  * imports — so "only immediate hotels in the list" is implemented as:
- * the sync's availability gate probes searches and flags hotels with no
- * confirmation=immediate offer (reversibly), product creation skips the
- * flagged ones, and the admin hotels grid hides them while reporting how
- * many are hidden. One setting drives all of it, default ON.
+ * the sync's availability gate probes searches and DELETES hotels with no
+ * confirmation=immediate offer (hotels linked to CS-Cart products are kept),
+ * and the admin hotels grid additionally hides any legacy-flagged rows until
+ * the next sync purges them. One setting drives all of it, default ON.
  */
 final class ImmediateConfirmationListTest extends TestCase
 {
@@ -63,6 +63,24 @@ final class ImmediateConfirmationListTest extends TestCase
         self::assertStringContainsString(
             'ConfigProvider::shouldRequireImmediateAvailability()',
             self::src('src/Services/HotelSyncService.php'),
+        );
+    }
+
+    public function testGateDeletesUnavailableHotelsInsteadOfKeepingThem(): void
+    {
+        // "It is useless to have a huge database of hotels that might never
+        // be available to be booked" — the gate's terminal action is DELETE,
+        // not flag; the SQL re-checks the product link so linked hotels
+        // survive even if they lose availability later.
+        $gate = self::src('src/Services/HotelAvailabilityGate.php');
+        self::assertStringContainsString('deleteUnlinkedBatch($toDelete)', $gate);
+        self::assertStringNotContainsString('markSkippedBatch', $gate);
+
+        $repo = self::src('src/Repository/HotelSkipRepository.php');
+        self::assertStringContainsString('DELETE FROM ?:sphinx_hotels', $repo);
+        self::assertStringContainsString(
+            'hotel_id IN (?a) AND (product_id IS NULL OR product_id = 0)',
+            $repo,
         );
     }
 
