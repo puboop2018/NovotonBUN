@@ -6,9 +6,10 @@ namespace Tygh\Addons\NovotonHolidays\Cron\Commands;
 
 use Tygh\Addons\NovotonHolidays\Cron\AbstractCronCommand;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
-use Tygh\Addons\TravelCore\Exceptions\GeocodeTransportException;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+use Tygh\Addons\TravelCore\Services\Geocoding\GeocodeBacklogRunner;
 use Tygh\Addons\TravelCore\Services\Geocoding\NominatimClient;
+use Tygh\Addons\TravelCore\Services\Geocoding\ReverseGeocodeResult;
 
 /**
  * Reverse-geocode hotel coordinates into approximate street addresses via
@@ -18,9 +19,14 @@ use Tygh\Addons\TravelCore\Services\Geocoding\NominatimClient;
  * Every attempt stamps geocoded_at, even when no street was found, so the
  * backlog drains monotonically and re-runs are naturally resumable with no
  * state file: a candidate is simply a row with real coordinates and no
- * stamp. Requests are paced to 1/second per the public Nominatim usage
- * policy; a transport failure aborts the run early, leaving the remaining
- * hotels unstamped for the next run.
+ * stamp.
+ *
+ * The loop, the 1 req/sec pacing and the abort-on-transport-failure rule
+ * belong to travel_core's GeocodeBacklogRunner, NOT to this class: the
+ * Nominatim policy limits requests per APPLICATION, so novoton and sphinx
+ * must not each keep their own pacer — two of them would double the real
+ * rate. This command supplies only what is novoton-specific: the candidate
+ * rows, and what to store for each result.
  *
  * Params:
  *   limit=N   hotels per run (default 300 ≈ 5 min at 1 req/s)
@@ -110,59 +116,57 @@ class GeocodeAddressesCommand extends AbstractCronCommand
         $this->output('Reverse geocoding ' . count($hotels) . " hotels via {$endpoint} (1 req/s)...");
         $this->output('');
 
-        $client = $this->client ?? new NominatimClient(null, $endpoint, $contactEmail, 'NovotonHolidays/1.0');
-        $sleeper = $this->sleeper ?? static function (int $seconds): void {
-            sleep($seconds);
-        };
+        $runner = new GeocodeBacklogRunner(
+            $this->client ?? new NominatimClient(null, $endpoint, $contactEmail, 'NovotonHolidays/1.0'),
+            $this->sleeper,
+            $this->output(...),
+        );
 
         $withStreet = 0;
         $noStreet = 0;
-        $aborted = false;
-        $abortError = '';
 
-        foreach ($hotels as $i => $hotel) {
-            if ($i > 0) {
-                $sleeper(1); // Nominatim public-instance policy: max 1 request/second
-            }
-
-            $hotelId = TypeCoerce::toString($hotel['hotel_id'] ?? '');
-            if ($hotelId === '') {
-                continue;
-            }
-
-            try {
-                $street = $client->reverse(
-                    TypeCoerce::toFloat($hotel['latitude'] ?? 0),
-                    TypeCoerce::toFloat($hotel['longitude'] ?? 0),
-                );
-            } catch (GeocodeTransportException $e) {
-                $aborted = true;
-                $abortError = $e->getMessage();
-                $this->output("ABORT: {$abortError} — remaining hotels stay unstamped for the next run.");
-                break;
-            }
+        // Counted HERE rather than from the runner's found/empty tally: the
+        // runner calls a result "found" when it carries anything at all,
+        // while novoton only stores — and only counts — the street. A hit
+        // that names the city but no street is `no_street` to us.
+        $persist = static function (string $hotelId, ?ReverseGeocodeResult $result) use (&$withStreet, &$noStreet): void {
+            $street = $result === null ? '' : $result->street;
 
             // Stamp even when no street was found so the hotel is not
             // retried every run; a NULL street keeps the display on the
             // city/region line.
-            if ($street === null) {
+            if ($street === '') {
                 db_query(
                     'UPDATE ?:novoton_hotels SET street_address = NULL, geocoded_at = NOW() WHERE hotel_id = ?s',
                     $hotelId,
                 );
                 $noStreet++;
-            } else {
-                db_query(
-                    'UPDATE ?:novoton_hotels SET street_address = ?s, geocoded_at = NOW() WHERE hotel_id = ?s',
-                    $street,
-                    $hotelId,
-                );
-                $withStreet++;
+
+                return;
             }
 
+            db_query(
+                'UPDATE ?:novoton_hotels SET street_address = ?s, geocoded_at = NOW() WHERE hotel_id = ?s',
+                $street,
+                $hotelId,
+            );
+            $withStreet++;
+        };
+
+        $candidates = [];
+        foreach ($hotels as $hotel) {
             $label = TypeCoerce::toString($hotel['hotel_name'] ?? '');
-            $this->output("  {$hotelId} | " . ($label !== '' ? $label : '(unnamed)') . ' -> ' . ($street ?? '(no street found)'));
+            $candidates[] = [
+                'id' => TypeCoerce::toString($hotel['hotel_id'] ?? ''),
+                'label' => $label !== '' ? $label : '(unnamed)',
+                'lat' => TypeCoerce::toFloat($hotel['latitude'] ?? 0),
+                'lng' => TypeCoerce::toFloat($hotel['longitude'] ?? 0),
+            ];
         }
+
+        $runStats = $runner->run($candidates, $persist);
+        $aborted = (bool) $runStats['aborted'];
+        $abortError = TypeCoerce::toString($runStats['error']);
 
         $remaining = $this->countCandidates();
 

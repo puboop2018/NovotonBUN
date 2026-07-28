@@ -158,15 +158,20 @@ final class GeocodingTest extends TestCase
 
     public function testEachAddonIdentifiesItselfWhileSharingOnePacer(): void
     {
-        // The policy wants the APPLICATION identified; both provider crons
-        // pass their own token, but they run through the same client + runner
-        // so the 1 req/s ceiling is global rather than per addon.
+        // The policy wants the APPLICATION identified, so each cron passes its
+        // own token — but the 1 req/s ceiling is per application, so BOTH must
+        // go through the shared runner. A second hand-rolled loop anywhere
+        // silently doubles the real request rate against the public instance.
         $novoton = (string) file_get_contents(
             dirname(__DIR__, 7)
             . '/addon-novoton-holidays/app/addons/novoton_holidays/src/Cron/Commands/GeocodeAddressesCommand.php',
         );
         self::assertStringContainsString("'NovotonHolidays/1.0'", $novoton);
         self::assertStringContainsString('TravelCore\Services\Geocoding\NominatimClient', $novoton);
+        self::assertStringContainsString('GeocodeBacklogRunner', $novoton);
+        // …and must not regrow its own pacing loop.
+        self::assertStringNotContainsString('max 1 request/second', $novoton);
+        self::assertStringNotContainsString('$sleeper(1)', $novoton);
 
         $sphinx = (string) file_get_contents(
             dirname(__DIR__, 7)
@@ -174,6 +179,7 @@ final class GeocodingTest extends TestCase
         );
         self::assertStringContainsString("'SphinxHolidays/1.0'", $sphinx);
         self::assertStringContainsString('GeocodeBacklogRunner', $sphinx);
+        self::assertStringNotContainsString('$sleeper(1)', $sphinx);
     }
 
     public function testTransportFailuresRaiseSoARunCanAbort(): void
