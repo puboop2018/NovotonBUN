@@ -113,6 +113,18 @@ if (empty($providedKey) || !hash_equals($storedKey, $providedKey)) {
     exit;
 }
 
+// ── Ensure schema deltas are applied in this (frontend) request ──
+// Same AREA gap as the SEO defaults below, but fatal rather than cosmetic:
+// init.php only self-heals the schema when AREA === 'A', so a store that
+// pulls new code and runs a cron URL before ever opening an admin page dies
+// with "Unknown column 'geo_city'" / "Unknown column 'geocoded_at'". The cron
+// is a first-class entry point for schema-dependent work, so it applies the
+// deltas itself. SchemaMigrator::ensure() has a per-request static guard and
+// only ALTERs what is genuinely missing (two INFORMATION_SCHEMA reads).
+if (function_exists('fn_sphinx_holidays_ensure_schema')) {
+    fn_sphinx_holidays_ensure_schema();
+}
+
 // ── Ensure SEO template defaults are available in this (frontend) request ──
 // The init.php self-heal probe only fires in the admin area (AREA 'A'); the
 // cron runs in the storefront area (AREA 'C'), where addons.sphinx_holidays.seo_*
