@@ -62,9 +62,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $defaults  = _sphinx_seo_setting_defaults();
         $settings  = Settings::instance();
 
-        // Collect all values first so we can batch-update the Registry.
+        // Global keys only: overwrite mode + field toggles. The six template
+        // strings are PER-LANGUAGE now (seo_lang[<lang>][<key>] below) — the
+        // language-less keys stay untouched as the legacy/shared fallback.
+        $templateKeys = _travel_core_seo_template_keys();
         $toSave = [];
         foreach ($defaults as $key => $default) {
+            if (in_array($key, $templateKeys, true)) {
+                continue;
+            }
             // Checkboxes absent from POST mean unchecked → 'N' for seo_field_* keys
             if (str_starts_with($key, 'seo_field_')) {
                 $toSave[$key] = !empty($submitted[$key]) ? 'Y' : 'N';
@@ -85,6 +91,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // sees the new values. The redirect that follows will reload from DB.
         $existing = Registry::get('addons.sphinx_holidays');
         Registry::set('addons.sphinx_holidays', array_merge(is_array($existing) ? $existing : [], $toSave));
+
+        $seoLang = $_REQUEST['seo_lang'] ?? [];
+        fn_travel_core_seo_save_lang_templates('sphinx_holidays', is_array($seoLang) ? $seoLang : []);
 
         fn_set_notification('N', __('notice'),
             __('travel_core.seo_templates_saved',
@@ -137,8 +146,18 @@ if ($mode === 'manage' || $mode === '') {
             : ($stored ?? $default);
     }
 
+    // Per-language template values: one section per storefront language,
+    // each showing that language's EFFECTIVE template (override → shared
+    // legacy value → built-in default, incl. the addon's __<lang> defaults).
+    $langData = fn_travel_core_seo_lang_form_data(
+        'sphinx_holidays',
+        array_merge(fn_sphinx_holidays_seo_defaults(), $defaults),
+    );
+
     $view = Tygh::$app['view'];
     if (is_object($view) && method_exists($view, 'assign')) {
         $view->assign('seo_values', $values);
+        $view->assign('seo_languages', $langData['languages']);
+        $view->assign('seo_lang_values', $langData['values']);
     }
 }

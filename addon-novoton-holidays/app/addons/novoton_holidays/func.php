@@ -163,6 +163,12 @@ function fn_novoton_holidays_seo_defaults(): array
         'seo_meta_keywords'          => '{{name}}, {{city}}, {{country}}, {{property_type}}, {{star_rating}} star',
         'seo_name_slug'              => '{{name}}-{{city}}-{{country}}',
         'seo_full_description'       => '',
+        // Per-language defaults: a "__<lang>" suffix targets that storefront
+        // language; languages without one fall back to the base template
+        // above (see _travel_core_seo_template_for). Only fields whose COPY
+        // differs need a variant — names/slugs are proper nouns.
+        'seo_meta_description__ro'   => 'Rezervă {{name}} în {{city}}, {{country}}. Hotel de {{star_rating}} stele cu {{facilities}}.',
+        'seo_meta_keywords__ro'      => '{{name}}, {{city}}, {{country}}, {{property_type}}, {{star_rating}} stele',
         'seo_field_product_name'     => 'Y',
         'seo_field_page_title'       => 'Y',
         'seo_field_meta_description' => 'Y',

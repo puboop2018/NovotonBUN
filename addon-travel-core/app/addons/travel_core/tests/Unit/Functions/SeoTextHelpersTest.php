@@ -22,7 +22,9 @@ namespace {
         }
     }
 
+    // run_long_task stays in hotels.php; the SEO text helpers moved to seo.php.
     require_once dirname(__DIR__, 3) . '/functions/hotels.php';
+    require_once dirname(__DIR__, 3) . '/functions/seo.php';
 }
 
 namespace Tygh\Addons\TravelCore\Tests\Unit\Functions {

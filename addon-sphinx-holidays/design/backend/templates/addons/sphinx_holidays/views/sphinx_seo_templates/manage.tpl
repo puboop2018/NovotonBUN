@@ -31,6 +31,12 @@
     color: #6c757d;
     margin-top: 2px;
 }
+#sphinx_seo_form .seo-lang-section { border-top: 2px solid #e3e6ea; margin-top: 24px; padding-top: 14px; }
+#sphinx_seo_form .seo-lang-heading { margin: 0 0 12px; }
+#sphinx_seo_form .seo-lang-code { color: #6c757d; font-weight: 400; font-size: 13px; text-transform: uppercase; }
+#sphinx_seo_form .seo-field-toggles .seo-field-toggle { margin-right: 14px; }
+#sphinx_seo_form .seo-field-toggles-hint { font-size: 11px; margin: 4px 0 8px; }
+#sphinx_seo_form .seo-lang-fallback-hint { font-size: 12px; }
 </style>
 
 {capture name="mainbox"}
@@ -87,133 +93,10 @@
                 <p>{__("travel_core.seo_bulk_apply_desc")|default:"Re-renders the templates for all existing hotel products that are already linked to Sphinx records."}</p>
             </div>
 
-            {* Product Name *}
-            <div class="control-group">
-                <label class="control-label" for="seo_product_name">
-                    <input type="checkbox"
-                           name="seo[seo_field_product_name]"
-                           value="Y"
-                           class="field-toggle"
-                           data-seo-toggle="seo_product_name"
-                           {if $seo_values.seo_field_product_name != 'N'}checked="checked"{/if} />
-                    {__("sphinx_holidays.seo_product_name")|default:"Product name"}
-                </label>
-                <div class="controls">
-                    <input type="text"
-                           id="seo_product_name"
-                           name="seo[seo_product_name]"
-                           data-seo-ideal="80"
-                           data-seo-max="255"
-                           value="{$seo_values.seo_product_name|escape:html}" />
-                    <p class="help-block">{__("sphinx_holidays.seo_product_name.tooltip")|default:"Template for the product name."}</p>
-                </div>
-            </div>
-
-            {* Page Title *}
-            <div class="control-group">
-                <label class="control-label" for="seo_page_title">
-                    <input type="checkbox"
-                           name="seo[seo_field_page_title]"
-                           value="Y"
-                           class="field-toggle"
-                           data-seo-toggle="seo_page_title"
-                           {if $seo_values.seo_field_page_title != 'N'}checked="checked"{/if} />
-                    {__("sphinx_holidays.seo_page_title")|default:"Page title"}
-                </label>
-                <div class="controls">
-                    <input type="text"
-                           id="seo_page_title"
-                           name="seo[seo_page_title]"
-                           data-seo-ideal="60"
-                           data-seo-max="255"
-                           value="{$seo_values.seo_page_title|escape:html}" />
-                    <p class="help-block">{__("sphinx_holidays.seo_page_title.tooltip")|default:"Template for the HTML page title (SEO). Google typically truncates around 60 characters."}</p>
-                </div>
-            </div>
-
-            {* Meta Description *}
-            <div class="control-group">
-                <label class="control-label" for="seo_meta_description">
-                    <input type="checkbox"
-                           name="seo[seo_field_meta_description]"
-                           value="Y"
-                           class="field-toggle"
-                           data-seo-toggle="seo_meta_description"
-                           {if $seo_values.seo_field_meta_description != 'N'}checked="checked"{/if} />
-                    {__("sphinx_holidays.seo_meta_description")|default:"Meta description"}
-                </label>
-                <div class="controls">
-                    <textarea id="seo_meta_description"
-                              name="seo[seo_meta_description]"
-                              data-seo-ideal="160"
-                              data-seo-max="500"
-                              rows="3">{$seo_values.seo_meta_description|escape:html}</textarea>
-                    <p class="help-block">{__("sphinx_holidays.seo_meta_description.tooltip")|default:"Template for the meta description tag. Google truncates around 160 characters."}</p>
-                </div>
-            </div>
-
-            {* Meta Keywords *}
-            <div class="control-group">
-                <label class="control-label" for="seo_meta_keywords">
-                    <input type="checkbox"
-                           name="seo[seo_field_meta_keywords]"
-                           value="Y"
-                           class="field-toggle"
-                           data-seo-toggle="seo_meta_keywords"
-                           {if $seo_values.seo_field_meta_keywords != 'N'}checked="checked"{/if} />
-                    {__("sphinx_holidays.seo_meta_keywords")|default:"Meta keywords"}
-                </label>
-                <div class="controls">
-                    <input type="text"
-                           id="seo_meta_keywords"
-                           name="seo[seo_meta_keywords]"
-                           data-seo-ideal="200"
-                           data-seo-max="255"
-                           value="{$seo_values.seo_meta_keywords|escape:html}" />
-                    <p class="help-block">{__("sphinx_holidays.seo_meta_keywords.tooltip")|default:"Template for the meta keywords tag."}</p>
-                </div>
-            </div>
-
-            {* SEO Name Slug *}
-            <div class="control-group">
-                <label class="control-label" for="seo_name_slug">
-                    <input type="checkbox"
-                           name="seo[seo_field_name_slug]"
-                           value="Y"
-                           class="field-toggle"
-                           data-seo-toggle="seo_name_slug"
-                           {if $seo_values.seo_field_name_slug != 'N'}checked="checked"{/if} />
-                    {__("sphinx_holidays.seo_name_slug")|default:"SEO URL slug"}
-                </label>
-                <div class="controls">
-                    <input type="text"
-                           id="seo_name_slug"
-                           name="seo[seo_name_slug]"
-                           data-seo-ideal="80"
-                           data-seo-max="255"
-                           value="{$seo_values.seo_name_slug|escape:html}" />
-                    <p class="help-block">{__("sphinx_holidays.seo_name_slug.tooltip")|default:"Template for the SEO-friendly URL slug. Result is automatically sanitized."}</p>
-                </div>
-            </div>
-
-            {* Full Description *}
-            <div class="control-group">
-                <label class="control-label" for="seo_full_description">
-                    <input type="checkbox"
-                           name="seo[seo_field_full_description]"
-                           value="Y"
-                           class="field-toggle"
-                           data-seo-toggle="seo_full_description"
-                           {if $seo_values.seo_field_full_description != 'N'}checked="checked"{/if} />
-                    {__("sphinx_holidays.seo_full_description")|default:"Full description (optional)"}
-                </label>
-                <div class="controls">
-                    <textarea id="seo_full_description"
-                              name="seo[seo_full_description]"
-                              rows="4">{$seo_values.seo_full_description|escape:html}</textarea>
-                    <p class="help-block">{__("sphinx_holidays.seo_full_description.tooltip")|default:"Optional template to wrap or replace the API description. Leave empty to use the raw API description as-is."}</p>
-                </div>
-            </div>
+            {* Per-language template fields + global field toggles — shared
+               travel_core component: ONE implementation for both providers,
+               posting seo_lang[<lang>][<key>] per storefront language. *}
+            {include file="addons/travel_core/components/seo_lang_fields.tpl"}
 
         </div>
 

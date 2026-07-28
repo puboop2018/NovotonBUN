@@ -858,6 +858,18 @@ msgctxt "Languages::travel_core.request_too_soon"
 msgid "Please wait a moment before sending another request."
 msgstr "Please wait a moment before sending another request."
 
+msgctxt "Languages::travel_core.seo_fields_applied"
+msgid "Fields applied on import"
+msgstr "Fields applied on import"
+
+msgctxt "Languages::travel_core.seo_fields_applied_hint"
+msgid "Unchecked fields are skipped for every language."
+msgstr "Unchecked fields are skipped for every language."
+
+msgctxt "Languages::travel_core.seo_per_language_hint"
+msgid "Each storefront language has its own template set. A language whose template was never saved falls back to the shared legacy template, then to the built-in default."
+msgstr "Each storefront language has its own template set. A language whose template was never saved falls back to the shared legacy template, then to the built-in default."
+
 msgctxt "Languages::travel_core.location_show_map"
 msgid "Location - show map"
 msgstr "Location - show map"

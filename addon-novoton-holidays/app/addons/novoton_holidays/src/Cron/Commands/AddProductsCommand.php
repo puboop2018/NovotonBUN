@@ -205,6 +205,17 @@ class AddProductsCommand extends AbstractCronCommand
                 $product_id = PriceInfoFormatter::toInt(fn_update_product($product_data, 0, CART_LANGUAGE));
 
                 if ($product_id > 0) {
+                    // Re-render the other storefront languages with their own
+                    // template sets (create replicated the CART_LANGUAGE copy).
+                    fn_travel_core_seo_localize(
+                        'novoton_holidays',
+                        $placeholders,
+                        $product_id,
+                        $hotel_id,
+                        \Tygh\Addons\NovotonHolidays\Helpers\ProductFactory::otherStorefrontLanguages(
+                            \Tygh\Addons\TravelCore\Helpers\TypeCoerce::toString(CART_LANGUAGE),
+                        ),
+                    );
                     $hotelRepo->linkToProduct($hotel_id, $product_id);
 
                     try {

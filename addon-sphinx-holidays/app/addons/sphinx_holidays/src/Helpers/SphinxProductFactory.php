@@ -242,8 +242,10 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
             return ['status' => 'failed', 'product_id' => 0, 'reason' => 'product creation'];
         }
 
-        // Replicate descriptions to other configured languages
-        $otherLanguages = array_diff($configuredLanguages, [$primaryLang]);
+        // Seed the other configured languages with the primary render as a
+        // baseline (covers language-less fields like short_description and
+        // any SEO field whose toggle is off)…
+        $otherLanguages = array_values(array_diff($configuredLanguages, [$primaryLang]));
         $fullDescription = $productData['full_description'] ?? '';
         $pageTitle = $productData['page_title'] ?? '';
         $metaDesc = $productData['meta_description'] ?? '';
@@ -268,6 +270,12 @@ class SphinxProductFactory implements SphinxProductFactoryInterface
                 $metaDesc,
                 $metaKeywords,
             );
+        }
+        // …then overwrite the SEO fields with each language's OWN template
+        // render, so RO/EN storefronts carry their own copy.
+        $otherLangStrings = array_map(strval(...), $otherLanguages);
+        if ($otherLangStrings !== []) {
+            fn_travel_core_seo_localize('sphinx_holidays', $placeholders, $productId, $hotelId, $otherLangStrings);
         }
 
         // Link hotel → product
