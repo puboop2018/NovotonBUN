@@ -1208,6 +1208,14 @@ msgctxt "Languages::sphinx_holidays.offer_no_longer_available"
 msgid "This offer is no longer available. Please search again."
 msgstr "This offer is no longer available. Please search again."
 
+msgctxt "Languages::sphinx_holidays.booking_system_unavailable"
+msgid "The booking system is temporarily unavailable. Please try again in a few minutes."
+msgstr "The booking system is temporarily unavailable. Please try again in a few minutes."
+
+msgctxt "Languages::sphinx_holidays.terms_outage"
+msgid "The conditions cannot be displayed right now. Please try again in a few minutes."
+msgstr "The conditions cannot be displayed right now. Please try again in a few minutes."
+
 msgctxt "Languages::sphinx_holidays.offer_unavailable"
 msgid "This offer is no longer available."
 msgstr "This offer is no longer available."

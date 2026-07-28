@@ -615,6 +615,17 @@ return [
         'en' => 'This offer is no longer available. Please search again.',
         'ro' => 'Această ofertă nu mai este disponibilă. Vă rugăm căutați din nou.',
     ],
+    // Verify-service outage (5xx/transport), as opposed to a genuine offer
+    // expiry: "search again" advice would be false — fresh offers cannot
+    // verify either while the service is down.
+    'sphinx_holidays.booking_system_unavailable' => [
+        'en' => 'The booking system is temporarily unavailable. Please try again in a few minutes.',
+        'ro' => 'Sistemul de rezervări este momentan indisponibil. Vă rugăm încercați din nou în câteva minute.',
+    ],
+    'sphinx_holidays.terms_outage' => [
+        'en' => 'The conditions cannot be displayed right now. Please try again in a few minutes.',
+        'ro' => 'Condițiile nu pot fi afișate momentan. Vă rugăm încercați din nou în câteva minute.',
+    ],
     'sphinx_holidays.offer_unavailable' => [
         'en' => 'This offer is no longer available.',
         'ro' => 'Această ofertă nu mai este disponibilă.',

@@ -31,15 +31,22 @@ try {
         exit;
     }
 
-    $verifyResult = Container::getApi()->verifyHotelOffer($offer_id);
+    $api = Container::getApi();
+    $verifyResult = $api->verifyHotelOffer($offer_id);
 
     // Offer expired / no longer verifiable → tell the modal to show a
-    // re-search message rather than an empty terms panel.
+    // re-search message rather than an empty terms panel. A 5xx / transport
+    // failure is the verify SERVICE being down, not the offer being gone —
+    // report it as an outage so the modal doesn't send the guest on a
+    // pointless re-search.
     if (!OfferAvailability::isVerifiedAvailable(
         $verifyResult,
         ConfigProvider::shouldRequireImmediateAvailability(),
     )) {
-        echo json_encode(['status' => 'unavailable']);
+        $verifyHttpCode = $api->getHttpClient()->getLastHttpCode();
+        echo json_encode([
+            'status' => ($verifyHttpCode === 0 || $verifyHttpCode >= 500) ? 'outage' : 'unavailable',
+        ]);
         exit;
     }
 

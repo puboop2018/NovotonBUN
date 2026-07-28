@@ -152,6 +152,7 @@ try {
             'freeCancellation' => $sxLbl('sphinx_holidays.free_cancellation', 'Anulare gratuită'),
             'termsLoading' => $sxLbl('sphinx_holidays.terms_loading', 'Se încarcă condițiile...'),
             'termsUnavailable' => $sxLbl('sphinx_holidays.terms_unavailable', 'Condițiile nu sunt disponibile. Vă rugăm căutați din nou.'),
+            'termsOutage' => $sxLbl('sphinx_holidays.terms_outage', 'Condițiile nu pot fi afișate momentan. Vă rugăm încercați din nou în câteva minute.'),
             'noTermsInfo' => $sxLbl('sphinx_holidays.no_terms_info', 'Nu există condiții specifice pentru această ofertă.'),
             'termsDueBy' => $sxLbl('sphinx_holidays.terms_due_by', 'De achitat'),
             'termsPenalty' => $sxLbl('sphinx_holidays.terms_penalty', 'Penalizare'),
