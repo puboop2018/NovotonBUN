@@ -240,8 +240,15 @@ final class SettingsMigrator
                 continue; // already gone, or never existed on this store
             }
 
-            $settings->removeById($objectId);
-            $removed[] = $name;
+            // Per-setting, so one row the deployed kit refuses to delete does
+            // not abandon the rest — and never propagates out of a heal that
+            // runs on every admin page load.
+            try {
+                $settings->removeById($objectId);
+                $removed[] = $name;
+            } catch (\Throwable $e) {
+                error_log("travel_core: could not retire {$addon}.{$name} — " . $e->getMessage());
+            }
         }
 
         return $removed;

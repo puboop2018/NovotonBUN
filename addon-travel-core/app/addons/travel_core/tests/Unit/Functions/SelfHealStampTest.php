@@ -83,7 +83,10 @@ namespace Tygh\Addons\TravelCore\Tests\Unit\Functions {
         {
             $tcInit = (string) file_get_contents(dirname(__DIR__, 3) . '/init.php');
             self::assertStringContainsString("fn_travel_core_self_heal_due('travel_core_schema'", $tcInit);
-            $healPos = strpos($tcInit, 'fn_travel_core_ensure_schema();');
+            // The heal is invoked THROUGH the guard: it runs on every admin
+            // page load, and an uncaught throwable there is a 503 on the whole
+            // admin (see fn_travel_core_self_heal_guard).
+            $healPos = strpos($tcInit, "fn_travel_core_self_heal_guard('travel_core_schema'");
             $stampPos = strpos($tcInit, "fn_travel_core_self_heal_stamp('travel_core_schema'");
             self::assertNotFalse($healPos);
             self::assertNotFalse($stampPos);

@@ -62,7 +62,7 @@ require_once __DIR__ . '/hooks.php';
 if (defined('AREA') && AREA === 'A' && function_exists('fn_travel_core_ensure_schema')) {
     $__tc_heal_fp = (string) @md5_file(__DIR__ . '/func.php');
     if (fn_travel_core_self_heal_due('travel_core_schema', $__tc_heal_fp)) {
-        fn_travel_core_ensure_schema();
+        fn_travel_core_self_heal_guard('travel_core_schema', 'fn_travel_core_ensure_schema');
         fn_travel_core_self_heal_stamp('travel_core_schema', $__tc_heal_fp);
     }
     unset($__tc_heal_fp);
@@ -85,7 +85,7 @@ if (defined('AREA') && AREA === 'A' && function_exists('fn_travel_core_ensure_al
     }
     $__tc_set_fp = md5($__tc_set_fp);
     if (fn_travel_core_self_heal_due('travel_settings', $__tc_set_fp)) {
-        fn_travel_core_ensure_all_settings();
+        fn_travel_core_self_heal_guard('travel_settings', 'fn_travel_core_ensure_all_settings');
         fn_travel_core_self_heal_stamp('travel_settings', $__tc_set_fp);
     }
     unset($__tc_set_fp, $__tc_addon);

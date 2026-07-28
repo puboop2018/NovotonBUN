@@ -152,7 +152,8 @@ final class SettingsMigratorTest extends TestCase
         }
 
         $init = self::src('init.php');
-        self::assertStringContainsString('fn_travel_core_ensure_all_settings()', $init);
+        // Invoked through the guard — see testAFailingHealCannotTakeTheAdminDown.
+        self::assertStringContainsString("'fn_travel_core_ensure_all_settings'", $init);
         // Fingerprinted on all three addon.xml files, so declaring a new
         // setting anywhere re-arms the heal.
         self::assertStringContainsString("fn_travel_core_self_heal_due('travel_settings'", $init);
@@ -191,6 +192,42 @@ final class SettingsMigratorTest extends TestCase
         self::assertStringContainsString("method_exists(\$settings, 'removeById')", $m);
         self::assertStringContainsString('getNumberOfRequiredParameters() > 1', $m);
         self::assertStringContainsString('$settings->removeById($objectId)', $m);
+    }
+
+    /**
+     * A heal that throws must degrade to "not healed", never to "no store".
+     *
+     * These run from init.php on every admin page load, and CS-Cart turns an
+     * uncaught throwable into the 503 "Service unavailable" page — which takes
+     * out the admin pages you would need to fix it. They call into the CS-Cart
+     * kit, which is licensed code outside this repository and so cannot be
+     * pinned by any test here, so the guard is the only real protection.
+     */
+    public function testAFailingHealCannotTakeTheAdminDown(): void
+    {
+        $heal = self::src('functions/self_heal.php');
+        self::assertStringContainsString('function fn_travel_core_self_heal_guard(', $heal);
+        self::assertStringContainsString('catch (\Throwable $e)', $heal);
+
+        // Every per-request heal call site goes through the guard.
+        $init = self::src('init.php');
+        foreach (['travel_core_schema', 'travel_settings'] as $key) {
+            self::assertStringContainsString("fn_travel_core_self_heal_guard('{$key}'", $init);
+        }
+        self::assertStringNotContainsString('        fn_travel_core_ensure_schema();', $init);
+        self::assertStringNotContainsString('        fn_travel_core_ensure_all_settings();', $init);
+
+        $sphinx = (string) file_get_contents(
+            dirname(__DIR__, 6) . '/../addon-sphinx-holidays/app/addons/sphinx_holidays/init.php',
+        );
+        self::assertStringContainsString("fn_travel_core_self_heal_guard('sphinx_schema'", $sphinx);
+
+        // Deleting settings is the riskiest step — guard each one so a single
+        // refusal neither aborts the rest nor escapes the heal.
+        $m = self::src('src/Install/SettingsMigrator.php');
+        $removePos = strpos($m, '$settings->removeById($objectId);');
+        self::assertIsInt($removePos);
+        self::assertStringContainsString('try {', substr($m, $removePos - 200, 200));
     }
 
     public function testLabelsComeFromThePoFilesTheImporterWouldHaveRead(): void

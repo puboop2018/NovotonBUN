@@ -37,14 +37,40 @@ function fn_travel_core_self_heal_due(string $key, string $fingerprint): bool
 }
 
 /**
- * Persist the fingerprint after a successful heal run, so the next admin
- * request skips it. Callers stamp only AFTER the heal returned — a heal
- * that dies mid-run stays armed and retries on the next request.
+ * Persist the fingerprint after a heal run, so the next admin request skips it.
  */
 function fn_travel_core_self_heal_stamp(string $key, string $fingerprint): void
 {
     if (function_exists('fn_set_storage_data')) {
         fn_set_storage_data('travel_heal_' . $key, $fingerprint);
+    }
+}
+
+/**
+ * Run a self-heal so that it CANNOT take the store down.
+ *
+ * These heals run from init.php on every admin page load. CS-Cart turns an
+ * uncaught throwable into the 503 "Service unavailable" page, so a heal that
+ * throws locks the admin out — including the admin pages you would need to
+ * fix it. The heals touch CS-Cart's own APIs and schema, which are licensed
+ * kit code that is NOT in this repository and therefore cannot be pinned by
+ * a test: "it works on the deployed kit" is a hope, not a guarantee. So the
+ * failure mode has to be "not healed", never "no store".
+ *
+ * The caller stamps the fingerprint either way, deliberately: a heal that
+ * throws on this store would otherwise throw on every subsequent request
+ * forever. The stamp re-arms on the next change to the healer or to any
+ * addon.xml — precisely when a fix ships — so a genuine repair is not lost.
+ */
+function fn_travel_core_self_heal_guard(string $key, callable $heal): void
+{
+    try {
+        $heal();
+    } catch (\Throwable $e) {
+        error_log(
+            'travel_core: self-heal "' . $key . '" failed and was skipped — '
+            . $e->getMessage() . ' @ ' . $e->getFile() . ':' . $e->getLine(),
+        );
     }
 }
 
