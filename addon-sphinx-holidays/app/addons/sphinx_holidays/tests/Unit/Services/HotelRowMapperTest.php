@@ -125,7 +125,11 @@ class HotelRowMapperTest extends TestCase
     public function testEnrichFillsFromHierarchy(): void
     {
         $this->destRepo->method('resolveHierarchies')->with([12])->willReturn([
-            12 => ['country_code' => 'GR', 'country' => 'Greece', 'city' => 'Chania', 'region' => 'Crete', 'region_id' => 7],
+            12 => [
+                'country_code' => 'GR', 'country' => 'Greece',
+                'city' => 'Chania', 'region' => 'Crete', 'region_id' => 7,
+                'own_id' => 12, 'own_type' => 'destination', 'own_name' => 'Chania',
+            ],
         ]);
 
         $out = $this->mapper->enrichFromHierarchy([[
@@ -212,10 +216,18 @@ class HotelRowMapperTest extends TestCase
         $this->assertSame('Side', $out[0]['address_city'], 'address_city is a persistent column, not stripped');
     }
 
+    /**
+     * The hotel's own node is city-level, so rung 1 of the City ladder
+     * answers and the API address is never consulted.
+     */
     public function testEnrichPrefersTreeCityOverAddressCity(): void
     {
         $this->destRepo->method('resolveHierarchies')->with([12])->willReturn([
-            12 => ['country_code' => 'GR', 'country' => 'Greece', 'city' => 'Chania', 'region' => 'Crete', 'region_id' => 7],
+            12 => [
+                'country_code' => 'GR', 'country' => 'Greece',
+                'city' => 'Chania', 'region' => 'Crete', 'region_id' => 7,
+                'own_id' => 12, 'own_type' => 'destination', 'own_name' => 'Chania',
+            ],
         ]);
 
         $out = $this->mapper->enrichFromHierarchy([[
@@ -230,5 +242,6 @@ class HotelRowMapperTest extends TestCase
 
         $this->assertSame('Chania', $out[0]['destination_name'], 'tree city wins over address.city for destination_name');
         $this->assertSame('Some Address City', $out[0]['address_city'], 'address_city column is preserved');
+        $this->assertSame('ancestor', $out[0]['location_source'], 'region came from the parent node — the weaker rung');
     }
 }

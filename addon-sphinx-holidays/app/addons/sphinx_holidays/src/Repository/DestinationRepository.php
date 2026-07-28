@@ -459,8 +459,13 @@ class DestinationRepository
      * Walks each destination's parent_id chain to extract city, region, and country names.
      * Requires loadParentLookup() to have been called first.
      *
+     * own_id/own_type/own_name describe the hotel's OWN node (walk depth 0).
+     * HotelLocationResolver needs them to tell "the hotel points at a region"
+     * from "the hotel points at a destination inside that region" — the tree
+     * alone cannot express that difference once the walk has climbed.
+     *
      * @param array<int> $destinationIds List of destination IDs to resolve
-     * @return array<int, array{city: string, region: string, region_id: int, country: string, country_code: string}> Keyed by destination_id
+     * @return array<int, array{city: string, region: string, region_id: int, country: string, country_code: string, own_id: int, own_type: string, own_name: string}> Keyed by destination_id
      */
     public function resolveHierarchies(array $destinationIds): array
     {
@@ -471,7 +476,10 @@ class DestinationRepository
         $result = [];
         foreach ($destinationIds as $destId) {
             $destId = (int) $destId;
-            $hierarchy = ['city' => '', 'region' => '', 'region_id' => 0, 'country' => '', 'country_code' => ''];
+            $hierarchy = [
+                'city' => '', 'region' => '', 'region_id' => 0, 'country' => '', 'country_code' => '',
+                'own_id' => 0, 'own_type' => '', 'own_name' => '',
+            ];
 
             $currentId = $destId;
             $visited = [];
@@ -482,6 +490,12 @@ class DestinationRepository
                 $node = $this->parentLookup[$currentId];
                 $type = TypeCoerce::toString($node['type'] ?? '');
                 $name = TypeCoerce::toString($node['name'] ?? '');
+
+                if ($currentId === $destId) {
+                    $hierarchy['own_id'] = $currentId;
+                    $hierarchy['own_type'] = $type;
+                    $hierarchy['own_name'] = $name;
+                }
 
                 if (in_array($type, self::CITY_LEVEL_TYPES, true)) {
                     // First city-level node wins (the hotel's own destination)

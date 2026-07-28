@@ -267,6 +267,11 @@
                 `website`           VARCHAR(500) DEFAULT NULL COMMENT 'Hotel website URL',
                 `address_city`      VARCHAR(255) DEFAULT NULL COMMENT 'City from the hotel API address',
                 `address_country`   VARCHAR(255) DEFAULT NULL COMMENT 'Country from the hotel API address',
+                `geo_city`          VARCHAR(255) DEFAULT NULL COMMENT 'Reverse-geocoded city (OSM Nominatim) — last rung of the City ladder',
+                `geo_region`        VARCHAR(255) DEFAULT NULL COMMENT 'Reverse-geocoded region/province (OSM Nominatim) — last rung of the Region ladder',
+                `street_address`    VARCHAR(255) DEFAULT NULL COMMENT 'Reverse-geocoded street (OSM Nominatim), approximate',
+                `geocoded_at`       DATETIME DEFAULT NULL COMMENT 'Last reverse-geocode attempt (stamped even when nothing was found)',
+                `location_source`   VARCHAR(20) DEFAULT NULL COMMENT 'Weakest rung that produced City/Region: destination|ancestor|address|geocode',
                 `description`       TEXT DEFAULT NULL,
                 `short_description` TEXT DEFAULT NULL,
                 `image_url`         VARCHAR(500) DEFAULT NULL,
@@ -512,6 +517,41 @@
                 COMMENT 'Array of canonical board codes discovered from cache API'
                 AFTER `facilities_json`;
         </item>
+        <!-- Upgrade: reverse-geocoding + location provenance on sphinx_hotels.
+             The City/Region ladder (HotelLocationResolver) reads geo_city /
+             geo_region as its last rung; location_source records which rung
+             actually answered. -->
+        <item for="upgrade">
+            ALTER TABLE `?:sphinx_hotels`
+                ADD COLUMN `geo_city` VARCHAR(255) DEFAULT NULL
+                COMMENT 'Reverse-geocoded city (OSM Nominatim) — last rung of the City ladder'
+                AFTER `address_country`;
+        </item>
+        <item for="upgrade">
+            ALTER TABLE `?:sphinx_hotels`
+                ADD COLUMN `geo_region` VARCHAR(255) DEFAULT NULL
+                COMMENT 'Reverse-geocoded region/province (OSM Nominatim) — last rung of the Region ladder'
+                AFTER `geo_city`;
+        </item>
+        <item for="upgrade">
+            ALTER TABLE `?:sphinx_hotels`
+                ADD COLUMN `street_address` VARCHAR(255) DEFAULT NULL
+                COMMENT 'Reverse-geocoded street (OSM Nominatim), approximate'
+                AFTER `geo_region`;
+        </item>
+        <item for="upgrade">
+            ALTER TABLE `?:sphinx_hotels`
+                ADD COLUMN `geocoded_at` DATETIME DEFAULT NULL
+                COMMENT 'Last reverse-geocode attempt (stamped even when nothing was found)'
+                AFTER `street_address`;
+        </item>
+        <item for="upgrade">
+            ALTER TABLE `?:sphinx_hotels`
+                ADD COLUMN `location_source` VARCHAR(20) DEFAULT NULL
+                COMMENT 'Weakest rung that produced City/Region: destination|ancestor|address|geocode'
+                AFTER `geocoded_at`;
+        </item>
+
         <!-- Upgrade: add full_path column to existing sphinx_destinations -->
         <item for="upgrade">
             ALTER TABLE `?:sphinx_destinations`
@@ -771,14 +811,14 @@
         <item lang="ro" id="sphinx_holidays.product_code_prefix.tooltip"><![CDATA[Prefix pentru codurile de produs CS-Cart create din hoteluri Sphinx (ex. SPX). ID-ul hotelului se adaugă pentru codul complet (ex. SPX12345).]]></item>
         <item lang="en" id="sphinx_holidays.skip_no_description"><![CDATA[Skip hotels without description (do not create products for hotels with empty description)]]></item>
         <item lang="ro" id="sphinx_holidays.skip_no_description"><![CDATA[Omite hoteluri fără descriere (nu crea produse pentru hoteluri fără descriere)]]></item>
-        <item lang="en" id="sphinx_holidays.require_immediate_availability"><![CDATA[Require immediate availability (sync gate + storefront offers)]]></item>
-        <item lang="ro" id="sphinx_holidays.require_immediate_availability"><![CDATA[Necesită disponibilitate imediată (filtru sync + oferte storefront)]]></item>
+        <item lang="en" id="sphinx_holidays.require_immediate_availability"><![CDATA[Hotels with immediate confirmation]]></item>
+        <item lang="ro" id="sphinx_holidays.require_immediate_availability"><![CDATA[Hoteluri cu confirmare imediată]]></item>
         <item lang="en" id="sphinx_holidays.preorder_cache_ttl"><![CDATA[Checkout verify cache TTL (seconds)]]></item>
         <item lang="ro" id="sphinx_holidays.preorder_cache_ttl"><![CDATA[TTL cache verificare la checkout (secunde)]]></item>
         <item lang="en" id="sphinx_holidays.preorder_cache_ttl.tooltip"><![CDATA[Reuse the price verified at add-to-cart for this many seconds when the customer clicks Place Order — the checkout skips one API call per hotel in the cart. 0 = always re-verify live.]]></item>
         <item lang="ro" id="sphinx_holidays.preorder_cache_ttl.tooltip"><![CDATA[Refolosește prețul verificat la adăugarea în coș pentru acest număr de secunde când clientul apasă Plasează comanda — checkout-ul omite un apel API pentru fiecare hotel din coș. 0 = re-verifică mereu live.]]></item>
-        <item lang="en" id="sphinx_holidays.require_immediate_availability.tooltip"><![CDATA[When enabled, the hotels cron only adds hotels that have at least one offer with confirmation=immediate, and the storefront search shows only immediate-confirmation offers. The hotels cron accepts a per-run override: &availability_gate=0 to skip the gate, &availability_gate=1 to force it.]]></item>
-        <item lang="ro" id="sphinx_holidays.require_immediate_availability.tooltip"><![CDATA[Când este activ, cronul de hoteluri adaugă doar hotelurile care au cel puțin o ofertă cu confirmation=immediate, iar căutarea din storefront afișează doar ofertele cu confirmare imediată. Cronul de hoteluri acceptă o suprascriere per rulare: &availability_gate=0 pentru a omite filtrul, &availability_gate=1 pentru a-l forța.]]></item>
+        <item lang="en" id="sphinx_holidays.require_immediate_availability.tooltip"><![CDATA[When enabled, only hotels with at least one confirmation=immediate offer are kept in the hotel list: the hotels cron probes each destination and deletes hotels without such an offer (hotels already linked to CS-Cart products are never deleted), and the storefront search shows only immediate-confirmation offers. The hotels cron accepts a per-run override: &availability_gate=0 to skip the gate, &availability_gate=1 to force it.]]></item>
+        <item lang="ro" id="sphinx_holidays.require_immediate_availability.tooltip"><![CDATA[Când este activ, în lista de hoteluri se păstrează doar hotelurile cu cel puțin o ofertă confirmation=immediate: cronul de hoteluri verifică fiecare destinație și șterge hotelurile fără o astfel de ofertă (hotelurile deja legate de produse CS-Cart nu sunt șterse niciodată), iar căutarea din storefront afișează doar ofertele cu confirmare imediată. Cronul de hoteluri acceptă o suprascriere per rulare: &availability_gate=0 pentru a omite filtrul, &availability_gate=1 pentru a-l forța.]]></item>
         <item lang="en" id="sphinx_holidays.default_product_quantity"><![CDATA[Default product quantity]]></item>
         <item lang="ro" id="sphinx_holidays.default_product_quantity"><![CDATA[Cantitate implicită produs]]></item>
         <item lang="en" id="sphinx_holidays.default_product_quantity.tooltip"><![CDATA[Inventory quantity assigned to hotel products on creation. Set high to prevent 'zero inventory' errors.]]></item>

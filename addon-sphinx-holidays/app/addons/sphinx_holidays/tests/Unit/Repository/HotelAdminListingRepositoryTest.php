@@ -58,7 +58,40 @@ final class HotelAdminListingRepositoryTest extends TestCase
         self::assertSame('asc', $params['sort_order'], 'garbage sort order falls back to asc');
         self::assertSame('desc', $params['sort_order_toggle']);
         self::assertSame(42, $params['total_items'], 'COUNT(*) feeds pagination');
+        self::assertSame(0, $params['hidden_no_availability'], 'nothing hidden when the immediate-only flag is off');
         self::assertArrayNotHasKey('unknown_param', $params, 'foreign request params are dropped');
+    }
+
+    public function testImmediateOnlyHidesGatedHotelsAndReportsHiddenCount(): void
+    {
+        // "Hotels with immediate confirmation" ON: hotels the availability
+        // gate flagged as no_availability disappear from the grid, and the
+        // hidden count rides back in the search params for the notice line.
+        $fieldCalls = [];
+        DbStub::$getField = static function (string $query, mixed ...$params) use (&$fieldCalls): int {
+            $fieldCalls[] = [$query, $params];
+            return count($fieldCalls) === 1 ? 3 : 42; // hidden count, then total
+        };
+
+        $repo = new HotelAdminListingRepository(50, true);
+        [, $params] = $repo->getListing(['country_code' => 'TR']);
+
+        self::assertSame(3, $params['hidden_no_availability']);
+        self::assertSame(42, $params['total_items']);
+
+        // The hidden COUNT targets flagged rows under the same user filters…
+        self::assertStringContainsString('h.product_skip_reason = ?s', (string) $fieldCalls[0][0]);
+        self::assertSame('no_availability', $fieldCalls[0][1][1] ?? null);
+        self::assertStringContainsString("h.country_code = 'TR'", (string) ($fieldCalls[0][1][0] ?? ''));
+
+        // …and the listing WHERE excludes them.
+        $listingParams = end($this->queryParams);
+        self::assertIsArray($listingParams);
+        $condition = (string) ($listingParams[0] ?? '');
+        self::assertStringContainsString(
+            "(h.product_skip_reason IS NULL OR h.product_skip_reason != 'no_availability')",
+            $condition,
+        );
     }
 
     public function testFiltersLandInTheWhereFragment(): void

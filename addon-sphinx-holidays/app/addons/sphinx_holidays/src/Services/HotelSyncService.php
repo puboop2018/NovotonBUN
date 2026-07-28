@@ -156,7 +156,7 @@ class HotelSyncService extends AbstractSyncService implements HotelSyncServiceIn
             $stats['skipped'] = ValidationHelpers::toInt($stats['skipped'] ?? 0) + ValidationHelpers::toInt($countryStats['skipped'] ?? 0);
             $stats['failed'] = ValidationHelpers::toInt($stats['failed'] ?? 0) + ValidationHelpers::toInt($countryStats['failed'] ?? 0);
 
-            foreach (['availability_probed', 'availability_gated', 'availability_cleared', 'availability_errors'] as $k) {
+            foreach (['availability_probed', 'availability_deleted', 'availability_cleared', 'availability_errors'] as $k) {
                 $stats[$k] = ValidationHelpers::toInt($stats[$k] ?? 0) + ValidationHelpers::toInt($countryStats[$k] ?? 0);
             }
 
@@ -179,8 +179,8 @@ class HotelSyncService extends AbstractSyncService implements HotelSyncServiceIn
             $this->output('Availability gate: disabled');
         } else {
             $this->output(sprintf(
-                'Availability gate: %d gated, %d cleared (%d destination(s) probed, %d search error(s))',
-                ValidationHelpers::toInt($stats['availability_gated'] ?? 0),
+                'Availability gate: %d removed (no immediate offer), %d cleared (%d destination(s) probed, %d search error(s))',
+                ValidationHelpers::toInt($stats['availability_deleted'] ?? 0),
                 ValidationHelpers::toInt($stats['availability_cleared'] ?? 0),
                 ValidationHelpers::toInt($stats['availability_probed'] ?? 0),
                 ValidationHelpers::toInt($stats['availability_errors'] ?? 0),
@@ -278,8 +278,21 @@ class HotelSyncService extends AbstractSyncService implements HotelSyncServiceIn
                     $stats['total']++;
                 }
 
-                // Batch-resolve country/region/city from destination hierarchy
-                $pageBatch = $this->rowMapper->enrichFromHierarchy($pageBatch, $countryCode);
+                // Batch-resolve country/region/city from destination hierarchy.
+                // Stored geocoded values ride along as the ladder's last rung —
+                // without them a re-sync would blank a geocoded city.
+                $batchIds = [];
+                foreach ($pageBatch as $row) {
+                    $bid = TypeCoerce::toString($row['hotel_id'] ?? '');
+                    if ($bid !== '') {
+                        $batchIds[] = $bid;
+                    }
+                }
+                $pageBatch = $this->rowMapper->enrichFromHierarchy(
+                    $pageBatch,
+                    $countryCode,
+                    $this->hotelRepo->findGeoLocations($batchIds),
+                );
 
                 // Upsert in sub-batches
                 foreach (array_chunk($pageBatch, self::UPSERT_BATCH_SIZE) as $upsertChunk) {

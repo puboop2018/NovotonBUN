@@ -20,7 +20,7 @@ use Tygh\Addons\SphinxHolidays\Tests\Support\DbStub;
 class UpsertBatchTest extends TestCase
 {
     /** 28 tuple positions per hotel row, minus the literal 'active' sync_status = 27 bound params. */
-    private const HOTEL_PARAMS_PER_ROW = 27;
+    private const HOTEL_PARAMS_PER_ROW = 28;
     private const DESTINATION_PARAMS_PER_ROW = 10;
 
     /** @var list<array{query: string, params: list<mixed>}> */
@@ -67,6 +67,8 @@ class UpsertBatchTest extends TestCase
         self::assertStringContainsString('address_city, address_country', $query);
         self::assertStringContainsString('address_city = VALUES(address_city)', $query);
         self::assertStringContainsString('address_country = VALUES(address_country)', $query);
+        // Provenance of the City/Region ladder travels with the row.
+        self::assertStringContainsString('location_source = VALUES(location_source)', $query);
 
         $params = $this->calls[0]['params'];
         self::assertCount(3 * self::HOTEL_PARAMS_PER_ROW, $params);
@@ -159,10 +161,11 @@ class UpsertBatchTest extends TestCase
         $params = $this->calls[0]['params'];
 
         self::assertStringNotContainsString('?d', $query, 'lossy ?d must not bind any hotel column');
-        // Tuple positions 11/12 (lat/lng) and 25 (rating) → param indices 10/11/24.
+        // Tuple positions 11/12 (lat/lng) and 26 (rating) → param indices
+        // 10/11/25 (rating shifted by one when location_source was added).
         self::assertSame('36.88706900', $params[10]);
         self::assertSame('30.67462200', $params[11]);
-        self::assertSame('8.5', $params[24]);
+        self::assertSame('8.5', $params[25]);
     }
 
     public function testDestinationCoordinatesBindAsFullPrecisionStringsNotDd(): void

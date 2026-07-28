@@ -511,7 +511,7 @@ function fn_sphinx_holidays_get_hotels(array $params = []): array
     $perPageRaw = Registry::get('settings.Appearance.admin_elements_per_page');
     $perPage = is_numeric($perPageRaw) ? (int) $perPageRaw : 0;
 
-    return (new \Tygh\Addons\SphinxHolidays\Repository\HotelAdminListingRepository($perPage > 0 ? $perPage : 50))
+    return (new \Tygh\Addons\SphinxHolidays\Repository\HotelAdminListingRepository($perPage > 0 ? $perPage : 50, \Tygh\Addons\SphinxHolidays\Services\ConfigProvider::shouldRequireImmediateAvailability()))
         ->getListing($params);
 }
 

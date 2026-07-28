@@ -18,8 +18,10 @@ final class HotelAdminListingRepository
 {
     use RowNarrowingTrait;
 
-    public function __construct(private readonly int $defaultPerPage = 50)
-    {
+    public function __construct(
+        private readonly int $defaultPerPage = 50,
+        private readonly bool $onlyImmediateConfirmation = false,
+    ) {
     }
 
     /**
@@ -109,6 +111,24 @@ final class HotelAdminListingRepository
         }
         if ($params['city'] !== '') {
             $condition .= db_quote(' AND h.address_city LIKE ?l', '%' . $params['city'] . '%');
+        }
+
+        // "Hotels with immediate confirmation": hide hotels the availability
+        // gate flagged as having no immediate-confirmation offer. Rows stay
+        // stored — the sync probe clears the flag (and the hotel reappears)
+        // when it becomes bookable; the hidden count is reported so the
+        // admin can see the list is filtered, not missing data.
+        $params['hidden_no_availability'] = 0;
+        if ($this->onlyImmediateConfirmation) {
+            $params['hidden_no_availability'] = TypeCoerce::toInt(db_get_field(
+                'SELECT COUNT(*) FROM ?:sphinx_hotels h WHERE 1 ?p AND h.product_skip_reason = ?s',
+                $condition,
+                HotelSkipRepository::SKIP_REASON_NO_AVAILABILITY,
+            ));
+            $condition .= db_quote(
+                ' AND (h.product_skip_reason IS NULL OR h.product_skip_reason != ?s)',
+                HotelSkipRepository::SKIP_REASON_NO_AVAILABILITY,
+            );
         }
 
         // Total count
