@@ -192,6 +192,12 @@ class ReassignFeaturesCommand extends AbstractCronCommand
             }
         }
 
+        // City / Region — plain name-based variants on the shared location
+        // features (sphinx parity); the resort MAPPING above stays separate
+        // and only fires when its feature is configured.
+        $featureMapper->assignLocationByName($productId, 'city', $city);
+        $featureMapper->assignLocationByName($productId, 'region', TypeCoerce::toString($hotel['region'] ?? ''));
+
         // Boards — read from stored hotel_data JSON (no API call needed)
         $hotelData = fn_novoton_holidays_get_hotel_data($hotelId);
         if (is_array($hotelData)) {
@@ -265,7 +271,7 @@ class ReassignFeaturesCommand extends AbstractCronCommand
 
         $rows = db_get_array(
             'SELECT h.hotel_id, h.product_id, h.hotel_name, h.star_rating,
-                    h.property_type, h.city, h.country, h.is_adults_only
+                    h.property_type, h.city, h.region, h.country, h.is_adults_only
              FROM ?:novoton_hotels h
              WHERE h.product_id IS NOT NULL AND h.product_id > 0
                ?p

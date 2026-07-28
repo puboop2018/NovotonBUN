@@ -368,6 +368,11 @@ class AddProductsCommand extends AbstractCronCommand
             }
         }
 
+        // City / Region — plain name-based variants on the shared location
+        // features (sphinx parity); independent of the resort mapping above.
+        $featureMapper->assignLocationByName($productId, 'city', PriceInfoFormatter::toScalar($hotel['city'] ?? ''));
+        $featureMapper->assignLocationByName($productId, 'region', PriceInfoFormatter::toScalar($hotel['region'] ?? ''));
+
         // Property type — uses shared travel_core mapping
         if (!empty($hotel['property_type'])) {
             $code = $normalizer->normalizePropertyType($hotel['property_type']);
