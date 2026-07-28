@@ -426,6 +426,13 @@ window.SphinxSearch.onReady(function () {
         if (!body) return;
         body.innerHTML = '<p class="travel-terms-modal__unavailable">' + esc(lbl(labels().termsUnavailable, 'Condi\u021biile nu sunt disponibile. V\u0103 rug\u0103m c\u0103uta\u021bi din nou.')) + '</p>';
     }
+    // Verify SERVICE down (5xx/transport) \u2014 a re-search cannot help, so the
+    // copy must not suggest one.
+    function showOutage() {
+        var body = bodyEl();
+        if (!body) return;
+        body.innerHTML = '<p class="travel-terms-modal__unavailable">' + esc(lbl(labels().termsOutage, 'Condi\u021biile nu pot fi afi\u0219ate momentan. V\u0103 rug\u0103m \u00eencerca\u021bi din nou \u00een c\u00e2teva minute.')) + '</p>';
+    }
     function loadTerms(offerId) {
         if (cache[offerId]) { renderTerms(cache[offerId]); return; }
         var body = bodyEl();
@@ -436,13 +443,17 @@ window.SphinxSearch.onReady(function () {
             .then(function(r) { return r.json(); })
             .then(function(data) {
                 if (!data || data.status !== 'ok') {
-                    showUnavailable();
+                    if (data && data.status === 'outage') {
+                        showOutage();
+                    } else {
+                        showUnavailable();
+                    }
                     return;
                 }
                 cache[offerId] = data;
                 renderTerms(data);
             })
-            .catch(showUnavailable);
+            .catch(showOutage);
     }
 
     document.addEventListener('click', function(e) {

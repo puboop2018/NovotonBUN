@@ -1208,6 +1208,14 @@ msgctxt "Languages::sphinx_holidays.offer_no_longer_available"
 msgid "This offer is no longer available. Please search again."
 msgstr "Această ofertă nu mai este disponibilă. Vă rugăm căutați din nou."
 
+msgctxt "Languages::sphinx_holidays.booking_system_unavailable"
+msgid "The booking system is temporarily unavailable. Please try again in a few minutes."
+msgstr "Sistemul de rezervări este momentan indisponibil. Vă rugăm încercați din nou în câteva minute."
+
+msgctxt "Languages::sphinx_holidays.terms_outage"
+msgid "The conditions cannot be displayed right now. Please try again in a few minutes."
+msgstr "Condițiile nu pot fi afișate momentan. Vă rugăm încercați din nou în câteva minute."
+
 msgctxt "Languages::sphinx_holidays.offer_unavailable"
 msgid "This offer is no longer available."
 msgstr "Această ofertă nu mai este disponibilă."

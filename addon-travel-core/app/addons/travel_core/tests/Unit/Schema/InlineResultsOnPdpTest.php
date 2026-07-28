@@ -126,7 +126,9 @@ final class InlineResultsOnPdpTest extends TestCase
             $sphinxAddon . '/app/addons/sphinx_holidays/controllers/frontend/sphinx_booking/booking_form.php',
         );
         self::assertStringContainsString("'products.view?' . http_build_query", $bookingForm);
-        self::assertStringContainsString("'refresh' => 1", $bookingForm);
+        // refresh=1 only for a GENUINE expiry — verify outages skip the
+        // eviction (VerifyOutageTest owns that distinction).
+        self::assertStringContainsString("\$redirectParams['refresh'] = 1;", $bookingForm);
 
         // The engine forwards refresh=1 once on auto-restore and never writes
         // it into history (or every reload would force a live re-search).

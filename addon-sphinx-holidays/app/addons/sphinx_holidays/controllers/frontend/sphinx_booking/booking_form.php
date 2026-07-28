@@ -39,28 +39,46 @@ try {
         $verifyResult,
         ConfigProvider::shouldRequireImmediateAvailability(),
     )) {
-        // Diagnosability: record WHY the offer was rejected (shape drift vs
-        // genuine expiry) — this rejection previously logged nothing.
+        // A 5xx / transport failure is the VERIFY SERVICE being down, not the
+        // offer being gone (field case: the staging API 500ing inside its
+        // supplier client on every verify) — telling the guest to "search
+        // again" would send them chasing fresh offers that cannot verify
+        // either. Say what is true and skip the pointless cache eviction.
+        $verifyHttpCode = $api->getHttpClient()->getLastHttpCode();
+        $verifyOutage = $verifyHttpCode === 0 || $verifyHttpCode >= 500;
+
+        // Diagnosability: record WHY the offer was rejected (outage vs shape
+        // drift vs genuine expiry) — this rejection previously logged nothing.
         fn_log_event('general', 'runtime', [
-            'message' => 'Sphinx booking_form: offer rejected by verify',
+            'message' => $verifyOutage
+                ? 'Sphinx booking_form: verify OUTAGE (HTTP ' . $verifyHttpCode . ') — offer not rejected on merit'
+                : 'Sphinx booking_form: offer rejected by verify',
             'offer_id' => $offer_id,
             'verify_response' => substr((string) json_encode($verifyResult, JSON_UNESCAPED_UNICODE), 0, 1000),
         ]);
-        fn_set_notification('W', __('warning'),
-            __('sphinx_holidays.offer_no_longer_available', ['[default]' => 'This offer is no longer available. Please search again.']));
+        if ($verifyOutage) {
+            fn_set_notification('W', __('warning'),
+                __('sphinx_holidays.booking_system_unavailable', ['[default]' => 'The booking system is temporarily unavailable. Please try again in a few minutes.']));
+        } else {
+            fn_set_notification('W', __('warning'),
+                __('sphinx_holidays.offer_no_longer_available', ['[default]' => 'This offer is no longer available. Please search again.']));
+        }
         // refresh=1 → the next search bypasses + evicts the cached result set,
         // so the customer lands on a LIVE re-search instead of the same stale
-        // offers. With a known product the customer came from (or belongs on)
-        // the product page, where the booking engine auto-runs the search
-        // inline; the headerless standalone results page is only the fallback
-        // for searches with no product context.
+        // offers — only meaningful for a genuine expiry. With a known product
+        // the customer came from (or belongs on) the product page, where the
+        // booking engine auto-runs the search inline; the headerless
+        // standalone results page is only the fallback for searches with no
+        // product context.
         $redirectParams = [
             'check_in' => RequestCoerce::string($_REQUEST, 'check_in'),
             'check_out' => RequestCoerce::string($_REQUEST, 'check_out'),
             'adults' => RequestCoerce::int($_REQUEST, 'adults', 2),
             'children' => RequestCoerce::int($_REQUEST, 'children'),
-            'refresh' => 1,
         ];
+        if (!$verifyOutage) {
+            $redirectParams['refresh'] = 1;
+        }
         if ($product_id > 0) {
             return [CONTROLLER_STATUS_REDIRECT, 'products.view?' . http_build_query(
                 ['product_id' => $product_id] + $redirectParams,
