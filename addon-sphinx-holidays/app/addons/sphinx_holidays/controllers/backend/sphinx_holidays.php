@@ -553,9 +553,15 @@ if ($mode === 'manage') {
     $view->assign('skipped_hotels', $skippedCount);
     $view->assign('selected_countries', $selectedCountries);
     $view->assign('is_configured', $isConfigured);
+    // Sphinx-shaped products with NO hotel row linked to them — what the
+    // relink action actually repairs. (The old gate used the orphan count —
+    // hotels whose product was deleted — which relink cannot fix and which is
+    // 0 on the far more common "hotel rows lost" store, hiding the button.)
+    $view->assign('unlinked_sphinx_products', $hotelRepo->countUnlinkedProducts(
+        ConfigProvider::getProductCodePrefix(),
+    ));
     // Hotels with a dead product_id (product deleted from CS-Cart without clearing the link)
-    $orphanedSpxCount = $hotelRepo->countOrphanedProducts();
-    $view->assign('orphaned_spx_products', $orphanedSpxCount);
+    $view->assign('orphaned_spx_products', $hotelRepo->countOrphanedProducts());
 
     $view->assign('sync_logs', $syncLogs);
 

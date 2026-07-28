@@ -588,6 +588,15 @@ class HotelRepository implements HotelRepositoryInterface
     }
 
     /**
+     * Count sphinx-shaped CS-Cart products with no hotel row linked to them —
+     * the set the relink action repairs (see HotelStatsRepository).
+     */
+    public function countUnlinkedProducts(string $legacyPrefix): int
+    {
+        return $this->stats->countUnlinkedProducts($legacyPrefix);
+    }
+
+    /**
      * Update image URL and images JSON for a hotel.
      *
      * Used when fresh image data is fetched from the API during image sync.

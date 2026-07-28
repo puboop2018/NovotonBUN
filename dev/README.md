@@ -24,6 +24,12 @@ and heal the store itself:
   files, and every checkout/PDP label row; `?force=1` reseeds all three addons'
   language keys and clears the cache. Refuses non-localhost requests.
   `http://localhost:8080/dev/tools/seed-langs.php`
+- `tools/sphinx-relink.php` — sphinx hotel/product link report. Lists every
+  sphinx-shaped product (legacy `SPX…` + country-prefixed `TR3612`) and whether
+  a `?:sphinx_hotels` row points at it — an unlinked product is a hotel page
+  with no booking form. `?force=1` runs the same repair as the dashboard's
+  Relink button (fetch each missing hotel from the API, re-insert it linked)
+  and clears the cache. `http://localhost:8080/dev/tools/sphinx-relink.php`
 
 Each folder has a shared `_*_client.php` (the standalone HTTP client +
 pretty-printer) plus one probe file per API feature. This mirrors the existing

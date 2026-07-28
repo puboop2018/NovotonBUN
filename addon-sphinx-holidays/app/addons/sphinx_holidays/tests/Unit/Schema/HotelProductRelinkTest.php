@@ -46,6 +46,37 @@ final class HotelProductRelinkTest extends TestCase
         self::assertStringContainsString('SELECT hotel_id, product_id, name', $src);
     }
 
+    public function testRelinkButtonIsGatedOnRELINKABLEProducts(): void
+    {
+        // The button used to render only when countOrphanedProducts() > 0 —
+        // hotels whose PRODUCT was deleted, the opposite direction, which
+        // relink cannot repair. On the common "hotel rows lost" store that
+        // count is 0, so the only UI entry point to the repair was hidden
+        // (and the action is POST-only, so no URL could stand in for it).
+        $tpl = (string) file_get_contents(
+            dirname(__DIR__, 6) . '/design/backend/templates/addons/sphinx_holidays/views/sphinx_holidays/manage.tpl',
+        );
+        self::assertStringContainsString('{if $unlinked_sphinx_products > 0}', $tpl);
+        self::assertStringContainsString('({$unlinked_sphinx_products})', $tpl);
+        self::assertStringNotContainsString('{if $orphaned_spx_products > 0}', $tpl);
+
+        $controller = (string) file_get_contents(
+            dirname(__DIR__, 3) . '/controllers/backend/sphinx_holidays.php',
+        );
+        self::assertStringContainsString("\$view->assign('unlinked_sphinx_products'", $controller);
+        self::assertStringContainsString('countUnlinkedProducts(', $controller);
+
+        // The count must describe exactly what the relink pass will process:
+        // sphinx-shaped codes with no hotel row pointing at the product.
+        $stats = (string) file_get_contents(
+            dirname(__DIR__, 3) . '/src/Repository/HotelStatsRepository.php',
+        );
+        self::assertStringContainsString('public function countUnlinkedProducts(string $legacyPrefix): int', $stats);
+        self::assertStringContainsString("'^[A-Z]{2}[0-9]+\$'", $stats);
+        self::assertStringContainsString('NOT EXISTS', $stats);
+        self::assertStringContainsString('h.product_id = p.product_id', $stats);
+    }
+
     public function testRelinkPassScansTheCountryPrefixedCodeShape(): void
     {
         $src = (string) file_get_contents(

@@ -145,6 +145,34 @@ class HotelStatsRepository
     }
 
     /**
+     * Count CS-Cart products that LOOK like sphinx hotel products but have no
+     * hotel row pointing at them — exactly the set relinkExistingProducts()
+     * repairs (it fetches each hotel from the API and re-inserts it linked).
+     *
+     * The opposite direction of countOrphanedProducts(): there the hotel row
+     * survives and the product is gone; here the product survives and the
+     * hotel row is missing or unlinked (fresh reinstall, table re-sync). The
+     * relink admin action used to be gated on the ORPHAN count, so on a store
+     * with this (much more common) breakage the button never rendered.
+     *
+     * Code shapes: the legacy configured prefix + the country-prefixed shape
+     * SphinxProductFactory writes (TR3612). Two letters, so novoton's
+     * NVT-prefixed codes can never match.
+     */
+    public function countUnlinkedProducts(string $legacyPrefix): int
+    {
+        return TypeCoerce::toInt(db_get_field(
+            'SELECT COUNT(*) FROM ?:products p
+             WHERE (p.product_code LIKE ?l OR p.product_code REGEXP ?s)
+             AND NOT EXISTS (
+                 SELECT 1 FROM ?:sphinx_hotels h WHERE h.product_id = p.product_id
+             )',
+            $legacyPrefix . '%',
+            '^[A-Z]{2}[0-9]+$',
+        ));
+    }
+
+    /**
      * Get distinct classification values present in the data.
      *
      * @return list<int>

@@ -150,12 +150,17 @@
             </button>
         </form>
     {/if}
-    {if $orphaned_spx_products > 0}
+    {* Gated on products with NO hotel row linked — the breakage relink
+       repairs (it re-fetches each hotel from the API and re-inserts it
+       linked). The old gate used the orphan count (hotels whose product was
+       deleted), which relink cannot fix, so the button stayed hidden exactly
+       when it was needed. POST-only by design: the action mutates. *}
+    {if $unlinked_sphinx_products > 0}
         <form action="{""|fn_url}" method="post" style="display:inline; margin-left: 8px;">
             <input type="hidden" name="dispatch" value="sphinx_holidays.relink_products" />
             <button type="submit" class="btn btn-info" {if !$is_configured}disabled{/if}
                     onclick="return confirm('{__("sphinx_holidays.relink_confirm")|escape:javascript}');">
-                <i class="icon-link"></i> {__("sphinx_holidays.relink_existing_products")} ({$orphaned_spx_products})
+                <i class="icon-link"></i> {__("sphinx_holidays.relink_existing_products")} ({$unlinked_sphinx_products})
             </button>
         </form>
     {/if}
