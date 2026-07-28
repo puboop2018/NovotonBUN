@@ -686,6 +686,34 @@ msgctxt "SettingsOptions::travel_core::display_header"
 msgid "Display Settings"
 msgstr "Setări Afișare"
 
+msgctxt "SettingsOptions::travel_core::geocoding_header"
+msgid "Geocoding (OpenStreetMap Nominatim)"
+msgstr "Geocodare (OpenStreetMap Nominatim)"
+
+msgctxt "SettingsOptions::travel_core::geocoding_enabled"
+msgid "Enable reverse geocoding"
+msgstr "Activează geocodarea inversă"
+
+msgctxt "SettingsTooltips::travel_core::geocoding_enabled"
+msgid "Fill hotel locations from stored coordinates via OSM Nominatim: street addresses, plus the city/region fallback used when a provider's destination tree cannot name them. One switch for every travel addon — the Nominatim policy limits requests per application, not per addon. Results are approximate (nearest mapped address). Displaying OSM data requires a \"© OpenStreetMap contributors\" attribution on the site."
+msgstr "Completează locațiile hotelurilor din coordonatele stocate prin OSM Nominatim: adrese stradale, plus rezerva de oraș/regiune folosită când arborele de destinații al furnizorului nu le poate numi. Un singur comutator pentru toate addon-urile de travel — politica Nominatim limitează cererile per aplicație, nu per addon. Rezultatele sunt aproximative (cea mai apropiată adresă cartografiată). Afișarea datelor OSM necesită atribuirea \"© OpenStreetMap contributors\" pe site."
+
+msgctxt "SettingsOptions::travel_core::geocoding_contact_email"
+msgid "Geocoding contact email"
+msgstr "Email de contact pentru geocodare"
+
+msgctxt "SettingsTooltips::travel_core::geocoding_contact_email"
+msgid "Sent in the User-Agent of Nominatim requests — the public instance's usage policy requires a way to contact you. Geocoding will not run without it."
+msgstr "Trimis în User-Agent-ul cererilor Nominatim — politica de utilizare a instanței publice cere o modalitate de contact. Geocodarea nu rulează fără acesta."
+
+msgctxt "SettingsOptions::travel_core::geocoding_endpoint"
+msgid "Nominatim endpoint"
+msgstr "Endpoint Nominatim"
+
+msgctxt "SettingsTooltips::travel_core::geocoding_endpoint"
+msgid "Base URL of the Nominatim server. Change only if you run your own instance (removes the 1 request/second limit of the public server)."
+msgstr "URL-ul de bază al serverului Nominatim. Schimbați doar dacă rulați propria instanță (elimină limita de 1 cerere/secundă a serverului public)."
+
 msgctxt "SettingsOptions::travel_core::show_booking_form"
 msgid "Show Booking Form on Product Pages"
 msgstr "Afișare Formular Rezervare pe Paginile Produselor"

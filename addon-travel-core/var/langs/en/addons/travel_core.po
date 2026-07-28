@@ -686,6 +686,34 @@ msgctxt "SettingsOptions::travel_core::display_header"
 msgid "Display Settings"
 msgstr "Display Settings"
 
+msgctxt "SettingsOptions::travel_core::geocoding_header"
+msgid "Geocoding (OpenStreetMap Nominatim)"
+msgstr "Geocoding (OpenStreetMap Nominatim)"
+
+msgctxt "SettingsOptions::travel_core::geocoding_enabled"
+msgid "Enable reverse geocoding"
+msgstr "Enable reverse geocoding"
+
+msgctxt "SettingsTooltips::travel_core::geocoding_enabled"
+msgid "Fill hotel locations from stored coordinates via OSM Nominatim: street addresses, plus the city/region fallback used when a provider's destination tree cannot name them. One switch for every travel addon — the Nominatim policy limits requests per application, not per addon. Results are approximate (nearest mapped address). Displaying OSM data requires a \"© OpenStreetMap contributors\" attribution on the site."
+msgstr "Fill hotel locations from stored coordinates via OSM Nominatim: street addresses, plus the city/region fallback used when a provider's destination tree cannot name them. One switch for every travel addon — the Nominatim policy limits requests per application, not per addon. Results are approximate (nearest mapped address). Displaying OSM data requires a \"© OpenStreetMap contributors\" attribution on the site."
+
+msgctxt "SettingsOptions::travel_core::geocoding_contact_email"
+msgid "Geocoding contact email"
+msgstr "Geocoding contact email"
+
+msgctxt "SettingsTooltips::travel_core::geocoding_contact_email"
+msgid "Sent in the User-Agent of Nominatim requests — the public instance's usage policy requires a way to contact you. Geocoding will not run without it."
+msgstr "Sent in the User-Agent of Nominatim requests — the public instance's usage policy requires a way to contact you. Geocoding will not run without it."
+
+msgctxt "SettingsOptions::travel_core::geocoding_endpoint"
+msgid "Nominatim endpoint"
+msgstr "Nominatim endpoint"
+
+msgctxt "SettingsTooltips::travel_core::geocoding_endpoint"
+msgid "Base URL of the Nominatim server. Change only if you run your own instance (removes the 1 request/second limit of the public server)."
+msgstr "Base URL of the Nominatim server. Change only if you run your own instance (removes the 1 request/second limit of the public server)."
+
 msgctxt "SettingsOptions::travel_core::show_booking_form"
 msgid "Show Booking Form on Product Pages"
 msgstr "Show Booking Form on Product Pages"

@@ -8,7 +8,7 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Tygh\Addons\NovotonHolidays\Cron\Commands\GeocodeAddressesCommand;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
-use Tygh\Addons\NovotonHolidays\Services\NominatimClient;
+use Tygh\Addons\TravelCore\Services\Geocoding\NominatimClient;
 use Tygh\Addons\NovotonHolidays\Tests\Support\DbStub;
 use Tygh\Registry;
 

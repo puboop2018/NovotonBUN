@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Tygh\Addons\NovotonHolidays\Cron\Commands;
 
 use Tygh\Addons\NovotonHolidays\Cron\AbstractCronCommand;
-use Tygh\Addons\NovotonHolidays\Exceptions\GeocodeTransportException;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
-use Tygh\Addons\NovotonHolidays\Services\NominatimClient;
+use Tygh\Addons\TravelCore\Exceptions\GeocodeTransportException;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+use Tygh\Addons\TravelCore\Services\Geocoding\NominatimClient;
 
 /**
  * Reverse-geocode hotel coordinates into approximate street addresses via
@@ -110,7 +110,7 @@ class GeocodeAddressesCommand extends AbstractCronCommand
         $this->output('Reverse geocoding ' . count($hotels) . " hotels via {$endpoint} (1 req/s)...");
         $this->output('');
 
-        $client = $this->client ?? new NominatimClient(null, $endpoint, $contactEmail);
+        $client = $this->client ?? new NominatimClient(null, $endpoint, $contactEmail, 'NovotonHolidays/1.0');
         $sleeper = $this->sleeper ?? static function (int $seconds): void {
             sleep($seconds);
         };

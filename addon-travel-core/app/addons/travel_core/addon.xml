@@ -181,6 +181,31 @@
                             <item id="after_description"></item>
                         </variants>
                     </item>
+
+                    <!-- Reverse geocoding (OSM Nominatim): ONE policy for all
+                         provider addons. The usage policy caps requests per
+                         APPLICATION (1/sec), so the switch, the contact and
+                         the endpoint must be shared — a per-addon copy would
+                         let two crons double the real rate. -->
+                    <item id="geocoding_header">
+                        <type>header</type>
+                        <variants/>
+                    </item>
+                    <item id="geocoding_enabled">
+                        <type>checkbox</type>
+                        <default_value>N</default_value>
+                        <variants/>
+                    </item>
+                    <item id="geocoding_contact_email">
+                        <type>input</type>
+                        <default_value></default_value>
+                        <variants/>
+                    </item>
+                    <item id="geocoding_endpoint">
+                        <type>input</type>
+                        <default_value>https://nominatim.openstreetmap.org</default_value>
+                        <variants/>
+                    </item>
                 </items>
             </section>
         </sections>
