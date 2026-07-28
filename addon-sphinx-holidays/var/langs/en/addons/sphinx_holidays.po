@@ -672,6 +672,18 @@ msgctxt "Languages::sphinx_holidays.all_products_linked"
 msgid "Every hotel product is linked to a synced hotel."
 msgstr "Every hotel product is linked to a synced hotel."
 
+msgctxt "Languages::sphinx_holidays.location_source_tree"
+msgid "tree"
+msgstr "tree"
+
+msgctxt "Languages::sphinx_holidays.location_source_address"
+msgid "address"
+msgstr "address"
+
+msgctxt "Languages::sphinx_holidays.location_source_geocode"
+msgid "coordinates"
+msgstr "coordinates"
+
 msgctxt "Languages::sphinx_holidays.link_state_missing"
 msgid "Hotel not synced"
 msgstr "Hotel not synced"

@@ -247,6 +247,37 @@
                     <td style="word-break:break-all; font-size:11px; overflow:hidden;"><code>{$cron_urls.order_status}</code></td>
                     <td><a href="{$cron_urls.order_status}" target="_blank" class="btn btn-mini">Run</a></td>
                 </tr>
+                {* ── City/Region repair chain ──
+                   The ladder resolves a hotel's City/Region; update_products
+                   is what carries a CHANGED location onto the product's
+                   features (the repair jobs flag it, they never write
+                   features themselves). Schedule update_products and the
+                   chain completes itself. *}
+                <tr>
+                    <td><strong>backfill_hotel_locations</strong></td>
+                    <td>Re-resolve City/Region for stored hotels from the destination tree (no API calls)</td>
+                    <td><code>30 4 * * *</code> (daily)</td>
+                    <td style="word-break:break-all; font-size:11px; overflow:hidden;"><code>{$cron_urls.backfill_hotel_locations}</code></td>
+                    <td><a href="{$cron_urls.backfill_hotel_locations}" target="_blank" class="btn btn-mini">Run</a></td>
+                </tr>
+                <tr>
+                    <td><strong>geocode_hotels</strong></td>
+                    <td>Fill City/Region/street from coordinates via OpenStreetMap when the tree and the address cannot (1 req/sec; enable geocoding in Travel Core settings first)</td>
+                    <td><code>*/15 * * * *</code> with <code>&amp;limit=100</code></td>
+                    <td style="word-break:break-all; font-size:11px; overflow:hidden;"><code>{$cron_urls.geocode_hotels}&amp;limit=100</code></td>
+                    <td>
+                        <a href="{$cron_urls.geocode_hotels}&amp;limit=100" target="_blank" class="btn btn-mini">Run</a>
+                        <a href="{$cron_urls.geocode_hotels}&amp;status=1" target="_blank" class="btn btn-mini">Backlog</a>
+                        <a href="{$cron_urls.geocode_hotels}&amp;force=1&amp;limit=100" target="_blank" class="btn btn-mini">Re-do</a>
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>reassign_features</strong></td>
+                    <td>Re-assign ALL product features (stars, City, Region, boards…) for every linked hotel — the catch-all when something looks stale</td>
+                    <td>on demand</td>
+                    <td style="word-break:break-all; font-size:11px; overflow:hidden;"><code>{$cron_urls.reassign_features}</code></td>
+                    <td><a href="{$cron_urls.reassign_features}" target="_blank" class="btn btn-mini">Run</a></td>
+                </tr>
                 <tr>
                     <td><strong>cache_refresh</strong></td>
                     <td>Refresh cached search results</td>
@@ -277,8 +308,8 @@
                 </tr>
                 <tr>
                     <td><strong>update_products</strong></td>
-                    <td>Push changed hotel data to CS-Cart products</td>
-                    <td><code>0 6 * * *</code> (daily, after hotels)</td>
+                    <td>Push changed hotel data to CS-Cart products, re-assigning their features (stars, City, Region, boards…). This is what carries a repaired City/Region onto the product.</td>
+                    <td><code>0 6 * * *</code> (daily, after hotels) — or <code>*/30 * * * *</code> to pick up location repairs promptly; it costs nothing when nothing changed</td>
                     <td style="max-width:350px; word-break:break-all; font-size:11px;"><code>{$cron_urls.update_products}</code></td>
                     <td><a href="{$cron_urls.update_products}" target="_blank" class="btn btn-mini">Run</a></td>
                 </tr>

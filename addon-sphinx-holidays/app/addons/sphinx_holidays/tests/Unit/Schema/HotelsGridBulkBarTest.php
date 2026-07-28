@@ -134,15 +134,23 @@ final class HotelsGridBulkBarTest extends TestCase
 
     // ── City/Country columns from the hotel API address (not the dest tree) ──
 
-    public function testGridShowsAddressCityAndCountryColumns(): void
+    /**
+     * The City column now leads with the RESOLVED city — the value the
+     * product's City feature uses — and only falls back to the raw API
+     * address. (An earlier arc had dropped the tree-derived columns because
+     * they were routinely empty; HotelLocationResolver made them reliable,
+     * so they are authoritative again and the address became the fallback.)
+     */
+    public function testCityColumnShowsTheResolvedValueWithAddressAsFallback(): void
     {
         $tpl = self::template();
 
-        // Cells render the per-hotel API address fields.
-        self::assertStringContainsString('{$hotel.address_city|default:"-"|escape:html}', $tpl);
+        self::assertStringContainsString('{if $hotel.destination_name}', $tpl);
+        self::assertStringContainsString('{elseif $hotel.address_city}', $tpl);
+        // Country still comes straight from the API address.
         self::assertStringContainsString('{$hotel.address_country|default:"-"|escape:html}', $tpl);
-        // Sortable headers labelled City / Country.
-        self::assertStringContainsString('sort_by=address_city', $tpl);
+        // City sorts by the resolved column; Country by the address one.
+        self::assertStringContainsString('sort_by=destination_name', $tpl);
         self::assertStringContainsString('sort_by=address_country', $tpl);
         self::assertStringContainsString('sphinx_holidays.city', $tpl);
         self::assertStringContainsString('sphinx_holidays.country', $tpl);
@@ -150,14 +158,23 @@ final class HotelsGridBulkBarTest extends TestCase
         self::assertStringContainsString('name="city"', $tpl);
     }
 
-    public function testTreeRegionCityColumnsAndCascadingFiltersRemoved(): void
+    public function testCityFilterSearchesBothTheResolvedAndTheAddressCity(): void
+    {
+        // Otherwise typing what the City column displays would find nothing.
+        self::assertStringContainsString(
+            'h.address_city LIKE ?l OR h.destination_name LIKE ?l',
+            (string) file_get_contents(
+                dirname(__DIR__, 3) . '/src/Repository/HotelAdminListingRepository.php',
+            ),
+        );
+    }
+
+    public function testCascadingTreeFiltersStayRemoved(): void
     {
         $tpl = self::template();
 
-        // The tree-derived Region / City-Resort cells are no longer rendered.
-        self::assertStringNotContainsString('$hotel.region_name', $tpl);
-        self::assertStringNotContainsString('$hotel.destination_name', $tpl);
-        // The cascading tree filter selects + their JS are gone from this page.
+        // The resolved Region/City CELLS are back (see above), but the
+        // cascading tree filter selects + their JS stay gone from this page.
         self::assertStringNotContainsString('sphinx_region_filter', $tpl);
         self::assertStringNotContainsString('sphinx_city_filter', $tpl);
         self::assertStringNotContainsString('get_regions', $tpl);

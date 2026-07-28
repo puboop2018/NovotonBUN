@@ -61,6 +61,20 @@ return [
         'en' => 'Every hotel product is linked to a synced hotel.',
         'ro' => 'Toate produsele hoteliere sunt legate de un hotel sincronizat.',
     ],
+    // Which rung of the City/Region ladder produced the stored location —
+    // shown as a badge on the hotels grid so a weak value is visible.
+    'sphinx_holidays.location_source_tree' => [
+        'en' => 'tree',
+        'ro' => 'arbore',
+    ],
+    'sphinx_holidays.location_source_address' => [
+        'en' => 'address',
+        'ro' => 'adresă',
+    ],
+    'sphinx_holidays.location_source_geocode' => [
+        'en' => 'coordinates',
+        'ro' => 'coordonate',
+    ],
     'sphinx_holidays.link_state_missing' => [
         'en' => 'Hotel not synced',
         'ro' => 'Hotel nesincronizat',

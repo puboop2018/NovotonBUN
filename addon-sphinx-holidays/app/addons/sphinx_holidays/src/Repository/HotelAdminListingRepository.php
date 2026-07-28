@@ -62,6 +62,10 @@ final class HotelAdminListingRepository
             'country_code' => 'h.country_code',
             'address_city' => 'h.address_city',
             'address_country' => 'h.address_country',
+            // The RESOLVED location the product features use (the grid's
+            // City/Region columns) — distinct from the raw API address above.
+            'destination_name' => 'h.destination_name',
+            'region_name' => 'h.region_name',
             'sync_status' => 'h.sync_status',
             'last_synced_at' => 'h.last_synced_at',
             'property_type' => 'h.property_type',
@@ -110,7 +114,14 @@ final class HotelAdminListingRepository
             $condition .= db_quote(' AND h.name LIKE ?l', '%' . $params['q'] . '%');
         }
         if ($params['city'] !== '') {
-            $condition .= db_quote(' AND h.address_city LIKE ?l', '%' . $params['city'] . '%');
+            // The grid's City column shows the RESOLVED city, so the filter has
+            // to search it too — searching only the raw API address would hide
+            // the very rows the column displays.
+            $condition .= db_quote(
+                ' AND (h.address_city LIKE ?l OR h.destination_name LIKE ?l)',
+                '%' . $params['city'] . '%',
+                '%' . $params['city'] . '%',
+            );
         }
 
         // "Hotels with immediate confirmation": hide hotels the availability

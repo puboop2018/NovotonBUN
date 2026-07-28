@@ -38,6 +38,12 @@ class GeocodeHotelsCommand extends AbstractSyncCommand
     private const int DEFAULT_LIMIT = 100;
 
     /**
+     * Linked products whose City/Region changed in this run and were flagged
+     * for the feature re-assignment update_products performs.
+     */
+    private int $flaggedForFeatures = 0;
+
+    /**
      * @return list<string>
      */
     #[\Override]
@@ -113,6 +119,9 @@ class GeocodeHotelsCommand extends AbstractSyncCommand
         $this->output('Re-resolving stored City/Region for the geocoded hotels...');
         $reResolved = $this->reResolveLocations();
         $this->output("Locations refreshed: {$reResolved}");
+        if ($this->flaggedForFeatures > 0) {
+            $this->output("{$this->flaggedForFeatures} linked product(s) flagged for feature refresh — update_products re-assigns City/Region (schedule it, or run it now).");
+        }
 
         return [
             'success' => !$stats['aborted'],
@@ -121,6 +130,7 @@ class GeocodeHotelsCommand extends AbstractSyncCommand
                 'empty' => $stats['empty'],
                 'remaining' => $remaining,
                 're_resolved' => $reResolved,
+                'flagged_for_features' => $this->flaggedForFeatures,
                 'aborted' => $stats['aborted'],
             ],
         ];
@@ -191,7 +201,7 @@ class GeocodeHotelsCommand extends AbstractSyncCommand
         $destRepo->loadParentLookup();
 
         $rows = TypeCoerce::toRowList(db_get_array(
-            "SELECT hotel_id, destination_id, destination_name, region_id, region_name,
+            "SELECT hotel_id, product_id, destination_id, destination_name, region_id, region_name,
                     address_city, geo_city, geo_region, location_source
              FROM ?:sphinx_hotels
              WHERE geocoded_at IS NOT NULL
@@ -232,6 +242,14 @@ class GeocodeHotelsCommand extends AbstractSyncCommand
 
             if ($set === []) {
                 continue;
+            }
+
+            // Carry the change through to the PRODUCT features via the flag
+            // update_products already consumes — see BackfillHotelLocations.
+            $locationChanged = isset($set['destination_name']) || isset($set['region_name']);
+            if ($locationChanged && TypeCoerce::toInt($row['product_id'] ?? 0) > 0) {
+                $set['product_needs_update'] = 'Y';
+                $this->flaggedForFeatures++;
             }
 
             db_query(

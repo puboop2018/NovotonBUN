@@ -101,7 +101,8 @@ final class BackfillHotelLocationsCommandTest extends TestCase
 
         self::assertTrue($result['success']);
         self::assertSame(
-            ['scanned' => 4, 'updated' => 2, 'no_destination_id' => 1, 'unresolved' => 1],
+            ['scanned' => 4, 'updated' => 2, 'flagged_for_features' => 0,
+                'no_destination_id' => 1, 'unresolved' => 1],
             $result['stats'],
         );
 

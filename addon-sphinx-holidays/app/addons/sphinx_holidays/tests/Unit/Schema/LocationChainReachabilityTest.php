@@ -1,0 +1,121 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Tygh\Addons\SphinxHolidays\Tests\Unit\Schema;
+
+use PHPUnit\Framework\TestCase;
+
+/**
+ * Pins the City/Region chain end to end: resolve → store → PRODUCT FEATURE,
+ * and the admin's ability to run and verify it.
+ *
+ * Three gaps this locks shut, all found by auditing the shipped ladder:
+ *
+ *  1. The repair jobs wrote the hotel row but never flagged the product, so a
+ *     corrected city never reached the Oraș/Regiune features. No new cron was
+ *     added — `update_products` already re-assigns features for hotels
+ *     flagged `product_needs_update='Y'`, and `upsertBatch` already flags that
+ *     same event during sync; the two direct-UPDATE commands were simply
+ *     bypassing it.
+ *  2. The repair chain had no Run buttons: `geocode_hotels` was absent from
+ *     `$cron_urls`, and `reassign_features` / `backfill_hotel_locations` had
+ *     URLs but no dashboard rows. Production remedies must be reachable from
+ *     the addon.
+ *  3. The grid's City column showed the RAW API address city — precisely the
+ *     value the ladder demotes — so the fix could not be verified there.
+ */
+final class LocationChainReachabilityTest extends TestCase
+{
+    private static function src(string $rel): string
+    {
+        return (string) file_get_contents(dirname(__DIR__, 3) . '/' . $rel);
+    }
+
+    private static function design(string $rel): string
+    {
+        return (string) file_get_contents(dirname(__DIR__, 6) . '/design/' . $rel);
+    }
+
+    public function testBothLocationRepairsFlagTheProductForFeatureRefresh(): void
+    {
+        foreach ([
+            'src/Cron/Commands/BackfillHotelLocationsCommand.php',
+            'src/Cron/Commands/GeocodeHotelsCommand.php',
+        ] as $rel) {
+            $src = self::src($rel);
+            self::assertStringContainsString(
+                "isset(\$set['destination_name']) || isset(\$set['region_name'])",
+                $src,
+                "{$rel} must notice a location change",
+            );
+            self::assertStringContainsString(
+                "\$set['product_needs_update'] = 'Y';",
+                $src,
+                "{$rel} must flag the linked product so update_products re-assigns features",
+            );
+            // Only linked products — flagging an unlinked hotel is noise.
+            self::assertStringContainsString("\$row['product_id'] ?? 0) > 0", $src, $rel);
+            // The row must actually carry product_id for that guard to work.
+            self::assertStringContainsString('product_id', $src, $rel);
+        }
+    }
+
+    public function testFeatureReassignmentStaysInUpdateProductsRatherThanBeingDuplicated(): void
+    {
+        // Deliberate architecture: the repair jobs never call assignAll
+        // themselves (that would duplicate the update path and run heavy
+        // per-product writes inside a rate-limited geocode loop).
+        foreach ([
+            'src/Cron/Commands/BackfillHotelLocationsCommand.php',
+            'src/Cron/Commands/GeocodeHotelsCommand.php',
+        ] as $rel) {
+            self::assertStringNotContainsString('assignAll(', self::src($rel), $rel);
+        }
+
+        // …and the consumer of the flag still does the assignment.
+        $update = self::src('src/Cron/Commands/UpdateProductsCommand.php');
+        self::assertStringContainsString("product_needs_update = 'Y'", $update);
+        self::assertStringContainsString('assignAll(', $update);
+    }
+
+    public function testTheRepairChainHasRunButtons(): void
+    {
+        $controller = self::src('controllers/backend/sphinx_holidays.php');
+        self::assertStringContainsString("'geocode_hotels' =>", $controller);
+
+        $tpl = self::design('backend/templates/addons/sphinx_holidays/views/sphinx_holidays/manage.tpl');
+        foreach (['backfill_hotel_locations', 'geocode_hotels', 'reassign_features'] as $mode) {
+            self::assertStringContainsString('{$cron_urls.' . $mode . '}', $tpl, "no dashboard row for {$mode}");
+        }
+        // The geocode row offers the batch/backlog/redo variants.
+        self::assertStringContainsString('&amp;limit=100', $tpl);
+        self::assertStringContainsString('&amp;status=1', $tpl);
+    }
+
+    public function testGridShowsTheResolvedLocationNotTheRawAddress(): void
+    {
+        $tpl = self::design('backend/templates/addons/sphinx_holidays/views/sphinx_holidays/hotels.tpl');
+
+        // City column reads the resolved value first, address only as fallback.
+        self::assertStringContainsString('{if $hotel.destination_name}', $tpl);
+        self::assertStringContainsString('{elseif $hotel.address_city}', $tpl);
+        // Region column exists at all.
+        self::assertStringContainsString('{$hotel.region_name|default:"-"|escape:html}', $tpl);
+        // Provenance badge for every rung.
+        foreach ([
+            'sphinx_holidays.location_source_tree',
+            'sphinx_holidays.location_source_address',
+            'sphinx_holidays.location_source_geocode',
+        ] as $key) {
+            self::assertStringContainsString($key, $tpl);
+        }
+        // The bulk bar spans the widened row (checkbox + 11 columns).
+        self::assertStringContainsString('<th colspan="11">', $tpl);
+
+        // Both new columns are sortable, which requires the allowlist entries.
+        $repo = self::src('src/Repository/HotelAdminListingRepository.php');
+        self::assertStringContainsString("'destination_name' => 'h.destination_name'", $repo);
+        self::assertStringContainsString("'region_name' => 'h.region_name'", $repo);
+    }
+}

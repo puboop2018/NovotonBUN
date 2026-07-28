@@ -606,6 +606,7 @@ if ($mode === 'manage') {
         'reassign_features' => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=reassign_features",
         'enrich_hotel_data' => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=enrich_hotel_data",
         'backfill_hotel_locations' => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=backfill_hotel_locations",
+        'geocode_hotels' => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=geocode_hotels",
         'sync_images' => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=sync_images",
         'process_image_queue' => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=process_image_queue",
         'sync_and_upload_images' => $base_url . "index.php?dispatch=sphinx_cron.run&access_key={$cron_key}&cron_mode=sync_and_upload_images",
