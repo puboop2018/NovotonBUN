@@ -515,6 +515,23 @@ if ($mode === 'search_hotels') {
 
 // ─── GET handlers ───
 
+if ($mode === 'product_links') {
+    // Which hotel products cannot be booked, and why: a product with no
+    // ?:sphinx_hotels row pointing at it renders as a plain catalog item
+    // (no booking form, no location line). The Relink action on this page
+    // repairs them — it is POST-only, so this page is its home in the admin.
+    $auditor = new \Tygh\Addons\SphinxHolidays\Services\ProductLinkAuditor(
+        Container::getHotelRepository(),
+    );
+    $report = $auditor->report(ConfigProvider::getProductCodePrefix());
+
+    $view->assign('unlinked_sphinx_products', TypeCoerce::toInt($report['total']));
+    $view->assign('unlinked_product_rows', $report['rows']);
+    $view->assign('is_configured', ConfigProvider::isConfigured());
+
+    return [CONTROLLER_STATUS_OK];
+}
+
 if ($mode === 'manage') {
     $destRepo = Container::getDestinationRepository();
     $hotelRepo = Container::getHotelRepository();

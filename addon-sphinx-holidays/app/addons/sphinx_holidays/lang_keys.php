@@ -38,6 +38,41 @@ return [
         'en' => 'Product code prefix',
         'ro' => 'Prefix cod produs',
     ],
+
+    // Product-link audit page (sphinx_holidays.product_links): which hotel
+    // products cannot be booked because no ?:sphinx_hotels row points at them.
+    'sphinx_holidays.product_links' => [
+        'en' => 'Product links',
+        'ro' => 'Legături produse',
+    ],
+    'sphinx_holidays.product_links_description' => [
+        'en' => 'A hotel page shows its booking form only while a synced hotel points at the product. Products listed below are not linked, so they render as plain catalog items. Relink fetches each hotel from the Sphinx API and links it.',
+        'ro' => 'O pagină de hotel afișează formularul de rezervare doar cât timp un hotel sincronizat indică produsul. Produsele de mai jos nu sunt legate, deci se afișează ca produse obișnuite. Relegarea preia fiecare hotel din API-ul Sphinx și îl leagă.',
+    ],
+    'sphinx_holidays.unlinked_products' => [
+        'en' => 'Unlinked products',
+        'ro' => 'Produse nelegate',
+    ],
+    'sphinx_holidays.hotel_id' => [
+        'en' => 'Hotel ID',
+        'ro' => 'ID hotel',
+    ],
+    'sphinx_holidays.all_products_linked' => [
+        'en' => 'Every hotel product is linked to a synced hotel.',
+        'ro' => 'Toate produsele hoteliere sunt legate de un hotel sincronizat.',
+    ],
+    'sphinx_holidays.link_state_missing' => [
+        'en' => 'Hotel not synced',
+        'ro' => 'Hotel nesincronizat',
+    ],
+    'sphinx_holidays.link_state_unlinked' => [
+        'en' => 'Hotel synced, link missing',
+        'ro' => 'Hotel sincronizat, legătură lipsă',
+    ],
+    'sphinx_holidays.link_state_conflict' => [
+        'en' => 'Hotel linked to product [product_id]',
+        'ro' => 'Hotel legat de produsul [product_id]',
+    ],
     'sphinx_holidays.product_code_prefix.tooltip' => [
         'en' => 'Prefix for CS-Cart product codes created from Sphinx hotels (e.g. SPX). The hotel ID is appended to form the full code (e.g. SPX12345).',
         'ro' => 'Prefix pentru codurile de produs CS-Cart create din hoteluri Sphinx (ex. SPX). ID-ul hotelului se adaugă pentru codul complet (ex. SPX12345).',

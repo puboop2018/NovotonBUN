@@ -11,10 +11,11 @@
  * such hotel from the Sphinx API by the id inside its product code and
  * re-insert it with the link.
  *
- * The admin action (sphinx_holidays.relink_products) is POST-only, so it can
- * only be triggered from its button on the Sphinx dashboard. This page is the
- * clickable equivalent for the sandbox, plus the per-product report the admin
- * screen does not show.
+ * PRODUCTION USES THE ADMIN: Sphinx → Product links
+ * (admin.php?dispatch=sphinx_holidays.product_links) shows the same report and
+ * runs the same repair; dev/ ships only in the sandbox. This page exists for
+ * container debugging without an admin session (and works from the CLI), and
+ * it calls the SAME ProductLinkAuditor service so the two cannot drift.
  *
  * WHERE: the fullstore sandbox only — docker/fullstore/docker-compose.yml
  * bind-mounts dev/ at /var/www/html/dev. Refuses non-localhost HTTP requests.
@@ -28,6 +29,7 @@
 use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
 use Tygh\Addons\SphinxHolidays\Services\Container;
 use Tygh\Addons\SphinxHolidays\Services\HotelSyncService;
+use Tygh\Addons\SphinxHolidays\Services\ProductLinkAuditor;
 
 $sr_is_cli = PHP_SAPI === 'cli';
 
@@ -71,69 +73,43 @@ if (!class_exists(Container::class)) {
 
 $sr_prefix = ConfigProvider::getProductCodePrefix();
 
-/**
- * Sphinx-shaped products: the legacy configured prefix + the country-prefixed
- * shape the product factory writes (TR3612). Two letters, so novoton's
- * NVT-prefixed codes never match.
- *
- * @var array<int, array<string, mixed>> $sr_products
- */
-$sr_products = (array) db_get_array(
-    "SELECT p.product_id, p.product_code, d.product AS name,
-            (SELECT h.hotel_id FROM ?:sphinx_hotels h WHERE h.product_id = p.product_id LIMIT 1) AS linked_hotel
-     FROM ?:products p
-     LEFT JOIN ?:product_descriptions d
-            ON d.product_id = p.product_id AND d.lang_code = ?s
-     WHERE p.product_code LIKE ?l OR p.product_code REGEXP ?s
-     ORDER BY p.product_code",
-    defined('CART_LANGUAGE') ? CART_LANGUAGE : 'en',
-    $sr_prefix . '%',
-    '^[A-Z]{2}[0-9]+$'
-);
+// SAME report the admin page renders (Sphinx → Product links) — one
+// implementation, so the sandbox view can never drift from production.
+$sr_report = (new ProductLinkAuditor(Container::getHotelRepository()))->report($sr_prefix);
+$sr_rows = (array) ($sr_report['rows'] ?? []);
 
-$sr_unlinked = [];
-foreach ($sr_products as $sr_row) {
-    if ((string) ($sr_row['linked_hotel'] ?? '') === '') {
-        $sr_unlinked[] = $sr_row;
-    }
-}
-
-sr_line('sphinx-shaped products: ' . count($sr_products)
-    . '   linked: ' . (count($sr_products) - count($sr_unlinked))
-    . '   UNLINKED: ' . count($sr_unlinked));
+sr_line('unlinked sphinx products: ' . (int) ($sr_report['total'] ?? 0));
 sr_line('(unlinked = no ?:sphinx_hotels row points at the product → no booking form on its page)');
 sr_line();
 
-if ($sr_unlinked !== []) {
+$sr_states = [
+    'missing' => 'hotel not synced (relink fetches it from the API)',
+    'unlinked' => 'hotel synced, link missing (also heals on first product-page view)',
+    'linked_to_other' => 'hotel linked to ANOTHER product (inspect manually)',
+];
+
+if ($sr_rows !== []) {
     sr_line('== unlinked products ==');
-    foreach ($sr_unlinked as $sr_row) {
-        $sr_code = (string) ($sr_row['product_code'] ?? '');
-        $sr_hotelId = str_starts_with($sr_code, $sr_prefix)
-            ? substr($sr_code, strlen($sr_prefix))
-            : (string) preg_replace('/^[A-Z]{2}/', '', $sr_code);
-        // A row may exist but point elsewhere (or nowhere) — say which.
-        $sr_rowState = db_get_field(
-            'SELECT COALESCE(product_id, 0) FROM ?:sphinx_hotels WHERE hotel_id = ?s LIMIT 1',
-            $sr_hotelId
-        );
-        $sr_state = $sr_rowState === null
-            ? 'no hotel row (relink fetches it from the API)'
-            : ((int) $sr_rowState === 0
-                ? 'hotel row exists, unlinked (heals on first product-page view too)'
-                : 'hotel row linked to product ' . (int) $sr_rowState . ' (CONFLICT — inspect manually)');
-        sr_line('  ' . str_pad($sr_code, 12) . ' product ' . str_pad((string) ($sr_row['product_id'] ?? ''), 6)
-            . ' hotel ' . str_pad($sr_hotelId, 10) . $sr_state);
+    foreach ($sr_rows as $sr_row) {
+        $sr_state = (string) ($sr_row['state'] ?? '');
+        $sr_note = $sr_states[$sr_state] ?? $sr_state;
+        if ($sr_state === 'linked_to_other') {
+            $sr_note .= ' → product ' . (int) ($sr_row['linked_product_id'] ?? 0);
+        }
+        sr_line('  ' . str_pad((string) ($sr_row['product_code'] ?? ''), 12)
+            . ' product ' . str_pad((string) ($sr_row['product_id'] ?? ''), 6)
+            . ' hotel ' . str_pad((string) ($sr_row['hotel_id'] ?? ''), 10) . $sr_note);
         sr_line('  ' . str_pad('', 12) . (string) ($sr_row['name'] ?? ''));
     }
     sr_line();
 }
 
 if (!$sr_force) {
-    sr_line($sr_unlinked === []
+    sr_line($sr_rows === []
         ? 'VERDICT: every sphinx-shaped product is linked. If a hotel page still lacks the'
             . "\nbooking form, clear var/cache and hard-refresh (Ctrl+F5)."
         : 'Re-run with ?force=1 (or CLI arg "force") to fetch the missing hotels from the'
-            . "\nSphinx API and link them. Same action as the dashboard's Relink button.");
+            . "\nSphinx API and link them — same repair as the admin's Sphinx → Product links page.");
     exit;
 }
 

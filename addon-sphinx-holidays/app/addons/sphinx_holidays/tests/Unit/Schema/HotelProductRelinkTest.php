@@ -46,6 +46,64 @@ final class HotelProductRelinkTest extends TestCase
         self::assertStringContainsString('SELECT hotel_id, product_id, name', $src);
     }
 
+    public function testAdminCarriesTheAuditPageAndItsRepair(): void
+    {
+        // Production stores never get dev/ (sandbox bind-mount only), so the
+        // report AND the repair must live in the addon's admin.
+        $controller = (string) file_get_contents(
+            dirname(__DIR__, 3) . '/controllers/backend/sphinx_holidays.php',
+        );
+        self::assertStringContainsString("if (\$mode === 'product_links') {", $controller);
+        self::assertStringContainsString('ProductLinkAuditor(', $controller);
+        self::assertStringContainsString("assign('unlinked_product_rows'", $controller);
+
+        $page = (string) file_get_contents(
+            dirname(__DIR__, 6)
+            . '/design/backend/templates/addons/sphinx_holidays/views/sphinx_holidays/product_links.tpl',
+        );
+        // The POST-only repair is reachable from the page itself…
+        self::assertStringContainsString('value="sphinx_holidays.relink_products"', $page);
+        self::assertStringContainsString('method="post"', $page);
+        // …and every row says WHY it is unbookable.
+        foreach (['link_state_missing', 'link_state_unlinked', 'link_state_conflict'] as $state) {
+            self::assertStringContainsString('sphinx_holidays.' . $state, $page);
+        }
+
+        // Dashboard links to it unconditionally — a store with zero synced
+        // hotels must still be able to open the audit.
+        $dashboard = (string) file_get_contents(
+            dirname(__DIR__, 6)
+            . '/design/backend/templates/addons/sphinx_holidays/views/sphinx_holidays/manage.tpl',
+        );
+        self::assertStringContainsString('"sphinx_holidays.product_links"|fn_url', $dashboard);
+
+        // Labels seeded (runtime seeder + .po parity enforced addon-wide).
+        $langKeys = require dirname(__DIR__, 3) . '/lang_keys.php';
+        foreach ([
+            'sphinx_holidays.product_links',
+            'sphinx_holidays.unlinked_products',
+            'sphinx_holidays.link_state_missing',
+            'sphinx_holidays.link_state_conflict',
+        ] as $key) {
+            self::assertArrayHasKey($key, $langKeys);
+        }
+    }
+
+    public function testAuditorNamesEachUnlinkedProductsState(): void
+    {
+        $src = (string) file_get_contents(
+            dirname(__DIR__, 3) . '/src/Services/ProductLinkAuditor.php',
+        );
+        // Three distinct diagnoses — "missing" needs an API fetch, "unlinked"
+        // also self-heals on view, "linked_to_other" needs a human.
+        self::assertStringContainsString("'missing'", $src);
+        self::assertStringContainsString("'unlinked'", $src);
+        self::assertStringContainsString("'linked_to_other'", $src);
+        // Code→hotel-id derivation shared with the relink pass.
+        self::assertStringContainsString('public static function hotelIdFromCode(', $src);
+        self::assertStringContainsString("preg_replace('/^[A-Z]{2}/', '', \$code)", $src);
+    }
+
     public function testRelinkButtonIsGatedOnRELINKABLEProducts(): void
     {
         // The button used to render only when countOrphanedProducts() > 0 —

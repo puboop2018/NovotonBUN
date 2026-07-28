@@ -597,6 +597,16 @@ class HotelRepository implements HotelRepositoryInterface
     }
 
     /**
+     * The unlinked sphinx-shaped products themselves (admin audit page).
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function findUnlinkedProducts(string $legacyPrefix, int $limit = 500): array
+    {
+        return $this->stats->findUnlinkedProducts($legacyPrefix, $limit);
+    }
+
+    /**
      * Update image URL and images JSON for a hotel.
      *
      * Used when fresh image data is fetched from the API during image sync.

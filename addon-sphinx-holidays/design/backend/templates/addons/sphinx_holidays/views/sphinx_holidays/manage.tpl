@@ -177,6 +177,11 @@
                 <i class="icon-building"></i> {__("sphinx_holidays.hotels")}
             </a>
         {/if}
+        {* Always reachable: a store whose hotel rows were lost shows 0
+           unlinked here only until the audit page counts them. *}
+        <a href="{"sphinx_holidays.product_links"|fn_url}" class="btn">
+            <i class="icon-link"></i> {__("sphinx_holidays.product_links")}{if $unlinked_sphinx_products > 0} ({$unlinked_sphinx_products}){/if}
+        </a>
     </div>
 
     {* ── Cron Commands ── *}

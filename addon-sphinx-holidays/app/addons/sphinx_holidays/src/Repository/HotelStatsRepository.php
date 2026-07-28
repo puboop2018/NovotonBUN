@@ -173,6 +173,34 @@ class HotelStatsRepository
     }
 
     /**
+     * The unlinked sphinx-shaped products themselves (same predicate as
+     * countUnlinkedProducts), newest code order, for the admin audit page.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function findUnlinkedProducts(string $legacyPrefix, int $limit = 500): array
+    {
+        $rows = db_get_array(
+            'SELECT p.product_id, p.product_code, d.product AS name
+             FROM ?:products p
+             LEFT JOIN ?:product_descriptions d
+                    ON d.product_id = p.product_id AND d.lang_code = ?s
+             WHERE (p.product_code LIKE ?l OR p.product_code REGEXP ?s)
+             AND NOT EXISTS (
+                 SELECT 1 FROM ?:sphinx_hotels h WHERE h.product_id = p.product_id
+             )
+             ORDER BY p.product_code
+             LIMIT ?i',
+            defined('CART_LANGUAGE') ? CART_LANGUAGE : 'en',
+            $legacyPrefix . '%',
+            '^[A-Z]{2}[0-9]+$',
+            $limit,
+        );
+
+        return TypeCoerce::toRowList($rows);
+    }
+
+    /**
      * Get distinct classification values present in the data.
      *
      * @return list<int>
