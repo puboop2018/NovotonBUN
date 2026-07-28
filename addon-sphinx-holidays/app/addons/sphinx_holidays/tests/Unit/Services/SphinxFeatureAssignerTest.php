@@ -175,6 +175,62 @@ class SphinxFeatureAssignerTest extends TestCase
         $this->assigner->assignAll(42, ['region_id' => '55', 'region_name' => 'Sunny Beach']);
     }
 
+    public function testAssignRegionFallsBackToRegionNameWhenMappingUnresolved(): void
+    {
+        // Field case: hotels whose region_id was never whitelisted kept an
+        // empty Regiune feature although sphinx_hotels.region_name is
+        // populated. The unmapped id is still tracked, then the name is
+        // assigned as a plain location variant (novoton parity).
+        Registry::set('addons.travel_core.feature_id_region', 20);
+        $this->repo->method('findByAlias')->willReturn(null);
+        $this->repo->expects($this->atLeastOnce())->method('trackUnmapped');
+
+        // 1st db_get_field: variant-by-name lookup → exists (7);
+        // 2nd: currently assigned variant → differs (0) → DELETE + INSERT.
+        $calls = 0;
+        DbStub::$getField = static function () use (&$calls): int {
+            return ++$calls === 1 ? 7 : 0;
+        };
+        DbStub::$getFields = static fn (): array => ['en'];
+
+        $queries = [];
+        DbStub::$query = static function (string $query) use (&$queries): int {
+            $queries[] = $query;
+            return 1;
+        };
+
+        $this->assigner->assignAll(42, ['region_id' => '55', 'region_name' => 'Riviera Albaneza']);
+
+        $this->assertCount(2, $queries);
+        $this->assertStringContainsString('DELETE FROM', $queries[0]);
+        $this->assertStringContainsString('INSERT INTO', $queries[1]);
+    }
+
+    public function testAssignRegionAssignsByNameWhenRegionIdMissing(): void
+    {
+        // No region_id at all → nothing to resolve or track, but the name
+        // still lands as a location variant.
+        Registry::set('addons.travel_core.feature_id_region', 20);
+        $this->repo->expects($this->never())->method('findByAlias');
+        $this->repo->expects($this->never())->method('trackUnmapped');
+
+        $calls = 0;
+        DbStub::$getField = static function () use (&$calls): int {
+            return ++$calls === 1 ? 7 : 0;
+        };
+        DbStub::$getFields = static fn (): array => ['en'];
+
+        $queries = [];
+        DbStub::$query = static function (string $query) use (&$queries): int {
+            $queries[] = $query;
+            return 1;
+        };
+
+        $this->assigner->assignAll(42, ['region_name' => 'Riviera']);
+
+        $this->assertCount(2, $queries);
+    }
+
     // ── assignAll: per-hotel cache reset ────────────────────────────────────
 
     public function testAssignAllResetsResolvedFacilitiesCacheBetweenCalls(): void

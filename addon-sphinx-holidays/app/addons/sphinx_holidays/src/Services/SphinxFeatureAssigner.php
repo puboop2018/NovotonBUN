@@ -242,38 +242,44 @@ class SphinxFeatureAssigner implements SphinxFeatureAssignerInterface
     }
 
     /**
+     * Primary path: resolve region_id through FeatureMapper (seeded from the
+     * Destination Whitelist) so curated canonical variants win when mapped.
+     * Every dead end of that path (no region_id, unresolved mapping, no
+     * usable feature/variant) falls back to a plain name-based variant from
+     * region_name — the sphinx_hotels row carries the name even when the id
+     * was never whitelisted, and Regiune must not stay empty because of it.
+     *
      * @param array<string, mixed> $hotel
      */
     private function assignRegion(int $productId, array $hotel): void
     {
+        $regionName = TypeCoerce::toString($hotel['region_name'] ?? '');
         $regionId = TypeCoerce::toString($hotel['region_id'] ?? '');
-        if ($regionId === '' || $regionId === '0') {
-            return;
+
+        if ($regionId !== '' && $regionId !== '0') {
+            $mapping = FeatureMapper::resolve(self::API_SOURCE, 'region', $regionId);
+            if ($mapping === null) {
+                // Keep the gap visible on the Feature Mappings screen.
+                FeatureMapper::handleUnmapped(self::API_SOURCE, 'region', $regionId, $regionName);
+            } else {
+                $featureId = TypeCoerce::toInt($mapping['cscart_feature_id'] ?? 0);
+                if ($featureId <= 0) {
+                    $featureId = $this->getFeatureId('region');
+                }
+
+                $variantId = TypeCoerce::toInt($mapping['cscart_variant_id'] ?? 0);
+                if ($featureId > 0 && $variantId <= 0) {
+                    $variantId = $this->autoCreateVariant($featureId, $mapping);
+                }
+
+                if ($featureId > 0 && $variantId > 0) {
+                    $this->assignSelectBoxValue($productId, $featureId, $variantId);
+                    return;
+                }
+            }
         }
 
-        // Resolve through FeatureMapper (seeded from Destination Whitelist)
-        $mapping = FeatureMapper::resolve(self::API_SOURCE, 'region', $regionId);
-        if ($mapping === null) {
-            FeatureMapper::handleUnmapped(self::API_SOURCE, 'region', $regionId, TypeCoerce::toString($hotel['region_name'] ?? ''));
-            return;
-        }
-
-        $featureId = TypeCoerce::toInt($mapping['cscart_feature_id'] ?? 0);
-        if ($featureId <= 0) {
-            $featureId = $this->getFeatureId('region');
-        }
-        if ($featureId <= 0) {
-            return;
-        }
-
-        $variantId = TypeCoerce::toInt($mapping['cscart_variant_id'] ?? 0);
-        if ($variantId <= 0) {
-            $variantId = $this->autoCreateVariant($featureId, $mapping);
-        }
-
-        if ($variantId > 0) {
-            $this->assignSelectBoxValue($productId, $featureId, $variantId);
-        }
+        $this->assignLocationFeature($productId, 'region', $regionName);
     }
 
     /**

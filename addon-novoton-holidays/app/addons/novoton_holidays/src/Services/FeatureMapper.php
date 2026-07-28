@@ -166,6 +166,42 @@ class FeatureMapper
      * Uses travel_core's getFeatureId() to resolve the CS-Cart feature,
      * then fetches the description from product_features_descriptions.
      */
+    /**
+     * Assign a location feature (city/region) by its plain NAME — sphinx
+     * parity (SphinxFeatureAssigner::assignLocationFeature). Locations are
+     * open-ended proper nouns, so they bypass the canonical mapping: the
+     * variant is looked up by name on the configured feature and created
+     * when missing. No-op when the feature id is not configured.
+     */
+    public function assignLocationByName(int $productId, string $featureType, string $locationName): bool
+    {
+        $locationName = trim($locationName);
+        if ($locationName === '') {
+            return false;
+        }
+
+        $featureId = CoreFeatureMapper::getFeatureId($featureType);
+        if ($featureId <= 0) {
+            return false;
+        }
+
+        $variantId = TypeCoerce::toInt(db_get_field(
+            'SELECT pf.variant_id FROM ?:product_feature_variant_descriptions pf
+             WHERE pf.variant = ?s AND pf.lang_code = ?s
+             AND pf.variant_id IN (SELECT variant_id FROM ?:product_feature_variants WHERE feature_id = ?i)
+             LIMIT 1',
+            $locationName,
+            CART_LANGUAGE,
+            $featureId,
+        ));
+
+        if ($variantId <= 0) {
+            $variantId = $this->createVariant($featureId, $locationName, $locationName);
+        }
+
+        return $variantId > 0 && $this->assignSelectBox($productId, $featureId, $variantId);
+    }
+
     public function getFeatureName(string $featureType, string $langCode = 'en'): ?string
     {
         // Map Novoton feature types to travel_core setting keys
