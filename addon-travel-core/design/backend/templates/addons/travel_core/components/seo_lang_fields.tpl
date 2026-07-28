@@ -42,7 +42,7 @@
 </div>
 
 <p class="muted seo-lang-fallback-hint">
-    {__("travel_core.seo_per_language_hint")|default:"Each storefront language has its own template set. A language whose template was never saved falls back to the shared legacy template, then to the built-in default."}
+    {__("travel_core.seo_per_language_hint")|default:"Each storefront language has its own template set. A language whose template was never saved uses the built-in default."}
 </p>
 
 {* ── One section per storefront language ── *}

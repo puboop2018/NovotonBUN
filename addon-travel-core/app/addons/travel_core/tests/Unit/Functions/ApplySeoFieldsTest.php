@@ -90,9 +90,10 @@ namespace Tygh\Addons\TravelCore\Tests\Unit\Functions {
 
         public function testStoredSettingTakesPrecedenceOverDefault(): void
         {
-            // An admin-saved page-title template must win over the built-in default.
+            // An admin-saved per-language template must win over the built-in
+            // default (implicit language = CART_LANGUAGE, 'en' in this suite).
             Registry::set('addons.unitseo', [
-                'seo_page_title' => 'Custom {{name}} Title',
+                'seo_page_title__en' => 'Custom {{name}} Title',
             ]);
 
             $result = fn_travel_core_apply_seo_fields('unitseo', $this->placeholders, 0, null);
@@ -126,33 +127,34 @@ namespace Tygh\Addons\TravelCore\Tests\Unit\Functions {
             $this->assertSame('Book Edart Hotel in Durres, Albania.', $en['meta_description'] ?? null);
         }
 
-        public function testStoredSharedTemplateBeatsTheLanguageDefault(): void
+        public function testStoredSharedTemplateIsIgnored(): void
         {
-            // An admin-saved SHARED (language-less) template represents an
-            // explicit choice — it must win over the addon's built-in __ro
-            // default, preserving pre-per-language behaviour exactly.
+            // Fresh-addon policy: language-less STORED templates are not part
+            // of the resolution chain — only the per-language keys are admin
+            // truth. A stray shared value must change nothing.
             Registry::set('addons.unitseo', [
                 'seo_meta_description' => 'Shared {{name}} copy.',
             ]);
 
             $ro = fn_travel_core_apply_seo_fields('unitseo', $this->placeholders, 0, null, 'ro');
+            $en = fn_travel_core_apply_seo_fields('unitseo', $this->placeholders, 0, null, 'en');
 
-            $this->assertSame('Shared Edart Hotel copy.', $ro['meta_description'] ?? null);
+            $this->assertSame('Rezervă Edart Hotel în Durres, Albania.', $ro['meta_description'] ?? null);
+            $this->assertSame('Book Edart Hotel in Durres, Albania.', $en['meta_description'] ?? null);
         }
 
-        public function testStoredLanguageOverrideWinsOverEverything(): void
+        public function testStoredLanguageValueWinsForItsLanguageOnly(): void
         {
             Registry::set('addons.unitseo', [
-                'seo_meta_description'       => 'Shared {{name}} copy.',
-                'seo_meta_description__ro'   => 'RO specific: {{name}}.',
+                'seo_meta_description__ro' => 'RO specific: {{name}}.',
             ]);
 
             $ro = fn_travel_core_apply_seo_fields('unitseo', $this->placeholders, 0, null, 'ro');
             $en = fn_travel_core_apply_seo_fields('unitseo', $this->placeholders, 0, null, 'en');
 
             $this->assertSame('RO specific: Edart Hotel.', $ro['meta_description'] ?? null);
-            // The override targets 'ro' only — 'en' still uses the shared value.
-            $this->assertSame('Shared Edart Hotel copy.', $en['meta_description'] ?? null);
+            // The value targets 'ro' only — 'en' keeps its built-in default.
+            $this->assertSame('Book Edart Hotel in Durres, Albania.', $en['meta_description'] ?? null);
         }
 
         public function testDisabledFieldToggleSkipsRendering(): void

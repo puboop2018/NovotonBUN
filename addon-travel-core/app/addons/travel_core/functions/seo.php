@@ -193,24 +193,26 @@ function _travel_core_seo_field_map(): array
 /**
  * Resolve the template pattern for one field in one language.
  *
- * Templates are per-language: an admin-saved language override
- * (seo_page_title__ro) wins, then the language-less legacy/shared setting,
- * then the addon's built-in per-language default (seo_page_title__ro in
- * fn_<addon>_seo_defaults()), then the built-in base default. This is what
- * lets RO and EN storefronts carry DIFFERENT copy while stores that never
- * saved per-language templates keep exactly their old behaviour.
+ * Templates are per-language ONLY: the admin-saved language value
+ * (seo_page_title__ro) wins, then the addon's built-in per-language default
+ * (seo_page_title__ro in fn_<addon>_seo_defaults()), then the built-in base
+ * default. Language-less STORED settings are deliberately not consulted —
+ * the per-language keys are the single source of admin truth.
  *
  * @param array<mixed> $settings
  * @param array<mixed> $defaults
  */
 function _travel_core_seo_template_for(array $settings, array $defaults, string $templateKey, string $langCode): string
 {
-    foreach ([$settings, $defaults] as $source) {
-        foreach ([$templateKey . '__' . $langCode, $templateKey] as $key) {
-            $value = $source[$key] ?? '';
-            if (is_string($value) && $value !== '') {
-                return $value;
-            }
+    $stored = $settings[$templateKey . '__' . $langCode] ?? '';
+    if (is_string($stored) && $stored !== '') {
+        return $stored;
+    }
+
+    foreach ([$templateKey . '__' . $langCode, $templateKey] as $key) {
+        $value = $defaults[$key] ?? '';
+        if (is_string($value) && $value !== '') {
+            return $value;
         }
     }
 

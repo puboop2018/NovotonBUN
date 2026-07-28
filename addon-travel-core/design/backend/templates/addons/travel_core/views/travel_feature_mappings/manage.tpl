@@ -89,11 +89,16 @@
                         {/if}
                     </div>
 
-                    {* Provider badges *}
+                    {* Provider (source) badges — full names, same markup as the
+                       list view's Sources column. The old one-letter pill
+                       ({$src|upper|truncate:1:"":true}) rendered EMPTY under
+                       Smarty 5, hiding the sources entirely. *}
                     {if $stat.providers}
                         <div style="margin-top: 6px;">
                             {foreach from=$stat.providers|explode:"," item=src}
-                                <span class="label {if $src == 'sphinx'}label-info{elseif $src == 'novoton'}label-warning{else}label-default{/if}" style="font-size: 10px;">{$src|upper|truncate:1:"":true}</span>
+                                {if $src|trim}
+                                <span class="label {if $src|trim == 'sphinx'}label-info{elseif $src|trim == 'novoton'}label-warning{else}label-default{/if}" style="font-size: 9px;">{$src|trim|escape:'html'}</span>
+                                {/if}
                             {/foreach}
                         </div>
                     {/if}

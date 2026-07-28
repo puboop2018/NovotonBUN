@@ -867,8 +867,8 @@ msgid "Unchecked fields are skipped for every language."
 msgstr "Câmpurile debifate sunt omise pentru toate limbile."
 
 msgctxt "Languages::travel_core.seo_per_language_hint"
-msgid "Each storefront language has its own template set. A language whose template was never saved falls back to the shared legacy template, then to the built-in default."
-msgstr "Fiecare limbă a magazinului are propriul set de șabloane. O limbă fără șablon salvat folosește șablonul comun moștenit, apoi valoarea implicită."
+msgid "Each storefront language has its own template set. A language whose template was never saved uses the built-in default."
+msgstr "Fiecare limbă a magazinului are propriul set de șabloane. O limbă fără șablon salvat folosește valoarea implicită."
 
 msgctxt "Languages::travel_core.location_show_map"
 msgid "Location - show map"

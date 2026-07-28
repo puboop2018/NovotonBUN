@@ -38,8 +38,11 @@ final class SeoTemplatesPerLanguageTest extends TestCase
             'function fn_travel_core_apply_seo_fields(string $addonName, array $placeholders, int $productId = 0, ?string $hotelId = null, string $langCode = \'\'): array',
             $src,
         );
-        // Resolution chain lives in one helper…
+        // Resolution chain lives in one helper — stored values are read for
+        // the LANGUAGE KEY ONLY (no language-less stored fallback; fresh-addon
+        // policy), defaults fall back __<lang> → base.
         self::assertStringContainsString('function _travel_core_seo_template_for(', $src);
+        self::assertStringContainsString("\$stored = \$settings[\$templateKey . '__' . \$langCode] ?? '';", $src);
         self::assertStringContainsString("[\$templateKey . '__' . \$langCode, \$templateKey]", $src);
         // …and fill-if-empty inspects the RENDERED language's own values.
         self::assertStringContainsString('$productId,

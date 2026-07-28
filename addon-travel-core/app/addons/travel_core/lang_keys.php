@@ -97,8 +97,8 @@ return [
         'ro' => 'Câmpurile debifate sunt omise pentru toate limbile.',
     ],
     'travel_core.seo_per_language_hint' => [
-        'en' => 'Each storefront language has its own template set. A language whose template was never saved falls back to the shared legacy template, then to the built-in default.',
-        'ro' => 'Fiecare limbă a magazinului are propriul set de șabloane. O limbă fără șablon salvat folosește șablonul comun moștenit, apoi valoarea implicită.',
+        'en' => 'Each storefront language has its own template set. A language whose template was never saved uses the built-in default.',
+        'ro' => 'Fiecare limbă a magazinului are propriul set de șabloane. O limbă fără șablon salvat folosește valoarea implicită.',
     ],
 
     // Shared hotel-identity header (components/hotel_header.tpl) — one key
