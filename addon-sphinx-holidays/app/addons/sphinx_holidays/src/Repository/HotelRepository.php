@@ -62,7 +62,7 @@ class HotelRepository implements HotelRepositoryInterface
      * (36.887069 was stored as 36.89). Do NOT revert to ?d for decimals.
      */
     private const UPSERT_ROW_PLACEHOLDERS = '(?s, ?s, ?i, ?s, ?i, ?s, ?i, ?s, ?s, ?s, ?s, ?s, '
-        . "?s, ?s, ?s, ?s, ?s, ?s, ?s, ?s, ?s, ?s, ?s, ?s, ?s, ?i, 'active', ?s)";
+        . "?s, ?s, ?s, ?s, ?s, ?s, ?s, ?s, ?s, ?s, ?s, ?s, ?s, ?s, ?i, 'active', ?s)";
 
     /**
      * Upsert a batch of hotels (multi-row INSERT ... ON DUPLICATE KEY UPDATE).
@@ -117,6 +117,7 @@ class HotelRepository implements HotelRepositoryInterface
                     TypeCoerce::toString($hotel['website'] ?? ''),
                     TypeCoerce::toString($hotel['address_city'] ?? ''),
                     TypeCoerce::toString($hotel['address_country'] ?? ''),
+                    TypeCoerce::toString($hotel['location_source'] ?? ''),
                     TypeCoerce::toString($hotel['description'] ?? ''),
                     TypeCoerce::toString($hotel['short_description'] ?? ''),
                     TypeCoerce::toString($hotel['image_url'] ?? ''),
@@ -139,7 +140,7 @@ class HotelRepository implements HotelRepositoryInterface
                      destination_id, destination_name, region_id, region_name,
                      country_code, country_name, latitude, longitude,
                      address, phone, email, website,
-                     address_city, address_country,
+                     address_city, address_country, location_source,
                      description, short_description, image_url,
                      images_json, facilities_json, is_adults_only,
                      rating, rating_count,
@@ -183,6 +184,7 @@ class HotelRepository implements HotelRepositoryInterface
                     website = VALUES(website),
                     address_city = VALUES(address_city),
                     address_country = VALUES(address_country),
+                    location_source = VALUES(location_source),
                     description = VALUES(description),
                     short_description = VALUES(short_description),
                     image_url = VALUES(image_url),
@@ -297,6 +299,40 @@ class HotelRepository implements HotelRepositoryInterface
     public function getTotal(): int
     {
         return $this->stats->getTotal();
+    }
+
+    /**
+     * Stored reverse-geocoded locations for a batch of hotels — the last rung
+     * of HotelLocationResolver's ladder.
+     *
+     * They live in their own columns (never written by upsertBatch) precisely
+     * so a re-sync cannot wipe them; the sync reads them back through this
+     * method to keep the ladder complete while enriching.
+     *
+     * @param string[] $hotelIds
+     * @return array<string, array<string, mixed>> hotel_id => {geo_city, geo_region}
+     */
+    public function findGeoLocations(array $hotelIds): array
+    {
+        if ($hotelIds === []) {
+            return [];
+        }
+
+        $rows = self::asRowList(db_get_array(
+            'SELECT hotel_id, geo_city, geo_region FROM ?:sphinx_hotels
+             WHERE hotel_id IN (?a) AND (geo_city IS NOT NULL OR geo_region IS NOT NULL)',
+            $hotelIds,
+        ));
+
+        $byId = [];
+        foreach ($rows as $row) {
+            $id = TypeCoerce::toString($row['hotel_id'] ?? '');
+            if ($id !== '') {
+                $byId[$id] = $row;
+            }
+        }
+
+        return $byId;
     }
 
     /**

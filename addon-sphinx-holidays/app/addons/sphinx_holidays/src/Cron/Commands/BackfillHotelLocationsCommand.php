@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\SphinxHolidays\Cron\Commands;
 
 use Tygh\Addons\SphinxHolidays\Services\Container;
+use Tygh\Addons\SphinxHolidays\Services\HotelLocationResolver;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 /**
@@ -68,11 +69,18 @@ class BackfillHotelLocationsCommand extends AbstractSyncCommand
         $lastId = '';
 
         while (true) {
+            // Rows still missing a location, PLUS rows whose stored city/region
+            // came from a weaker rung than the ladder can now reach (a fresh
+            // geocode, or the type gate rejecting a country name that the old
+            // code had accepted).
             $rows = TypeCoerce::toRowList(db_get_array(
-                "SELECT hotel_id, name, destination_id, destination_name, region_id, region_name
+                "SELECT hotel_id, name, destination_id, destination_name, region_id, region_name,
+                        address_city, geo_city, geo_region, location_source
                  FROM ?:sphinx_hotels
                  WHERE (region_name IS NULL OR region_name = ''
-                        OR destination_name IS NULL OR destination_name = '')
+                        OR destination_name IS NULL OR destination_name = ''
+                        OR location_source IS NULL
+                        OR location_source IN ('address', 'geocode'))
                    AND hotel_id > ?s
                  ORDER BY hotel_id
                  LIMIT ?i",
@@ -104,20 +112,22 @@ class BackfillHotelLocationsCommand extends AbstractSyncCommand
                     continue;
                 }
 
-                $hierarchy = $hierarchyMap[$destId] ?? [];
-                $treeCity = TypeCoerce::toString($hierarchy['city'] ?? '');
-                $treeRegion = TypeCoerce::toString($hierarchy['region'] ?? '');
-                $treeRegionId = TypeCoerce::toInt($hierarchy['region_id'] ?? 0);
+                // Same ladder the sync runs — one decision, two callers.
+                $resolved = HotelLocationResolver::resolve($row, $hierarchyMap[$destId] ?? []);
 
                 $set = [];
-                if ($treeCity !== '' && TypeCoerce::toString($row['destination_name'] ?? '') === '') {
-                    $set['destination_name'] = $treeCity;
+                if ($resolved['city'] !== '' && $resolved['city'] !== TypeCoerce::toString($row['destination_name'] ?? '')) {
+                    $set['destination_name'] = $resolved['city'];
                 }
-                if ($treeRegion !== '' && TypeCoerce::toString($row['region_name'] ?? '') === '') {
-                    $set['region_name'] = $treeRegion;
+                if ($resolved['region'] !== '' && $resolved['region'] !== TypeCoerce::toString($row['region_name'] ?? '')) {
+                    $set['region_name'] = $resolved['region'];
                 }
-                if ($treeRegionId > 0 && TypeCoerce::toInt($row['region_id'] ?? 0) === 0) {
-                    $set['region_id'] = $treeRegionId;
+                if ($resolved['region_id'] > 0 && TypeCoerce::toInt($row['region_id'] ?? 0) !== $resolved['region_id']) {
+                    $set['region_id'] = $resolved['region_id'];
+                }
+                $source = HotelLocationResolver::rowSource($resolved);
+                if ($source !== TypeCoerce::toString($row['location_source'] ?? '')) {
+                    $set['location_source'] = $source;
                 }
 
                 if ($set === []) {
@@ -125,7 +135,9 @@ class BackfillHotelLocationsCommand extends AbstractSyncCommand
                     $this->collectSample(
                         $samples,
                         $row,
-                        "destination_id={$destId} not in the tree, or its parent chain names no region/city",
+                        $resolved['city'] === '' && $resolved['region'] === ''
+                            ? "destination_id={$destId} resolves to a country/continent node and no address or geocode is stored"
+                            : 'already resolved — nothing to change',
                     );
                     continue;
                 }

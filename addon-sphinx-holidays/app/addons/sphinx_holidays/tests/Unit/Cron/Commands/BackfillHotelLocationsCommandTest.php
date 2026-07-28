@@ -86,7 +86,7 @@ final class BackfillHotelLocationsCommandTest extends TestCase
             // both empty → both filled from the tree (+ region_id)
             ['hotel_id' => 'H1', 'name' => 'Fixable', 'destination_id' => 501,
                 'destination_name' => '', 'region_id' => 0, 'region_name' => ''],
-            // city already set → only region filled
+            // stale city → the ladder is authoritative and corrects it
             ['hotel_id' => 'H2', 'name' => 'Partial', 'destination_id' => 501,
                 'destination_name' => 'Kept City', 'region_id' => 0, 'region_name' => ''],
             // no destination_id → unrepairable here
@@ -107,15 +107,17 @@ final class BackfillHotelLocationsCommandTest extends TestCase
 
         self::assertCount(2, $this->updates);
         self::assertSame(
-            ['destination_name' => 'Side', 'region_name' => 'Antalya', 'region_id' => 500],
+            ['destination_name' => 'Side', 'region_name' => 'Antalya', 'region_id' => 500,
+                'location_source' => 'ancestor'],
             $this->updates[0]['params'][0],
-            'H1 gets city + region + region_id from the tree',
+            'H1 gets city from its own node, region from the parent, and the provenance',
         );
         self::assertSame('H1', $this->updates[0]['params'][1]);
         self::assertSame(
-            ['region_name' => 'Antalya', 'region_id' => 500],
+            ['destination_name' => 'Side', 'region_name' => 'Antalya', 'region_id' => 500,
+                'location_source' => 'ancestor'],
             $this->updates[1]['params'][0],
-            'H2 keeps its existing city — only the empty columns are written',
+            'H2 had a stale city — the type-gated ladder overrides it with the tree name',
         );
         self::assertSame('H2', $this->updates[1]['params'][1]);
     }

@@ -267,6 +267,11 @@
                 `website`           VARCHAR(500) DEFAULT NULL COMMENT 'Hotel website URL',
                 `address_city`      VARCHAR(255) DEFAULT NULL COMMENT 'City from the hotel API address',
                 `address_country`   VARCHAR(255) DEFAULT NULL COMMENT 'Country from the hotel API address',
+                `geo_city`          VARCHAR(255) DEFAULT NULL COMMENT 'Reverse-geocoded city (OSM Nominatim) — last rung of the City ladder',
+                `geo_region`        VARCHAR(255) DEFAULT NULL COMMENT 'Reverse-geocoded region/province (OSM Nominatim) — last rung of the Region ladder',
+                `street_address`    VARCHAR(255) DEFAULT NULL COMMENT 'Reverse-geocoded street (OSM Nominatim), approximate',
+                `geocoded_at`       DATETIME DEFAULT NULL COMMENT 'Last reverse-geocode attempt (stamped even when nothing was found)',
+                `location_source`   VARCHAR(20) DEFAULT NULL COMMENT 'Weakest rung that produced City/Region: destination|ancestor|address|geocode',
                 `description`       TEXT DEFAULT NULL,
                 `short_description` TEXT DEFAULT NULL,
                 `image_url`         VARCHAR(500) DEFAULT NULL,
@@ -512,6 +517,41 @@
                 COMMENT 'Array of canonical board codes discovered from cache API'
                 AFTER `facilities_json`;
         </item>
+        <!-- Upgrade: reverse-geocoding + location provenance on sphinx_hotels.
+             The City/Region ladder (HotelLocationResolver) reads geo_city /
+             geo_region as its last rung; location_source records which rung
+             actually answered. -->
+        <item for="upgrade">
+            ALTER TABLE `?:sphinx_hotels`
+                ADD COLUMN `geo_city` VARCHAR(255) DEFAULT NULL
+                COMMENT 'Reverse-geocoded city (OSM Nominatim) — last rung of the City ladder'
+                AFTER `address_country`;
+        </item>
+        <item for="upgrade">
+            ALTER TABLE `?:sphinx_hotels`
+                ADD COLUMN `geo_region` VARCHAR(255) DEFAULT NULL
+                COMMENT 'Reverse-geocoded region/province (OSM Nominatim) — last rung of the Region ladder'
+                AFTER `geo_city`;
+        </item>
+        <item for="upgrade">
+            ALTER TABLE `?:sphinx_hotels`
+                ADD COLUMN `street_address` VARCHAR(255) DEFAULT NULL
+                COMMENT 'Reverse-geocoded street (OSM Nominatim), approximate'
+                AFTER `geo_region`;
+        </item>
+        <item for="upgrade">
+            ALTER TABLE `?:sphinx_hotels`
+                ADD COLUMN `geocoded_at` DATETIME DEFAULT NULL
+                COMMENT 'Last reverse-geocode attempt (stamped even when nothing was found)'
+                AFTER `street_address`;
+        </item>
+        <item for="upgrade">
+            ALTER TABLE `?:sphinx_hotels`
+                ADD COLUMN `location_source` VARCHAR(20) DEFAULT NULL
+                COMMENT 'Weakest rung that produced City/Region: destination|ancestor|address|geocode'
+                AFTER `geocoded_at`;
+        </item>
+
         <!-- Upgrade: add full_path column to existing sphinx_destinations -->
         <item for="upgrade">
             ALTER TABLE `?:sphinx_destinations`

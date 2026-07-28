@@ -278,8 +278,21 @@ class HotelSyncService extends AbstractSyncService implements HotelSyncServiceIn
                     $stats['total']++;
                 }
 
-                // Batch-resolve country/region/city from destination hierarchy
-                $pageBatch = $this->rowMapper->enrichFromHierarchy($pageBatch, $countryCode);
+                // Batch-resolve country/region/city from destination hierarchy.
+                // Stored geocoded values ride along as the ladder's last rung —
+                // without them a re-sync would blank a geocoded city.
+                $batchIds = [];
+                foreach ($pageBatch as $row) {
+                    $bid = TypeCoerce::toString($row['hotel_id'] ?? '');
+                    if ($bid !== '') {
+                        $batchIds[] = $bid;
+                    }
+                }
+                $pageBatch = $this->rowMapper->enrichFromHierarchy(
+                    $pageBatch,
+                    $countryCode,
+                    $this->hotelRepo->findGeoLocations($batchIds),
+                );
 
                 // Upsert in sub-batches
                 foreach (array_chunk($pageBatch, self::UPSERT_BATCH_SIZE) as $upsertChunk) {

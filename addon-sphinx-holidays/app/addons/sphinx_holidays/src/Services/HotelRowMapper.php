@@ -105,15 +105,22 @@ class HotelRowMapper
      * destination hierarchy.
      *
      * Uses the preloaded parentLookup (in-memory, no DB queries) to resolve
-     * country_code, country_name, and region_name from each hotel's
-     * destination_id. Falls back to the sync context $countryCode when
-     * destinations haven't been synced yet.
+     * country_code and country_name from each hotel's destination_id, then
+     * hands City/Region to HotelLocationResolver, which applies the explicit
+     * type-gated ladder (see that class). Falls back to the sync context
+     * $countryCode when destinations haven't been synced yet.
+     *
+     * $geoByHotelId carries the STORED reverse-geocoded values (the ladder's
+     * last rung). They live in their own columns precisely because the upsert
+     * overwrites destination_name/region_name unconditionally — without them
+     * a re-sync would wipe a geocoded city every time.
      *
      * @param list<array<string, mixed>> $hotels Normalized hotel rows
      * @param string $countryCode Sync context country code (fallback)
+     * @param array<string, array<string, mixed>> $geoByHotelId hotel_id => {geo_city, geo_region}
      * @return list<array<string, mixed>> Hotels with enriched country/region data
      */
-    public function enrichFromHierarchy(array $hotels, string $countryCode): array
+    public function enrichFromHierarchy(array $hotels, string $countryCode, array $geoByHotelId = []): array
     {
         if (empty($hotels)) {
             return $hotels;
@@ -133,36 +140,40 @@ class HotelRowMapper
             $destId = TypeCoerce::toInt($hotel['destination_id'] ?? 0);
             $hierarchy = $hierarchyMap[$destId] ?? [];
 
-            // Primary: derive from destination hierarchy
+            // Country comes straight off the tree (no ambiguity: only a
+            // `country` node can name one).
             if (!empty($hierarchy['country_code'])) {
                 $hotel['country_code'] = $hierarchy['country_code'];
             }
             if (!empty($hierarchy['country'])) {
                 $hotel['country_name'] = $hierarchy['country'];
             }
-            if (!empty($hierarchy['city']) && $hotel['destination_name'] === '') {
-                $hotel['destination_name'] = $hierarchy['city'];
-            }
-            if (!empty($hierarchy['region']) && $hotel['region_name'] === '') {
-                $hotel['region_name'] = $hierarchy['region'];
-            }
-            if (!empty($hierarchy['region_id']) && TypeCoerce::toInt($hotel['region_id'] ?? 0) === 0) {
-                $hotel['region_id'] = TypeCoerce::toInt($hierarchy['region_id']);
-            }
-
             // Fallback: sync context country code (when destinations aren't synced yet)
             if ($hotel['country_code'] === '') {
                 $hotel['country_code'] = $countryCode;
             }
 
-            // Last-resort fallback for the tree-derived destination_name (used by
-            // products/search): the API address city, only when the destination
-            // tree couldn't name a city/resort. address_city is a persistent
-            // column in its own right (the grid's City column), so it is NOT
-            // stripped here — just read.
-            if (($hotel['destination_name'] ?? '') === '' && !empty($hotel['address_city'])) {
-                $hotel['destination_name'] = TypeCoerce::toString($hotel['address_city']);
+            // City/Region: one explicit ladder, shared with the backfill cron.
+            $hotelId = TypeCoerce::toString($hotel['hotel_id'] ?? '');
+            $stored = $geoByHotelId[$hotelId] ?? [];
+            $resolved = HotelLocationResolver::resolve([
+                'address_city' => $hotel['address_city'] ?? '',
+                'geo_city' => $stored['geo_city'] ?? '',
+                'geo_region' => $stored['geo_region'] ?? '',
+            ], $hierarchy);
+
+            // Only overwrite with a resolved value; an unresolved ladder must
+            // not blank a name the API itself supplied.
+            if ($resolved['city'] !== '') {
+                $hotel['destination_name'] = $resolved['city'];
             }
+            if ($resolved['region'] !== '') {
+                $hotel['region_name'] = $resolved['region'];
+            }
+            if ($resolved['region_id'] > 0) {
+                $hotel['region_id'] = $resolved['region_id'];
+            }
+            $hotel['location_source'] = HotelLocationResolver::rowSource($resolved);
         }
         unset($hotel);
 
