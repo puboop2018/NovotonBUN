@@ -2,19 +2,27 @@
 
 declare(strict_types=1);
 
-namespace Tygh\Addons\NovotonHolidays\Services;
+namespace Tygh\Addons\TravelCore\Services\Geocoding;
 
-use Tygh\Addons\NovotonHolidays\Exceptions\GeocodeTransportException;
+use Tygh\Addons\TravelCore\Exceptions\GeocodeTransportException;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 /**
- * Minimal OSM Nominatim reverse-geocoding client.
+ * Minimal OSM Nominatim reverse-geocoding client, shared by every provider
+ * addon.
  *
- * Turns stored hotel coordinates into an approximate street line for the
- * PDP location display — the Novoton API carries no street field. Uses the
- * Nominatim /reverse endpoint (jsonv2). Callers MUST pace requests to max
- * 1/second and identify themselves (User-Agent with contact) per the usage
- * policy: https://operations.osmfoundation.org/policies/nominatim/
+ * Turns stored hotel coordinates into an approximate street line, a city and
+ * a region — the last rung of the providers' location ladders, and the only
+ * source of a street for APIs that carry none. Uses the /reverse endpoint
+ * (jsonv2).
+ *
+ * Callers MUST pace requests to max 1/second and identify themselves
+ * (User-Agent with contact) per the usage policy:
+ * https://operations.osmfoundation.org/policies/nominatim/ — that limit is
+ * per APPLICATION, not per addon, which is exactly why this client lives in
+ * travel_core: two addons pacing themselves independently would double the
+ * real request rate. GeocodeBacklogRunner owns the pacing for both.
+ *
  * Results are ODbL-licensed: storing them is permitted with OpenStreetMap
  * attribution ("© OpenStreetMap contributors" somewhere on the site).
  */
@@ -38,13 +46,19 @@ final class NominatimClient
 
     /**
      * @param callable(string, string): array{int, string}|null $transport
+     * @param string $appName Application token for the User-Agent; the policy
+     *                        wants the app identified, not the addon.
      */
-    public function __construct(?callable $transport = null, string $endpoint = '', string $contactEmail = '')
-    {
+    public function __construct(
+        ?callable $transport = null,
+        string $endpoint = '',
+        string $contactEmail = '',
+        string $appName = 'TravelCore/1.0',
+    ) {
         $this->transport = $transport ?? static fn (string $url, string $userAgent): array => self::curlGet($url, $userAgent);
         $this->endpoint = rtrim($endpoint !== '' ? $endpoint : self::DEFAULT_ENDPOINT, '/');
         // Nominatim policy: identify the application and provide a contact.
-        $this->userAgent = 'NovotonHolidays/1.0' . ($contactEmail !== '' ? " ({$contactEmail})" : '');
+        $this->userAgent = $appName . ($contactEmail !== '' ? " ({$contactEmail})" : '');
     }
 
     public function getUserAgent(): string
@@ -53,14 +67,12 @@ final class NominatimClient
     }
 
     /**
-     * Reverse-geocode coordinates into an approximate street line
-     * ("road" or "road house_number"), or null when the nearest mapped
-     * address has nothing street-like.
+     * Reverse-geocode coordinates into street + city + region.
      *
      * @throws GeocodeTransportException on HTTP/transport failure — the
      *                                   caller should stop its run
      */
-    public function reverse(float $lat, float $lng): ?string
+    public function reverseDetailed(float $lat, float $lng): ReverseGeocodeResult
     {
         // zoom=18 asks for building/street-level detail; accept-language=ro
         // matches the storefront's primary locale for street names.
@@ -83,41 +95,21 @@ final class NominatimClient
 
         $address = isset($decoded['address']) && is_array($decoded['address']) ? $decoded['address'] : [];
 
-        return self::extractStreet($address);
+        return ReverseGeocodeResult::fromNominatimAddress($address);
     }
 
     /**
-     * @param array<mixed> $address Nominatim "address" object
+     * Street line only, or null when the nearest mapped address has nothing
+     * street-like — the original novoton contract, kept so its geocode cron
+     * and tests are unaffected by the move.
+     *
+     * @throws GeocodeTransportException
      */
-    private static function extractStreet(array $address): ?string
+    public function reverse(float $lat, float $lng): ?string
     {
-        $road = self::str($address['road'] ?? null);
-        if ($road === '') {
-            // The nearest mapped way may be a pedestrian zone or footpath;
-            // failing those, a neighbourhood name still localizes the hotel.
-            foreach (['pedestrian', 'footway', 'neighbourhood'] as $fallback) {
-                $road = self::str($address[$fallback] ?? null);
-                if ($road !== '') {
-                    break;
-                }
-            }
-        }
+        $street = $this->reverseDetailed($lat, $lng)->street;
 
-        if ($road === '') {
-            return null;
-        }
-
-        $number = self::str($address['house_number'] ?? null);
-
-        // Romanian postal style puts the number after the road: "Strada X 12".
-        $street = $number !== '' ? "{$road} {$number}" : $road;
-
-        return mb_substr($street, 0, 255);
-    }
-
-    private static function str(mixed $v): string
-    {
-        return is_string($v) ? trim($v) : '';
+        return $street !== '' ? $street : null;
     }
 
     /**

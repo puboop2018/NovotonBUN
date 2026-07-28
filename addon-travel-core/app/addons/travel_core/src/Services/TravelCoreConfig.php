@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\TravelCore\Services;
 
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+use Tygh\Addons\TravelCore\Services\Geocoding\NominatimClient;
 use Tygh\Registry;
 
 /**
@@ -85,5 +87,33 @@ final class TravelCoreConfig
     public static function isShowBookingForm(): bool
     {
         return Registry::get('addons.travel_core.show_booking_form') !== 'N';
+    }
+
+    // ── Reverse geocoding (OSM Nominatim) ──
+    //
+    // One switch, one contact, one endpoint for every provider addon: the
+    // Nominatim usage policy limits an APPLICATION to 1 request/second, so
+    // per-addon copies of these settings would let two crons double the real
+    // rate against the public instance.
+
+    public static function isGeocodingEnabled(): bool
+    {
+        return Registry::get('addons.travel_core.geocoding_enabled') === 'Y';
+    }
+
+    /**
+     * Contact email carried in the Nominatim User-Agent — the public
+     * instance's usage policy requires identifying the application.
+     */
+    public static function getGeocodingContactEmail(): string
+    {
+        return trim(TypeCoerce::toString(Registry::get('addons.travel_core.geocoding_contact_email')));
+    }
+
+    public static function getGeocodingEndpoint(): string
+    {
+        $value = trim(TypeCoerce::toString(Registry::get('addons.travel_core.geocoding_endpoint')));
+
+        return $value !== '' ? $value : NominatimClient::DEFAULT_ENDPOINT;
     }
 }

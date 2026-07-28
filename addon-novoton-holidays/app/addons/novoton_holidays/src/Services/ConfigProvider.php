@@ -17,6 +17,8 @@ namespace Tygh\Addons\NovotonHolidays\Services;
 use Tygh\Addons\NovotonHolidays\Constants;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Services\AbstractConfigProvider;
+use Tygh\Addons\TravelCore\Services\Geocoding\NominatimClient;
+use Tygh\Addons\TravelCore\Services\TravelCoreConfig;
 use Tygh\Registry;
 
 class ConfigProvider extends AbstractConfigProvider
@@ -224,9 +226,17 @@ class ConfigProvider extends AbstractConfigProvider
 
     // ── Geocoding (OSM Nominatim) Settings ──
 
+    // Travel Core owns these settings now (one contact + one endpoint + one
+    // switch for every provider addon, because the Nominatim rate limit is
+    // per APPLICATION). The novoton keys are still read as a fallback so a
+    // store that configured them before the move keeps working until the
+    // admin fills the shared section; novoton's own settings are kept for
+    // that one release and then removed.
+
     public static function isGeocodingEnabled(): bool
     {
-        return (self::settings()['geocoding_enabled'] ?? 'N') === 'Y';
+        return TravelCoreConfig::isGeocodingEnabled()
+            || (self::settings()['geocoding_enabled'] ?? 'N') === 'Y';
     }
 
     /**
@@ -235,14 +245,21 @@ class ConfigProvider extends AbstractConfigProvider
      */
     public static function getGeocodingContactEmail(): string
     {
-        return trim(TypeCoerce::toString(self::settings()['geocoding_contact_email'] ?? ''));
+        $shared = TravelCoreConfig::getGeocodingContactEmail();
+
+        return $shared !== ''
+            ? $shared
+            : trim(TypeCoerce::toString(self::settings()['geocoding_contact_email'] ?? ''));
     }
 
     public static function getGeocodingEndpoint(): string
     {
         $val = trim(TypeCoerce::toString(self::settings()['geocoding_endpoint'] ?? ''));
+        if ($val !== '' && $val !== NominatimClient::DEFAULT_ENDPOINT) {
+            return $val; // an explicitly customised novoton endpoint still wins
+        }
 
-        return $val !== '' ? $val : NominatimClient::DEFAULT_ENDPOINT;
+        return TravelCoreConfig::getGeocodingEndpoint();
     }
 
     public static function getLastExchangeRateUpdate(): string

@@ -37,6 +37,7 @@ final class CronModeRegistrationTest extends TestCase
         'enrich_hotel_data',
         'experiences',
         'full',
+        'geocode_hotels',
         'hotels',
         'order_status',
         'package_routes',

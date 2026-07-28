@@ -159,11 +159,22 @@
                 </a>
             </th>
 
-            {* City — from the hotel API address, sortable *}
-            <th width="120">
-                <a href="{"`$sort_url_base`&sort_by=address_city&sort_order=`$search.sort_order_toggle`"|fn_url}">
+            {* City — the RESOLVED city (what the product's City feature uses),
+               not the raw API address city; sortable *}
+            <th width="140">
+                <a href="{"`$sort_url_base`&sort_by=destination_name&sort_order=`$search.sort_order_toggle`"|fn_url}">
                     {__("sphinx_holidays.city")}
-                    {if $search.sort_by == 'address_city'}
+                    {if $search.sort_by == 'destination_name'}
+                        {if $search.sort_order == 'asc'}&#9650;{else}&#9660;{/if}
+                    {/if}
+                </a>
+            </th>
+
+            {* Region — the RESOLVED region (product's Region feature), sortable *}
+            <th width="140">
+                <a href="{"`$sort_url_base`&sort_by=region_name&sort_order=`$search.sort_order_toggle`"|fn_url}">
+                    {__("sphinx_holidays.region")}
+                    {if $search.sort_by == 'region_name'}
                         {if $search.sort_order == 'asc'}&#9650;{else}&#9660;{/if}
                     {/if}
                 </a>
@@ -230,7 +241,7 @@
             <th width="30">
                 <input type="checkbox" name="check_all" id="sphinx_check_all" class="cm-check-items" title="{__("check_uncheck_all")}" />
             </th>
-            <th colspan="10">
+            <th colspan="11">
                 <div class="bulk-edit" style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
                     <div class="btn-group dropdown">
                         <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
@@ -328,8 +339,28 @@
             {* Country *}
             <td>{$hotel.country_code|escape:html}</td>
 
-            {* City — hotel API address.city *}
-            <td>{$hotel.address_city|default:"-"|escape:html}</td>
+            {* City — the resolved value the product's City feature uses,
+               with a badge naming the rung of the ladder that answered.
+               address_city is the raw API string and only shows as a
+               fallback (it is exactly what the ladder demotes when it
+               merely repeats the region). *}
+            <td>
+                {if $hotel.destination_name}
+                    {$hotel.destination_name|escape:html}
+                {elseif $hotel.address_city}
+                    {$hotel.address_city|escape:html}
+                {else}-{/if}
+                {if $hotel.location_source == 'destination' || $hotel.location_source == 'ancestor'}
+                    <span class="sphinx-badge sphinx-badge-success">{__("sphinx_holidays.location_source_tree")}</span>
+                {elseif $hotel.location_source == 'address'}
+                    <span class="sphinx-badge sphinx-badge-warning">{__("sphinx_holidays.location_source_address")}</span>
+                {elseif $hotel.location_source == 'geocode'}
+                    <span class="sphinx-badge sphinx-badge-info">{__("sphinx_holidays.location_source_geocode")}</span>
+                {/if}
+            </td>
+
+            {* Region — the resolved value the product's Region feature uses *}
+            <td>{$hotel.region_name|default:"-"|escape:html}</td>
 
             {* Country — hotel API address.country *}
             <td>{$hotel.address_country|default:"-"|escape:html}</td>

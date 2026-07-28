@@ -63,6 +63,7 @@ class BackfillHotelLocationsCommand extends AbstractSyncCommand
 
         $scanned = 0;
         $updated = 0;
+        $flagged = 0;
         $noDestinationId = 0;
         $unresolved = 0;
         $samples = [];
@@ -74,7 +75,7 @@ class BackfillHotelLocationsCommand extends AbstractSyncCommand
             // geocode, or the type gate rejecting a country name that the old
             // code had accepted).
             $rows = TypeCoerce::toRowList(db_get_array(
-                "SELECT hotel_id, name, destination_id, destination_name, region_id, region_name,
+                "SELECT hotel_id, name, product_id, destination_id, destination_name, region_id, region_name,
                         address_city, geo_city, geo_region, location_source
                  FROM ?:sphinx_hotels
                  WHERE (region_name IS NULL OR region_name = ''
@@ -142,6 +143,17 @@ class BackfillHotelLocationsCommand extends AbstractSyncCommand
                     continue;
                 }
 
+                // A changed City/Region must reach the PRODUCT features, not
+                // just the hotel row. update_products already re-assigns
+                // features for hotels flagged this way (and upsertBatch flags
+                // the same event during sync) — reuse that path instead of
+                // running feature writes here.
+                $locationChanged = isset($set['destination_name']) || isset($set['region_name']);
+                if ($locationChanged && TypeCoerce::toInt($row['product_id'] ?? 0) > 0) {
+                    $set['product_needs_update'] = 'Y';
+                    $flagged++;
+                }
+
                 db_query('UPDATE ?:sphinx_hotels SET ?u WHERE hotel_id = ?s', $set, $hotelId);
                 $updated++;
             }
@@ -154,6 +166,9 @@ class BackfillHotelLocationsCommand extends AbstractSyncCommand
 
         $this->output("Scanned {$scanned} hotel(s) with empty Region/City.");
         $this->output("Updated: {$updated}");
+        if ($flagged > 0) {
+            $this->output("{$flagged} linked product(s) flagged for feature refresh — run cron_mode=update_products to re-assign City/Region.");
+        }
         if ($noDestinationId > 0) {
             $this->output("Skipped — no destination_id on the row: {$noDestinationId} (only a full hotel re-sync can repair these)");
         }
@@ -169,6 +184,7 @@ class BackfillHotelLocationsCommand extends AbstractSyncCommand
             'stats' => [
                 'scanned' => $scanned,
                 'updated' => $updated,
+                'flagged_for_features' => $flagged,
                 'no_destination_id' => $noDestinationId,
                 'unresolved' => $unresolved,
             ],
