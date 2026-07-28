@@ -17,8 +17,10 @@
  *
  *   1. the public API of Tygh\Settings (via Reflection — method signatures)
  *   2. the structure of the settings_* tables
- *   3. what travel_core actually has stored right now, so the gap between
- *      addon.xml and the database is visible
+ *   3. what an addon actually has stored right now, BOTH ways round: declared
+ *      in addon.xml but missing from the DB (a setting that cannot be set),
+ *      and stored in the DB but no longer declared (a retired setting that
+ *      keeps rendering — how geocoding ended up configurable in two places)
  *
  * WHERE: the fullstore sandbox only — docker/fullstore/docker-compose.yml
  * bind-mounts dev/ at /var/www/html/dev, so this file is served by the
@@ -26,6 +28,7 @@
  *
  * USE:
  *   http://localhost:8080/dev/tools/settings-schema.php
+ *   http://localhost:8080/dev/tools/settings-schema.php?addon=novoton_holidays
  *   CLI (from inside the app container): php /var/www/html/dev/tools/settings-schema.php
  *
  * Read-only: this tool never writes. Copy the output into the chat.
@@ -121,22 +124,31 @@ foreach (['settings_sections', 'settings_objects', 'settings_descriptions', 'set
     }
 }
 
-// ── 3. What travel_core actually has ────────────────────────────────────────
+// ── 3. What the addon actually has ──────────────────────────────────────────
 
-ss_section('3. travel_core: addon.xml vs the database');
+// ?addon=… (or argv[1] on the CLI) so any of the three can be inspected;
+// travel_core stays the default because it owns the shared sections.
+$ss_addon = (string) ($_GET['addon'] ?? ($ss_is_cli ? ($argv[1] ?? '') : ''));
+if (!in_array($ss_addon, ['travel_core', 'novoton_holidays', 'sphinx_holidays'], true)) {
+    $ss_addon = 'travel_core';
+}
+
+ss_section("3. {$ss_addon}: addon.xml vs the database");
 
 $ss_section_row = db_get_row(
-    "SELECT * FROM ?:settings_sections WHERE name = 'travel_core'",
+    'SELECT * FROM ?:settings_sections WHERE name = ?s',
+    $ss_addon,
 );
-echo "settings_sections row for travel_core:\n";
+echo "settings_sections row for {$ss_addon}:\n";
 echo '  ' . (is_array($ss_section_row) && $ss_section_row !== [] ? json_encode($ss_section_row) : '(none)') . "\n\n";
 
 $ss_stored = db_get_array(
-    "SELECT o.object_id, o.name, o.type, o.value, o.position, o.section_id, o.section_tab_id
+    'SELECT o.object_id, o.name, o.type, o.value, o.position, o.section_id, o.section_tab_id
      FROM ?:settings_objects o
      JOIN ?:settings_sections s ON s.section_id = o.section_id
-     WHERE s.name = 'travel_core'
-     ORDER BY o.position, o.object_id",
+     WHERE s.name = ?s
+     ORDER BY o.position, o.object_id',
+    $ss_addon,
 );
 $ss_stored = is_array($ss_stored) ? $ss_stored : [];
 
@@ -152,8 +164,9 @@ foreach ($ss_stored as $ss_o) {
     );
 }
 
-// Which addon.xml <item id="..."> entries never made it into the DB.
-$ss_xml_path = $ss_docroot . '/app/addons/travel_core/addon.xml';
+// Which addon.xml <item id="..."> entries never made it into the DB — and
+// which DB rows outlived their declaration.
+$ss_xml_path = $ss_docroot . '/app/addons/' . $ss_addon . '/addon.xml';
 echo "\naddon.xml declared vs stored:\n";
 if (!is_file($ss_xml_path)) {
     echo "  addon.xml not readable at {$ss_xml_path}\n";
@@ -169,10 +182,18 @@ if (!is_file($ss_xml_path)) {
     }
     $ss_storedNames = array_map(static fn (array $r): string => (string) ($r['name'] ?? ''), $ss_stored);
     $ss_missing = array_values(array_diff($ss_declared, $ss_storedNames));
+    $ss_orphans = array_values(array_diff($ss_storedNames, $ss_declared));
 
     echo '  declared in addon.xml: ' . count($ss_declared) . "\n";
     echo '  MISSING from the DB  : ' . count($ss_missing) . "\n";
     foreach ($ss_missing as $ss_name) {
+        echo "    - {$ss_name}\n";
+    }
+    // Rows that outlived their declaration. These still RENDER on the
+    // settings page, so a retired setting can quietly contradict the one
+    // that replaced it — SettingsMigrator::RETIRED deletes the known ones.
+    echo '  STALE in the DB only : ' . count($ss_orphans) . "\n";
+    foreach ($ss_orphans as $ss_name) {
         echo "    - {$ss_name}\n";
     }
 }

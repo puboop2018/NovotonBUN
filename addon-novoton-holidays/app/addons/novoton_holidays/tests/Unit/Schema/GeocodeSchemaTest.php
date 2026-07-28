@@ -67,21 +67,43 @@ final class GeocodeSchemaTest extends TestCase
         self::assertStringContainsString("address: self::optString(\$row['street_address']", $provider);
     }
 
-    public function testGeocodingSettingsAreDeclaredOptIn(): void
+    /**
+     * Geocoding is configured ONCE, in Travel Core.
+     *
+     * The Nominatim usage policy caps requests per APPLICATION and both
+     * provider addons share GeocodeBacklogRunner, so a per-addon switch would
+     * be a second control for one behaviour — and a stale novoton row could
+     * silently keep geocoding running after the shared one was turned off.
+     */
+    public function testGeocodingSettingsLiveInTravelCoreOnly(): void
     {
         $xml = self::read('addon.xml');
 
-        self::assertStringContainsString('<item id="geocoding_enabled">', $xml);
-        // Opt-in: the checkbox must default to N (external HTTP + OSM
-        // attribution obligation are conscious decisions, not surprises).
-        $enabledPos = strpos($xml, '<item id="geocoding_enabled">');
-        self::assertNotFalse($enabledPos);
-        $enabledBlock = substr($xml, $enabledPos, 200);
-        self::assertStringContainsString('<default_value>N</default_value>', $enabledBlock);
+        foreach (['geocoding_enabled', 'geocoding_contact_email', 'geocoding_endpoint', 'geocoding_header'] as $name) {
+            self::assertStringNotContainsString('<item id="' . $name . '">', $xml);
+        }
 
-        self::assertStringContainsString('<item id="geocoding_contact_email">', $xml);
-        self::assertStringContainsString('<item id="geocoding_endpoint">', $xml);
-        self::assertStringContainsString('https://nominatim.openstreetmap.org', $xml);
+        // Nor may the labels linger in the .po: they route to
+        // ?:settings_descriptions for rows that no longer exist.
+        foreach (['en', 'ro'] as $lang) {
+            $po = self::read('../../../var/langs/' . $lang . '/addons/novoton_holidays.po');
+            self::assertStringNotContainsString('::novoton_holidays::geocoding', $po);
+        }
+
+        $core = self::addonRoot() . '/../../../../addon-travel-core/app/addons/travel_core/addon.xml';
+        self::assertFileExists($core);
+        $coreXml = (string) file_get_contents($core);
+        foreach (['geocoding_enabled', 'geocoding_contact_email', 'geocoding_endpoint'] as $name) {
+            self::assertStringContainsString('<item id="' . $name . '">', $coreXml);
+        }
+
+        // The config getters delegate — no novoton fallback that could win.
+        $config = self::read('src/Services/ConfigProvider.php');
+        self::assertStringContainsString(
+            'return TravelCoreConfig::isGeocodingEnabled();',
+            $config,
+        );
+        self::assertStringNotContainsString("settings()['geocoding_", $config);
     }
 
     public function testAdminCronPageListsTheMode(): void

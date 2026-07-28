@@ -15,10 +15,11 @@ use PHPUnit\Framework\TestCase;
  * Core settings page ended at "Display Settings" and there was no checkbox to
  * tick, so `geocode_hotels` could only ever answer "Geocoding is disabled".
  *
- * Fix mirrors what the booking-form colors already do: ?:storage_data is the
- * source of truth (no upgrade needed, shared by both areas — the cron runs in
- * 'C'), addon settings remain a fallback, and the form lives on the Tools page
- * which is plain template + controller and therefore always present.
+ * Fix: SettingsMigrator creates the missing rows at runtime, so Settings →
+ * Travel Core → Geocoding is the single home. ?:storage_data survives only as
+ * a read-only legacy fallback for values captured while the Tools page briefly
+ * carried the form, and the reader is loaded from init.php for every request
+ * — including the storefront cron, which runs in area 'C'.
  */
 final class GeocodingSettingsReachTest extends TestCase
 {
@@ -27,14 +28,12 @@ final class GeocodingSettingsReachTest extends TestCase
         return (string) file_get_contents(dirname(__DIR__, 3) . '/' . $rel);
     }
 
-    public function testSettingsAreStorageBackedNotOnlyAddonXml(): void
+    public function testTheReaderIsLoadedInEveryAreaIncludingTheCron(): void
     {
         $fn = self::src('functions/geocoding.php');
         self::assertStringContainsString("const TRAVEL_CORE_GEOCODING_STORAGE_KEY = 'travel_core_geocoding'", $fn);
         self::assertStringContainsString('fn_get_storage_data(TRAVEL_CORE_GEOCODING_STORAGE_KEY)', $fn);
-        self::assertStringContainsString('fn_set_storage_data(TRAVEL_CORE_GEOCODING_STORAGE_KEY', $fn);
-        // Registry (addon.xml settings) stays as the fallback so a fresh
-        // install, where the rows DO exist, behaves identically.
+        // Registry (the settings rows) is what the reader answers from.
         self::assertStringContainsString("Registry::get('addons.travel_core')", $fn);
 
         // Loaded for every request, including the storefront cron.
@@ -52,45 +51,69 @@ final class GeocodingSettingsReachTest extends TestCase
         self::assertStringNotContainsString("Registry::get('addons.travel_core.geocoding_enabled') === 'Y';", $config);
     }
 
-    public function testToolsPageExposesTheFormAndRefusesEnablingWithoutAContact(): void
+    /**
+     * Geocoding is configured in ONE place: Settings -> Travel Core.
+     *
+     * The Tools page briefly carried a duplicate form, because the settings
+     * rows did not exist on installed stores and that page was the only
+     * surface guaranteed to render. SettingsMigrator removed the need for it,
+     * and two switches for one behaviour is worse than an awkward location.
+     */
+    public function testGeocodingIsConfiguredOnlyInSettings(): void
     {
         $controller = self::src('controllers/backend/travel_tools.php');
-        self::assertStringContainsString("\$mode === 'save_geocoding'", $controller);
-        self::assertStringContainsString('fn_travel_core_save_geocoding_settings(', $controller);
-        // OSM requires an identifiable contact; enabling without one would
-        // produce a switch that is on but refuses to run.
-        self::assertStringContainsString('FILTER_VALIDATE_EMAIL', $controller);
-        self::assertStringContainsString('travel_core.geocoding_email_required', $controller);
-        // The manage view needs the current values to render the form.
-        self::assertStringContainsString("assign('geocoding', fn_travel_core_get_geocoding_settings())", $controller);
+        self::assertStringNotContainsString('save_geocoding', $controller);
+        self::assertStringNotContainsString('geocoding', $controller);
 
         $tpl = (string) file_get_contents(
             dirname(__DIR__, 6)
             . '/design/backend/templates/addons/travel_core/views/travel_tools/manage.tpl',
         );
-        self::assertStringContainsString('travel_tools.save_geocoding', $tpl);
-        self::assertStringContainsString('name="geocoding[enabled]"', $tpl);
-        self::assertStringContainsString('name="geocoding[contact_email]"', $tpl);
-        self::assertStringContainsString('name="geocoding[endpoint]"', $tpl);
-        // An unchecked checkbox posts nothing, so the hidden 'N' companion is
-        // what lets the switch be turned back OFF.
-        self::assertStringContainsString('<input type="hidden" name="geocoding[enabled]" value="N" />', $tpl);
+        self::assertStringNotContainsString('geocoding', $tpl);
+
+        // The settings themselves stay declared, so the settings page renders
+        // them and the migrator can heal them onto older stores.
+        $xml = self::src('addon.xml');
+        foreach (['geocoding_header', 'geocoding_enabled', 'geocoding_contact_email', 'geocoding_endpoint'] as $name) {
+            self::assertStringContainsString('<item id="' . $name . '">', $xml);
+        }
     }
 
-    public function testLabelsShipThroughTheRuntimeLangSeederNotOnlyAddonXml(): void
+    /**
+     * Storage may only answer for a store whose settings rows do not exist
+     * yet. If it could override a real setting, clearing a field in Settings
+     * would silently resurrect the old Tools-page value.
+     */
+    public function testTheSettingWinsWheneverItExistsAndStorageIsLegacyOnly(): void
     {
-        // Language keys — unlike settings — do have a runtime seeder, so
-        // lang_keys.php is what reaches an installed store.
-        $lang = self::src('lang_keys.php');
-        foreach ([
-            'travel_core.geocoding_section',
-            'travel_core.geocoding_enabled',
-            'travel_core.geocoding_contact_email',
-            'travel_core.geocoding_endpoint',
-            'travel_core.geocoding_saved',
-            'travel_core.geocoding_email_required',
-        ] as $key) {
-            self::assertStringContainsString("'{$key}' => [", $lang, "{$key} must be runtime-seeded");
+        $fn = self::src('functions/geocoding.php');
+
+        self::assertStringContainsString('array_key_exists($key, $registry)', $fn);
+        self::assertStringContainsString("\$stored[\$key] ?? ''", $fn);
+        // The writer is gone with the form it served.
+        self::assertStringNotContainsString('function fn_travel_core_save_geocoding_settings', $fn);
+    }
+
+    /**
+     * Settings-page labels live in the .po under the SettingsOptions /
+     * SettingsTooltips scopes — the table CS-Cart's importer targets and the
+     * one SettingsMigrator writes when healing. Without them the section
+     * renders as blank rows, which is what happened in the field.
+     */
+    public function testSettingsLabelsExistInBothPoFiles(): void
+    {
+        foreach (['en', 'ro'] as $lang) {
+            $po = (string) file_get_contents(
+                dirname(__DIR__, 6) . '/var/langs/' . $lang . '/addons/travel_core.po',
+            );
+            foreach ([
+                'SettingsOptions::travel_core::geocoding_header',
+                'SettingsOptions::travel_core::geocoding_enabled',
+                'SettingsOptions::travel_core::geocoding_contact_email',
+                'SettingsOptions::travel_core::geocoding_endpoint',
+            ] as $ctx) {
+                self::assertStringContainsString($ctx, $po, "{$ctx} missing from {$lang}.po");
+            }
         }
     }
 }

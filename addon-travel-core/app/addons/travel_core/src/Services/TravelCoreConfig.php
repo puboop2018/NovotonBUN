@@ -96,11 +96,12 @@ final class TravelCoreConfig
     // per-addon copies of these settings would let two crons double the real
     // rate against the public instance.
 
-    // Read through fn_travel_core_get_geocoding_settings(), which puts
-    // ?:storage_data ahead of the addon settings: the addon.xml rows only
-    // exist on stores installed AFTER the geocoding section was added, and
-    // CS-Cart never re-reads addon.xml on a deploy or cache clear. Storage
-    // needs no upgrade and is shared by both areas (the cron runs in 'C').
+    // Read through fn_travel_core_get_geocoding_settings(), whose source of
+    // truth is Settings -> Travel Core -> Geocoding. Those rows only exist on
+    // stores installed AFTER the section was declared (CS-Cart never re-reads
+    // addon.xml on a deploy or cache clear), so SettingsMigrator creates them
+    // at runtime; ?:storage_data answers only as a legacy fallback for the
+    // window when the values were captured on the Tools page.
 
     public static function isGeocodingEnabled(): bool
     {

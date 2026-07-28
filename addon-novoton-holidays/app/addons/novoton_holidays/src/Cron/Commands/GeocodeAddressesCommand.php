@@ -79,14 +79,14 @@ class GeocodeAddressesCommand extends AbstractCronCommand
         }
 
         if (!ConfigProvider::isGeocodingEnabled()) {
-            $this->output('Geocoding is disabled — enable it in the Novoton addon settings first.');
+            $this->output('Geocoding is disabled — enable it in Travel Core settings first.');
 
             return ['success' => false, 'error' => 'Geocoding disabled in settings'];
         }
 
         $contactEmail = ConfigProvider::getGeocodingContactEmail();
         if ($contactEmail === '') {
-            $this->output('Set the geocoding contact email in the addon settings first — the Nominatim usage policy requires identifying the application.');
+            $this->output('Set the geocoding contact email in Travel Core settings first — the Nominatim usage policy requires identifying the application.');
 
             return ['success' => false, 'error' => 'Missing geocoding contact email'];
         }
