@@ -114,6 +114,35 @@ final class SettingsMigratorTest extends TestCase
         );
     }
 
+    /**
+     * The endpoint and contact email must arrive pre-filled: a store that has
+     * to discover both the Nominatim URL and that a contact is mandatory
+     * before geocoding will run is a store where geocoding never runs.
+     */
+    public function testGeocodingDefaultsArePreFilledAndEmptyValuesGetRepaired(): void
+    {
+        $xml = self::src('addon.xml');
+        $pos = strpos($xml, '<item id="geocoding_endpoint">');
+        self::assertIsInt($pos);
+        self::assertStringContainsString(
+            '<default_value>https://nominatim.openstreetmap.org</default_value>',
+            substr($xml, $pos, 200),
+        );
+
+        $pos = strpos($xml, '<item id="geocoding_contact_email">');
+        self::assertIsInt($pos);
+        self::assertStringContainsString('<default_value>od18in@yahoo.com</default_value>', substr($xml, $pos, 200));
+
+        // Defaults are seeded on create; settings that already exist with an
+        // empty value are repaired too, or a store healed before this would
+        // keep showing blank fields forever.
+        $m = self::src('src/Install/SettingsMigrator.php');
+        self::assertStringContainsString('repairValue(', $m);
+        self::assertStringContainsString('$settings->getValue($name, $addon)', $m);
+        // Never clobber a value an admin actually set.
+        self::assertStringContainsString("\$current !== null && \$current !== ''", $m);
+    }
+
     public function testHealRunsForEveryTravelAddonAndIsStampGated(): void
     {
         $heal = self::src('functions/self_heal.php');

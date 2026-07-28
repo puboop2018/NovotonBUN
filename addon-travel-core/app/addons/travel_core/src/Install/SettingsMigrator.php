@@ -112,11 +112,14 @@ final class SettingsMigrator
             }
 
             if ($settings->isExists($name, $addon)) {
-                // Present already — but possibly LABEL-LESS. The first heal on
-                // a Windows checkout parsed no labels (CRLF, see below) and
-                // created these fields blank; isExists() alone would then skip
-                // them forever. Repair descriptions when they are missing.
-                if (self::repairDescriptions($addon, $name, $labels)) {
+                // Present already — but possibly LABEL-LESS or VALUE-LESS. The
+                // first heal on a Windows checkout parsed no labels (CRLF, see
+                // below) and created these fields blank; isExists() alone would
+                // then skip them forever. Repair both, never overwriting
+                // anything an admin has actually set.
+                $repaired = self::repairDescriptions($addon, $name, $labels);
+                $repaired = self::repairValue($addon, $name, $item['default']) || $repaired;
+                if ($repaired) {
                     $created[] = $name;
                 }
 
@@ -160,6 +163,36 @@ final class SettingsMigrator
         }
 
         return $created;
+    }
+
+    /**
+     * Seed an existing setting's default when it holds no value at all.
+     *
+     * A setting created before its default could be applied reads as an empty
+     * field, which looks like a deliberate blank. Only a genuinely empty value
+     * is filled — an admin who cleared a field on purpose, or set anything at
+     * all, is never overridden. (An unticked checkbox stores 'N', not '', so
+     * this cannot silently re-enable something.)
+     */
+    private static function repairValue(string $addon, string $name, string $default): bool
+    {
+        if ($default === '') {
+            return false;
+        }
+
+        $settings = Settings::instance();
+        if (!$settings instanceof Settings) {
+            return false;
+        }
+
+        $current = $settings->getValue($name, $addon);
+        if ($current !== null && $current !== '' && $current !== []) {
+            return false;
+        }
+
+        $settings->updateValue($name, $default, $addon);
+
+        return true;
     }
 
     /**
