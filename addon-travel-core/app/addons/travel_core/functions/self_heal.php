@@ -47,3 +47,53 @@ function fn_travel_core_self_heal_stamp(string $key, string $fingerprint): void
         fn_set_storage_data('travel_heal_' . $key, $fingerprint);
     }
 }
+
+/**
+ * Create settings an addon.xml declares that the database never received.
+ *
+ * CS-Cart imports <settings> only at install/upgrade, so every setting added
+ * after a store was installed is invisible there — the field is missing from
+ * the settings page with no way to set it. Language keys and the schema
+ * already self-heal for the same reason; this closes the third gap.
+ *
+ * Safe for any addon: only creates what `isExists()` says is absent, and
+ * returns the names it created so callers can log or report them.
+ *
+ * @return list<string> settings created (empty when already in sync)
+ */
+function fn_travel_core_ensure_settings(string $addon, string $addonDir, string $langsDir): array
+{
+    if (!class_exists(\Tygh\Settings::class)) {
+        return [];
+    }
+
+    return \Tygh\Addons\TravelCore\Install\SettingsMigrator::ensure($addon, $addonDir, $langsDir);
+}
+
+/**
+ * Heal the settings of every travel addon that is installed and deployed.
+ *
+ * Each addon ships its own addon.xml + .po pair, so the paths are derived
+ * from the addon name; addons whose directory is absent are skipped.
+ *
+ * @return array<string, list<string>> addon => created setting names
+ */
+function fn_travel_core_ensure_all_settings(): array
+{
+    $addonsRoot = dirname(__DIR__, 2);          // …/app/addons
+    $varLangs = dirname($addonsRoot, 2) . '/var/langs';
+
+    $created = [];
+    foreach (['travel_core', 'novoton_holidays', 'sphinx_holidays'] as $addon) {
+        $dir = $addonsRoot . '/' . $addon;
+        if (!is_file($dir . '/addon.xml')) {
+            continue;
+        }
+        $names = fn_travel_core_ensure_settings($addon, $dir, $varLangs);
+        if ($names !== []) {
+            $created[$addon] = $names;
+        }
+    }
+
+    return $created;
+}

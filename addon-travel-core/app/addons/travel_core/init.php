@@ -68,6 +68,26 @@ if (defined('AREA') && AREA === 'A' && function_exists('fn_travel_core_ensure_sc
     unset($__tc_heal_fp);
 }
 
+// Self-heal SETTINGS: CS-Cart imports an addon's <settings> only at install
+// or upgrade, never on a code deploy, so any setting added later is absent
+// from the settings page on an existing store with no way to set it (the
+// reverse-geocoding switch was invisible in the field for exactly this).
+// Stamp-gated on all three addon.xml files together, so it re-runs whenever
+// any of them declares something new. Admin area only — creating settings is
+// an administrative act and the storefront must never race it.
+if (defined('AREA') && AREA === 'A' && function_exists('fn_travel_core_ensure_all_settings')) {
+    $__tc_set_fp = '';
+    foreach (['travel_core', 'novoton_holidays', 'sphinx_holidays'] as $__tc_addon) {
+        $__tc_set_fp .= (string) @md5_file(dirname(__DIR__) . '/' . $__tc_addon . '/addon.xml');
+    }
+    $__tc_set_fp = md5($__tc_set_fp);
+    if (fn_travel_core_self_heal_due('travel_settings', $__tc_set_fp)) {
+        fn_travel_core_ensure_all_settings();
+        fn_travel_core_self_heal_stamp('travel_settings', $__tc_set_fp);
+    }
+    unset($__tc_set_fp, $__tc_addon);
+}
+
 // Self-heal language keys: addon.xml/.po are only imported at install, so new
 // or changed labels never reach existing stores on their own. Compare a stored
 // stamp against the current fingerprint of addon.xml + lang_keys.php and
