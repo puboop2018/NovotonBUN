@@ -18,6 +18,47 @@ declare(strict_types=1);
  */
 
 return [
+    // Reverse-geocoding controls on the Tools page. They live there, not in
+    // the addon settings form, because CS-Cart only creates settings rows
+    // from addon.xml at install/upgrade time — stores installed before the
+    // geocoding section existed have no such fields. These labels DO reach
+    // those stores, because language keys have a runtime seeder (above).
+    'travel_core.geocoding_section' => [
+        'en' => 'Reverse geocoding (OpenStreetMap Nominatim)',
+        'ro' => 'Geocodare inversă (OpenStreetMap Nominatim)',
+    ],
+    'travel_core.geocoding_section_desc' => [
+        'en' => 'Fills hotel locations from stored coordinates: street addresses, plus the city/region fallback used when a provider\'s destination tree cannot name them. One setting for every travel add-on — the Nominatim policy limits requests per application, not per add-on.',
+        'ro' => 'Completează locațiile hotelurilor din coordonatele stocate: adrese stradale, plus rezerva de oraș/regiune folosită când arborele de destinații al furnizorului nu le poate numi. O singură setare pentru toate addon-urile de travel — politica Nominatim limitează cererile per aplicație, nu per addon.',
+    ],
+    'travel_core.geocoding_enabled' => [
+        'en' => 'Enable reverse geocoding',
+        'ro' => 'Activează geocodarea inversă',
+    ],
+    'travel_core.geocoding_contact_email' => [
+        'en' => 'Contact email',
+        'ro' => 'Email de contact',
+    ],
+    'travel_core.geocoding_contact_email_desc' => [
+        'en' => 'Sent in the User-Agent of every Nominatim request — the public instance\'s usage policy requires a way to contact you. Geocoding will not run without it.',
+        'ro' => 'Trimis în User-Agent-ul fiecărei cereri Nominatim — politica de utilizare a instanței publice cere o modalitate de contact. Geocodarea nu rulează fără acesta.',
+    ],
+    'travel_core.geocoding_endpoint' => [
+        'en' => 'Nominatim endpoint',
+        'ro' => 'Endpoint Nominatim',
+    ],
+    'travel_core.geocoding_endpoint_desc' => [
+        'en' => 'Change only if you run your own instance (removes the 1 request/second limit of the public server).',
+        'ro' => 'Schimbați doar dacă rulați propria instanță (elimină limita de 1 cerere/secundă a serverului public).',
+    ],
+    'travel_core.geocoding_saved' => [
+        'en' => 'Geocoding settings saved.',
+        'ro' => 'Setările de geocodare au fost salvate.',
+    ],
+    'travel_core.geocoding_email_required' => [
+        'en' => 'A valid contact email is required before reverse geocoding can be enabled — the OpenStreetMap usage policy requires identifying the application.',
+        'ro' => 'Este necesar un email de contact valid înainte de a activa geocodarea inversă — politica de utilizare OpenStreetMap cere identificarea aplicației.',
+    ],
     // BARE key by CS-Cart convention: the Appearance "Product detailed page
     // view" dropdown labels each blocks/product_templates/<file>.tpl with the
     // lang var named exactly after the file (no addon prefix).

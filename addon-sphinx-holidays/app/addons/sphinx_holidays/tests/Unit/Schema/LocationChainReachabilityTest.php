@@ -79,6 +79,36 @@ final class LocationChainReachabilityTest extends TestCase
         self::assertStringContainsString('assignAll(', $update);
     }
 
+    /**
+     * Field failure: `backfill_hotel_locations` and `geocode_hotels` both died
+     * with "Unknown column 'geo_city'" / "'geocoded_at'" on a store that had
+     * pulled the code but not yet opened an admin page.
+     *
+     * init.php only self-heals the schema when AREA === 'A'; the cron runs in
+     * the storefront area, so the ALTERs never ran. The cron is a first-class
+     * entry point for schema-dependent work and must apply them itself — the
+     * same gap the SEO-defaults seeding already works around in this file.
+     */
+    public function testTheCronAppliesSchemaDeltasItselfBecauseInitIsAdminOnly(): void
+    {
+        $cron = self::src('controllers/frontend/sphinx_cron.php');
+        self::assertStringContainsString('fn_sphinx_holidays_ensure_schema()', $cron);
+
+        // The admin-only gate that made this necessary is still the reason —
+        // if init.php ever stops being AREA-gated this pin can be revisited.
+        self::assertStringContainsString(
+            "AREA === 'A' && function_exists('fn_sphinx_holidays_ensure_schema')",
+            self::src('init.php'),
+        );
+
+        // The columns the crons depend on must be in the migrator's delta list,
+        // not only in addon.xml (whose for="upgrade" ALTERs never auto-apply).
+        $migrator = self::src('src/Install/SchemaMigrator.php');
+        foreach (['geo_city', 'geo_region', 'street_address', 'geocoded_at', 'location_source'] as $column) {
+            self::assertStringContainsString("'{$column}' =>", $migrator, "{$column} missing from SchemaMigrator");
+        }
+    }
+
     public function testTheRepairChainHasRunButtons(): void
     {
         $controller = self::src('controllers/backend/sphinx_holidays.php');

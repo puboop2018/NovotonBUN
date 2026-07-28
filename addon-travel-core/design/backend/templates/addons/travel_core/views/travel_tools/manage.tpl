@@ -71,6 +71,46 @@
 
     {/if}
 
+    {* ── Reverse geocoding ──
+       Lives here, not in the addon settings form: CS-Cart only creates
+       settings rows from addon.xml at install/upgrade time, so on a store
+       installed before this section existed there is no checkbox to tick.
+       Saved to ?:storage_data instead. *}
+    <div class="travel-geocoding-section">
+        <h3>{__("travel_core.geocoding_section")}</h3>
+        <p class="muted">{__("travel_core.geocoding_section_desc")}</p>
+
+        <form method="post" action="{"travel_tools.save_geocoding"|fn_url}" class="travel-geocoding-form">
+            <input type="hidden" name="security_hash" value="{$security_hash}" />
+            <input type="hidden" name="geocoding[enabled]" value="N" />
+
+            <div class="control-group">
+                <label class="checkbox">
+                    <input type="checkbox" name="geocoding[enabled]" value="Y" {if $geocoding.enabled}checked{/if} />
+                    {__("travel_core.geocoding_enabled")}
+                </label>
+            </div>
+
+            <div class="control-group">
+                <label for="travel_geocoding_email">{__("travel_core.geocoding_contact_email")}:</label>
+                <input type="text" id="travel_geocoding_email" name="geocoding[contact_email]"
+                       value="{$geocoding.contact_email|escape:html}" size="40" />
+                <p class="muted">{__("travel_core.geocoding_contact_email_desc")}</p>
+            </div>
+
+            <div class="control-group">
+                <label for="travel_geocoding_endpoint">{__("travel_core.geocoding_endpoint")}:</label>
+                <input type="text" id="travel_geocoding_endpoint" name="geocoding[endpoint]"
+                       value="{$geocoding.endpoint|escape:html}" size="60" />
+                <p class="muted">{__("travel_core.geocoding_endpoint_desc")}</p>
+            </div>
+
+            <button type="submit" name="dispatch[travel_tools.save_geocoding]" class="btn btn-primary">
+                {__("save")}
+            </button>
+        </form>
+    </div>
+
 </div>
 
 {/capture}
