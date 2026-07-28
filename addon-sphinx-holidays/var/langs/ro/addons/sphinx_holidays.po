@@ -652,6 +652,38 @@ msgctxt "Languages::sphinx_holidays.product_code_prefix"
 msgid "Product code prefix"
 msgstr "Prefix cod produs"
 
+msgctxt "Languages::sphinx_holidays.product_links"
+msgid "Product links"
+msgstr "Legături produse"
+
+msgctxt "Languages::sphinx_holidays.product_links_description"
+msgid "A hotel page shows its booking form only while a synced hotel points at the product. Products listed below are not linked, so they render as plain catalog items. Relink fetches each hotel from the Sphinx API and links it."
+msgstr "O pagină de hotel afișează formularul de rezervare doar cât timp un hotel sincronizat indică produsul. Produsele de mai jos nu sunt legate, deci se afișează ca produse obișnuite. Relegarea preia fiecare hotel din API-ul Sphinx și îl leagă."
+
+msgctxt "Languages::sphinx_holidays.unlinked_products"
+msgid "Unlinked products"
+msgstr "Produse nelegate"
+
+msgctxt "Languages::sphinx_holidays.hotel_id"
+msgid "Hotel ID"
+msgstr "ID hotel"
+
+msgctxt "Languages::sphinx_holidays.all_products_linked"
+msgid "Every hotel product is linked to a synced hotel."
+msgstr "Toate produsele hoteliere sunt legate de un hotel sincronizat."
+
+msgctxt "Languages::sphinx_holidays.link_state_missing"
+msgid "Hotel not synced"
+msgstr "Hotel nesincronizat"
+
+msgctxt "Languages::sphinx_holidays.link_state_unlinked"
+msgid "Hotel synced, link missing"
+msgstr "Hotel sincronizat, legătură lipsă"
+
+msgctxt "Languages::sphinx_holidays.link_state_conflict"
+msgid "Hotel linked to product [product_id]"
+msgstr "Hotel legat de produsul [product_id]"
+
 msgctxt "Languages::sphinx_holidays.product_code_prefix.tooltip"
 msgid "Prefix for CS-Cart product codes created from Sphinx hotels (e.g. SPX). The hotel ID is appended to form the full code (e.g. SPX12345)."
 msgstr "Prefix pentru codurile de produs CS-Cart create din hoteluri Sphinx (ex. SPX). ID-ul hotelului se adaugă pentru codul complet (ex. SPX12345)."

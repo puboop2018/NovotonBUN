@@ -145,6 +145,62 @@ class HotelStatsRepository
     }
 
     /**
+     * Count CS-Cart products that LOOK like sphinx hotel products but have no
+     * hotel row pointing at them — exactly the set relinkExistingProducts()
+     * repairs (it fetches each hotel from the API and re-inserts it linked).
+     *
+     * The opposite direction of countOrphanedProducts(): there the hotel row
+     * survives and the product is gone; here the product survives and the
+     * hotel row is missing or unlinked (fresh reinstall, table re-sync). The
+     * relink admin action used to be gated on the ORPHAN count, so on a store
+     * with this (much more common) breakage the button never rendered.
+     *
+     * Code shapes: the legacy configured prefix + the country-prefixed shape
+     * SphinxProductFactory writes (TR3612). Two letters, so novoton's
+     * NVT-prefixed codes can never match.
+     */
+    public function countUnlinkedProducts(string $legacyPrefix): int
+    {
+        return TypeCoerce::toInt(db_get_field(
+            'SELECT COUNT(*) FROM ?:products p
+             WHERE (p.product_code LIKE ?l OR p.product_code REGEXP ?s)
+             AND NOT EXISTS (
+                 SELECT 1 FROM ?:sphinx_hotels h WHERE h.product_id = p.product_id
+             )',
+            $legacyPrefix . '%',
+            '^[A-Z]{2}[0-9]+$',
+        ));
+    }
+
+    /**
+     * The unlinked sphinx-shaped products themselves (same predicate as
+     * countUnlinkedProducts), newest code order, for the admin audit page.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function findUnlinkedProducts(string $legacyPrefix, int $limit = 500): array
+    {
+        $rows = db_get_array(
+            'SELECT p.product_id, p.product_code, d.product AS name
+             FROM ?:products p
+             LEFT JOIN ?:product_descriptions d
+                    ON d.product_id = p.product_id AND d.lang_code = ?s
+             WHERE (p.product_code LIKE ?l OR p.product_code REGEXP ?s)
+             AND NOT EXISTS (
+                 SELECT 1 FROM ?:sphinx_hotels h WHERE h.product_id = p.product_id
+             )
+             ORDER BY p.product_code
+             LIMIT ?i',
+            defined('CART_LANGUAGE') ? CART_LANGUAGE : 'en',
+            $legacyPrefix . '%',
+            '^[A-Z]{2}[0-9]+$',
+            $limit,
+        );
+
+        return TypeCoerce::toRowList($rows);
+    }
+
+    /**
      * Get distinct classification values present in the data.
      *
      * @return list<int>

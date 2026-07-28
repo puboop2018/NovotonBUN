@@ -515,6 +515,23 @@ if ($mode === 'search_hotels') {
 
 // ─── GET handlers ───
 
+if ($mode === 'product_links') {
+    // Which hotel products cannot be booked, and why: a product with no
+    // ?:sphinx_hotels row pointing at it renders as a plain catalog item
+    // (no booking form, no location line). The Relink action on this page
+    // repairs them — it is POST-only, so this page is its home in the admin.
+    $auditor = new \Tygh\Addons\SphinxHolidays\Services\ProductLinkAuditor(
+        Container::getHotelRepository(),
+    );
+    $report = $auditor->report(ConfigProvider::getProductCodePrefix());
+
+    $view->assign('unlinked_sphinx_products', TypeCoerce::toInt($report['total']));
+    $view->assign('unlinked_product_rows', $report['rows']);
+    $view->assign('is_configured', ConfigProvider::isConfigured());
+
+    return [CONTROLLER_STATUS_OK];
+}
+
 if ($mode === 'manage') {
     $destRepo = Container::getDestinationRepository();
     $hotelRepo = Container::getHotelRepository();
@@ -553,9 +570,15 @@ if ($mode === 'manage') {
     $view->assign('skipped_hotels', $skippedCount);
     $view->assign('selected_countries', $selectedCountries);
     $view->assign('is_configured', $isConfigured);
+    // Sphinx-shaped products with NO hotel row linked to them — what the
+    // relink action actually repairs. (The old gate used the orphan count —
+    // hotels whose product was deleted — which relink cannot fix and which is
+    // 0 on the far more common "hotel rows lost" store, hiding the button.)
+    $view->assign('unlinked_sphinx_products', $hotelRepo->countUnlinkedProducts(
+        ConfigProvider::getProductCodePrefix(),
+    ));
     // Hotels with a dead product_id (product deleted from CS-Cart without clearing the link)
-    $orphanedSpxCount = $hotelRepo->countOrphanedProducts();
-    $view->assign('orphaned_spx_products', $orphanedSpxCount);
+    $view->assign('orphaned_spx_products', $hotelRepo->countOrphanedProducts());
 
     $view->assign('sync_logs', $syncLogs);
 
