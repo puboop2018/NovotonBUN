@@ -80,10 +80,19 @@ function fn_travel_core_calculate_cart_items_post(&$cart, &$cart_products, $auth
 }
 
 /**
- * Hook: dispatch_before_display — Load travel_core CSS for booking pages.
+ * Hook: dispatch_before_display — settings self-heal (admin) + booking CSS.
  */
 function fn_travel_core_dispatch_before_display(): void
 {
+    // Settings heal lives HERE, not in init.php: that file is require'd from
+    // fn_init_addons() before CS-Cart defines CART_LANGUAGE, and
+    // Settings::updateValue() dereferences it — seeding a default there 500'd
+    // every admin page. By dispatch time the framework is fully initialised.
+    // Self-gated (admin area + stamp), so this costs one storage read.
+    if (function_exists('fn_travel_core_heal_settings_once')) {
+        fn_travel_core_heal_settings_once();
+    }
+
     if (!defined('AREA') || AREA !== 'C') {
         return;
     }
