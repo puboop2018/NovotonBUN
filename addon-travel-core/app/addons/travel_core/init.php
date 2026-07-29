@@ -68,28 +68,13 @@ if (defined('AREA') && AREA === 'A' && function_exists('fn_travel_core_ensure_sc
     unset($__tc_heal_fp);
 }
 
-// Self-heal SETTINGS: CS-Cart imports an addon's <settings> only at install
-// or upgrade, never on a code deploy, so any setting added later is absent
-// from the settings page on an existing store with no way to set it (the
-// reverse-geocoding switch was invisible in the field for exactly this).
-// Stamp-gated on all three addon.xml files together, so it re-runs whenever
-// any of them declares something new. Admin area only — creating settings is
-// an administrative act and the storefront must never race it.
-if (defined('AREA') && AREA === 'A' && function_exists('fn_travel_core_ensure_all_settings')) {
-    // Fingerprint the migrator itself alongside the addon.xml files: a fix to
-    // the healer (e.g. the CRLF label bug that created blank fields) must
-    // re-arm on stores whose addon.xml has not changed since the bad run.
-    $__tc_set_fp = (string) @md5_file(__DIR__ . '/src/Install/SettingsMigrator.php');
-    foreach (['travel_core', 'novoton_holidays', 'sphinx_holidays'] as $__tc_addon) {
-        $__tc_set_fp .= (string) @md5_file(dirname(__DIR__) . '/' . $__tc_addon . '/addon.xml');
-    }
-    $__tc_set_fp = md5($__tc_set_fp);
-    if (fn_travel_core_self_heal_due('travel_settings', $__tc_set_fp)) {
-        fn_travel_core_self_heal_guard('travel_settings', 'fn_travel_core_ensure_all_settings');
-        fn_travel_core_self_heal_stamp('travel_settings', $__tc_set_fp);
-    }
-    unset($__tc_set_fp, $__tc_addon);
-}
+// The SETTINGS self-heal deliberately does NOT run here. This file is
+// require'd from fn_init_addons(), which CS-Cart calls from fn_init() BEFORE
+// it defines CART_LANGUAGE — and Settings::updateValue() dereferences that
+// constant (Settings::getData). Seeding a default from here therefore threw
+// "Undefined constant Tygh\CART_LANGUAGE" and 500'd every admin page. It now
+// runs from fn_travel_core_heal_settings_once() on the dispatch_before_display
+// hook, by which point the framework is fully initialised.
 
 // Self-heal language keys: addon.xml/.po are only imported at install, so new
 // or changed labels never reach existing stores on their own. Compare a stored

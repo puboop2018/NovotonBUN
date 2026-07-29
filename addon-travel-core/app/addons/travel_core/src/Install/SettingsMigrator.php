@@ -197,7 +197,14 @@ final class SettingsMigrator
     }
 
     /**
-     * Delete the addon's RETIRED settings from a store that still has them.
+     * MOVE the addon's RETIRED settings out of a store that still has them:
+     * carry each row's value into the same-named travel_core setting (when
+     * that one exists and is empty), then delete the row.
+     *
+     * The carry step is what makes retirement safe on a store where the
+     * operator configured the provider copy before the consolidation — the
+     * value follows the setting to its new home instead of vanishing with the
+     * row. It runs BEFORE the delete, so a failed carry keeps the source row.
      *
      * Runs before the create loop so a retired name can never be re-created in
      * the same pass, and is idempotent: getId() returns 0 once the row is
@@ -244,6 +251,7 @@ final class SettingsMigrator
             // not abandon the rest — and never propagates out of a heal that
             // runs on every admin page load.
             try {
+                self::carryValueToCore($addon, $name);
                 $settings->removeById($objectId);
                 $removed[] = $name;
             } catch (\Throwable $e) {
@@ -252,6 +260,45 @@ final class SettingsMigrator
         }
 
         return $removed;
+    }
+
+    /**
+     * Hand a retiring provider setting's value to its travel_core successor.
+     *
+     * Only fills a genuine gap: the travel_core setting must exist (created
+     * by an earlier heal or the install) and hold nothing, and the provider
+     * value must be a non-empty string. A travel_core value the admin already
+     * set — or a default an earlier pass seeded — is never overwritten.
+     * Provider addons heal before travel_core (see
+     * fn_travel_core_ensure_all_settings), so a carried operator value lands
+     * before default-seeding and therefore wins over the repo default.
+     */
+    private static function carryValueToCore(string $addon, string $name): void
+    {
+        if ($addon === 'travel_core') {
+            return;
+        }
+
+        $settings = Settings::instance();
+        if (!$settings instanceof Settings) {
+            return;
+        }
+
+        $value = $settings->getValue($name, $addon);
+        if (!is_string($value) || trim($value) === '') {
+            return; // nothing worth carrying
+        }
+
+        if (!$settings->isExists($name, 'travel_core')) {
+            return; // no successor row yet — travel_core's own heal seeds it
+        }
+
+        $current = $settings->getValue($name, 'travel_core');
+        if ($current !== null && $current !== '' && $current !== []) {
+            return; // successor already configured — never overwrite
+        }
+
+        $settings->updateValue($name, $value, 'travel_core');
     }
 
     /**

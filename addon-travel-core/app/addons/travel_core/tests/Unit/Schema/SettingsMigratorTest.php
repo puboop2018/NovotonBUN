@@ -109,8 +109,8 @@ final class SettingsMigratorTest extends TestCase
         // The stamp has to include the migrator itself, or a fix to the healer
         // never re-runs on a store whose addon.xml is unchanged.
         self::assertStringContainsString(
-            "md5_file(__DIR__ . '/src/Install/SettingsMigrator.php')",
-            self::src('init.php'),
+            "md5_file(dirname(__DIR__) . '/src/Install/SettingsMigrator.php')",
+            self::src('functions/self_heal.php'),
         );
     }
 
@@ -143,21 +143,59 @@ final class SettingsMigratorTest extends TestCase
         self::assertStringContainsString("\$current !== null && \$current !== ''", $m);
     }
 
-    public function testHealRunsForEveryTravelAddonAndIsStampGated(): void
+    /**
+     * The heal runs from the dispatch_before_display hook, NEVER from
+     * init.php. Addon init.php files are require'd by fn_init_addons(),
+     * which fn_init() runs BEFORE defining CART_LANGUAGE — and
+     * Settings::updateValue() dereferences that constant, so seeding a
+     * default from init threw "Undefined constant Tygh\CART_LANGUAGE" and
+     * 500'd every admin page. By dispatch time the framework is fully
+     * initialised (it is the same context the settings pages themselves use).
+     */
+    public function testHealRunsForEveryTravelAddonAtDispatchTimeAndIsStampGated(): void
     {
         $heal = self::src('functions/self_heal.php');
         self::assertStringContainsString('function fn_travel_core_ensure_all_settings()', $heal);
-        foreach (['travel_core', 'novoton_holidays', 'sphinx_holidays'] as $addon) {
-            self::assertStringContainsString("'{$addon}'", $heal);
-        }
+        self::assertStringContainsString('function fn_travel_core_heal_settings_once()', $heal);
+        // Providers first, travel_core LAST: a value carried out of a retired
+        // provider row lands in travel_core before default-seeding, so an
+        // operator-configured value beats a repo default.
+        self::assertStringContainsString(
+            "foreach (['novoton_holidays', 'sphinx_holidays', 'travel_core'] as \$addon)",
+            $heal,
+        );
+        // One addon's failure must not shield the others' stale rows — the
+        // CART_LANGUAGE crash in travel_core's pass did exactly that to
+        // novoton's retirement.
+        $loopPos = strpos($heal, "foreach (['novoton_holidays'");
+        self::assertIsInt($loopPos);
+        self::assertStringContainsString('} catch (\Throwable $e) {', substr($heal, $loopPos, 700));
 
+        // Stamp-gated through the guard, fingerprinted on the migrator, THIS
+        // orchestration file (__FILE__) and all three addon.xml files: the
+        // guard stamps even a failed run, so only a fingerprint change ever
+        // re-runs the heal — any fix to the mechanism must re-arm it.
+        self::assertStringContainsString("fn_travel_core_self_heal_due('travel_settings'", $heal);
+        self::assertStringContainsString('@md5_file(__FILE__)', $heal);
+        self::assertStringContainsString(
+            "fn_travel_core_self_heal_guard('travel_settings', 'fn_travel_core_ensure_all_settings')",
+            $heal,
+        );
+        self::assertStringContainsString("fn_travel_core_self_heal_stamp('travel_settings'", $heal);
+
+        // Wired to the dispatch hook, BEFORE its storefront-only early return
+        // (the heal gates itself to AREA 'A').
+        $hook = self::src('hooks/cart_hooks.php');
+        $callPos = strpos($hook, 'fn_travel_core_heal_settings_once();');
+        $areaPos = strpos($hook, "AREA !== 'C'");
+        self::assertIsInt($callPos);
+        self::assertIsInt($areaPos);
+        self::assertLessThan($areaPos, $callPos);
+
+        // And init.php stays out of it entirely.
         $init = self::src('init.php');
-        // Invoked through the guard — see testAFailingHealCannotTakeTheAdminDown.
-        self::assertStringContainsString("'fn_travel_core_ensure_all_settings'", $init);
-        // Fingerprinted on all three addon.xml files, so declaring a new
-        // setting anywhere re-arms the heal.
-        self::assertStringContainsString("fn_travel_core_self_heal_due('travel_settings'", $init);
-        self::assertStringContainsString("fn_travel_core_self_heal_stamp('travel_settings'", $init);
+        self::assertStringNotContainsString('fn_travel_core_ensure_all_settings', $init);
+        self::assertStringNotContainsString("fn_travel_core_self_heal_due('travel_settings'", $init);
     }
 
     /**
@@ -192,6 +230,20 @@ final class SettingsMigratorTest extends TestCase
         self::assertStringContainsString("method_exists(\$settings, 'removeById')", $m);
         self::assertStringContainsString('getNumberOfRequiredParameters() > 1', $m);
         self::assertStringContainsString('$settings->removeById($objectId)', $m);
+
+        // Retirement is a MOVE, not just a delete: an operator-configured
+        // provider value is carried into the same-named EMPTY travel_core
+        // setting BEFORE the row is removed (a failed carry keeps the source),
+        // and a travel_core value that already exists is never overwritten.
+        $carryPos = strpos($m, 'self::carryValueToCore($addon, $name);');
+        $removePos = strpos($m, '$settings->removeById($objectId);');
+        self::assertIsInt($carryPos);
+        self::assertIsInt($removePos);
+        self::assertLessThan($removePos, $carryPos);
+
+        self::assertStringContainsString("isExists(\$name, 'travel_core')", $m);
+        self::assertStringContainsString("getValue(\$name, 'travel_core')", $m);
+        self::assertStringContainsString("updateValue(\$name, \$value, 'travel_core')", $m);
     }
 
     /**
@@ -209,13 +261,13 @@ final class SettingsMigratorTest extends TestCase
         self::assertStringContainsString('function fn_travel_core_self_heal_guard(', $heal);
         self::assertStringContainsString('catch (\Throwable $e)', $heal);
 
-        // Every per-request heal call site goes through the guard.
+        // Every per-request heal call site goes through the guard. The schema
+        // heal stays in init.php (db_*-only, safe there); the settings heal
+        // lives in self_heal.php and runs at dispatch time.
         $init = self::src('init.php');
-        foreach (['travel_core_schema', 'travel_settings'] as $key) {
-            self::assertStringContainsString("fn_travel_core_self_heal_guard('{$key}'", $init);
-        }
+        self::assertStringContainsString("fn_travel_core_self_heal_guard('travel_core_schema'", $init);
         self::assertStringNotContainsString('        fn_travel_core_ensure_schema();', $init);
-        self::assertStringNotContainsString('        fn_travel_core_ensure_all_settings();', $init);
+        self::assertStringContainsString("fn_travel_core_self_heal_guard('travel_settings'", $heal);
 
         $sphinx = (string) file_get_contents(
             dirname(__DIR__, 6) . '/../addon-sphinx-holidays/app/addons/sphinx_holidays/init.php',

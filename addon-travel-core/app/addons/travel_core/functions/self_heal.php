@@ -47,6 +47,50 @@ function fn_travel_core_self_heal_stamp(string $key, string $fingerprint): void
 }
 
 /**
+ * Heal every travel addon's settings, once per deployed version, at a point
+ * in the request where CS-Cart is actually ready for it.
+ *
+ * NOT callable from an addon's init.php. That file is require'd by
+ * fn_init_addons(), which fn_init() runs BEFORE defining CART_LANGUAGE, and
+ * Settings::updateValue() -> updateValueById() -> getData() dereferences that
+ * constant. Seeding a default there threw "Undefined constant
+ * Tygh\CART_LANGUAGE" from inside bootstrap, i.e. a 500 on every admin page
+ * including the ones needed to diagnose it. The dispatch_before_display hook
+ * fires after the framework is fully initialised, so the whole Settings API
+ * is usable there.
+ *
+ * Admin area only: creating settings is an administrative act and the
+ * storefront must never race it.
+ */
+function fn_travel_core_heal_settings_once(): void
+{
+    if (!defined('AREA') || AREA !== 'A' || !function_exists('fn_travel_core_ensure_all_settings')) {
+        return;
+    }
+
+    // Fingerprint the whole healing mechanism alongside the addon.xml files:
+    // the migrator AND this orchestration file. The guard stamps even a
+    // FAILED run (see fn_travel_core_self_heal_guard), so the only way a fix
+    // ever re-runs the heal is a fingerprint change — a fix to either file
+    // must re-arm on stores whose addon.xml has not changed since the bad run
+    // (the CRLF label bug, the CART_LANGUAGE crash, this very move).
+    $addonsRoot = dirname(__DIR__, 2);
+    $fingerprint = (string) @md5_file(dirname(__DIR__) . '/src/Install/SettingsMigrator.php');
+    $fingerprint .= (string) @md5_file(__FILE__);
+    foreach (['travel_core', 'novoton_holidays', 'sphinx_holidays'] as $addon) {
+        $fingerprint .= (string) @md5_file($addonsRoot . '/' . $addon . '/addon.xml');
+    }
+    $fingerprint = md5($fingerprint);
+
+    if (!fn_travel_core_self_heal_due('travel_settings', $fingerprint)) {
+        return;
+    }
+
+    fn_travel_core_self_heal_guard('travel_settings', 'fn_travel_core_ensure_all_settings');
+    fn_travel_core_self_heal_stamp('travel_settings', $fingerprint);
+}
+
+/**
  * Run a self-heal so that it CANNOT take the store down.
  *
  * These heals run from init.php on every admin page load. CS-Cart turns an
@@ -102,7 +146,15 @@ function fn_travel_core_ensure_settings(string $addon, string $addonDir, string 
  * Each addon ships its own addon.xml + .po pair, so the paths are derived
  * from the addon name; addons whose directory is absent are skipped.
  *
- * @return array<string, list<string>> addon => created setting names
+ * PROVIDER ADDONS FIRST, travel_core last — deliberately. Retiring a
+ * provider's duplicate setting carries its value into the same-named
+ * travel_core setting when that one is empty; travel_core's own pass then
+ * seeds addon.xml defaults into whatever is STILL empty. Providers-first
+ * means an operator-configured provider value beats a repo default. And each
+ * addon heals inside its own catch: the CART_LANGUAGE crash proved that one
+ * addon's failure would otherwise shield the others' stale rows forever.
+ *
+ * @return array<string, list<string>> addon => created/removed setting names
  */
 function fn_travel_core_ensure_all_settings(): array
 {
@@ -110,12 +162,20 @@ function fn_travel_core_ensure_all_settings(): array
     $varLangs = dirname($addonsRoot, 2) . '/var/langs';
 
     $created = [];
-    foreach (['travel_core', 'novoton_holidays', 'sphinx_holidays'] as $addon) {
+    foreach (['novoton_holidays', 'sphinx_holidays', 'travel_core'] as $addon) {
         $dir = $addonsRoot . '/' . $addon;
         if (!is_file($dir . '/addon.xml')) {
             continue;
         }
-        $names = fn_travel_core_ensure_settings($addon, $dir, $varLangs);
+
+        try {
+            $names = fn_travel_core_ensure_settings($addon, $dir, $varLangs);
+        } catch (\Throwable $e) {
+            error_log("travel_core: settings heal for {$addon} failed — " . $e->getMessage());
+
+            continue;
+        }
+
         if ($names !== []) {
             $created[$addon] = $names;
         }
