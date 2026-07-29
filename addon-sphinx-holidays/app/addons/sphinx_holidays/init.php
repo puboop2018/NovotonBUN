@@ -108,7 +108,12 @@ if (defined('AREA') && AREA === 'A' && function_exists('fn_sphinx_holidays_ensur
     if (!function_exists('fn_travel_core_self_heal_due')
         || fn_travel_core_self_heal_due('sphinx_schema', $__spx_heal_fp)
     ) {
-        fn_sphinx_holidays_ensure_schema();
+        if (function_exists('fn_travel_core_self_heal_guard')) {
+            // Never let a heal 503 the admin — see fn_travel_core_self_heal_guard.
+            fn_travel_core_self_heal_guard('sphinx_schema', 'fn_sphinx_holidays_ensure_schema');
+        } else {
+            fn_sphinx_holidays_ensure_schema();
+        }
         if (function_exists('fn_travel_core_self_heal_stamp')) {
             fn_travel_core_self_heal_stamp('sphinx_schema', $__spx_heal_fp);
         }
