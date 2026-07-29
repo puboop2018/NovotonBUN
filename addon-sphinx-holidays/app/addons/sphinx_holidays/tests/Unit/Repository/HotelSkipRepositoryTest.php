@@ -217,8 +217,8 @@ class HotelSkipRepositoryTest extends TestCase
     public function testFindAvailabilityGateCandidatesQueriesEligibleRows(): void
     {
         $rows = [
-            ['hotel_id' => '10', 'destination_id' => 5, 'product_skip_reason' => null],
-            ['hotel_id' => '11', 'destination_id' => 5, 'product_skip_reason' => 'no_availability'],
+            ['hotel_id' => '10', 'destination_id' => 5, 'product_id' => 0, 'product_skip_reason' => null],
+            ['hotel_id' => '11', 'destination_id' => 5, 'product_id' => 42, 'product_skip_reason' => 'no_availability'],
         ];
         $captured = [];
         DbStub::$getArray = static function (string $query, ...$params) use ($rows, &$captured): array {
@@ -230,8 +230,33 @@ class HotelSkipRepositoryTest extends TestCase
 
         $this->assertSame($rows, $result);
         $this->assertStringContainsString('WHERE destination_id IN (?n)', $captured[0]);
-        $this->assertStringContainsString('(product_id IS NULL OR product_id = 0)', $captured[0]);
+        // LINKED hotels are candidates too ("Hotels with immediate
+        // confirmation" reaches the product catalog), so the query must
+        // select product_id and must NOT carry the old unlinked-only guard.
+        $this->assertStringContainsString('SELECT hotel_id, destination_id, product_id, product_skip_reason', $captured[0]);
+        $this->assertStringNotContainsString('product_id IS NULL', $captured[0]);
         $this->assertStringContainsString('(product_skip_reason IS NULL OR product_skip_reason = ?s)', $captured[0]);
         $this->assertSame([[5, 9], 'active', 'no_availability'], $captured[1]);
+    }
+
+    public function testDeleteBatchDeletesUnconditionallyWithImageQueueRows(): void
+    {
+        // The linked branch: the gate calls this only AFTER the CS-Cart
+        // product is confirmed gone, so no product-link guard belongs here.
+        $queries = [];
+        DbStub::$query = static function (string $query, ...$params) use (&$queries): int {
+            $queries[] = [$query, $params];
+            return 2;
+        };
+
+        $this->assertSame(0, $this->repo->deleteBatch([]));
+        $this->assertSame([], $queries, 'empty input must not touch the DB');
+
+        $this->assertSame(2, $this->repo->deleteBatch(['H1', 'H2']));
+        $this->assertCount(2, $queries);
+        $this->assertStringContainsString('DELETE FROM ?:sphinx_hotels WHERE hotel_id IN (?a)', $queries[0][0]);
+        $this->assertStringNotContainsString('product_id', $queries[0][0]);
+        $this->assertStringContainsString('DELETE FROM ?:sphinx_image_sync_queue WHERE hotel_id IN (?a)', $queries[1][0]);
+        $this->assertSame([['H1', 'H2']], $queries[0][1]);
     }
 }

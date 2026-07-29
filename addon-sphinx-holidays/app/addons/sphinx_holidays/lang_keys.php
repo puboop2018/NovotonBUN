@@ -112,12 +112,8 @@ return [
         'ro' => 'Hoteluri cu confirmare imediată',
     ],
     'sphinx_holidays.require_immediate_availability.tooltip' => [
-        'en' => 'When enabled, only hotels with at least one confirmation=immediate offer are kept in the hotel list: the hotels cron probes each destination and deletes hotels without such an offer (hotels already linked to CS-Cart products are never deleted), and the storefront search shows only immediate-confirmation offers. The hotels cron accepts a per-run override: &availability_gate=0 to skip the gate, &availability_gate=1 to force it.',
-        'ro' => 'Când este activ, în lista de hoteluri se păstrează doar hotelurile cu cel puțin o ofertă confirmation=immediate: cronul de hoteluri verifică fiecare destinație și șterge hotelurile fără o astfel de ofertă (hotelurile deja legate de produse CS-Cart nu sunt șterse niciodată), iar căutarea din storefront afișează doar ofertele cu confirmare imediată. Cronul de hoteluri acceptă o suprascriere per rulare: &availability_gate=0 pentru a omite filtrul, &availability_gate=1 pentru a-l forța.',
-    ],
-    'sphinx_holidays.hotels_hidden_no_availability' => [
-        'en' => '[count] hotel(s) hidden — no immediate-confirmation offer found by the sync probe (see the "Hotels with immediate confirmation" setting).',
-        'ro' => '[count] hotel(uri) ascunse — fără ofertă cu confirmare imediată la ultima verificare (vezi setarea „Hoteluri cu confirmare imediată”).',
+        'en' => 'When enabled, only hotels with at least one confirmation=immediate offer are kept in the hotel list: the hotels cron probes each destination and deletes hotels without such an offer (hotels already linked to CS-Cart products lose the product together with the hotel), and the storefront search shows only immediate-confirmation offers. The hotels cron accepts a per-run override: &availability_gate=0 to skip the gate, &availability_gate=1 to force it.',
+        'ro' => 'Când este activ, în lista de hoteluri se păstrează doar hotelurile cu cel puțin o ofertă confirmation=immediate: cronul de hoteluri verifică fiecare destinație și șterge hotelurile fără o astfel de ofertă (hotelurile deja legate de produse CS-Cart sunt șterse împreună cu produsul lor), iar căutarea din storefront afișează doar ofertele cu confirmare imediată. Cronul de hoteluri acceptă o suprascriere per rulare: &availability_gate=0 pentru a omite filtrul, &availability_gate=1 pentru a-l forța.',
     ],
     'sphinx_holidays.preorder_cache_ttl' => [
         'en' => 'Checkout verify cache TTL (seconds)',
