@@ -62,29 +62,39 @@ final class ImmediateConfirmationListTest extends TestCase
         );
     }
 
-    public function testGateDeletesUnavailableHotelsLinkedOnesWithTheirProduct(): void
+    public function testGateDeletesUnlinkedButHidesLinkedProductsAndRestoresThem(): void
     {
-        // "We will have only hotels that have confirmation: immediate in the
-        // hotel list AND in CS-Cart" — the gate's terminal action is DELETE,
-        // not flag, and a linked hotel loses its CS-Cart product first, its
-        // row second (only once the product is confirmed gone, so a refused
-        // delete never strands an orphan product).
+        // User ruling, second iteration: unbookable UNLINKED hotels are
+        // deleted, but a LINKED hotel keeps row + product — the product is
+        // set to Hidden (reachable by direct link, absent from listings and
+        // searches) and reactivated when immediate availability returns.
+        // Deleting a seasonal hotel's product would burn its URL and SEO.
         $gate = self::src('src/Services/HotelAvailabilityGate.php');
         self::assertStringContainsString('deleteUnlinkedBatch($toDelete)', $gate);
-        self::assertStringContainsString('fn_delete_product($productId)', $gate);
-        self::assertStringContainsString('deleteBatch($rowsToDelete)', $gate);
-        self::assertStringNotContainsString('markSkippedBatch', $gate);
+        self::assertStringContainsString('hideProductsBatch($toHideProducts)', $gate);
+        self::assertStringContainsString('markSkippedBatch($toHideHotels', $gate);
+        self::assertStringContainsString('showProductsBatch($toRestoreProducts)', $gate);
+        // The delete-the-product experiment is over.
+        self::assertStringNotContainsString('fn_delete_product', $gate);
+
+        // Both status flips are guarded so an admin's manual Hidden/Disabled
+        // choice is never overridden in either direction.
+        $repo = self::src('src/Repository/HotelSkipRepository.php');
+        self::assertStringContainsString("SET status = 'H' WHERE product_id IN (?n) AND status = 'A'", $repo);
+        self::assertStringContainsString("SET status = 'A' WHERE product_id IN (?n) AND status = 'H'", $repo);
 
         // Candidates include LINKED hotels — the old unlinked-only predicate
-        // is exactly what kept unbookable hotels sellable in CS-Cart.
-        $repo = self::src('src/Repository/HotelSkipRepository.php');
+        // is exactly what kept unbookable hotels visible in CS-Cart searches.
         self::assertStringContainsString(
             'SELECT hotel_id, destination_id, product_id, product_skip_reason',
             $repo,
         );
 
-        // The setting tooltip must not promise the old exception.
-        self::assertStringNotContainsString('are never deleted', self::src('addon.xml'));
+        // The setting tooltip documents the hide/restore behaviour.
+        $xml = self::src('addon.xml');
+        self::assertStringNotContainsString('are never deleted', $xml);
+        self::assertStringContainsString('set to Hidden', $xml);
+        self::assertStringContainsString('reactivated when immediate availability returns', $xml);
     }
 
     public function testHotelsGridHasNoHiddenRowsNotice(): void

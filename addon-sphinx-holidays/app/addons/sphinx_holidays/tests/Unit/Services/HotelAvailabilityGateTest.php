@@ -10,7 +10,6 @@ use Tygh\Addons\SphinxHolidays\Api\SphinxHttpClient;
 use Tygh\Addons\SphinxHolidays\Repository\HotelSkipRepository;
 use Tygh\Addons\SphinxHolidays\Services\HotelAvailabilityGate;
 use Tygh\Addons\SphinxHolidays\SphinxApi;
-use Tygh\Addons\SphinxHolidays\Tests\Support\ProductFnStub;
 
 /**
  * Characterization coverage for HotelAvailabilityGate — the immediate-availability
@@ -31,18 +30,12 @@ class HotelAvailabilityGateTest extends TestCase
 
     protected function setUp(): void
     {
-        ProductFnStub::reset();
         $this->httpClient = $this->createMock(SphinxHttpClient::class);
         $this->httpClient->method('isCircuitOpen')->willReturn(false);
         $this->api = $this->createMock(SphinxApi::class);
         $this->api->method('getHttpClient')->willReturn($this->httpClient);
         $this->skip = $this->createMock(HotelSkipRepository::class);
         $this->output = [];
-    }
-
-    protected function tearDown(): void
-    {
-        ProductFnStub::reset();
     }
 
     private function gate(): HotelAvailabilityGate
@@ -114,11 +107,13 @@ class HotelAvailabilityGateTest extends TestCase
     }
 
     /**
-     * "Hotels with immediate confirmation" extends to the product catalog:
-     * a LINKED hotel that lost its immediate offer loses the CS-Cart product
-     * first and its row second, so no unbookable hotel stays purchasable.
+     * A LINKED hotel that lost its immediate offer is NOT deleted: its
+     * CS-Cart product goes Hidden (direct link only, absent from listings
+     * and searches) and the row is flagged — so a seasonal hotel keeps its
+     * page for the day availability returns. Product first, flag second:
+     * the flag is what marks the product as gate-hidden.
      */
-    public function testLinkedUnavailableHotelLosesItsProductAndThenItsRow(): void
+    public function testLinkedUnavailableHotelGetsProductHiddenAndRowFlagged(): void
     {
         $this->skip->method('findAvailabilityGateCandidates')->willReturn([
             ['hotel_id' => 'H1', 'destination_id' => 5, 'product_id' => 42, 'product_skip_reason' => ''],
@@ -127,62 +122,43 @@ class HotelAvailabilityGateTest extends TestCase
 
         $this->skip->expects($this->once())->method('deleteUnlinkedBatch')
             ->with([])->willReturn(0);
-        $this->skip->expects($this->once())->method('deleteBatch')
-            ->with(['H1'])->willReturn(1);
+        $this->skip->expects($this->once())->method('hideProductsBatch')
+            ->with([42])->willReturn(1);
+        $this->skip->expects($this->once())->method('markSkippedBatch')
+            ->with(['H1'], 'no_availability')->willReturn(1);
 
         $stats = $this->gate()->apply('GR', [5], [], $this->sink());
 
-        $this->assertSame([42], ProductFnStub::$deleted, 'the CS-Cart product is deleted exactly once');
-        $this->assertSame(1, $stats['availability_deleted']);
-        $this->assertSame(1, $stats['availability_products_deleted']);
+        $this->assertSame(0, $stats['availability_deleted'], 'linked hotels are never deleted');
+        $this->assertSame(1, $stats['availability_products_hidden']);
+        $this->assertSame(0, $stats['availability_products_restored']);
     }
 
     /**
-     * A product the platform refuses to delete blocks the hotel row: deleting
-     * the row anyway would strand an orphan product that stays purchasable
-     * with no hotel behind it. The pair is kept intact for the next run.
+     * The way back: a flagged linked hotel whose immediate offer returned
+     * gets the flag cleared AND the gate-hidden product reactivated.
      */
-    public function testProductThatRefusesDeletionKeepsItsHotelRowForTheNextRun(): void
+    public function testFlaggedLinkedHotelBackInAvailabilityIsClearedAndReactivated(): void
     {
-        ProductFnStub::$delete = static fn (int $id): bool => false;
-        ProductFnStub::$getName = static fn (int $id): string => 'Sunis Hotel Su'; // still exists
-
         $this->skip->method('findAvailabilityGateCandidates')->willReturn([
-            ['hotel_id' => 'H1', 'destination_id' => 5, 'product_id' => 42, 'product_skip_reason' => ''],
+            ['hotel_id' => 'H1', 'destination_id' => 5, 'product_id' => 42, 'product_skip_reason' => 'no_availability'],
         ]);
-        $this->api->method('searchHotels')->willReturn(['results' => []]);
+        $this->api->method('searchHotels')->willReturn([
+            'results' => [['confirmation' => 'immediate', 'hotel_id' => 'H1']],
+        ]);
 
-        $this->skip->expects($this->once())->method('deleteBatch')
+        $this->skip->expects($this->once())->method('showProductsBatch')
+            ->with([42])->willReturn(1);
+        $this->skip->expects($this->once())->method('clearSkipReasonBatch')
+            ->with(['H1'], 'no_availability')->willReturn(1);
+        $this->skip->expects($this->once())->method('hideProductsBatch')
             ->with([])->willReturn(0);
 
         $stats = $this->gate()->apply('GR', [5], [], $this->sink());
 
-        $this->assertSame(0, $stats['availability_deleted']);
-        $this->assertSame(0, $stats['availability_products_deleted']);
-        $this->assertTrue($this->outputContains('could not delete product 42'));
-    }
-
-    /**
-     * A product_id pointing at a product that no longer exists (deleted by
-     * hand, or by deduplication) must not immortalise the hotel row.
-     */
-    public function testAlreadyDeletedProductStillReleasesTheHotelRow(): void
-    {
-        ProductFnStub::$delete = static fn (int $id): bool => false;
-        ProductFnStub::$getName = static fn (int $id): string => ''; // gone
-
-        $this->skip->method('findAvailabilityGateCandidates')->willReturn([
-            ['hotel_id' => 'H1', 'destination_id' => 5, 'product_id' => 42, 'product_skip_reason' => ''],
-        ]);
-        $this->api->method('searchHotels')->willReturn(['results' => []]);
-
-        $this->skip->expects($this->once())->method('deleteBatch')
-            ->with(['H1'])->willReturn(1);
-
-        $stats = $this->gate()->apply('GR', [5], [], $this->sink());
-
-        $this->assertSame(1, $stats['availability_deleted']);
-        $this->assertSame(0, $stats['availability_products_deleted']);
+        $this->assertSame(1, $stats['availability_cleared']);
+        $this->assertSame(1, $stats['availability_products_restored']);
+        $this->assertSame(0, $stats['availability_products_hidden']);
     }
 
     /**
