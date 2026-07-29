@@ -177,3 +177,27 @@ if (!class_exists(\Tygh\Tygh::class)) {
     }
     ');
 }
+
+// ── CS-Cart catalog function stubs (spy-backed) ────────────────────────────
+// The availability gate deletes a linked hotel's CS-Cart product before its
+// row; DeduplicateCommand deletes duplicate products. Both call the global
+// functions behind function_exists() guards, so the stubs must exist for the
+// linked-deletion branches to be testable at all. Behaviour is driven by
+// Tests\Support\ProductFnStub (reset it in setUp — functions are process-global).
+if (!function_exists('fn_delete_product')) {
+    function fn_delete_product($product_id): bool
+    {
+        \Tygh\Addons\SphinxHolidays\Tests\Support\ProductFnStub::$deleted[] = (int) $product_id;
+        $fn = \Tygh\Addons\SphinxHolidays\Tests\Support\ProductFnStub::$delete;
+
+        return $fn === null ? true : (bool) $fn((int) $product_id);
+    }
+}
+if (!function_exists('fn_get_product_name')) {
+    function fn_get_product_name($product_id)
+    {
+        $fn = \Tygh\Addons\SphinxHolidays\Tests\Support\ProductFnStub::$getName;
+
+        return $fn === null ? '' : $fn((int) $product_id);
+    }
+}

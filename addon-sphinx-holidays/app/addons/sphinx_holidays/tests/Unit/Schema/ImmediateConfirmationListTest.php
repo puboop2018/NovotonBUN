@@ -11,11 +11,13 @@ use PHPUnit\Framework\TestCase;
  *
  * The confirmation field exists only on live search offers
  * (/api/v1/hotels/results), never in the static hotel catalog the sync
- * imports — so "only immediate hotels in the list" is implemented as:
- * the sync's availability gate probes searches and DELETES hotels with no
- * confirmation=immediate offer (hotels linked to CS-Cart products are kept),
- * and the admin hotels grid additionally hides any legacy-flagged rows until
- * the next sync purges them. One setting drives all of it, default ON.
+ * imports — so "only immediate hotels" is implemented as: the sync's
+ * availability gate probes searches and DELETES hotels with no
+ * confirmation=immediate offer. That reaches the product catalog too — a
+ * LINKED hotel loses its CS-Cart product first and its row second — so
+ * unbookable hotels exist nowhere: not in the hotel list, not as products.
+ * The grid consequently has NO hide-filter: it shows exactly what is
+ * stored. One setting drives all of it, default ON.
  */
 final class ImmediateConfirmationListTest extends TestCase
 {
@@ -38,62 +40,71 @@ final class ImmediateConfirmationListTest extends TestCase
         self::assertStringContainsString('<![CDATA[Hoteluri cu confirmare imediată]]>', $xml);
     }
 
-    public function testGridListingIsWiredToTheSettingAndExcludesFlaggedHotels(): void
+    public function testGridShowsExactlyWhatIsStoredWithNoHideFilter(): void
     {
-        // func.php shell injects the setting (Registry access is banned in
-        // src/ bodies, so the flag rides in through the constructor)…
+        // The rule lives in the DATA (the gate deletes unbookable hotels and
+        // their products), so the grid never filters — hiding rows would just
+        // disguise legacy-flagged backlog until the next cron resolves it.
         self::assertStringContainsString(
-            'HotelAdminListingRepository($perPage > 0 ? $perPage : 50, '
-            . '\Tygh\Addons\SphinxHolidays\Services\ConfigProvider::shouldRequireImmediateAvailability())',
+            'HotelAdminListingRepository($perPage > 0 ? $perPage : 50)',
             self::src('func.php'),
         );
 
-        // …the repository hides gate-flagged rows and reports the count…
         $repo = self::src('src/Repository/HotelAdminListingRepository.php');
-        self::assertStringContainsString('private readonly bool $onlyImmediateConfirmation', $repo);
-        self::assertStringContainsString(
-            'h.product_skip_reason IS NULL OR h.product_skip_reason != ?s',
-            $repo,
-        );
-        self::assertStringContainsString('HotelSkipRepository::SKIP_REASON_NO_AVAILABILITY', $repo);
-        self::assertStringContainsString("\$params['hidden_no_availability']", $repo);
+        self::assertStringNotContainsString('onlyImmediateConfirmation', $repo);
+        self::assertStringNotContainsString('hidden_no_availability', $repo);
 
-        // …and the sync gate that produces the flag reads the SAME setting,
-        // so the one checkbox governs list + product creation + storefront.
+        // …and the sync gate reads the ONE setting, so a single checkbox
+        // governs list + product catalog + storefront search.
         self::assertStringContainsString(
             'ConfigProvider::shouldRequireImmediateAvailability()',
             self::src('src/Services/HotelSyncService.php'),
         );
     }
 
-    public function testGateDeletesUnavailableHotelsInsteadOfKeepingThem(): void
+    public function testGateDeletesUnavailableHotelsLinkedOnesWithTheirProduct(): void
     {
-        // "It is useless to have a huge database of hotels that might never
-        // be available to be booked" — the gate's terminal action is DELETE,
-        // not flag; the SQL re-checks the product link so linked hotels
-        // survive even if they lose availability later.
+        // "We will have only hotels that have confirmation: immediate in the
+        // hotel list AND in CS-Cart" — the gate's terminal action is DELETE,
+        // not flag, and a linked hotel loses its CS-Cart product first, its
+        // row second (only once the product is confirmed gone, so a refused
+        // delete never strands an orphan product).
         $gate = self::src('src/Services/HotelAvailabilityGate.php');
         self::assertStringContainsString('deleteUnlinkedBatch($toDelete)', $gate);
+        self::assertStringContainsString('fn_delete_product($productId)', $gate);
+        self::assertStringContainsString('deleteBatch($rowsToDelete)', $gate);
         self::assertStringNotContainsString('markSkippedBatch', $gate);
 
+        // Candidates include LINKED hotels — the old unlinked-only predicate
+        // is exactly what kept unbookable hotels sellable in CS-Cart.
         $repo = self::src('src/Repository/HotelSkipRepository.php');
-        self::assertStringContainsString('DELETE FROM ?:sphinx_hotels', $repo);
         self::assertStringContainsString(
-            'hotel_id IN (?a) AND (product_id IS NULL OR product_id = 0)',
+            'SELECT hotel_id, destination_id, product_id, product_skip_reason',
             $repo,
         );
+
+        // The setting tooltip must not promise the old exception.
+        self::assertStringNotContainsString('are never deleted', self::src('addon.xml'));
     }
 
-    public function testHotelsGridExplainsHiddenRows(): void
+    public function testHotelsGridHasNoHiddenRowsNotice(): void
     {
+        // The notice ("[count] hotel(s) hidden…") described the hide-filter;
+        // both are gone, and with them the raw
+        // "_sphinx_holidays.hotels_hidden_no_availability" label that stores
+        // with an unseeded lang table rendered above the grid.
         $tpl = (string) file_get_contents(
             dirname(__DIR__, 6)
             . '/design/backend/templates/addons/sphinx_holidays/views/sphinx_holidays/hotels.tpl',
         );
-        self::assertStringContainsString('{if $search.hidden_no_availability}', $tpl);
-        self::assertStringContainsString(
-            '{__("sphinx_holidays.hotels_hidden_no_availability", ["[count]" => $search.hidden_no_availability])}',
-            $tpl,
-        );
+        self::assertStringNotContainsString('hidden_no_availability', $tpl);
+
+        self::assertStringNotContainsString('hotels_hidden_no_availability', self::src('lang_keys.php'));
+        foreach (['en', 'ro'] as $lang) {
+            $po = (string) file_get_contents(
+                dirname(__DIR__, 6) . '/var/langs/' . $lang . '/addons/sphinx_holidays.po',
+            );
+            self::assertStringNotContainsString('hotels_hidden_no_availability', $po);
+        }
     }
 }

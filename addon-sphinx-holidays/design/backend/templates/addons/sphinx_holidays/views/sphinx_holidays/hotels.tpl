@@ -91,10 +91,6 @@
 
 {include file="common/pagination.tpl" save_current_url=true}
 
-{if $search.hidden_no_availability}
-<div class="alert alert-info">{__("sphinx_holidays.hotels_hidden_no_availability", ["[count]" => $search.hidden_no_availability])}</div>
-{/if}
-
 {* $sort_url_base is built in the controller with proper URL encoding *}
 
 <form action="{"sphinx_holidays.bulk_update_hotels"|fn_url}" method="post" name="sphinx_bulk_form" id="sphinx_bulk_form">

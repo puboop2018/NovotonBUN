@@ -52,13 +52,15 @@ class HotelSkipRepository
     /**
      * Find hotels eligible for the availability gate within the given destinations.
      *
-     * Candidates are active hotels with no CS-Cart product yet and either no
-     * skip reason or the availability gate's own reason — so the gate can both
-     * newly flag unavailable hotels and clear hotels that became available,
-     * while never touching linked products or hotels skipped for other reasons.
+     * Candidates are ALL active hotels — linked to a CS-Cart product or not —
+     * with either no skip reason or the availability gate's own reason.
+     * "Hotels with immediate confirmation" means only bookable hotels exist
+     * anywhere, the product catalog included, so a linked hotel that lost its
+     * immediate offer is deleted together with its product rather than kept.
+     * Hotels skipped for other reasons (invalid_country, …) stay untouched.
      *
      * @param int[] $destinationIds
-     * @return list<array<string, mixed>> Rows of {hotel_id, destination_id, product_skip_reason}
+     * @return list<array<string, mixed>> Rows of {hotel_id, destination_id, product_id, product_skip_reason}
      */
     public function findAvailabilityGateCandidates(array $destinationIds): array
     {
@@ -67,11 +69,10 @@ class HotelSkipRepository
         }
 
         return self::asRowList(db_get_array(
-            'SELECT hotel_id, destination_id, product_skip_reason
+            'SELECT hotel_id, destination_id, product_id, product_skip_reason
              FROM ?:sphinx_hotels
              WHERE destination_id IN (?n)
                AND sync_status = ?s
-               AND (product_id IS NULL OR product_id = 0)
                AND (product_skip_reason IS NULL OR product_skip_reason = ?s)',
             $destinationIds,
             self::STATUS_ACTIVE,
@@ -122,6 +123,31 @@ class HotelSkipRepository
         $deleted = TypeCoerce::toInt(db_query(
             'DELETE FROM ?:sphinx_hotels
              WHERE hotel_id IN (?a) AND (product_id IS NULL OR product_id = 0)',
+            $hotelIds,
+        ));
+        db_query('DELETE FROM ?:sphinx_image_sync_queue WHERE hotel_id IN (?a)', $hotelIds);
+
+        return $deleted;
+    }
+
+    /**
+     * Delete hotels unconditionally by id ("Hotels with immediate
+     * confirmation", linked branch). The caller has ALREADY deleted the
+     * CS-Cart product — the gate only hands over ids whose product is
+     * confirmed gone, so this cannot orphan a live product. Pending
+     * image-queue rows go with the deleted hotels.
+     *
+     * @param string[] $hotelIds
+     * @return int Number of hotels deleted
+     */
+    public function deleteBatch(array $hotelIds): int
+    {
+        if ($hotelIds === []) {
+            return 0;
+        }
+
+        $deleted = TypeCoerce::toInt(db_query(
+            'DELETE FROM ?:sphinx_hotels WHERE hotel_id IN (?a)',
             $hotelIds,
         ));
         db_query('DELETE FROM ?:sphinx_image_sync_queue WHERE hotel_id IN (?a)', $hotelIds);

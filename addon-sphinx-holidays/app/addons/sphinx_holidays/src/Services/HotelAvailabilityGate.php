@@ -11,16 +11,19 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Helpers\ValidationHelpers;
 
 /**
- * Gates product-less hotels on immediate availability.
+ * Gates ALL hotels on immediate availability.
  *
- * For each destination with candidate hotels (no product yet, unflagged or
- * carrying a legacy no_availability flag), runs a live search per probe
- * window (PROBE_WINDOWS_DAYS_AHEAD) and DELETES hotels with no
- * immediate-confirmation offer in ANY window — the hotel list only stores
- * bookable hotels ("Hotels with immediate confirmation"); it also clears the
- * legacy flag from hotels that have become bookable again. Hotels linked to
- * CS-Cart products and hotels skipped for other reasons are never touched
- * (the delete re-checks the product link in SQL).
+ * For each destination with candidate hotels (unflagged or carrying a legacy
+ * no_availability flag — linked to a CS-Cart product or not), runs a live
+ * search per probe window (PROBE_WINDOWS_DAYS_AHEAD) and DELETES hotels with
+ * no immediate-confirmation offer in ANY window — "Hotels with immediate
+ * confirmation" means only bookable hotels exist anywhere: a linked hotel
+ * loses its CS-Cart product first (fn_delete_product) and then its row, an
+ * unlinked one just its row. The hotel row is only removed once the product
+ * is confirmed gone, so a product delete the platform refuses never strands
+ * an orphan product without its hotel. The gate also clears the legacy flag
+ * from hotels that have become bookable again. Hotels skipped for other
+ * reasons are never touched.
  *
  * Deletion is scoped to destinations that were probed successfully, so an API
  * error never mass-deletes hotels — only clearing (always safe) still applies.
@@ -77,7 +80,7 @@ class HotelAvailabilityGate
 
         $candidates = $this->skipRepo->findAvailabilityGateCandidates($destIds);
         if ($candidates === []) {
-            $output("    {$countryCode}: availability gate — no unlinked hotels to check");
+            $output("    {$countryCode}: availability gate — no hotels to check");
             return $stats;
         }
 
@@ -177,6 +180,8 @@ class HotelAvailabilityGate
         // (legacy-flagged rows included, so old flag-mode leftovers purge on
         // the first run); available hotels get any legacy flag cleared.
         $toDelete = [];
+        /** @var array<string, int> $toDeleteLinked hotel_id => product_id */
+        $toDeleteLinked = [];
         $toClear = [];
         foreach ($candidates as $row) {
             $hid = TypeCoerce::toString($row['hotel_id'] ?? '');
@@ -192,27 +197,81 @@ class HotelAvailabilityGate
             }
             $destId = ValidationHelpers::toInt($row['destination_id'] ?? 0);
             if (isset($probedDestinations[$destId])) {
-                $toDelete[] = $hid;
+                $productId = ValidationHelpers::toInt($row['product_id'] ?? 0);
+                if ($productId > 0) {
+                    $toDeleteLinked[$hid] = $productId;
+                } else {
+                    $toDelete[] = $hid;
+                }
             }
         }
 
         $deleted = $this->skipRepo->deleteUnlinkedBatch($toDelete);
+        [$linkedDeleted, $productsDeleted] = $this->deleteLinkedHotels($toDeleteLinked, $output);
+        $deleted += $linkedDeleted;
         $cleared = $this->skipRepo->clearSkipReasonBatch($toClear, HotelSkipRepository::SKIP_REASON_NO_AVAILABILITY);
 
         $stats['availability_probed'] = count($probedDestinations);
         $stats['availability_deleted'] = $deleted;
+        $stats['availability_products_deleted'] = $productsDeleted;
         $stats['availability_cleared'] = $cleared;
         $stats['availability_errors'] = $errors;
 
         $output(sprintf(
-            '    %s: availability gate — %d removed (no immediate-confirmation offer), %d cleared, %d search error(s)',
+            '    %s: availability gate — %d removed (no immediate-confirmation offer, %d CS-Cart product(s) deleted with them), %d cleared, %d search error(s)',
             $countryCode,
             $deleted,
+            $productsDeleted,
             $cleared,
             $errors,
         ));
 
         return $stats;
+    }
+
+    /**
+     * Delete linked unavailable hotels together with their CS-Cart products.
+     *
+     * "Hotels with immediate confirmation" extends to the product catalog: a
+     * hotel without a bookable offer must not remain purchasable. The product
+     * goes FIRST; the hotel row is deleted only once the product is confirmed
+     * gone (deleted now, or already absent), so a delete the platform refuses
+     * leaves the pair intact for the next run instead of stranding an orphan
+     * product with no hotel row behind it.
+     *
+     * @param array<string, int> $hotelToProduct hotel_id => product_id
+     * @param callable(string): void $output
+     * @return array{0: int, 1: int} [hotels deleted, products deleted]
+     */
+    private function deleteLinkedHotels(array $hotelToProduct, callable $output): array
+    {
+        if ($hotelToProduct === [] || !function_exists('fn_delete_product')) {
+            return [0, 0];
+        }
+
+        $productsDeleted = 0;
+        $rowsToDelete = [];
+        foreach ($hotelToProduct as $hotelId => $productId) {
+            if (fn_delete_product($productId)) {
+                $productsDeleted++;
+                $rowsToDelete[] = (string) $hotelId;
+                continue;
+            }
+
+            // A false return also covers "product already gone" (deleted by
+            // hand, or by deduplication). Only a product that still exists
+            // blocks the hotel row.
+            $stillExists = function_exists('fn_get_product_name')
+                && !in_array(fn_get_product_name($productId), ['', false, null], true);
+            if ($stillExists) {
+                $output("    [WARN] could not delete product {$productId} for hotel {$hotelId} — row kept for the next run");
+                continue;
+            }
+
+            $rowsToDelete[] = (string) $hotelId;
+        }
+
+        return [$this->skipRepo->deleteBatch($rowsToDelete), $productsDeleted];
     }
 
     /**
