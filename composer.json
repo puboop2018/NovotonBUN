@@ -32,6 +32,8 @@
 
         "mirror": "@php scripts/mirror-themes.php",
 
+        "package": "@php scripts/package-addons.php",
+
         "stan": "phpstan analyse --memory-limit=1G",
         "stan:baseline": "phpstan analyse --memory-limit=1G --generate-baseline=phpstan-baseline.neon --allow-empty-baseline",
 
@@ -70,6 +72,7 @@
         ]
     },
     "scripts-descriptions": {
+        "package":       "Build production zips per addon into dist/ (dev files excluded; CS-Cart Upload & install layout)",
         "stan":          "PHPStan static analysis (level 10)",
         "stan:baseline": "Regenerate PHPStan baseline from current errors",
         "fix":           "PHP CS Fixer — auto-format code (src + procedural configs)",

@@ -52,3 +52,4 @@ NovotonBeforeSplit/
 .DS_Store
 Thumbs.db
 addon-*.zip
+dist/
