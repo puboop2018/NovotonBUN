@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Tygh\Addons\TravelCore\Install;
 
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+
 /**
  * Delivers an addon's language variables to an ALREADY-INSTALLED store.
  *
@@ -43,44 +45,88 @@ final class LanguageDelivery
     /**
      * TRUE when every installed language already carries $fingerprint.
      *
-     * One indexed read (the probe runs on every request, so it must stay
-     * cheap): a LEFT JOIN that keeps only the languages whose stamp is absent
-     * or stale. Zero rows back means there is nothing to do.
+     * Two plain single-table reads, compared in PHP. That is deliberate and it
+     * is the second attempt at this method: the first asked the same question
+     * with a LEFT JOIN carrying `?s` placeholders in its ON clause — the most
+     * exotic SQL in these three addons — and the store then delivered exactly
+     * nothing, not even the label upserts that run before any check. Whatever
+     * the true cause, a PROBE is an optimisation; it must never be the reason
+     * the delivery does not happen.
      *
-     * Fails CLOSED — an unreadable ?:languages reports "not current", so the
-     * heal runs and the guard around it absorbs whatever goes wrong. A silent
-     * "current" is exactly the bug this class exists to remove.
+     * Hence the try/catch: this fails OPEN to seeding. If the probe cannot
+     * answer, the heal runs anyway — the seed is idempotent, so a needless run
+     * costs a few hundred upserts once, while a needless skip costs a
+     * storefront full of raw keys for months. A silent "current" is precisely
+     * the bug this class exists to remove.
      */
     public static function isCurrent(string $stampName, string $fingerprint): bool
     {
-        $stale = @db_get_field(
-            'SELECT COUNT(*) FROM ?:languages AS l'
-            . ' LEFT JOIN ?:language_values AS lv'
-            . '        ON lv.lang_code = l.lang_code AND lv.name = ?s AND lv.value = ?s'
-            . ' WHERE lv.name IS NULL',
-            $stampName,
-            $fingerprint,
-        );
+        try {
+            $installed = self::storeLanguages();
+            if ($installed === []) {
+                return false;
+            }
 
-        return is_scalar($stale) && (string) $stale !== '' && (int) $stale === 0;
+            $stamps = self::rowsByLanguage($stampName);
+
+            foreach ($installed as $code) {
+                if (($stamps[$code] ?? null) !== $fingerprint) {
+                    return false;
+                }
+            }
+
+            return true;
+        } catch (\Throwable) {
+            return false;
+        }
+    }
+
+    /**
+     * One language variable's value in every language that has a row.
+     *
+     * @return array<string, string> lang_code => value
+     */
+    public static function rowsByLanguage(string $name): array
+    {
+        $rows = db_get_array('SELECT lang_code, value FROM ?:language_values WHERE name = ?s', $name);
+        if (!is_array($rows)) {
+            return [];
+        }
+
+        $out = [];
+        foreach ($rows as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+            $code = TypeCoerce::toString($row['lang_code'] ?? '');
+            if (trim($code) !== '') {
+                $out[trim($code)] = TypeCoerce::toString($row['value'] ?? '');
+            }
+        }
+
+        return $out;
     }
 
     /**
      * Upsert every variable for every installed language, verify, then stamp.
      *
+     * The return carries enough detail for the failure log and the dev tool to
+     * say WHY rather than only THAT: the first version reported two bare lists,
+     * and a silent store then told us nothing at all.
+     *
      * @param array<string, array<string, string>> $vars name => [source lang => value]
      *
-     * @return array{seeded: list<string>, failed: list<string>} installed
-     *                                                           language codes by outcome
+     * @return array{seeded: list<string>, failed: list<string>, canary: string, written: int, detail: array<string, string>}
      */
     public static function seed(string $stampName, array $vars, string $fingerprint): array
     {
+        $result = ['seeded' => [], 'failed' => [], 'canary' => '', 'written' => 0, 'detail' => []];
         if ($vars === []) {
-            return ['seeded' => [], 'failed' => []];
+            return $result;
         }
 
         $canary = self::canaryKey($vars);
-        $result = ['seeded' => [], 'failed' => []];
+        $result['canary'] = $canary;
 
         foreach (self::resolveLanguages($vars) as $storeLang => $sourceLang) {
             foreach ($vars as $name => $translations) {
@@ -96,6 +142,7 @@ final class LanguageDelivery
                     $value,
                     $value,
                 );
+                $result['written']++;
             }
 
             // Read the canary back before claiming success. A write that the
@@ -106,9 +153,16 @@ final class LanguageDelivery
                 $canary,
                 $storeLang,
             );
+            $expected = $vars[$canary][$sourceLang] ?? '';
 
-            if (!is_scalar($written) || (string) $written !== ($vars[$canary][$sourceLang] ?? '')) {
+            if (!is_scalar($written) || (string) $written !== $expected) {
                 $result['failed'][] = $storeLang;
+                $result['detail'][$storeLang] = sprintf(
+                    'read-back of "%s" gave %s, expected "%s"',
+                    $canary,
+                    is_scalar($written) ? '"' . (string) $written . '"' : get_debug_type($written),
+                    $expected,
+                );
 
                 continue;
             }
@@ -122,6 +176,7 @@ final class LanguageDelivery
                 $fingerprint,
             );
             $result['seeded'][] = $storeLang;
+            $result['detail'][$storeLang] = 'seeded from source "' . $sourceLang . '"';
         }
 
         // Labels are served through CS-Cart's registry cache; clear it so the
