@@ -185,4 +185,90 @@ class DateHelper
 
         return null;
     }
+
+    // ── Store-configured display dates ──────────────────────────────────────
+    //
+    // Every customer-facing date in the travel addons goes through here.
+    // Before this existed there were three behaviours on one page: the booking
+    // sidebar hardcoded '%d.%m.%Y', novoton's cancellation lines followed the
+    // store setting, and sphinx's hardcoded dd.mm.yyyy — so a store set to
+    // %m/%d/%Y showed "Check-in 07.09.2026" next to "Anulare gratuită până la
+    // 08/28/2026". One date, two formats, on the same card.
+
+    /**
+     * Format a date exactly as Settings ▸ Appearance ▸ date format asks.
+     *
+     * Uses CS-Cart's own fn_date_format() when the framework is loaded, so
+     * month and weekday names come out translated; falls back to a strftime →
+     * PHP conversion elsewhere (unit tests, CLI tooling).
+     */
+    public static function formatStoreDate(string|int|null $date): string
+    {
+        return self::formatWith($date, TravelCoreConfig::getDateFormat());
+    }
+
+    /**
+     * Weekday name for the same date ("Monday" / "luni").
+     *
+     * Deliberately NOT part of the store date format: the booking sidebar
+     * renders the weekday as its own line under the date.
+     */
+    public static function formatStoreWeekday(string|int|null $date): string
+    {
+        return self::formatWith($date, '%A');
+    }
+
+    /** Format with an explicit CS-Cart strftime-style pattern. */
+    public static function formatWith(string|int|null $date, string $csFormat): string
+    {
+        $timestamp = self::toTimestamp($date);
+        if ($timestamp === null) {
+            return is_scalar($date) ? (string) $date : '';
+        }
+
+        if (function_exists('fn_date_format')) {
+            /** @var mixed $formatted */
+            $formatted = fn_date_format($timestamp, $csFormat);
+
+            return is_scalar($formatted) ? (string) $formatted : '';
+        }
+
+        return date(self::strftimeToPhp($csFormat), $timestamp);
+    }
+
+    /**
+     * Timestamp for a date string or numeric timestamp; null when the input
+     * carries no usable date (the caller then keeps whatever it was given
+     * rather than printing an epoch date).
+     */
+    public static function toTimestamp(string|int|null $date): ?int
+    {
+        if ($date === null || $date === '' || $date === 0 || $date === '0') {
+            return null;
+        }
+
+        if (is_int($date)) {
+            return $date > 0 ? $date : null;
+        }
+
+        if (is_numeric($date)) {
+            $timestamp = (int) $date;
+
+            return $timestamp > 0 ? $timestamp : null;
+        }
+
+        $timestamp = strtotime($date);
+
+        return is_int($timestamp) && $timestamp !== 0 ? $timestamp : null;
+    }
+
+    /** CS-Cart stores strftime-style patterns; PHP's date() wants its own. */
+    public static function strftimeToPhp(string $csFormat): string
+    {
+        return str_replace(
+            ['%d', '%m', '%Y', '%y', '%B', '%b', '%A', '%a', '%e', '%H', '%M'],
+            ['d', 'm', 'Y', 'y', 'F', 'M', 'l', 'D', 'j', 'H', 'i'],
+            $csFormat,
+        );
+    }
 }

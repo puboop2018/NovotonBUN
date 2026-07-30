@@ -95,6 +95,11 @@ $sl_sentinels = [
     'travel_core.guest_details_invalid',
     'travel_core.price_updated_badge',
     'travel_core.price_dropped_badge',
+    'travel_core.you_selected',
+    'travel_core.selected_line',
+    'travel_core.change_selection',
+    'travel_core.cancel_cost_title',
+    'travel_core.booking_conditions_link',
     'travelcore_template',
     'travel_core.reserve_now',
     'novoton_holidays.n_offers',
@@ -105,14 +110,16 @@ function sl_line(string $s = ''): void
     echo $s, "\n";
 }
 
-function sl_stamp(string $name): ?string
+/**
+ * Stamps are written PER LANGUAGE, and only for a language whose labels were
+ * read back from the database afterwards — so a missing entry here means that
+ * language's labels genuinely did not land.
+ *
+ * @return array<string,string> lang_code => fingerprint
+ */
+function sl_stamps(string $name): array
 {
-    $v = db_get_field(
-        "SELECT value FROM ?:language_values WHERE name = ?s AND lang_code = 'en' LIMIT 1",
-        $name
-    );
-
-    return $v === null || $v === '' ? null : (string) $v;
+    return sl_values($name);
 }
 
 /** @return array<string,string> lang_code => value */
@@ -128,6 +135,17 @@ function sl_values(string $name): array
     }
 
     return $out;
+}
+
+/** @return list<string> */
+function sl_store_languages(): array
+{
+    static $cached = null;
+    if ($cached === null) {
+        $cached = array_map('strval', (array) db_get_fields("SELECT lang_code FROM ?:languages ORDER BY lang_code"));
+    }
+
+    return $cached;
 }
 
 function sl_file_stat(string $file): string
@@ -159,14 +177,20 @@ function sl_report_addon(string $addon, array $fns, string $docroot): void
 
     sl_line('  seeder function:    ' . $seederFn . '  ' . (function_exists($seederFn) ? 'loaded' : 'NOT LOADED'));
 
-    $stored = sl_stamp($stampName);
+    $stored = sl_stamps($stampName);
     $computed = function_exists($hashFn) ? (string) $hashFn() : null;
-    sl_line('  stored stamp:       ' . ($stored ?? 'NONE — the seeder has never completed on this store'));
     sl_line('  live fingerprint:   ' . ($computed ?? '(hash function not loaded)'));
-    if ($stored !== null && $computed !== null) {
-        sl_line('  stamp vs files:     ' . ($stored === $computed
-            ? 'MATCH — probe sees nothing to do'
-            : 'MISMATCH — probe reseeds on the next request it runs in'));
+    if ($stored === []) {
+        sl_line('  stamped languages:  NONE — the seeder has never completed on this store');
+    } else {
+        $sl_parts = [];
+        foreach (sl_store_languages() as $sl_lang) {
+            $sl_parts[] = $sl_lang . '=' . (!isset($stored[$sl_lang])
+                ? 'MISSING'
+                : ($stored[$sl_lang] === $computed ? 'current' : 'STALE'));
+        }
+        sl_line('  stamped languages:  ' . implode('  ', $sl_parts));
+        sl_line('                      (any MISSING/STALE re-arms the probe on the next request)');
     }
 
     sl_line('  fingerprint inputs:');
@@ -179,14 +203,14 @@ function sl_report_addon(string $addon, array $fns, string $docroot): void
     $init = (string) @file_get_contents($dir . '/init.php');
     if ($init === '') {
         $gate = 'init.php UNREADABLE';
+    } elseif (strpos($init, 'fn_travel_core_heal_language_keys(') !== false) {
+        $gate = 'shared heal, guarded, every area (current)';
     } elseif (strpos($init, $seederFn) === false) {
         $gate = 'NO lang self-heal probe in the loaded init.php — stale copy, update the container files';
-    } elseif ($addon === 'travel_core') {
-        $gate = strpos($init, "AREA === 'A' && function_exists('" . $seederFn . "'") !== false
-            ? 'ADMIN-GATED (old copy — current code seeds from any area; update the container files)'
-            : 'area-agnostic probe present (current)';
     } else {
-        $gate = 'probe present (admin-gated by design — this page bootstraps as admin, so it fires here)';
+        $gate = 'OLD probe: single "en" stamp row, no read-back verification'
+            . (strpos($init, "AREA === 'A'") !== false ? ', ADMIN-GATED' : '')
+            . ' — update the container files';
     }
     sl_line('  loaded init gate:   ' . $gate);
     sl_line();
@@ -220,9 +244,9 @@ sl_line('seed-langs — addon language self-heal diagnostic (' . date('Y-m-d H:i
 sl_line('(state below is AFTER bootstrap: the addons\' own init probes already ran for this request)');
 sl_line();
 
-$sl_langs = db_get_fields("SELECT lang_code FROM ?:languages ORDER BY lang_code");
-sl_line('store languages:    ' . implode(', ', (array) $sl_langs)
-    . '   (the seeders write en + ro; other languages fall back to raw keys)');
+sl_line('store languages:    ' . implode(', ', sl_store_languages())
+    . '   (every one of these gets rows: exact source match, else its base'
+    . ' language, else English)');
 sl_line();
 
 foreach ($sl_addons as $sl_addon => $sl_fns) {
@@ -261,5 +285,5 @@ if ($sl_force) {
     sl_line('Re-run with ?force=1 (or CLI arg "force") to seed everything unconditionally right now.');
 } else {
     sl_line('VERDICT: every checked label is present. If the storefront still shows raw "_travel_core…"');
-    sl_line('keys, hard-refresh (Ctrl+F5) and confirm the page language is one of: en, ro.');
+    sl_line('keys, hard-refresh (Ctrl+F5) and clear var/cache — the rows are in the database.');
 }

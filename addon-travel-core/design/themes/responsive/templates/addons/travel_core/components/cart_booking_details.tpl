@@ -56,13 +56,13 @@
             <div>
                 <div class="travel-bcard-date-label">{__("travel_core.check_in")|default:"Check-in"}</div>
                 <div class="travel-bcard-date-value">
-                    {$product.extra.check_in|default:''|date_format:"%a %d %b %Y"}
+                    {$product.extra.check_in|default:''|date_format:$settings.Appearance.date_format|default:"%d.%m.%Y"}
                 </div>
             </div>
             <div>
                 <div class="travel-bcard-date-label">{__("travel_core.check_out")|default:"Check-out"}</div>
                 <div class="travel-bcard-date-value">
-                    {$product.extra.check_out|default:''|date_format:"%a %d %b %Y"}
+                    {$product.extra.check_out|default:''|date_format:$settings.Appearance.date_format|default:"%d.%m.%Y"}
                 </div>
             </div>
             <div>

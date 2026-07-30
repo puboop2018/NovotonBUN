@@ -141,14 +141,15 @@
 .travel-booking-page .travel-btn-back:hover {
     text-decoration: underline;
 }
-/* Both booking forms are width-capped + centred. 1140px (was 900px, novoton
-   only) is what the 2-column layout below needs: a 340px summary column plus
-   a guest-form column that still fits two fields side by side. */
+/* NO width cap here, deliberately. The theme layout is fluid up to its own
+   maximum (Design > Layouts > Main), and every other travel page - including
+   search results - simply fills it. A 1140px cap on this page alone is what
+   made the hotel card float narrower than the logo, breadcrumbs and footer,
+   with uneven margins on both sides. Width belongs to the theme; the page
+   only decides how to divide it. */
 .travel-booking-page.novoton-reservation-form,
 .travel-booking-page.sphinx-booking-form {
-    max-width: 1140px;
     margin: 0 auto;
-    padding: 0 15px;
 }
 
 /* ── Booking page: 2-column layout (summary sidebar + guest forms) ─────── */
@@ -157,7 +158,7 @@
    so the guest confirms what they are paying for before typing names. */
 .travel-booking-page .travel-booking-layout {
     display: grid;
-    grid-template-columns: 340px minmax(0, 1fr);
+    grid-template-columns: 380px minmax(0, 1fr);
     gap: 24px;
     align-items: start;
 }
@@ -194,10 +195,21 @@
 .travel-booking-page .travel-bcard__body {
     padding: 16px;
 }
+/* Wide landscape hero, flush inside the card's rounded top (.travel-bcard is
+   border-radius + overflow:hidden, and the hero is its first child). The
+   container owns the shape so the crop is identical whatever the source photo
+   is; `height: auto` used to let a portrait thumbnail through, which is how it
+   ended up looking tall and squeezed. */
+.travel-booking-page .travel-bsidebar-hero {
+    aspect-ratio: 3 / 2;
+    overflow: hidden;
+    background: var(--nvt-bg-light, #f2f5f8);
+}
 .travel-booking-page .travel-bsidebar-hero img {
     display: block;
     width: 100%;
-    height: auto;
+    height: 100%;
+    object-fit: cover;
 }
 /* Stars row: rating left, availability badge right, on one line. */
 .travel-booking-page .travel-bsidebar-toprow {
@@ -226,10 +238,22 @@
     list-style: none;
     font-size: 12.5px;
 }
+/* Scannable chips, not a run-on sentence: each amenity is its own bordered
+   badge led by a green check, so the eye can skim the list. */
 .travel-booking-page .travel-bsidebar-features li {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
     background: var(--nvt-bg-light, #f2f5f8);
-    border-radius: 6px;
-    padding: 3px 8px;
+    border: 1px solid var(--nvt-field-border, #e0e7ef);
+    border-radius: 14px;
+    padding: 4px 10px;
+    line-height: 1.3;
+}
+.travel-booking-page .travel-bsidebar-features li::before {
+    content: "\2713";
+    color: var(--nvt-success-strong, #1e7e34);
+    font-weight: 700;
 }
 /* Summary card */
 .travel-booking-page .travel-bsidebar-package {
@@ -330,6 +354,13 @@
     font-weight: 600;
     border-radius: 4px;
     padding: 1px 4px;
+}
+/* Free until <date> — green, like the search-results card promises it. */
+.travel-booking-page .travel-bsidebar-freecancel {
+    margin-bottom: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--nvt-success-strong, #1e7e34);
 }
 .travel-booking-page .travel-bsidebar-cancel {
     margin: 0;

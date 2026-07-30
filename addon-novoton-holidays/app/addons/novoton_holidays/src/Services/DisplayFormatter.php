@@ -6,6 +6,7 @@ namespace Tygh\Addons\NovotonHolidays\Services;
 
 use Tygh\Addons\NovotonHolidays\Api\PropertyTypeDetector;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+use Tygh\Addons\TravelCore\Services\DateHelper;
 
 /**
  * Pure display formatting for novoton storefront surfaces — board labels,
@@ -18,8 +19,11 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 final class DisplayFormatter
 {
     /**
-     * Format a date using a CS-Cart strftime-style format string
-     * (Admin > Settings > Appearance). Falls back to %d.%m.%Y.
+     * Format a date using a CS-Cart strftime-style format string.
+     *
+     * With no explicit format, follows Settings ▸ Appearance ▸ date format —
+     * the same single formatter every other customer-facing date in the travel
+     * addons uses, so a store cannot end up showing two formats on one page.
      *
      * @param string|int $date Date string or timestamp
      */
@@ -29,24 +33,9 @@ final class DisplayFormatter
             return '';
         }
 
-        // Convert to timestamp if string
-        $timestamp = is_numeric($date) ? (int) $date : strtotime((string) $date);
-        if ($timestamp === false || $timestamp === 0) {
-            return (string) $date;
-        }
-
-        if ($csFormat === '') {
-            $csFormat = '%d.%m.%Y';
-        }
-
-        // CS-Cart uses strftime format (%d, %m, %Y), convert to PHP date format
-        $php_format = str_replace(
-            ['%d', '%m', '%Y', '%y', '%B', '%b', '%A', '%a'],
-            ['d', 'm', 'Y', 'y', 'F', 'M', 'l', 'D'],
-            $csFormat,
-        );
-
-        return date($php_format, $timestamp);
+        return $csFormat === ''
+            ? DateHelper::formatStoreDate($date)
+            : DateHelper::formatWith($date, $csFormat);
     }
 
     /**

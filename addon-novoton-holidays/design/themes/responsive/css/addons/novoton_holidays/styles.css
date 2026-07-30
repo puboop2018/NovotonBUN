@@ -2476,9 +2476,11 @@ sup.price-decimal {
    Booking Form Styles (moved from inline)
    =========================== */
 
-/* Novoton-style Booking Form */
+/* Novoton-style Booking Form.
+   No max-width: the booking page fills the theme container like every other
+   page, so its left edge lines up with the logo and breadcrumbs. The 2-column
+   layout inside it is travel_core's booking-pages.css. */
 .novoton-reservation-form {
-    max-width: 900px;
     margin: 0 auto;
 }
 

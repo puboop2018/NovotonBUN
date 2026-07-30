@@ -7,6 +7,7 @@ namespace Tygh\Addons\SphinxHolidays\Services;
 use Tygh\Addons\SphinxHolidays\Api\SphinxNormalizer;
 use Tygh\Addons\SphinxHolidays\Contracts\SphinxFeatureAssignerInterface;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+use Tygh\Addons\TravelCore\Services\FacilityLabelResolver;
 use Tygh\Addons\TravelCore\Services\FeatureMapper;
 use Tygh\Addons\TravelCore\Services\TravelGroupResolver;
 use Tygh\Addons\TravelCore\Traits\CsCartFeatureAssignment;
@@ -229,10 +230,17 @@ class SphinxFeatureAssigner implements SphinxFeatureAssignerInterface
     public function getHotelFacilityLabels(array $hotel, string $lang = 'en', int $limit = 6): array
     {
         $labels = [];
+        $column = FacilityLabelResolver::column($lang);
+
         foreach ($this->resolveHotelFacilities($hotel) as $facility) {
+            // resolveHotelFacilities() already carries the mapping row, so use
+            // it rather than re-resolving through FacilityLabelResolver — the
+            // language rules are shared, the lookup is not.
             $mapping = TypeCoerce::toStringMap($facility['mapping'] ?? []);
-            $key = $lang === 'ro' ? 'display_name_ro' : 'display_name_en';
-            $label = trim(TypeCoerce::toString($mapping[$key] ?? ''));
+            $label = trim(TypeCoerce::toString($mapping[$column] ?? ''));
+            if ($label === '') {
+                $label = trim(TypeCoerce::toString($mapping['display_name_en'] ?? ''));
+            }
             if ($label === '') {
                 $label = trim(TypeCoerce::toString($facility['name']));
             }

@@ -73,10 +73,11 @@ function fn_novoton_holidays_language_variables(): array
 }
 
 /**
- * Fingerprint of the language sources — the init.php probe re-seeds when it
- * changes. stat-based (size + mtime), not a content hash: this runs on every
- * admin request and the sources are hundreds of KB. Real edits touch size or
- * mtime; a deploy that resets mtimes re-arms one idempotent reseed.
+ * Fingerprint of the language sources — the value stamped onto every installed
+ * language once its labels are verified in the database. stat-based (size +
+ * mtime), not a content hash: this runs on every request and the sources are
+ * hundreds of KB. Whether the ROWS are present is a separate question that
+ * LanguageDelivery::isCurrent() asks the database directly.
  */
 function fn_novoton_holidays_language_seed_hash(): string
 {
@@ -90,31 +91,20 @@ function fn_novoton_holidays_language_seed_hash(): string
 }
 
 /**
- * UPSERT every runtime language key into ?:language_values, stamp the seed
- * hash, and clear the cache so labels render on the next page load.
+ * Force a full language (re)seed, ignoring both the stamp and the probe.
+ *
+ * Delivery rules (which installed language gets which source values, and the
+ * read-back that must succeed before a language is stamped as done) are shared
+ * with the other travel addons in travel_core's LanguageDelivery. The
+ * self-healing entry point is fn_travel_core_heal_language_keys().
  */
 function fn_novoton_holidays_seed_language_keys(): void
 {
-    foreach (fn_novoton_holidays_language_variables() as $name => $translations) {
-        foreach ($translations as $lang_code => $value) {
-            db_query(
-                "INSERT INTO ?:language_values (name, lang_code, value) VALUES (?s, ?s, ?s)
-                 ON DUPLICATE KEY UPDATE value = ?s",
-                $name, $lang_code, $value, $value
-            );
-        }
-    }
-
-    $hash = fn_novoton_holidays_language_seed_hash();
-    db_query(
-        "INSERT INTO ?:language_values (name, lang_code, value) VALUES (?s, 'en', ?s)
-         ON DUPLICATE KEY UPDATE value = ?s",
-        'novoton_holidays._lang_seed_hash', $hash, $hash
+    \Tygh\Addons\TravelCore\Install\LanguageDelivery::seed(
+        'novoton_holidays._lang_seed_hash',
+        fn_novoton_holidays_language_variables(),
+        fn_novoton_holidays_language_seed_hash(),
     );
-
-    if (function_exists('fn_clear_cache')) {
-        fn_clear_cache();
-    }
 }
 
 /**

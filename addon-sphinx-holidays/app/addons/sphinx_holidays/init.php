@@ -70,20 +70,26 @@ if (class_exists(\Tygh\Addons\TravelCore\Services\TravelProviderRegistry::class)
 
 // Self-heal language keys. Existing installations don't re-run post_install
 // when new settings/labels ship (e.g. require_immediate_availability), so
-// labels stay empty until reinstall. The old probe checked one fixed sentinel
-// key, which goes stale the moment that key is seeded — labels added later
-// never healed. Instead compare a stored stamp against the current content
-// hash of addon.xml + lang_keys.php and reseed on any change; the seeder is
-// idempotent and also mirrors settings labels into ?:settings_descriptions.
-if (defined('AREA') && AREA === 'A' && function_exists('fn_sphinx_holidays_seed_language_keys')) {
-    $__stamp = db_get_field(
-        "SELECT value FROM ?:language_values WHERE name = ?s AND lang_code = ?s LIMIT 1",
-        'sphinx_holidays._lang_seed_hash', 'en'
-    );
-    if ($__stamp !== fn_sphinx_holidays_language_seed_hash()) {
-        fn_sphinx_holidays_seed_language_keys();
-    }
-    unset($__stamp);
+// labels stay empty until reinstall. The probe asks the database whether every
+// INSTALLED language carries the current source fingerprint, rather than
+// trusting one stamp row that a failed seed would have written regardless.
+// The seeder is idempotent and also mirrors settings labels into
+// ?:settings_descriptions.
+//
+// No AREA gate: it used to be admin-only, so a deploy followed by
+// storefront-only traffic left customers looking at raw "_sphinx_holidays.*"
+// keys. Guarded, because a throw inside fn_init_addons() is a 503 everywhere.
+if (function_exists('fn_travel_core_heal_language_keys')) {
+    fn_travel_core_self_heal_guard('sphinx_holidays_langs', static function (): void {
+        fn_travel_core_heal_language_keys(
+            'sphinx_holidays',
+            'fn_sphinx_holidays_language_variables',
+            fn_sphinx_holidays_language_seed_hash(),
+            static function (array $vars): void {
+                \Tygh\Addons\SphinxHolidays\Install\LanguageSeeder::mirrorSettingsDescriptions($vars);
+            },
+        );
+    });
 }
 
 // Self-heal SEO template defaults. On fresh installs the templates are empty

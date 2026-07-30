@@ -386,6 +386,7 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
         // a second API round-trip just to render a card.
         $cancellation_lines = [];
         $payment_lines = [];
+        $free_cancellation_until = '';
         if ($response instanceof \SimpleXMLElement) {
             $termsPayment = $response->xpath('//TermsOfPayment');
             if (!empty($termsPayment[0])) {
@@ -401,6 +402,11 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
                         $check_in,
                     ),
                 );
+                // The one line a guest looks for first — the search card
+                // already shows it in green, so the booking form must too.
+                $free_cancellation_until = \Tygh\Addons\TravelCore\Services\DateHelper::formatStoreDate(
+                    fn_novoton_holidays_get_free_cancellation_date((string) $termsCancellation[0]->asXML()),
+                );
             }
         }
 
@@ -408,6 +414,7 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
         $sendJson([
             'success' => true,
             'cancellation_lines' => $cancellation_lines,
+            'free_cancellation_until' => $free_cancellation_until,
             'payment_lines' => $payment_lines,
             'cancellation_full_amount' => \Tygh\Addons\TravelCore\ViewModels\BookingSidebarFactory::fullChargeAmount(
                 $cancellation_lines,

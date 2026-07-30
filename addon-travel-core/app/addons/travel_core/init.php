@@ -77,21 +77,24 @@ if (defined('AREA') && AREA === 'A' && function_exists('fn_travel_core_ensure_sc
 // hook, by which point the framework is fully initialised.
 
 // Self-heal language keys: addon.xml/.po are only imported at install, so new
-// or changed labels never reach existing stores on their own. Compare a stored
-// stamp against the current fingerprint of addon.xml + lang_keys.php and
-// reseed on any change; the seeder is idempotent. Deliberately NOT gated to
-// the admin area: a deploy followed by storefront-only traffic used to show
-// customers raw "_travel_core.…" keys until someone opened an admin page.
-// Steady-state cost is one indexed stamp SELECT per request.
-if (function_exists('fn_travel_core_seed_language_keys')) {
-    $__stamp = db_get_field(
-        "SELECT value FROM ?:language_values WHERE name = ?s AND lang_code = ?s LIMIT 1",
-        'travel_core._lang_seed_hash', 'en'
-    );
-    if ($__stamp !== fn_travel_core_language_seed_hash()) {
-        fn_travel_core_seed_language_keys();
-    }
-    unset($__stamp);
+// or changed labels never reach existing stores on their own. The probe asks
+// the database whether every INSTALLED language carries the current source
+// fingerprint (LanguageDelivery::isCurrent — one indexed read per request),
+// rather than trusting a single stamp row that a failed seed could have
+// written anyway. Deliberately NOT gated to the admin area: a deploy followed
+// by storefront-only traffic used to show customers raw "_travel_core.…" keys
+// until someone opened an admin page.
+//
+// Guarded: this runs inside fn_init_addons(), so an uncaught throw here is a
+// 503 on every page — the failure mode must be "not healed", never "no store".
+if (function_exists('fn_travel_core_heal_language_keys')) {
+    fn_travel_core_self_heal_guard('travel_core_langs', static function (): void {
+        fn_travel_core_heal_language_keys(
+            'travel_core',
+            'fn_travel_core_language_variables',
+            fn_travel_core_language_seed_hash(),
+        );
+    });
 }
 
 // Register addon hooks

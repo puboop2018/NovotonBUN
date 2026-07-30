@@ -235,4 +235,10 @@ return [
         'en' => 'Close',
         'ro' => 'Închide',
     ],
+    // The green line at the top of the cancellation card — same wording the
+    // search-results card uses, so the promise reads identically end to end.
+    'travel_core.free_cancellation_until' => [
+        'en' => 'Free cancellation until',
+        'ro' => 'Anulare gratuită până la',
+    ],
 ];

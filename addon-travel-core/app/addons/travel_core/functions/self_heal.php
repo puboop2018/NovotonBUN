@@ -91,6 +91,70 @@ function fn_travel_core_heal_settings_once(): void
 }
 
 /**
+ * Deliver an addon's language variables to this store, at most once per
+ * (sources x installed languages) change.
+ *
+ * Called from every addon's init.php, in EVERY area — a deploy followed by
+ * storefront-only traffic used to leave customers looking at raw
+ * "_travel_core.…" keys until somebody happened to open an admin page.
+ *
+ * Two gates, deliberately different:
+ *   - LanguageDelivery::isCurrent() is the CORRECTNESS gate. It asks the
+ *     database whether every installed language carries this fingerprint, so
+ *     a store that lost its rows heals without any file needing to change.
+ *     This is the steady-state path: one indexed read per request.
+ *   - The ?:storage_data stamp is the ATTEMPT throttle. If the writes cannot
+ *     land (denied grant, collation mismatch), isCurrent() stays false
+ *     forever; without this we would re-run hundreds of upserts on every
+ *     request. It re-arms whenever the sources OR the store's language set
+ *     change — i.e. exactly when a retry could produce a different outcome.
+ *
+ * @param callable():array<string, array<string, string>> $varsProvider
+ * @param null|callable(array<string, array<string, string>>):void $afterSeed extra
+ *                                                                            per-addon delivery that must run with the
+ *                                                                            same freshly-read variables (sphinx mirrors
+ *                                                                            settings labels into ?:settings_descriptions)
+ */
+function fn_travel_core_heal_language_keys(
+    string $addon,
+    callable $varsProvider,
+    string $fingerprint,
+    ?callable $afterSeed = null,
+): void {
+    $stampName = $addon . '._lang_seed_hash';
+
+    if (\Tygh\Addons\TravelCore\Install\LanguageDelivery::isCurrent($stampName, $fingerprint)) {
+        return;
+    }
+
+    $languages = \Tygh\Addons\TravelCore\Install\LanguageDelivery::storeLanguages();
+    $attemptKey = 'lang_' . $addon;
+    $attemptFingerprint = md5($fingerprint . '|' . implode(',', $languages));
+
+    if (!fn_travel_core_self_heal_due($attemptKey, $attemptFingerprint)) {
+        return;
+    }
+
+    $vars = $varsProvider();
+    $result = \Tygh\Addons\TravelCore\Install\LanguageDelivery::seed($stampName, $vars, $fingerprint);
+    if ($afterSeed !== null) {
+        $afterSeed($vars);
+    }
+    fn_travel_core_self_heal_stamp($attemptKey, $attemptFingerprint);
+
+    if ($result['failed'] !== []) {
+        // Loud, because the symptom (raw keys on the storefront) is otherwise
+        // indistinguishable from "nobody added the label yet".
+        error_log(
+            'travel_core: language seed for "' . $addon . '" could not be verified for language(s) '
+            . implode(', ', $result['failed'])
+            . ' — those labels will render as raw keys. Installed languages: '
+            . (implode(', ', $languages) ?: '(none readable)'),
+        );
+    }
+}
+
+/**
  * Run a self-heal so that it CANNOT take the store down.
  *
  * These heals run from init.php on every admin page load. CS-Cart turns an

@@ -1029,3 +1029,7 @@ msgstr "The booking conditions are being confirmed with the provider…"
 msgctxt "Languages::travel_core.close"
 msgid "Close"
 msgstr "Close"
+
+msgctxt "Languages::travel_core.free_cancellation_until"
+msgid "Free cancellation until"
+msgstr "Free cancellation until"

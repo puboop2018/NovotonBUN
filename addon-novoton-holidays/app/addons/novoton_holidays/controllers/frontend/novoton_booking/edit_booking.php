@@ -13,6 +13,8 @@ use Tygh\Addons\NovotonHolidays\Services\PriceInfoFormatter;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Services\CurrencyService;
 use Tygh\Addons\NovotonHolidays\Helpers\JsonDecoder;
+use Tygh\Addons\NovotonHolidays\Services\RoomLimitsResolver;
+use Tygh\Addons\NovotonHolidays\ViewModels\NovotonBookingSidebarBuilder;
 
     $booking_id = PriceInfoFormatter::toInt($_REQUEST['booking_id'] ?? 0);
     $cart_id = PriceInfoFormatter::toScalar($_REQUEST['cart_id'] ?? '');
@@ -200,6 +202,7 @@ use Tygh\Addons\NovotonHolidays\Helpers\JsonDecoder;
     $view->assign('cart_id', $cart_id);
     $view->assign('is_edit_mode', true);
     $view->assign('guest_prefill', $guest_prefill);
+    $edit_product_id = PriceInfoFormatter::toInt($booking_record['product_id'] ?? 0);
     $view->assign('product_id', $booking_record['product_id']);
     $view->assign('hotel_name', $hotel_name);
     $view->assign('hotel_city', $hotel_info['city'] ?? $booking_record['hotel_city'] ?? '');
@@ -209,6 +212,57 @@ use Tygh\Addons\NovotonHolidays\Helpers\JsonDecoder;
     $view->assign('package_name', $package_name);
     $view->assign('hotel_all_packages', $all_packages);
     $view->assign('auth', TypeCoerce::toStringMap($session['auth'] ?? []));
+
+    // ── The same page, fully ──────────────────────────────────────────────
+    // edit_booking.tpl is a one-line include of booking_form.tpl, so this mode
+    // renders the identical 2-column layout — but only if it assigns the
+    // identical view variables. It used to assign neither the hotel header nor
+    // the sidebar, and since components/booking_sidebar.tpl is wrapped in
+    // `{if $tbs}`, the entire left column rendered as NOTHING: an isolated bare
+    // form with no hotel, no dates, no price, and an empty booking-conditions
+    // modal (which reads the same variable). Both come from the shared builder
+    // now, so create and edit cannot diverge again.
+    //
+    // Figures are the BOOKED ones — no re-quote. A guest fixing a misspelled
+    // name must not have the price move under them.
+    $editHeaderVm = NovotonBookingSidebarBuilder::header(
+        TypeCoerce::toString($brHotelId),
+        TypeCoerce::toStringMap($hotel_info ?? []),
+        $hotel_stars,
+        $edit_product_id,
+        $hotel_name,
+    );
+    $view->assign('hotel_location_line', $editHeaderVm->locationLine);
+    $view->assign('hotel_map_url', $editHeaderVm->mapUrl);
+    $view->assign('travel_hotel_header', $editHeaderVm->toViewArray());
+
+    $editSidebarVm = NovotonBookingSidebarBuilder::sidebar(
+        $booking,
+        $editHeaderVm,
+        $edit_product_id,
+        TypeCoerce::toString($package_name),
+        $novoton_display_coefficient,
+        $novoton_display_symbol,
+        true,
+        defined('CART_LANGUAGE') ? TypeCoerce::toString(CART_LANGUAGE) : 'en',
+    );
+    $view->assign('travel_booking_sidebar', $editSidebarVm->toViewArray());
+
+    // Age categories, occupancy limits and the rooms JSON the form's inline
+    // script reads. All three are `|default:`-guarded in the template, so
+    // their absence degraded silently: every hotel quietly got 4 adults /
+    // 2 children / capacity 2, and the room list came up empty.
+    $editLimits = RoomLimitsResolver::resolve(
+        TypeCoerce::toStringMap($hotel_info ?? []),
+        TypeCoerce::toString($brHotelId),
+        TypeCoerce::toString($booking['room_id']),
+    );
+    $editRoomsJson = json_encode($booking['rooms_data'], JSON_UNESCAPED_UNICODE);
+    $view->assign('booking_data', array_merge($booking, [
+        'age_categories' => $editLimits['age_categories'],
+        'current_room_limits' => $editLimits['current_room_limits'],
+        'rooms_data_json' => is_string($editRoomsJson) ? $editRoomsJson : '[]',
+    ]));
 
     // Page setup
     $page_title = __('novoton_holidays.edit_booking');

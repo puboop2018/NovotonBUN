@@ -39,6 +39,9 @@ final class BookingSidebarViewModel
      * @param list<string> $paymentLines Formatted payment-terms lines. Shown in
      *                                   the "What are my booking conditions?" modal beside the
      *                                   cancellation policy.
+     * @param string $cancelFreeUntil Already-formatted date up to which
+     *                                cancelling is free — rendered in green, the same
+     *                                treatment the search-results card gives it.
      */
     public function __construct(
         public readonly array $imagePair = [],
@@ -66,6 +69,7 @@ final class BookingSidebarViewModel
         public readonly string $oldTotal = '',
         public readonly array $cancelLines = [],
         public readonly string $cancelFullAmount = '',
+        public readonly string $cancelFreeUntil = '',
         public readonly array $paymentLines = [],
         public readonly string $roomLabel = '',
     ) {
@@ -104,6 +108,7 @@ final class BookingSidebarViewModel
             'old_total' => $this->oldTotal,
             'cancel_lines' => $this->cancelLines,
             'cancel_full_amount' => $this->cancelFullAmount,
+            'cancel_free_until' => $this->cancelFreeUntil,
             'payment_lines' => $this->paymentLines,
             'room_label' => $this->roomLabel,
         ];

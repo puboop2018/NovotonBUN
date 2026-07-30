@@ -191,6 +191,14 @@ function fn_novoton_holidays_post_install(): bool
     // Seed Novoton API aliases into shared travel_core feature mapping
     fn_novoton_holidays_seed_travel_aliases();
 
+    // Seed the labels rather than trusting CS-Cart's install-time .po import:
+    // it only covers the languages the store had when the pack was imported,
+    // and lang_keys.php entries added since the .po was last regenerated would
+    // otherwise wait for the runtime probe to notice them.
+    if (function_exists('fn_novoton_holidays_seed_language_keys')) {
+        fn_novoton_holidays_seed_language_keys();
+    }
+
     // Create novoton_reports directory for report storage
     $reports_dir = TypeCoerce::toString(fn_get_files_dir_path()) . 'novoton_reports/';
     if (!is_dir($reports_dir)) {

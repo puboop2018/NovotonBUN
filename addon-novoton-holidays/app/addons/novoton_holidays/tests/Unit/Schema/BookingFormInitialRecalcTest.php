@@ -135,7 +135,7 @@ final class BookingFormInitialRecalcTest extends TestCase
         $start = strpos($css, '.travel-booking-page .travel-booking-layout {');
         self::assertNotFalse($start);
         $rule = substr($css, $start, (int) strpos($css, '}', $start) - $start);
-        self::assertStringContainsString('grid-template-columns: 340px minmax(0, 1fr)', $rule);
+        self::assertStringContainsString('grid-template-columns: 380px minmax(0, 1fr)', $rule);
         // Mobile: the sidebar is re-ordered ABOVE the guest form.
         $mqStart = strpos($css, '@media (max-width: 900px)');
         self::assertNotFalse($mqStart);
@@ -146,17 +146,22 @@ final class BookingFormInitialRecalcTest extends TestCase
 
     public function testBookingFormFeedsTheSharedHeaderViewModel(): void
     {
-        // The controller builds the header data (map URL via the shared
-        // HotelMapUrl builder) and hands it to the component through
-        // HotelHeaderViewModel under the shared variable name.
+        // The header (map URL via the shared HotelMapUrl builder) is derived by
+        // the novoton builder that BOTH modes of this page call, and handed to
+        // the component under the shared variable name.
         $controller = (string) file_get_contents(
             dirname(__DIR__, 3) . '/controllers/frontend/novoton_booking/booking_form.php',
         );
-        self::assertStringContainsString('HotelHeaderFactory::fromSeo(', $controller);
+        self::assertStringContainsString('NovotonBookingSidebarBuilder::header(', $controller);
         self::assertStringContainsString("assign('travel_hotel_header'", $controller);
+
+        $builder = (string) file_get_contents(
+            dirname(__DIR__, 3) . '/src/ViewModels/NovotonBookingSidebarBuilder.php',
+        );
+        self::assertStringContainsString('HotelHeaderFactory::fromSeo(', $builder);
         // The old template's city/region/country fallback rides in as the
         // factory's locationLineFallback argument.
-        self::assertStringContainsString("implode(', ', array_filter([", $controller);
+        self::assertStringContainsString("implode(', ', array_filter([", $builder);
     }
 
     public function testRecalcDebugGateUsesARealSettingKey(): void
