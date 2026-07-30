@@ -6,6 +6,7 @@ namespace Tygh\Addons\TravelCore\Tests\Unit\Install;
 
 use PHPUnit\Framework\TestCase;
 use Tygh\Addons\TravelCore\Install\LanguageDelivery;
+use Tygh\Addons\TravelCore\Tests\Support\DbStub;
 
 /**
  * Pins the language-delivery rules.
@@ -18,10 +19,10 @@ use Tygh\Addons\TravelCore\Install\LanguageDelivery;
  * added afterwards did not. Their only delivery path is the runtime seeder,
  * and it had silently written nothing for months.
  *
- * The pure decision logic is tested here; the SQL is exercised on a live store
- * (see the verification steps in the commit). What matters is that the two
- * decisions that caused the outage — which language codes to write, and when a
- * language may be marked as done — can never regress silently again.
+ * Both halves are covered here: the language-resolution ladder as pure logic,
+ * and the seed/probe behaviour against the db_* stubs. The two decisions that
+ * caused the outage — which language codes to write, and when a language may be
+ * marked as done — can never regress silently again.
  */
 final class LanguageDeliveryTest extends TestCase
 {
@@ -214,6 +215,126 @@ final class LanguageDeliveryTest extends TestCase
             $repoRoot . '/addon-sphinx-holidays/app/addons/sphinx_holidays/init.php',
         );
         self::assertStringContainsString('LanguageSeeder::mirrorSettingsDescriptions($vars)', $init);
+    }
+
+    // ── Behaviour, against the db_* stubs ───────────────────────────────────
+
+    protected function setUp(): void
+    {
+        DbStub::reset();
+    }
+
+    protected function tearDown(): void
+    {
+        DbStub::reset();
+    }
+
+    /**
+     * The whole point of the rewrite: a store whose Romanian language is
+     * spelled 'ro-RO' must receive Romanian VALUES under the 'ro-RO' code.
+     * The old seeder wrote 'ro', which matched nothing, and stamped anyway.
+     */
+    public function testSeedWritesEveryInstalledLanguageWithItsOwnValues(): void
+    {
+        DbStub::$getFields = static fn (): array => ['en-US', 'ro-RO'];
+
+        $written = [];
+        DbStub::$query = static function (string $sql, ...$p) use (&$written): int {
+            $written[] = [$p[1] ?? '', $p[0] ?? '', $p[2] ?? ''];
+
+            return 1;
+        };
+        // Canary read-back returns whatever the seeder just wrote.
+        DbStub::$getField = static function (string $sql, ...$p) use (&$written) {
+            foreach ($written as [$lang, $name, $value]) {
+                if ($name === $p[0] && $lang === $p[1]) {
+                    return $value;
+                }
+            }
+
+            return null;
+        };
+
+        $result = LanguageDelivery::seed('travel_core._lang_seed_hash', self::vars(), 'fp-1');
+
+        self::assertSame(['en-US', 'ro-RO'], $result['seeded']);
+        self::assertSame([], $result['failed']);
+
+        $roValues = [];
+        foreach ($written as [$lang, $name, $value]) {
+            if ($lang === 'ro-RO') {
+                $roValues[$name] = $value;
+            }
+        }
+        self::assertSame('Detaliile rezervării', $roValues['travel_core.your_booking_details'] ?? null);
+        self::assertSame('fp-1', $roValues['travel_core._lang_seed_hash'] ?? null);
+    }
+
+    /**
+     * Root cause #1, as behaviour: when the labels do not come back out of the
+     * database, that language must NOT be stamped — the stamp is what disarms
+     * the probe, and stamping a failed write is how the store stayed broken
+     * for months.
+     */
+    public function testAFailedWriteIsNeverStamped(): void
+    {
+        DbStub::$getFields = static fn (): array => ['en'];
+        $written = [];
+        DbStub::$query = static function (string $sql, ...$p) use (&$written): int {
+            $written[] = $p[0] ?? '';
+
+            return 1;
+        };
+        DbStub::$getField = static fn () => null;   // nothing reads back
+
+        $result = LanguageDelivery::seed('travel_core._lang_seed_hash', self::vars(), 'fp-1');
+
+        self::assertSame([], $result['seeded']);
+        self::assertSame(['en'], $result['failed']);
+        self::assertNotContains('travel_core._lang_seed_hash', $written, 'the stamp must not be written');
+    }
+
+    /**
+     * Root cause #3, as behaviour: the probe asks the DATABASE whether every
+     * installed language carries this fingerprint. Any language missing it —
+     * rows lost, a language added later — re-arms the heal with no file
+     * change at all.
+     */
+    public function testProbeIsCurrentOnlyWhenNoLanguageIsStale(): void
+    {
+        DbStub::$getField = static fn (): string => '0';
+        self::assertTrue(LanguageDelivery::isCurrent('travel_core._lang_seed_hash', 'fp-1'));
+
+        DbStub::$getField = static fn (): string => '1';
+        self::assertFalse(LanguageDelivery::isCurrent('travel_core._lang_seed_hash', 'fp-1'));
+    }
+
+    /** Fails closed: an unreadable ?:languages must report "not current". */
+    public function testProbeFailsClosed(): void
+    {
+        DbStub::$getField = static fn () => null;
+        self::assertFalse(LanguageDelivery::isCurrent('travel_core._lang_seed_hash', 'fp-1'));
+    }
+
+    public function testStoreLanguagesAreDedupedAndTrimmed(): void
+    {
+        DbStub::$getFields = static fn (): array => ['en', ' ro ', 'en', ''];
+
+        self::assertSame(['en', 'ro'], LanguageDelivery::storeLanguages());
+    }
+
+    /** No variables, no writes — and certainly no stamp. */
+    public function testSeedingAnEmptySetDoesNothing(): void
+    {
+        $calls = 0;
+        DbStub::$query = static function () use (&$calls): int {
+            $calls++;
+
+            return 1;
+        };
+
+        self::assertSame(['seeded' => [], 'failed' => []], LanguageDelivery::seed('stamp', [], 'fp'));
+        self::assertSame(0, $calls);
     }
 
     /**
