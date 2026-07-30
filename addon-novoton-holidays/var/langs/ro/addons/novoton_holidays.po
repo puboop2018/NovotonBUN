@@ -438,11 +438,11 @@ msgstr "Cameră"
 
 msgctxt "Languages::novoton_holidays.n_adults"
 msgid "[n] Adult|[n] Adults"
-msgstr "[n] Adult|[n] Adulți"
+msgstr "[n] Adult|[n] Adulți|[n] de Adulți"
 
 msgctxt "Languages::novoton_holidays.n_children"
 msgid "[n] Child|[n] Children"
-msgstr "[n] Copil|[n] Copii"
+msgstr "[n] Copil|[n] Copii|[n] de Copii"
 
 msgctxt "Languages::novoton_holidays.n_nights"
 msgid "[n] Night|[n] Nights"
@@ -450,11 +450,11 @@ msgstr "[n] Noapte|[n] Nopți"
 
 msgctxt "Languages::novoton_holidays.n_offers"
 msgid "[n] Offer|[n] Offers"
-msgstr "[n] Ofertă|[n] Oferte"
+msgstr "[n] Ofertă|[n] Oferte|[n] de Oferte"
 
 msgctxt "Languages::novoton_holidays.n_rooms"
 msgid "[n] Room|[n] Rooms"
-msgstr "[n] Cameră|[n] Camere"
+msgstr "[n] Cameră|[n] Camere|[n] de Camere"
 
 msgctxt "Languages::novoton_holidays.n_years"
 msgid "[n] year|[n] years"

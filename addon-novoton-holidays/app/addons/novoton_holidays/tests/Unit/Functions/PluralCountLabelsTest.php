@@ -7,11 +7,16 @@ namespace Tygh\Addons\NovotonHolidays\Tests\Unit\Functions;
 use PHPUnit\Framework\TestCase;
 
 /**
- * The availability-badge counts use CS-Cart plural forms
- * ("[n] singular|[n] plural") so Romanian renders "1 ofertă" (singular) vs
- * "2 oferte" (plural) correctly — the previous {if count==1} conditionals
- * were replaced. The keys are seeded through lang_keys.php (novoton gained a
- * self-seeder) so they reach already-installed stores, not just fresh ones.
+ * The availability-badge counts use CS-Cart plural forms, so Romanian renders
+ * "1 Ofertă" / "2 Oferte" / "20 de Oferte" correctly — the previous
+ * {if count==1} conditionals were replaced. The keys are seeded through
+ * lang_keys.php (novoton gained a self-seeder) so they reach already-installed
+ * stores, not just fresh ones.
+ *
+ * Romanian takes THREE forms, per the Unicode CLDR rules CS-Cart selects by:
+ * one (n=1), few (n=0 or n%100 in 2..19), other (everything else, which needs
+ * "de"). English keeps two — the msgid stays in the source language and only
+ * the translation lists every variant.
  */
 final class PluralCountLabelsTest extends TestCase
 {
@@ -29,14 +34,19 @@ final class PluralCountLabelsTest extends TestCase
         $vars = self::langKeys();
 
         self::assertArrayHasKey('novoton_holidays.n_offers', $vars);
-        // Two [n] forms separated by "|": singular first (n==1), plural second.
-        self::assertSame('[n] Ofertă|[n] Oferte', $vars['novoton_holidays.n_offers']['ro']);
+        // Ordered by the CLDR rules: one | few | other. Search results routinely
+        // exceed 19, so the "de" form is the one customers see most.
+        self::assertSame('[n] Ofertă|[n] Oferte|[n] de Oferte', $vars['novoton_holidays.n_offers']['ro']);
         self::assertSame('[n] Offer|[n] Offers', $vars['novoton_holidays.n_offers']['en']);
 
         foreach (['n_rooms', 'n_adults', 'n_children', 'n_offers'] as $k) {
             $key = 'novoton_holidays.' . $k;
             self::assertArrayHasKey($key, $vars, "{$key} must be seeded for the badge counts");
-            self::assertStringContainsString('|', $vars[$key]['ro'], "{$key} must carry two plural forms");
+            self::assertCount(
+                3,
+                explode('|', $vars[$key]['ro']),
+                "{$key}: Romanian needs one|few|other, not just singular|plural",
+            );
             self::assertStringContainsString('[n]', $vars[$key]['ro']);
         }
     }

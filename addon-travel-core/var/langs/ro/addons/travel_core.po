@@ -980,19 +980,19 @@ msgstr "Ați selectat"
 
 msgctxt "Languages::travel_core.n_nights"
 msgid "[n] night|[n] nights"
-msgstr "[n] noapte|[n] nopți"
+msgstr "[n] noapte|[n] nopți|[n] de nopți"
 
 msgctxt "Languages::travel_core.n_rooms"
 msgid "[n] room|[n] rooms"
-msgstr "[n] cameră|[n] camere"
+msgstr "[n] cameră|[n] camere|[n] de camere"
 
 msgctxt "Languages::travel_core.n_adults"
 msgid "[n] adult|[n] adults"
-msgstr "[n] adult|[n] adulți"
+msgstr "[n] adult|[n] adulți|[n] de adulți"
 
 msgctxt "Languages::travel_core.n_children"
 msgid "[n] child|[n] children"
-msgstr "[n] copil|[n] copii"
+msgstr "[n] copil|[n] copii|[n] de copii"
 
 msgctxt "Languages::travel_core.selected_line"
 msgid "[nights], [rooms] for [adults]"

@@ -181,19 +181,19 @@ return [
     // form, so Romanian keeps its own singular/plural nouns.
     'travel_core.n_nights' => [
         'en' => '[n] night|[n] nights',
-        'ro' => '[n] noapte|[n] nopți',
+        'ro' => '[n] noapte|[n] nopți|[n] de nopți',
     ],
     'travel_core.n_rooms' => [
         'en' => '[n] room|[n] rooms',
-        'ro' => '[n] cameră|[n] camere',
+        'ro' => '[n] cameră|[n] camere|[n] de camere',
     ],
     'travel_core.n_adults' => [
         'en' => '[n] adult|[n] adults',
-        'ro' => '[n] adult|[n] adulți',
+        'ro' => '[n] adult|[n] adulți|[n] de adulți',
     ],
     'travel_core.n_children' => [
         'en' => '[n] child|[n] children',
-        'ro' => '[n] copil|[n] copii',
+        'ro' => '[n] copil|[n] copii|[n] de copii',
     ],
     // The sentence that joins them, so word order and the connector ("and" /
     // "și") stay translatable instead of being concatenated in code.
