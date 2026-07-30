@@ -21,6 +21,9 @@
 <script src="{$config.current_location}/js/addons/travel_core/dob-validation.js?v={$cache_ver}" defer></script>
 <script src="{$config.current_location}/js/addons/travel_core/booking-form-validation.js?v={$cache_ver}" defer></script>
 
+{* "What are my booking conditions?" modal (both providers' booking forms) *}
+<script src="{$config.current_location}/js/addons/travel_core/booking-conditions.js?v={$cache_ver}" defer></script>
+
 {* ?travel_debug=1: anchor-INDEPENDENT diagnosis. The visible debug panel
    renders through the products:product_detail_bottom anchor, which some
    product templates don't fire — this index:scripts hook fires on every

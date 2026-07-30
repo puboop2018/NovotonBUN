@@ -158,4 +158,81 @@ return [
         'en' => 'Please fill in all guest names.',
         'ro' => 'Vă rugăm completați numele tuturor turiștilor.',
     ],
+
+    // Booking-form summary sidebar (components/booking_sidebar.tpl) — the
+    // shared left column of both providers' booking pages.
+    'travel_core.available' => [
+        'en' => 'Available',
+        'ro' => 'Disponibil',
+    ],
+    'travel_core.on_request' => [
+        'en' => 'On request',
+        'ro' => 'La cerere',
+    ],
+    'travel_core.package' => [
+        'en' => 'Package',
+        'ro' => 'Pachet',
+    ],
+    'travel_core.you_selected' => [
+        'en' => 'You selected',
+        'ro' => 'Ați selectat',
+    ],
+    // CS-Cart plural forms ("[n] singular|[n] plural"): the count picks the
+    // form, so Romanian keeps its own singular/plural nouns.
+    'travel_core.n_nights' => [
+        'en' => '[n] night|[n] nights',
+        'ro' => '[n] noapte|[n] nopți',
+    ],
+    'travel_core.n_rooms' => [
+        'en' => '[n] room|[n] rooms',
+        'ro' => '[n] cameră|[n] camere',
+    ],
+    'travel_core.n_adults' => [
+        'en' => '[n] adult|[n] adults',
+        'ro' => '[n] adult|[n] adulți',
+    ],
+    'travel_core.n_children' => [
+        'en' => '[n] child|[n] children',
+        'ro' => '[n] copil|[n] copii',
+    ],
+    // The sentence that joins them, so word order and the connector ("and" /
+    // "și") stay translatable instead of being concatenated in code.
+    'travel_core.selected_line' => [
+        'en' => '[nights], [rooms] for [adults]',
+        'ro' => '[nights], [rooms] pentru [adults]',
+    ],
+    'travel_core.selected_line_with_children' => [
+        'en' => '[nights], [rooms] for [adults] and [children]',
+        'ro' => '[nights], [rooms] pentru [adults] și [children]',
+    ],
+    'travel_core.change_selection' => [
+        'en' => 'Change your selection',
+        'ro' => 'Schimbați-vă opțiunea',
+    ],
+    'travel_core.original_price' => [
+        'en' => 'Original price',
+        'ro' => 'Preț inițial',
+    ],
+    'travel_core.cancel_cost_title' => [
+        'en' => 'How much will it cost to cancel?',
+        'ro' => 'Cât costă să anulez?',
+    ],
+    'travel_core.cancel_you_will_pay' => [
+        'en' => "If you cancel, you'll pay",
+        'ro' => 'Dacă anulați, veți plăti',
+    ],
+    // "What are my booking conditions?" — the link under Add-to-Cart and its
+    // modal (components/booking_conditions_modal.tpl).
+    'travel_core.booking_conditions_link' => [
+        'en' => 'What are my booking conditions?',
+        'ro' => 'Care sunt condițiile rezervării mele?',
+    ],
+    'travel_core.booking_conditions_loading' => [
+        'en' => 'The booking conditions are being confirmed with the provider…',
+        'ro' => 'Condițiile rezervării se confirmă cu operatorul…',
+    ],
+    'travel_core.close' => [
+        'en' => 'Close',
+        'ro' => 'Închide',
+    ],
 ];

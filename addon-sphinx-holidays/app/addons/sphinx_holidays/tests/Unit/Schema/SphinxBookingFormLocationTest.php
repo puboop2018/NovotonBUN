@@ -32,24 +32,31 @@ final class SphinxBookingFormLocationTest extends TestCase
         return (string) file_get_contents($path);
     }
 
-    public function testHotelIdentityComesFromTheSharedComponent(): void
+    public function testHotelIdentityComesFromTheSharedSidebar(): void
     {
         $tpl = self::tpl();
 
-        // Name/stars/location/map-link markup lives ONCE in travel_core's
-        // hotel_header.tpl (pinned by HotelHeaderComponentTest); this page
-        // only includes it — new-tab link so an in-progress form is never
-        // lost, sphinx-* hook classes via params, inside the light
-        // .travel-booking-summary card (no --hero blue gradient).
-        self::assertStringContainsString('addons/travel_core/components/hotel_header.tpl', $tpl);
-        self::assertStringContainsString('hh_extra_class="sphinx-hotel-header-name"', $tpl);
-        self::assertStringContainsString('hh_location_class="sphinx-hotel-header-location"', $tpl);
-        self::assertStringContainsString('hh_new_tab=true', $tpl);
+        // Name/stars/location/map-link markup lives ONCE in travel_core — now
+        // in components/booking_sidebar.tpl, which the 2-column redesign made
+        // the single home of the whole summary column (stars ABOVE the name,
+        // per the design brief). This page only includes it and owns no
+        // identity markup of its own.
+        self::assertStringContainsString('addons/travel_core/components/booking_sidebar.tpl', $tpl);
+        self::assertStringContainsString('class="travel-booking-layout"', $tpl);
         self::assertStringNotContainsString('travel-hotel-name-link', $tpl, 'no locally duplicated name markup');
         self::assertStringNotContainsString('travel-hotel-map-link', $tpl, 'no locally duplicated map-link markup');
         self::assertStringNotContainsString('ty-product-block-title', $tpl);
         self::assertStringNotContainsString('travel-booking-summary--hero', $tpl, 'the blue-gradient hero is gone');
         self::assertStringNotContainsString('<h2>', $tpl, 'the header heading is an h1 (single-hotel page semantics)');
+
+        // The location line + map link the sidebar renders keep the classes
+        // the existing pin-icon CSS targets, so the icon still appears.
+        $sidebar = (string) file_get_contents(
+            dirname(__DIR__, 7)
+            . '/addon-travel-core/design/themes/responsive/templates/addons/travel_core/components/booking_sidebar.tpl',
+        );
+        self::assertStringContainsString('travel-hotel-location', $sidebar);
+        self::assertStringContainsString('travel-hotel-map-link', $sidebar);
     }
 
     public function testControllerBuildsTheLineAndUrlViaSharedServices(): void

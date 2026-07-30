@@ -378,9 +378,41 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
             );
         }
 
+        // Cancellation policy for the booking-form sidebar card.
+        //
+        // Novoton only returns terms alongside a price quote, and this recalc
+        // is the quote the booking form already performs on load — so the
+        // policy rides back on a call we are making anyway rather than costing
+        // a second API round-trip just to render a card.
+        $cancellation_lines = [];
+        $payment_lines = [];
+        if ($response instanceof \SimpleXMLElement) {
+            $termsPayment = $response->xpath('//TermsOfPayment');
+            if (!empty($termsPayment[0])) {
+                $payment_lines = \Tygh\Addons\TravelCore\ViewModels\BookingSidebarFactory::termLines(
+                    fn_novoton_holidays_format_payment_terms((string) $termsPayment[0]->asXML()),
+                );
+            }
+            $termsCancellation = $response->xpath('//TermsOfCancellation');
+            if (!empty($termsCancellation[0])) {
+                $cancellation_lines = \Tygh\Addons\TravelCore\ViewModels\BookingSidebarFactory::termLines(
+                    fn_novoton_holidays_format_cancellation_terms(
+                        (string) $termsCancellation[0]->asXML(),
+                        $check_in,
+                    ),
+                );
+            }
+        }
+
         // Return success response with room change info and price change analysis
         $sendJson([
             'success' => true,
+            'cancellation_lines' => $cancellation_lines,
+            'payment_lines' => $payment_lines,
+            'cancellation_full_amount' => \Tygh\Addons\TravelCore\ViewModels\BookingSidebarFactory::fullChargeAmount(
+                $cancellation_lines,
+                $formatted_price,
+            ),
             'new_price' => $new_price,
             'original_price' => $original_price,
             'formatted_price' => $formatted_price,

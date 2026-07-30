@@ -212,6 +212,41 @@ class SphinxFeatureAssigner implements SphinxFeatureAssignerInterface
         return $resolved;
     }
 
+    /**
+     * Localized facility labels for one hotel, for the booking-form summary
+     * sidebar.
+     *
+     * Prefers the canonical mapping's display name (so "pool" reads
+     * "Piscină" in Romanian) and falls back to the provider's own label when
+     * a facility has no mapping yet — an unmapped facility should still be
+     * visible to the guest, not silently dropped.
+     *
+     * Capped: the sidebar shows an at-a-glance strip, not the full inventory.
+     *
+     * @param array<string, mixed> $hotel A ?:sphinx_hotels row.
+     * @return list<string>
+     */
+    public function getHotelFacilityLabels(array $hotel, string $lang = 'en', int $limit = 6): array
+    {
+        $labels = [];
+        foreach ($this->resolveHotelFacilities($hotel) as $facility) {
+            $mapping = TypeCoerce::toStringMap($facility['mapping'] ?? []);
+            $key = $lang === 'ro' ? 'display_name_ro' : 'display_name_en';
+            $label = trim(TypeCoerce::toString($mapping[$key] ?? ''));
+            if ($label === '') {
+                $label = trim(TypeCoerce::toString($facility['name']));
+            }
+            if ($label !== '' && !in_array($label, $labels, true)) {
+                $labels[] = $label;
+            }
+            if (count($labels) >= $limit) {
+                break;
+            }
+        }
+
+        return $labels;
+    }
+
     // ── Feature-specific methods (delegate to templates) ──
 
     /**

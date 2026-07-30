@@ -87,23 +87,25 @@ final class HotelHeaderComponentTest extends TestCase
         self::assertStringContainsString('class="travel-hotel-location{if $hh_location_class} {$hh_location_class}{/if}"', $tpl);
     }
 
-    public function testBookingFormSurfacesIncludeTheComponentAndSearchPagesDoNot(): void
+    public function testHotelIdentityIsAlwaysRenderedByAShoredComponentNeverInline(): void
     {
         $repoRoot = dirname(__DIR__, 7);
 
-        // Since the inline-results change, search results render on the
-        // product page (which shows the hotel identity itself) — only the
-        // two guest booking forms still open with the shared header.
-        $surfaces = [
+        // Since the booking-form redesign, the two guest forms render the
+        // hotel identity through components/booking_sidebar.tpl (stars ABOVE
+        // the name, per the design brief) instead of hotel_header.tpl, which
+        // stacks them the other way. What must stay true on every surface is
+        // that NO page hand-rolls the header markup locally.
+        $bookingForms = [
             'addon-novoton-holidays/design/themes/responsive/templates/addons/novoton_holidays/views/novoton_booking/booking_form.tpl',
             'addon-sphinx-holidays/design/themes/responsive/templates/addons/sphinx_holidays/views/sphinx_booking/booking_form.tpl',
         ];
-        foreach ($surfaces as $surface) {
+        foreach ($bookingForms as $surface) {
             $page = (string) file_get_contents($repoRoot . '/' . $surface);
             self::assertStringContainsString(
-                'addons/travel_core/components/hotel_header.tpl',
+                'addons/travel_core/components/booking_sidebar.tpl',
                 $page,
-                "surface must render the shared header component: {$surface}",
+                "booking form must render the shared sidebar: {$surface}",
             );
             self::assertStringNotContainsString(
                 'ty-product-list__item-name',
@@ -111,6 +113,13 @@ final class HotelHeaderComponentTest extends TestCase
                 "surface must not duplicate the header markup locally: {$surface}",
             );
         }
+
+        // hotel_header.tpl itself is still the component the OTHER surfaces
+        // use, so it must keep existing and keep its own markup.
+        $component = (string) file_get_contents(
+            $repoRoot . '/addon-travel-core/design/themes/responsive/templates/addons/travel_core/components/hotel_header.tpl',
+        );
+        self::assertStringContainsString('ty-product-list__item-name', $component);
 
         $searchPages = [
             'addon-novoton-holidays/design/themes/responsive/templates/addons/novoton_holidays/views/novoton_booking/search.tpl',

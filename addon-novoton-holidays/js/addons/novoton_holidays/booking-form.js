@@ -364,6 +364,9 @@ function triggerPriceRecalculationInline(childrenAges, roomNum, isInitialLoad) {
             // Hide any previous error message
             hidePriceError();
 
+            renderCancellationPolicy(data);
+            renderBookingConditions(data, roomNum, isMultiRoom);
+
             try {
 
             if (data.room_changed) {
@@ -512,6 +515,76 @@ function showPriceError(message) {
         availBadge.style.setProperty('background', '#F59E0B', 'important');
         availBadge.innerHTML = '<strong>' + nvtLabel('unavailableForChildAge', 'Indisponibil') + '</strong><br><span style="font-size:11px;">' + nvtLabel('unavailableForChildAgeSub', 'pentru vârsta copilului') + '</span>';
     }
+}
+
+/**
+ * Fill the sidebar's cancellation card from the price re-verification.
+ *
+ * Novoton returns cancellation terms only with a price quote, so the card is
+ * rendered empty by the server and filled here off the recalc the booking form
+ * already performs on load — no extra API call. Stays hidden while there is
+ * nothing to say, so the guest never sees an empty policy box.
+ */
+function renderCancellationPolicy(data) {
+    var card = document.getElementById('travel-cancel-card');
+    var list = document.getElementById('travel-cancel-lines');
+    if (!card || !list) return;
+
+    var lines = (data && data.cancellation_lines) || [];
+    if (!lines.length) {
+        card.classList.add('travel-is-hidden');
+        return;
+    }
+
+    list.textContent = '';
+    lines.forEach(function (line) {
+        var li = document.createElement('li');
+        li.textContent = line;
+        list.appendChild(li);
+    });
+
+    // A 100% penalty gets the headline row; anything else is just a list.
+    var existingRow = card.querySelector('.travel-bsidebar-cancelrow');
+    if (existingRow) existingRow.remove();
+    if (data.cancellation_full_amount) {
+        var row = document.createElement('div');
+        row.className = 'travel-bsidebar-cancelrow';
+        var mark = document.createElement('mark');
+        mark.className = 'travel-bsidebar-cancelhl';
+        mark.textContent = nvtLabel('cancelYouWillPay', 'If you cancel, you’ll pay');
+        var amount = document.createElement('strong');
+        amount.innerHTML = data.cancellation_full_amount;
+        row.appendChild(mark);
+        row.appendChild(amount);
+        list.parentNode.insertBefore(row, list);
+    }
+
+    card.classList.remove('travel-is-hidden');
+}
+
+/**
+ * Feed one room's payment + cancellation terms into the shared
+ * "What are my booking conditions?" modal (travel_core booking-conditions.js).
+ *
+ * Novoton re-prices each room separately, and each quote carries that room's
+ * own terms — so a multi-room booking ends up with one section per room in the
+ * modal, which is exactly what the guest needs to see before paying.
+ */
+function renderBookingConditions(data, roomNum, isMultiRoom) {
+    if (!window.TravelConditions) return;
+
+    var num = roomNum || 1;
+    var title = isMultiRoom
+        ? nvtLabel('roomNumber', 'Camera') + ' ' + num
+        : '';
+
+    window.TravelConditions.setRoomSection(num, {
+        title: title,
+        paymentLabel: nvtLabel('paymentTerms', 'Terms of Payment'),
+        payment: (data && data.payment_lines) || [],
+        cancellationLabel: nvtLabel('cancellationPolicy', 'Cancellation Policy'),
+        cancellation: (data && data.cancellation_lines) || []
+    });
 }
 
 // Hide price error, refresh link, unverified badge, and re-enable submit

@@ -15,6 +15,8 @@ use Tygh\Addons\NovotonHolidays\Services\PriceInfoFormatter;
 use Tygh\Addons\TravelCore\Dto\Hotel\HotelSeoData;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Services\CurrencyService;
+use Tygh\Addons\TravelCore\ViewModels\BookingSidebarFactory;
+use Tygh\Addons\TravelCore\ViewModels\BookingSidebarViewModel;
 use Tygh\Addons\TravelCore\ViewModels\HotelHeaderFactory;
 
     $bookingData = TypeCoerce::toStringMap($_REQUEST);
@@ -387,8 +389,63 @@ use Tygh\Addons\TravelCore\ViewModels\HotelHeaderFactory;
     $view->assign('calendar_prices_currency', $calendar_prices_currency);
     $view->assign('show_calendar_prices', ConfigProvider::isShowCalendarPrices() ? 'Y' : 'N');
 
-    // Terms are now fetched directly from API at checkout (Option A)
-    // No need to pass through booking form
+    // ── Shared 2-column summary sidebar (travel_core component) ───────────
+    // Every value is formatted HERE, because the shared template carries no
+    // provider branches: novoton derives its summary from URL params + the
+    // hotels table, sphinx from a verified live offer.
+    //
+    // Cancellation terms are deliberately absent: novoton only returns them
+    // with a price quote, and the page already re-verifies the price on load
+    // (booking-form.js). The card therefore ships empty and is filled by that
+    // existing round-trip — no second API call just to render a policy.
+    $sidebarRoomsData = TypeCoerce::toRowList($bookingData['rooms_data'] ?? []);
+    $sidebarOccupancy = BookingSidebarFactory::occupancy($sidebarRoomsData);
+    $sidebarCheckIn = TypeCoerce::toString($booking['check_in']);
+    $sidebarCheckOut = TypeCoerce::toString($booking['check_out']);
+    $sidebarCheckInTs = (int) strtotime($sidebarCheckIn);
+    $sidebarCheckOutTs = (int) strtotime($sidebarCheckOut);
+    $sidebarPackage = TypeCoerce::toString($package_name) !== ''
+        ? TypeCoerce::toString($package_name)
+        : TypeCoerce::toString($booking['package_name']);
+
+    $sidebarVm = new BookingSidebarViewModel(
+        imagePair: fn_travel_core_product_main_pair(PriceInfoFormatter::toInt($product_id)),
+        name: $headerVm->name,
+        stars: $headerVm->stars,
+        available: empty($bookingData['is_on_request']),
+        locationLine: $headerVm->locationLine,
+        mapUrl: $headerVm->mapUrl,
+        features: Container::getInstance()->facilityRepository()->getLabelsForHotel(
+            TypeCoerce::toString($booking['hotel_id']),
+            defined('CART_LANGUAGE') ? TypeCoerce::toString(CART_LANGUAGE) : 'en',
+        ),
+        packageName: $sidebarPackage !== $headerVm->name ? $sidebarPackage : '',
+        checkIn: TypeCoerce::toString($sidebarCheckInTs > 0 ? fn_date_format($sidebarCheckInTs, '%d.%m.%Y') : $sidebarCheckIn),
+        checkInWeekday: TypeCoerce::toString($sidebarCheckInTs > 0 ? fn_date_format($sidebarCheckInTs, '%A') : ''),
+        checkOut: TypeCoerce::toString($sidebarCheckOutTs > 0 ? fn_date_format($sidebarCheckOutTs, '%d.%m.%Y') : $sidebarCheckOut),
+        checkOutWeekday: TypeCoerce::toString($sidebarCheckOutTs > 0 ? fn_date_format($sidebarCheckOutTs, '%A') : ''),
+        nights: TypeCoerce::toInt($booking['nights']),
+        rooms: max(1, TypeCoerce::toInt($booking['num_rooms'])),
+        adults: $sidebarOccupancy['adults'] > 0 ? $sidebarOccupancy['adults'] : TypeCoerce::toInt($booking['adults']),
+        children: $sidebarOccupancy['children'] > 0 ? $sidebarOccupancy['children'] : TypeCoerce::toInt($booking['children']),
+        roomLines: BookingSidebarFactory::roomLines($sidebarRoomsData),
+        boardName: TypeCoerce::toString($sidebarRoomsData[0]['board_name'] ?? ''),
+        changeUrl: BookingSidebarFactory::changeSelectionUrl(PriceInfoFormatter::toInt($product_id), [
+            'check_in' => $sidebarCheckIn,
+            'check_out' => $sidebarCheckOut,
+            'adults' => TypeCoerce::toInt($booking['adults']),
+            'children' => TypeCoerce::toInt($booking['children']),
+            'children_ages' => TypeCoerce::toString($booking['children_ages']),
+            'rooms' => TypeCoerce::toInt($booking['num_rooms']),
+        ]),
+        productId: PriceInfoFormatter::toInt($product_id),
+        total: fn_novoton_holidays_format_price(
+            TypeCoerce::toFloat($booking['total_price']),
+            $novoton_display_coefficient,
+            $novoton_display_symbol,
+        ),
+    );
+    $view->assign('travel_booking_sidebar', $sidebarVm->toViewArray());
 
     // Page setup
     $page_title = __('novoton_holidays.complete_booking');

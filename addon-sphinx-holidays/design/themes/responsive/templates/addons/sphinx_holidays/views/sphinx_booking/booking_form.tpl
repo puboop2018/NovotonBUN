@@ -16,59 +16,15 @@
 
 <div class="travel-booking-page sphinx-booking-form">
 
-    {* Hotel & booking summary header — minimalist light card (parity with the
-       search results header): the light .travel-booking-summary base (no --hero
-       gradient) around the shared travel_core hotel-identity component (the
-       name links to the product page in a NEW tab so an in-progress form is
-       never lost). Data: $travel_hotel_header (HotelHeaderViewModel, assigned
-       by the booking_form controller). *}
-    <div class="travel-booking-summary booking-summary-header">
-        {include file="addons/travel_core/components/hotel_header.tpl"
-            hh_extra_class="sphinx-hotel-header-name"
-            hh_location_class="sphinx-hotel-header-location"
-            hh_new_tab=true}
-        <div class="travel-booking-meta">
-            <span><i class="icon-calendar"></i> {$sphinx_booking_data.check_in|date_format:"%d.%m.%Y"} - {$sphinx_booking_data.check_out|date_format:"%d.%m.%Y"}</span>
-            <span><i class="icon-moon"></i> {$sphinx_booking_data.nights} {__("travel_core.nights")|default:"nights"}</span>
-            <span><i class="icon-home"></i> {$sphinx_booking_data.room_name|escape:html}</span>
-            <span><i class="icon-food"></i> {$sphinx_booking_data.board_name|escape:html}</span>
-        </div>
-    </div>
+    {* 2-column layout (travel_core booking-pages.css): the shared summary
+       sidebar on the left, the guest form on the right. The sidebar renders
+       hotel identity, dates, occupancy, room/board, price and the cancellation
+       policy from $travel_booking_sidebar, so the old separate summary header,
+       price box and terms box are gone from this page. *}
+    <div class="travel-booking-layout">
+        {include file="addons/travel_core/components/booking_sidebar.tpl"}
 
-    {* Price display *}
-    <div class="travel-price-box booking-price-box">
-        <div class="travel-price-label">{__("travel_core.total_price")|default:"Total price"}</div>
-        <div class="travel-price-total price-total" aria-live="polite" aria-atomic="true">
-            {$sphinx_booking_data.total_price|number_format:2:",":"."} {if $sphinx_booking_data.currency == 'EUR'}€{else}{$sphinx_booking_data.currency}{/if}
-        </div>
-        <div id="price-loading-indicator" style="display: none;"><i class="icon-refresh"></i></div>
-    </div>
-
-    {* Payment & cancellation terms (from the verified offer; hidden when the API sends none) *}
-    {if $sphinx_booking_data.payment_terms || $sphinx_booking_data.cancellation_fees}
-    <div class="travel-terms-box sphinx-booking-terms">
-        {if $sphinx_booking_data.payment_terms}
-        <div class="travel-terms-group">
-            <strong>{__("sphinx_holidays.payment_terms")|default:"Payment terms"}</strong>
-            <ul>
-                {foreach $sphinx_booking_data.payment_terms as $_sx_term}
-                <li>{$_sx_term|escape:html}</li>
-                {/foreach}
-            </ul>
-        </div>
-        {/if}
-        {if $sphinx_booking_data.cancellation_fees}
-        <div class="travel-terms-group">
-            <strong>{__("sphinx_holidays.cancellation_policy")|default:"Cancellation policy"}</strong>
-            <ul>
-                {foreach $sphinx_booking_data.cancellation_fees as $_sx_fee}
-                <li>{$_sx_fee|escape:html}</li>
-                {/foreach}
-            </ul>
-        </div>
-        {/if}
-    </div>
-    {/if}
+        <div class="travel-booking-col-main">
 
     {* Guest entry form *}
     <form action="{if $is_edit_mode}{"sphinx_booking.update_booking"|fn_url}{else}{"sphinx_booking.add_to_cart"|fn_url}{/if}" method="post" id="sphinx-booking-form">
@@ -121,7 +77,15 @@
             </button>
         </div>
 
+        {* "What are my booking conditions?" — link + modal (shared). Sphinx
+           knows its terms from the verified offer, so the modal body is
+           rendered server-side. *}
+        {include file="addons/travel_core/components/booking_conditions_modal.tpl"}
+
     </form>
+
+        </div>{* /travel-booking-col-main *}
+    </div>{* /travel-booking-layout *}
 
 </div>
 

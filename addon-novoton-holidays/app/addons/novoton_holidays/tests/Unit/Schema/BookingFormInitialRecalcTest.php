@@ -96,35 +96,52 @@ final class BookingFormInitialRecalcTest extends TestCase
         );
     }
 
-    public function testBookingFormHeaderIsTheMinimalistSearchStyleCard(): void
+    public function testBookingFormRendersTheSharedSummarySidebar(): void
     {
         $tpl = self::themeTpl('responsive');
 
-        // The hotel identity (name/stars/location/map link) comes from the
-        // shared travel_core component — new-tab link so an in-progress form
-        // is never lost — inside the light reservation-header card with the
-        // inline availability pill.
-        self::assertStringContainsString('{include file="addons/travel_core/components/hotel_header.tpl" hh_new_tab=true}', $tpl);
-        self::assertStringContainsString('class="travel-hero-badge" id="availability-badge"', $tpl);
+        // The hotel identity, dates, occupancy, price and cancellation all
+        // moved into the shared travel_core sidebar when the page became a
+        // 2-column layout. The booking form owns no summary markup any more —
+        // that is the whole point of sharing it with sphinx.
+        self::assertStringContainsString('class="travel-booking-layout"', $tpl);
+        self::assertStringContainsString('{include file="addons/travel_core/components/booking_sidebar.tpl"}', $tpl);
+        self::assertStringNotContainsString('components/hotel_header.tpl', $tpl, 'the header now renders inside the sidebar');
+        self::assertStringNotContainsString('travel-detail-row', $tpl, 'the old image|info|price row is gone');
+        self::assertStringNotContainsString('$hotel_image', $tpl, 'the dead image block went with it');
         self::assertStringNotContainsString('travel-hero-location', $tpl, 'the blue-gradient hero location is gone');
         self::assertStringNotContainsString('ty-product-block-title', $tpl, 'the big PDP block title stays retired');
 
-        // The reservation-header rule is now a light card, not the blue hero;
-        // the location line (emitted by the component before the pill) is
-        // pushed below the pill row via flex order.
+        // The availability pill keeps its id inside the sidebar: booking-form.js
+        // rewrites #availability-badge after every re-price.
+        $sidebar = (string) file_get_contents(
+            dirname(__DIR__, 7)
+            . '/addon-travel-core/design/themes/responsive/templates/addons/travel_core/components/booking_sidebar.tpl',
+        );
+        self::assertStringContainsString('id="availability-badge"', $sidebar);
+
+        // Stars render ABOVE the name (brief), unlike hotel_header.tpl which
+        // puts them after it inside the h1.
+        $starsPos = strpos($sidebar, 'travel-hotel-stars');
+        $namePos = strpos($sidebar, 'travel-bsidebar-name');
+        self::assertIsInt($starsPos);
+        self::assertIsInt($namePos);
+        self::assertLessThan($namePos, $starsPos);
+
+        // Two-column grid that collapses with the summary ABOVE the form.
         $css = (string) file_get_contents(
             dirname(__DIR__, 7) . '/addon-travel-core/design/themes/responsive/css/addons/travel_core/booking-pages.css',
         );
-        $start = strpos($css, '.travel-booking-page .travel-reservation-header {');
+        $start = strpos($css, '.travel-booking-page .travel-booking-layout {');
         self::assertNotFalse($start);
         $rule = substr($css, $start, (int) strpos($css, '}', $start) - $start);
-        self::assertStringContainsString('background: var(--nvt-bg', $rule);
-        self::assertStringNotContainsString('linear-gradient', $rule, 'the header must be a light card, not the blue hero');
-
-        $locStart = strpos($css, '.travel-booking-page .travel-hotel-location {');
-        self::assertNotFalse($locStart);
-        $locRule = substr($css, $locStart, (int) strpos($css, '}', $locStart) - $locStart);
-        self::assertStringContainsString('order: 10', $locRule);
+        self::assertStringContainsString('grid-template-columns: 340px minmax(0, 1fr)', $rule);
+        // Mobile: the sidebar is re-ordered ABOVE the guest form.
+        $mqStart = strpos($css, '@media (max-width: 900px)');
+        self::assertNotFalse($mqStart);
+        $mq = substr($css, $mqStart, 400);
+        self::assertStringContainsString('grid-template-columns: 1fr', $mq);
+        self::assertStringContainsString('order: -1', $mq);
     }
 
     public function testBookingFormFeedsTheSharedHeaderViewModel(): void

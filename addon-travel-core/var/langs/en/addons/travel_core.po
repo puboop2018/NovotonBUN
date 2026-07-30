@@ -965,3 +965,67 @@ msgstr "Save changes"
 msgctxt "Languages::travel_core.guest_details_invalid"
 msgid "Please fill in all guest names."
 msgstr "Please fill in all guest names."
+
+msgctxt "Languages::travel_core.available"
+msgid "Available"
+msgstr "Available"
+
+msgctxt "Languages::travel_core.on_request"
+msgid "On request"
+msgstr "On request"
+
+msgctxt "Languages::travel_core.you_selected"
+msgid "You selected"
+msgstr "You selected"
+
+msgctxt "Languages::travel_core.n_nights"
+msgid "[n] night|[n] nights"
+msgstr "[n] night|[n] nights"
+
+msgctxt "Languages::travel_core.n_rooms"
+msgid "[n] room|[n] rooms"
+msgstr "[n] room|[n] rooms"
+
+msgctxt "Languages::travel_core.n_adults"
+msgid "[n] adult|[n] adults"
+msgstr "[n] adult|[n] adults"
+
+msgctxt "Languages::travel_core.n_children"
+msgid "[n] child|[n] children"
+msgstr "[n] child|[n] children"
+
+msgctxt "Languages::travel_core.selected_line"
+msgid "[nights], [rooms] for [adults]"
+msgstr "[nights], [rooms] for [adults]"
+
+msgctxt "Languages::travel_core.selected_line_with_children"
+msgid "[nights], [rooms] for [adults] and [children]"
+msgstr "[nights], [rooms] for [adults] and [children]"
+
+msgctxt "Languages::travel_core.change_selection"
+msgid "Change your selection"
+msgstr "Change your selection"
+
+msgctxt "Languages::travel_core.original_price"
+msgid "Original price"
+msgstr "Original price"
+
+msgctxt "Languages::travel_core.cancel_cost_title"
+msgid "How much will it cost to cancel?"
+msgstr "How much will it cost to cancel?"
+
+msgctxt "Languages::travel_core.cancel_you_will_pay"
+msgid "If you cancel, you'll pay"
+msgstr "If you cancel, you'll pay"
+
+msgctxt "Languages::travel_core.booking_conditions_link"
+msgid "What are my booking conditions?"
+msgstr "What are my booking conditions?"
+
+msgctxt "Languages::travel_core.booking_conditions_loading"
+msgid "The booking conditions are being confirmed with the provider…"
+msgstr "The booking conditions are being confirmed with the provider…"
+
+msgctxt "Languages::travel_core.close"
+msgid "Close"
+msgstr "Close"
