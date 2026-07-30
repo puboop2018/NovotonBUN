@@ -112,15 +112,36 @@
     {/if}
 
     {if $show_terms|default:false}
+        {* Two provider shapes, one block. Novoton formats its XML terms into
+           newline-joined STRINGS at add-to-cart (terms_of_payment_with_amounts
+           resolves percentages into real sums, so it wins when present);
+           sphinx stores ARRAYS of already-formatted lines (payment_terms /
+           cancellation_fees). Reading only novoton's keys is why sphinx order
+           emails silently showed no terms at all. *}
         {$_obd_pay = $_be.terms_of_payment_with_amounts|default:$_be.terms_of_payment_formatted|default:''}
         {$_obd_cancel = $_be.terms_of_cancellation_formatted|default:''}
-        {if $_obd_pay}
+        {$_obd_pay_lines = $_be.payment_terms|default:[]}
+        {$_obd_cancel_lines = $_be.cancellation_fees|default:[]}
+
+        {if $_obd_pay || $_obd_pay_lines}
             <strong>{__("`$_bp`.payment_terms")|default:"Terms of Payment"}:</strong><br>
-            &nbsp;&nbsp;{$_obd_pay|escape:'html'|nl2br nofilter}<br>
+            {if $_obd_pay}
+                &nbsp;&nbsp;{$_obd_pay|escape:'html'|nl2br nofilter}<br>
+            {else}
+                {foreach from=$_obd_pay_lines item="_obd_line"}
+                    &nbsp;&nbsp;{$_obd_line|escape:'html'}<br>
+                {/foreach}
+            {/if}
         {/if}
-        {if $_obd_cancel}
+        {if $_obd_cancel || $_obd_cancel_lines}
             <strong>{__("`$_bp`.cancellation_policy")|default:"Cancellation Policy"}:</strong><br>
-            &nbsp;&nbsp;{$_obd_cancel|escape:'html'|nl2br nofilter}<br>
+            {if $_obd_cancel}
+                &nbsp;&nbsp;{$_obd_cancel|escape:'html'|nl2br nofilter}<br>
+            {else}
+                {foreach from=$_obd_cancel_lines item="_obd_line"}
+                    &nbsp;&nbsp;{$_obd_line|escape:'html'}<br>
+                {/foreach}
+            {/if}
         {/if}
     {/if}
 
