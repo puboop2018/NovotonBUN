@@ -180,6 +180,99 @@ final class BookingSidebarTest extends TestCase
         self::assertStringContainsString('travel_core.change_selection', $tpl);
     }
 
+    /**
+     * Plural counts must be passed POSITIONALLY.
+     *
+     * Field report: the summary read "7 noapte|7 nopți, 1 cameră|1 camere
+     * pentru 2 adult|2 adulți" — both halves of every plural, verbatim.
+     * CS-Cart selects one side of the "|" only when the count arrives as a
+     * positional argument, `__("key", [$n])`. An associative
+     * `["[n]" => $n]` is a plain string substitution: it fills [n] on BOTH
+     * sides and returns the lot. Fourteen other call sites in this repo
+     * already used the positional form; these four were the exceptions.
+     *
+     * Scanned repo-wide, because the same mistake in any provider template
+     * would look equally fine in review and equally broken on the page.
+     */
+    public function testPluralCountsArePassedPositionallyEverywhere(): void
+    {
+        $offenders = [];
+
+        foreach (self::pluralKeys() as $key) {
+            foreach (self::templatesUsing($key) as $file => $line) {
+                $offenders[] = $file . ': ' . trim($line);
+            }
+        }
+
+        self::assertSame(
+            [],
+            $offenders,
+            "these render BOTH plural forms verbatim — pass the count as [\$n], not [\"[n]\" => \$n]:\n"
+            . implode("\n", $offenders),
+        );
+    }
+
+    /**
+     * Every language key whose value carries a "|" is a plural form and must be
+     * called positionally.
+     *
+     * @return list<string>
+     */
+    private static function pluralKeys(): array
+    {
+        $keys = [];
+        foreach ([
+            'addon-travel-core/app/addons/travel_core/lang_keys.php',
+            'addon-novoton-holidays/app/addons/novoton_holidays/lang_keys.php',
+            'addon-sphinx-holidays/app/addons/sphinx_holidays/lang_keys.php',
+        ] as $relative) {
+            $path = self::repoRoot() . '/' . $relative;
+            if (!is_file($path)) {
+                continue;
+            }
+            /** @var array<string, array<string, string>> $vars */
+            $vars = require $path;
+            foreach ($vars as $key => $translations) {
+                if (str_contains((string) ($translations['en'] ?? ''), '|')) {
+                    $keys[] = $key;
+                }
+            }
+        }
+
+        return $keys;
+    }
+
+    /**
+     * Template lines that call $key with an ASSOCIATIVE placeholder map.
+     *
+     * @return array<string, string> file => offending line
+     */
+    private static function templatesUsing(string $key): array
+    {
+        $hits = [];
+        $needle = '__("' . $key . '", ["[n]"';
+
+        $it = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator(self::repoRoot(), \FilesystemIterator::SKIP_DOTS),
+        );
+        foreach ($it as $file) {
+            if (!$file instanceof \SplFileInfo || $file->getExtension() !== 'tpl') {
+                continue;
+            }
+            $path = $file->getPathname();
+            if (str_contains($path, '/vendor/') || str_contains($path, '/node_modules/')) {
+                continue;
+            }
+            foreach (file($path) ?: [] as $line) {
+                if (str_contains($line, $needle)) {
+                    $hits[str_replace(self::repoRoot() . '/', '', $path)] = $line;
+                }
+            }
+        }
+
+        return $hits;
+    }
+
     /** "Change your selection" goes back to the PDP carrying the search. */
     public function testChangeSelectionTargetsTheProductPageWithTheSearch(): void
     {

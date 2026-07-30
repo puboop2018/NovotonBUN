@@ -118,15 +118,22 @@
 
             {* "7 nights, 1 room for 2 adults and 1 child" — each count is a
                CS-Cart plural form ("[n] x|[n] y"), then joined by a sentence
-               key so Romanian keeps its own word order and "și". *}
+               key so Romanian keeps its own word order and "și".
+
+               The count MUST be passed positionally — {__("key", [$n])}. That
+               is what selects one side of the "|"; an associative
+               ["[n]" => $n] is a plain string substitution, which printed both
+               halves verbatim ("7 noapte|7 nopți"). Every other plural call
+               site in this repo uses the positional form; these four were the
+               only exceptions. *}
             <div class="travel-bsidebar-selected">
                 <span class="travel-bsidebar-selected__label">{__("travel_core.you_selected")}</span>
-                {capture assign="tbs_nights"}{__("travel_core.n_nights", ["[n]" => $tbs.nights])}{/capture}
-                {capture assign="tbs_rooms"}{__("travel_core.n_rooms", ["[n]" => $tbs.rooms])}{/capture}
-                {capture assign="tbs_adults"}{__("travel_core.n_adults", ["[n]" => $tbs.adults])}{/capture}
+                {capture assign="tbs_nights"}{__("travel_core.n_nights", [$tbs.nights])}{/capture}
+                {capture assign="tbs_rooms"}{__("travel_core.n_rooms", [$tbs.rooms])}{/capture}
+                {capture assign="tbs_adults"}{__("travel_core.n_adults", [$tbs.adults])}{/capture}
                 <strong class="travel-bsidebar-selected__value">
                     {if $tbs.children > 0}
-                        {capture assign="tbs_children"}{__("travel_core.n_children", ["[n]" => $tbs.children])}{/capture}
+                        {capture assign="tbs_children"}{__("travel_core.n_children", [$tbs.children])}{/capture}
                         {__("travel_core.selected_line_with_children", ["[nights]" => $tbs_nights, "[rooms]" => $tbs_rooms, "[adults]" => $tbs_adults, "[children]" => $tbs_children])}
                     {else}
                         {__("travel_core.selected_line", ["[nights]" => $tbs_nights, "[rooms]" => $tbs_rooms, "[adults]" => $tbs_adults])}
