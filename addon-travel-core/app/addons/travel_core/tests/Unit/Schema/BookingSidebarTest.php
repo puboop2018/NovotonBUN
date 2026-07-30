@@ -253,7 +253,7 @@ final class BookingSidebarTest extends TestCase
         // price re-verification, so its JS fills the same two nodes.
         $sphinx = (string) file_get_contents(
             self::repoRoot()
-            . '/addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/frontend/sphinx_booking/booking_form.php',
+            . '/addon-sphinx-holidays/app/addons/sphinx_holidays/src/ViewModels/SphinxBookingSidebarBuilder.php',
         );
         self::assertStringContainsString('cancelFreeUntil:', $sphinx);
         self::assertStringContainsString('freeCancellationUntil(', $sphinx);
@@ -279,13 +279,14 @@ final class BookingSidebarTest extends TestCase
      */
     public function testDatesFollowTheStoreFormatEverywhere(): void
     {
+        // The sidebar builders (which both create and edit modes call).
         foreach ([
-            '/addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/booking_form.php',
-            '/addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/frontend/sphinx_booking/booking_form.php',
-        ] as $controller) {
-            $src = (string) file_get_contents(self::repoRoot() . $controller);
-            self::assertStringContainsString('DateHelper::formatStoreDate(', $src, $controller);
-            self::assertStringNotContainsString("'%d.%m.%Y'", $src, $controller . ': hardcoded date format');
+            '/addon-novoton-holidays/app/addons/novoton_holidays/src/ViewModels/NovotonBookingSidebarBuilder.php',
+            '/addon-sphinx-holidays/app/addons/sphinx_holidays/src/ViewModels/SphinxBookingSidebarBuilder.php',
+        ] as $builder) {
+            $src = (string) file_get_contents(self::repoRoot() . $builder);
+            self::assertStringContainsString('DateHelper::formatStoreDate(', $src, $builder);
+            self::assertStringNotContainsString("'%d.%m.%Y'", $src, $builder . ': hardcoded date format');
         }
 
         // Both providers' terms formatters share the same one formatter.

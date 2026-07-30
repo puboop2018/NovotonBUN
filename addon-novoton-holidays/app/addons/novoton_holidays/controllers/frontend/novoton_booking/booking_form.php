@@ -12,13 +12,10 @@ use Tygh\Tygh;
 use Tygh\Addons\NovotonHolidays\Services\ConfigProvider;
 use Tygh\Addons\NovotonHolidays\Services\Container;
 use Tygh\Addons\NovotonHolidays\Services\PriceInfoFormatter;
-use Tygh\Addons\TravelCore\Dto\Hotel\HotelSeoData;
+use Tygh\Addons\NovotonHolidays\Services\RoomLimitsResolver;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Services\CurrencyService;
-use Tygh\Addons\TravelCore\Services\DateHelper;
-use Tygh\Addons\TravelCore\ViewModels\BookingSidebarFactory;
-use Tygh\Addons\TravelCore\ViewModels\BookingSidebarViewModel;
-use Tygh\Addons\TravelCore\ViewModels\HotelHeaderFactory;
+use Tygh\Addons\NovotonHolidays\ViewModels\NovotonBookingSidebarBuilder;
 
     $bookingData = TypeCoerce::toStringMap($_REQUEST);
 
@@ -209,102 +206,16 @@ use Tygh\Addons\TravelCore\ViewModels\HotelHeaderFactory;
         }
     }
 
-    // Get age categories and room limits from hotel_data JSON or API
-    $age_categories = [];
-    $room_limits = [];
-
-    // V3: Try to get from hotel_data JSON first
-    if (!empty($hotel_info['hotel_data'])) {
-        $hotelData = TypeCoerce::toStringMap(json_decode(TypeCoerce::toString($hotel_info['hotel_data']), true));
-        if (!empty($hotelData['ages'])) {
-            $agesRaw = TypeCoerce::toStringMap($hotelData['ages']);
-            $ages = isset($agesRaw['IdAge']) ? [$agesRaw] : TypeCoerce::toRowList($hotelData['ages']);
-            foreach ($ages as $age) {
-                $age_categories[] = [
-                    'id' => TypeCoerce::toString($age['IdAge'] ?? ''),
-                    'is_child' => TypeCoerce::toString($age['fAge'] ?? '0') === '1',
-                    'from_year' => TypeCoerce::toFloat($age['FromYear'] ?? 0),
-                    'to_year' => TypeCoerce::toFloat($age['ToYear'] ?? 99)
-                ];
-            }
-        }
-        if (!empty($hotelData['rooms'])) {
-            $roomsRaw = TypeCoerce::toStringMap($hotelData['rooms']);
-            $rooms_db = isset($roomsRaw['IdRoom']) ? [$roomsRaw] : TypeCoerce::toRowList($hotelData['rooms']);
-            foreach ($rooms_db as $r) {
-                $rid = TypeCoerce::toString($r['IdRoom'] ?? $r['id'] ?? '');
-                if ($rid !== '' && $rid !== '0') $room_limits[$rid] = $r;
-            }
-        }
-    }
-
-    // If not in DB, fetch from API
-    if (empty($age_categories) || empty($room_limits)) {
-        $api = fn_novoton_holidays_get_api();
-        if ($api !== null) {
-            // A provider hiccup must not 500 this customer-facing page —
-            // degrade to the default age/room limits below, same as the
-            // no-API-configured path.
-            try {
-                $hotelInfoResponse = $api->hotels()->getHotelInfo(TypeCoerce::toString($booking['hotel_id']));
-            } catch (\Throwable $e) {
-                $hotelInfoResponse = null;
-                fn_log_event('general', 'runtime', [
-                    'message' => 'Novoton booking_form: getHotelInfo failed — using default age/room limits',
-                    'hotel_id' => TypeCoerce::toString($booking['hotel_id']),
-                    'error' => $e->getMessage(),
-                ]);
-            }
-            if ((bool) $hotelInfoResponse && isset($hotelInfoResponse->hotels->hotel)) {
-                $h = $hotelInfoResponse->hotels->hotel;
-
-                // Parse age categories
-                if (isset($h->age)) {
-                    $ages = isset($h->age->IdAge) ? [$h->age] : $h->age;
-                    foreach ($ages as $age) {
-                        $age_data = [
-                            'id' => (string)($age->IdAge ?? ''),
-                            'is_child' => ((string)($age->fAge ?? '0')) === '1',
-                            'from_year' => (float)((string)($age->FromYear ?? 0)),
-                            'to_year' => (float)((string)($age->ToYear ?? 99))
-                        ];
-                        $age_categories[] = $age_data;
-                    }
-                }
-
-                // Parse room limits
-                if (isset($h->rooms)) {
-                    $rooms = isset($h->rooms->IdRoom) ? [$h->rooms] : $h->rooms;
-                    foreach ($rooms as $room) {
-                        $room_id = (string)($room->IdRoom ?? '');
-                        $room_limits[$room_id] = [
-                            'id' => $room_id,
-                            'type' => (string)($room->Type ?? ''),
-                            'rb' => (int)((string)($room->RB ?? 2)),
-                            'eb' => (int)((string)($room->EB ?? 0)),
-                            'max_adults' => (int)((string)($room->maxADT ?? 4)),
-                            'max_children' => (int)((string)($room->maxCHD ?? 2)),
-                            'min_pax' => (int)((string)($room->minPAX ?? 1))
-                        ];
-                    }
-                }
-
-                // V3: Age and room data is already stored in hotel_data JSON via hotelinfo sync
-                // No separate caching needed - data will be fetched fresh from API or hotel_data
-            }
-        }
-    }
-
-    // Add age categories and room limits to booking data for JavaScript
-    $booking['age_categories'] = $age_categories;
-    $current_room_id = $booking['room_id'];
-    $booking['current_room_limits'] = $room_limits[$current_room_id] ?? [
-        'max_adults' => 4,
-        'max_children' => 2,
-        'min_pax' => 1,
-        'rb' => 2,
-        'eb' => 2
-    ];
+    // Age categories + occupancy limits for the form's guest pickers. Shared
+    // with edit_booking, which renders the same template and reads the same
+    // two variables.
+    $limits = RoomLimitsResolver::resolve(
+        TypeCoerce::toStringMap($hotel_info),
+        TypeCoerce::toString($booking['hotel_id']),
+        TypeCoerce::toString($booking['room_id']),
+    );
+    $booking['age_categories'] = $limits['age_categories'];
+    $booking['current_room_limits'] = $limits['current_room_limits'];
 
     // Canonical rooms_data JSON for the template's inline JS. Prepared here
     // because {json_decode(...)} in a template is a Smarty 5 CompilerException
@@ -337,32 +248,15 @@ use Tygh\Addons\TravelCore\ViewModels\HotelHeaderFactory;
     // columns are already present). The map URL comes from the shared builder
     // so the "Locație - arată pe hartă" link is present for every hotel —
     // coordinate pin when geocoded, place-search on "name, location" otherwise.
-    $bookingHotelSeo = new HotelSeoData(
-        hotelId: TypeCoerce::toString($booking['hotel_id']),
-        providerName: 'novoton',
-        name: TypeCoerce::toString($hotel_info['hotel_name'] ?? ''),
-        city: TypeCoerce::toString($hotel_info['city'] ?? ''),
-        region: TypeCoerce::toString($hotel_info['region'] ?? ''),
-        country: TypeCoerce::toString($hotel_info['country'] ?? ''),
-        latitude: TypeCoerce::toFloat($hotel_info['latitude'] ?? 0),
-        longitude: TypeCoerce::toFloat($hotel_info['longitude'] ?? 0),
-        address: TypeCoerce::toString($hotel_info['street_address'] ?? ''),
-    );
-    // Shared header derivation (travel_core factory): sanitized line +
-    // always-present map URL + the hotel_header component's view model. The
-    // city/region/country join keeps the old template's fallback for when the
-    // sanitizer has nothing to work with (the map URL still derives from the
-    // sanitized line, as before). $hotel_stars is ★ glyphs from star_rating,
-    // or raw "*"s parsed out of the hotel name (legacy) — count either form.
-    $headerVm = HotelHeaderFactory::fromSeo(
-        $bookingHotelSeo,
-        mb_substr_count($hotel_stars, '★') + substr_count($hotel_stars, '*'),
+    // Shared header derivation (travel_core factory via the novoton builder):
+    // sanitized line + always-present map URL + the hotel_header component's
+    // view model. Built by the SAME builder edit_booking uses, so the two modes
+    // of this page cannot drift apart again.
+    $headerVm = NovotonBookingSidebarBuilder::header(
+        TypeCoerce::toString($booking['hotel_id']),
+        TypeCoerce::toStringMap($hotel_info),
+        $hotel_stars,
         PriceInfoFormatter::toInt($product_id),
-        implode(', ', array_filter([
-            TypeCoerce::toString($hotel_info['city'] ?? ''),
-            TypeCoerce::toString($hotel_info['region'] ?? ''),
-            TypeCoerce::toString($hotel_info['country'] ?? ''),
-        ], static fn (string $part): bool => $part !== '')),
     );
     $view->assign('hotel_location_line', $headerVm->locationLine);
     $view->assign('hotel_map_url', $headerVm->mapUrl);
@@ -391,64 +285,17 @@ use Tygh\Addons\TravelCore\ViewModels\HotelHeaderFactory;
     $view->assign('show_calendar_prices', ConfigProvider::isShowCalendarPrices() ? 'Y' : 'N');
 
     // ── Shared 2-column summary sidebar (travel_core component) ───────────
-    // Every value is formatted HERE, because the shared template carries no
-    // provider branches: novoton derives its summary from URL params + the
-    // hotels table, sphinx from a verified live offer.
-    //
-    // Cancellation terms are deliberately absent: novoton only returns them
-    // with a price quote, and the page already re-verifies the price on load
-    // (booking-form.js). The card therefore ships empty and is filled by that
-    // existing round-trip — no second API call just to render a policy.
-    $sidebarRoomsData = TypeCoerce::toRowList($bookingData['rooms_data'] ?? []);
-    $sidebarOccupancy = BookingSidebarFactory::occupancy($sidebarRoomsData);
-    $sidebarCheckIn = TypeCoerce::toString($booking['check_in']);
-    $sidebarCheckOut = TypeCoerce::toString($booking['check_out']);
-    $sidebarCheckInTs = (int) strtotime($sidebarCheckIn);
-    $sidebarCheckOutTs = (int) strtotime($sidebarCheckOut);
-    $sidebarPackage = TypeCoerce::toString($package_name) !== ''
-        ? TypeCoerce::toString($package_name)
-        : TypeCoerce::toString($booking['package_name']);
-
-    $sidebarVm = new BookingSidebarViewModel(
-        imagePair: fn_travel_core_product_main_pair(PriceInfoFormatter::toInt($product_id)),
-        name: $headerVm->name,
-        stars: $headerVm->stars,
-        available: empty($bookingData['is_on_request']),
-        locationLine: $headerVm->locationLine,
-        mapUrl: $headerVm->mapUrl,
-        features: Container::getInstance()->facilityRepository()->getLabelsForHotel(
-            TypeCoerce::toString($booking['hotel_id']),
-            defined('CART_LANGUAGE') ? TypeCoerce::toString(CART_LANGUAGE) : 'en',
-        ),
-        packageName: $sidebarPackage !== $headerVm->name ? $sidebarPackage : '',
-        // Store-configured format (Settings -> Appearance), NOT a hardcoded
-        // one: the cancellation lines below the summary already follow it, and
-        // a card showing "Check-in 07.09.2026" beside "free until 08/28/2026"
-        // is the bug this replaced.
-        checkIn: $sidebarCheckInTs > 0 ? DateHelper::formatStoreDate($sidebarCheckInTs) : $sidebarCheckIn,
-        checkInWeekday: $sidebarCheckInTs > 0 ? DateHelper::formatStoreWeekday($sidebarCheckInTs) : '',
-        checkOut: $sidebarCheckOutTs > 0 ? DateHelper::formatStoreDate($sidebarCheckOutTs) : $sidebarCheckOut,
-        checkOutWeekday: $sidebarCheckOutTs > 0 ? DateHelper::formatStoreWeekday($sidebarCheckOutTs) : '',
-        nights: TypeCoerce::toInt($booking['nights']),
-        rooms: max(1, TypeCoerce::toInt($booking['num_rooms'])),
-        adults: $sidebarOccupancy['adults'] > 0 ? $sidebarOccupancy['adults'] : TypeCoerce::toInt($booking['adults']),
-        children: $sidebarOccupancy['children'] > 0 ? $sidebarOccupancy['children'] : TypeCoerce::toInt($booking['children']),
-        roomLines: BookingSidebarFactory::roomLines($sidebarRoomsData),
-        boardName: TypeCoerce::toString($sidebarRoomsData[0]['board_name'] ?? ''),
-        changeUrl: BookingSidebarFactory::changeSelectionUrl(PriceInfoFormatter::toInt($product_id), [
-            'check_in' => $sidebarCheckIn,
-            'check_out' => $sidebarCheckOut,
-            'adults' => TypeCoerce::toInt($booking['adults']),
-            'children' => TypeCoerce::toInt($booking['children']),
-            'children_ages' => TypeCoerce::toString($booking['children_ages']),
-            'rooms' => TypeCoerce::toInt($booking['num_rooms']),
-        ]),
-        productId: PriceInfoFormatter::toInt($product_id),
-        total: fn_novoton_holidays_format_price(
-            TypeCoerce::toFloat($booking['total_price']),
-            $novoton_display_coefficient,
-            $novoton_display_symbol,
-        ),
+    // Same builder as edit_booking: one page, one summary, whichever mode
+    // rendered it.
+    $sidebarVm = NovotonBookingSidebarBuilder::sidebar(
+        $bookingData,
+        $headerVm,
+        PriceInfoFormatter::toInt($product_id),
+        TypeCoerce::toString($package_name),
+        $novoton_display_coefficient,
+        $novoton_display_symbol,
+        empty($bookingData['is_on_request']),
+        defined('CART_LANGUAGE') ? TypeCoerce::toString(CART_LANGUAGE) : 'en',
     );
     $view->assign('travel_booking_sidebar', $sidebarVm->toViewArray());
 

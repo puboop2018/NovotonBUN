@@ -18,6 +18,7 @@ if (!defined('BOOTSTRAP')) {
 }
 
 use Tygh\Addons\SphinxHolidays\Services\Container;
+use Tygh\Addons\SphinxHolidays\ViewModels\SphinxBookingSidebarBuilder;
 use Tygh\Addons\TravelCore\Dto\Hotel\HotelSeoData;
 use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
@@ -109,7 +110,7 @@ if ($hotelRow !== null) {
 $header = $headerVm ?? HotelHeaderFactory::bare($hotelName, 0, $product_id);
 $view->assign('travel_hotel_header', $header->toViewArray());
 
-$view->assign('sphinx_booking_data', [
+$editBookingData = [
     'offer_id' => TypeCoerce::toString($src('offer_id')),
     'num_rooms' => 1,
     'rooms_data' => $roomsData,
@@ -134,8 +135,35 @@ $view->assign('sphinx_booking_data', [
     'verified' => true,
     'payment_terms' => TypeCoerce::toList($cart_extra['payment_terms'] ?? []),
     'cancellation_fees' => TypeCoerce::toList($cart_extra['cancellation_fees'] ?? []),
-]);
+];
+$view->assign('sphinx_booking_data', $editBookingData);
 $view->assign('sphinx_provider', 'sphinx');
+
+// ── The same page, fully ──────────────────────────────────────────────────
+// edit_booking.tpl is a one-line include of booking_form.tpl, so this mode
+// renders the identical 2-column layout — but only if it assigns the identical
+// view variables. It never assigned the sidebar, and since
+// components/booking_sidebar.tpl is wrapped in `{if $tbs}`, the entire left
+// column rendered as NOTHING: an isolated bare form with no hotel, no dates,
+// no price, and an empty booking-conditions modal (which reads the same
+// variable). Same builder as booking_form, so the two cannot diverge again.
+//
+// Built from the STORED cart line, never a live offer: this mode must not
+// re-verify the offer (pinned by SphinxEditBookingTest), and a guest fixing a
+// misspelled name must not have the price move under them.
+$editCurrency = TypeCoerce::toString($editBookingData['currency']);
+$editSidebar = SphinxBookingSidebarBuilder::build(
+    $editBookingData,
+    $header,
+    $hotelRow,
+    number_format(TypeCoerce::toFloat($editBookingData['total_price']), 2, ',', '.')
+        . ' ' . ($editCurrency === 'EUR' ? '€' : $editCurrency),
+    $cart_extra['cancellation_fees'] ?? null,
+    true,
+    defined('CART_LANGUAGE') ? TypeCoerce::toString(CART_LANGUAGE) : 'en',
+);
+$view->assign('travel_booking_sidebar', $editSidebar->toViewArray());
+
 $view->assign('is_edit_mode', true);
 $view->assign('edit_booking_id', $booking_id);
 $view->assign('edit_cart_id', $cart_id);

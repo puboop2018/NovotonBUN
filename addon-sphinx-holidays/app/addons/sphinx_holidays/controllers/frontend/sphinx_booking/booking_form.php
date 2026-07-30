@@ -17,9 +17,7 @@ use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
 use Tygh\Addons\TravelCore\Dto\Hotel\HotelSeoData;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
-use Tygh\Addons\TravelCore\Services\DateHelper;
-use Tygh\Addons\TravelCore\ViewModels\BookingSidebarFactory;
-use Tygh\Addons\TravelCore\ViewModels\BookingSidebarViewModel;
+use Tygh\Addons\SphinxHolidays\ViewModels\SphinxBookingSidebarBuilder;
 use Tygh\Addons\TravelCore\ViewModels\HotelHeaderFactory;
 
 /** @var \Smarty $view */
@@ -202,7 +200,7 @@ try {
         TypeCoerce::toInt($product_id),
     ))->toViewArray());
 
-    $view->assign('sphinx_booking_data', [
+    $bfBookingData = [
         'offer_id' => $offer_id,
         'num_rooms' => 1,
         'rooms_data' => $roomsData,
@@ -232,71 +230,25 @@ try {
         // (formatted display lines; [] when the API sends none).
         'payment_terms' => \Tygh\Addons\SphinxHolidays\Services\TermsFormatter::lines($verifiedOffer['payment_terms'] ?? null),
         'cancellation_fees' => \Tygh\Addons\SphinxHolidays\Services\TermsFormatter::lines($verifiedOffer['cancellation_fees'] ?? null),
-    ]);
+    ];
+    $view->assign('sphinx_booking_data', $bfBookingData);
 
     $view->assign('sphinx_provider', 'sphinx');
 
     // ── Shared 2-column summary sidebar (travel_core component) ───────────
-    // Formatted here, not in the template: the shared sidebar carries no
-    // provider branches, so each provider hands it finished strings.
-    $bfHeaderForSidebar = $bfHeaderVm ?? HotelHeaderFactory::bare($hotelName, 0, TypeCoerce::toInt($product_id));
-    $bfCancelLines = \Tygh\Addons\SphinxHolidays\Services\TermsFormatter::lines(
-        $verifiedOffer['cancellation_fees'] ?? null,
-    );
+    // Same builder as edit_booking: one page, one summary, whichever mode
+    // rendered it. The raw cancellation payload goes in too — the free-until
+    // date can only be derived from the rules, not from the formatted lines.
     $bfCurrency = ConfigProvider::getDefaultCurrency();
     $bfFormattedTotal = number_format($verifiedPrice, 2, ',', '.') . ' ' . ($bfCurrency === 'EUR' ? '€' : $bfCurrency);
-    $bfCheckInTs = (int) strtotime($checkIn);
-    $bfCheckOutTs = (int) strtotime($checkOut);
-    $bfLang = defined('CART_LANGUAGE') ? TypeCoerce::toString(CART_LANGUAGE) : 'en';
-
-    $bfSidebar = new BookingSidebarViewModel(
-        imagePair: function_exists('fn_travel_core_product_main_pair')
-            ? fn_travel_core_product_main_pair(TypeCoerce::toInt($product_id))
-            : [],
-        imageUrl: $hotelRow !== null ? TypeCoerce::toString($hotelRow['image_url'] ?? '') : '',
-        name: $bfHeaderForSidebar->name,
-        stars: $bfHeaderForSidebar->stars,
-        // The offer reached this page only because verifyHotelOffer() said it
-        // is bookable right now, so the badge is not a guess.
-        available: true,
-        locationLine: $bfHeaderForSidebar->locationLine,
-        mapUrl: $bfHeaderForSidebar->mapUrl,
-        features: $hotelRow !== null
-            ? Container::getFeatureAssigner()->getHotelFacilityLabels($hotelRow, $bfLang)
-            : [],
-        // Store-configured format (Settings -> Appearance), NOT a hardcoded
-        // one — the cancellation lines in the same sidebar follow it too.
-        checkIn: $bfCheckInTs > 0 ? DateHelper::formatStoreDate($bfCheckInTs) : $checkIn,
-        checkInWeekday: $bfCheckInTs > 0 ? DateHelper::formatStoreWeekday($bfCheckInTs) : '',
-        checkOut: $bfCheckOutTs > 0 ? DateHelper::formatStoreDate($bfCheckOutTs) : $checkOut,
-        checkOutWeekday: $bfCheckOutTs > 0 ? DateHelper::formatStoreWeekday($bfCheckOutTs) : '',
-        nights: $nights,
-        rooms: 1,
-        adults: $adults,
-        children: $children,
-        roomLines: BookingSidebarFactory::roomLines($roomsData, $roomName),
-        boardName: $boardName,
-        changeUrl: BookingSidebarFactory::changeSelectionUrl(TypeCoerce::toInt($product_id), [
-            'check_in' => $checkIn,
-            'check_out' => $checkOut,
-            'adults' => $adults,
-            'children' => $children,
-            'children_ages' => $childrenAges,
-            'rooms' => 1,
-        ]),
-        productId: TypeCoerce::toInt($product_id),
-        total: $bfFormattedTotal,
-        cancelLines: $bfCancelLines,
-        cancelFullAmount: BookingSidebarFactory::fullChargeAmount($bfCancelLines, $bfFormattedTotal),
-        cancelFreeUntil: TypeCoerce::toString(
-            \Tygh\Addons\SphinxHolidays\Services\TermsFormatter::freeCancellationUntil(
-                $verifiedOffer['cancellation_fees'] ?? null,
-            ),
-        ),
-        paymentLines: \Tygh\Addons\SphinxHolidays\Services\TermsFormatter::lines(
-            $verifiedOffer['payment_terms'] ?? null,
-        ),
-        roomLabel: $roomName,
+    $bfSidebar = SphinxBookingSidebarBuilder::build(
+        $bfBookingData,
+        $bfHeaderVm ?? HotelHeaderFactory::bare($hotelName, 0, TypeCoerce::toInt($product_id)),
+        $hotelRow,
+        $bfFormattedTotal,
+        $verifiedOffer['cancellation_fees'] ?? null,
+        true,
+        defined('CART_LANGUAGE') ? TypeCoerce::toString(CART_LANGUAGE) : 'en',
     );
     $view->assign('travel_booking_sidebar', $bfSidebar->toViewArray());
 
