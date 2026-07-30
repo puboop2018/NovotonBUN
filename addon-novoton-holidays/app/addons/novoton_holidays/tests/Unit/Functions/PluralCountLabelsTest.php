@@ -47,10 +47,13 @@ final class PluralCountLabelsTest extends TestCase
         self::assertStringContainsString('function fn_novoton_holidays_seed_language_keys(', $func);
         self::assertStringContainsString('function fn_novoton_holidays_language_seed_hash(', $func);
 
-        // init.php reseeds on an admin load when the hash changes.
+        // init.php reseeds whenever an installed language is missing the
+        // current fingerprint. Deliberately NOT admin-gated any more: the
+        // old AREA === 'A' probe left CUSTOMERS reading raw keys after a
+        // deploy until somebody opened the admin panel.
         $init = (string) file_get_contents(dirname(__DIR__, 3) . '/init.php');
-        self::assertStringContainsString('fn_novoton_holidays_seed_language_keys()', $init);
-        self::assertStringContainsString("AREA === 'A'", $init);
-        self::assertStringContainsString('novoton_holidays._lang_seed_hash', $init);
+        self::assertStringContainsString('fn_travel_core_heal_language_keys(', $init);
+        self::assertStringContainsString("'novoton_holidays'", $init);
+        self::assertStringContainsString('fn_novoton_holidays_language_seed_hash()', $init);
     }
 }

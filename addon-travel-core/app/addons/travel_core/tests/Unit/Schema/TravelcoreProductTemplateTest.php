@@ -201,9 +201,10 @@ final class TravelcoreProductTemplateTest extends TestCase
 
         // The seeder must reach installed stores from ANY area: the old
         // admin-only gate left storefront visitors staring at raw keys until
-        // someone opened an admin page after a deploy.
+        // someone opened an admin page after a deploy. Delivery rules live in
+        // LanguageDelivery now (see LanguageDeliveryTest).
         $init = (string) file_get_contents($addonRoot . '/init.php');
-        $langBlock = strpos($init, "if (function_exists('fn_travel_core_seed_language_keys')) {");
+        $langBlock = strpos($init, "if (function_exists('fn_travel_core_heal_language_keys')) {");
         self::assertNotFalse($langBlock, 'lang self-heal must not be admin-gated');
     }
 }

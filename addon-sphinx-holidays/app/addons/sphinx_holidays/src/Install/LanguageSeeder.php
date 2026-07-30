@@ -18,11 +18,13 @@ namespace Tygh\Addons\SphinxHolidays\Install;
  * shipped in later releases otherwise render with an empty label on existing
  * installations.
  *
- * Idempotent (INSERT ... ON DUPLICATE KEY UPDATE). Stamps the source content
- * hash into the sphinx_holidays._lang_seed_hash lang var; init.php probes
- * that stamp (via the fn_sphinx_holidays_* shells) and re-runs this seeder
- * whenever addon.xml or lang_keys.php change, so new labels appear on the
- * next admin page load without reinstalling.
+ * Idempotent (INSERT ... ON DUPLICATE KEY UPDATE). The label write itself —
+ * resolving the store's installed languages, and refusing to stamp a language
+ * whose values could not be read back — is shared with the other travel addons
+ * in travel_core's LanguageDelivery; init.php probes that stamp (through
+ * fn_travel_core_heal_language_keys) and re-runs this seeder whenever
+ * addon.xml or lang_keys.php change, so new labels appear on the next page
+ * load without reinstalling.
  */
 final class LanguageSeeder
 {
@@ -30,21 +32,31 @@ final class LanguageSeeder
     {
         $vars = self::variables();
 
-        foreach ($vars as $name => $translations) {
-            foreach ($translations as $lang_code => $value) {
-                db_query(
-                    'INSERT INTO ?:language_values (name, lang_code, value) VALUES (?s, ?s, ?s)
-                     ON DUPLICATE KEY UPDATE value = ?s',
-                    $name,
-                    $lang_code,
-                    $value,
-                    $value,
-                );
-            }
-        }
+        // Label delivery (which installed language gets which source values,
+        // and the read-back that must succeed before a language is stamped as
+        // done) is shared with the other travel addons.
+        \Tygh\Addons\TravelCore\Install\LanguageDelivery::seed(
+            'sphinx_holidays._lang_seed_hash',
+            $vars,
+            self::seedHash(),
+        );
 
-        // Mirror settings labels into settings_descriptions for every settings
-        // object of this addon that has a matching sphinx_holidays.{name} lang var.
+        self::mirrorSettingsDescriptions($vars);
+    }
+
+    /**
+     * Mirror settings labels into ?:settings_descriptions.
+     *
+     * CS-Cart fills descriptions only when a settings object is created, so
+     * settings shipped in later releases otherwise render with an empty label
+     * on existing installations.
+     *
+     * @param array<string, array<string, string>> $vars
+     */
+    public static function mirrorSettingsDescriptions(array $vars): void
+    {
+        // Every settings object of this addon that has a matching
+        // sphinx_holidays.{name} lang var.
         // @db_query: defensive, like the settings_objects migrations in novoton —
         // a schema mismatch must never break the admin panel.
         $objects = db_get_array(
@@ -73,22 +85,6 @@ final class LanguageSeeder
                     $tooltip,
                 );
             }
-        }
-
-        // Stamp the seeded content so the init.php probe knows when to re-seed.
-        $hash = self::seedHash();
-        db_query(
-            "INSERT INTO ?:language_values (name, lang_code, value) VALUES (?s, 'en', ?s)
-             ON DUPLICATE KEY UPDATE value = ?s",
-            'sphinx_holidays._lang_seed_hash',
-            $hash,
-            $hash,
-        );
-
-        // Labels are served through CS-Cart's registry cache; clear it so the
-        // (re)seeded values render immediately instead of after a manual cc.
-        if (function_exists('fn_clear_cache')) {
-            fn_clear_cache();
         }
     }
 

@@ -72,6 +72,11 @@ function fn_travel_core_post_install(): bool
 {
     fn_travel_core_ensure_schema();
     fn_travel_core_seed_feature_map();
+    // Seed the labels rather than trusting CS-Cart's install-time .po import:
+    // it only covers the languages the store had when the pack was imported,
+    // and lang_keys.php entries added since the .po was last regenerated would
+    // otherwise wait for the runtime probe to notice them.
+    fn_travel_core_seed_language_keys();
     return true;
 }
 
@@ -495,44 +500,22 @@ function fn_travel_core_seed_feature_map(): void
 }
 
 /**
- * Self-heal language keys for existing installations.
+ * Force a full language (re)seed, ignoring both the stamp and the probe.
  *
- * CS-Cart imports addon.xml/.po language variables only at install, so labels
- * added or changed in later releases never reach an already-installed store.
- * This seeder UPSERTs every variable from lang_keys.php + addon.xml into
- * ?:language_values, stamps the source content hash into the
- * travel_core._lang_seed_hash lang var, and clears the registry cache; the
- * init.php probe re-runs it whenever either source file changes. Same
- * mechanism as sphinx_holidays (which also mirrors settings labels — travel
- * core has no such gap, so this port seeds language_values only).
+ * The delivery rules — which installed languages get which source values, and
+ * the read-back that must succeed before a language is stamped as done — live
+ * in LanguageDelivery so all three addons share them. The self-healing entry
+ * point is fn_travel_core_heal_language_keys() (functions/self_heal.php);
+ * this shell is what post_install and dev/tools/seed-langs.php call when the
+ * caller wants the write attempted unconditionally.
  */
 function fn_travel_core_seed_language_keys(): void
 {
-    $vars = fn_travel_core_language_variables();
-
-    foreach ($vars as $name => $translations) {
-        foreach ($translations as $lang_code => $value) {
-            db_query(
-                "INSERT INTO ?:language_values (name, lang_code, value) VALUES (?s, ?s, ?s)
-                 ON DUPLICATE KEY UPDATE value = ?s",
-                $name, $lang_code, $value, $value
-            );
-        }
-    }
-
-    // Stamp the seeded content so the init.php probe knows when to re-seed.
-    $hash = fn_travel_core_language_seed_hash();
-    db_query(
-        "INSERT INTO ?:language_values (name, lang_code, value) VALUES (?s, 'en', ?s)
-         ON DUPLICATE KEY UPDATE value = ?s",
-        'travel_core._lang_seed_hash', $hash, $hash
+    \Tygh\Addons\TravelCore\Install\LanguageDelivery::seed(
+        'travel_core._lang_seed_hash',
+        fn_travel_core_language_variables(),
+        fn_travel_core_language_seed_hash(),
     );
-
-    // Labels are served through CS-Cart's registry cache; clear it so the
-    // (re)seeded values render on the next request instead of after a manual cc.
-    if (function_exists('fn_clear_cache')) {
-        fn_clear_cache();
-    }
 }
 
 /**
@@ -561,12 +544,13 @@ function fn_travel_core_language_variables(): array
 }
 
 /**
- * Fingerprint of the language-variable sources — the self-heal seed stamp.
+ * Fingerprint of the language-variable sources — the value stamped onto every
+ * installed language once its labels are verified in the database.
  *
- * stat-based (size + mtime), not a content hash: this runs on every admin
- * request and addon.xml alone is hundreds of KB — hashing it each time was
- * measurable. Real edits always touch size or mtime; a deploy that resets
- * mtimes merely re-arms one idempotent reseed.
+ * stat-based (size + mtime), not a content hash: addon.xml alone is hundreds
+ * of KB and this is computed on every request. It only has to answer "did the
+ * sources change?"; whether the ROWS are present is a separate question, and
+ * LanguageDelivery::isCurrent() asks the database that one directly.
  */
 function fn_travel_core_language_seed_hash(): string
 {

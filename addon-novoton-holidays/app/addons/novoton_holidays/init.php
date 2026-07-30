@@ -136,18 +136,23 @@ if (defined('AREA') && AREA === 'A') {
     unset($__mapLabel);
 }
 
-// Language self-seed: on admin load, reseed ?:language_values from
-// lang_keys.php + addon.xml when their combined hash changes — so labels
-// added after install (CS-Cart imports .po only at install time) render on
-// already-installed stores instead of showing raw "_novoton_holidays.*".
-if (defined('AREA') && AREA === 'A' && function_exists('fn_novoton_holidays_seed_language_keys')) {
-    $__nvtSeedStamp = db_get_field(
-        "SELECT value FROM ?:language_values WHERE name = 'novoton_holidays._lang_seed_hash' AND lang_code = 'en' LIMIT 1"
-    );
-    if ($__nvtSeedStamp !== fn_novoton_holidays_language_seed_hash()) {
-        fn_novoton_holidays_seed_language_keys();
-    }
-    unset($__nvtSeedStamp);
+// Language self-seed: reseed ?:language_values from lang_keys.php + addon.xml
+// whenever an installed language is missing the current source fingerprint —
+// CS-Cart imports .po only at install time, so labels added afterwards would
+// otherwise render as raw "_novoton_holidays.*" forever.
+//
+// No AREA gate: it used to be admin-only, which meant a deploy followed by
+// storefront-only traffic left CUSTOMERS looking at the raw keys until someone
+// happened to open the admin panel. Guarded, because a throw inside
+// fn_init_addons() is a 503 on every page.
+if (function_exists('fn_travel_core_heal_language_keys')) {
+    fn_travel_core_self_heal_guard('novoton_holidays_langs', static function (): void {
+        fn_travel_core_heal_language_keys(
+            'novoton_holidays',
+            'fn_novoton_holidays_language_variables',
+            fn_novoton_holidays_language_seed_hash(),
+        );
+    });
 }
 
 // Register addon hooks
