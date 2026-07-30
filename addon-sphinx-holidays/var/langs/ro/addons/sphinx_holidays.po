@@ -1330,19 +1330,19 @@ msgstr "Clasificare [rating] stele"
 
 msgctxt "Languages::sphinx_holidays.n_rooms"
 msgid "[n] Room|[n] Rooms"
-msgstr "[n] Cameră|[n] Camere"
+msgstr "[n] Cameră|[n] Camere|[n] de Camere"
 
 msgctxt "Languages::sphinx_holidays.n_offers"
 msgid "[n] Offer|[n] Offers"
-msgstr "[n] Ofertă|[n] Oferte"
+msgstr "[n] Ofertă|[n] Oferte|[n] de Oferte"
 
 msgctxt "Languages::sphinx_holidays.n_adults"
 msgid "[n] Adult|[n] Adults"
-msgstr "[n] Adult|[n] Adulți"
+msgstr "[n] Adult|[n] Adulți|[n] de Adulți"
 
 msgctxt "Languages::sphinx_holidays.n_children"
 msgid "[n] Child|[n] Children"
-msgstr "[n] Copil|[n] Copii"
+msgstr "[n] Copil|[n] Copii|[n] de Copii"
 
 msgctxt "Languages::sphinx_holidays.edit_booking"
 msgid "Edit booking"

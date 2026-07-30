@@ -213,6 +213,63 @@ final class BookingSidebarTest extends TestCase
     }
 
     /**
+     * Romanian needs THREE plural forms, not two.
+     *
+     * CS-Cart selects the form by the Unicode CLDR plural rules for the
+     * language, and supports as many variants as the rules define — the
+     * documentation shows Russian with three. Romanian also has three:
+     *
+     *   one   n = 1                        -> "1 noapte"
+     *   few   n = 0, or n % 100 in 2..19   -> "2 nopți", "19 nopți"
+     *   other everything else              -> "20 DE nopți", "100 DE nopți"
+     *
+     * With only two forms a 20-night stay reads "20 nopți", which is wrong in
+     * Romanian. English keeps its two forms — per the docs the msgid stays in
+     * the source language and only the translation lists every variant.
+     */
+    public function testRomanianPluralsCarryTheThreeCldrForms(): void
+    {
+        $wrong = [];
+
+        foreach ([
+            'addon-travel-core/app/addons/travel_core/lang_keys.php',
+            'addon-novoton-holidays/app/addons/novoton_holidays/lang_keys.php',
+            'addon-sphinx-holidays/app/addons/sphinx_holidays/lang_keys.php',
+        ] as $relative) {
+            $path = self::repoRoot() . '/' . $relative;
+            if (!is_file($path)) {
+                continue;
+            }
+            /** @var array<string, array<string, string>> $vars */
+            $vars = require $path;
+            foreach ($vars as $key => $translations) {
+                $en = (string) ($translations['en'] ?? '');
+                if (!str_contains($en, '|')) {
+                    continue;
+                }
+                $ro = (string) ($translations['ro'] ?? '');
+                $forms = explode('|', $ro);
+
+                if (count($forms) !== 3) {
+                    $wrong[] = $key . ': Romanian has ' . count($forms) . ' form(s), needs 3 — ' . $ro;
+
+                    continue;
+                }
+                // The "other" form is the one that carries "de".
+                if (!str_contains($forms[2], ' de ')) {
+                    $wrong[] = $key . ': the third (CLDR "other") form must read "[n] de …" — ' . $forms[2];
+                }
+                // English stays two forms; only the translation lists all of them.
+                if (count(explode('|', $en)) !== 2) {
+                    $wrong[] = $key . ': English should keep its two forms — ' . $en;
+                }
+            }
+        }
+
+        self::assertSame([], $wrong, "Romanian plural forms are wrong:\n" . implode("\n", $wrong));
+    }
+
+    /**
      * Every language key whose value carries a "|" is a plural form and must be
      * called positionally.
      *

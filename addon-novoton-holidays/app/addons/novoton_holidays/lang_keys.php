@@ -24,18 +24,18 @@ return [
     // n_offers is new.
     'novoton_holidays.n_rooms' => [
         'en' => '[n] Room|[n] Rooms',
-        'ro' => '[n] Cameră|[n] Camere',
+        'ro' => '[n] Cameră|[n] Camere|[n] de Camere',
     ],
     'novoton_holidays.n_offers' => [
         'en' => '[n] Offer|[n] Offers',
-        'ro' => '[n] Ofertă|[n] Oferte',
+        'ro' => '[n] Ofertă|[n] Oferte|[n] de Oferte',
     ],
     'novoton_holidays.n_adults' => [
         'en' => '[n] Adult|[n] Adults',
-        'ro' => '[n] Adult|[n] Adulți',
+        'ro' => '[n] Adult|[n] Adulți|[n] de Adulți',
     ],
     'novoton_holidays.n_children' => [
         'en' => '[n] Child|[n] Children',
-        'ro' => '[n] Copil|[n] Copii',
+        'ro' => '[n] Copil|[n] Copii|[n] de Copii',
     ],
 ];
