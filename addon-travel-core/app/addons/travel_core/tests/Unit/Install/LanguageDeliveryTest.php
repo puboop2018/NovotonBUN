@@ -115,20 +115,72 @@ final class LanguageDeliveryTest extends TestCase
     }
 
     /**
-     * Root cause #3: the probe must ask the database whether the LABELS are
-     * there, not merely whether a stamp row exists — otherwise a store that
-     * lost its rows never heals without a file change.
+     * The probe is an OPTIMISATION, never a gate on delivery.
+     *
+     * Its first version asked the same question with a LEFT JOIN carrying
+     * placeholders in the ON clause, and the store then delivered nothing at
+     * all — not even the upserts that run before any check. A probe that cannot
+     * answer must fall through to seeding: a needless seed costs a few hundred
+     * idempotent upserts once, a needless skip costs months of raw keys.
      */
-    public function testProbeCountsLanguagesMissingTheFingerprint(): void
+    public function testProbeFailsOpenToSeedingWhenItCannotAnswer(): void
     {
-        $src = (string) file_get_contents(
-            dirname(__DIR__, 3) . '/src/Install/LanguageDelivery.php',
-        );
+        DbStub::$getFields = static function (): never {
+            throw new \RuntimeException('languages table exploded');
+        };
 
-        self::assertStringContainsString('FROM ?:languages AS l', $src);
-        self::assertStringContainsString('lv.name IS NULL', $src);
-        // Fails closed: an unreadable languages table must report "not current".
-        self::assertStringContainsString("is_scalar(\$stale) && (string) \$stale !== '' && (int) \$stale === 0", $src);
+        self::assertFalse(LanguageDelivery::isCurrent('travel_core._lang_seed_hash', 'fp-1'));
+    }
+
+    /**
+     * A heal that throws must still be attempted only ONCE per deploy.
+     *
+     * The attempt stamp used to be written after seed(). When seed() threw, the
+     * guard swallowed it and the stamp was never reached — so the heal
+     * re-entered on every single request, several hundred upserts at a time, on
+     * a page that is supposed to cost one indexed read. `finally` is what the
+     * guard's own docblock has always required of its callers.
+     */
+    public function testAThrowingHealIsStillStampedSoItCannotRunEveryRequest(): void
+    {
+        $src = (string) file_get_contents(dirname(__DIR__, 3) . '/functions/self_heal.php');
+
+        $heal = strpos($src, 'function fn_travel_core_heal_language_keys(');
+        self::assertIsInt($heal);
+        $body = substr($src, $heal);
+
+        $try = strpos($body, 'try {');
+        $finally = strpos($body, '} finally {');
+        $stamp = strpos($body, 'fn_travel_core_self_heal_stamp($attemptKey, $attemptFingerprint);', (int) $finally);
+        self::assertIsInt($try);
+        self::assertIsInt($finally);
+        self::assertIsInt($stamp, 'the attempt stamp must live inside the finally block');
+    }
+
+    /**
+     * Guarding a self-heal is right — a throw inside fn_init_addons() is a 503
+     * on every page — but it must not make the failure invisible. error_log
+     * alone needs shell access to a container; fn_log_event puts the same line
+     * in Administration ▸ Logs where an operator can find it.
+     */
+    public function testHealFailuresReachALogAnOperatorCanRead(): void
+    {
+        $src = (string) file_get_contents(dirname(__DIR__, 3) . '/functions/self_heal.php');
+
+        self::assertStringContainsString('function fn_travel_core_heal_report(string $message): void', $src);
+        self::assertStringContainsString("fn_log_event('general', 'runtime'", $src);
+        // The reporter is called FROM a catch block, so it can never throw.
+        $report = strpos($src, 'function fn_travel_core_heal_report(');
+        self::assertIsInt($report);
+        self::assertStringContainsString('} catch (\\Throwable) {', substr($src, $report));
+
+        // And the guard routes through it rather than error_log alone.
+        $guard = strpos($src, 'function fn_travel_core_self_heal_guard(');
+        self::assertIsInt($guard);
+        self::assertStringContainsString(
+            'fn_travel_core_heal_report(',
+            substr($src, $guard, (int) $report - (int) $guard),
+        );
     }
 
     /**
@@ -295,24 +347,39 @@ final class LanguageDeliveryTest extends TestCase
     }
 
     /**
-     * Root cause #3, as behaviour: the probe asks the DATABASE whether every
+     * Root cause #3, as behaviour: the probe asks the DATABASE whether EVERY
      * installed language carries this fingerprint. Any language missing it —
-     * rows lost, a language added later — re-arms the heal with no file
-     * change at all.
+     * rows lost, a language added to the store later — re-arms the heal with
+     * no file change at all.
      */
-    public function testProbeIsCurrentOnlyWhenNoLanguageIsStale(): void
+    public function testProbeIsCurrentOnlyWhenEveryLanguageCarriesTheFingerprint(): void
     {
-        DbStub::$getField = static fn (): string => '0';
+        DbStub::$getFields = static fn (): array => ['en', 'ro'];
+
+        $stamps = static fn (array $rows): callable => static fn (): array => $rows;
+
+        DbStub::$getArray = $stamps([
+            ['lang_code' => 'en', 'value' => 'fp-1'],
+            ['lang_code' => 'ro', 'value' => 'fp-1'],
+        ]);
         self::assertTrue(LanguageDelivery::isCurrent('travel_core._lang_seed_hash', 'fp-1'));
 
-        DbStub::$getField = static fn (): string => '1';
+        // One language never got its rows — heal.
+        DbStub::$getArray = $stamps([['lang_code' => 'en', 'value' => 'fp-1']]);
+        self::assertFalse(LanguageDelivery::isCurrent('travel_core._lang_seed_hash', 'fp-1'));
+
+        // Sources changed under a fully-stamped store — heal.
+        DbStub::$getArray = $stamps([
+            ['lang_code' => 'en', 'value' => 'fp-0'],
+            ['lang_code' => 'ro', 'value' => 'fp-0'],
+        ]);
         self::assertFalse(LanguageDelivery::isCurrent('travel_core._lang_seed_hash', 'fp-1'));
     }
 
-    /** Fails closed: an unreadable ?:languages must report "not current". */
-    public function testProbeFailsClosed(): void
+    /** No readable languages at all is "not current", never "nothing to do". */
+    public function testProbeWithNoReadableLanguagesSeeds(): void
     {
-        DbStub::$getField = static fn () => null;
+        DbStub::$getFields = static fn (): array => [];
         self::assertFalse(LanguageDelivery::isCurrent('travel_core._lang_seed_hash', 'fp-1'));
     }
 
@@ -333,7 +400,10 @@ final class LanguageDeliveryTest extends TestCase
             return 1;
         };
 
-        self::assertSame(['seeded' => [], 'failed' => []], LanguageDelivery::seed('stamp', [], 'fp'));
+        $result = LanguageDelivery::seed('stamp', [], 'fp');
+        self::assertSame([], $result['seeded']);
+        self::assertSame([], $result['failed']);
+        self::assertSame(0, $result['written']);
         self::assertSame(0, $calls);
     }
 

@@ -1,0 +1,38 @@
+# Line endings: LF in the repository, always.
+#
+# Without this, a Windows clone (core.autocrlf=true) checks out CRLF, and the
+# fullstore container bind-mounts that clone straight into the CS-Cart docroot —
+# so the store runs bytes that CI has never seen. That is not theoretical: while
+# diagnosing a label-delivery bug, every deployed file measured larger than its
+# repo counterpart by exactly its own line count (travel_core/addon.xml 67718 vs
+# 68557 = 839 lines, lang_keys.php 8928 vs 9172 = 244 lines, and the same for
+# both providers), which made "does the store match the repo?" unanswerable
+# until the cause was identified.
+#
+# It also keeps `composer package` zips byte-identical wherever they are built.
+#
+# NOTE for existing clones: this file does not rewrite a working tree that is
+# already CRLF. Run once, after merging:
+#     git add --renormalize .
+# (or re-clone). Until then the container keeps its CRLF copies — harmless, but
+# the discrepancy stays.
+
+* text=auto eol=lf
+
+# Binaries must never be touched.
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.ico  binary
+*.webp binary
+*.svgz binary
+*.zip  binary
+*.gz   binary
+*.pdf  binary
+*.docx binary
+*.xlsx binary
+*.woff  binary
+*.woff2 binary
+*.ttf   binary
+*.eot   binary

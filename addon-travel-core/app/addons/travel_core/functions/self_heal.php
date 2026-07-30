@@ -135,21 +135,35 @@ function fn_travel_core_heal_language_keys(
         return;
     }
 
-    $vars = $varsProvider();
-    $result = \Tygh\Addons\TravelCore\Install\LanguageDelivery::seed($stampName, $vars, $fingerprint);
-    if ($afterSeed !== null) {
-        $afterSeed($vars);
+    // finally, NOT after the seed: when seed() throws, the guard around this
+    // function swallows it, and without the stamp the heal re-entered on EVERY
+    // request — several hundred upserts on a page that should cost one indexed
+    // read. A heal that cannot succeed must still be attempted only once per
+    // deploy, exactly as fn_travel_core_self_heal_guard's docblock requires.
+    try {
+        $vars = $varsProvider();
+        $result = \Tygh\Addons\TravelCore\Install\LanguageDelivery::seed($stampName, $vars, $fingerprint);
+        if ($afterSeed !== null) {
+            $afterSeed($vars);
+        }
+    } finally {
+        fn_travel_core_self_heal_stamp($attemptKey, $attemptFingerprint);
     }
-    fn_travel_core_self_heal_stamp($attemptKey, $attemptFingerprint);
 
     if ($result['failed'] !== []) {
         // Loud, because the symptom (raw keys on the storefront) is otherwise
         // indistinguishable from "nobody added the label yet".
-        error_log(
-            'travel_core: language seed for "' . $addon . '" could not be verified for language(s) '
+        fn_travel_core_heal_report(
+            'language seed for "' . $addon . '" could not be verified for language(s) '
             . implode(', ', $result['failed'])
             . ' — those labels will render as raw keys. Installed languages: '
-            . (implode(', ', $languages) ?: '(none readable)'),
+            . (implode(', ', $languages) ?: '(none readable)')
+            . '. Attempted ' . $result['written'] . ' upsert(s); '
+            . implode('; ', array_map(
+                static fn (string $lang, string $why): string => $lang . ': ' . $why,
+                array_keys($result['detail']),
+                array_values($result['detail']),
+            )),
         );
     }
 }
@@ -175,10 +189,41 @@ function fn_travel_core_self_heal_guard(string $key, callable $heal): void
     try {
         $heal();
     } catch (\Throwable $e) {
-        error_log(
-            'travel_core: self-heal "' . $key . '" failed and was skipped — '
-            . $e->getMessage() . ' @ ' . $e->getFile() . ':' . $e->getLine(),
+        fn_travel_core_heal_report(
+            'self-heal "' . $key . '" failed and was skipped — '
+            . get_debug_type($e) . ': ' . $e->getMessage()
+            . ' @ ' . $e->getFile() . ':' . $e->getLine(),
         );
+    }
+}
+
+/**
+ * Report a self-heal failure somewhere a human will actually find it.
+ *
+ * error_log() alone was not enough. It writes to the PHP error log, which on a
+ * containerised store needs shell access, and on a managed host may not be
+ * readable at all — so a guarded heal that failed on every request for months
+ * looked exactly like a heal that had nothing to do. Guarding these heals is
+ * right (a throw inside fn_init_addons() is a 503 on every page), but silence
+ * is not part of the deal.
+ *
+ * fn_log_event puts the same line in Administration ▸ Logs, where an operator
+ * can read it without a terminal. Both paths are attempted, and this function
+ * itself can never throw: it is called from a catch block, and from init.php,
+ * where CS-Cart's logging may not be wired up yet.
+ */
+function fn_travel_core_heal_report(string $message): void
+{
+    error_log('travel_core: ' . $message);
+
+    if (!function_exists('fn_log_event')) {
+        return;
+    }
+
+    try {
+        fn_log_event('general', 'runtime', ['message' => 'travel_core self-heal: ' . $message]);
+    } catch (\Throwable) {
+        // Already in error_log; a logging failure must not escalate.
     }
 }
 
@@ -235,7 +280,7 @@ function fn_travel_core_ensure_all_settings(): array
         try {
             $names = fn_travel_core_ensure_settings($addon, $dir, $varLangs);
         } catch (\Throwable $e) {
-            error_log("travel_core: settings heal for {$addon} failed — " . $e->getMessage());
+            fn_travel_core_heal_report("settings heal for {$addon} failed — " . $e->getMessage());
 
             continue;
         }

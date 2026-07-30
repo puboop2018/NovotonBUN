@@ -155,7 +155,53 @@ function sl_file_stat(string $file): string
         return 'ABSENT';
     }
 
-    return 'size=' . $stat['size'] . '  mtime=' . date('Y-m-d H:i:s', (int) $stat['mtime']);
+    // CRLF makes every deployed file bigger than its repo counterpart by
+    // exactly its line count, which turns any "does the store match the repo?"
+    // size comparison into a false discrepancy. Worth naming rather than
+    // re-deriving each time.
+    $head = (string) @file_get_contents($file, false, null, 0, 65536);
+    $eol = str_contains($head, "\r\n") ? '  eol=CRLF' : '  eol=LF';
+
+    return 'size=' . $stat['size'] . '  mtime=' . date('Y-m-d H:i:s', (int) $stat['mtime']) . $eol;
+}
+
+/**
+ * Can this store write to ?:language_values at all?
+ *
+ * The one question the label census cannot answer. If every seeder reports
+ * success and the rows are still absent, the writes are being rejected — a
+ * denied GRANT, a read-only replica, a collation the value cannot survive. One
+ * sentinel row, inserted, read back, deleted.
+ */
+function sl_write_probe(): string
+{
+    $name = 'travel_core._write_probe';
+    $lang = sl_store_languages()[0] ?? 'en';
+    $value = 'probe-' . substr(md5((string) getmypid() . $name), 0, 12);
+
+    try {
+        db_query(
+            "INSERT INTO ?:language_values (name, lang_code, value) VALUES (?s, ?s, ?s)
+             ON DUPLICATE KEY UPDATE value = ?s",
+            $name, $lang, $value, $value
+        );
+    } catch (\Throwable $e) {
+        return 'INSERT THREW — ' . get_debug_type($e) . ': ' . $e->getMessage();
+    }
+
+    $back = db_get_field(
+        "SELECT value FROM ?:language_values WHERE name = ?s AND lang_code = ?s LIMIT 1",
+        $name, $lang
+    );
+    @db_query("DELETE FROM ?:language_values WHERE name = ?s", $name);
+
+    if ((string) $back === $value) {
+        return 'OK — wrote and read back a row in lang "' . $lang . '"';
+    }
+
+    return 'FAILED — wrote "' . $value . '" to lang "' . $lang . '" but read back '
+        . (is_scalar($back) ? '"' . (string) $back . '"' : get_debug_type($back))
+        . '. The database is rejecting writes to ?:language_values.';
 }
 
 function sl_report_addon(string $addon, array $fns, string $docroot): void
@@ -176,6 +222,21 @@ function sl_report_addon(string $addon, array $fns, string $docroot): void
     sl_line('                      ' . $link);
 
     sl_line('  seeder function:    ' . $seederFn . '  ' . (function_exists($seederFn) ? 'loaded' : 'NOT LOADED'));
+
+    // THE gate init.php actually tests. Checking only the seeder above missed
+    // the case where functions/self_heal.php is stale: init.php looks current,
+    // the block is skipped, and nothing is logged.
+    sl_line('  heal function:      fn_travel_core_heal_language_keys  '
+        . (function_exists('fn_travel_core_heal_language_keys') ? 'loaded' : 'NOT LOADED — init.php skips the heal silently!'));
+
+    // The ?:storage_data attempt throttle. Invisible until now: once written,
+    // the heal returns early even while the labels are still missing.
+    $attempt = function_exists('fn_get_storage_data')
+        ? fn_get_storage_data('travel_heal_lang_' . $addon)
+        : null;
+    sl_line('  attempt throttle:   ' . (is_string($attempt) && $attempt !== ''
+        ? $attempt . '  (a run has already been attempted for this deploy + language set)'
+        : 'none — the next request will attempt a seed'));
 
     $stored = sl_stamps($stampName);
     $computed = function_exists($hashFn) ? (string) $hashFn() : null;
@@ -257,13 +318,22 @@ $sl_missing = sl_report_sentinels($sl_sentinels);
 
 if ($sl_force) {
     sl_line('== force seeding ==');
+    sl_line('  write probe:      ' . sl_write_probe());
     foreach ($sl_addons as $sl_addon => $sl_fns) {
         $sl_seeder = $sl_fns[0];
-        if (function_exists($sl_seeder)) {
+        if (!function_exists($sl_seeder)) {
+            sl_line('  skipped ' . $sl_seeder . ' — not loaded (addon disabled or files missing)');
+            continue;
+        }
+        // Unguarded on purpose: init.php wraps the heal so a throw cannot 503
+        // the store, which also means a throw is invisible there. Here we WANT
+        // to see it.
+        try {
             $sl_seeder();
             sl_line('  ran ' . $sl_seeder . '()');
-        } else {
-            sl_line('  skipped ' . $sl_seeder . ' — not loaded (addon disabled or files missing)');
+        } catch (\Throwable $sl_e) {
+            sl_line('  THREW in ' . $sl_seeder . '() — ' . get_debug_type($sl_e) . ': ' . $sl_e->getMessage());
+            sl_line('              @ ' . $sl_e->getFile() . ':' . $sl_e->getLine());
         }
     }
     if (function_exists('fn_clear_cache')) {
