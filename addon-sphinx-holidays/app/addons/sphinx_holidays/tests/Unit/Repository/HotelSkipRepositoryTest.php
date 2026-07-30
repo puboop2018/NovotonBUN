@@ -239,24 +239,48 @@ class HotelSkipRepositoryTest extends TestCase
         $this->assertSame([[5, 9], 'active', 'no_availability'], $captured[1]);
     }
 
-    public function testDeleteBatchDeletesUnconditionallyWithImageQueueRows(): void
+    public function testHideProductsBatchOnlyTouchesActiveProducts(): void
     {
-        // The linked branch: the gate calls this only AFTER the CS-Cart
-        // product is confirmed gone, so no product-link guard belongs here.
+        // The linked branch: the gate hides an unavailable hotel's product
+        // instead of deleting it. Guarded on status='A' so a product the
+        // admin already Hid or Disabled by hand keeps the admin's choice.
         $queries = [];
         DbStub::$query = static function (string $query, ...$params) use (&$queries): int {
             $queries[] = [$query, $params];
-            return 2;
+            return 1;
         };
 
-        $this->assertSame(0, $this->repo->deleteBatch([]));
+        $this->assertSame(0, $this->repo->hideProductsBatch([]));
         $this->assertSame([], $queries, 'empty input must not touch the DB');
 
-        $this->assertSame(2, $this->repo->deleteBatch(['H1', 'H2']));
-        $this->assertCount(2, $queries);
-        $this->assertStringContainsString('DELETE FROM ?:sphinx_hotels WHERE hotel_id IN (?a)', $queries[0][0]);
-        $this->assertStringNotContainsString('product_id', $queries[0][0]);
-        $this->assertStringContainsString('DELETE FROM ?:sphinx_image_sync_queue WHERE hotel_id IN (?a)', $queries[1][0]);
-        $this->assertSame([['H1', 'H2']], $queries[0][1]);
+        $this->assertSame(1, $this->repo->hideProductsBatch([42, 43]));
+        $this->assertCount(1, $queries);
+        $this->assertStringContainsString(
+            "UPDATE ?:products SET status = 'H' WHERE product_id IN (?n) AND status = 'A'",
+            $queries[0][0],
+        );
+        $this->assertSame([[42, 43]], $queries[0][1]);
+    }
+
+    public function testShowProductsBatchOnlyReactivatesHiddenProducts(): void
+    {
+        // The way back — guarded on status='H': a product the admin Disabled
+        // while the hotel was unavailable stays exactly as the admin left it.
+        $queries = [];
+        DbStub::$query = static function (string $query, ...$params) use (&$queries): int {
+            $queries[] = [$query, $params];
+            return 1;
+        };
+
+        $this->assertSame(0, $this->repo->showProductsBatch([]));
+        $this->assertSame([], $queries, 'empty input must not touch the DB');
+
+        $this->assertSame(1, $this->repo->showProductsBatch([42]));
+        $this->assertCount(1, $queries);
+        $this->assertStringContainsString(
+            "UPDATE ?:products SET status = 'A' WHERE product_id IN (?n) AND status = 'H'",
+            $queries[0][0],
+        );
+        $this->assertSame([[42]], $queries[0][1]);
     }
 }

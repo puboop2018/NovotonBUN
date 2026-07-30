@@ -213,6 +213,10 @@ phpMyAdmin: the row's `latitude` flips to `36.88706900` and the PDP map opens at
 - **Uninstall order** is enforced by the addons: CS-Cart blocks uninstalling
   `travel_core` while `novoton_holidays`/`sphinx_holidays` are active — uninstall
   the providers first. `fgo_invoicing` is independent.
+- **`eurosite`** is linked so it appears under Add-ons → Downloaded add-ons,
+  but it is an MVP outside the CI gates and is NOT auto-installed: install it
+  from the admin when you want to work on it, then set real API credentials in
+  its settings (it ships only the spec placeholders `YourUser`/`YourPassword`).
 - The kit and `.env` are gitignored; everything else here is committed so the
   whole team shares the same sandbox.
 - The separate `docker/test-db/` image (MySQL-only, for CI) is unrelated and

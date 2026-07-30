@@ -24,6 +24,10 @@ declare -A ADDONS=(
     [novoton_holidays]=addon-novoton-holidays
     [sphinx_holidays]=addon-sphinx-holidays
     [fgo_invoicing]=addon-fgo-invoicing
+    # MVP (out of the CI gates): linking only puts it on the Add-ons page —
+    # installing stays a manual admin action, and its API credentials are the
+    # spec placeholders until an operator fills real ones in its settings.
+    [eurosite]=eurosite_addon
 )
 
 link() { # $1 = source under /repo, $2 = destination under docroot

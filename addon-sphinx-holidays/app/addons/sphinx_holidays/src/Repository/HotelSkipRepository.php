@@ -27,10 +27,12 @@ class HotelSkipRepository
 
     /**
      * Skip reason set by the availability gate for hotels that have no
-     * immediate-confirmation offer. Hotels carrying this reason are excluded
-     * from product creation by HotelRepository::findUnlinked(); it is cleared
-     * automatically once the hotel returns immediate availability on a later
-     * sync.
+     * immediate-confirmation offer. On a LINKED hotel it records that the
+     * gate set the CS-Cart product to Hidden — which is what lets a later
+     * run reactivate the product when availability returns, without ever
+     * touching products an admin hid or disabled by hand. Unlinked hotels
+     * are deleted outright instead of flagged, and flagged hotels are
+     * excluded from product creation by HotelRepository::findUnlinked().
      */
     public const string SKIP_REASON_NO_AVAILABILITY = 'no_availability';
 
@@ -131,28 +133,48 @@ class HotelSkipRepository
     }
 
     /**
-     * Delete hotels unconditionally by id ("Hotels with immediate
-     * confirmation", linked branch). The caller has ALREADY deleted the
-     * CS-Cart product — the gate only hands over ids whose product is
-     * confirmed gone, so this cannot orphan a live product. Pending
-     * image-queue rows go with the deleted hotels.
+     * Hide the CS-Cart products of linked hotels that lost their immediate
+     * offer. Hidden ('H') is CS-Cart's "reachable by direct link, absent
+     * from listings and searches" status — the product page survives (URL,
+     * SEO, images, history) for when the hotel becomes bookable again.
      *
-     * @param string[] $hotelIds
-     * @return int Number of hotels deleted
+     * Only ACTIVE products are touched: a product the admin already Hid or
+     * Disabled by hand keeps whatever the admin chose.
+     *
+     * @param int[] $productIds
+     * @return int Number of products hidden
      */
-    public function deleteBatch(array $hotelIds): int
+    public function hideProductsBatch(array $productIds): int
     {
-        if ($hotelIds === []) {
+        if ($productIds === []) {
             return 0;
         }
 
-        $deleted = TypeCoerce::toInt(db_query(
-            'DELETE FROM ?:sphinx_hotels WHERE hotel_id IN (?a)',
-            $hotelIds,
+        return TypeCoerce::toInt(db_query(
+            "UPDATE ?:products SET status = 'H' WHERE product_id IN (?n) AND status = 'A'",
+            $productIds,
         ));
-        db_query('DELETE FROM ?:sphinx_image_sync_queue WHERE hotel_id IN (?a)', $hotelIds);
+    }
 
-        return $deleted;
+    /**
+     * Reactivate products the gate hid, for hotels whose immediate offer
+     * returned. Only HIDDEN products flip back: the caller passes products
+     * whose hotel carries the gate's own flag, and the status guard keeps a
+     * product the admin meanwhile Disabled exactly as the admin left it.
+     *
+     * @param int[] $productIds
+     * @return int Number of products reactivated
+     */
+    public function showProductsBatch(array $productIds): int
+    {
+        if ($productIds === []) {
+            return 0;
+        }
+
+        return TypeCoerce::toInt(db_query(
+            "UPDATE ?:products SET status = 'A' WHERE product_id IN (?n) AND status = 'H'",
+            $productIds,
+        ));
     }
 
     /**
