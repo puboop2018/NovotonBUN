@@ -30,6 +30,14 @@ interface FacilityRepositoryInterface
      * @return list<int>
      */
     public function getIdsForHotel(string $hotel_id): array;
+
+    /**
+     * Localized facility labels for one hotel (booking-form summary sidebar),
+     * de-duplicated and capped.
+     *
+     * @return list<string>
+     */
+    public function getLabelsForHotel(string $hotel_id, string $lang = 'en', int $limit = 6): array;
     public function linkToHotel(string $hotel_id, int $facility_id): bool;
     public function clearHotelFacilities(string $hotel_id): bool;
     /**

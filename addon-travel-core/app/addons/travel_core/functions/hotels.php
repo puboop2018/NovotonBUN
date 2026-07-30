@@ -632,3 +632,26 @@ function fn_travel_core_attach_product_image(int $productId, string $tempFile, s
 
     return true;
 }
+
+/**
+ * The hotel product's main image pair, for the booking-form sidebar hero.
+ *
+ * Returned in CS-Cart's own image-pair shape so the template can hand it
+ * straight to common/image.tpl — which is what makes the hero honour the
+ * store's Settings -> Thumbnails sizes instead of hard-coding pixels.
+ *
+ * Lives in functions/ rather than a src/ service because fn_get_image_pairs()
+ * is a CS-Cart procedural API; src/ classes stay framework-free.
+ *
+ * @return array<string, mixed> Empty when the product has no image.
+ */
+function fn_travel_core_product_main_pair(int $productId): array
+{
+    if ($productId <= 0 || !function_exists('fn_get_image_pairs')) {
+        return [];
+    }
+
+    $pair = fn_get_image_pairs($productId, 'product', 'M', true, true, CART_LANGUAGE);
+
+    return is_array($pair) ? \Tygh\Addons\TravelCore\Helpers\TypeCoerce::toStringMap($pair) : [];
+}

@@ -141,12 +141,207 @@
 .travel-booking-page .travel-btn-back:hover {
     text-decoration: underline;
 }
-/* Novoton reservation form is width-capped + centred (was in its embedded
-   <style>); scoped to the novoton wrapper so sphinx forms are unaffected. */
-.travel-booking-page.novoton-reservation-form {
-    max-width: 900px;
+/* Both booking forms are width-capped + centred. 1140px (was 900px, novoton
+   only) is what the 2-column layout below needs: a 340px summary column plus
+   a guest-form column that still fits two fields side by side. */
+.travel-booking-page.novoton-reservation-form,
+.travel-booking-page.sphinx-booking-form {
+    max-width: 1140px;
     margin: 0 auto;
     padding: 0 15px;
+}
+
+/* ── Booking page: 2-column layout (summary sidebar + guest forms) ─────── */
+/* Shared by both providers — components/booking_sidebar.tpl on the left,
+   the guest-name form on the right. Mobile stacks the summary ABOVE the form
+   so the guest confirms what they are paying for before typing names. */
+.travel-booking-page .travel-booking-layout {
+    display: grid;
+    grid-template-columns: 340px minmax(0, 1fr);
+    gap: 24px;
+    align-items: start;
+}
+.travel-booking-page .travel-bsidebar {
+    min-width: 0;
+}
+.travel-booking-page .travel-booking-col-main {
+    min-width: 0;
+}
+@media (max-width: 900px) {
+    .travel-booking-page .travel-booking-layout {
+        grid-template-columns: 1fr;
+    }
+    .travel-booking-page .travel-bsidebar {
+        order: -1;
+    }
+}
+
+/* Sidebar cards */
+.travel-booking-page .travel-bcard {
+    background: #fff;
+    border: 1px solid var(--nvt-field-border, #e0e7ef);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 16px;
+}
+.travel-booking-page .travel-bcard__title {
+    margin: 0;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--nvt-field-border, #e0e7ef);
+    font-size: 15px;
+    font-weight: 700;
+}
+.travel-booking-page .travel-bcard__body {
+    padding: 16px;
+}
+.travel-booking-page .travel-bsidebar-hero img {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+/* Stars row: rating left, availability badge right, on one line. */
+.travel-booking-page .travel-bsidebar-toprow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+.travel-booking-page .travel-bsidebar-name {
+    margin: 0 0 6px;
+    font-size: 20px;
+    font-weight: 800;
+    line-height: 1.25;
+}
+.travel-booking-page .travel-bsidebar-location {
+    margin: 0 0 10px;
+    font-size: 13px;
+}
+.travel-booking-page .travel-bsidebar-features {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 12.5px;
+}
+.travel-booking-page .travel-bsidebar-features li {
+    background: var(--nvt-bg-light, #f2f5f8);
+    border-radius: 6px;
+    padding: 3px 8px;
+}
+/* Summary card */
+.travel-booking-page .travel-bsidebar-package {
+    font-size: 13.5px;
+    margin-bottom: 12px;
+}
+.travel-booking-page .travel-bsidebar-package__label {
+    display: block;
+    font-size: 12px;
+    color: var(--nvt-text-light, #666);
+}
+.travel-booking-page .travel-bsidebar-dates {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border: 1px solid var(--nvt-field-border, #e0e7ef);
+    border-radius: 8px;
+    overflow: hidden;
+}
+.travel-booking-page .travel-bsidebar-date {
+    padding: 10px 12px;
+}
+.travel-booking-page .travel-bsidebar-date + .travel-bsidebar-date {
+    border-left: 1px solid var(--nvt-field-border, #e0e7ef);
+}
+.travel-booking-page .travel-bsidebar-date span {
+    display: block;
+    font-size: 12px;
+    color: var(--nvt-text-light, #666);
+    margin-bottom: 2px;
+}
+.travel-booking-page .travel-bsidebar-date strong {
+    display: block;
+    font-size: 14px;
+}
+.travel-booking-page .travel-bsidebar-date em {
+    font-style: normal;
+    font-size: 12px;
+    color: var(--nvt-text-light, #666);
+}
+.travel-booking-page .travel-bsidebar-rule {
+    border: 0;
+    border-top: 1px solid var(--nvt-field-border, #e0e7ef);
+    margin: 14px 0;
+}
+.travel-booking-page .travel-bsidebar-selected__label {
+    font-size: 12.5px;
+    color: var(--nvt-text-light, #666);
+}
+.travel-booking-page .travel-bsidebar-selected__value {
+    display: block;
+    font-size: 14px;
+    margin: 2px 0 10px;
+}
+.travel-booking-page .travel-bsidebar-rooms {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 13.5px;
+}
+.travel-booking-page .travel-bsidebar-board {
+    font-size: 13.5px;
+    color: var(--nvt-text-light, #666);
+    margin-top: 3px;
+}
+.travel-booking-page .travel-bsidebar-change {
+    display: inline-block;
+    margin-top: 12px;
+    font-size: 13.5px;
+}
+/* Price card */
+.travel-booking-page .travel-bsidebar-pricerow {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13.5px;
+    margin-bottom: 6px;
+}
+.travel-booking-page .travel-bsidebar-oldprice {
+    text-decoration: line-through;
+    color: var(--nvt-text-light, #666);
+}
+.travel-booking-page .travel-bsidebar-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+}
+/* Cancellation card */
+.travel-booking-page .travel-bsidebar-cancelrow {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 13.5px;
+    margin-bottom: 8px;
+}
+.travel-booking-page .travel-bsidebar-cancelhl {
+    background: var(--nvt-danger-light, #fdecea);
+    color: var(--nvt-danger, #c0392b);
+    font-weight: 600;
+    border-radius: 4px;
+    padding: 1px 4px;
+}
+.travel-booking-page .travel-bsidebar-cancel {
+    margin: 0;
+    padding: 0 0 0 18px;
+    font-size: 13px;
+    color: var(--nvt-text-light, #666);
+}
+/* De-inlined display toggle (InlineStyleRatchet): price-state nodes and the
+   cancellation card start hidden and are revealed by JS when they have
+   something to say. */
+.travel-booking-page .travel-is-hidden {
+    display: none;
 }
 /* Room-banner right-hand meta (occupancy + per-room price) */
 .travel-booking-page .travel-room-banner-meta {
@@ -296,21 +491,20 @@
 }
 
 /* ── Guest cards + field grid ─────────────────────────────────────────── */
-/* Adult/child colour-coding (blue/amber left border) + the "holder" chip and
-   room-header banner were lifted from novoton's booking form so both
-   providers share the richer look. */
+/* Plain bordered cards. The blue/amber LEFT ACCENT BAR was removed with the
+   2-column redesign (user ruling: "we get rid of left bordered/highlighted
+   line on the form") — the child card keeps only its warm background, which
+   is what actually distinguishes it. */
 .travel-booking-page .guest-entry {
     padding: 15px;
     margin-bottom: 10px;
     background: var(--nvt-bg, #fff);
     border: 1px solid var(--nvt-field-border, #e0e7ef);
-    border-left: 4px solid var(--nvt-primary, #003580);
     border-radius: 6px;
 }
 .travel-booking-page .guest-entry-child {
     background: var(--nvt-surface-child, #fffbf0);
     border-color: var(--nvt-border-child, #f0e0c0);
-    border-left-color: var(--nvt-warning, #f0ad4e);
 }
 /* "Holder"/main-guest chip on the first adult */
 .travel-booking-page .travel-holder-tag,
@@ -629,11 +823,12 @@
     }
 }
 
-/* Desktop: keep the standalone price box in view while a long guest list
-   scrolls beneath it (sphinx hotel form's price box is a block sibling above
-   the guest section; a no-op where the price sits inside a flex row). */
-@media (min-width: 768px) {
-    .travel-booking-page .travel-price-box {
+/* Desktop: keep the summary sidebar in view while a long guest list scrolls
+   beside it. Targets the sidebar as a whole, not the price card inside it —
+   sticking a child of a sticky-eligible grid item does nothing useful, and
+   the guest wants the dates and total visible together. */
+@media (min-width: 901px) {
+    .travel-booking-page .travel-bsidebar {
         position: sticky;
         top: 10px;
         z-index: 1;
@@ -946,4 +1141,97 @@
 /* Anchor target of the Reserve button — land clear of sticky headers. */
 #travel-booking-root {
     scroll-margin-top: 90px;
+}
+
+/* ── "What are my booking conditions?" link + modal ───────────────────── */
+/* Shared by both providers (components/booking_conditions_modal.tpl). The
+   modal is NOT scoped under .travel-booking-page: it is appended at the end of
+   the form and must overlay the whole viewport. */
+.travel-booking-page .travel-conditions {
+    margin-top: 12px;
+    text-align: right;
+}
+.travel-booking-page .travel-conditions-link {
+    font-size: 13.5px;
+    text-decoration: underline;
+}
+.travel-conditions-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1050;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+}
+.travel-conditions-modal__backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+}
+.travel-conditions-modal__dialog {
+    position: relative;
+    background: #fff;
+    border-radius: 10px;
+    width: 100%;
+    max-width: 560px;
+    max-height: 80vh;
+    overflow: auto;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
+}
+.travel-conditions-modal__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--nvt-field-border, #e0e7ef);
+    position: sticky;
+    top: 0;
+    background: #fff;
+}
+.travel-conditions-modal__title {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 700;
+}
+.travel-conditions-modal__close {
+    background: none;
+    border: 0;
+    font-size: 26px;
+    line-height: 1;
+    cursor: pointer;
+    color: var(--nvt-text-light, #666);
+    padding: 0 4px;
+}
+.travel-conditions-modal__body {
+    padding: 16px;
+}
+.travel-conditions-modal__empty {
+    padding: 0 16px 16px;
+    margin: 0;
+    color: var(--nvt-text-light, #666);
+    font-size: 13.5px;
+}
+.travel-conditions-room + .travel-conditions-room {
+    margin-top: 18px;
+    padding-top: 18px;
+    border-top: 1px solid var(--nvt-field-border, #e0e7ef);
+}
+.travel-conditions-room__title {
+    margin: 0 0 8px;
+    font-size: 14px;
+    font-weight: 700;
+}
+.travel-conditions-group + .travel-conditions-group {
+    margin-top: 12px;
+}
+.travel-conditions-group ul {
+    margin: 4px 0 0;
+    padding-left: 18px;
+    font-size: 13.5px;
+}
+/* Freeze the page behind an open modal. */
+body.travel-conditions-open {
+    overflow: hidden;
 }

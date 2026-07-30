@@ -965,3 +965,67 @@ msgstr "Salvează modificările"
 msgctxt "Languages::travel_core.guest_details_invalid"
 msgid "Please fill in all guest names."
 msgstr "Vă rugăm completați numele tuturor turiștilor."
+
+msgctxt "Languages::travel_core.available"
+msgid "Available"
+msgstr "Disponibil"
+
+msgctxt "Languages::travel_core.on_request"
+msgid "On request"
+msgstr "La cerere"
+
+msgctxt "Languages::travel_core.you_selected"
+msgid "You selected"
+msgstr "Ați selectat"
+
+msgctxt "Languages::travel_core.n_nights"
+msgid "[n] night|[n] nights"
+msgstr "[n] noapte|[n] nopți"
+
+msgctxt "Languages::travel_core.n_rooms"
+msgid "[n] room|[n] rooms"
+msgstr "[n] cameră|[n] camere"
+
+msgctxt "Languages::travel_core.n_adults"
+msgid "[n] adult|[n] adults"
+msgstr "[n] adult|[n] adulți"
+
+msgctxt "Languages::travel_core.n_children"
+msgid "[n] child|[n] children"
+msgstr "[n] copil|[n] copii"
+
+msgctxt "Languages::travel_core.selected_line"
+msgid "[nights], [rooms] for [adults]"
+msgstr "[nights], [rooms] pentru [adults]"
+
+msgctxt "Languages::travel_core.selected_line_with_children"
+msgid "[nights], [rooms] for [adults] and [children]"
+msgstr "[nights], [rooms] pentru [adults] și [children]"
+
+msgctxt "Languages::travel_core.change_selection"
+msgid "Change your selection"
+msgstr "Schimbați-vă opțiunea"
+
+msgctxt "Languages::travel_core.original_price"
+msgid "Original price"
+msgstr "Preț inițial"
+
+msgctxt "Languages::travel_core.cancel_cost_title"
+msgid "How much will it cost to cancel?"
+msgstr "Cât costă să anulez?"
+
+msgctxt "Languages::travel_core.cancel_you_will_pay"
+msgid "If you cancel, you'll pay"
+msgstr "Dacă anulați, veți plăti"
+
+msgctxt "Languages::travel_core.booking_conditions_link"
+msgid "What are my booking conditions?"
+msgstr "Care sunt condițiile rezervării mele?"
+
+msgctxt "Languages::travel_core.booking_conditions_loading"
+msgid "The booking conditions are being confirmed with the provider…"
+msgstr "Condițiile rezervării se confirmă cu operatorul…"
+
+msgctxt "Languages::travel_core.close"
+msgid "Close"
+msgstr "Închide"

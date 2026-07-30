@@ -61,119 +61,19 @@
         {/if}
         {* Terms are now fetched directly from API at checkout - no need for hidden fields *}
         
-        {* Header — minimalist light card (parity with the search results
-           header): shared travel_core hotel-identity component (name links to
-           the product page in a NEW tab so an in-progress form is never lost)
-           plus the inline availability pill. The location line sits after the
-           pill in the DOM but renders below it (flex order in
-           booking-pages.css). Data: $travel_hotel_header (HotelHeaderViewModel,
-           assigned by the booking_form controller — its location line carries
-           the city/region/country fallback). *}
-        <div class="travel-reservation-header">
-            {include file="addons/travel_core/components/hotel_header.tpl" hh_new_tab=true}
-            <span class="travel-hero-badge" id="availability-badge">
-                {if $booking_data.is_on_request}
-                    {__("novoton_holidays.on_request")}
-                {else}
-                    ✓ {__("novoton_holidays.available")}
-                {/if}
-            </span>
-        </div>
-        
-        {* Body *}
-        <div class="travel-reservation-body">
-            
-            {* Booking Details *}
-            <div class="travel-detail-row">
-                {if $hotel_image}
-                <div class="travel-detail-image">
-                    <img src="{$hotel_image}" alt="{$hotel_name}">
-                </div>
-                {/if}
-                
-                <div class="travel-detail-info travel-info-summary">
-                    <span class="travel-info-key">{__("novoton_holidays.package")}:</span>
-                    <span class="travel-info-val">
-                        {if $package_name && $package_name != $hotel_name}
-                            {$package_name|replace:'%2b':'+'|replace:'%2B':'+'}
-                        {elseif $booking_data.package_name}
-                            {$booking_data.package_name|replace:'%2b':'+'|replace:'%2B':'+'}
-                        {else}
-                            {$hotel_name}
-                        {/if}
-                    </span>
-                    
-                    <span class="travel-info-key">{__("novoton_holidays.check_in")}:</span>
-                    <span class="travel-info-val travel-info-val--highlight">{$booking_data.check_in|date_format:$settings.Appearance.date_format}, {$booking_data.check_in|date_format:"%A"}</span>
-                    
-                    <span class="travel-info-key">{__("novoton_holidays.check_out")}:</span>
-                    <span class="travel-info-val travel-info-val--highlight">{$booking_data.check_out|date_format:$settings.Appearance.date_format}, {$booking_data.check_out|date_format:"%A"}</span>
-                    
-                    <span class="travel-info-key">{__("novoton_holidays.stay")|default:"Cazare"}:</span>
-                    <span class="travel-info-val">{$booking_data.nights} {if $booking_data.nights == 1}{__("novoton_holidays.night")}{else}{__("novoton_holidays.nights")}{/if}</span>
-                    
-                    {* Multi-room type display *}
-                    {if $booking_data.num_rooms > 1 && $booking_data.rooms_data}
-                        <span class="travel-info-key">{__("novoton_holidays.rooms")}:</span>
-                        <span class="travel-info-val">{$booking_data.num_rooms} {__("novoton_holidays.rooms")}</span>
-                        
-                        {foreach from=$booking_data.rooms_data item=room_info key=room_idx}
-                            {$room_num = $room_idx + 1}
-                            <span class="travel-info-key travel-info-key--sub">-> {__("novoton_holidays.room_number")} {$room_num}:</span>
-                            <span class="travel-info-val room-type-full" data-room-num="{$room_num}">
-                                {if $room_info.room_display}
-                                    {$room_info.room_display}
-                                {elseif $room_info.room_name}
-                                    {$room_info.room_name}
-                                {elseif $room_info.room_id}
-                                    {call name="format_room_type" room_id=$room_info.room_id}
-                                {else}
-                                    {call name="format_room_type" room_id=$booking_data.room_id}
-                                {/if}
-                                {if $room_info.board_name}
-                                    - {$room_info.board_name}
-                                {elseif $room_info.board_id}
-                                    - {$room_info.board_id}
-                                {/if}
-                                {if $room_info.price}
-                                    ({fn_novoton_holidays_format_price($room_info.price|default:0, $novoton_display_coefficient|default:1, $novoton_display_symbol|default:$novoton_display_currency|default:$smarty.const.CART_PRIMARY_CURRENCY) nofilter})
-                                {/if}
-                            </span>
-                        {/foreach}
-                    {else}
-                        <span class="travel-info-key">{__("novoton_holidays.room_type")}:</span>
-                        <span class="travel-info-val room-type-full">
-                            {if $booking_data.room_type_display}
-                                {$booking_data.room_type_display|replace:'%2b':'+'|replace:'%2B':'+'|replace:' 2 1':' 2 +1'|replace:' 2 2':' 2 +2'|replace:' 3 1':' 3 +1'|replace:' 3 2':' 3 +2'}
-                            {elseif $booking_data.rooms_data && $booking_data.rooms_data[0].room_type_display}
-                                {$booking_data.rooms_data[0].room_type_display|replace:'%2b':'+'|replace:'%2B':'+'|replace:' 2 1':' 2 +1'|replace:' 2 2':' 2 +2'|replace:' 3 1':' 3 +1'|replace:' 3 2':' 3 +2'}
-                            {elseif $booking_data.rooms_data && $booking_data.rooms_data[0].room_name}
-                                {$booking_data.rooms_data[0].room_name|replace:'%2b':'+'|replace:'%2B':'+'|replace:' 2 1':' 2 +1'|replace:' 2 2':' 2 +2'|replace:' 3 1':' 3 +1'|replace:' 3 2':' 3 +2'}
-                            {else}
-                                {call name="format_room_type" room_id=$booking_data.room_id}
-                            {/if}
-                        </span>
-                        
-                        <span class="travel-info-key">{__("novoton_holidays.board")}:</span>
-                        {* Localized label with the raw code in parens, e.g.
-                           "Demipensiune (HB +)" — same as the search card. *}
-                        <span class="travel-info-val">{fn_novoton_holidays_format_board_name($booking_data.board_id|default:'')}</span>
-                    {/if}
-                </div>
-                
-                <div class="booking-price-box">
-                    <div id="price-error-message" class="travel-price-error" style="display: none;"></div>
-                    <div class="travel-price-label">{__("novoton_holidays.total")}:</div>
-                    <div class="price-total" id="novoton-total-price">{fn_novoton_holidays_format_price($booking_data.total_price|default:0, $novoton_display_coefficient|default:1, $novoton_display_symbol|default:$novoton_display_currency|default:$smarty.const.CART_PRIMARY_CURRENCY) nofilter}</div>
-                    <span id="price-unverified-badge" class="travel-price-unverified" style="display: none;">
-                        ⚠ {__("novoton_holidays.price_unverified")|default:"neconfirmat"}
-                    </span>
-                    <a href="#" id="refresh-price-link" class="travel-price-refresh" onclick="refreshPrice(); return false;" style="display: none;">
-                        🔄 {__("novoton_holidays.refresh_price")|default:"Actualizează prețul"}
-                    </a>
-                </div>
-            </div>
-            
+        {* 2-column layout (travel_core booking-pages.css): the shared summary
+           sidebar on the left, the guest forms on the right. Everything the
+           sidebar shows — hotel identity, dates, occupancy, rooms, board,
+           price, cancellation — is assigned by the controller as
+           $travel_booking_sidebar, so this page owns no summary markup of its
+           own any more. The two dead blocks it used to carry — a hotel image
+           whose variable was never assigned, and a terms section whose
+           variables were never assigned either — went with it. *}
+        <div class="travel-booking-layout">
+            {include file="addons/travel_core/components/booking_sidebar.tpl"}
+
+            <div class="travel-booking-col-main">
+
             {* Guest Names Section - Multi-Room Support with Split Fields *}
             <div class="travel-form-section guest-names-section">
                 <h3>{__("novoton_holidays.enter_booking_details")}</h3>
@@ -182,7 +82,6 @@
                    shared room body offsets its labels by the guests rendered
                    in earlier rooms. *}
                 {$guest_seq = 0}
-                {capture assign="nvt_adult_sublabel"}{__("novoton_holidays.regular_bed")}{/capture}
 
                 {* Loop through each room *}
                 {foreach from=$booking_data.rooms_data item=room key=room_idx}
@@ -218,35 +117,13 @@
                         gb_child_dob_required=true
                         gb_adult_age_value="30"
                         gb_child_dob_onblur="validateAndCheckAge"
-                        gb_seq_offset=$guest_seq
-                        gb_adult_sublabel=$nvt_adult_sublabel}
+                        gb_seq_offset=$guest_seq}
                     {$_room_guests = $room.adults|default:1}
                     {$_room_guests = $_room_guests + $room.children|default:0}
                     {$guest_seq = $guest_seq + $_room_guests}
                     </div>{* Close room-guest-section *}
                 {/foreach}
             </div>
-            
-            {* Important Info *}
-            {if $payment_terms || $cancellation_terms}
-            <div class="travel-form-section travel-important-info">
-                <h3>{__("novoton_holidays.important_info")}</h3>
-                
-                {if $payment_terms}
-                <div class="travel-info-block">
-                    <h4>{__("novoton_holidays.terms_of_payment")}</h4>
-                    <p>{$payment_terms|nl2br}</p>
-                </div>
-                {/if}
-                
-                {if $cancellation_terms}
-                <div class="travel-info-block">
-                    <h4>{__("novoton_holidays.cancellation_terms")}</h4>
-                    <p>{$cancellation_terms|nl2br}</p>
-                </div>
-                {/if}
-            </div>
-            {/if}
             
             {* Form Actions *}
             <div class="travel-form-actions">
@@ -265,7 +142,14 @@
                     {if $is_edit_mode}{__("novoton_holidays.update_booking")}{else}{__("novoton_holidays.add_to_cart")}{/if}
                 </button>
             </div>
-        </div>
+
+            {* "What are my booking conditions?" — link + modal (shared). Its
+               body is filled per room by booking-form.js from the same price
+               re-verification that fills the cancellation card. *}
+            {include file="addons/travel_core/components/booking_conditions_modal.tpl"}
+
+            </div>{* /travel-booking-col-main *}
+        </div>{* /travel-booking-layout *}
     </form>
 </div>
 
@@ -332,7 +216,10 @@ window.NovotonBookingI18n = {ldelim}
     continueWithNewRoom: '{__("novoton_holidays.continue_with_new_room")|default:"Continua cu noua camera"|escape:"javascript"}',
     roomTypeDouble: '{__("novoton_holidays.room_type_double")|default:"Double Room"|escape:"javascript"}',
     roomNumber: '{__("novoton_holidays.room_number")|default:"Camera"|escape:"javascript"}',
-    roomUpdated: '{__("novoton_holidays.room_updated")|default:"Camera a fost actualizata:"|escape:"javascript"}'
+    roomUpdated: '{__("novoton_holidays.room_updated")|default:"Camera a fost actualizata:"|escape:"javascript"}',
+    cancelYouWillPay: '{__("travel_core.cancel_you_will_pay")|escape:"javascript"}',
+    paymentTerms: '{__("travel_core.payment_terms")|escape:"javascript"}',
+    cancellationPolicy: '{__("travel_core.cancellation_policy")|escape:"javascript"}'
 {rdelim};
 </script>
 {script src="js/addons/novoton_holidays/booking-form.js"}

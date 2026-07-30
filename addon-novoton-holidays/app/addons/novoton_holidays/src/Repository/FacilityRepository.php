@@ -135,6 +135,36 @@ class FacilityRepository implements FacilityRepositoryInterface
     }
 
     /**
+     * Localized facility labels for one hotel, for the booking-form summary
+     * sidebar.
+     *
+     * Capped: the sidebar shows an at-a-glance reassurance strip ("Free WiFi,
+     * Pool, Restaurant..."), not the full inventory — that belongs on the
+     * product page.
+     *
+     * @return list<string>
+     */
+    public function getLabelsForHotel(string $hotel_id, string $lang = 'en', int $limit = 6): array
+    {
+        if ($hotel_id === '') {
+            return [];
+        }
+
+        $labels = [];
+        foreach ($this->getForHotel($hotel_id, $lang) as $row) {
+            $name = trim(TypeCoerce::toString($row['facility_name'] ?? ''));
+            if ($name !== '' && !in_array($name, $labels, true)) {
+                $labels[] = $name;
+            }
+            if (count($labels) >= $limit) {
+                break;
+            }
+        }
+
+        return $labels;
+    }
+
+    /**
      * Get facility IDs for a hotel
      * @return list<int>
      */
