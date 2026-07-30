@@ -15,6 +15,7 @@ use Tygh\Addons\NovotonHolidays\Services\PriceInfoFormatter;
 use Tygh\Addons\TravelCore\Dto\Hotel\HotelSeoData;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Services\CurrencyService;
+use Tygh\Addons\TravelCore\Services\DateHelper;
 use Tygh\Addons\TravelCore\ViewModels\BookingSidebarFactory;
 use Tygh\Addons\TravelCore\ViewModels\BookingSidebarViewModel;
 use Tygh\Addons\TravelCore\ViewModels\HotelHeaderFactory;
@@ -420,10 +421,14 @@ use Tygh\Addons\TravelCore\ViewModels\HotelHeaderFactory;
             defined('CART_LANGUAGE') ? TypeCoerce::toString(CART_LANGUAGE) : 'en',
         ),
         packageName: $sidebarPackage !== $headerVm->name ? $sidebarPackage : '',
-        checkIn: TypeCoerce::toString($sidebarCheckInTs > 0 ? fn_date_format($sidebarCheckInTs, '%d.%m.%Y') : $sidebarCheckIn),
-        checkInWeekday: TypeCoerce::toString($sidebarCheckInTs > 0 ? fn_date_format($sidebarCheckInTs, '%A') : ''),
-        checkOut: TypeCoerce::toString($sidebarCheckOutTs > 0 ? fn_date_format($sidebarCheckOutTs, '%d.%m.%Y') : $sidebarCheckOut),
-        checkOutWeekday: TypeCoerce::toString($sidebarCheckOutTs > 0 ? fn_date_format($sidebarCheckOutTs, '%A') : ''),
+        // Store-configured format (Settings -> Appearance), NOT a hardcoded
+        // one: the cancellation lines below the summary already follow it, and
+        // a card showing "Check-in 07.09.2026" beside "free until 08/28/2026"
+        // is the bug this replaced.
+        checkIn: $sidebarCheckInTs > 0 ? DateHelper::formatStoreDate($sidebarCheckInTs) : $sidebarCheckIn,
+        checkInWeekday: $sidebarCheckInTs > 0 ? DateHelper::formatStoreWeekday($sidebarCheckInTs) : '',
+        checkOut: $sidebarCheckOutTs > 0 ? DateHelper::formatStoreDate($sidebarCheckOutTs) : $sidebarCheckOut,
+        checkOutWeekday: $sidebarCheckOutTs > 0 ? DateHelper::formatStoreWeekday($sidebarCheckOutTs) : '',
         nights: TypeCoerce::toInt($booking['nights']),
         rooms: max(1, TypeCoerce::toInt($booking['num_rooms'])),
         adults: $sidebarOccupancy['adults'] > 0 ? $sidebarOccupancy['adults'] : TypeCoerce::toInt($booking['adults']),

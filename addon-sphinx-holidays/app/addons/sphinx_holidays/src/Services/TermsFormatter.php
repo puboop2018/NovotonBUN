@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\SphinxHolidays\Services;
 
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+use Tygh\Addons\TravelCore\Services\DateHelper;
 
 /**
  * Normalizes Sphinx payment-terms / cancellation-fees payloads into plain
@@ -276,12 +277,19 @@ final class TermsFormatter
         return '';
     }
 
-    /** ISO `YYYY-MM-DD` → `dd.mm.yyyy`; anything else is returned trimmed as-is. */
+    /**
+     * ISO `YYYY-MM-DD` → the store's configured date format; anything else is
+     * returned trimmed as-is.
+     *
+     * This used to hardcode `dd.mm.yyyy`, which meant a store set to
+     * `%m/%d/%Y` got sphinx dates in one format and novoton's in another on
+     * pages that show both.
+     */
     private static function friendlyDate(string $date): string
     {
         $date = trim($date);
-        if (preg_match('/^(\d{4})-(\d{2})-(\d{2})/', $date, $m) === 1) {
-            return "{$m[3]}.{$m[2]}.{$m[1]}";
+        if (preg_match('/^(\d{4})-(\d{2})-(\d{2})/', $date) === 1) {
+            return DateHelper::formatStoreDate($date);
         }
 
         return $date;

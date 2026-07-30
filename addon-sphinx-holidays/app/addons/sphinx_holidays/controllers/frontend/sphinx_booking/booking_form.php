@@ -17,6 +17,7 @@ use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
 use Tygh\Addons\TravelCore\Dto\Hotel\HotelSeoData;
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
+use Tygh\Addons\TravelCore\Services\DateHelper;
 use Tygh\Addons\TravelCore\ViewModels\BookingSidebarFactory;
 use Tygh\Addons\TravelCore\ViewModels\BookingSidebarViewModel;
 use Tygh\Addons\TravelCore\ViewModels\HotelHeaderFactory;
@@ -263,10 +264,12 @@ try {
         features: $hotelRow !== null
             ? Container::getFeatureAssigner()->getHotelFacilityLabels($hotelRow, $bfLang)
             : [],
-        checkIn: TypeCoerce::toString($bfCheckInTs > 0 ? fn_date_format($bfCheckInTs, '%d.%m.%Y') : $checkIn),
-        checkInWeekday: TypeCoerce::toString($bfCheckInTs > 0 ? fn_date_format($bfCheckInTs, '%A') : ''),
-        checkOut: TypeCoerce::toString($bfCheckOutTs > 0 ? fn_date_format($bfCheckOutTs, '%d.%m.%Y') : $checkOut),
-        checkOutWeekday: TypeCoerce::toString($bfCheckOutTs > 0 ? fn_date_format($bfCheckOutTs, '%A') : ''),
+        // Store-configured format (Settings -> Appearance), NOT a hardcoded
+        // one — the cancellation lines in the same sidebar follow it too.
+        checkIn: $bfCheckInTs > 0 ? DateHelper::formatStoreDate($bfCheckInTs) : $checkIn,
+        checkInWeekday: $bfCheckInTs > 0 ? DateHelper::formatStoreWeekday($bfCheckInTs) : '',
+        checkOut: $bfCheckOutTs > 0 ? DateHelper::formatStoreDate($bfCheckOutTs) : $checkOut,
+        checkOutWeekday: $bfCheckOutTs > 0 ? DateHelper::formatStoreWeekday($bfCheckOutTs) : '',
         nights: $nights,
         rooms: 1,
         adults: $adults,
@@ -285,6 +288,11 @@ try {
         total: $bfFormattedTotal,
         cancelLines: $bfCancelLines,
         cancelFullAmount: BookingSidebarFactory::fullChargeAmount($bfCancelLines, $bfFormattedTotal),
+        cancelFreeUntil: TypeCoerce::toString(
+            \Tygh\Addons\SphinxHolidays\Services\TermsFormatter::freeCancellationUntil(
+                $verifiedOffer['cancellation_fees'] ?? null,
+            ),
+        ),
         paymentLines: \Tygh\Addons\SphinxHolidays\Services\TermsFormatter::lines(
             $verifiedOffer['payment_terms'] ?? null,
         ),

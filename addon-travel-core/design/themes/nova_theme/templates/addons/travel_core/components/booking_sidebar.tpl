@@ -30,12 +30,19 @@
 
     {* ── 1. Hotel ─────────────────────────────────────────────────────── *}
     <section class="travel-bcard travel-bcard--hotel">
+        {* Hero: the store's Settings -> Thumbnails WIDTH is the source of
+           truth, the height is derived from the card's 3:2 landscape ratio.
+           Passing the stored thumbnail height instead produced the tall,
+           squeezed crop this replaced — CS-Cart generated a portrait thumb and
+           the CSS had nothing to correct it with. The container enforces the
+           ratio, `object-fit: cover` does the cropping. *}
         {if $tbs.image_pair}
+            {$tbs_hero_w = $settings.Thumbnails.product_lists_thumbnail_width|default:400}
             <div class="travel-bsidebar-hero">
                 {include file="common/image.tpl"
                     images=$tbs.image_pair
-                    image_width=$settings.Thumbnails.product_lists_thumbnail_width
-                    image_height=$settings.Thumbnails.product_lists_thumbnail_height
+                    image_width=$tbs_hero_w
+                    image_height=($tbs_hero_w * 2 / 3)|round
                     no_ids=true
                 }
             </div>
@@ -171,9 +178,15 @@
     {* Hidden until it has content: novoton fills it from the price
        re-verification that already runs on page load (no extra API call), so
        an empty card must not flash an empty policy at the guest. *}
-    <section class="travel-bcard travel-bcard--cancel{if !$tbs.cancel_lines && !$tbs.cancel_full_amount} travel-is-hidden{/if}" id="travel-cancel-card">
+    <section class="travel-bcard travel-bcard--cancel{if !$tbs.cancel_lines && !$tbs.cancel_full_amount && !$tbs.cancel_free_until} travel-is-hidden{/if}" id="travel-cancel-card">
         <h3 class="travel-bcard__title">{__("travel_core.cancel_cost_title")}</h3>
         <div class="travel-bcard__body">
+            {* Free-cancellation deadline first and in green — the same
+               treatment (and wording) the search-results card gives it, so the
+               guest sees one consistent promise from search to checkout. *}
+            <div class="travel-bsidebar-freecancel{if !$tbs.cancel_free_until} travel-is-hidden{/if}" id="travel-cancel-free">
+                &#10003; {__("travel_core.free_cancellation_until")} <strong id="travel-cancel-free-date">{$tbs.cancel_free_until|escape:html}</strong>
+            </div>
             {if $tbs.cancel_full_amount}
                 <div class="travel-bsidebar-cancelrow">
                     <mark class="travel-bsidebar-cancelhl">{__("travel_core.cancel_you_will_pay")}</mark>

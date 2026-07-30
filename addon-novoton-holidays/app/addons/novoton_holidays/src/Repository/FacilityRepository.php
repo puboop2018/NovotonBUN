@@ -15,10 +15,14 @@ namespace Tygh\Addons\NovotonHolidays\Repository;
 
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Addons\TravelCore\Repository\RowNarrowingTrait;
+use Tygh\Addons\TravelCore\Services\FacilityLabelResolver;
 
 class FacilityRepository implements FacilityRepositoryInterface
 {
     use RowNarrowingTrait;
+
+    /** Provider key in ?:travel_api_alias — seeded by NovotonAliasSeedData. */
+    private const string API_SOURCE = 'novoton';
 
     /** @var array<string, string> Allowed facility name columns by language */
     private const array NAME_COLUMNS = [
@@ -150,18 +154,22 @@ class FacilityRepository implements FacilityRepositoryInterface
             return [];
         }
 
-        $labels = [];
+        // Names come from the SHARED feature map, not from this addon's own
+        // facility_name_ro column: fn_novoton_holidays_sync_facilities_list()
+        // fills that column with a verbatim copy of the English name, so a
+        // Romanian storefront was listing "Air conditioning/Heating". Novoton's
+        // facility ids are already aliased to canonical codes that carry real
+        // Romanian (NovotonAliasSeedData + travel_core's seed), and the raw
+        // provider name stays as the fallback for anything unmapped.
+        $facilities = [];
         foreach ($this->getForHotel($hotel_id, $lang) as $row) {
-            $name = trim(TypeCoerce::toString($row['facility_name'] ?? ''));
-            if ($name !== '' && !in_array($name, $labels, true)) {
-                $labels[] = $name;
-            }
-            if (count($labels) >= $limit) {
-                break;
-            }
+            $facilities[] = [
+                'id' => TypeCoerce::toString($row['facility_id'] ?? ''),
+                'name' => TypeCoerce::toString($row['facility_name'] ?? ''),
+            ];
         }
 
-        return $labels;
+        return FacilityLabelResolver::labels(self::API_SOURCE, $facilities, $lang, $limit);
     }
 
     /**

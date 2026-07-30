@@ -76,17 +76,78 @@ final class BookingSidebarTest extends TestCase
     }
 
     /**
-     * The hero is sized by the store's Settings -> Thumbnails values, per the
-     * brief — which means going through CS-Cart's own image machinery rather
-     * than a hand-rolled <img> with fixed pixels.
+     * The hero still honours the store's Settings ▸ Thumbnails, per the brief —
+     * but only its WIDTH. The stored thumbnail HEIGHT is what produced the
+     * tall, squeezed crop the field reported: CS-Cart generated a portrait
+     * thumbnail and `height: auto` let it through untouched. Width from the
+     * setting, height derived from the card's landscape ratio, and the CSS
+     * container enforces the shape.
      */
-    public function testHeroUsesTheStoresThumbnailSettings(): void
+    public function testHeroUsesTheStoresThumbnailWidthAtALandscapeRatio(): void
     {
         $tpl = self::tpl();
 
         self::assertStringContainsString('{include file="common/image.tpl"', $tpl);
-        self::assertStringContainsString('image_width=$settings.Thumbnails.product_lists_thumbnail_width', $tpl);
-        self::assertStringContainsString('image_height=$settings.Thumbnails.product_lists_thumbnail_height', $tpl);
+        self::assertStringContainsString('$settings.Thumbnails.product_lists_thumbnail_width', $tpl);
+        self::assertStringContainsString('image_height=($tbs_hero_w * 2 / 3)|round', $tpl);
+        self::assertStringNotContainsString('product_lists_thumbnail_height', $tpl);
+
+        // The ratio is enforced by the container, and the image is cropped to
+        // it rather than squeezed.
+        $css = self::css();
+        $start = strpos($css, '.travel-booking-page .travel-bsidebar-hero {');
+        self::assertNotFalse($start);
+        $rule = substr($css, $start, (int) strpos($css, '}', $start) - $start);
+        self::assertStringContainsString('aspect-ratio: 3 / 2', $rule);
+        self::assertStringContainsString('overflow: hidden', $rule);
+
+        $imgStart = strpos($css, '.travel-booking-page .travel-bsidebar-hero img {');
+        self::assertNotFalse($imgStart);
+        $imgRule = substr($css, $imgStart, (int) strpos($css, '}', $imgStart) - $imgStart);
+        self::assertStringContainsString('object-fit: cover', $imgRule);
+        self::assertStringNotContainsString('height: auto', $imgRule);
+    }
+
+    /**
+     * The booking page must fill the same theme container as the header,
+     * breadcrumbs and footer. A page-level max-width here is what made the
+     * hotel card float narrower than the logo with uneven margins.
+     */
+    public function testTheBookingPageDoesNotCapItsOwnWidth(): void
+    {
+        $css = self::css();
+
+        $start = strpos($css, '.travel-booking-page.novoton-reservation-form,');
+        self::assertNotFalse($start);
+        $rule = substr($css, $start, (int) strpos($css, '}', $start) - $start);
+        self::assertStringNotContainsString('max-width', $rule);
+
+        $novoton = (string) file_get_contents(
+            self::repoRoot() . '/addon-novoton-holidays/design/themes/responsive/css/addons/novoton_holidays/styles.css',
+        );
+        $legacy = strpos($novoton, '.novoton-reservation-form {');
+        self::assertNotFalse($legacy);
+        $legacyRule = substr($novoton, $legacy, (int) strpos($novoton, '}', $legacy) - $legacy);
+        self::assertStringNotContainsString('max-width', $legacyRule);
+    }
+
+    /**
+     * Amenities are chips a guest can skim, not a run-on line of text.
+     */
+    public function testAmenitiesRenderAsCheckedChips(): void
+    {
+        $css = self::css();
+
+        $start = strpos($css, '.travel-booking-page .travel-bsidebar-features {');
+        self::assertNotFalse($start);
+        $rule = substr($css, $start, (int) strpos($css, '}', $start) - $start);
+        self::assertStringContainsString('flex-wrap: wrap', $rule);
+
+        $markStart = strpos($css, '.travel-booking-page .travel-bsidebar-features li::before {');
+        self::assertNotFalse($markStart, 'each amenity carries a check mark');
+        $markRule = substr($css, $markStart, (int) strpos($css, '}', $markStart) - $markStart);
+        self::assertStringContainsString('\2713', $markRule);
+        self::assertStringContainsString('--nvt-success-strong', $markRule);
     }
 
     public function testSummaryCardFollowsTheBriefsOrderAndCopy(): void
@@ -161,11 +222,120 @@ final class BookingSidebarTest extends TestCase
         self::assertStringContainsString('travel_core.cancel_cost_title', $tpl);
         self::assertStringContainsString('travel_core.cancel_you_will_pay', $tpl);
         // Empty policy => hidden card (novoton fills it from the price
-        // re-verification that already runs on load).
+        // re-verification that already runs on load). A free-until date on its
+        // own is reason enough to show the card.
         self::assertStringContainsString(
-            '{if !$tbs.cancel_lines && !$tbs.cancel_full_amount} travel-is-hidden{/if}',
+            '{if !$tbs.cancel_lines && !$tbs.cancel_full_amount && !$tbs.cancel_free_until} travel-is-hidden{/if}',
             $tpl,
         );
+    }
+
+    /**
+     * "Free cancellation until <date>" is the line guests look for first, and
+     * the search-results card already shows it in green — the booking form
+     * must make the same promise the same way.
+     */
+    public function testFreeCancellationIsGreenAndMatchesTheSearchCard(): void
+    {
+        $tpl = self::tpl();
+        self::assertStringContainsString('id="travel-cancel-free"', $tpl);
+        self::assertStringContainsString('id="travel-cancel-free-date"', $tpl);
+        self::assertStringContainsString('travel_core.free_cancellation_until', $tpl);
+
+        $css = self::css();
+        $start = strpos($css, '.travel-booking-page .travel-bsidebar-freecancel {');
+        self::assertNotFalse($start);
+        $rule = substr($css, $start, (int) strpos($css, '}', $start) - $start);
+        // Same token the search card uses (--nvt-success is too light for AA).
+        self::assertStringContainsString('--nvt-success-strong', $rule);
+
+        // Sphinx knows the date server-side; novoton only learns it from the
+        // price re-verification, so its JS fills the same two nodes.
+        $sphinx = (string) file_get_contents(
+            self::repoRoot()
+            . '/addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/frontend/sphinx_booking/booking_form.php',
+        );
+        self::assertStringContainsString('cancelFreeUntil:', $sphinx);
+        self::assertStringContainsString('freeCancellationUntil(', $sphinx);
+
+        $js = (string) file_get_contents(
+            self::repoRoot() . '/addon-novoton-holidays/js/addons/novoton_holidays/booking-form.js',
+        );
+        self::assertStringContainsString("getElementById('travel-cancel-free-date')", $js);
+        self::assertStringContainsString('data.free_cancellation_until', $js);
+
+        $recalc = (string) file_get_contents(
+            self::repoRoot()
+            . '/addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/ajax_recalculate_price.php',
+        );
+        self::assertStringContainsString("'free_cancellation_until' => \$free_cancellation_until", $recalc);
+    }
+
+    /**
+     * Every customer-facing date follows Settings ▸ Appearance ▸ date format.
+     * Field report: "Check-in 07.09.2026" beside "Anulare gratuită până la
+     * 08/28/2026" — one card, two formats, because the sidebar hardcoded
+     * dd.mm.yyyy while the terms line followed the store setting.
+     */
+    public function testDatesFollowTheStoreFormatEverywhere(): void
+    {
+        foreach ([
+            '/addon-novoton-holidays/app/addons/novoton_holidays/controllers/frontend/novoton_booking/booking_form.php',
+            '/addon-sphinx-holidays/app/addons/sphinx_holidays/controllers/frontend/sphinx_booking/booking_form.php',
+        ] as $controller) {
+            $src = (string) file_get_contents(self::repoRoot() . $controller);
+            self::assertStringContainsString('DateHelper::formatStoreDate(', $src, $controller);
+            self::assertStringNotContainsString("'%d.%m.%Y'", $src, $controller . ': hardcoded date format');
+        }
+
+        // Both providers' terms formatters share the same one formatter.
+        foreach ([
+            '/addon-novoton-holidays/app/addons/novoton_holidays/src/Services/TermsFormatter.php',
+            '/addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/TermsFormatter.php',
+        ] as $formatter) {
+            $src = (string) file_get_contents(self::repoRoot() . $formatter);
+            self::assertStringContainsString('DateHelper::formatStoreDate(', $src, $formatter);
+        }
+
+        // The cart/checkout card too — it used to print "%a %d %b %Y".
+        foreach (['responsive', 'nova_theme'] as $theme) {
+            $card = (string) file_get_contents(
+                self::repoRoot() . '/addon-travel-core/design/themes/' . $theme
+                . '/templates/addons/travel_core/components/cart_booking_details.tpl',
+            );
+            self::assertStringContainsString('date_format:$settings.Appearance.date_format', $card, $theme);
+            self::assertStringNotContainsString('date_format:"%a %d %b %Y"', $card, $theme);
+        }
+    }
+
+    /**
+     * Romanian amenity names: sphinx already resolved them through the shared
+     * feature map; novoton read its own facility_name_ro column, which its
+     * sync fills with a verbatim copy of the ENGLISH name — so a Romanian
+     * storefront listed "Air conditioning/Heating". Both go through the shared
+     * resolver now.
+     */
+    public function testAmenityNamesComeFromTheSharedFeatureMap(): void
+    {
+        $repo = (string) file_get_contents(
+            self::repoRoot()
+            . '/addon-novoton-holidays/app/addons/novoton_holidays/src/Repository/FacilityRepository.php',
+        );
+        self::assertStringContainsString('FacilityLabelResolver::labels(', $repo);
+
+        $resolver = (string) file_get_contents(
+            self::repoRoot() . '/addon-travel-core/app/addons/travel_core/src/Services/FacilityLabelResolver.php',
+        );
+        self::assertStringContainsString('FeatureMapper::resolveFacility(', $resolver);
+        // Unmapped facilities keep the provider's own label rather than being
+        // silently dropped, which is what an empty RO column used to cause.
+        self::assertStringContainsString("\$facility['name'] ?? ''", $resolver);
+
+        $sphinx = (string) file_get_contents(
+            self::repoRoot()
+            . '/addon-sphinx-holidays/app/addons/sphinx_holidays/src/Services/SphinxFeatureAssigner.php',
+        );
+        self::assertStringContainsString('FacilityLabelResolver::column($lang)', $sphinx);
     }
 
     /** Only a 100% penalty gets the headline row. */

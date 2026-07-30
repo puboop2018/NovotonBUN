@@ -17,6 +17,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\NovotonHolidays\Services;
 
 use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+use Tygh\Addons\TravelCore\Services\DateHelper;
 
 class TermsFormatter
 {
@@ -123,7 +124,13 @@ class TermsFormatter
     }
 
     /**
-     * Format a date using CS-Cart's configured date format.
+     * Format a date using the store's configured date format.
+     *
+     * Shared with every other customer-facing date in the travel addons (the
+     * booking sidebar, the cart card, sphinx's terms) — this used to be a
+     * private copy that also rewrote the '%d %b %Y' default to '%d.%m.%Y',
+     * which is exactly how one card ended up showing "Check-in 07.09.2026"
+     * beside "Anulare gratuită până la 08/28/2026".
      *
      * @param string|int $date Date string or timestamp
      * @return string Formatted date
@@ -134,25 +141,7 @@ class TermsFormatter
             return '';
         }
 
-        $timestamp = is_numeric($date) ? (int) $date : strtotime((string) $date);
-        if (empty($timestamp)) {
-            return (string) $date;
-        }
-
-        $dateFormat = ConfigProvider::getDateFormat();
-        // ConfigProvider default is '%d %b %Y'; for terms display we prefer
-        // the numeric form when the admin setting is empty.
-        if ($dateFormat === '%d %b %Y') {
-            $dateFormat = '%d.%m.%Y';
-        }
-
-        $phpFormat = str_replace(
-            ['%d', '%m', '%Y', '%y', '%B', '%b', '%A', '%a'],
-            ['d', 'm', 'Y', 'y', 'F', 'M', 'l', 'D'],
-            $dateFormat,
-        );
-
-        return date($phpFormat, $timestamp);
+        return DateHelper::formatStoreDate(is_int($date) ? $date : (string) $date);
     }
 
     /**

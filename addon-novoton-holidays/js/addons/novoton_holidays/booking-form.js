@@ -530,9 +530,20 @@ function renderCancellationPolicy(data) {
     var list = document.getElementById('travel-cancel-lines');
     if (!card || !list) return;
 
+    // "Free cancellation until <date>" — the green line the search card
+    // already promises. Rendered even when there are no fee lines: a
+    // free-until date is the most reassuring thing the card can say.
+    var freeRow = document.getElementById('travel-cancel-free');
+    var freeDate = document.getElementById('travel-cancel-free-date');
+    var freeUntil = (data && data.free_cancellation_until) || '';
+    if (freeRow && freeDate) {
+        freeDate.textContent = freeUntil;
+        freeRow.classList.toggle('travel-is-hidden', !freeUntil);
+    }
+
     var lines = (data && data.cancellation_lines) || [];
     if (!lines.length) {
-        card.classList.add('travel-is-hidden');
+        card.classList.toggle('travel-is-hidden', !freeUntil);
         return;
     }
 

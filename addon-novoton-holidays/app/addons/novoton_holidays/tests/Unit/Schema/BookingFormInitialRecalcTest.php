@@ -135,7 +135,7 @@ final class BookingFormInitialRecalcTest extends TestCase
         $start = strpos($css, '.travel-booking-page .travel-booking-layout {');
         self::assertNotFalse($start);
         $rule = substr($css, $start, (int) strpos($css, '}', $start) - $start);
-        self::assertStringContainsString('grid-template-columns: 340px minmax(0, 1fr)', $rule);
+        self::assertStringContainsString('grid-template-columns: 380px minmax(0, 1fr)', $rule);
         // Mobile: the sidebar is re-ordered ABOVE the guest form.
         $mqStart = strpos($css, '@media (max-width: 900px)');
         self::assertNotFalse($mqStart);
