@@ -393,6 +393,11 @@ try {
                 'search_id' => $searchIdStr,
                 'complete' => true,
             ], $cacheTtl);
+            // Per-offer snapshots, same TTL: the booking form is reached by URL
+            // and cannot trust a price from it, so this is where a server-owned
+            // price comes from when an offer says must_verify=false and does
+            // not need the (currently 500ing) verify round trip.
+            \Tygh\Addons\SphinxHolidays\Services\OfferSnapshotStore::remember($initialResults, $cacheTtl);
         }
 
         $view->assign('sphinx_search_results', $initialResults);

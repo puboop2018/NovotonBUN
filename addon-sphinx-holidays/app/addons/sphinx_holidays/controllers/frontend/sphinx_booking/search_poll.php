@@ -266,6 +266,13 @@ try {
             'search_id' => $searchId,
             'complete' => true,
         ], TypeCoerce::toInt($searchMeta['cache_ttl']));
+        // Same per-offer snapshots as the synchronous path in search.php — the
+        // polled path is the one most searches actually take, so omitting it
+        // here would leave the booking form with nothing to trust.
+        \Tygh\Addons\SphinxHolidays\Services\OfferSnapshotStore::remember(
+            $accumulated,
+            TypeCoerce::toInt($searchMeta['cache_ttl']),
+        );
     }
 
     if ($terminal) {

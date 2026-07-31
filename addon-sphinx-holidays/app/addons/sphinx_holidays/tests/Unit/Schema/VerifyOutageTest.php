@@ -104,9 +104,13 @@ final class VerifyOutageTest extends TestCase
         $js = (string) file_get_contents(
             dirname(__DIR__, 3) . '/../../../js/addons/sphinx_holidays/search-results.js',
         );
-        self::assertStringContainsString('function showOutage()', $js);
+        self::assertStringContainsString('function showOutage(', $js);
         self::assertStringContainsString("data.status === 'outage'", $js);
-        self::assertStringContainsString('.catch(showOutage)', $js);
+        // A network failure is an outage too. showOutage now takes the response
+        // payload (for the debug panel), so the handler is wrapped rather than
+        // passed by reference — .catch would otherwise hand it the Error.
+        self::assertStringContainsString('showOutage(null);', $js);
+        self::assertMatchesRegularExpression('/\.catch\(\s*function\s*\(\)\s*\{\s*showOutage\(null\);\s*\}\s*\)/', $js);
 
         // The label ships through the data-client-config JSON.
         $controller = self::src('controllers/frontend/sphinx_booking/search.php');

@@ -55,6 +55,26 @@ class CacheService implements CacheServiceInterface
     }
 
     /**
+     * Store many already-encoded entries in one batched write.
+     *
+     * A search yields ~1,500 offers and OfferSnapshotStore writes one entry
+     * per offer, so a per-key set() would be ~1,500 round trips on a path that
+     * runs while the customer waits. Values arrive pre-encoded because the
+     * caller owns the snapshot shape.
+     *
+     * @param array<string, string> $entries key => JSON payload
+     * @return int entries submitted
+     */
+    public function setMany(array $entries, int $ttl): int
+    {
+        if ($entries === [] || $ttl <= 0) {
+            return 0;
+        }
+
+        return $this->repo->upsertMany($entries, time() + $ttl);
+    }
+
+    /**
      * Store a value in cache with a TTL. Non-array values are rejected
      * (this backend stores JSON rows of search-result shapes).
      *

@@ -675,6 +675,10 @@ return [
         'en' => 'The conditions cannot be displayed right now. Please try again in a few minutes.',
         'ro' => 'Condițiile nu pot fi afișate momentan. Vă rugăm încercați din nou în câteva minute.',
     ],
+    'sphinx_holidays.terms_partial' => [
+        'en' => 'The detailed payment and cancellation schedule cannot be loaded right now. The cancellation status below comes from the search result and is accurate.',
+        'ro' => 'Programul detaliat de plată și anulare nu poate fi încărcat momentan. Statusul de anulare de mai jos provine din rezultatul căutării și este corect.',
+    ],
     'sphinx_holidays.offer_unavailable' => [
         'en' => 'This offer is no longer available.',
         'ro' => 'Această ofertă nu mai este disponibilă.',

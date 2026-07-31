@@ -394,6 +394,13 @@ window.SphinxSearch.onReady(function () {
         var body = bodyEl();
         if (!body) return;
         var html = '';
+        // status 'partial': verify is down, so the detailed schedule is
+        // genuinely unavailable, but the search result carried is_free and
+        // that fact is accurate. Say which part is missing, then show what we
+        // do know — strictly better than a blanket "nothing can be shown".
+        if (data.status === 'partial' && data.notice) {
+            html += '<p class="travel-terms-modal__notice">' + esc(data.notice) + '</p>';
+        }
         if (data.is_free && !data.free_until) {
             html += '<div class="travel-terms-modal__free">\u2713 ' + esc(lbl(cfg.freeCancellation, 'Anulare gratuit\u0103')) + '</div>';
         } else if (data.free_until) {
@@ -419,19 +426,37 @@ window.SphinxSearch.onReady(function () {
             ? renderTrack(data.cancellation_rules, cancelHeading, 'cancel', total, cur)
             : section(cancelHeading, data.cancellation_fees);
         if (html === '') html = '<p>' + esc(lbl(cfg.noTermsInfo, 'Nu exist\u0103 condi\u021bii specifice pentru aceast\u0103 ofert\u0103.')) + '</p>';
-        body.innerHTML = html;
+        body.innerHTML = html + debugPanel(data);
     }
-    function showUnavailable() {
+    // Raw provider payload, present only when the addon's "Enable debug
+    // logging" setting is on (the server omits the key entirely otherwise).
+    // Shows payment_terms / cancellation_fees exactly as the API sent them,
+    // so an empty modal can be read as "is_loaded: false" rather than guessed
+    // at. Escaped and rendered as text \u2014 never parsed, never executed.
+    function debugPanel(data) {
+        if (!data || !data.debug) return '';
+        var json;
+        try {
+            json = JSON.stringify(data.debug, null, 4);
+        } catch (e) {
+            return '';
+        }
+        return '<details class="travel-terms-modal__debug" open>'
+            + '<summary>API response (debug)</summary>'
+            + '<pre>' + esc(json) + '</pre>'
+            + '</details>';
+    }
+    function showUnavailable(data) {
         var body = bodyEl();
         if (!body) return;
-        body.innerHTML = '<p class="travel-terms-modal__unavailable">' + esc(lbl(labels().termsUnavailable, 'Condi\u021biile nu sunt disponibile. V\u0103 rug\u0103m c\u0103uta\u021bi din nou.')) + '</p>';
+        body.innerHTML = '<p class="travel-terms-modal__unavailable">' + esc(lbl(labels().termsUnavailable, 'Condi\u021biile nu sunt disponibile. V\u0103 rug\u0103m c\u0103uta\u021bi din nou.')) + '</p>' + debugPanel(data);
     }
     // Verify SERVICE down (5xx/transport) \u2014 a re-search cannot help, so the
     // copy must not suggest one.
-    function showOutage() {
+    function showOutage(data) {
         var body = bodyEl();
         if (!body) return;
-        body.innerHTML = '<p class="travel-terms-modal__unavailable">' + esc(lbl(labels().termsOutage, 'Condi\u021biile nu pot fi afi\u0219ate momentan. V\u0103 rug\u0103m \u00eencerca\u021bi din nou \u00een c\u00e2teva minute.')) + '</p>';
+        body.innerHTML = '<p class="travel-terms-modal__unavailable">' + esc(lbl(labels().termsOutage, 'Condi\u021biile nu pot fi afi\u0219ate momentan. V\u0103 rug\u0103m \u00eencerca\u021bi din nou \u00een c\u00e2teva minute.')) + '</p>' + debugPanel(data);
     }
     function loadTerms(offerId) {
         if (cache[offerId]) { renderTerms(cache[offerId]); return; }
@@ -442,18 +467,26 @@ window.SphinxSearch.onReady(function () {
         fetch('index.php?dispatch=sphinx_booking.offer_terms&offer_id=' + encodeURIComponent(offerId), { credentials: 'same-origin' })
             .then(function(r) { return r.json(); })
             .then(function(data) {
-                if (!data || data.status !== 'ok') {
+                if (!data || (data.status !== 'ok' && data.status !== 'partial')) {
                     if (data && data.status === 'outage') {
-                        showOutage();
+                        showOutage(data);
                     } else {
-                        showUnavailable();
+                        showUnavailable(data);
                     }
                     return;
                 }
-                cache[offerId] = data;
+                // A partial answer is NOT cached: it is missing the schedule
+                // only because verify happens to be down, and the next click
+                // should try again rather than replay the degraded copy.
+                if (data.status === 'ok') {
+                    cache[offerId] = data;
+                }
                 renderTerms(data);
             })
-            .catch(showOutage);
+            // Wrapped: .catch hands the Error to its callback, and showOutage
+            // now takes a response payload — passing the Error straight in
+            // would feed a non-response object to the debug panel.
+            .catch(function () { showOutage(null); });
     }
 
     document.addEventListener('click', function(e) {
