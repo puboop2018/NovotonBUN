@@ -500,6 +500,37 @@
    schedule is missing, but the free-cancellation fact from the search
    result IS shown below. Reads as a caveat, not an error — the content
    under it is accurate. */
+/* Debug panel — only rendered when the addon's debug logging setting is on.
+   Monospace, scrollable in BOTH axes: the payload is raw provider JSON and a
+   5xx stack trace has very long lines that must not stretch the modal. */
+.travel-terms-modal__debug {
+    margin: 16px 0 0;
+    border: 1px solid var(--nvt-border, #ddd);
+    border-radius: 4px;
+    background: var(--nvt-bg-light, #f7f7f7);
+}
+.travel-terms-modal__debug > summary {
+    cursor: pointer;
+    padding: 8px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--nvt-text-light, #666);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+.travel-terms-modal__debug pre {
+    margin: 0;
+    padding: 12px;
+    max-height: 340px;
+    overflow: auto;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 12px;
+    line-height: 1.45;
+    white-space: pre;
+    color: var(--nvt-text, #333);
+    background: none;
+    border: 0;
+}
 .travel-terms-modal__notice {
     margin: 0 0 12px;
     padding: 8px 12px;

@@ -16,6 +16,7 @@ declare(strict_types=1);
 if (!defined('BOOTSTRAP')) { exit('Access denied'); }
 
 use Tygh\Addons\SphinxHolidays\Helpers\OfferAvailability;
+use Tygh\Addons\SphinxHolidays\Helpers\TermsDebug;
 use Tygh\Addons\SphinxHolidays\Services\ConfigProvider;
 use Tygh\Addons\SphinxHolidays\Services\Container;
 use Tygh\Addons\SphinxHolidays\Services\TermsFormatter;
@@ -33,6 +34,13 @@ try {
 
     $api = Container::getApi();
     $verifyResult = $api->verifyHotelOffer($offer_id);
+
+    // Operator diagnostics, off unless Settings > Debug > "Enable debug
+    // logging" is on. Attached to EVERY branch below — the failure branches
+    // are the ones worth inspecting, since that is where the modal currently
+    // shows a message with no way to tell an empty payload from a dead
+    // endpoint.
+    $debugOn = ConfigProvider::isDebugLogging();
 
     // Offer expired / no longer verifiable → tell the modal to show a
     // re-search message rather than an empty terms panel. A 5xx / transport
@@ -71,9 +79,24 @@ try {
         // from the server-side snapshot rather than showing a bare error.
         $snapshot = \Tygh\Addons\SphinxHolidays\Services\OfferSnapshotStore::get($offer_id);
         $snapshotFees = TypeCoerce::toStringMap(($snapshot ?? [])['cancellation_fees'] ?? []);
+
+        // Verify produced nothing usable, so the blocks shown are the SEARCH
+        // ones from the snapshot — labelled as such, because "empty because
+        // search never carries them" and "empty because verify died" are
+        // different diagnoses and the panel must not blur them.
+        $rejectDebug = TermsDebug::build(
+            $debugOn,
+            $outage ? 'verify_failed_showing_search_snapshot' : 'verify_rejected',
+            $verifyHttpCode,
+            TypeCoerce::toString($http->getLastError()),
+            TypeCoerce::toString($http->getLastResponseRaw()),
+            $snapshot,
+        );
+
         if ($outage && $snapshotFees !== [] && array_key_exists('is_free', $snapshotFees)) {
             echo json_encode([
                 'status' => 'partial',
+                'debug' => $rejectDebug,
                 'is_free' => TypeCoerce::toBool($snapshotFees['is_free']),
                 'payment_terms' => [],
                 'cancellation_fees' => [],
@@ -87,7 +110,10 @@ try {
             exit;
         }
 
-        echo json_encode(['status' => $outage ? 'outage' : 'unavailable']);
+        echo json_encode([
+            'status' => $outage ? 'outage' : 'unavailable',
+            'debug' => $rejectDebug,
+        ]);
         exit;
     }
 
@@ -140,6 +166,17 @@ try {
 
     echo json_encode([
         'status' => 'ok',
+        // The verify offer's own payment_terms / cancellation_fees objects,
+        // untouched by TermsFormatter — so an empty panel can be attributed to
+        // the API sending is_loaded=false rather than to our formatting.
+        'debug' => TermsDebug::build(
+            $debugOn,
+            'verify',
+            $api->getHttpClient()->getLastHttpCode(),
+            TypeCoerce::toString($api->getHttpClient()->getLastError()),
+            TypeCoerce::toString($api->getHttpClient()->getLastResponseRaw()),
+            $offer,
+        ),
         'payment_terms' => $paymentTerms,
         'cancellation_fees' => $cancellationFees,
         'free_until' => $freeUntil,

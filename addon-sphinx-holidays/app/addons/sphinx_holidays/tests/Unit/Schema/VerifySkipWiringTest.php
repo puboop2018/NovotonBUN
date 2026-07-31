@@ -93,6 +93,38 @@ final class VerifySkipWiringTest extends TestCase
     }
 
     /**
+     * The debug panel must reach EVERY branch — the failure ones especially,
+     * since that is where "empty payload" and "dead endpoint" are otherwise
+     * indistinguishable — and must be gated on the addon's debug setting so a
+     * shopper never sees raw provider JSON.
+     */
+    public function testDebugPanelIsWiredIntoEveryBranchAndGated(): void
+    {
+        $controller = self::src('controllers/frontend/sphinx_booking/offer_terms.php');
+
+        self::assertStringContainsString('$debugOn = ConfigProvider::isDebugLogging();', $controller);
+        // Success, partial and outage/unavailable all carry it.
+        self::assertSame(
+            3,
+            substr_count($controller, "'debug' => "),
+            'all three response branches must attach the debug payload',
+        );
+        self::assertStringContainsString('TermsDebug::build(', $controller);
+
+        $js = (string) file_get_contents(
+            dirname(__DIR__, 3) . '/../../../js/addons/sphinx_holidays/search-results.js',
+        );
+        self::assertStringContainsString('function debugPanel(data)', $js);
+        // Absent key => nothing rendered, so debug-off leaks nothing.
+        self::assertStringContainsString('if (!data || !data.debug) return \'\';', $js);
+        // Rendered as escaped text, never parsed.
+        self::assertStringContainsString('esc(json)', $js);
+        // The failure paths render it too.
+        self::assertStringContainsString('showOutage(data)', $js);
+        self::assertStringContainsString('showUnavailable(data)', $js);
+    }
+
+    /**
      * Snapshots must expire WITH the search results they came from. Outliving
      * them would let a stale price be served after the offers are gone.
      */
