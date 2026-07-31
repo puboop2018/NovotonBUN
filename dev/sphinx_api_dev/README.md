@@ -13,6 +13,7 @@ scripts are served directly as real files — no manual copy, and host edits sho
 ```
 http://localhost:8080/sphinx_api_dev/GetHotelbyId.php?id=3612
 http://localhost:8080/sphinx_api_dev/HotelSearchResults.php
+http://localhost:8080/sphinx_api_dev/VerifyOffer.php
 ```
 
 (New files in the folder appear immediately. If a script 404s, the mount isn't in your
@@ -88,3 +89,34 @@ next step is to **survey more hotel IDs** with this tool (pass several at once)
 and find the ones that are genuinely wrong or `null`, before deciding on a fix
 (name-search link vs. coordinate repair). The map-links block the script
 prints lets you eyeball each one.
+
+## VerifyOffer.php — is the VERIFY endpoint down? (search vs verify, side by side)
+
+Search and verify are **separate endpoints**, and the storefront fails
+asymmetrically when only verify is broken: the results list renders perfectly,
+but **both** the "Condiții de Plată și Anulare" modal **and** the "Rezervă acum"
+button fail — because each of them re-verifies the offer. The search payload
+carries no terms and no booking guarantee (`must_verify=true`), so terms exist
+only on the verify response. From inside the store those look like two unrelated
+bugs; they are one.
+
+This probe settles it in a single run: it searches to obtain a **live** offer id
+(they expire), then calls verify and prints the HTTP status plus the provider's
+**raw error body** — the part worth forwarding to the Sphinx developers.
+
+```bash
+php VerifyOffer.php                    # search, then verify the first offer
+php VerifyOffer.php count=3            # verify the first three
+php VerifyOffer.php offer_id=abc123    # verify one specific id, skip the search
+php VerifyOffer.php destination_id=3713 check_in=2026-09-07 check_out=2026-09-13
+```
+
+Browser: `VerifyOffer.php?count=3`
+
+Exit code is **1** when any verify fails, so it doubles as a smoke check. It
+classifies exactly as the storefront does — HTTP 0 or >= 500 is an OUTAGE
+(`sphinx_holidays.booking_system_unavailable` / `terms_outage`), 4xx is a
+genuine expired offer (`offer_no_longer_available`). If verify comes back
+healthy while the storefront still shows the outage messages, the fault is on
+our side: check Administration ▸ Logs for `Sphinx booking_form: verify` and
+`Sphinx offer_terms: verify`.

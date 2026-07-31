@@ -45,6 +45,60 @@ final class VerifyOutageTest extends TestCase
         self::assertStringContainsString('verify OUTAGE (HTTP ', $src);
     }
 
+    /**
+     * BOTH verify rejections must leave a trace, and it must carry the RAW
+     * upstream body.
+     *
+     * Field case: a guest reported "Condițiile nu pot fi afișate" and "Sistemul
+     * de rezervări este momentan indisponibil" on the same page. They are one
+     * outage — offer_terms and booking_form both re-verify the offer — but only
+     * booking_form logged anything, so the terms half was invisible and the two
+     * looked unrelated.
+     *
+     * And what booking_form logged was nearly useless: a 5xx decodes to null,
+     * so `verify_response` recorded the literal string "null" while the
+     * provider's actual error (an "Undefined array key 0" inside their own
+     * EtripV2Client) was discarded — the one thing worth forwarding to them.
+     */
+    public function testBothVerifyRejectionsLogTheRawUpstreamFailure(): void
+    {
+        foreach ([
+            'controllers/frontend/sphinx_booking/offer_terms.php',
+            'controllers/frontend/sphinx_booking/booking_form.php',
+        ] as $relative) {
+            $src = self::src($relative);
+
+            self::assertStringContainsString('fn_log_event(', $src, $relative . ': rejection must be logged');
+            self::assertStringContainsString(
+                "'raw_response' => substr((string) \$",
+                $src,
+                $relative . ': log the RAW body — a 5xx decodes to null',
+            );
+            self::assertStringContainsString(
+                "'transport_error' =>",
+                $src,
+                $relative . ': a transport failure (HTTP 0) has no body, only a curl error',
+            );
+        }
+    }
+
+    /**
+     * The standalone probe is how "is it them or us?" gets answered without a
+     * storefront round-trip, and it must classify identically to the code above.
+     */
+    public function testTheStandaloneVerifyProbeExistsAndMatchesTheStorefrontRule(): void
+    {
+        $probe = (string) file_get_contents(dirname(__DIR__, 7) . '/dev/sphinx_api_dev/VerifyOffer.php');
+
+        self::assertNotSame('', $probe, 'dev/sphinx_api_dev/VerifyOffer.php must exist');
+        self::assertStringContainsString('/api/v1/hotels/verify?offer_id=', $probe);
+        // Same discriminator as offer_terms.php / booking_form.php.
+        self::assertStringContainsString('if ($code >= 500)', $probe);
+        self::assertStringContainsString("if (\$code === 0)", $probe);
+        // It searches first, because offer ids expire.
+        self::assertStringContainsString('/api/v1/hotels/search', $probe);
+    }
+
     public function testModalRendersTheOutageCopy(): void
     {
         $js = (string) file_get_contents(
