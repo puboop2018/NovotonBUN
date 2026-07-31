@@ -343,9 +343,12 @@ if ($limit > 0 && count($rowsOut) > $limit) {
 }
 
 // ── 5. Raw API payload, on request ─────────────────────────────────────────
+// Dumped from the ROWS PRINTED ABOVE, not from the unsorted match list, so
+// `--limit=3 --raw=3` shows the raw payload of the same three hotels.
 if ($rawCount > 0) {
-    spx_section("RAW API JSON · first {$rawCount} matching offer(s), exactly as returned");
-    foreach (array_slice($matching, 0, $rawCount) as $offer) {
+    spx_section("RAW API JSON · first {$rawCount} row(s) above, exactly as the API returned them");
+    foreach (array_slice($shown, 0, $rawCount) as $offer) {
+        unset($offer['_offer_count']); // our own grouping tally, not API data
         echo json_encode($offer, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n";
     }
 }
