@@ -18,7 +18,8 @@ creds.
 | `circuits.php` | `GET /static/circuits` | Circuit catalog | `--page --per_page --updated_since --limit` |
 | `experiences.php` | `GET /static/experiences` | Experience catalog | `--page --per_page --limit` |
 | `package_routes.php` | `GET /static/package-routes` | Package-route catalog | `--page --per_page --limit` |
-| `hotel_search.php` | `POST /hotels/search` → `GET /hotels/results` | Async availability search + poll | `--destination_id --check_in --check_out --adults --children --polls --poll_delay --no_poll --limit` |
+| `hotel_search.php` | `POST /hotels/search` → `GET /hotels/results` | Async availability search + poll (raw JSON) | `--destination_id --check_in --check_out --adults --children --polls --poll_delay --no_poll --limit` |
+| `hotel_availability.php` | `GET /static/destinations` → search → results | **Bookable hotels in a named place** — resolves the destination by name, drains the whole cursor, filters `confirmation`, one row per hotel | `--destination --destination_id --check_in --check_out --adults --children --confirmation --offers --raw --limit --polls` |
 | `hotel_verify.php` | `GET /hotels/verify` | Re-verify an offer before booking | `<offer_id>` |
 | `hotel_book.php` | `POST /hotels/book` | **Book an offer** (dry-run by default) | `--offer_id --guests --email --phone --send` |
 | `orders.php` | `GET /orders` (or `/orders/{id}`) | Orders list, or one order | `--page --per_page --reference_code --id --limit` |
@@ -40,6 +41,11 @@ php hotel.php 3612
 # 2. live availability search (async: POST search, then poll results)
 php hotel_search.php --destination_id=101 \
     --check_in=2026-08-02 --check_out=2026-08-09 --adults=2 --limit=10
+
+# 2b. …or ask the question directly: what can I book in <place>?
+php hotel_availability.php                       # Antalya, 01–07 Sep 2026, 2 adults + a 5yo
+php hotel_availability.php --destination="Antalya City" --limit=20
+php hotel_availability.php --confirmation=any --offers --raw=1
 
 # 3. verify an offer_id from the results
 php hotel_verify.php <offer_id>
