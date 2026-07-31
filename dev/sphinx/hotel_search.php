@@ -123,16 +123,18 @@ for ($i = 1; $i <= $maxPolls; $i++) {
     echo spx_format_json($poll['body'], $limit) . "\n";
 
     $pd = json_decode($poll['body'], true);
-    $status = is_array($pd) ? (string) ($pd['status'] ?? '') : '';
     $nextCursor = is_array($pd) ? (string) ($pd['cursor'] ?? '') : '';
-    if ($nextCursor !== '') {
-        $cursor = $nextCursor;
-    }
-    if ($status === 'completed' || $status === 'done' || $status === '') {
-        echo "\n(status: " . ($status !== '' ? $status : 'no status field') . " — stopping)\n";
+
+    // The documented envelope is { data, cursor } — there is NO status field,
+    // and the cursor going null is the only end-of-search signal. This used to
+    // also break on `status === ''`, which is what a missing key decodes to,
+    // so every run stopped after one poll and --polls did nothing.
+    if ($nextCursor === '') {
+        echo "\n(cursor is null — search exhausted, stopping)\n";
         break;
     }
-    echo "\n(status: {$status} — polling again" . ($i < $maxPolls ? " in {$pollDelay}s" : '') . ")\n";
+    $cursor = $nextCursor;
+    echo "\n(cursor still live — polling again" . ($i < $maxPolls ? " in {$pollDelay}s" : '') . ")\n";
 }
 
 /**

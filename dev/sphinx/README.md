@@ -80,8 +80,19 @@ Useful `hotel_availability.php` URLs:
 
 `raw` vs `raw_response`: `raw=N` decodes and re-indents N offers for reading;
 `raw_response=N` prints the untouched response bodies (no decode, no
-re-encode) of the search call and the first N results pages. curl sends no
-`Accept-Encoding`, so those bytes are what crossed the wire.
+re-encode) of the search call and the first N results pages, **with their
+response headers**. The headers make the claim checkable rather than merely
+asserted — `content-length` against the printed byte count, and the absence of
+`content-encoding`, show nothing was decoded in transit — and they carry
+`x-request-id`, which the API docs tell you to quote when reporting a fault,
+plus `x-ratelimit-*`. Only response headers are printed; the request's Bearer
+token never appears. Failing pages (4xx/5xx) are captured too — that is the
+response people most often need verbatim.
+
+Write `raw_response=1`, not a bare `raw_response`: with no `=value` the
+browser sends an empty string, which is not a number. Any unparseable numeric
+parameter is now reported at the top of the output instead of silently
+falling back to its default.
 
 A full drain is ~15–17 sequential API calls and takes about a minute; the
 script disables output buffering and flushes per page so the browser shows
@@ -95,7 +106,12 @@ is sent, and no such parameter appears in the API docs. `--max_offers` /
 so an early stop returns whichever supplier answered first rather than a
 representative sample — a 2-page drain of Antalya reported 135 hotels and
 zero `on_request` offers against 835 / 8,845 for a full drain, and named a
-different cheapest hotel. The script marks any capped run `PARTIAL`.
+different cheapest hotel. The script marks any capped run `PARTIAL` — in the
+summary block, not just the progress log — and exits 1 rather than 0 when a
+truncated drain finds nothing, so "no availability" from a capped run is never
+mistaken for an answer. `--max_offers` counts offers that pass the
+`confirmation` filter, not raw rows; counting raw rows let an
+`immediate`-filtered run spend its whole budget on `on_request` offers.
 
 ## Pagination vs. `limit`
 
