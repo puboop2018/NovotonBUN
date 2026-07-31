@@ -34,9 +34,42 @@ if (empty($offer_id)) {
 
 try {
     $api = Container::getApi();
-    $verifyResult = $api->verifyHotelOffer($offer_id);
 
-    if (!\Tygh\Addons\SphinxHolidays\Helpers\OfferAvailability::isVerifiedAvailable(
+    // Verify only when the API says it is required.
+    //
+    // Sphinx marks every offer with `must_verify`, and its docs are explicit:
+    // "You must use this endpoint whenever the chosen offer has the
+    // must_verify property set to true", and "this call can be an expensive
+    // operation and should be used only when necessary". Calling it
+    // unconditionally was always wasteful; it became a fault when the
+    // provider's verify started 500ing ("Undefined array key 0" in their
+    // EtripV2Client), because offers that never needed verifying became
+    // unbookable. Measured live: all four Porto Bello Hotel Resort&Spa offers
+    // carry must_verify=false, and every verify call for them 500s.
+    //
+    // The skip is driven by a SERVER-side snapshot written when the search
+    // results were cached — never by the request, whose price could be edited.
+    // No snapshot, or any doubt in it, means we verify exactly as before.
+    $snapshot = \Tygh\Addons\SphinxHolidays\Services\OfferSnapshotStore::get($offer_id);
+    $skipVerify = \Tygh\Addons\SphinxHolidays\Services\OfferSnapshotStore::isBookableWithoutVerify($snapshot);
+
+    if ($skipVerify) {
+        // Shaped like an unwrapped verify payload so everything downstream is
+        // unchanged. The book endpoint re-verifies server-side anyway and only
+        // proceeds when pricing is unchanged, so this cannot commit a stale
+        // price to an order.
+        $verifyResult = $snapshot;
+        fn_log_event('general', 'runtime', [
+            'message' => 'Sphinx booking_form: verify SKIPPED — offer declares must_verify=false',
+            'offer_id' => $offer_id,
+            'price' => TypeCoerce::toString($snapshot['price'] ?? ''),
+            'confirmation' => TypeCoerce::toString($snapshot['confirmation'] ?? ''),
+        ]);
+    } else {
+        $verifyResult = $api->verifyHotelOffer($offer_id);
+    }
+
+    if (!$skipVerify && !\Tygh\Addons\SphinxHolidays\Helpers\OfferAvailability::isVerifiedAvailable(
         $verifyResult,
         ConfigProvider::shouldRequireImmediateAvailability(),
     )) {

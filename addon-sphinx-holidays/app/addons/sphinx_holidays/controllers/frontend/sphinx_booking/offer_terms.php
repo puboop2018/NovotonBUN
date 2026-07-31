@@ -63,6 +63,30 @@ try {
             'raw_response' => substr((string) $http->getLastResponseRaw(), 0, 1000),
         ]);
 
+        // The detailed schedule genuinely only exists on the verify response
+        // (search sends payment_terms.is_loaded=false on every offer — 0 of
+        // 17,336 measured). But search DOES carry cancellation_fees.is_free,
+        // and during a verify outage that one fact is the difference between
+        // "we can tell you nothing" and "your cancellation is free". Serve it
+        // from the server-side snapshot rather than showing a bare error.
+        $snapshot = \Tygh\Addons\SphinxHolidays\Services\OfferSnapshotStore::get($offer_id);
+        $snapshotFees = TypeCoerce::toStringMap(($snapshot ?? [])['cancellation_fees'] ?? []);
+        if ($outage && $snapshotFees !== [] && array_key_exists('is_free', $snapshotFees)) {
+            echo json_encode([
+                'status' => 'partial',
+                'is_free' => TypeCoerce::toBool($snapshotFees['is_free']),
+                'payment_terms' => [],
+                'cancellation_fees' => [],
+                'payment_rules' => [],
+                'cancellation_rules' => [],
+                'free_until' => null,
+                'notice' => TypeCoerce::toString(__('sphinx_holidays.terms_partial', [
+                    '[default]' => 'The detailed payment and cancellation schedule cannot be loaded right now. The cancellation status below comes from the search result and is accurate.',
+                ])),
+            ]);
+            exit;
+        }
+
         echo json_encode(['status' => $outage ? 'outage' : 'unavailable']);
         exit;
     }

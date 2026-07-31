@@ -394,6 +394,13 @@ window.SphinxSearch.onReady(function () {
         var body = bodyEl();
         if (!body) return;
         var html = '';
+        // status 'partial': verify is down, so the detailed schedule is
+        // genuinely unavailable, but the search result carried is_free and
+        // that fact is accurate. Say which part is missing, then show what we
+        // do know — strictly better than a blanket "nothing can be shown".
+        if (data.status === 'partial' && data.notice) {
+            html += '<p class="travel-terms-modal__notice">' + esc(data.notice) + '</p>';
+        }
         if (data.is_free && !data.free_until) {
             html += '<div class="travel-terms-modal__free">\u2713 ' + esc(lbl(cfg.freeCancellation, 'Anulare gratuit\u0103')) + '</div>';
         } else if (data.free_until) {
@@ -442,7 +449,7 @@ window.SphinxSearch.onReady(function () {
         fetch('index.php?dispatch=sphinx_booking.offer_terms&offer_id=' + encodeURIComponent(offerId), { credentials: 'same-origin' })
             .then(function(r) { return r.json(); })
             .then(function(data) {
-                if (!data || data.status !== 'ok') {
+                if (!data || (data.status !== 'ok' && data.status !== 'partial')) {
                     if (data && data.status === 'outage') {
                         showOutage();
                     } else {
@@ -450,7 +457,12 @@ window.SphinxSearch.onReady(function () {
                     }
                     return;
                 }
-                cache[offerId] = data;
+                // A partial answer is NOT cached: it is missing the schedule
+                // only because verify happens to be down, and the next click
+                // should try again rather than replay the degraded copy.
+                if (data.status === 'ok') {
+                    cache[offerId] = data;
+                }
                 renderTerms(data);
             })
             .catch(showOutage);

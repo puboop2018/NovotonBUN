@@ -1256,6 +1256,10 @@ msgctxt "Languages::sphinx_holidays.booking_system_unavailable"
 msgid "The booking system is temporarily unavailable. Please try again in a few minutes."
 msgstr "The booking system is temporarily unavailable. Please try again in a few minutes."
 
+msgctxt "Languages::sphinx_holidays.terms_partial"
+msgid "The detailed payment and cancellation schedule cannot be loaded right now. The cancellation status below comes from the search result and is accurate."
+msgstr "The detailed payment and cancellation schedule cannot be loaded right now. The cancellation status below comes from the search result and is accurate."
+
 msgctxt "Languages::sphinx_holidays.terms_outage"
 msgid "The conditions cannot be displayed right now. Please try again in a few minutes."
 msgstr "The conditions cannot be displayed right now. Please try again in a few minutes."

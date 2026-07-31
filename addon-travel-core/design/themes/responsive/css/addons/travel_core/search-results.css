@@ -496,6 +496,19 @@
     color: var(--nvt-text-light, #666);
     margin: 0;
 }
+/* Partial answer: the provider's verify call is down so the detailed
+   schedule is missing, but the free-cancellation fact from the search
+   result IS shown below. Reads as a caveat, not an error — the content
+   under it is accurate. */
+.travel-terms-modal__notice {
+    margin: 0 0 12px;
+    padding: 8px 12px;
+    border-left: 3px solid var(--nvt-warning, #d08700);
+    background: var(--nvt-warning-light, #fff8e6);
+    color: var(--nvt-text, #333);
+    font-size: 13px;
+    line-height: 1.45;
+}
 
 /* ── Timeline variant of the terms modal body ────────────────────────────
    TWO separate timelines — payment ("due by") and cancellation ("withheld")
