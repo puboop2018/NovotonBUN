@@ -39,6 +39,21 @@ final class VerifySkipWiringTest extends TestCase
     }
 
     /**
+     * The CACHE-HIT path must heal too.
+     *
+     * A cached result set is served for its whole TTL (900s by default). If it
+     * was cached without snapshots — by a deploy predating them, or any path
+     * that skips the write — then for that entire window the cards render fine
+     * while every Book-now falls back to the verify call this exists to avoid.
+     * That is exactly the "it still does not work after deploying" shape.
+     */
+    public function testTheCacheHitPathHealsMissingSnapshots(): void
+    {
+        $src = self::src('controllers/frontend/sphinx_booking/search.php');
+        self::assertStringContainsString('OfferSnapshotStore::rememberIfMissing($cachedResults, $cacheTtl)', $src);
+    }
+
+    /**
      * The price must come from the server's own snapshot. booking_form.php is
      * reached by URL, so a price taken from the request could be edited into
      * an order total.
@@ -49,6 +64,11 @@ final class VerifySkipWiringTest extends TestCase
 
         self::assertStringContainsString('OfferSnapshotStore::get($offer_id)', $src);
         self::assertStringContainsString('OfferSnapshotStore::isBookableWithoutVerify($snapshot)', $src);
+        // Must go through toVerifyShape, which downgrades the commissioned card
+        // price back to base_price — booking_form commissions again at line 140,
+        // and handing it the card price would charge commission twice.
+        self::assertStringContainsString('OfferSnapshotStore::toVerifyShape(', $src);
+        self::assertStringNotContainsString('$verifyResult = $snapshot;', $src);
         // The snapshot decides; the request never does.
         self::assertStringNotContainsString("RequestCoerce::float(\$_REQUEST, 'price'", $src);
         // Verify still runs whenever the skip does not apply.
