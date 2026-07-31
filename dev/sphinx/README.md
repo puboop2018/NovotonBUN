@@ -56,6 +56,47 @@ php hotel_book.php --offer_id=<offer_id> \
 #   add --send to actually book.
 ```
 
+## Running the probes from a browser
+
+`dev/` is served in the docker sandbox, so every probe takes the same
+parameters as a **query string** — drop the `--` and join with `&`:
+
+```
+http://localhost:8080/dev/sphinx/hotel_availability.php?confirmation=immediate&limit=10
+```
+
+Useful `hotel_availability.php` URLs:
+
+| Goal | URL suffix |
+| --- | --- |
+| Only instantly-bookable hotels | `?confirmation=immediate` (the default) |
+| Include supplier-confirmed ones | `?confirmation=any` |
+| Show only the first 10 | `?confirmation=immediate&limit=10` |
+| …plus their offer JSON | `?confirmation=immediate&limit=5&raw=5` |
+| **The exact bytes the API returned** | `?raw_response=1&raw_max=20000` |
+| Whole response, no truncation | `?raw_response=1&raw_max=0` (≈570 KB/page) |
+| Hide the per-page progress log | `?quiet=1&limit=20` |
+| Every parameter | `?help=1` |
+
+`raw` vs `raw_response`: `raw=N` decodes and re-indents N offers for reading;
+`raw_response=N` prints the untouched response bodies (no decode, no
+re-encode) of the search call and the first N results pages. curl sends no
+`Accept-Encoding`, so those bytes are what crossed the wire.
+
+A full drain is ~15–17 sequential API calls and takes about a minute; the
+script disables output buffering and flushes per page so the browser shows
+progress instead of a blank tab.
+
+**`limit` trims the OUTPUT, not the search.** There is no server-side result
+cap: `POST /hotels/search` accepts a `limit` field without complaint but
+ignores it — the cursor JWT's own `limit` claim stays `10000` no matter what
+is sent, and no such parameter appears in the API docs. `--max_offers` /
+`--polls` do stop the drain early, but Sphinx streams suppliers concurrently,
+so an early stop returns whichever supplier answered first rather than a
+representative sample — a 2-page drain of Antalya reported 135 hotels and
+zero `on_request` offers against 835 / 8,845 for a full drain, and named a
+different cheapest hotel. The script marks any capped run `PARTIAL`.
+
 ## Pagination vs. `limit`
 
 Sphinx pages **server-side** with `--page` / `--per_page` (the API requires
