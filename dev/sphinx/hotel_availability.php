@@ -46,20 +46,29 @@ declare(strict_types=1);
  *   hotel_availability.php?raw_response=1          # verbatim API bytes
  *   hotel_availability.php?quiet=1&limit=20        # just the hotel list
  *
- * Exit code is 1 when the search itself fails, 0 otherwise (including "no
- * immediate offers" — that is a legitimate answer, not an error).
+ * Exit code is 1 when the search fails OR when the drain could not be
+ * completed and produced nothing — a truncated run's "no offers" is an
+ * artefact of the cap, not an answer. It is 0 when a COMPLETE drain finds no
+ * matching offers: that is a legitimate answer, not an error.
  */
 
 require __DIR__ . '/_sphinx_client.php';
 
-// A full drain is ~15 sequential API calls and takes roughly a minute. In a
-// browser that means two distinct failures without these: the request is
-// killed at max_execution_time (30s by default), and until then the tab shows
-// a blank page because the output sits in a buffer. Stream instead.
+// A full drain is ~15-17 sequential API calls and takes roughly a minute, so
+// in a browser the tab would otherwise sit blank until the very end: PHP's
+// implicit_flush is off under a web SAPI, so echo hands bytes to the server's
+// output filter chain rather than the client. ob_implicit_flush + an explicit
+// flush per page is what actually streams.
+//
+// set_time_limit(0) is belt-and-braces, not a fix for a 30s cap: this
+// container sets max_execution_time = 300 (docker/fullstore/php-dev.ini), and
+// on Linux that clock excludes time blocked in syscalls, so the curl waits and
+// the inter-poll sleep() never counted against it anyway.
 if (!spx_is_cli()) {
     @set_time_limit(0);
     @ini_set('zlib.output_compression', '0');
-    @ini_set('output_buffering', '0');
+    // output_buffering is PHP_INI_PERDIR and cannot be set at runtime — the
+    // ob_end_flush loop below is what actually clears any active buffer.
     while (ob_get_level() > 0) {
         @ob_end_flush();
     }
@@ -144,12 +153,53 @@ function avail_flag(string $name): bool
     return $raw !== null && !in_array(strtolower(trim($raw)), ['0', 'no', 'false', 'off'], true);
 }
 
+/**
+ * Numeric params fail OPEN when they cannot be parsed, which is the worst
+ * direction: `?limit=abc` casts to 0 and dumps all 835 rows, and a bare
+ * `?raw_response` (no `=1`) casts to 0 and silently omits the whole verbatim
+ * section — the feature looks absent rather than misconfigured. PHP's cast
+ * is silent even under strict_types, so collect the bad ones and say so.
+ *
+ * @return list<string>
+ */
+function avail_bad_numbers(array $names): array
+{
+    $bad = [];
+    foreach ($names as $name) {
+        $raw = spx_param($name);
+        if ($raw === null) {
+            continue; // absent is fine — the default applies
+        }
+        $trimmed = trim($raw);
+        if ($trimmed === '') {
+            $bad[] = "{$name}= (empty) — ignored, default used";
+            continue;
+        }
+        if (!ctype_digit(ltrim($trimmed, '-'))) {
+            $bad[] = "{$name}=\"{$trimmed}\" is not a number — ignored, default used";
+        }
+    }
+
+    return $bad;
+}
+
 $childrenAges = array_values(array_filter(
     array_map('intval', preg_split('/[,\s]+/', spx_param('children', AVAIL_DEFAULT_CHILDREN) ?? '', -1, PREG_SPLIT_NO_EMPTY) ?: []),
     static fn (int $n): bool => $n >= 0,
 ));
 
 spx_out_setup();
+
+$badNumbers = avail_bad_numbers(['raw', 'raw_response', 'raw_max', 'limit', 'max_offers', 'polls', 'poll_delay', 'adults', 'destination_id']);
+if ($badNumbers !== []) {
+    echo "!! Unusable parameter value(s) — these did NOT take effect:\n";
+    foreach ($badNumbers as $line) {
+        echo "!!   {$line}\n";
+    }
+    echo "!! Note a bare ?raw_response (no =1) counts as empty and switches the\n";
+    echo "!! verbatim dump OFF; write ?raw_response=1.\n\n";
+    avail_flush();
+}
 
 // Opened in a browser with no query string at all: say what the knobs are
 // before spending a minute on the default search. Output is text/plain, so
@@ -282,9 +332,41 @@ if ($rawResponses > 0) {
     ];
 }
 
+$kept = 0; // offers passing the confirmation filter — what --max_offers counts
 for ($poll = 1; $poll <= $maxPolls && $cursor !== ''; $poll++) {
     $pageUrl = '/api/v1/hotels/results?' . http_build_query(['cursor' => $cursor]);
     $page = spx_get($cfg, '/api/v1/hotels/results', ['cursor' => $cursor]);
+
+    // Captured BEFORE the error checks and BEFORE decoding. Before the checks
+    // because a 4xx/5xx body is the single thing people most want verbatim —
+    // capturing only after a 200 would drop exactly the response worth
+    // forwarding to the provider. Before decoding because these are meant to
+    // be the bytes as they came off the wire.
+    if ($rawResponses > 0 && count($verbatim) <= $rawResponses) {
+        $verbatim[] = [
+            'label' => "GET /api/v1/hotels/results (page {$poll})"
+                . ($page['code'] === 200 ? '' : " — HTTP {$page['code']}"),
+            'url' => $cfg['url'] . $pageUrl,
+            'code' => $page['code'],
+            'body' => $page['body'],
+            'headers' => $page['headers'] ?? '',
+            'error' => $page['error'],
+        ];
+    }
+
+    // A transport failure is NOT visible in the status code. curl_exec()
+    // returns false when the transfer dies after the response headers have
+    // arrived, yet CURLINFO_HTTP_CODE still reads 200 — reproduced against a
+    // stalling server: `curl_exec: false / HTTP_CODE: 200 / error: Operation
+    // timed out / body: 0 bytes`. Left unchecked that path decodes to null,
+    // yields no cursor, exits the loop with no stop reason, and reports
+    // "complete — cursor drained to null" over a truncated drain. Pages here
+    // run to ~570 KB and the timeout is 60s, so this is a live scenario.
+    if ($page['error'] !== '') {
+        echo "  page {$poll}: transport failure — {$page['error']}\n";
+        $stopReason = "cURL failed on page {$poll}: {$page['error']}";
+        break;
+    }
     if ($page['code'] !== 200) {
         echo "  page {$poll}: HTTP {$page['code']} — stopping\n";
         echo '  ' . substr($page['body'], 0, 400) . "\n";
@@ -292,28 +374,32 @@ for ($poll = 1; $poll <= $maxPolls && $cursor !== ''; $poll++) {
         break;
     }
 
-    // Captured BEFORE decoding — these are the bytes as they came off the
-    // wire. curl is not asked for gzip (no CURLOPT_ENCODING in spx_request),
-    // so the server sends identity and no transparent decode happens.
-    if ($rawResponses > 0 && count($verbatim) <= $rawResponses) {
-        $verbatim[] = [
-            'label' => "GET /api/v1/hotels/results (page {$poll})",
-            'url' => $cfg['url'] . $pageUrl,
-            'code' => $page['code'],
-            'body' => $page['body'],
-        ];
+    $pd = json_decode($page['body'], true);
+    if (!is_array($pd)) {
+        echo "  page {$poll}: response was not valid JSON (" . strlen($page['body']) . " bytes) — stopping\n";
+        $stopReason = "page {$poll} did not decode as JSON";
+        break;
     }
 
-    $pd   = json_decode($page['body'], true);
-    $rows = is_array($pd) && isset($pd['data']) && is_array($pd['data']) ? $pd['data'] : [];
+    $rows = isset($pd['data']) && is_array($pd['data']) ? $pd['data'] : [];
     foreach ($rows as $row) {
         if (is_array($row)) {
             $offers[] = $row;
+            if (avail_matches($row, $confirmation)) {
+                $kept++;
+            }
         }
     }
     $pages++;
 
-    if (!$quiet) {
+    if ($quiet) {
+        // Still write SOMETHING per page. With quiet=1 and no output at all,
+        // implicit flushing has nothing to push and the browser shows a bare
+        // section header for the whole ~60s drain, looking hung — which is
+        // the exact failure the streaming preamble exists to prevent.
+        echo '.';
+        avail_flush();
+    } else {
         printf(
             "  page %-3d %5d offer(s) · %6.0f ms · running total %d\n",
             $poll,
@@ -324,14 +410,24 @@ for ($poll = 1; $poll <= $maxPolls && $cursor !== ''; $poll++) {
         avail_flush();
     }
 
-    // A null cursor means the search is exhausted. An empty PAGE does not:
-    // Sphinx streams suppliers asynchronously and can hand back an empty
-    // page while a slower supplier is still answering. Measured on Antalya:
-    // pages 1 and 7 were both empty while pages 5 and 9 carried thousands.
-    $next = is_array($pd) ? ($pd['cursor'] ?? null) : null;
+    // Only a cursor key present and literally null means the search is
+    // exhausted. An empty PAGE does not: the API docs say to keep polling
+    // through empty pages, and measured on Antalya pages 1 and 7 were both
+    // empty while pages 5 and 9 carried thousands. A MISSING cursor key is
+    // not success either — it is a malformed envelope.
+    if (!array_key_exists('cursor', $pd)) {
+        echo "  page {$poll}: response carried no 'cursor' key — stopping\n";
+        $stopReason = "page {$poll} returned an envelope with no cursor field";
+        break;
+    }
+    $next = $pd['cursor'];
     $cursor = is_string($next) ? $next : '';
 
-    if ($maxOffers > 0 && count($offers) >= $maxOffers && $cursor !== '') {
+    // Counted against FILTERED offers. Counting raw rows meant
+    // `confirmation=immediate&max_offers=N` could spend the whole cap on
+    // on_request offers — which outnumber immediate ones 8,845 to 6,105 on
+    // Antalya — and report "0 immediate offers" for a destination with 835.
+    if ($maxOffers > 0 && $kept >= $maxOffers && $cursor !== '') {
         $stopReason = "the --max_offers={$maxOffers} cap was reached";
         break;
     }
@@ -339,10 +435,20 @@ for ($poll = 1; $poll <= $maxPolls && $cursor !== ''; $poll++) {
         sleep($pollDelay);
     }
 }
+if ($quiet && $pages > 0) {
+    echo "\n";
+}
 if ($stopReason === '' && $cursor !== '') {
     $stopReason = "the --polls={$maxPolls} cap was reached";
 }
 $partial = $stopReason !== '';
+
+/** Does this offer pass the active confirmation filter? */
+function avail_matches(array $offer, string $confirmation): bool
+{
+    return $confirmation === 'any'
+        || strtolower((string) ($offer['confirmation'] ?? '')) === $confirmation;
+}
 
 // ── 4. Filter + group ──────────────────────────────────────────────────────
 $byConfirmation = [];
@@ -392,6 +498,16 @@ echo "filter      : confirmation=" . ($confirmation === 'any' ? 'any (no filter)
    . ' → ' . count($matching) . " offer(s)\n";
 
 if ($matching === []) {
+    // On a truncated drain "nothing matched" is an artefact of the cap, not a
+    // finding — and the generic advice below would be wrong in every one of
+    // its suggestions, while being the last thing read after the PARTIAL
+    // banner. Say which it is.
+    if ($partial) {
+        echo "\nThis is NOT 'no availability'. The drain stopped early ({$stopReason}),\n";
+        echo "so these offers are only what arrived before the stop. Remove --max_offers\n";
+        echo "and/or raise --polls before concluding anything about this destination.\n";
+        exit(1);
+    }
     echo "\nNothing matched. Try --confirmation=any, other dates, or a sibling destination id.\n";
     exit(0);
 }
@@ -403,8 +519,11 @@ if ($perOffer) {
 } else {
     foreach ($matching as $offer) {
         $hotelId = (string) ($offer['hotel_id'] ?? $offer['hotel_name'] ?? '?');
-        $price = avail_price($offer);
-        if (!isset($rowsOut[$hotelId]) || $price < avail_price($rowsOut[$hotelId])) {
+        // An unpriced offer never displaces a priced one as a hotel's
+        // "cheapest"; it only stands in when nothing else is available.
+        $cheaper = !isset($rowsOut[$hotelId])
+            || avail_sort_key($offer) < avail_sort_key($rowsOut[$hotelId]);
+        if ($cheaper) {
             $keptOffers = ($rowsOut[$hotelId]['_offer_count'] ?? 0) + 1;
             $rowsOut[$hotelId] = $offer;
             $rowsOut[$hotelId]['_offer_count'] = $keptOffers;
@@ -413,7 +532,7 @@ if ($perOffer) {
         }
     }
     $rowsOut = array_values($rowsOut);
-    usort($rowsOut, static fn (array $a, array $b): int => avail_price($a) <=> avail_price($b));
+    usort($rowsOut, static fn (array $a, array $b): int => avail_sort_key($a) <=> avail_sort_key($b));
 }
 
 $shown = $limit > 0 ? array_slice($rowsOut, 0, $limit) : $rowsOut;
@@ -445,7 +564,7 @@ foreach ($shown as $i => $offer) {
     );
     printf(
         "     price   : %s %s   (marketing %s · discount %s · commission %s)\n",
-        number_format(avail_price($offer), 2),
+        avail_num(avail_price($offer)),
         (string) ($pricing['currency'] ?? $currency),
         avail_num($pricing['marketing_price'] ?? null),
         avail_num($pricing['discount'] ?? null),
@@ -503,7 +622,19 @@ if ($rawResponses > 0) {
         echo '[' . ($i + 1) . '/' . count($verbatim) . "] {$captured['label']}\n";
         echo "URL   : {$captured['url']}\n";
         echo "HTTP  : {$captured['code']}\n";
-        echo "Bytes : " . number_format($bytes) . "\n";
+        echo 'Bytes : ' . number_format($bytes) . "\n";
+        if (($captured['error'] ?? '') !== '') {
+            echo "cURL  : {$captured['error']}\n";
+        }
+        // Response headers make the identity claim checkable rather than
+        // asserted: Content-Length against the byte count above, and no
+        // Content-Encoding, prove nothing was decoded on the way in. They
+        // also carry X-Request-ID, which the API docs say to quote when
+        // reporting a fault. No request headers are printed, so the Bearer
+        // token never appears.
+        if (($captured['headers'] ?? '') !== '') {
+            echo "--- response headers ---\n" . $captured['headers'] . "\n";
+        }
         echo str_repeat('-', 72) . "\n";
 
         if ($rawMax > 0 && $bytes > $rawMax) {
@@ -514,16 +645,19 @@ if ($rawResponses > 0) {
         }
         avail_flush();
     }
-
-    if ($verbatim === []) {
-        echo "(nothing captured — the drain ended before any page was fetched)\n";
-    }
 }
 
 echo "\nNext: php hotel_verify.php <offer_id>   (terms + payment schedule live only on verify)\n";
 
-/** The offer's actual sale price, falling back through the pricing shape. */
-function avail_price(array $offer): float
+/**
+ * The offer's actual sale price, falling back through the pricing shape.
+ *
+ * Returns NULL — not 0.0 — when nothing numeric is there. 0.0 sorted an
+ * unpriced offer to position #1 and let it win its hotel's "cheapest offer"
+ * comparison, so a single null selling_price displaced the real cheapest
+ * hotel and, with --limit, pushed genuine results out of the visible window.
+ */
+function avail_price(array $offer): ?float
 {
     $pricing = is_array($offer['pricing'] ?? null) ? $offer['pricing'] : [];
 
@@ -533,7 +667,15 @@ function avail_price(array $offer): float
         }
     }
 
-    return 0.0;
+    return null;
+}
+
+/** Sort key that pushes unpriced offers to the end instead of the front. */
+function avail_sort_key(array $offer): array
+{
+    $price = avail_price($offer);
+
+    return [$price === null ? 1 : 0, $price ?? 0.0];
 }
 
 function avail_num(mixed $value): string

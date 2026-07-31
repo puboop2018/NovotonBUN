@@ -92,8 +92,21 @@ function spx_section(string $title): void
 /**
  * Perform one HTTP request. Returns the raw body + transport metadata.
  *
+ * RESPONSE headers are captured too. They are what makes a "these are the
+ * bytes the API returned" claim provable rather than merely asserted:
+ * Content-Length against strlen($body), and the absence of Content-Encoding,
+ * confirm nothing was transparently decoded. They also carry X-Request-ID,
+ * which the API docs tell you to quote when reporting a problem. Only
+ * RESPONSE headers are captured — the request's Bearer token is never
+ * echoed by any probe.
+ *
+ * NOTE: no CURLOPT_ENCODING is set anywhere here, so curl sends no
+ * Accept-Encoding and the server replies identity. dev/sphinx/hotel_availability.php
+ * depends on that for its --raw_response guarantee; adding it would silently
+ * turn those "verbatim" bytes into decoded ones.
+ *
  * @param array<string, mixed>|null $body JSON body for POST (null for GET)
- * @return array{code:int, body:string, error:string, ms:float}
+ * @return array{code:int, body:string, error:string, ms:float, headers:string}
  */
 function spx_request(array $cfg, string $method, string $url, ?array $body = null): array
 {
@@ -116,6 +129,13 @@ function spx_request(array $cfg, string $method, string $url, ?array $body = nul
     }
     $opts[CURLOPT_HTTPHEADER] = $headers;
 
+    $responseHeaders = '';
+    $opts[CURLOPT_HEADERFUNCTION] = static function ($ch, string $line) use (&$responseHeaders): int {
+        $responseHeaders .= $line;
+
+        return strlen($line);
+    };
+
     $ch = curl_init($url);
     curl_setopt_array($ch, $opts);
     $start = microtime(true);
@@ -126,10 +146,11 @@ function spx_request(array $cfg, string $method, string $url, ?array $body = nul
     curl_close($ch);
 
     return [
-        'code'  => $code,
-        'body'  => is_string($raw) ? $raw : '',
-        'error' => $err,
-        'ms'    => $ms,
+        'code'    => $code,
+        'body'    => is_string($raw) ? $raw : '',
+        'error'   => $err,
+        'ms'      => $ms,
+        'headers' => trim($responseHeaders),
     ];
 }
 
