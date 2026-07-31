@@ -45,17 +45,25 @@ try {
         // supplier client on every verify) — telling the guest to "search
         // again" would send them chasing fresh offers that cannot verify
         // either. Say what is true and skip the pointless cache eviction.
-        $verifyHttpCode = $api->getHttpClient()->getLastHttpCode();
+        $verifyHttp = $api->getHttpClient();
+        $verifyHttpCode = $verifyHttp->getLastHttpCode();
         $verifyOutage = $verifyHttpCode === 0 || $verifyHttpCode >= 500;
 
         // Diagnosability: record WHY the offer was rejected (outage vs shape
         // drift vs genuine expiry) — this rejection previously logged nothing.
+        //
+        // The RAW body matters more than the decoded one: a 5xx decodes to
+        // null, so 'verify_response' recorded the literal string "null" and
+        // discarded the provider's actual error message — which is exactly what
+        // has to be forwarded to them to get the outage fixed.
         fn_log_event('general', 'runtime', [
             'message' => $verifyOutage
                 ? 'Sphinx booking_form: verify OUTAGE (HTTP ' . $verifyHttpCode . ') — offer not rejected on merit'
-                : 'Sphinx booking_form: offer rejected by verify',
+                : 'Sphinx booking_form: offer rejected by verify (HTTP ' . $verifyHttpCode . ')',
             'offer_id' => $offer_id,
-            'verify_response' => substr((string) json_encode($verifyResult, JSON_UNESCAPED_UNICODE), 0, 1000),
+            'transport_error' => $verifyHttp->getLastError(),
+            'raw_response' => substr((string) $verifyHttp->getLastResponseRaw(), 0, 1000),
+            'verify_response' => substr((string) json_encode($verifyResult, JSON_UNESCAPED_UNICODE), 0, 500),
         ]);
         if ($verifyOutage) {
             fn_set_notification('W', __('warning'),

@@ -43,10 +43,27 @@ try {
         $verifyResult,
         ConfigProvider::shouldRequireImmediateAvailability(),
     )) {
-        $verifyHttpCode = $api->getHttpClient()->getLastHttpCode();
-        echo json_encode([
-            'status' => ($verifyHttpCode === 0 || $verifyHttpCode >= 500) ? 'outage' : 'unavailable',
+        $http = $api->getHttpClient();
+        $verifyHttpCode = $http->getLastHttpCode();
+        $outage = $verifyHttpCode === 0 || $verifyHttpCode >= 500;
+
+        // This branch used to be SILENT. The booking button's identical
+        // rejection logged the HTTP code, but the terms modal logged nothing —
+        // so a guest reporting "conditions can't be shown" left no trace at
+        // all, and the two symptoms of one outage looked unrelated. Both now
+        // carry the RAW upstream body: a 5xx decodes to null, so logging the
+        // decoded result alone recorded the word "null" and threw away the
+        // provider's actual error — the one thing worth forwarding to them.
+        fn_log_event('general', 'runtime', [
+            'message' => $outage
+                ? 'Sphinx offer_terms: verify OUTAGE (HTTP ' . $verifyHttpCode . ') — terms unavailable, offer not rejected on merit'
+                : 'Sphinx offer_terms: offer rejected by verify (HTTP ' . $verifyHttpCode . ')',
+            'offer_id' => $offer_id,
+            'transport_error' => $http->getLastError(),
+            'raw_response' => substr((string) $http->getLastResponseRaw(), 0, 1000),
         ]);
+
+        echo json_encode(['status' => $outage ? 'outage' : 'unavailable']);
         exit;
     }
 
