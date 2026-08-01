@@ -56,6 +56,19 @@ php hotel_book.php --offer_id=<offer_id> \
 #   add --send to actually book.
 ```
 
+## Postman
+
+`postman_collection.json` — import it, paste your bearer token into the
+`token` collection variable, then send requests 1 → 2 → 3 in order. Each one
+saves what the next needs (cursor, then `offer_id`) automatically, because
+offer ids expire within minutes and a verify call cannot be tested on its own.
+
+The file deliberately ships with an EMPTY token so it carries no credentials
+and can be attached to a support ticket as-is.
+
+Request 2 may return an empty page — that is normal, Sphinx streams suppliers
+in parallel. Just send it again; the cursor advances itself.
+
 ## Running the probes from a browser
 
 `dev/` is served in the docker sandbox, so every probe takes the same

@@ -1,0 +1,163 @@
+{
+  "info": {
+    "name": "Sphinx API — search → results → verify",
+    "description": "Reproduces the hotel booking chain end to end.\n\nRun the three requests IN ORDER. Each one saves what the next needs (cursor, then offer_id) into collection variables automatically, so you never copy/paste ids by hand.\n\nBEFORE YOU START: open the Variables tab and paste your bearer token into `token`. Nothing is stored in this file.\n\nWHY IT EXISTS: offer ids expire within minutes, so a verify call cannot be tested on its own — it has to follow a live search. This collection makes that a three-click sequence.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://api.sphinx2.christiantour.dev.ploi.imementohub.com",
+      "description": "Sphinx API host"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "description": "PASTE YOUR BEARER TOKEN HERE. Left empty on purpose so this file carries no credentials."
+    },
+    { "key": "destination_id", "value": "168566", "description": "Antalya City" },
+    { "key": "check_in", "value": "2026-09-07" },
+    { "key": "check_out", "value": "2026-09-13" },
+    { "key": "hotel_name_filter", "value": "Porto Bello", "description": "Which hotel to pick an offer from" },
+    { "key": "cursor", "value": "", "description": "Filled in by request 1" },
+    { "key": "offer_id", "value": "", "description": "Filled in by request 2" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+  },
+  "item": [
+    {
+      "name": "0. Auth check — GET /me",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Accept", "value": "application/json" }],
+        "url": { "raw": "{{base_url}}/api/v1/me", "host": ["{{base_url}}"], "path": ["api", "v1", "me"] },
+        "description": "Optional. Confirms the token works before anything else. Expect HTTP 200."
+      }
+    },
+    {
+      "name": "1. Search — POST /hotels/search",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "// Saves the cursor so request 2 can just be clicked.",
+              "pm.test('search returns 200', function () { pm.response.to.have.status(200); });",
+              "var body = pm.response.json();",
+              "if (body && body.cursor) {",
+              "    pm.collectionVariables.set('cursor', body.cursor);",
+              "    console.log('cursor saved — now send request 2');",
+              "} else {",
+              "    console.log('NO CURSOR in the response — cannot continue');",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Accept", "value": "application/json" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"destination_id\": {{destination_id}},\n    \"check_in\": \"{{check_in}}\",\n    \"check_out\": \"{{check_out}}\",\n    \"currency\": \"EUR\",\n    \"occupancy\": [\n        {\n            \"adults\": 2,\n            \"children_ages\": []\n        }\n    ]\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/hotels/search",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "hotels", "search"]
+        },
+        "description": "Starts an async search. Returns only a cursor — no offers yet."
+      }
+    },
+    {
+      "name": "2. Results — GET /hotels/results",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "// Picks an offer for the hotel named in `hotel_name_filter` and saves its id.",
+              "// IMPORTANT: an EMPTY page does not mean 'no results'. Sphinx streams",
+              "// suppliers in parallel, so early pages are often empty while slower",
+              "// suppliers are still answering. Just SEND THIS REQUEST AGAIN — the",
+              "// cursor updates itself each time — until offers appear.",
+              "pm.test('results returns 200', function () { pm.response.to.have.status(200); });",
+              "var body = pm.response.json();",
+              "var rows = (body && body.data) || [];",
+              "if (body && typeof body.cursor === 'string' && body.cursor) {",
+              "    pm.collectionVariables.set('cursor', body.cursor);",
+              "}",
+              "var want = (pm.collectionVariables.get('hotel_name_filter') || '').toLowerCase();",
+              "var hit = null;",
+              "for (var i = 0; i < rows.length; i++) {",
+              "    var name = (rows[i].hotel_name || '').toLowerCase();",
+              "    if (!want || name.indexOf(want) !== -1) { hit = rows[i]; break; }",
+              "}",
+              "console.log('offers on this page: ' + rows.length);",
+              "if (hit) {",
+              "    pm.collectionVariables.set('offer_id', hit.offer_id);",
+              "    console.log('MATCH: ' + hit.hotel_name);",
+              "    console.log('offer_id     : ' + hit.offer_id);",
+              "    console.log('must_verify  : ' + hit.must_verify + '   <-- false means verify is NOT required');",
+              "    console.log('confirmation : ' + hit.confirmation);",
+              "    console.log('price        : ' + (hit.pricing && hit.pricing.selling_price));",
+              "    console.log('Now send request 3.');",
+              "} else if (body && body.cursor === null) {",
+              "    console.log('Search finished and no match for \"' + want + '\". Clear hotel_name_filter to take any offer.');",
+              "} else {",
+              "    console.log('No match on this page — SEND THIS REQUEST AGAIN (the cursor has advanced).');",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Accept", "value": "application/json" }],
+        "url": {
+          "raw": "{{base_url}}/api/v1/hotels/results?cursor={{cursor}}",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "hotels", "results"],
+          "query": [{ "key": "cursor", "value": "{{cursor}}" }]
+        },
+        "description": "Fetches a page of offers. Re-send until you see offers (empty pages are normal — the search is still streaming). Keep going until `cursor` is null to see everything."
+      }
+    },
+    {
+      "name": "3. Verify — GET /hotels/verify   <-- THIS IS THE FAILING CALL",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "console.log('HTTP ' + pm.response.code + '  (' + pm.response.responseTime + ' ms)');",
+              "console.log('offer_id: ' + pm.collectionVariables.get('offer_id'));",
+              "if (pm.response.code >= 500) {",
+              "    console.log('SERVER ERROR — this is the response to send to the Sphinx team.');",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Accept", "value": "application/json" }],
+        "url": {
+          "raw": "{{base_url}}/api/v1/hotels/verify?offer_id={{offer_id}}",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "hotels", "verify"],
+          "query": [{ "key": "offer_id", "value": "{{offer_id}}" }]
+        },
+        "description": "Re-confirms the offer picked in request 2.\n\nEXPECTED: HTTP 200 with the offer, its payment_terms and cancellation_fees now loaded.\n\nACTUAL (as of the last check): HTTP 500 with an 'Undefined array key 0' error from inside Sphinx's own EtripV2Client. Copy the whole response body from the Body tab — that is what the Sphinx team needs."
+      }
+    }
+  ]
+}
