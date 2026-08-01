@@ -268,6 +268,12 @@ try {
         if ($cached !== null) {
             $cachedMap = TypeCoerce::toStringMap($cached);
             $cachedResults = TypeCoerce::toRowList($cachedMap['results'] ?? []);
+            // Heal the snapshots for a result set that was cached without them
+            // — by a deploy that predates them, or by any path that skips the
+            // write. Without this, a cache entry keeps serving cards whose
+            // Book-now button falls back to the broken verify for the rest of
+            // its TTL. Skipped entirely when they are already present.
+            \Tygh\Addons\SphinxHolidays\Services\OfferSnapshotStore::rememberIfMissing($cachedResults, $cacheTtl);
             $view->assign('sphinx_search_results', $cachedResults);
             $view->assign('sphinx_search_id', TypeCoerce::toString($cachedMap['search_id'] ?? ''));
             $view->assign('sphinx_search_status', 'completed');

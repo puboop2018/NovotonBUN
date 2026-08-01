@@ -41,7 +41,7 @@ final class OfferSnapshotStore
      * Key version — bump when the snapshot shape changes so entries written by
      * an older deploy are ignored rather than misread.
      */
-    private const string KEY_PREFIX = 'offer:v1:';
+    private const string KEY_PREFIX = 'offer:v2:';
 
     public static function key(string $offerId): string
     {
@@ -81,6 +81,34 @@ final class OfferSnapshotStore
         }
 
         return Container::getCacheService()->setMany($entries, $ttl);
+    }
+
+    /**
+     * Write snapshots only when they are not already there.
+     *
+     * For the CACHE-HIT path. A cached result set is served for up to its full
+     * TTL (900s by default), and if it was written before snapshots existed —
+     * or by any path that does not write them — every Rezerva acum in that
+     * window falls back to the verify call this whole mechanism exists to
+     * avoid. Re-writing unconditionally would mean ~1,500 rows on every hit of
+     * a destination-wide search, so one cheap read of the first offer decides
+     * for the set: they are written together, so they are missing together.
+     *
+     * @param list<array<string, mixed>> $offers
+     * @return int snapshots written (0 when already present)
+     */
+    public static function rememberIfMissing(array $offers, int $ttl): int
+    {
+        if ($offers === [] || $ttl <= 0) {
+            return 0;
+        }
+
+        $firstId = TypeCoerce::toString($offers[0]['offer_id'] ?? '');
+        if ($firstId !== '' && self::get($firstId) !== null) {
+            return 0;
+        }
+
+        return self::remember($offers, $ttl);
     }
 
     /**
@@ -129,7 +157,44 @@ final class OfferSnapshotStore
             return false;
         }
 
-        return TypeCoerce::toFloat($snapshot['price'] ?? 0) > 0.0;
+        // base_price is the PRE-commission figure. Without it the skip cannot
+        // hand booking_form a payload it will price correctly (see
+        // toVerifyShape), so an old-shape snapshot must verify instead.
+        return TypeCoerce::toFloat($snapshot['price'] ?? 0) > 0.0
+            && TypeCoerce::toFloat($snapshot['base_price'] ?? 0) > 0.0;
+    }
+
+    /**
+     * Re-shape a snapshot into what booking_form expects from verify.
+     *
+     * CRITICAL: `price` here must be the PRE-commission figure. The search
+     * controllers commission the rows before caching (`original_price` keeps
+     * the raw one), while booking_form takes whatever OfferAvailability
+     * ::extractPrice() returns and applies commission to it. Handing over the
+     * already-commissioned number would charge commission twice and quietly
+     * inflate the total — the customer would see one price on the card and a
+     * higher one on the booking form.
+     *
+     * @param array<string, mixed> $snapshot
+     * @return array<string, mixed>
+     */
+    public static function toVerifyShape(array $snapshot): array
+    {
+        return [
+            'offer_id' => $snapshot['offer_id'] ?? '',
+            'hotel_id' => $snapshot['hotel_id'] ?? '',
+            'hotel_name' => $snapshot['hotel_name'] ?? '',
+            'room_name' => $snapshot['room_name'] ?? '',
+            'board_name' => $snapshot['board_name'] ?? '',
+            'price' => TypeCoerce::toFloat($snapshot['base_price'] ?? 0),
+            'currency' => $snapshot['currency'] ?? '',
+            'check_in' => $snapshot['check_in'] ?? '',
+            'check_out' => $snapshot['check_out'] ?? '',
+            'confirmation' => $snapshot['confirmation'] ?? '',
+            'must_verify' => false,
+            'cancellation_fees' => $snapshot['cancellation_fees'] ?? [],
+            'payment_terms' => $snapshot['payment_terms'] ?? [],
+        ];
     }
 
     /**
@@ -147,8 +212,14 @@ final class OfferSnapshotStore
             'hotel_name' => TypeCoerce::toString($offer['hotel_name'] ?? ''),
             'room_name' => TypeCoerce::toString($offer['room_name'] ?? ''),
             'board_name' => TypeCoerce::toString($offer['board_name'] ?? ''),
+            // `price` is what the CARD shows (commission already applied by
+            // the search controller). `base_price` is the provider's own
+            // figure, kept separately because booking_form re-applies
+            // commission; conflating them double-charges. Absent when the
+            // search row never carried original_price, and the gate above
+            // then refuses to skip rather than guessing.
             'price' => TypeCoerce::toFloat($offer['price'] ?? 0),
-            'original_price' => TypeCoerce::toFloat($offer['original_price'] ?? $offer['price'] ?? 0),
+            'base_price' => TypeCoerce::toFloat($offer['original_price'] ?? 0),
             'currency' => TypeCoerce::toString($offer['currency'] ?? ''),
             'check_in' => TypeCoerce::toString($offer['check_in'] ?? ''),
             'check_out' => TypeCoerce::toString($offer['check_out'] ?? ''),

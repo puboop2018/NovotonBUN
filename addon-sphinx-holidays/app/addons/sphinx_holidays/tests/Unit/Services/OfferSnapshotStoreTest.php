@@ -29,7 +29,8 @@ final class OfferSnapshotStoreTest extends TestCase
         return $overrides + [
             'must_verify' => false,
             'confirmation' => 'immediate',
-            'price' => 1452.0,
+            'price' => 1452.0,      // what the card shows (commissioned)
+            'base_price' => 1355.0, // the provider's own figure
         ];
     }
 
@@ -112,7 +113,46 @@ final class OfferSnapshotStoreTest extends TestCase
     public function testKeyIsNamespacedAndVersioned(): void
     {
         // Versioned so a snapshot written by an older deploy, with a different
-        // shape, is never read back as if it were current.
-        self::assertSame('offer:v1:abc-123', OfferSnapshotStore::key('abc-123'));
+        // shape, is never read back as if it were current. v2 added base_price.
+        self::assertSame('offer:v2:abc-123', OfferSnapshotStore::key('abc-123'));
+    }
+
+    /**
+     * The commission trap.
+     *
+     * The search controllers commission every row BEFORE caching it
+     * (`$result['original_price'] = $result['price']; $result['price'] =
+     * applyCommission(...)`), while booking_form.php applies commission to
+     * whatever OfferAvailability::extractPrice() hands it. So the payload the
+     * skip path substitutes for a verify response must carry the PRE-commission
+     * figure — otherwise commission is charged twice and the booking form shows
+     * a higher total than the card the customer clicked.
+     */
+    public function testVerifyShapeCarriesThePreCommissionPrice(): void
+    {
+        $shape = OfferSnapshotStore::toVerifyShape(self::offer([
+            'offer_id' => 'abc',
+            'room_name' => 'STANDARD SIDE SEA VIEW',
+        ]));
+
+        self::assertSame(1355.0, $shape['price'], 'must be base_price, not the commissioned card price');
+        self::assertNotSame(1452.0, $shape['price']);
+        // Presented as an already-verified offer so downstream gates pass.
+        self::assertFalse($shape['must_verify']);
+        self::assertSame('STANDARD SIDE SEA VIEW', $shape['room_name']);
+    }
+
+    /**
+     * A snapshot with no base_price cannot be priced correctly, so it must
+     * verify rather than fall back to the commissioned figure. This also
+     * covers v1-shaped rows left over from an earlier deploy.
+     */
+    public function testMissingBasePriceRefusesToSkip(): void
+    {
+        $noBase = self::offer();
+        unset($noBase['base_price']);
+        self::assertFalse(OfferSnapshotStore::isBookableWithoutVerify($noBase));
+
+        self::assertFalse(OfferSnapshotStore::isBookableWithoutVerify(self::offer(['base_price' => 0])));
     }
 }

@@ -55,10 +55,11 @@ try {
 
     if ($skipVerify) {
         // Shaped like an unwrapped verify payload so everything downstream is
-        // unchanged. The book endpoint re-verifies server-side anyway and only
-        // proceeds when pricing is unchanged, so this cannot commit a stale
-        // price to an order.
-        $verifyResult = $snapshot;
+        // unchanged — including `price` being the PRE-commission figure, which
+        // line 140 then commissions exactly once. The book endpoint
+        // re-verifies server-side anyway and only proceeds when pricing is
+        // unchanged, so this cannot commit a stale price to an order.
+        $verifyResult = \Tygh\Addons\SphinxHolidays\Services\OfferSnapshotStore::toVerifyShape($snapshot ?? []);
         fn_log_event('general', 'runtime', [
             'message' => 'Sphinx booking_form: verify SKIPPED — offer declares must_verify=false',
             'offer_id' => $offer_id,
