@@ -37,6 +37,52 @@ final class EurositeApiClientTest extends TestCase
         self::assertStringContainsString('RequestType="getCountryRequest"', $t->lastRequest);
     }
 
+    public function testGetOwnCitiesParsesTheCrossCountryCatalog(): void
+    {
+        // Canned rows mirror the live catalog (verified 2026-08-04): one list
+        // across all countries, CountryCode per row.
+        $t = new FakeTransport(self::wrap('getOwnCityResponse',
+            '<City><CountryCode>BG</CountryCode><CityCode>BGALB</CityCode><CityName>Albena</CityName></City>'
+            . '<City><CountryCode>RO</CountryCode><CityCode>ROMM</CityCode><CityName>Mamaia</CityName></City>'));
+
+        $cities = $this->client($t)->getOwnCities();
+
+        self::assertSame([
+            ['code' => 'BGALB', 'name' => 'Albena', 'country_code' => 'BG'],
+            ['code' => 'ROMM', 'name' => 'Mamaia', 'country_code' => 'RO'],
+        ], $cities);
+        self::assertStringContainsString('RequestType="getOwnCityRequest"', $t->lastRequest);
+    }
+
+    public function testGetTagOffersParsesTagsAndToleratesAnEmptyCatalog(): void
+    {
+        $t = new FakeTransport(self::wrap('getTagOffersResponse',
+            '<Tag><TagCode>2</TagCode><TagName>1 Mai</TagName></Tag>'
+            . '<Tag><TagCode>5</TagCode><TagName>Craciun</TagName></Tag>'));
+
+        $tags = $this->client($t)->getTagOffers();
+
+        self::assertSame([['code' => '2', 'name' => '1 Mai'], ['code' => '5', 'name' => 'Craciun']], $tags);
+        self::assertStringContainsString('RequestType="getTagOffersRequest"', $t->lastRequest);
+
+        // Live 2026-08-04: this account's tag catalog is empty —
+        // <getTagOffersResponse/> is a valid, non-error response.
+        $empty = new FakeTransport(self::wrap('getTagOffersResponse', ''));
+        self::assertSame([], $this->client($empty)->getTagOffers());
+    }
+
+    public function testStaticParsersTolerateExtraLiveOnlyFields(): void
+    {
+        // The live service returns more fields than the spec examples show
+        // (CountryId, DirectivaEuropeana, CityId — seen 2026-08-04); mapping
+        // must pass them by without breaking.
+        $t = new FakeTransport(self::wrap('getCountryResponse',
+            '<Country><CountryCode>AL</CountryCode><CountryId>4</CountryId>'
+            . '<CountryName>Albania</CountryName><DirectivaEuropeana/></Country>'));
+
+        self::assertSame([['code' => 'AL', 'name' => 'Albania']], $this->client($t)->getCountries());
+    }
+
     public function testSearchHotelsBuildsThePayloadAndMapsAnOffer(): void
     {
         $t = new FakeTransport(self::wrap('getHotelPriceResponse',

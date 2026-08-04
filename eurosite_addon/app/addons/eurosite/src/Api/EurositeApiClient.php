@@ -82,6 +82,30 @@ final class EurositeApiClient
     }
 
     /**
+     * getOwnCityRequest — cities where the operator has own offers. One list
+     * across all countries, so the country code rides along per row.
+     *
+     * @return list<array{code: string, name: string, country_code: string}>
+     */
+    public function getOwnCities(): array
+    {
+        $details = $this->call('getOwnCityRequest', '<getOwnCityRequest/>');
+        if ($details === null) {
+            return [];
+        }
+        $out = [];
+        foreach ($details->City as $c) {
+            $out[] = [
+                'code'         => trim((string) $c->CityCode),
+                'name'         => trim((string) $c->CityName),
+                'country_code' => trim((string) $c->CountryCode),
+            ];
+        }
+
+        return $out;
+    }
+
+    /**
      * getOwnHotelsRequest — the operator's own hotels in a city (with rooms).
      *
      * @return list<array{code: string, name: string, city_code: string, rooms: array<string, string>}>
@@ -126,6 +150,29 @@ final class EurositeApiClient
             $out[] = [
                 'code' => trim((string) ($r['Code'] ?? $r['code'] ?? '')),
                 'name' => trim((string) $r),
+            ];
+        }
+
+        return $out;
+    }
+
+    /**
+     * getTagOffersRequest — the offer-tag catalog (e.g. Craciun, 1 Mai). The
+     * catalog may legitimately be empty for an account.
+     *
+     * @return list<array{code: string, name: string}>
+     */
+    public function getTagOffers(): array
+    {
+        $details = $this->call('getTagOffersRequest', '<getTagOffersRequest/>');
+        if ($details === null) {
+            return [];
+        }
+        $out = [];
+        foreach ($details->Tag as $t) {
+            $out[] = [
+                'code' => trim((string) $t->TagCode),
+                'name' => trim((string) $t->TagName),
             ];
         }
 

@@ -1,0 +1,85 @@
+msgid ""
+msgstr "Project-Id-Version: cs-cart-latest"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language-Team: English\n"
+"Language: en_US"
+
+msgctxt "Addons::name::eurosite"
+msgid "Eurosite Holidays"
+msgstr "Eurosite Holidays"
+
+msgctxt "Addons::description::eurosite"
+msgid "Integration with the Eurosite XML web service (touringit.ro platform) for hotel search and bookings. Static data, availability + price search, product details and add/get/cancel booking."
+msgstr "Integration with the Eurosite XML web service (touringit.ro platform) for hotel search and bookings. Static data, availability + price search, product details and add/get/cancel booking."
+
+msgctxt "SettingsSections::eurosite::general"
+msgid "General"
+msgstr "General"
+
+msgctxt "SettingsOptions::eurosite::api_header"
+msgid "Eurosite API connection"
+msgstr "Eurosite API connection"
+
+msgctxt "SettingsOptions::eurosite::api_url"
+msgid "API endpoint URL"
+msgstr "API endpoint URL"
+
+msgctxt "SettingsTooltips::eurosite::api_url"
+msgid "The single XML web-service URL every RequestType is POSTed to (provided by the Touroperator)."
+msgstr "The single XML web-service URL every RequestType is POSTed to (provided by the Touroperator)."
+
+msgctxt "SettingsOptions::eurosite::api_user"
+msgid "API user"
+msgstr "API user"
+
+msgctxt "SettingsOptions::eurosite::api_password"
+msgid "API password"
+msgstr "API password"
+
+msgctxt "SettingsTooltips::eurosite::api_password"
+msgid "Credentials are embedded in every request's AuditInfo. Without a valid account the service answers every request with error -1000 (\"You are not authorised to access this server!\")."
+msgstr "Credentials are embedded in every request's AuditInfo. Without a valid account the service answers every request with error -1000 (\"You are not authorised to access this server!\")."
+
+msgctxt "SettingsOptions::eurosite::tourop_code"
+msgid "Tour operator code"
+msgstr "Tour operator code"
+
+msgctxt "SettingsTooltips::eurosite::tourop_code"
+msgid "The operator code embedded in search/booking payloads. Ask Eurosite which code your account uses — own-hotels data on the Laguna platform reports \"LA\"."
+msgstr "The operator code embedded in search/booking payloads. Ask Eurosite which code your account uses — own-hotels data on the Laguna platform reports \"LA\"."
+
+msgctxt "SettingsOptions::eurosite::default_currency"
+msgid "Default currency"
+msgstr "Default currency"
+
+msgctxt "SettingsOptions::eurosite::default_language"
+msgid "Default API language"
+msgstr "Default API language"
+
+msgctxt "SettingsOptions::eurosite::allow_insecure_api"
+msgid "Allow insecure (HTTP) API connection"
+msgstr "Allow insecure (HTTP) API connection"
+
+msgctxt "SettingsTooltips::eurosite::allow_insecure_api"
+msgid "Permit sending API credentials over unencrypted HTTP (dev only). Disable once the API URL uses https:// — connections then hard-fail rather than leak credentials in plaintext."
+msgstr "Permit sending API credentials over unencrypted HTTP (dev only). Disable once the API URL uses https:// — connections then hard-fail rather than leak credentials in plaintext."
+
+msgctxt "SettingsOptions::eurosite::resilience_header"
+msgid "Resilience"
+msgstr "Resilience"
+
+msgctxt "SettingsOptions::eurosite::api_max_retries"
+msgid "Max retries"
+msgstr "Max retries"
+
+msgctxt "SettingsOptions::eurosite::api_timeout"
+msgid "Request timeout (s)"
+msgstr "Request timeout (s)"
+
+msgctxt "SettingsOptions::eurosite::circuit_breaker_threshold"
+msgid "Circuit breaker threshold"
+msgstr "Circuit breaker threshold"
+
+msgctxt "SettingsOptions::eurosite::circuit_breaker_timeout"
+msgid "Circuit breaker cooldown (s)"
+msgstr "Circuit breaker cooldown (s)"

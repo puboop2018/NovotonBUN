@@ -9,10 +9,11 @@ use Tygh\Addons\Eurosite\EurositeXmlParser;
 
 /**
  * Pins the parser against a REAL response captured from the live web
- * service (laguna.touringit.ro, 2026-07-25): the server's IP-allowlist
- * refusal. Every non-whitelisted caller gets this exact shape regardless
- * of credentials, so it is the first response any new deployment sees —
- * the parser must surface it as a readable error, not a mystery payload.
+ * service (laguna.touringit.ro, 2026-07-25): the server's auth refusal.
+ * Every caller with invalid/placeholder credentials gets this exact shape
+ * (verified 2026-08-04: valid credentials answer fine from any host), so
+ * it is the first response any unconfigured deployment sees — the parser
+ * must surface it as a readable error, not a mystery payload.
  */
 final class EurositeXmlParserTest extends TestCase
 {

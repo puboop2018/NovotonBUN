@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 /**
- * Eurosite · getCountryRequest — country list (static data; per the operator
- * this answers without a real account from a whitelisted IP).
+ * Eurosite · getCountryRequest — country list (static data; requires XML
+ * credentials like every service — verified live 2026-08-04).
  *
  * Usage (CLI):      php countries.php [--limit=20]
  * Usage (browser):  countries.php?limit=20

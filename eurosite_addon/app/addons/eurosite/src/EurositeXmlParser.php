@@ -69,8 +69,8 @@ final class EurositeXmlParser
         }
 
         // Structured <Error><ErrorId/><ErrorText/></Error> — the live
-        // server's shape (e.g. the -1000 IP-allowlist refusal every
-        // non-whitelisted caller gets). The bare-tag scan below misses it
+        // server's shape (e.g. the -1000 auth refusal every caller with
+        // invalid credentials gets). The bare-tag scan below misses it
         // because the <Error> element's own text is only whitespace.
         $errorText = $xml->xpath('//ErrorText');
         if (is_array($errorText) && $errorText !== []) {

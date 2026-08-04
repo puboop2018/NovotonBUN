@@ -1,0 +1,85 @@
+msgid ""
+msgstr "Project-Id-Version: cs-cart-latest"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language-Team: Romanian\n"
+"Language: ro_RO"
+
+msgctxt "Addons::name::eurosite"
+msgid "Eurosite Holidays"
+msgstr "Eurosite Holidays"
+
+msgctxt "Addons::description::eurosite"
+msgid "Integration with the Eurosite XML web service (touringit.ro platform) for hotel search and bookings. Static data, availability + price search, product details and add/get/cancel booking."
+msgstr "Integrare cu serviciul web XML Eurosite (platforma touringit.ro) pentru căutare hoteluri și rezervări. Date statice, căutare disponibilitate + preț, detalii produs și adăugare/interogare/anulare rezervare."
+
+msgctxt "SettingsSections::eurosite::general"
+msgid "General"
+msgstr "General"
+
+msgctxt "SettingsOptions::eurosite::api_header"
+msgid "Eurosite API connection"
+msgstr "Conexiune API Eurosite"
+
+msgctxt "SettingsOptions::eurosite::api_url"
+msgid "API endpoint URL"
+msgstr "Adresă endpoint API"
+
+msgctxt "SettingsTooltips::eurosite::api_url"
+msgid "The single XML web-service URL every RequestType is POSTed to (provided by the Touroperator)."
+msgstr "Adresa unică a serviciului web XML către care se trimit toate tipurile de cereri (furnizată de Touroperator)."
+
+msgctxt "SettingsOptions::eurosite::api_user"
+msgid "API user"
+msgstr "Utilizator API"
+
+msgctxt "SettingsOptions::eurosite::api_password"
+msgid "API password"
+msgstr "Parolă API"
+
+msgctxt "SettingsTooltips::eurosite::api_password"
+msgid "Credentials are embedded in every request's AuditInfo. Without a valid account the service answers every request with error -1000 (\"You are not authorised to access this server!\")."
+msgstr "Credențialele sunt incluse în AuditInfo la fiecare cerere. Fără un cont valid serviciul răspunde la orice cerere cu eroarea -1000 („You are not authorised to access this server!”)."
+
+msgctxt "SettingsOptions::eurosite::tourop_code"
+msgid "Tour operator code"
+msgstr "Cod touroperator"
+
+msgctxt "SettingsTooltips::eurosite::tourop_code"
+msgid "The operator code embedded in search/booking payloads. Ask Eurosite which code your account uses — own-hotels data on the Laguna platform reports \"LA\"."
+msgstr "Codul de operator inclus în cererile de căutare/rezervare. Întrebați Eurosite ce cod folosește contul dvs. — datele de hoteluri proprii de pe platforma Laguna raportează „LA”."
+
+msgctxt "SettingsOptions::eurosite::default_currency"
+msgid "Default currency"
+msgstr "Monedă implicită"
+
+msgctxt "SettingsOptions::eurosite::default_language"
+msgid "Default API language"
+msgstr "Limbă implicită API"
+
+msgctxt "SettingsOptions::eurosite::allow_insecure_api"
+msgid "Allow insecure (HTTP) API connection"
+msgstr "Permite conexiune API nesecurizată (HTTP)"
+
+msgctxt "SettingsTooltips::eurosite::allow_insecure_api"
+msgid "Permit sending API credentials over unencrypted HTTP (dev only). Disable once the API URL uses https:// — connections then hard-fail rather than leak credentials in plaintext."
+msgstr "Permite trimiterea credențialelor API prin HTTP necriptat (doar pentru dezvoltare). Dezactivați când adresa API folosește https:// — conexiunile vor eșua în loc să expună credențialele în clar."
+
+msgctxt "SettingsOptions::eurosite::resilience_header"
+msgid "Resilience"
+msgstr "Reziliență"
+
+msgctxt "SettingsOptions::eurosite::api_max_retries"
+msgid "Max retries"
+msgstr "Reîncercări maxime"
+
+msgctxt "SettingsOptions::eurosite::api_timeout"
+msgid "Request timeout (s)"
+msgstr "Timeout cerere (s)"
+
+msgctxt "SettingsOptions::eurosite::circuit_breaker_threshold"
+msgid "Circuit breaker threshold"
+msgstr "Prag circuit breaker"
+
+msgctxt "SettingsOptions::eurosite::circuit_breaker_timeout"
+msgid "Circuit breaker cooldown (s)"
+msgstr "Cooldown circuit breaker (s)"
