@@ -5,8 +5,8 @@ msgstr "Project-Id-Version: cs-cart-latest"
 "Language: en_US"
 
 msgctxt "Addons::name::eurosite"
-msgid "Eurosite Holidays"
-msgstr "Eurosite Holidays"
+msgid "Eurosite Touring"
+msgstr "Eurosite Touring"
 
 msgctxt "Addons::description::eurosite"
 msgid "Integration with the Eurosite XML web service (touringit.ro platform) for hotel search and bookings. Static data, availability + price search, product details and add/get/cancel booking."

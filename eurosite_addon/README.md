@@ -1,4 +1,4 @@
-# `eurosite_addon/` — Eurosite Holidays provider addon (MVP)
+# `eurosite_addon/` — Eurosite Touring provider addon (MVP)
 
 A new CS-Cart provider addon (id **`eurosite`**) for the **Eurosite** XML web
 service — a distinct Touroperator platform, a sibling to the existing

@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 /**
- * Eurosite Holidays — addon functions.
+ * Eurosite Touring — addon functions.
  *
  * MVP keeps this thin: the API/booking logic lives in src/ (Api\* + Services\*).
  * This file holds only the CS-Cart procedural boundary the platform calls by

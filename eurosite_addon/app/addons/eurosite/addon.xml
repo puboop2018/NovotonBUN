@@ -10,7 +10,7 @@
     <supplier_link>https://vacantelitoral.ro</supplier_link>
     <default_language>en</default_language>
     <dependencies>travel_core</dependencies>
-    <!-- Eurosite Holidays: hotel & package booking integration with the
+    <!-- Eurosite Touring: hotel & package booking integration with the
          Eurosite XML web service (a Touroperator platform, distinct from
          Novoton and Sphinx). MVP: static data + hotel search + product
          details + add/get/cancel booking. Requires PHP 8.3+ and travel_core.
@@ -167,7 +167,10 @@
         </item>
     </queries>
 
-    <uninstall>
-        <remove_files>app/addons/eurosite</remove_files>
-    </uninstall>
+    <!-- No <uninstall><remove_files>: none of the sibling addons declare one,
+         and in the dev store app/addons/eurosite is a SYMLINK into the repo
+         (docker/fullstore/link-addons.sh) — CS-Cart's recursive removal walks
+         into symlinked directories, so an uninstall would delete the addon's
+         source from the working tree. CS-Cart drops the addon's own files on
+         a real uninstall anyway. -->
 </addon>

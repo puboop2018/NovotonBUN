@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 /**
- * Eurosite Holidays — addon bootstrap.
+ * Eurosite Touring — addon bootstrap.
  *
  * Location: app/addons/eurosite/init.php
  */
