@@ -21,7 +21,7 @@ answers `ErrorId -1000 "You are not authorised to access this server!"`;
 with valid credentials the same requests answer from any host (verified live
 2026-08-04 — the earlier "IP allowlist" reading of -1000, noted 2026-07-25
 when only placeholder credentials existed, was wrong). Static catalogs
-confirmed live: 86 countries, ~21,700 cities, 116 own-offer cities, 22 room
+confirmed live: 86 countries, 358 RO cities (~21,700 across all countries), 116 own-offer cities, 22 room
 types, own hotels with room lists (e.g. Albena, Mamaia); the tag catalog is
 currently empty.
 

@@ -13,7 +13,8 @@ use Tygh\Addons\TravelCore\Services\AbstractConfigProvider;
  * Type-safe getters over the addon settings with sensible defaults. Registry
  * plumbing (cached settings array, getSetting) comes from the shared
  * travel_core base — this is the designated Registry-reader for the addon
- * (allowlisted in phpstan-disallowed-calls.neon).
+ * (to be allowlisted in phpstan-disallowed-calls.neon when the addon joins
+ * the repo's PHPStan paths).
  */
 class ConfigProvider extends AbstractConfigProvider
 {

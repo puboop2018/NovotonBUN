@@ -37,6 +37,77 @@ final class EurositeApiClientTest extends TestCase
         self::assertStringContainsString('RequestType="getCountryRequest"', $t->lastRequest);
     }
 
+    public function testGetCitiesSendsTheCountryAttributeAndParsesRows(): void
+    {
+        // Canned rows mirror the live shape (2026-08-04): CityId/CountryId
+        // extras plus Romanian diacritics must pass through cleanly.
+        $t = new FakeTransport(self::wrap('getCityResponse',
+            '<City><CountryCode>RO</CountryCode><CountryId>1</CountryId>'
+            . '<CityCode>ROBH</CityCode><CityId>101</CityId><CityName>Băile Herculane</CityName></City>'));
+
+        $cities = $this->client($t)->getCities('RO');
+
+        self::assertSame([['code' => 'ROBH', 'name' => 'Băile Herculane']], $cities);
+        // CountryCode must ride as an ATTRIBUTE — sent as a child element the
+        // live server ignores the filter and returns every country's cities.
+        self::assertStringContainsString('<getCityRequest CountryCode="RO"/>', $t->lastRequest);
+    }
+
+    public function testGetOwnHotelsParsesRoomsAndToleratesRoomlessHotels(): void
+    {
+        // Live shape (Albena, 2026-08-04): Touropcode rides along ("LA" on the
+        // Laguna platform), room codes use a lowercase `code` attribute, and a
+        // hotel may carry an empty <Rooms/>.
+        $t = new FakeTransport(self::wrap('getOwnHotelsResponse',
+            '<Hotel><Touropcode>LA</Touropcode><HotelCode>BG0005</HotelCode><HotelName>MALIBU ALBENA</HotelName>'
+            . '<CountryCode>BG</CountryCode><CityCode>BGALB</CityCode><CityName>Albena</CityName>'
+            . '<Rooms><Room code="1">Single</Room><Room code="2892">Dubla</Room></Rooms></Hotel>'
+            . '<Hotel><Touropcode>LA</Touropcode><HotelCode>BG0006</HotelCode><HotelName>KALIAKRA BEACH</HotelName>'
+            . '<CountryCode>BG</CountryCode><CityCode>BGALB</CityCode><CityName>Albena</CityName>'
+            . '<Rooms/></Hotel>'));
+
+        $hotels = $this->client($t)->getOwnHotels('BGALB');
+
+        self::assertCount(2, $hotels);
+        self::assertSame('BG0005', $hotels[0]['code']);
+        self::assertSame('LA', $hotels[0]['tourop']);
+        self::assertSame(['1' => 'Single', '2892' => 'Dubla'], $hotels[0]['rooms']);
+        self::assertSame([], $hotels[1]['rooms']);
+        self::assertStringContainsString('RequestType="getOwnHotelsRequest"', $t->lastRequest);
+        self::assertStringContainsString('<CityCode>BGALB</CityCode>', $t->lastRequest);
+    }
+
+    public function testGetRoomTypesReadsTheSpecAttributeCase(): void
+    {
+        // The spec's getRoomResponse uses a capital-C Code attribute (live
+        // matches, 2026-08-04); the mapper hedges Code/code.
+        $t = new FakeTransport(self::wrap('getRoomResponse',
+            '<Room Code="AP">apartament</Room><Room Code="DB">double</Room>'));
+
+        $rooms = $this->client($t)->getRoomTypes();
+
+        self::assertSame([['code' => 'AP', 'name' => 'apartament'], ['code' => 'DB', 'name' => 'double']], $rooms);
+        self::assertStringContainsString('RequestType="getRoomRequest"', $t->lastRequest);
+    }
+
+    public function testStaticCallThrowsOnTheLiveAuthRefusalEnvelope(): void
+    {
+        // The REAL error envelope every caller with invalid credentials gets
+        // (captured live): it must surface as an exception, never as an empty
+        // catalog a sync job would happily persist.
+        $t = new FakeTransport('<?xml version="1.0" encoding="utf-8"?>'
+            . '<Response ResponseType="Error">'
+            . '<AuditInfo><ResponseId>266456772</ResponseId><RequestId>81184</RequestId>'
+            . '<ResponseTime>2026-08-04T17:08:12</ResponseTime></AuditInfo>'
+            . '<ResponseDetails><Errors><Error><ErrorId>-1000</ErrorId>'
+            . '<ErrorText>You are not authorised to access this server!</ErrorText>'
+            . '</Error></Errors></ResponseDetails></Response>');
+
+        $this->expectException(\Tygh\Addons\Eurosite\Exception\EurositeApiException::class);
+        $this->expectExceptionMessage('-1000: You are not authorised to access this server!');
+        $this->client($t)->getCountries();
+    }
+
     public function testGetOwnCitiesParsesTheCrossCountryCatalog(): void
     {
         // Canned rows mirror the live catalog (verified 2026-08-04): one list

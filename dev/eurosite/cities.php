@@ -23,8 +23,8 @@ $cfg     = euro_config();
 $country = strtoupper(euro_param('country', 'RO') ?? 'RO');
 $limit   = (int) (euro_param('limit', '0') ?? '0');
 
-$details = '  <getCityRequest>'
-    . '<CountryCode>' . euro_esc($country) . '</CountryCode>'
-    . '</getCityRequest>';
+// CountryCode is an ATTRIBUTE (spec + addon client) — as a child element the
+// live server ignores the filter and returns the full ~21,700-city catalog.
+$details = '  <getCityRequest CountryCode="' . euro_esc($country) . '" />';
 
 euro_run($cfg, 'getCityRequest', $details, $limit);

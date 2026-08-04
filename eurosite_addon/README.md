@@ -8,7 +8,7 @@ service — a distinct Touroperator platform, a sibling to the existing
 > **Status: MVP / work-in-progress.** The API protocol layer is complete,
 > unit-tested, and **live-verified against the real endpoint (2026-08-04)
 > with account credentials**: every static-data service answers (86
-> countries, ~21,700 cities, 116 own-offer cities, 22 room types, own hotels
+> countries, 358 RO cities (~21,700 across all countries), 116 own-offer cities, 22 room types, own hotels
 > with room lists; the tag catalog is currently empty). The
 > storefront/cart/admin surfaces and CI-gate wiring are the documented next
 > steps (see *Graduation* below). The addon is not yet wired into the repo's
@@ -36,7 +36,7 @@ eurosite_addon/
     │   └── Services/
     │       ├── ConfigProvider.php        settings getters (extends travel_core AbstractConfigProvider)
     │       └── Container.php             composition root (wires the API stack)
-    └── tests/Unit/                       18 tests, 81 assertions (envelope, static data, search, booking, normalizer)
+    └── tests/Unit/                       22 tests, 94 assertions (envelope, static data, search, booking, normalizer)
 ```
 
 ## The Eurosite protocol
@@ -84,6 +84,12 @@ item fees / cancellation penalties, packages, transport (charter), circuits,
 excursions, and pax modification. The envelope + parser already generalize to
 these — they're additional `EurositeApiClient` methods.
 
+**Error contract:** every read method throws `EurositeApiException` when the
+server answers with its error envelope (e.g. the `-1000` auth refusal) or an
+unparseable body — an API failure is never returned as an empty catalog, so a
+future sync job can't mistake "credentials rejected" for "no data".
+`addBooking()`/`cancelBooking()` keep returning `ok`/`error` result arrays.
+
 ## Configuration
 
 Addon settings (Admin → Add-ons → Eurosite), read via `ConfigProvider`:
@@ -118,7 +124,7 @@ search/booking payloads.
 ```bash
 cd eurosite_addon/app/addons/eurosite
 composer install                 # once, for phpunit
-vendor/bin/phpunit               # 18 tests, 81 assertions
+vendor/bin/phpunit               # 22 tests, 94 assertions
 ```
 
 The tests inject a fake transport (`EurositeTransportInterface`) that captures
