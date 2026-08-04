@@ -36,13 +36,22 @@
             <min>8.3.0</min>
             <max>8.4.99</max>
         </php_version>
+        <!-- Extension names must be ones CS-Cart's install-time check accepts:
+             "simplexml" fails it (PHP's canonical name is mixed-case
+             "SimpleXML"), blocking install with "The simplexml extension
+             should be installed..." even when it is loaded. Declare ext-xml
+             instead, exactly like the sibling addons — SimpleXML always ships
+             alongside it and CS-Cart core already requires it anyway. -->
         <php_extensions>
             <curl>
                 <supported>Y</supported>
             </curl>
-            <simplexml>
+            <xml>
                 <supported>Y</supported>
-            </simplexml>
+            </xml>
+            <libxml>
+                <supported>Y</supported>
+            </libxml>
         </php_extensions>
     </compatibility>
 
