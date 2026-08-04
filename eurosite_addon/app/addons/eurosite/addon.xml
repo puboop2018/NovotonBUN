@@ -5,7 +5,7 @@
     <priority>113</priority>
     <position>3</position>
     <status>active</status>
-    <has_icon>N</has_icon>
+    <has_icon>Y</has_icon>
     <supplier>VacanteLitoral.ro</supplier>
     <supplier_link>https://vacantelitoral.ro</supplier_link>
     <default_language>en</default_language>
