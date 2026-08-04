@@ -49,6 +49,9 @@
             <xml>
                 <supported>Y</supported>
             </xml>
+            <libxml>
+                <supported>Y</supported>
+            </libxml>
         </php_extensions>
     </compatibility>
 
