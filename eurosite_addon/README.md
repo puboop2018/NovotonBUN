@@ -5,33 +5,38 @@ service — a distinct Touroperator platform, a sibling to the existing
 `novoton_holidays` and `sphinx_holidays` providers. Built from
 `Documentation/Specificatii_API_Eurosite.pdf`.
 
-> **Status: MVP / work-in-progress.** The API protocol layer is complete and
-> unit-tested; the storefront/cart/admin surfaces and CI-gate wiring are the
-> documented next steps (see *Graduation* below). The addon is not yet wired
-> into the repo's PHPStan/cs-fixer/CI paths — it lives in its own top-level
-> folder on purpose so it can mature without destabilizing the green branch.
+> **Status: MVP / work-in-progress.** The API protocol layer is complete,
+> unit-tested, and **live-verified against the real endpoint (2026-08-04)
+> with account credentials**: every static-data service answers (86
+> countries, 358 RO cities (~21,700 across all countries), 116 own-offer cities, 22 room types, own hotels
+> with room lists; the tag catalog is currently empty). The
+> storefront/cart/admin surfaces and CI-gate wiring are the documented next
+> steps (see *Graduation* below). The addon is not yet wired into the repo's
+> PHPStan/cs-fixer/CI paths — it lives in its own top-level folder on purpose
+> so it can mature without destabilizing the green branch.
 
 ```
-eurosite_addon/app/addons/eurosite/
-├── addon.xml            id=eurosite, deps=travel_core, settings + eurosite_bookings table
-├── init.php             PSR-4 autoload + TravelProviderRegistry registration
-├── func.php             thin CS-Cart procedural boundary (hooks are a follow-up)
-├── composer.json        PSR-4 (Tygh\Addons\Eurosite\)
-├── lang_keys.php        settings labels (en/ro)
-├── phpunit.xml
-├── src/
-│   ├── EurositeXmlBuilder.php        builds the <Request>/<AuditInfo> envelope
-│   ├── EurositeHttpClient.php        curl POST + retry/circuit-breaker (travel_core ResiliencePolicy)
-│   ├── EurositeTransportInterface.php  transport seam (fakeable in tests)
-│   ├── EurositeXmlParser.php         cleans + unwraps <ResponseDetails>
-│   ├── Api/
-│   │   ├── EurositeApiClient.php     the endpoint facade (static data → search → booking)
-│   │   └── EurositeNormalizer.php    Eurosite → canonical codes (ProviderNormalizerInterface)
-│   ├── Dto/HotelOffer.php            a normalized search-result offer
-│   └── Services/
-│       ├── ConfigProvider.php        settings getters (extends travel_core AbstractConfigProvider)
-│       └── Container.php             composition root (wires the API stack)
-└── tests/Unit/                       13 tests, 68 assertions (envelope, search, booking, normalizer)
+eurosite_addon/
+├── var/langs/{en,ro}/addons/eurosite.po  addon name/description + settings labels
+└── app/addons/eurosite/
+    ├── addon.xml            id=eurosite, deps=travel_core, settings + eurosite_bookings table
+    ├── init.php             PSR-4 autoload + TravelProviderRegistry registration
+    ├── func.php             thin CS-Cart procedural boundary (hooks are a follow-up)
+    ├── composer.json        PSR-4 (Tygh\Addons\Eurosite\)
+    ├── phpunit.xml
+    ├── src/
+    │   ├── EurositeXmlBuilder.php        builds the <Request>/<AuditInfo> envelope
+    │   ├── EurositeHttpClient.php        curl POST + retry/circuit-breaker (travel_core ResiliencePolicy)
+    │   ├── EurositeTransportInterface.php  transport seam (fakeable in tests)
+    │   ├── EurositeXmlParser.php         cleans + unwraps <ResponseDetails>
+    │   ├── Api/
+    │   │   ├── EurositeApiClient.php     the endpoint facade (static data → search → booking)
+    │   │   └── EurositeNormalizer.php    Eurosite → canonical codes (ProviderNormalizerInterface)
+    │   ├── Dto/HotelOffer.php            a normalized search-result offer
+    │   └── Services/
+    │       ├── ConfigProvider.php        settings getters (extends travel_core AbstractConfigProvider)
+    │       └── Container.php             composition root (wires the API stack)
+    └── tests/Unit/                       22 tests, 94 assertions (envelope, static data, search, booking, normalizer)
 ```
 
 ## The Eurosite protocol
@@ -64,8 +69,10 @@ search-to-booking flow, mapped 1:1 to the spec:
 | --- | --- | --- |
 | `getCountries()` | getCountryRequest | static: countries |
 | `getCities($country)` | getCityRequest | static: cities |
+| `getOwnCities()` | getOwnCityRequest | static: cities with own offers (all countries) |
 | `getOwnHotels($city)` | getOwnHotelsRequest | static: own hotels + rooms |
 | `getRoomTypes()` | getRoomRequest | static: room-type catalog |
+| `getTagOffers()` | getTagOffersRequest | static: offer-tag catalog (may be empty) |
 | `searchHotels($params)` | getHotelPriceRequest | availability + price search → `HotelOffer[]` |
 | `getProductInfo(...)` | getProductInfoRequest | hotel details (description, images, coords) |
 | `addBooking($booking)` | AddBookingRequest | create a booking → api/client references |
@@ -76,6 +83,12 @@ search-to-booking flow, mapped 1:1 to the spec:
 item fees / cancellation penalties, packages, transport (charter), circuits,
 excursions, and pax modification. The envelope + parser already generalize to
 these — they're additional `EurositeApiClient` methods.
+
+**Error contract:** every read method throws `EurositeApiException` when the
+server answers with its error envelope (e.g. the `-1000` auth refusal) or an
+unparseable body — an API failure is never returned as an empty catalog, so a
+future sync job can't mistake "credentials rejected" for "no data".
+`addBooking()`/`cancelBooking()` keep returning `ok`/`error` result arrays.
 
 ## Configuration
 
@@ -92,16 +105,26 @@ Addon settings (Admin → Add-ons → Eurosite), read via `ConfigProvider`:
 
 There are **no default credentials** — the spec ships placeholders
 (`YourUser`/`YourPassword`), so nothing here authenticates until you enter
-the real account keys. The endpoint URL ships as the default above
-(HTTPS, on the touringit.ro platform Eurosite runs on); the spec's sample
-payloads reference the same platform (`EU.touringit.ro` asset links).
+the real account keys. **Credentials are required for every service, static
+data included**: with an invalid account the server answers every request
+with `ErrorId -1000` ("You are not authorised to access this server!"), and
+with a valid account the same requests answer from any host (verified live
+2026-08-04; the earlier "IP allowlist" reading of -1000 was wrong). The
+endpoint URL ships as the default above (HTTPS, on the touringit.ro platform
+Eurosite runs on); the spec's sample payloads reference the same platform
+(`EU.touringit.ro` asset links).
+
+Live own-hotels data on this platform reports `Touropcode` **`LA`** (Laguna),
+not the spec-example `EU` the `tourop_code` setting defaults to — confirm the
+right code for your account with the operator before relying on
+search/booking payloads.
 
 ## Testing
 
 ```bash
 cd eurosite_addon/app/addons/eurosite
 composer install                 # once, for phpunit
-vendor/bin/phpunit               # 13 tests, 68 assertions
+vendor/bin/phpunit               # 22 tests, 94 assertions
 ```
 
 The tests inject a fake transport (`EurositeTransportInterface`) that captures
@@ -111,13 +134,11 @@ network. The code is PHPStan level-10 clean and PSR-12 formatted.
 
 ## Graduation (next steps, in order)
 
-1. **Install & smoke-test** against the real endpoint — the `dev/eurosite/`
-   standalone probes exist for exactly this (countries/cities/rooms/own
-   hotels/search/product info/booking lookup; see `dev/eurosite/README.md`).
-   Caveat verified live: the server IP-allowlists callers — from a
-   non-whitelisted host every request answers `ErrorId -1000` regardless of
-   credentials, so probe from the store server or a whitelisted IP. Per the
-   operator, the static-data services then answer without a real account.
+1. ~~**Install & smoke-test** against the real endpoint~~ — **done 2026-08-04**
+   with account credentials: all six static-data services answer (the
+   `dev/eurosite/` probes cover each one; see `dev/eurosite/README.md`).
+   `ErrorId -1000` means bad credentials, not a blocked IP. Search/booking
+   smoke tests against a real product are the remaining live checks.
 2. **Storefront**: a `TravelProviderRegistry` hotel-product provider + a search
    controller/template, reusing the shared travel_core search UI.
 3. **Cart + order pipeline**: `BookingRepository` (the `eurosite_bookings`

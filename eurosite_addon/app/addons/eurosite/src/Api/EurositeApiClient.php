@@ -8,6 +8,7 @@ use Tygh\Addons\Eurosite\Dto\HotelOffer;
 use Tygh\Addons\Eurosite\EurositeTransportInterface;
 use Tygh\Addons\Eurosite\EurositeXmlBuilder;
 use Tygh\Addons\Eurosite\EurositeXmlParser;
+use Tygh\Addons\Eurosite\Exception\EurositeApiException;
 
 /**
  * Eurosite API facade — the MVP surface of the "individual accommodations"
@@ -44,9 +45,6 @@ final class EurositeApiClient
     public function getCountries(): array
     {
         $details = $this->call('getCountryRequest', '<getCountryRequest/>');
-        if ($details === null) {
-            return [];
-        }
         $out = [];
         foreach ($details->Country as $c) {
             $out[] = [
@@ -67,9 +65,6 @@ final class EurositeApiClient
     {
         $payload = '<getCityRequest CountryCode="' . EurositeXmlBuilder::attr($countryCode) . '"/>';
         $details = $this->call('getCityRequest', $payload);
-        if ($details === null) {
-            return [];
-        }
         $out = [];
         foreach ($details->City as $c) {
             $out[] = [
@@ -82,27 +77,46 @@ final class EurositeApiClient
     }
 
     /**
+     * getOwnCityRequest — cities where the operator has own offers. One list
+     * across all countries, so the country code rides along per row.
+     *
+     * @return list<array{code: string, name: string, country_code: string}>
+     */
+    public function getOwnCities(): array
+    {
+        $details = $this->call('getOwnCityRequest', '<getOwnCityRequest/>');
+        $out = [];
+        foreach ($details->City as $c) {
+            $out[] = [
+                'code'         => trim((string) $c->CityCode),
+                'name'         => trim((string) $c->CityName),
+                'country_code' => trim((string) $c->CountryCode),
+            ];
+        }
+
+        return $out;
+    }
+
+    /**
      * getOwnHotelsRequest — the operator's own hotels in a city (with rooms).
      *
-     * @return list<array{code: string, name: string, city_code: string, rooms: array<string, string>}>
+     * @return list<array{code: string, name: string, city_code: string, tourop: string, rooms: array<string, string>}>
      */
     public function getOwnHotels(string $cityCode): array
     {
         $payload = '<getOwnHotelsRequest><CityCode>' . EurositeXmlBuilder::esc($cityCode) . '</CityCode></getOwnHotelsRequest>';
         $details = $this->call('getOwnHotelsRequest', $payload);
-        if ($details === null) {
-            return [];
-        }
         $out = [];
         foreach ($details->Hotel as $h) {
             $rooms = [];
-            foreach ($h->Rooms->Room as $r) {
-                $rooms[trim((string) $r['code'])] = trim((string) $r);
+            foreach ($h->Rooms->Room ?? [] as $r) {
+                $rooms[trim((string) ($r['code'] ?? $r['Code'] ?? ''))] = trim((string) $r);
             }
             $out[] = [
                 'code'      => trim((string) $h->HotelCode),
                 'name'      => trim((string) $h->HotelName),
                 'city_code' => trim((string) $h->CityCode),
+                'tourop'    => trim((string) $h->Touropcode),
                 'rooms'     => $rooms,
             ];
         }
@@ -118,14 +132,31 @@ final class EurositeApiClient
     public function getRoomTypes(): array
     {
         $details = $this->call('getRoomRequest', '<getRoomRequest/>');
-        if ($details === null) {
-            return [];
-        }
         $out = [];
         foreach ($details->Room as $r) {
             $out[] = [
                 'code' => trim((string) ($r['Code'] ?? $r['code'] ?? '')),
                 'name' => trim((string) $r),
+            ];
+        }
+
+        return $out;
+    }
+
+    /**
+     * getTagOffersRequest — the offer-tag catalog (e.g. Craciun, 1 Mai). The
+     * catalog may legitimately be empty for an account.
+     *
+     * @return list<array{code: string, name: string}>
+     */
+    public function getTagOffers(): array
+    {
+        $details = $this->call('getTagOffersRequest', '<getTagOffersRequest/>');
+        $out = [];
+        foreach ($details->Tag as $t) {
+            $out[] = [
+                'code' => trim((string) $t->TagCode),
+                'name' => trim((string) $t->TagName),
             ];
         }
 
@@ -147,9 +178,6 @@ final class EurositeApiClient
     public function searchHotels(array $params): array
     {
         $details = $this->call('getHotelPriceRequest', $this->buildHotelPricePayload($params));
-        if ($details === null) {
-            return [];
-        }
 
         $offers = [];
         foreach ($details->Hotel ?? [] as $hotel) {
@@ -166,9 +194,9 @@ final class EurositeApiClient
      * getProductInfoRequest — full details for one product (description,
      * pictures, facilities). Returned as a shallow assoc array of the response.
      *
-     * @return array<string, mixed>|null
+     * @return array<string, mixed>
      */
-    public function getProductInfo(string $countryCode, string $cityCode, string $productCode, string $productType = 'hotel'): ?array
+    public function getProductInfo(string $countryCode, string $cityCode, string $productCode, string $productType = 'hotel'): array
     {
         $payload = '<getProductInfoRequest>'
             . '<ProductType>' . EurositeXmlBuilder::esc($productType) . '</ProductType>'
@@ -178,9 +206,6 @@ final class EurositeApiClient
             . '<ProductCode>' . EurositeXmlBuilder::esc($productCode) . '</ProductCode>'
             . '</getProductInfoRequest>';
         $details = $this->call('getProductInfoRequest', $payload);
-        if ($details === null) {
-            return null;
-        }
 
         $pictures = [];
         foreach ($details->Pictures->Picture ?? $details->Picture ?? [] as $p) {
@@ -243,16 +268,13 @@ final class EurositeApiClient
     /**
      * getBookingRequest — status + details of an existing booking.
      *
-     * @return array<string, mixed>|null
+     * @return array<string, mixed>
      */
-    public function getBooking(string $reference, string $source = 'client'): ?array
+    public function getBooking(string $reference, string $source = 'client'): array
     {
         $payload = '<getBookingRequest><BookingReference Source="' . EurositeXmlBuilder::attr($source) . '">'
             . EurositeXmlBuilder::esc($reference) . '</BookingReference></getBookingRequest>';
         $details = $this->call('getBookingRequest', $payload);
-        if ($details === null) {
-            return null;
-        }
 
         $refs = [];
         foreach ($details->BookingReferences->BookingReference ?? [] as $ref) {
@@ -299,11 +321,24 @@ final class EurositeApiClient
     }
 
     /**
-     * Send + return the unwrapped <ResponseDetails> child, or null.
+     * Send + return the unwrapped <ResponseDetails> child.
+     *
+     * @throws EurositeApiException on the server's error envelope (its
+     *   ResponseDetails child is <Errors> — e.g. the -1000 auth refusal) or an
+     *   empty/unparseable body, so an API failure is never mistaken for an
+     *   empty catalog / no results.
      */
-    private function call(string $requestType, string $detailsXml): ?\SimpleXMLElement
+    private function call(string $requestType, string $detailsXml): \SimpleXMLElement
     {
-        return $this->parser->responseDetails($this->send($requestType, $detailsXml));
+        $raw = $this->send($requestType, $detailsXml);
+        $details = $this->parser->responseDetails($raw);
+        if ($details === null || $details->getName() === 'Errors') {
+            $reason = $this->parser->errorMessage($raw);
+
+            throw new EurositeApiException($requestType . ' failed: ' . ($reason !== '' ? $reason : 'malformed response'));
+        }
+
+        return $details;
     }
 
     private function nextRequestId(): string

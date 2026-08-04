@@ -15,12 +15,15 @@ not paths:
 https://laguna.touringit.ro/server_xml/server.php
 ```
 
-**IP allowlist:** the server refuses unknown hosts outright — every request
-from a non-whitelisted IP answers `ErrorId -1000 "You are not authorised to
-access this server!"` regardless of credentials (verified live 2026-07-25).
-Run these probes from the store server or another whitelisted machine. Per
-the operator, the static-data services (countries/cities/rooms/own hotels)
-then answer without a real account; search/booking need credentials.
+**Authentication:** valid XML credentials are required for **every** service,
+static data included. With an invalid/placeholder account every request
+answers `ErrorId -1000 "You are not authorised to access this server!"`;
+with valid credentials the same requests answer from any host (verified live
+2026-08-04 — the earlier "IP allowlist" reading of -1000, noted 2026-07-25
+when only placeholder credentials existed, was wrong). Static catalogs
+confirmed live: 86 countries, 358 RO cities (~21,700 across all countries), 116 own-offer cities, 22 room
+types, own hotels with room lists (e.g. Albena, Mamaia); the tag catalog is
+currently empty.
 
 ## Configuration (env vars)
 
@@ -38,8 +41,10 @@ then answer without a real account; search/booking need credentials.
 | --- | --- | --- |
 | `countries.php` | getCountryRequest | `--limit=N` |
 | `cities.php` | getCityRequest | `--country=RO --limit=N` |
+| `own_cities.php` | getOwnCityRequest | `--limit=N` |
 | `rooms.php` | getRoomRequest | `--limit=N` |
 | `own_hotels.php` | getOwnHotelsRequest | `--city=CODE --limit=N` |
+| `tag_offers.php` | getTagOffersRequest | `--limit=N` |
 | `hotel_search.php` | getHotelPriceRequest | `--country --city --check-in --nights --adults [--children=8,5] [--room=DB] --limit=N` |
 | `product_info.php` | getProductInfoRequest | `--country --city --product [--type=hotel] --limit=N` |
 | `booking_info.php` | getBookingRequest | `--ref=REF [--source=client|api]` |

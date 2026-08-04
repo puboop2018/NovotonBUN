@@ -16,11 +16,11 @@ declare(strict_types=1);
  *       <RequestDetails>{endpoint payload}</RequestDetails>
  *     </Request>
  *
- * Credentials default to the spec's placeholders — per the operator, some
- * static-data services answer without a real account (the server still
- * IP-allowlists callers: from a non-whitelisted host EVERY request gets
- * ErrorId -1000 "You are not authorised to access this server!", so run
- * these from the store server / a whitelisted IP). Override with env vars:
+ * Credentials default to the spec's placeholders, but REAL credentials are
+ * required for every service, static data included: with an invalid/placeholder
+ * account EVERY request answers ErrorId -1000 "You are not authorised to
+ * access this server!" (verified live 2026-08-04 — with valid credentials the
+ * same requests answer fine, host IP irrelevant). Override with env vars:
  *   EUROSITE_API_URL       default https://laguna.touringit.ro/server_xml/server.php
  *   EUROSITE_API_USER      default YourUser   (spec placeholder)
  *   EUROSITE_API_PASSWORD  default YourPassword
@@ -283,8 +283,8 @@ function euro_run(array $cfg, string $requestType, string $detailsXml, int $limi
     echo euro_format_xml($res['body'], $limit) . "\n";
 
     if (str_contains($res['body'], '<ErrorId>-1000</ErrorId>')) {
-        echo "\nNOTE: -1000 'not authorised to access this server' usually means this\n"
-           . "machine's IP is not whitelisted with the Touroperator — run the probe\n"
-           . "from the store server, or ask Eurosite to whitelist your IP.\n";
+        echo "\nNOTE: -1000 'not authorised to access this server' means the credentials\n"
+           . "were rejected — set EUROSITE_API_USER / EUROSITE_API_PASSWORD to a valid\n"
+           . "XML account (the spec placeholders always get this refusal).\n";
     }
 }
