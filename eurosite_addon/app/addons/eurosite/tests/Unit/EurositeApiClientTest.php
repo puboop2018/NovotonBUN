@@ -196,6 +196,157 @@ final class EurositeApiClientTest extends TestCase
         self::assertStringContainsString('<Age>8</Age>', $req);
     }
 
+    public function testIsProductInfoUpdatableReadsTheFlag(): void
+    {
+        $t = new FakeTransport(self::wrap('getProductInfoUpdateResponse',
+            '<UpdateList><IsUpdatable>N</IsUpdatable></UpdateList>'));
+
+        $updatable = $this->client($t)->isProductInfoUpdatable([
+            'country_code'     => 'BG',
+            'city_code'        => 'BGNSPDAR',
+            'product_code'     => 'BG0063',
+            'last_update_date' => '2012-09-05',
+            'last_update_time' => '16:10:56',
+        ]);
+
+        self::assertFalse($updatable);
+        $req = $t->lastRequest;
+        self::assertStringContainsString('RequestType="getProductInfoUpdateRequest"', $req);
+        self::assertStringContainsString('<LastUpdateDate>2012-09-05</LastUpdateDate>', $req);
+        self::assertStringContainsString('<ProductType>hotel</ProductType>', $req);
+    }
+
+    public function testGetHotelServiceTypesParsesTheServiceList(): void
+    {
+        // Canned from the spec example (getHotelServiceTypesResponse).
+        $t = new FakeTransport(self::wrap('getHotelServiceTypesResponse',
+            '<Services><Service><Type>2</Type><TypeName>Masa</TypeName><Code>1094</Code>'
+            . '<Name>Supliment all inclusive</Name><HasPrice>true</HasPrice>'
+            . '<CharterId></CharterId><Provider>NumeFurnizor</Provider><VATNumber>111111111</VATNumber>'
+            . '</Service></Services>'));
+
+        $services = $this->client($t)->getHotelServiceTypes([
+            'country_code' => 'BG', 'city_code' => 'BGNSPDAR', 'product_code' => 'BG0063',
+            'variant_id' => '0|1065798_1447_0', 'check_in' => '2012-09-14', 'check_out' => '2012-09-21',
+        ]);
+
+        self::assertSame([[
+            'type' => 2, 'type_name' => 'Masa', 'code' => '1094',
+            'name' => 'Supliment all inclusive', 'has_price' => true, 'provider' => 'NumeFurnizor',
+        ]], $services);
+        $req = $t->lastRequest;
+        self::assertStringContainsString('RequestType="getHotelServiceTypesRequest"', $req);
+        self::assertStringContainsString('<VariantId>0|1065798_1447_0</VariantId>', $req);
+    }
+
+    public function testGetHotelServicePricesBuildsSpecPayloadAndParsesPrices(): void
+    {
+        // Canned from the spec example (getHotelServicePriceResponse).
+        $t = new FakeTransport(self::wrap('getHotelServicePriceResponse',
+            '<Services><Service CurrencyCode="EUR"><Type>2</Type><Code>1094</Code>'
+            . '<Name>Supliment all inclusive</Name><HasPrice>true</HasPrice>'
+            . '<Price>315</Price><Gross>315</Gross><NET>262.5</NET><Commission>42.34</Commission>'
+            . '</Service></Services>'));
+
+        $prices = $this->client($t)->getHotelServicePrices([
+            'country_code' => 'BG', 'city_code' => 'BGNSPDAR', 'product_code' => 'BG0063',
+            'service_type' => '2', 'service_code' => '1094', 'variant_id' => '0|1065798_1447_0',
+            'check_in' => '2012-09-14', 'check_out' => '2012-09-21',
+            'pax' => [
+                ['type' => 'adult', 'name' => 'Adult 1'],
+                ['type' => 'child', 'name' => 'Copil 2', 'child_age' => '3'],
+            ],
+        ]);
+
+        self::assertCount(1, $prices);
+        self::assertSame(315.0, $prices[0]['price']);
+        self::assertSame(262.5, $prices[0]['net']);
+        self::assertSame('EUR', $prices[0]['currency']);
+
+        // Spec shape: CurrencyCode is a CHILD element, services nest in
+        // <Services><Service> with ServiceType/ServiceCode + PaxNames.
+        $req = $t->lastRequest;
+        self::assertStringContainsString('RequestType="getHotelServicePriceRequest"', $req);
+        self::assertStringContainsString('<CurrencyCode>EUR</CurrencyCode>', $req);
+        self::assertStringContainsString('<ServiceCode>1094</ServiceCode>', $req);
+        self::assertStringContainsString('<PaxName PaxType="child" ChildAge="3">Copil 2</PaxName>', $req);
+    }
+
+    public function testGetItemFeesParsesTheCancellationScheduleWithPlaceholderPax(): void
+    {
+        // Canned from the spec example (getItemFeesResponse) — absolute values.
+        $t = new FakeTransport(self::wrap('getItemFeesResponse',
+            '<ItemFees><ItemFee><Fees>'
+            . '<Fee Type="cancellation"><FromDate>2012-09-06</FromDate><ToDate>2012-09-12</ToDate><Value Procent="false">104</Value></Fee>'
+            . '<Fee Type="cancellation"><FromDate>2012-09-13</FromDate><ToDate>2012-09-18</ToDate><Value Procent="true">80</Value></Fee>'
+            . '</Fees></ItemFee></ItemFees>'));
+
+        $fees = $this->client($t)->getItemFees([
+            'country_code' => 'BG', 'city_code' => 'BGNSPDAR', 'product_code' => 'BG0069',
+            'variant_id' => '0|1067879_1453_1', 'check_in' => '2012-09-22', 'check_out' => '2012-09-29',
+            'rooms' => [['code' => '817', 'adults' => 2, 'children' => [5]]],
+        ]);
+
+        self::assertSame([
+            ['type' => 'cancellation', 'from_date' => '2012-09-06', 'to_date' => '2012-09-12', 'value' => 104.0, 'is_percent' => false],
+            ['type' => 'cancellation', 'from_date' => '2012-09-13', 'to_date' => '2012-09-18', 'value' => 80.0, 'is_percent' => true],
+        ], $fees);
+
+        // The request reuses the AddBooking BookingItems shape and fills
+        // placeholder pax names when no real guests exist yet.
+        $req = $t->lastRequest;
+        self::assertStringContainsString('RequestType="getItemFeesRequest"', $req);
+        self::assertStringContainsString('<getItemFeesRequest CurrencyCode="EUR">', $req);
+        self::assertStringContainsString('Code="817" NoAdults="2" NoChildren="1"', $req);
+        self::assertStringContainsString('<PaxName PaxType="adult">ADULT 1</PaxName>', $req);
+        self::assertStringContainsString('<PaxName PaxType="child" ChildAge="5">CHILD 1</PaxName>', $req);
+    }
+
+    public function testGetBookingFeesParsesPerItemFeeSchedules(): void
+    {
+        // Canned from the spec example (getBookingFeesResponse) — Price rows.
+        $t = new FakeTransport(self::wrap('getBookingFeesResponse',
+            '<BookingReferences>'
+            . '<BookingReference Source="api">EU_XML_12898</BookingReference>'
+            . '<BookingReference Source="client">int1234</BookingReference>'
+            . '</BookingReferences>'
+            . '<BookingFees><BookingItemFee><ItemClientId>1</ItemClientId>'
+            . '<ItemReference Source="api">EU_XMLEU_12890</ItemReference>'
+            . '<Fees>'
+            . '<Fee Type="cancellation"><FromDate>2012-08-24</FromDate><ToDate>2012-09-02</ToDate><Price CurrencyCode="EUR">42.48</Price></Fee>'
+            . '<Fee Type="cancellation"><FromDate>2012-09-03</FromDate><ToDate>2012-09-12</ToDate><Price CurrencyCode="EUR">106.2</Price></Fee>'
+            . '</Fees></BookingItemFee></BookingFees>'));
+
+        $res = $this->client($t)->getBookingFees('int1234');
+
+        self::assertSame('EU_XML_12898', $res['api_ref']);
+        self::assertSame('int1234', $res['client_ref']);
+        self::assertCount(1, $res['items']);
+        self::assertSame('EU_XMLEU_12890', $res['items'][0]['item_ref']);
+        self::assertSame(42.48, $res['items'][0]['fees'][0]['price']);
+        self::assertSame('EUR', $res['items'][0]['fees'][0]['currency']);
+        self::assertStringContainsString('RequestType="getBookingFeesRequest"', $t->lastRequest);
+        self::assertStringContainsString('<BookingReference Source="client">int1234</BookingReference>', $t->lastRequest);
+    }
+
+    public function testSearchHotelsCapturesTheSeriesId(): void
+    {
+        $t = new FakeTransport(self::wrap('getHotelPriceResponse',
+            '<Hotel><Product><ProductCode>RO0099</ProductCode><ProductName>Condor</ProductName></Product>'
+            . '<Offers><Offer CurrencyCode="EUR"><SeriesId>1874</SeriesId>'
+            . '<ProductPrice>100</ProductPrice><PackageVariantId>0|1_2_3</PackageVariantId>'
+            . '</Offer></Offers></Hotel>'));
+
+        $offers = $this->client($t)->searchHotels([
+            'country_code' => 'RO', 'city_code' => 'ROMM',
+            'check_in' => '2012-09-14', 'check_out' => '2012-09-21',
+            'rooms' => [['code' => 'DB', 'adults' => 2]],
+        ]);
+
+        self::assertSame('1874', $offers[0]->seriesId);
+        self::assertSame('1874', $offers[0]->toArray()['series_id']);
+    }
+
     public function testAddBookingExtractsTheApiReference(): void
     {
         $t = new FakeTransport(self::wrap('AddBookingResponse',

@@ -35,6 +35,28 @@ spl_autoload_register(static function (string $class): void {
     }
 });
 
+// Schema self-heal for installed stores (admin area only; stamp-gated so the
+// catalog reads + conditional DDL run once per deployed SchemaMigrator.php,
+// then every request pays a single ?:storage_data read). Dev stores symlink
+// the addon and never rerun addon.xml — this is how new tables/columns land.
+if (defined('AREA') && AREA === 'A' && function_exists('fn_eurosite_ensure_schema')) {
+    $__eu_heal_fp = (string) @md5_file(__DIR__ . '/src/Install/SchemaMigrator.php');
+    if (!function_exists('fn_travel_core_self_heal_due')
+        || fn_travel_core_self_heal_due('eurosite_schema', $__eu_heal_fp)
+    ) {
+        if (function_exists('fn_travel_core_self_heal_guard')) {
+            // Never let a heal 503 the admin — see fn_travel_core_self_heal_guard.
+            fn_travel_core_self_heal_guard('eurosite_schema', 'fn_eurosite_ensure_schema');
+        } else {
+            fn_eurosite_ensure_schema();
+        }
+        if (function_exists('fn_travel_core_self_heal_stamp')) {
+            fn_travel_core_self_heal_stamp('eurosite_schema', $__eu_heal_fp);
+        }
+    }
+    unset($__eu_heal_fp);
+}
+
 // Register with the shared travel-provider registry so Eurosite participates in
 // the cross-provider feature-mapping / normalization pipeline (guarded against
 // travel_core not being loaded). MVP registers the normalizer only; the

@@ -223,6 +223,263 @@ final class EurositeApiClient
         ];
     }
 
+    /**
+     * getProductInfoUpdateRequest — ask whether cached product details are
+     * stale. Spec: usually answered Y, but callers keeping the mandated
+     * getProductInfo cache use this to skip re-fetching fresh entries.
+     *
+     * @param array<string, mixed> $p {
+     *   country_code, city_code, product_code, product_type?,
+     *   last_update_date (Y-m-d), last_update_time (H:i:s)
+     * }
+     */
+    public function isProductInfoUpdatable(array $p): bool
+    {
+        $payload = '<getProductInfoUpdateRequest><ProductList><Product>'
+            . '<ProductType>' . EurositeXmlBuilder::esc(self::str($p['product_type'] ?? '') ?: 'hotel') . '</ProductType>'
+            . '<CountryCode>' . EurositeXmlBuilder::esc(self::str($p['country_code'] ?? '')) . '</CountryCode>'
+            . '<CityCode>' . EurositeXmlBuilder::esc(self::str($p['city_code'] ?? '')) . '</CityCode>'
+            . '<TourOpCode>' . EurositeXmlBuilder::esc(self::str($p['tourop_code'] ?? '') ?: $this->tourOpCode) . '</TourOpCode>'
+            . '<ProductCode>' . EurositeXmlBuilder::esc(self::str($p['product_code'] ?? '')) . '</ProductCode>'
+            . '<LastUpdateDate>' . EurositeXmlBuilder::esc(self::str($p['last_update_date'] ?? '')) . '</LastUpdateDate>'
+            . '<LastUpdateTime>' . EurositeXmlBuilder::esc(self::str($p['last_update_time'] ?? '')) . '</LastUpdateTime>'
+            . '</Product></ProductList></getProductInfoUpdateRequest>';
+        $details = $this->call('getProductInfoUpdateRequest', $payload);
+
+        return strtoupper(trim((string) ($details->UpdateList->IsUpdatable ?? 'Y'))) === 'Y';
+    }
+
+    /**
+     * getHotelServiceTypesRequest — supplementary services available for an
+     * offer (Type 2 = meals, 7 = transport, 6 = other).
+     *
+     * @param array<string, mixed> $p {
+     *   country_code, city_code, product_code, variant_id, check_in,
+     *   check_out, language?, tourop_code?
+     * }
+     * @return list<array{type: int, type_name: string, code: string, name: string, has_price: bool, provider: string}>
+     */
+    public function getHotelServiceTypes(array $p): array
+    {
+        $payload = '<getHotelServiceTypesRequest>'
+            . '<CountryCode>' . EurositeXmlBuilder::esc(self::str($p['country_code'] ?? '')) . '</CountryCode>'
+            . '<CityCode>' . EurositeXmlBuilder::esc(self::str($p['city_code'] ?? '')) . '</CityCode>'
+            . '<TourOpCode>' . EurositeXmlBuilder::esc(self::str($p['tourop_code'] ?? '') ?: $this->tourOpCode) . '</TourOpCode>'
+            . '<ProductCode>' . EurositeXmlBuilder::esc(self::str($p['product_code'] ?? '')) . '</ProductCode>'
+            . '<VariantId>' . EurositeXmlBuilder::esc(self::str($p['variant_id'] ?? '')) . '</VariantId>'
+            . '<Language>' . EurositeXmlBuilder::esc(self::str($p['language'] ?? '') ?: 'RO') . '</Language>'
+            . '<PeriodOfStay>'
+            . '<CheckIn>' . EurositeXmlBuilder::esc(self::str($p['check_in'] ?? '')) . '</CheckIn>'
+            . '<CheckOut>' . EurositeXmlBuilder::esc(self::str($p['check_out'] ?? '')) . '</CheckOut>'
+            . '</PeriodOfStay>'
+            . '</getHotelServiceTypesRequest>';
+        $details = $this->call('getHotelServiceTypesRequest', $payload);
+
+        $out = [];
+        foreach ($details->Services->Service ?? [] as $s) {
+            $out[] = [
+                'type'      => (int) (string) ($s->Type ?? 0),
+                'type_name' => trim((string) ($s->TypeName ?? '')),
+                'code'      => trim((string) ($s->Code ?? '')),
+                'name'      => trim((string) ($s->Name ?? '')),
+                'has_price' => strtolower(trim((string) ($s->HasPrice ?? ''))) === 'true',
+                'provider'  => trim((string) ($s->Provider ?? '')),
+            ];
+        }
+
+        return $out;
+    }
+
+    /**
+     * getHotelServicePriceRequest — price one supplementary service for an
+     * offer/occupancy.
+     *
+     * @param array<string, mixed> $p {
+     *   currency?, language?, service_type, service_code, country_code,
+     *   city_code, product_code, variant_id, check_in, check_out,
+     *   tourop_code?, pax:list<array{type, name, child_age?}>
+     * }
+     * @return list<array{type: string, code: string, name: string, price: float, gross: float, net: float, commission: float, currency: string}>
+     */
+    public function getHotelServicePrices(array $p): array
+    {
+        $pax = '';
+        foreach (self::rows($p['pax'] ?? []) as $g) {
+            $type = self::str($g['type'] ?? 'adult');
+            $attrs = 'PaxType="' . EurositeXmlBuilder::attr($type) . '"';
+            if ($type === 'child' && ($ca = self::str($g['child_age'] ?? '')) !== '') {
+                $attrs .= ' ChildAge="' . EurositeXmlBuilder::attr($ca) . '"';
+            }
+            $pax .= '<PaxName ' . $attrs . '>' . EurositeXmlBuilder::esc(self::str($g['name'] ?? '')) . '</PaxName>';
+        }
+
+        $payload = '<getHotelServicePriceRequest>'
+            . '<CountryCode>' . EurositeXmlBuilder::esc(self::str($p['country_code'] ?? '')) . '</CountryCode>'
+            . '<CityCode>' . EurositeXmlBuilder::esc(self::str($p['city_code'] ?? '')) . '</CityCode>'
+            . '<TourOpCode>' . EurositeXmlBuilder::esc(self::str($p['tourop_code'] ?? '') ?: $this->tourOpCode) . '</TourOpCode>'
+            . '<ProductCode>' . EurositeXmlBuilder::esc(self::str($p['product_code'] ?? '')) . '</ProductCode>'
+            . '<CurrencyCode>' . EurositeXmlBuilder::esc(self::str($p['currency'] ?? '') ?: 'EUR') . '</CurrencyCode>'
+            . '<VariantId>' . EurositeXmlBuilder::esc(self::str($p['variant_id'] ?? '')) . '</VariantId>'
+            . '<Language>' . EurositeXmlBuilder::esc(self::str($p['language'] ?? '') ?: 'RO') . '</Language>'
+            . '<Services><Service>'
+            . '<ServiceType>' . EurositeXmlBuilder::esc(self::str($p['service_type'] ?? '')) . '</ServiceType>'
+            . '<ServiceCode>' . EurositeXmlBuilder::esc(self::str($p['service_code'] ?? '')) . '</ServiceCode>'
+            . '<PeriodOfStay>'
+            . '<CheckIn>' . EurositeXmlBuilder::esc(self::str($p['check_in'] ?? '')) . '</CheckIn>'
+            . '<CheckOut>' . EurositeXmlBuilder::esc(self::str($p['check_out'] ?? '')) . '</CheckOut>'
+            . '</PeriodOfStay>'
+            . '<PaxNames>' . $pax . '</PaxNames>'
+            . '</Service></Services>'
+            . '</getHotelServicePriceRequest>';
+        $details = $this->call('getHotelServicePriceRequest', $payload);
+
+        $out = [];
+        foreach ($details->Services->Service ?? [] as $s) {
+            $out[] = [
+                'type'       => trim((string) ($s->Type ?? '')),
+                'code'       => trim((string) ($s->Code ?? '')),
+                'name'       => trim((string) ($s->Name ?? '')),
+                'price'      => (float) (string) ($s->Price ?? 0),
+                'gross'      => (float) (string) ($s->Gross ?? 0),
+                'net'        => (float) (string) ($s->NET ?? 0),
+                'commission' => (float) (string) ($s->Commission ?? 0),
+                'currency'   => trim((string) ($s['CurrencyCode'] ?? '')) ?: (self::str($p['currency'] ?? '') ?: 'EUR'),
+            ];
+        }
+
+        return $out;
+    }
+
+    /**
+     * getItemFeesRequest — cancellation penalty schedule for a would-be
+     * booking (pre-booking; feeds the "Conditii de Anulare" modal). The
+     * payload reuses the AddBooking BookingItems shape.
+     *
+     * @param array<string, mixed> $p {
+     *   currency?, country_code, city_code, product_code, variant_id,
+     *   check_in, check_out, tourop_code?,
+     *   rooms:list<array{code, adults, children:int[], pax?:list<array{type,name,child_age?}>}>
+     * }
+     * @return list<array{type: string, from_date: string, to_date: string, value: float, is_percent: bool}>
+     */
+    public function getItemFees(array $p): array
+    {
+        $rooms = '';
+        foreach (self::rows($p['rooms'] ?? []) as $room) {
+            $code = EurositeXmlBuilder::attr(self::str($room['code'] ?? ''));
+            $adults = max(1, (int) self::str($room['adults'] ?? 2));
+            $childAges = self::intList($room['children'] ?? []);
+            $attrs = 'Code="' . $code . '" NoAdults="' . $adults . '"';
+            if ($childAges !== []) {
+                $attrs .= ' NoChildren="' . count($childAges) . '"';
+            }
+
+            // PaxNames is mandatory in the spec; before real guests exist we
+            // send sequential placeholders (verified against the live shape).
+            $paxRows = self::rows($room['pax'] ?? []);
+            if ($paxRows === []) {
+                for ($i = 1; $i <= $adults; $i++) {
+                    $paxRows[] = ['type' => 'adult', 'name' => 'ADULT ' . $i];
+                }
+                foreach ($childAges as $n => $age) {
+                    $paxRows[] = ['type' => 'child', 'name' => 'CHILD ' . ($n + 1), 'child_age' => (string) $age];
+                }
+            }
+            $pax = '';
+            foreach ($paxRows as $g) {
+                $type = self::str($g['type'] ?? 'adult');
+                $attrsP = 'PaxType="' . EurositeXmlBuilder::attr($type) . '"';
+                if ($type === 'child' && ($ca = self::str($g['child_age'] ?? '')) !== '') {
+                    $attrsP .= ' ChildAge="' . EurositeXmlBuilder::attr($ca) . '"';
+                }
+                $pax .= '<PaxName ' . $attrsP . '>' . EurositeXmlBuilder::esc(self::str($g['name'] ?? '')) . '</PaxName>';
+            }
+
+            $rooms .= '<Room ' . $attrs . '><PaxNames>' . $pax . '</PaxNames></Room>';
+        }
+
+        $payload = '<getItemFeesRequest CurrencyCode="'
+            . EurositeXmlBuilder::attr(self::str($p['currency'] ?? '') ?: 'EUR') . '">'
+            . '<BookingItems>'
+            . '<BookingItem ProductType="hotel">'
+            . '<TourOpCode>' . EurositeXmlBuilder::esc(self::str($p['tourop_code'] ?? '') ?: $this->tourOpCode) . '</TourOpCode>'
+            . '<HotelItem>'
+            . '<CountryCode>' . EurositeXmlBuilder::esc(self::str($p['country_code'] ?? '')) . '</CountryCode>'
+            . '<CityCode>' . EurositeXmlBuilder::esc(self::str($p['city_code'] ?? '')) . '</CityCode>'
+            . '<ProductCode>' . EurositeXmlBuilder::esc(self::str($p['product_code'] ?? '')) . '</ProductCode>'
+            . '<PeriodOfStay>'
+            . '<CheckIn>' . EurositeXmlBuilder::esc(self::str($p['check_in'] ?? '')) . '</CheckIn>'
+            . '<CheckOut>' . EurositeXmlBuilder::esc(self::str($p['check_out'] ?? '')) . '</CheckOut>'
+            . '</PeriodOfStay>'
+            . '<VariantId>' . EurositeXmlBuilder::esc(self::str($p['variant_id'] ?? '')) . '</VariantId>'
+            . '<Rooms>' . $rooms . '</Rooms>'
+            . '</HotelItem>'
+            . '</BookingItem>'
+            . '</BookingItems>'
+            . '</getItemFeesRequest>';
+        $details = $this->call('getItemFeesRequest', $payload);
+
+        $out = [];
+        foreach ($details->xpath('.//Fee') ?: [] as $fee) {
+            $value = $fee->Value ?? null;
+            $out[] = [
+                'type'       => trim((string) ($fee['Type'] ?? 'cancellation')),
+                'from_date'  => trim((string) ($fee->FromDate ?? '')),
+                'to_date'    => trim((string) ($fee->ToDate ?? '')),
+                'value'      => (float) (string) ($value ?? 0),
+                'is_percent' => strtolower(trim((string) ($value['Procent'] ?? 'false'))) === 'true',
+            ];
+        }
+
+        return $out;
+    }
+
+    /**
+     * getBookingFeesRequest — re-check cancellation penalties on an EXISTING
+     * booking. Fees come back as absolute <Price CurrencyCode=...> amounts.
+     *
+     * @return array{api_ref: string, client_ref: string, items: list<array{item_client_id: string, item_ref: string, fees: list<array{type: string, from_date: string, to_date: string, price: float, currency: string}>}>}
+     */
+    public function getBookingFees(string $reference, string $source = 'client'): array
+    {
+        $payload = '<getBookingFeesRequest><BookingReference Source="' . EurositeXmlBuilder::attr($source) . '">'
+            . EurositeXmlBuilder::esc($reference) . '</BookingReference></getBookingFeesRequest>';
+        $details = $this->call('getBookingFeesRequest', $payload);
+
+        $apiRef = '';
+        $clientRef = '';
+        foreach ($details->BookingReferences->BookingReference ?? [] as $ref) {
+            $src = (string) $ref['Source'];
+            if ($src === 'api') {
+                $apiRef = trim((string) $ref);
+            } elseif ($src === 'client') {
+                $clientRef = trim((string) $ref);
+            }
+        }
+
+        $items = [];
+        foreach ($details->BookingFees->BookingItemFee ?? [] as $item) {
+            $fees = [];
+            foreach ($item->Fees->Fee ?? [] as $fee) {
+                $price = $fee->Price ?? null;
+                $fees[] = [
+                    'type'      => trim((string) ($fee['Type'] ?? 'cancellation')),
+                    'from_date' => trim((string) ($fee->FromDate ?? '')),
+                    'to_date'   => trim((string) ($fee->ToDate ?? '')),
+                    'price'     => (float) (string) ($price ?? 0),
+                    'currency'  => trim((string) ($price['CurrencyCode'] ?? 'EUR')),
+                ];
+            }
+            $items[] = [
+                'item_client_id' => trim((string) ($item->ItemClientId ?? '')),
+                'item_ref'       => trim((string) ($item->ItemReference ?? '')),
+                'fees'           => $fees,
+            ];
+        }
+
+        return ['api_ref' => $apiRef, 'client_ref' => $clientRef, 'items' => $items];
+    }
+
     // ── Booking ──────────────────────────────────────────────────────────────
 
     /**
@@ -507,6 +764,7 @@ final class EurositeApiClient
             grila: trim((string) ($offer->GrilaName ?? '')),
             rooms: $rooms,
             meals: $meals,
+            seriesId: trim((string) ($offer->SeriesId ?? '')),
         );
     }
 
