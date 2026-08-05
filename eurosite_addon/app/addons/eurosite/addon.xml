@@ -165,6 +165,17 @@
                 KEY `idx_client_ref` (`client_ref`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
         </item>
+
+        <!-- Clean up on uninstall, the same way the sibling addons do: drop
+             the addon's own table and its language values. Without these the
+             table and labels survive an uninstall as orphans. -->
+        <item for="uninstall">DROP TABLE IF EXISTS `?:eurosite_bookings`</item>
+        <!-- This addon's labels ship as .po msgctxt keys (Addons::name::eurosite,
+             SettingsOptions::eurosite::api_url, …), NOT the dot-prefixed
+             "<addon>.%" keys the lang_keys.php-based siblings clean up — so
+             match those namespaces instead. -->
+        <item for="uninstall">DELETE FROM ?:language_values WHERE name LIKE 'Addons::%::eurosite'</item>
+        <item for="uninstall">DELETE FROM ?:language_values WHERE name LIKE 'Settings%::eurosite::%'</item>
     </queries>
 
     <!-- No <uninstall><remove_files>: none of the sibling addons declare one,
