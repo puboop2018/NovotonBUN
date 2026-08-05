@@ -106,6 +106,18 @@
                         <variants/>
                     </item>
 
+                    <!-- ── Cron ── -->
+                    <item id="cron_header">
+                        <type>header</type>
+                        <variants/>
+                    </item>
+                    <!-- Shared secret for eurosite_cron.run / cron.php. -->
+                    <item id="cron_access_key">
+                        <type>password</type>
+                        <default_value>1234</default_value>
+                        <variants/>
+                    </item>
+
                     <!-- ── Resilience ── -->
                     <item id="resilience_header">
                         <type>header</type>

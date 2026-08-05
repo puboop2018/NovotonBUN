@@ -64,6 +64,18 @@ msgctxt "SettingsTooltips::eurosite::allow_insecure_api"
 msgid "Permit sending API credentials over unencrypted HTTP (dev only). Disable once the API URL uses https:// — connections then hard-fail rather than leak credentials in plaintext."
 msgstr "Permit sending API credentials over unencrypted HTTP (dev only). Disable once the API URL uses https:// — connections then hard-fail rather than leak credentials in plaintext."
 
+msgctxt "SettingsOptions::eurosite::cron_header"
+msgid "Cron"
+msgstr "Cron"
+
+msgctxt "SettingsOptions::eurosite::cron_access_key"
+msgid "Cron access key"
+msgstr "Cron access key"
+
+msgctxt "SettingsTooltips::eurosite::cron_access_key"
+msgid "Shared secret for the sync cron endpoints (index.php?dispatch=eurosite_cron.run&access_key=KEY&cron_mode=... and app/addons/eurosite/cron.php). Change it from the default before going live."
+msgstr "Shared secret for the sync cron endpoints (index.php?dispatch=eurosite_cron.run&access_key=KEY&cron_mode=... and app/addons/eurosite/cron.php). Change it from the default before going live."
+
 msgctxt "SettingsOptions::eurosite::resilience_header"
 msgid "Resilience"
 msgstr "Resilience"

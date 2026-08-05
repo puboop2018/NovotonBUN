@@ -47,6 +47,11 @@ class ConfigProvider extends AbstractConfigProvider
         return $code !== '' ? $code : 'EU';
     }
 
+    public static function getCronAccessKey(): string
+    {
+        return TypeCoerce::toString(self::getSetting('cron_access_key'));
+    }
+
     public static function getDefaultCurrency(): string
     {
         $cur = TypeCoerce::toString(self::getSetting('default_currency'));
