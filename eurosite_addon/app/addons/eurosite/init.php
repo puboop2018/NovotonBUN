@@ -57,14 +57,33 @@ if (defined('AREA') && AREA === 'A' && function_exists('fn_eurosite_ensure_schem
     unset($__eu_heal_fp);
 }
 
-// Register with the shared travel-provider registry so Eurosite participates in
-// the cross-provider feature-mapping / normalization pipeline (guarded against
-// travel_core not being loaded). MVP registers the normalizer only; the
-// booking-admin / hotel-product / status-sync providers are follow-ups.
+// Register with the shared travel-provider registry: the normalizer (feature
+// mapping / normalization pipeline), the booking-admin provider + status
+// callbacks (unified travel_bookings grid), and the hotel-product provider
+// (hotel-id ownership; Eurosite has no CS-Cart products yet, so product
+// resolution intentionally answers null). Guarded against travel_core not
+// being loaded.
 if (class_exists(\Tygh\Addons\TravelCore\Services\TravelProviderRegistry::class)) {
     \Tygh\Addons\TravelCore\Services\TravelProviderRegistry::register(
         'eurosite',
         'Eurosite',
         new \Tygh\Addons\Eurosite\Api\EurositeNormalizer(),
+    );
+    \Tygh\Addons\TravelCore\Services\TravelProviderRegistry::setBookingAdminProvider(
+        'eurosite',
+        new \Tygh\Addons\Eurosite\Services\BookingAdminProvider(),
+    );
+    \Tygh\Addons\TravelCore\Services\TravelProviderRegistry::setHotelProductProvider(
+        'eurosite',
+        new \Tygh\Addons\Eurosite\Providers\EurositeHotelProductProvider(),
+    );
+    \Tygh\Addons\TravelCore\Services\TravelProviderRegistry::setStatusCallbacks(
+        'eurosite',
+        static function (): array {
+            return (new \Tygh\Addons\Eurosite\Services\BookingStatusService())->syncAll();
+        },
+        static function (int $bookingId): array {
+            return (new \Tygh\Addons\Eurosite\Services\BookingStatusService())->checkSingle($bookingId);
+        },
     );
 }

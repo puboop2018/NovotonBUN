@@ -10,6 +10,7 @@ use Tygh\Addons\Eurosite\EurositeXmlBuilder;
 use Tygh\Addons\Eurosite\EurositeXmlParser;
 use Tygh\Addons\Eurosite\Repository\CityRepository;
 use Tygh\Addons\Eurosite\Repository\CountryRepository;
+use Tygh\Addons\Eurosite\Repository\EurositeBookingRepository;
 use Tygh\Addons\Eurosite\Repository\DestinationWhitelistRepository;
 use Tygh\Addons\Eurosite\Repository\HotelRepository;
 use Tygh\Addons\Eurosite\Repository\ProductInfoCacheRepository;
@@ -81,6 +82,13 @@ final class Container
 
     private static ?ProductInfoCacheRepository $productInfoCache = null;
 
+    private static ?EurositeBookingRepository $bookings = null;
+
+    public static function bookings(): EurositeBookingRepository
+    {
+        return self::$bookings ??= new EurositeBookingRepository();
+    }
+
     public static function countries(): CountryRepository
     {
         return self::$countries ??= new CountryRepository();
@@ -136,5 +144,6 @@ final class Container
         self::$whitelist = null;
         self::$syncLog = null;
         self::$productInfoCache = null;
+        self::$bookings = null;
     }
 }
