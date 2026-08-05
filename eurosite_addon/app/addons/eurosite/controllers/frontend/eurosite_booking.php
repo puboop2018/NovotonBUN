@@ -11,6 +11,8 @@ declare(strict_types=1);
  * Modes:
  *   search       — destination-driven hotel search (Cazari individuale)
  *   offer_terms  — AJAX JSON: cancellation fees + payment terms for an offer
+ *   booking_form — guest booking form for a snapshotted offer
+ *   add_to_cart  — persist booking + cart line (POST)
  *   packages     — Pachete Touroperator (placeholder)
  *   transport    — Transport Touroperator (placeholder)
  *   circuits     — Circuite Touroperator (placeholder)
@@ -21,8 +23,10 @@ if (!defined('BOOTSTRAP')) {
 }
 
 $allowed_modes = [
-    'search'      => 'search.php',
-    'offer_terms' => 'offer_terms.php',
+    'search'       => 'search.php',
+    'offer_terms'  => 'offer_terms.php',
+    'booking_form' => 'booking_form.php',
+    'add_to_cart'  => 'add_to_cart.php',
     'packages'    => 'packages.php',
     'transport'   => 'transport.php',
     'circuits'    => 'circuits.php',

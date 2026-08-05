@@ -41,3 +41,120 @@ function fn_eurosite_ensure_schema(): void
 {
     \Tygh\Addons\Eurosite\Install\SchemaMigrator::ensure(fn_eurosite_table_prefix());
 }
+
+// ── Order pipeline hooks (registered in init.php) ────────────────────────────
+
+/**
+ * pre_place_order — price-tamper guard: every eurosite cart line's price must
+ * match the server-side booking row (converted to the cart currency the same
+ * way add_to_cart did). Mismatch blocks the order.
+ *
+ * @param array<string, mixed> $cart
+ * @param bool $allow
+ * @param array<int, mixed> $product_groups
+ */
+function fn_eurosite_pre_place_order(array &$cart, &$allow, &$product_groups): void
+{
+    $products = is_array($cart['products'] ?? null) ? $cart['products'] : [];
+    foreach ($products as $item) {
+        if (!is_array($item)) {
+            continue;
+        }
+        $extra = is_array($item['extra'] ?? null) ? $item['extra'] : [];
+        $bookingId = (int) ($extra['eurosite_booking_id'] ?? 0);
+        if ($bookingId <= 0) {
+            continue;
+        }
+        $booking = \Tygh\Addons\Eurosite\Services\Container::bookings()->findById($bookingId);
+        if ($booking === null) {
+            $allow = false;
+            fn_set_notification('E', __('error'), 'Eurosite booking not found — please rebuild your cart.');
+            continue;
+        }
+        $coefficient = (float) db_get_field(
+            'SELECT coefficient FROM ?:currencies WHERE currency_code = ?s',
+            (string) ($booking['currency'] ?? 'EUR'),
+        );
+        $expected = $coefficient > 0
+            ? round((float) ($booking['total_price'] ?? 0) * $coefficient, 2)
+            : (float) ($booking['total_price'] ?? 0);
+        if (abs((float) ($item['price'] ?? 0) - $expected) > 0.01) {
+            $allow = false;
+            fn_set_notification('E', __('error'), 'The booking price changed — please rebuild your cart.');
+            fn_log_event('general', 'runtime', [
+                'message' => "Eurosite pre_place_order price mismatch for booking {$bookingId}: cart "
+                    . (string) ($item['price'] ?? 0) . " vs expected {$expected}",
+            ]);
+        }
+    }
+}
+
+/**
+ * place_order_post — link the order's eurosite bookings and submit them to
+ * the Eurosite API (AddBookingRequest); idempotent on re-fire.
+ *
+ * @param int|array<int> $order_id
+ */
+function fn_eurosite_place_order_post(&$order_id, mixed $cart = null): void
+{
+    $ids = is_array($order_id) ? $order_id : [$order_id];
+    foreach ($ids as $id) {
+        $id = (int) $id;
+        if ($id <= 0) {
+            continue;
+        }
+        $orderInfo = function_exists('fn_get_order_info') ? fn_get_order_info($id) : null;
+        if (!is_array($orderInfo) || $orderInfo === []) {
+            continue;
+        }
+        (new \Tygh\Addons\Eurosite\Services\BookingSubmissionService())->submitOrder($id, $orderInfo);
+    }
+}
+
+/**
+ * user_login_post — claim guest bookings created in this session.
+ */
+function fn_eurosite_user_login_post(mixed $user_data, mixed $user_id, mixed $unused = null): void
+{
+    $uid = (int) (is_scalar($user_id) ? $user_id : 0);
+    $sessionId = function_exists('session_id') ? (string) session_id() : '';
+    if ($uid > 0 && $sessionId !== '') {
+        \Tygh\Addons\Eurosite\Services\Container::bookings()->linkToUserBySession($sessionId, $uid);
+    }
+}
+
+/**
+ * create_user_post — same claim for freshly registered users.
+ */
+function fn_eurosite_create_user_post(mixed $user_id, mixed $user_data = null, mixed $unused1 = null, mixed $unused2 = null): void
+{
+    fn_eurosite_user_login_post(null, $user_id);
+}
+
+/**
+ * travel_link_order_bookings — travel_core's reconcile sweep: link any
+ * eurosite bookings referenced by the order's items but still unlinked.
+ *
+ * @param int $order_id
+ * @param int $linked incremented per booking linked
+ */
+function fn_eurosite_travel_link_order_bookings($order_id, &$linked): void
+{
+    $orderId = (int) $order_id;
+    if ($orderId <= 0 || !function_exists('fn_get_order_info')) {
+        return;
+    }
+    $orderInfo = fn_get_order_info($orderId);
+    if (!is_array($orderInfo) || $orderInfo === []) {
+        return;
+    }
+    $service = new \Tygh\Addons\Eurosite\Services\BookingSubmissionService();
+    $repo = \Tygh\Addons\Eurosite\Services\Container::bookings();
+    foreach ($service->bookingIdsFromOrder($orderInfo) as $bookingId) {
+        $booking = $repo->findById($bookingId);
+        if ($booking !== null && (int) ($booking['order_id'] ?? 0) === 0) {
+            $repo->linkToOrder($bookingId, $orderId, (int) ($orderInfo['user_id'] ?? 0));
+            $linked = (int) $linked + 1;
+        }
+    }
+}

@@ -161,7 +161,7 @@ if ($country !== '' && $city !== '' && $checkIn !== '' && $checkOut !== '') {
                     if ($info === null && $tourop !== '' && $lazyBudget > 0) {
                         $lazyBudget--;
                         try {
-                            $fetched = Container::getApi()->getProductInfo($country, $city, $pc, 'hotel');
+                            $fetched = Container::getApi()->getProductInfo($country, $city, $pc, 'hotel', $tourop);
                             $cache->put($tourop, $pc, $country, $city, $fetched);
                             $info = $cache->get($tourop, $pc);
                         } catch (\Throwable $e) {

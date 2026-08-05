@@ -107,3 +107,63 @@
     .eurosite-hotel-image { display: none; }
     .eurosite-picker-field select { min-width: 100%; }
 }
+
+/* ── Booking form ── */
+
+.eurosite-booking-layout {
+    display: flex;
+    gap: 26px;
+    align-items: flex-start;
+    margin-top: 18px;
+}
+
+.eurosite-booking-form { flex: 1 1 auto; }
+
+.eurosite-guest-fields {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin: 6px 0 12px;
+}
+
+.eurosite-guest-fields input,
+.eurosite-guest-fields select {
+    padding: 8px;
+    min-width: 150px;
+}
+
+.eurosite-conditions {
+    margin: 18px 0;
+    padding: 14px 16px;
+    background: #f7f9fb;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+}
+
+.eurosite-submit-btn { margin-top: 10px; }
+
+.eurosite-booking-sidebar {
+    flex: 0 0 280px;
+    background: #f7f9fb;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 16px 18px;
+    position: sticky;
+    top: 12px;
+}
+
+.eurosite-sidebar-row { font-size: 13px; margin: 6px 0; }
+
+.eurosite-sidebar-total {
+    display: flex;
+    justify-content: space-between;
+    border-top: 1px solid #dbe3ec;
+    margin-top: 12px;
+    padding-top: 10px;
+    font-size: 16px;
+}
+
+@media (max-width: 760px) {
+    .eurosite-booking-layout { flex-direction: column; }
+    .eurosite-booking-sidebar { position: static; width: 100%; flex-basis: auto; }
+}

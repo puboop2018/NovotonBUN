@@ -69,7 +69,7 @@ final class ProductInfoCacheCommand extends AbstractSyncCommand
                     continue;
                 }
                 $this->trySyncItem(function () use ($api, $cache, $tourop, $product, $country, $city, &$synced): void {
-                    $info = $api->getProductInfo($country, $city, $product, 'hotel');
+                    $info = $api->getProductInfo($country, $city, $product, 'hotel', $tourop);
                     $cache->put($tourop, $product, $country, $city, $info);
                     $synced++;
                 }, "product {$product}", $errors);

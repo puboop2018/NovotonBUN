@@ -196,13 +196,13 @@ final class EurositeApiClient
      *
      * @return array<string, mixed>
      */
-    public function getProductInfo(string $countryCode, string $cityCode, string $productCode, string $productType = 'hotel'): array
+    public function getProductInfo(string $countryCode, string $cityCode, string $productCode, string $productType = 'hotel', string $touropCode = ''): array
     {
         $payload = '<getProductInfoRequest>'
             . '<ProductType>' . EurositeXmlBuilder::esc($productType) . '</ProductType>'
             . '<CountryCode>' . EurositeXmlBuilder::esc($countryCode) . '</CountryCode>'
             . '<CityCode>' . EurositeXmlBuilder::esc($cityCode) . '</CityCode>'
-            . '<TourOpCode>' . EurositeXmlBuilder::esc($this->tourOpCode) . '</TourOpCode>'
+            . '<TourOpCode>' . EurositeXmlBuilder::esc($touropCode !== '' ? $touropCode : $this->tourOpCode) . '</TourOpCode>'
             . '<ProductCode>' . EurositeXmlBuilder::esc($productCode) . '</ProductCode>'
             . '</getProductInfoRequest>';
         $details = $this->call('getProductInfoRequest', $payload);
@@ -635,7 +635,7 @@ final class EurositeApiClient
         return '<getHotelPriceRequest>'
             . '<CountryCode>' . EurositeXmlBuilder::esc(self::str($params['country_code'] ?? '')) . '</CountryCode>'
             . '<CityCode>' . EurositeXmlBuilder::esc(self::str($params['city_code'] ?? '')) . '</CityCode>'
-            . '<TourOpCode>' . EurositeXmlBuilder::esc($this->tourOpCode) . '</TourOpCode>'
+            . '<TourOpCode>' . EurositeXmlBuilder::esc(self::str($params['tourop_code'] ?? '') ?: $this->tourOpCode) . '</TourOpCode>'
             . $optional
             . '<CurrencyCode>' . EurositeXmlBuilder::esc($currency) . '</CurrencyCode>'
             . ($meals !== '' ? '<MealTypes>' . $meals . '</MealTypes>' : '')
@@ -695,7 +695,7 @@ final class EurositeApiClient
             . '<BookingItems>'
             . '<BookingItem ProductType="hotel">'
             . '<ItemClientId>1</ItemClientId>'
-            . '<TourOpCode>' . EurositeXmlBuilder::esc($this->tourOpCode) . '</TourOpCode>'
+            . '<TourOpCode>' . EurositeXmlBuilder::esc(self::str($b['tourop_code'] ?? '') ?: $this->tourOpCode) . '</TourOpCode>'
             . '<HotelItem>'
             . ($agent !== '' ? '<BookingAgent>' . EurositeXmlBuilder::esc($agent) . '</BookingAgent>' : '')
             . ($client !== '' ? '<BookingClient>' . EurositeXmlBuilder::esc($client) . '</BookingClient>' : '')

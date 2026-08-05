@@ -18,6 +18,62 @@ if (!defined('BOOTSTRAP')) {
 function fn_eurosite_post_install(): void
 {
     fn_eurosite_seed_storefront_menu();
+    fn_eurosite_ensure_carrier_product();
+}
+
+/**
+ * Ensure the hidden EUROSITE-BOOKING carrier product exists — the cart line
+ * every eurosite booking rides on (eurosite hotels have no per-hotel CS-Cart
+ * products; search is destination-driven). Hidden (status H): reachable by
+ * direct add-to-cart, absent from catalog/search. Idempotent; failure
+ * degrades to a log line and the storefront's "checkout not configured"
+ * notice.
+ *
+ * Returns the product_id (existing or created), 0 on failure.
+ */
+function fn_eurosite_ensure_carrier_product(): int
+{
+    try {
+        $existing = (int) db_get_field(
+            "SELECT product_id FROM ?:products WHERE product_code = 'EUROSITE-BOOKING'",
+        );
+        if ($existing > 0) {
+            return $existing;
+        }
+        if (!function_exists('fn_update_product')) {
+            return 0;
+        }
+        $categoryId = (int) db_get_field(
+            'SELECT category_id FROM ?:categories ORDER BY category_id LIMIT 1',
+        );
+        $productData = [
+            'product'       => 'Eurosite booking',
+            'product_code'  => 'EUROSITE-BOOKING',
+            'status'        => 'H',
+            'price'         => 0,
+            'amount'        => 100000,
+            'tracking'      => 'D',            // no inventory tracking
+            'is_edp'        => 'N',
+            'shipping_freight' => 0,
+            'free_shipping' => 'Y',
+        ];
+        if ($categoryId > 0) {
+            $productData['category_ids'] = [$categoryId];
+            $productData['main_category'] = $categoryId;
+        }
+        $productId = (int) fn_update_product($productData);
+        if ($productId > 0) {
+            return $productId;
+        }
+    } catch (\Throwable $e) {
+        if (function_exists('fn_log_event')) {
+            fn_log_event('general', 'runtime', [
+                'message' => 'Eurosite carrier product creation failed: ' . $e->getMessage(),
+            ]);
+        }
+    }
+
+    return 0;
 }
 
 /**
