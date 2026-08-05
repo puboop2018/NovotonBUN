@@ -48,6 +48,7 @@ currently empty.
 | `hotel_search.php` | getHotelPriceRequest | `--country --city --check-in --nights --adults [--children=8,5] [--room=DB] --limit=N` |
 | `product_info.php` | getProductInfoRequest | `--country --city --product [--type=hotel] --limit=N` |
 | `booking_info.php` | getBookingRequest | `--ref=REF [--source=client|api]` |
+| `search_diagnose.php` | getHotelPriceRequest battery | `[--report=FILE]` — outage evidence report (EN+RO) for the operator |
 
 Every probe accepts `--help` (CLI) / `?help` (browser). `--limit=N` trims the
 most-repeated element in the response to its first N occurrences so big

@@ -18,10 +18,13 @@ service — a distinct Touroperator platform, a sibling to the existing
 > and the cart→order→AddBookingRequest pipeline on a hidden carrier
 > product. Placeholder pages cover the Pachete/Transport/Circuite modules.
 >
-> **Known blockers:** (1) the live getHotelPriceRequest currently dies in a
-> connection reset after ~6.6s for every variant — search appears not yet
-> enabled for this account server-side; raise with Eurosite/TouringIT.
-> (2) The addon is deliberately not yet wired into the repo's
+> **Known items:** (1) live search verified working end-to-end 2026-08-05
+> (239 Mamaia offers; getItemFees accepts placeholder pax names — the terms
+> modal contract holds) — but the service had a full outage on 2026-08-04
+> (every search reset at ~6.6s while static data answered), so treat it as
+> potentially intermittent; `dev/eurosite/search_diagnose.php` generates an
+> evidence report (EN+RO, timestamps + RequestIds) to send the operator if
+> it recurs. (2) The addon is deliberately not yet wired into the repo's
 > PHPStan/cs-fixer/CI paths (final graduation step).
 
 ```
@@ -150,10 +153,10 @@ network. The code is PHPStan level-10 clean and PSR-12 formatted.
    (`Documentation/CRON_JOBS.txt` has the schedule).
 3. ~~Whitelist, admin, bookings grid, storefront search + booking pipeline~~ —
    done (see Status above).
-4. **Live search/booking smoke test** — BLOCKED on the server-side search
-   outage (constant ~6.6s connection reset); once Eurosite enables search
-   for the account, run a full search → book → cancel cycle on the docker
-   store.
+4. **Live search/booking smoke test** — search + getItemFees verified live
+   2026-08-05 (see Status); the remaining piece is a full search → book →
+   cancel cycle on the docker store (AddBookingRequest against a real
+   offer, then CancelBookingRequest cleanup).
 5. **Wire into the CI gates**: add the addon's `src`/`controllers`/`func.php`
    to `phpstan.neon`, `.php-cs-fixer.dist.php`, the CI `php -l` step, and a
    PHPUnit coverage job — the same treatment novoton/sphinx get.
