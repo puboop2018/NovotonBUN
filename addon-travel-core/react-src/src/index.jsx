@@ -92,6 +92,11 @@ function readConfig(el) {
         roomsData:           url.get('rooms_data') || el.dataset.roomsData || '',
         calendarPrices,
         calendarPricesCurrency,
+        // The mount element itself, so the engine can read LIVE attributes at
+        // search time — providers without dedicated engine fields (eurosite's
+        // country/city selects) maintain a JSON map in data-extra-params and
+        // it must reflect the current selection, not the initial render.
+        mountEl:             el,
     };
 }
 

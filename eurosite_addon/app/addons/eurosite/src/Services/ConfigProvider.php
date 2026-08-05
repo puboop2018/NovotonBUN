@@ -52,6 +52,11 @@ class ConfigProvider extends AbstractConfigProvider
         return TypeCoerce::toString(self::getSetting('cron_access_key'));
     }
 
+    public static function getPaymentTermsText(): string
+    {
+        return TypeCoerce::toString(self::getSetting('payment_terms_text'));
+    }
+
     public static function getDefaultCurrency(): string
     {
         $cur = TypeCoerce::toString(self::getSetting('default_currency'));

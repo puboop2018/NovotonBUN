@@ -19,6 +19,8 @@ if (!defined('BOOTSTRAP')) {
     exit('Access denied');
 }
 
+require_once __DIR__ . '/functions/install.php';
+
 /**
  * The ?: table prefix, read here at the boundary — Registry access is
  * banned inside src/ class bodies (phpstan-disallowed-calls.neon).
