@@ -43,7 +43,7 @@ final class SchemaMigrator
     private static function createMissingTables(): void
     {
         $xml = @simplexml_load_file(__DIR__ . '/../../addon.xml');
-        if ($xml === false || $xml === null) {
+        if ($xml === false) {
             return;
         }
         foreach ($xml->queries->item ?? [] as $item) {
@@ -63,21 +63,21 @@ final class SchemaMigrator
         // column => ADD COLUMN definition (keep in sync with the
         // eurosite_bookings CREATE in addon.xml)
         $columns = [
-            'nights'        => "ADD COLUMN `nights` SMALLINT UNSIGNED NOT NULL DEFAULT 0 AFTER `check_out`",
-            'adults'        => "ADD COLUMN `adults` TINYINT UNSIGNED NOT NULL DEFAULT 2 AFTER `nights`",
-            'children'      => "ADD COLUMN `children` TINYINT UNSIGNED NOT NULL DEFAULT 0 AFTER `adults`",
+            'nights' => 'ADD COLUMN `nights` SMALLINT UNSIGNED NOT NULL DEFAULT 0 AFTER `check_out`',
+            'adults' => 'ADD COLUMN `adults` TINYINT UNSIGNED NOT NULL DEFAULT 2 AFTER `nights`',
+            'children' => 'ADD COLUMN `children` TINYINT UNSIGNED NOT NULL DEFAULT 0 AFTER `adults`',
             'children_ages' => "ADD COLUMN `children_ages` VARCHAR(100) NOT NULL DEFAULT '' AFTER `children`",
-            'num_rooms'     => "ADD COLUMN `num_rooms` TINYINT UNSIGNED NOT NULL DEFAULT 1 AFTER `children_ages`",
-            'rooms_data'    => 'ADD COLUMN `rooms_data` JSON DEFAULT NULL AFTER `num_rooms`',
-            'room_type'     => "ADD COLUMN `room_type` VARCHAR(255) NOT NULL DEFAULT '' AFTER `rooms_data`",
-            'board_id'      => "ADD COLUMN `board_id` VARCHAR(32) NOT NULL DEFAULT '' COMMENT 'meal/board service code' AFTER `room_type`",
-            'meal_name'     => "ADD COLUMN `meal_name` VARCHAR(255) NOT NULL DEFAULT '' AFTER `board_id`",
-            'series_id'     => "ADD COLUMN `series_id` VARCHAR(32) NOT NULL DEFAULT '' COMMENT 'SeriesId from the offer' AFTER `meal_name`",
-            'guest_name'    => "ADD COLUMN `guest_name` VARCHAR(500) NOT NULL DEFAULT '' AFTER `series_id`",
-            'guest_email'   => "ADD COLUMN `guest_email` VARCHAR(255) NOT NULL DEFAULT '' AFTER `guest_name`",
-            'guest_phone'   => "ADD COLUMN `guest_phone` VARCHAR(100) NOT NULL DEFAULT '' AFTER `guest_email`",
+            'num_rooms' => 'ADD COLUMN `num_rooms` TINYINT UNSIGNED NOT NULL DEFAULT 1 AFTER `children_ages`',
+            'rooms_data' => 'ADD COLUMN `rooms_data` JSON DEFAULT NULL AFTER `num_rooms`',
+            'room_type' => "ADD COLUMN `room_type` VARCHAR(255) NOT NULL DEFAULT '' AFTER `rooms_data`",
+            'board_id' => "ADD COLUMN `board_id` VARCHAR(32) NOT NULL DEFAULT '' COMMENT 'meal/board service code' AFTER `room_type`",
+            'meal_name' => "ADD COLUMN `meal_name` VARCHAR(255) NOT NULL DEFAULT '' AFTER `board_id`",
+            'series_id' => "ADD COLUMN `series_id` VARCHAR(32) NOT NULL DEFAULT '' COMMENT 'SeriesId from the offer' AFTER `meal_name`",
+            'guest_name' => "ADD COLUMN `guest_name` VARCHAR(500) NOT NULL DEFAULT '' AFTER `series_id`",
+            'guest_email' => "ADD COLUMN `guest_email` VARCHAR(255) NOT NULL DEFAULT '' AFTER `guest_name`",
+            'guest_phone' => "ADD COLUMN `guest_phone` VARCHAR(100) NOT NULL DEFAULT '' AFTER `guest_email`",
             'cancellation_fees_json' => "ADD COLUMN `cancellation_fees_json` JSON DEFAULT NULL COMMENT 'getBookingFees snapshot' AFTER `status`",
-            'updated_at'    => 'ADD COLUMN `updated_at` DATETIME DEFAULT NULL AFTER `created_at`',
+            'updated_at' => 'ADD COLUMN `updated_at` DATETIME DEFAULT NULL AFTER `created_at`',
         ];
 
         $table = $prefix . 'eurosite_bookings';

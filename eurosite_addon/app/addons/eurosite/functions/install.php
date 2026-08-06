@@ -8,6 +8,8 @@ declare(strict_types=1);
  * Location: app/addons/eurosite/functions/install.php (required by func.php).
  */
 
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+
 if (!defined('BOOTSTRAP')) {
     exit('Access denied');
 }
@@ -34,18 +36,18 @@ function fn_eurosite_post_install(): void
 function fn_eurosite_ensure_carrier_product(): int
 {
     try {
-        $existing = (int) db_get_field(
+        $existing = TypeCoerce::toInt(db_get_field(
             "SELECT product_id FROM ?:products WHERE product_code = 'EUROSITE-BOOKING'",
-        );
+        ));
         if ($existing > 0) {
             return $existing;
         }
         if (!function_exists('fn_update_product')) {
             return 0;
         }
-        $categoryId = (int) db_get_field(
+        $categoryId = TypeCoerce::toInt(db_get_field(
             'SELECT category_id FROM ?:categories ORDER BY category_id LIMIT 1',
-        );
+        ));
         $productData = [
             'product'       => 'Eurosite booking',
             'product_code'  => 'EUROSITE-BOOKING',
@@ -61,7 +63,7 @@ function fn_eurosite_ensure_carrier_product(): int
             $productData['category_ids'] = [$categoryId];
             $productData['main_category'] = $categoryId;
         }
-        $productId = (int) fn_update_product($productData);
+        $productId = TypeCoerce::toInt(fn_update_product($productData));
         if ($productId > 0) {
             return $productId;
         }
@@ -97,14 +99,16 @@ function fn_eurosite_seed_storefront_menu(): int
              WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = CONCAT(?s, 'static_data')",
             fn_eurosite_table_prefix(),
         );
-        $columns = is_array($columns) ? array_map('strval', $columns) : [];
+        $columns = TypeCoerce::toStringList($columns);
         if (!in_array('param', $columns, true) || !in_array('param_id', $columns, true)) {
             return 0; // no static_data table in this build — manual menu only
         }
         $has = static fn (string $col): bool => in_array($col, $columns, true);
 
-        $langCodes = db_get_fields("SELECT lang_code FROM ?:languages WHERE status = 'A'");
-        $langCodes = is_array($langCodes) && $langCodes !== [] ? array_map('strval', $langCodes) : ['en'];
+        $langCodes = TypeCoerce::toStringList(db_get_fields("SELECT lang_code FROM ?:languages WHERE status = 'A'"));
+        if ($langCodes === []) {
+            $langCodes = ['en'];
+        }
 
         $items = [
             ['param' => 'index.php?dispatch=eurosite_booking.search', 'pos' => 10,
@@ -149,11 +153,11 @@ function fn_eurosite_seed_storefront_menu(): int
  */
 function fn_eurosite_seed_menu_item(string $param, int $parentId, int $position, array $names, array $langCodes, callable $has): int
 {
-    $existing = (int) db_get_field(
+    $existing = TypeCoerce::toInt(db_get_field(
         "SELECT param_id FROM ?:static_data WHERE section = 'A' AND param = ?s AND parent_id = ?i",
         $param,
         $parentId,
-    );
+    ));
     if ($existing > 0) {
         return 0;
     }
@@ -169,7 +173,7 @@ function fn_eurosite_seed_menu_item(string $param, int $parentId, int $position,
         $row['param_2'] = '';
     }
     db_query('INSERT INTO ?:static_data ?e', $row);
-    $paramId = (int) db_get_field('SELECT LAST_INSERT_ID()');
+    $paramId = TypeCoerce::toInt(db_get_field('SELECT LAST_INSERT_ID()'));
     if ($paramId <= 0) {
         return 0;
     }

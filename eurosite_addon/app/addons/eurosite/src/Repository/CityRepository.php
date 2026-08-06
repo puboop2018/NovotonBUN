@@ -31,7 +31,7 @@ class CityRepository
             $tuples = [];
             $params = [];
             foreach ($chunk as $c) {
-                $code = trim(TypeCoerce::toString($c['code'] ?? ''));
+                $code = trim(TypeCoerce::toString($c['code']));
                 if ($code === '') {
                     continue;
                 }
@@ -40,7 +40,7 @@ class CityRepository
                     $params,
                     $code,
                     trim(TypeCoerce::toString($c['country_code'] ?? '')) ?: $countryCode,
-                    TypeCoerce::toString($c['name'] ?? ''),
+                    TypeCoerce::toString($c['name']),
                     $own,
                     $now,
                 );
@@ -78,6 +78,9 @@ class CityRepository
         ));
     }
 
+    /**
+     * @return array<string, mixed>|null
+     */
     public function findByCode(string $cityCode): ?array
     {
         $row = self::asRow(db_get_row('SELECT * FROM ?:eurosite_cities WHERE city_code = ?s', $cityCode));
@@ -94,7 +97,7 @@ class CityRepository
     {
         $rows = db_get_fields("SELECT DISTINCT country_code FROM ?:eurosite_cities WHERE is_own = 'Y' AND country_code <> ''");
 
-        return array_values(array_map(static fn ($v) => TypeCoerce::toString($v), is_array($rows) ? $rows : []));
+        return array_values(array_map(static fn ($v): string => TypeCoerce::toString($v), is_array($rows) ? $rows : []));
     }
 
     public function count(bool $ownOnly = false): int

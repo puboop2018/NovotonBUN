@@ -79,7 +79,7 @@ class CronDispatcher implements CronDispatcherInterface
             if (!$lock->acquire()) {
                 return [
                     'success' => false,
-                    'busy'    => true,
+                    'busy' => true,
                     'message' => "Mode '{$mode}' is already running. Try again later, or use &status=1 / &reset=1.",
                 ];
             }

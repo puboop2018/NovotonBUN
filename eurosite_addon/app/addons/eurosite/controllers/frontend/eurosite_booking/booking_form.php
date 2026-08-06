@@ -40,7 +40,7 @@ if ($snapshot === null) {
 }
 
 $adults = max(1, TypeCoerce::toInt($snapshot['adults'] ?? 2));
-$childrenAges = array_values(array_map('intval', (array) ($snapshot['children_ages'] ?? [])));
+$childrenAges = TypeCoerce::toIntList($snapshot['children_ages'] ?? []);
 
 // Cancellation fees, server-rendered into the conditions section (best
 // effort — the modal on the results page uses the same data via AJAX).
@@ -48,7 +48,7 @@ $cancellationFees = [];
 try {
     $hotelRow = Container::hotels()->findByProductCode(TypeCoerce::toString($snapshot['product_code']));
     $tourop = $hotelRow !== null ? TypeCoerce::toString($hotelRow['tourop_code'] ?? '') : '';
-    $rooms = is_array($snapshot['rooms'] ?? null) ? $snapshot['rooms'] : [];
+    $rooms = TypeCoerce::toRowList($snapshot['rooms'] ?? null);
     $fees = Container::getApi()->getItemFees([
         'currency'     => TypeCoerce::toString($snapshot['currency']),
         'country_code' => TypeCoerce::toString($snapshot['country_code']),

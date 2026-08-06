@@ -32,8 +32,9 @@ $allowed_modes = [
     'circuits'    => 'circuits.php',
 ];
 
-if (isset($allowed_modes[$mode])) {
-    $result = require __DIR__ . '/eurosite_booking/' . $allowed_modes[$mode];
+$mode_name = is_string($mode ?? null) ? $mode : '';
+if (isset($allowed_modes[$mode_name])) {
+    $result = require __DIR__ . '/eurosite_booking/' . $allowed_modes[$mode_name];
 
     return is_array($result) ? $result : null;
 }

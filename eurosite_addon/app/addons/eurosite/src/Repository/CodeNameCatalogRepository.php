@@ -33,12 +33,12 @@ abstract class CodeNameCatalogRepository
         $tuples = [];
         $params = [];
         foreach ($rows as $r) {
-            $code = trim(TypeCoerce::toString($r['code'] ?? ''));
+            $code = trim(TypeCoerce::toString($r['code']));
             if ($code === '') {
                 continue;
             }
             $tuples[] = '(?s, ?s, ?s)';
-            array_push($params, $code, TypeCoerce::toString($r['name'] ?? ''), $now);
+            array_push($params, $code, TypeCoerce::toString($r['name']), $now);
         }
         if ($tuples === []) {
             return 0;

@@ -13,6 +13,7 @@ declare(strict_types=1);
  * Location: app/addons/eurosite/func.php
  */
 
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 use Tygh\Registry;
 
 if (!defined('BOOTSTRAP')) {
@@ -91,7 +92,7 @@ function fn_eurosite_pre_place_order(array &$cart, &$allow, &$product_groups): v
             continue;
         }
         $extra = is_array($item['extra'] ?? null) ? $item['extra'] : [];
-        $bookingId = (int) ($extra['eurosite_booking_id'] ?? 0);
+        $bookingId = TypeCoerce::toInt($extra['eurosite_booking_id'] ?? 0);
         if ($bookingId <= 0) {
             continue;
         }
@@ -101,19 +102,19 @@ function fn_eurosite_pre_place_order(array &$cart, &$allow, &$product_groups): v
             fn_set_notification('E', __('error'), 'Eurosite booking not found — please rebuild your cart.');
             continue;
         }
-        $coefficient = (float) db_get_field(
+        $coefficient = TypeCoerce::toFloat(db_get_field(
             'SELECT coefficient FROM ?:currencies WHERE currency_code = ?s',
-            (string) ($booking['currency'] ?? 'EUR'),
-        );
+            TypeCoerce::toString($booking['currency'] ?? 'EUR'),
+        ));
         $expected = $coefficient > 0
-            ? round((float) ($booking['total_price'] ?? 0) * $coefficient, 2)
-            : (float) ($booking['total_price'] ?? 0);
-        if (abs((float) ($item['price'] ?? 0) - $expected) > 0.01) {
+            ? round(TypeCoerce::toFloat($booking['total_price'] ?? 0) * $coefficient, 2)
+            : TypeCoerce::toFloat($booking['total_price'] ?? 0);
+        if (abs(TypeCoerce::toFloat($item['price'] ?? 0) - $expected) > 0.01) {
             $allow = false;
             fn_set_notification('E', __('error'), 'The booking price changed — please rebuild your cart.');
             fn_log_event('general', 'runtime', [
                 'message' => "Eurosite pre_place_order price mismatch for booking {$bookingId}: cart "
-                    . (string) ($item['price'] ?? 0) . " vs expected {$expected}",
+                    . TypeCoerce::toString($item['price'] ?? 0) . " vs expected {$expected}",
             ]);
         }
     }
@@ -133,8 +134,8 @@ function fn_eurosite_place_order_post(&$order_id, mixed $cart = null): void
         if ($id <= 0) {
             continue;
         }
-        $orderInfo = function_exists('fn_get_order_info') ? fn_get_order_info($id) : null;
-        if (!is_array($orderInfo) || $orderInfo === []) {
+        $orderInfo = TypeCoerce::toStringMap(function_exists('fn_get_order_info') ? fn_get_order_info($id) : null);
+        if ($orderInfo === []) {
             continue;
         }
         (new \Tygh\Addons\Eurosite\Services\BookingSubmissionService())->submitOrder($id, $orderInfo);
@@ -174,16 +175,16 @@ function fn_eurosite_travel_link_order_bookings($order_id, &$linked): void
     if ($orderId <= 0 || !function_exists('fn_get_order_info')) {
         return;
     }
-    $orderInfo = fn_get_order_info($orderId);
-    if (!is_array($orderInfo) || $orderInfo === []) {
+    $orderInfo = TypeCoerce::toStringMap(fn_get_order_info($orderId));
+    if ($orderInfo === []) {
         return;
     }
     $service = new \Tygh\Addons\Eurosite\Services\BookingSubmissionService();
     $repo = \Tygh\Addons\Eurosite\Services\Container::bookings();
     foreach ($service->bookingIdsFromOrder($orderInfo) as $bookingId) {
         $booking = $repo->findById($bookingId);
-        if ($booking !== null && (int) ($booking['order_id'] ?? 0) === 0) {
-            $repo->linkToOrder($bookingId, $orderId, (int) ($orderInfo['user_id'] ?? 0));
+        if ($booking !== null && TypeCoerce::toInt($booking['order_id'] ?? 0) === 0) {
+            $repo->linkToOrder($bookingId, $orderId, TypeCoerce::toInt($orderInfo['user_id'] ?? 0));
             $linked = (int) $linked + 1;
         }
     }

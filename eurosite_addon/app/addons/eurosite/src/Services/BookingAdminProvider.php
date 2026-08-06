@@ -58,9 +58,9 @@ class BookingAdminProvider implements BookingAdminProviderInterface
         $status = TypeCoerce::toString($booking['status'] ?? '');
         $statusLabels = [
             TravelConstants::STATUS_CONFIRMED => '<span class="label label-success">Confirmed</span>',
-            TravelConstants::STATUS_PENDING   => '<span class="label label-warning">Pending</span>',
+            TravelConstants::STATUS_PENDING => '<span class="label label-warning">Pending</span>',
             TravelConstants::STATUS_CANCELLED => '<span class="label label-danger">Cancelled</span>',
-            TravelConstants::STATUS_FAILED    => '<span class="label label-danger">Failed</span>',
+            TravelConstants::STATUS_FAILED => '<span class="label label-danger">Failed</span>',
         ];
         $display['status_label'] = $statusLabels[$status] ?? '<span class="label">' . htmlspecialchars($status) . '</span>';
 
@@ -94,23 +94,23 @@ class BookingAdminProvider implements BookingAdminProviderInterface
 
         if (in_array($status, [TravelConstants::STATUS_CONFIRMED, TravelConstants::STATUS_PENDING], true)) {
             $actions[] = [
-                'name'         => 'cancel_booking',
-                'label'        => 'Cancel at Eurosite',
-                'url'          => 'travel_bookings.provider_action',
-                'method'       => 'POST',
-                'css_class'    => 'btn-danger cm-confirm',
-                'icon'         => 'icon-remove',
-                'booking_id'   => $providerBookingId,
+                'name' => 'cancel_booking',
+                'label' => 'Cancel at Eurosite',
+                'url' => 'travel_bookings.provider_action',
+                'method' => 'POST',
+                'css_class' => 'btn-danger cm-confirm',
+                'icon' => 'icon-remove',
+                'booking_id' => $providerBookingId,
                 'extra_params' => ['provider_action' => 'cancel_booking'],
             ];
             $actions[] = [
-                'name'         => 'refresh_fees',
-                'label'        => 'Refresh Cancellation Fees',
-                'url'          => 'travel_bookings.provider_action',
-                'method'       => 'POST',
-                'css_class'    => 'btn',
-                'icon'         => 'icon-refresh',
-                'booking_id'   => $providerBookingId,
+                'name' => 'refresh_fees',
+                'label' => 'Refresh Cancellation Fees',
+                'url' => 'travel_bookings.provider_action',
+                'method' => 'POST',
+                'css_class' => 'btn',
+                'icon' => 'icon-refresh',
+                'booking_id' => $providerBookingId,
                 'extra_params' => ['provider_action' => 'refresh_fees'],
             ];
         }
@@ -136,7 +136,7 @@ class BookingAdminProvider implements BookingAdminProviderInterface
         $booking = $bookingId > 0 ? $this->repo->findById($bookingId) : null;
         if ($booking === null) {
             return [
-                'redirect'     => $redirect,
+                'redirect' => $redirect,
                 'notification' => ['type' => 'E', 'title' => TypeCoerce::toString(__('error')), 'message' => 'Eurosite booking not found.'],
             ];
         }
@@ -153,14 +153,14 @@ class BookingAdminProvider implements BookingAdminProviderInterface
                     $this->repo->update($bookingId, ['status' => TravelConstants::STATUS_CANCELLED]);
 
                     return [
-                        'redirect'     => $redirect,
+                        'redirect' => $redirect,
                         'notification' => ['type' => 'N', 'title' => TypeCoerce::toString(__('notice')), 'message' => 'Cancellation requested at Eurosite.'],
                     ];
                 }
 
                 return [
-                    'redirect'     => $redirect,
-                    'notification' => ['type' => 'E', 'title' => TypeCoerce::toString(__('error')), 'message' => 'Cancellation failed: ' . TypeCoerce::toString($result['error'] ?? 'unknown error')],
+                    'redirect' => $redirect,
+                    'notification' => ['type' => 'E', 'title' => TypeCoerce::toString(__('error')), 'message' => 'Cancellation failed: ' . TypeCoerce::toString($result['error'])],
                 ];
             }
 
@@ -171,19 +171,19 @@ class BookingAdminProvider implements BookingAdminProviderInterface
                 ]);
 
                 return [
-                    'redirect'     => $redirect,
+                    'redirect' => $redirect,
                     'notification' => ['type' => 'N', 'title' => TypeCoerce::toString(__('notice')), 'message' => 'Cancellation fees refreshed from Eurosite.'],
                 ];
             }
         } catch (\Throwable $e) {
             return [
-                'redirect'     => $redirect,
+                'redirect' => $redirect,
                 'notification' => ['type' => 'E', 'title' => TypeCoerce::toString(__('error')), 'message' => 'Eurosite API error: ' . $e->getMessage()],
             ];
         }
 
         return [
-            'redirect'     => $redirect,
+            'redirect' => $redirect,
             'notification' => ['type' => 'W', 'title' => TypeCoerce::toString(__('warning')), 'message' => "Unknown Eurosite action: {$action}"],
         ];
     }

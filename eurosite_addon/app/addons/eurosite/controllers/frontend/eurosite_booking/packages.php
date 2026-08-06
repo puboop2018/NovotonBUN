@@ -14,4 +14,6 @@ if (!defined('BOOTSTRAP')) {
     exit('Access denied');
 }
 
-Tygh::$app['view']->assign('eurosite_module', 'packages');
+/** @var \Smarty $view */
+$view = Tygh::$app['view'];
+$view->assign('eurosite_module', 'packages');
