@@ -34,6 +34,14 @@ function fn_fgo_invoicing_post_install(): void
             db_query("ALTER TABLE ?:user_profiles ADD COLUMN `{$name}` {$definition}");
         }
     }
+
+    // Mirror settings labels into ?:settings_descriptions right after CS-Cart
+    // created the settings objects. CS-Cart only fills a description when the
+    // object is created, and it fills it from the .po — which may be absent on
+    // this deploy. Without this the whole settings form renders as blank labels
+    // next to working widgets, and reinstalling is the only other cure.
+    // Runs on travel_core-less stores too, where the init.php heal is skipped.
+    \Tygh\Addons\FgoInvoicing\Install\LanguageSeeder::mirrorSettingsDescriptions();
 }
 
 /**

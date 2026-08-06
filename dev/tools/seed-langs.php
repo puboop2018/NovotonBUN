@@ -73,6 +73,11 @@ $sl_addons = [
         'fn_sphinx_holidays_language_seed_hash',
         'sphinx_holidays._lang_seed_hash',
     ],
+    'fgo_invoicing' => [
+        'fn_fgo_invoicing_seed_language_keys',
+        'fn_fgo_invoicing_language_seed_hash',
+        'fgo_invoicing._lang_seed_hash',
+    ],
 ];
 
 /**

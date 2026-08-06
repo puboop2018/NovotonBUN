@@ -105,8 +105,8 @@ msgid "Append SKU to line description"
 msgstr "Append SKU to line description"
 
 msgctxt "SettingsOptions::fgo_invoicing::additional_info"
-msgid "Add CS-Cart order # to invoice notes"
-msgstr "Add CS-Cart order # to invoice notes"
+msgid "Add CS-Cart order number to invoice notes"
+msgstr "Add CS-Cart order number to invoice notes"
 
 msgctxt "SettingsOptions::fgo_invoicing::shipping_tax_vat"
 msgid "Shipping VAT handling"
@@ -123,6 +123,82 @@ msgstr "Net unit price (PretUnitar)"
 msgctxt "SettingsVariants::fgo_invoicing::shipping_tax_vat::vat_zero"
 msgid "Zero VAT"
 msgstr "Zero VAT"
+
+msgctxt "SettingsVariants::fgo_invoicing::invoice_type::Factura"
+msgid "Factura (invoice)"
+msgstr "Factura (invoice)"
+
+msgctxt "SettingsVariants::fgo_invoicing::invoice_type::Proforma"
+msgid "Proforma"
+msgstr "Proforma"
+
+msgctxt "SettingsVariants::fgo_invoicing::invoice_type::Aviz"
+msgid "Aviz (delivery note)"
+msgstr "Aviz (delivery note)"
+
+msgctxt "SettingsVariants::fgo_invoicing::invoice_type::T"
+msgid "Special document type T"
+msgstr "Special document type T"
+
+msgctxt "SettingsVariants::fgo_invoicing::invoice_type::S"
+msgid "Special document type S"
+msgstr "Special document type S"
+
+msgctxt "SettingsVariants::fgo_invoicing::invoice_type::U"
+msgid "Special document type U"
+msgstr "Special document type U"
+
+msgctxt "SettingsVariants::fgo_invoicing::invoice_type::H"
+msgid "Special document type H"
+msgstr "Special document type H"
+
+msgctxt "SettingsVariants::fgo_invoicing::invoice_type::n"
+msgid "Special document type n"
+msgstr "Special document type n"
+
+msgctxt "SettingsVariants::fgo_invoicing::invoice_type::X"
+msgid "Special document type X"
+msgstr "Special document type X"
+
+msgctxt "SettingsVariants::fgo_invoicing::invoice_type::M"
+msgid "Special document type M"
+msgstr "Special document type M"
+
+msgctxt "SettingsVariants::fgo_invoicing::invoice_type::Y"
+msgid "Special document type Y"
+msgstr "Special document type Y"
+
+msgctxt "SettingsVariants::fgo_invoicing::invoice_type::D"
+msgid "Special document type D"
+msgstr "Special document type D"
+
+msgctxt "SettingsVariants::fgo_invoicing::invoice_type::d"
+msgid "Special document type d"
+msgstr "Special document type d"
+
+msgctxt "SettingsVariants::fgo_invoicing::invoice_type::L"
+msgid "Special document type L"
+msgstr "Special document type L"
+
+msgctxt "SettingsVariants::fgo_invoicing::article_id_field::none"
+msgid "None"
+msgstr "None"
+
+msgctxt "SettingsVariants::fgo_invoicing::article_id_field::sku"
+msgid "SKU (product code)"
+msgstr "SKU (product code)"
+
+msgctxt "SettingsVariants::fgo_invoicing::article_id_field::ean13"
+msgid "EAN-13"
+msgstr "EAN-13"
+
+msgctxt "SettingsVariants::fgo_invoicing::article_id_field::isbn"
+msgid "ISBN"
+msgstr "ISBN"
+
+msgctxt "SettingsVariants::fgo_invoicing::article_id_field::upc"
+msgid "UPC"
+msgstr "UPC"
 
 msgctxt "SettingsOptions::fgo_invoicing::shipping_code"
 msgid "Shipping article code"
@@ -160,7 +236,6 @@ msgctxt "SettingsOptions::fgo_invoicing::debug_logging"
 msgid "Debug logging"
 msgstr "Debug logging"
 
-# ── Admin pages ────────────────────────────────────────────────────────
 
 msgctxt "Languages::fgo_invoicing.manage_title"
 msgid "fgo_invoicing.manage_title"
@@ -318,7 +393,6 @@ msgctxt "Languages::fgo_invoicing.response_payload"
 msgid "fgo_invoicing.response_payload"
 msgstr "Response payload"
 
-# ── Customer email ─────────────────────────────────────────────────────
 
 msgctxt "Languages::fgo_invoicing.email_subject"
 msgid "fgo_invoicing.email_subject"

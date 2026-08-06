@@ -5,162 +5,236 @@ msgstr "Project-Id-Version: cs-cart-latest\n"
 "Language: ro_RO\n"
 
 msgctxt "Addons::name::fgo_invoicing"
-msgid "FGO Invoicing"
-msgstr "FGO Facturare"
+msgid "Facturare FGO"
+msgstr "Facturare FGO"
 
 msgctxt "Addons::description::fgo_invoicing"
-msgid "Issues fiscal invoices through the FGO Romanian e-invoicing API on order events."
-msgstr "Emite facturi fiscale prin API-ul românesc de e-facturare FGO la evenimentele comenzii."
+msgid "Emite facturi fiscale prin API-ul de e-facturare FGO la evenimentele comenzii."
+msgstr "Emite facturi fiscale prin API-ul de e-facturare FGO la evenimentele comenzii."
 
 msgctxt "SettingsSections::fgo_invoicing::general"
-msgid "General Settings"
+msgid "Setări generale"
 msgstr "Setări generale"
 
 msgctxt "SettingsOptions::fgo_invoicing::credentials_header"
-msgid "API Credentials"
+msgid "Credențiale API"
 msgstr "Credențiale API"
 
 msgctxt "SettingsOptions::fgo_invoicing::client_code"
-msgid "Client code (CodUnic / CIF)"
+msgid "Cod client (CodUnic / CIF)"
 msgstr "Cod client (CodUnic / CIF)"
 
 msgctxt "SettingsOptions::fgo_invoicing::private_key"
-msgid "FGO private API key"
-msgstr "Cheie API privată FGO"
+msgid "Cheie privată API FGO"
+msgstr "Cheie privată API FGO"
 
 msgctxt "SettingsOptions::fgo_invoicing::sandbox"
-msgid "Use sandbox (api-testuat.fgo.ro)"
+msgid "Folosește sandbox (api-testuat.fgo.ro)"
 msgstr "Folosește sandbox (api-testuat.fgo.ro)"
 
 msgctxt "SettingsOptions::fgo_invoicing::behaviour_header"
-msgid "Trigger & Behaviour"
-msgstr "Declanșare și comportament"
+msgid "Declanșare & Comportament"
+msgstr "Declanșare & Comportament"
 
 msgctxt "SettingsOptions::fgo_invoicing::api_call"
-msgid "Issue invoice on"
+msgid "Emite factura la"
 msgstr "Emite factura la"
 
 msgctxt "SettingsVariants::fgo_invoicing::api_call::onOrder"
-msgid "Place order"
-msgstr "Plasarea comenzii"
+msgid "Plasare comandă"
+msgstr "Plasare comandă"
 
 msgctxt "SettingsVariants::fgo_invoicing::api_call::onPayment"
-msgid "Payment confirmed"
-msgstr "Confirmarea plății"
+msgid "Plată confirmată"
+msgstr "Plată confirmată"
 
 msgctxt "SettingsVariants::fgo_invoicing::api_call::onCompleted"
-msgid "Order completed"
-msgstr "Finalizarea comenzii"
+msgid "Comandă finalizată"
+msgstr "Comandă finalizată"
 
 msgctxt "SettingsVariants::fgo_invoicing::api_call::manual"
-msgid "Manual only"
+msgid "Doar manual"
 msgstr "Doar manual"
 
 msgctxt "SettingsOptions::fgo_invoicing::invoice_type"
-msgid "Document type"
+msgid "Tip document"
 msgstr "Tip document"
 
 msgctxt "SettingsOptions::fgo_invoicing::invoice_series"
-msgid "Invoice series"
+msgid "Serie factură"
 msgstr "Serie factură"
 
 msgctxt "SettingsOptions::fgo_invoicing::verify_duplicate"
-msgid "Ask FGO to deduplicate (VerificareDuplicat)"
-msgstr "Cere FGO deduplicarea (VerificareDuplicat)"
+msgid "Cere FGO să dedublice (VerificareDuplicat)"
+msgstr "Cere FGO să dedublice (VerificareDuplicat)"
 
 msgctxt "SettingsOptions::fgo_invoicing::auto_email_pdf"
-msgid "Email the PDF link to the customer after issuance"
-msgstr "Trimite clientului linkul PDF pe email după emitere"
+msgid "Trimite link-ul PDF clientului după emitere"
+msgstr "Trimite link-ul PDF clientului după emitere"
 
 msgctxt "SettingsOptions::fgo_invoicing::min_call_interval_ms"
-msgid "Minimum interval between FGO calls (ms)"
-msgstr "Interval minim între apelurile FGO (ms)"
+msgid "Interval minim între apeluri FGO (ms)"
+msgstr "Interval minim între apeluri FGO (ms)"
 
 msgctxt "SettingsOptions::fgo_invoicing::customer_header"
-msgid "Customer / VAT"
+msgid "Client / TVA"
 msgstr "Client / TVA"
 
 msgctxt "SettingsOptions::fgo_invoicing::sanitize_vat"
-msgid "Validate Romanian CIF (ValideazaCodUnicRo)"
-msgstr "Validează CIF-ul românesc (ValideazaCodUnicRo)"
+msgid "Validează CIF românesc (ValideazaCodUnicRo)"
+msgstr "Validează CIF românesc (ValideazaCodUnicRo)"
 
 msgctxt "SettingsOptions::fgo_invoicing::client_vat_required"
-msgid "Require CIF for company customers at checkout"
-msgstr "Cere CIF pentru clienții persoane juridice la checkout"
+msgid "Solicită CIF la finalizare pentru persoane juridice"
+msgstr "Solicită CIF la finalizare pentru persoane juridice"
 
 msgctxt "SettingsOptions::fgo_invoicing::client_cnp_required"
-msgid "Require CNP for individuals at checkout"
-msgstr "Cere CNP pentru persoanele fizice la checkout"
+msgid "Solicită CNP la finalizare pentru persoane fizice"
+msgstr "Solicită CNP la finalizare pentru persoane fizice"
 
 msgctxt "SettingsOptions::fgo_invoicing::lines_header"
-msgid "Invoice Lines & Codes"
-msgstr "Linii factură și coduri"
+msgid "Linii factură & Coduri"
+msgstr "Linii factură & Coduri"
 
 msgctxt "SettingsOptions::fgo_invoicing::article_id_field"
-msgid "Article identifier (CodArticol)"
+msgid "Identificator articol (CodArticol)"
 msgstr "Identificator articol (CodArticol)"
 
 msgctxt "SettingsOptions::fgo_invoicing::product_description"
-msgid "Append SKU to line description"
+msgid "Adaugă SKU la descrierea liniei"
 msgstr "Adaugă SKU la descrierea liniei"
 
 msgctxt "SettingsOptions::fgo_invoicing::additional_info"
-msgid "Add CS-Cart order # to invoice notes"
-msgstr "Adaugă nr. comenzii CS-Cart în notele facturii"
+msgid "Adaugă numărul comenzii CS-Cart la observații"
+msgstr "Adaugă numărul comenzii CS-Cart la observații"
 
 msgctxt "SettingsOptions::fgo_invoicing::shipping_tax_vat"
-msgid "Shipping VAT handling"
-msgstr "Tratarea TVA la transport"
+msgid "Tratare TVA transport"
+msgstr "Tratare TVA transport"
 
 msgctxt "SettingsVariants::fgo_invoicing::shipping_tax_vat::vat_included"
-msgid "Tax-inclusive (PretTotal)"
+msgid "Cu TVA inclus (PretTotal)"
 msgstr "Cu TVA inclus (PretTotal)"
 
 msgctxt "SettingsVariants::fgo_invoicing::shipping_tax_vat::vat_not_included"
-msgid "Net unit price (PretUnitar)"
-msgstr "Preț unitar net (PretUnitar)"
+msgid "Preț unitar fără TVA (PretUnitar)"
+msgstr "Preț unitar fără TVA (PretUnitar)"
 
 msgctxt "SettingsVariants::fgo_invoicing::shipping_tax_vat::vat_zero"
-msgid "Zero VAT"
+msgid "TVA zero"
 msgstr "TVA zero"
 
+msgctxt "SettingsVariants::fgo_invoicing::invoice_type::Factura"
+msgid "Factura (factură fiscală)"
+msgstr "Factura (factură fiscală)"
+
+msgctxt "SettingsVariants::fgo_invoicing::invoice_type::Proforma"
+msgid "Proformă"
+msgstr "Proformă"
+
+msgctxt "SettingsVariants::fgo_invoicing::invoice_type::Aviz"
+msgid "Aviz (aviz de însoțire)"
+msgstr "Aviz (aviz de însoțire)"
+
+msgctxt "SettingsVariants::fgo_invoicing::invoice_type::T"
+msgid "Tip document special T"
+msgstr "Tip document special T"
+
+msgctxt "SettingsVariants::fgo_invoicing::invoice_type::S"
+msgid "Tip document special S"
+msgstr "Tip document special S"
+
+msgctxt "SettingsVariants::fgo_invoicing::invoice_type::U"
+msgid "Tip document special U"
+msgstr "Tip document special U"
+
+msgctxt "SettingsVariants::fgo_invoicing::invoice_type::H"
+msgid "Tip document special H"
+msgstr "Tip document special H"
+
+msgctxt "SettingsVariants::fgo_invoicing::invoice_type::n"
+msgid "Tip document special n"
+msgstr "Tip document special n"
+
+msgctxt "SettingsVariants::fgo_invoicing::invoice_type::X"
+msgid "Tip document special X"
+msgstr "Tip document special X"
+
+msgctxt "SettingsVariants::fgo_invoicing::invoice_type::M"
+msgid "Tip document special M"
+msgstr "Tip document special M"
+
+msgctxt "SettingsVariants::fgo_invoicing::invoice_type::Y"
+msgid "Tip document special Y"
+msgstr "Tip document special Y"
+
+msgctxt "SettingsVariants::fgo_invoicing::invoice_type::D"
+msgid "Tip document special D"
+msgstr "Tip document special D"
+
+msgctxt "SettingsVariants::fgo_invoicing::invoice_type::d"
+msgid "Tip document special d"
+msgstr "Tip document special d"
+
+msgctxt "SettingsVariants::fgo_invoicing::invoice_type::L"
+msgid "Tip document special L"
+msgstr "Tip document special L"
+
+msgctxt "SettingsVariants::fgo_invoicing::article_id_field::none"
+msgid "Niciunul"
+msgstr "Niciunul"
+
+msgctxt "SettingsVariants::fgo_invoicing::article_id_field::sku"
+msgid "SKU (cod produs)"
+msgstr "SKU (cod produs)"
+
+msgctxt "SettingsVariants::fgo_invoicing::article_id_field::ean13"
+msgid "EAN-13"
+msgstr "EAN-13"
+
+msgctxt "SettingsVariants::fgo_invoicing::article_id_field::isbn"
+msgid "ISBN"
+msgstr "ISBN"
+
+msgctxt "SettingsVariants::fgo_invoicing::article_id_field::upc"
+msgid "UPC"
+msgstr "UPC"
+
 msgctxt "SettingsOptions::fgo_invoicing::shipping_code"
-msgid "Shipping article code"
+msgid "Cod articol transport"
 msgstr "Cod articol transport"
 
 msgctxt "SettingsOptions::fgo_invoicing::discount_code"
-msgid "Discount article code"
-msgstr "Cod articol discount"
+msgid "Cod articol reducere"
+msgstr "Cod articol reducere"
 
 msgctxt "SettingsOptions::fgo_invoicing::administration_code"
-msgid "Warehouse code (CodGestiune)"
+msgid "Cod gestiune (CodGestiune)"
 msgstr "Cod gestiune (CodGestiune)"
 
 msgctxt "SettingsOptions::fgo_invoicing::resilience_header"
-msgid "Resilience & Diagnostics"
-msgstr "Reziliență și diagnosticare"
+msgid "Rezistență & Diagnostic"
+msgstr "Rezistență & Diagnostic"
 
 msgctxt "SettingsOptions::fgo_invoicing::api_max_retries"
-msgid "HTTP retry attempts"
-msgstr "Reîncercări HTTP"
+msgid "Număr reîncercări HTTP"
+msgstr "Număr reîncercări HTTP"
 
 msgctxt "SettingsOptions::fgo_invoicing::api_retry_delay_ms"
-msgid "Initial retry delay (ms)"
-msgstr "Întârziere inițială la reîncercare (ms)"
+msgid "Întârziere inițială reîncercare (ms)"
+msgstr "Întârziere inițială reîncercare (ms)"
 
 msgctxt "SettingsOptions::fgo_invoicing::api_cb_threshold"
-msgid "Circuit breaker open threshold"
+msgid "Prag deschidere circuit breaker"
 msgstr "Prag deschidere circuit breaker"
 
 msgctxt "SettingsOptions::fgo_invoicing::api_cb_timeout"
-msgid "Circuit breaker open timeout (s)"
-msgstr "Durată deschidere circuit breaker (s)"
+msgid "Timeout circuit breaker (s)"
+msgstr "Timeout circuit breaker (s)"
 
 msgctxt "SettingsOptions::fgo_invoicing::debug_logging"
-msgid "Debug logging"
-msgstr "Jurnalizare debug"
-
-# ── Admin pages ────────────────────────────────────────────────────────
+msgid "Logare diagnostic"
+msgstr "Logare diagnostic"
 
 msgctxt "Languages::fgo_invoicing.manage_title"
 msgid "fgo_invoicing.manage_title"
@@ -192,7 +266,7 @@ msgstr "Link PDF"
 
 msgctxt "Languages::fgo_invoicing.payment_link"
 msgid "fgo_invoicing.payment_link"
-msgstr "Link de plată"
+msgstr "Link plată"
 
 msgctxt "Languages::fgo_invoicing.last_error"
 msgid "fgo_invoicing.last_error"
@@ -244,7 +318,7 @@ msgstr "Deschide factura"
 
 msgctxt "Languages::fgo_invoicing.confirm_issue"
 msgid "fgo_invoicing.confirm_issue"
-msgstr "Emiteți (sau re-emiteți) factura FGO pentru această comandă?"
+msgstr "Emiteți (sau reemiteți) factura FGO pentru această comandă?"
 
 msgctxt "Languages::fgo_invoicing.confirm_cancel"
 msgid "fgo_invoicing.confirm_cancel"
@@ -252,15 +326,15 @@ msgstr "Anulați factura FGO pentru această comandă?"
 
 msgctxt "Languages::fgo_invoicing.confirm_storno"
 msgid "fgo_invoicing.confirm_storno"
-msgstr "Emiteți un storno (reversare) pentru această factură?"
+msgstr "Emiteți un storno pentru această factură?"
 
 msgctxt "Languages::fgo_invoicing.confirm_delete"
 msgid "fgo_invoicing.confirm_delete"
-msgstr "Ștergeți această factură în FGO? Operația nu poate fi anulată."
+msgstr "Ștergeți această factură din FGO? Acțiunea este ireversibilă."
 
 msgctxt "Languages::fgo_invoicing.invoice_for_order"
 msgid "fgo_invoicing.invoice_for_order"
-msgstr "Factura FGO pentru comanda"
+msgstr "Factură FGO pentru comanda"
 
 msgctxt "Languages::fgo_invoicing.invoice"
 msgid "fgo_invoicing.invoice"
@@ -272,11 +346,11 @@ msgstr "Nu a fost emisă încă nicio factură FGO pentru această comandă."
 
 msgctxt "Languages::fgo_invoicing.no_invoice_for_order"
 msgid "fgo_invoicing.no_invoice_for_order"
-msgstr "Nu există factură FGO pentru acea comandă."
+msgstr "Nu există nicio factură FGO pentru acea comandă."
 
 msgctxt "Languages::fgo_invoicing.invoice_issued"
 msgid "fgo_invoicing.invoice_issued"
-msgstr "Factura FGO a fost emisă."
+msgstr "Factură FGO emisă."
 
 msgctxt "Languages::fgo_invoicing.invoice_failed"
 msgid "fgo_invoicing.invoice_failed"
@@ -284,7 +358,7 @@ msgstr "Emiterea FGO a eșuat"
 
 msgctxt "Languages::fgo_invoicing.action_succeeded"
 msgid "fgo_invoicing.action_succeeded"
-msgstr "Acțiunea FGO a fost finalizată."
+msgstr "Acțiune FGO finalizată."
 
 msgctxt "Languages::fgo_invoicing.connection_ok"
 msgid "fgo_invoicing.connection_ok"
@@ -292,7 +366,7 @@ msgstr "Conexiune OK"
 
 msgctxt "Languages::fgo_invoicing.connection_failed"
 msgid "fgo_invoicing.connection_failed"
-msgstr "Conexiunea a eșuat"
+msgstr "Conexiune eșuată"
 
 msgctxt "Languages::fgo_invoicing.missing_order_id"
 msgid "fgo_invoicing.missing_order_id"
@@ -312,13 +386,11 @@ msgstr "Deschide pagina de plată"
 
 msgctxt "Languages::fgo_invoicing.request_payload"
 msgid "fgo_invoicing.request_payload"
-msgstr "Conținut cerere"
+msgstr "Payload cerere"
 
 msgctxt "Languages::fgo_invoicing.response_payload"
 msgid "fgo_invoicing.response_payload"
-msgstr "Conținut răspuns"
-
-# ── Customer email ─────────────────────────────────────────────────────
+msgstr "Payload răspuns"
 
 msgctxt "Languages::fgo_invoicing.email_subject"
 msgid "fgo_invoicing.email_subject"
@@ -338,7 +410,7 @@ msgstr "Vezi factura PDF"
 
 msgctxt "Languages::fgo_invoicing.email_payment_link"
 msgid "fgo_invoicing.email_payment_link"
-msgstr "Plătește această factură online"
+msgstr "Plătește factura online"
 
 msgctxt "Languages::fgo_invoicing.email_signoff"
 msgid "fgo_invoicing.email_signoff"
