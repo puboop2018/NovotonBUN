@@ -244,6 +244,10 @@ msgctxt "Languages::eurosite.no_cities"
 msgid "No cities found."
 msgstr "No cities found."
 
+msgctxt "Languages::eurosite.request_failed"
+msgid "Request failed."
+msgstr "Request failed."
+
 msgctxt "Languages::eurosite.back_to_dashboard"
 msgid "Back to dashboard"
 msgstr "Back to dashboard"

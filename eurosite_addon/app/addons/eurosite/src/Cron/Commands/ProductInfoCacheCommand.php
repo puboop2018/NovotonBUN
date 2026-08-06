@@ -76,11 +76,11 @@ final class ProductInfoCacheCommand extends AbstractSyncCommand
             }
 
             return [
-                'total'   => $total,
-                'synced'  => $synced,
+                'total' => $total,
+                'synced' => $synced,
                 'skipped' => $skipped,
-                'failed'  => count($errors),
-                'error'   => implode('; ', array_slice($errors, 0, 5)),
+                'failed' => count($errors),
+                'error' => implode('; ', array_slice($errors, 0, 5)),
             ];
         });
     }

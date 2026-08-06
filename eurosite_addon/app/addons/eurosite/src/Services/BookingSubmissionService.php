@@ -90,10 +90,10 @@ class BookingSubmissionService
             }
             $type = TypeCoerce::toString($guest['type'] ?? 'adult');
             $entry = [
-                'type'   => $type,
-                'name'   => TypeCoerce::toString($guest['name'] ?? ''),
+                'type' => $type,
+                'name' => TypeCoerce::toString($guest['name'] ?? ''),
                 'gender' => TypeCoerce::toString($guest['gender'] ?? ''),
-                'dob'    => TypeCoerce::toString($guest['dob'] ?? ''),
+                'dob' => TypeCoerce::toString($guest['dob'] ?? ''),
             ];
             if ($type === 'child') {
                 $entry['child_age'] = TypeCoerce::toString($guest['age'] ?? '');
@@ -116,26 +116,26 @@ class BookingSubmissionService
 
         try {
             $result = Container::getApi()->addBooking([
-                'currency'     => TypeCoerce::toString($booking['currency'] ?? 'EUR'),
+                'currency' => TypeCoerce::toString($booking['currency'] ?? 'EUR'),
                 'booking_name' => TypeCoerce::toString($booking['client_ref'] ?? ''),
-                'client_id'    => TypeCoerce::toString($booking['client_ref'] ?? ''),
+                'client_id' => TypeCoerce::toString($booking['client_ref'] ?? ''),
                 'country_code' => TypeCoerce::toString($booking['country_code'] ?? ''),
-                'city_code'    => TypeCoerce::toString($booking['city_code'] ?? ''),
+                'city_code' => TypeCoerce::toString($booking['city_code'] ?? ''),
                 'product_code' => TypeCoerce::toString($booking['product_code'] ?? ''),
-                'variant_id'   => TypeCoerce::toString($booking['variant_id'] ?? ''),
-                'check_in'     => TypeCoerce::toString($booking['check_in'] ?? ''),
-                'check_out'    => TypeCoerce::toString($booking['check_out'] ?? ''),
-                'tourop_code'  => $tourop,
-                'rooms'        => [[
-                    'code'     => $roomCode,
-                    'adults'   => TypeCoerce::toInt($booking['adults'] ?? 2),
+                'variant_id' => TypeCoerce::toString($booking['variant_id'] ?? ''),
+                'check_in' => TypeCoerce::toString($booking['check_in'] ?? ''),
+                'check_out' => TypeCoerce::toString($booking['check_out'] ?? ''),
+                'tourop_code' => $tourop,
+                'rooms' => [[
+                    'code' => $roomCode,
+                    'adults' => TypeCoerce::toInt($booking['adults'] ?? 2),
                     'children' => $childrenAges,
-                    'pax'      => $pax,
+                    'pax' => $pax,
                 ]],
             ]);
         } catch (\Throwable $e) {
             $this->repo->update($bookingId, [
-                'status'       => TravelConstants::STATUS_FAILED,
+                'status' => TravelConstants::STATUS_FAILED,
                 'api_response' => 'EXCEPTION: ' . $e->getMessage(),
             ]);
             fn_log_event('general', 'runtime', [
@@ -147,9 +147,9 @@ class BookingSubmissionService
 
         $ok = !empty($result['ok']);
         $this->repo->update($bookingId, [
-            'api_ref'      => TypeCoerce::toString($result['api_ref'] ?? ''),
-            'status'       => $ok ? TravelConstants::STATUS_CONFIRMED : TravelConstants::STATUS_FAILED,
-            'api_response' => TypeCoerce::toString($result['raw'] ?? ''),
+            'api_ref' => TypeCoerce::toString($result['api_ref']),
+            'status' => $ok ? TravelConstants::STATUS_CONFIRMED : TravelConstants::STATUS_FAILED,
+            'api_response' => TypeCoerce::toString($result['raw']),
         ]);
 
         if ($ok) {
@@ -166,7 +166,7 @@ class BookingSubmissionService
             }
         } else {
             fn_log_event('general', 'runtime', [
-                'message' => "Eurosite addBooking rejected booking {$bookingId}: " . TypeCoerce::toString($result['error'] ?? ''),
+                'message' => "Eurosite addBooking rejected booking {$bookingId}: " . TypeCoerce::toString($result['error']),
             ]);
         }
 

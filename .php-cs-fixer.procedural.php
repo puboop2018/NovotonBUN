@@ -25,6 +25,8 @@ $finder = PhpCsFixer\Finder::create()
         __DIR__ . '/addon-novoton-holidays/app/addons/novoton_holidays',
         __DIR__ . '/addon-travel-core/app/addons/travel_core',
         __DIR__ . '/addon-sphinx-holidays/app/addons/sphinx_holidays',
+        __DIR__ . '/addon-fgo-invoicing/app/addons/fgo_invoicing',
+        __DIR__ . '/eurosite_addon/app/addons/eurosite',
     ])
     ->name('*.php')
     // src + tests are formatted by the stricter .php-cs-fixer.dist.php

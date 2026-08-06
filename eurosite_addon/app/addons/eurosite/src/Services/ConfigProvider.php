@@ -102,17 +102,17 @@ class ConfigProvider extends AbstractConfigProvider
     public static function toClientSettings(): array
     {
         return [
-            'api_url'                   => self::getApiUrl(),
-            'api_user'                  => self::getApiUser(),
-            'api_password'              => self::getApiPassword(),
-            'tourop_code'               => self::getTourOpCode(),
-            'default_currency'          => self::getDefaultCurrency(),
-            'default_language'          => self::getDefaultLanguage(),
-            'allow_insecure_api'        => self::allowInsecureApi(),
-            'api_max_retries'           => self::getMaxRetries(),
-            'api_timeout'               => self::getTimeout(),
+            'api_url' => self::getApiUrl(),
+            'api_user' => self::getApiUser(),
+            'api_password' => self::getApiPassword(),
+            'tourop_code' => self::getTourOpCode(),
+            'default_currency' => self::getDefaultCurrency(),
+            'default_language' => self::getDefaultLanguage(),
+            'allow_insecure_api' => self::allowInsecureApi(),
+            'api_max_retries' => self::getMaxRetries(),
+            'api_timeout' => self::getTimeout(),
             'circuit_breaker_threshold' => self::getCircuitBreakerThreshold(),
-            'circuit_breaker_timeout'   => self::getCircuitBreakerTimeout(),
+            'circuit_breaker_timeout' => self::getCircuitBreakerTimeout(),
         ];
     }
 }

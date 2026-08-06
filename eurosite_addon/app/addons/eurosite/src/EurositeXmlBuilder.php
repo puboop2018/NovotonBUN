@@ -41,9 +41,9 @@ final class EurositeXmlBuilder
      * Wrap an endpoint payload in the full <Request> envelope.
      *
      * @param string $requestType e.g. "getHotelPriceRequest"
-     * @param string $detailsXml  the inner XML placed inside <RequestDetails>
-     * @param string $requestId   caller-supplied id (kept out of the class so
-     *                            output stays deterministic for tests)
+     * @param string $detailsXml the inner XML placed inside <RequestDetails>
+     * @param string $requestId caller-supplied id (kept out of the class so
+     *                          output stays deterministic for tests)
      * @param string $requestTime ISO-8601 datetime; '' lets the caller default
      */
     public function envelope(string $requestType, string $detailsXml, string $requestId, string $requestTime): string

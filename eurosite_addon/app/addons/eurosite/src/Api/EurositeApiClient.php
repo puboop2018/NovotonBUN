@@ -88,8 +88,8 @@ final class EurositeApiClient
         $out = [];
         foreach ($details->City as $c) {
             $out[] = [
-                'code'         => trim((string) $c->CityCode),
-                'name'         => trim((string) $c->CityName),
+                'code' => trim((string) $c->CityCode),
+                'name' => trim((string) $c->CityName),
                 'country_code' => trim((string) $c->CountryCode),
             ];
         }
@@ -113,11 +113,11 @@ final class EurositeApiClient
                 $rooms[trim((string) ($r['code'] ?? $r['Code'] ?? ''))] = trim((string) $r);
             }
             $out[] = [
-                'code'      => trim((string) $h->HotelCode),
-                'name'      => trim((string) $h->HotelName),
+                'code' => trim((string) $h->HotelCode),
+                'name' => trim((string) $h->HotelName),
                 'city_code' => trim((string) $h->CityCode),
-                'tourop'    => trim((string) $h->Touropcode),
-                'rooms'     => $rooms,
+                'tourop' => trim((string) $h->Touropcode),
+                'rooms' => $rooms,
             ];
         }
 
@@ -169,10 +169,10 @@ final class EurositeApiClient
      * getHotelPriceRequest — availability + price search across hotels.
      *
      * @param array<string, mixed> $params {
-     *   country_code, city_code, check_in, check_out, currency?, language?,
-     *   product_name?, product_category?, offer_type?, meals?:int[],
-     *   facilities?:int[], rooms:list<array{code,adults,children:int[]}>
-     * }
+     *                                     country_code, city_code, check_in, check_out, currency?, language?,
+     *                                     product_name?, product_category?, offer_type?, meals?:int[],
+     *                                     facilities?:int[], rooms:list<array{code,adults,children:int[]}>
+     *                                     }
      * @return list<HotelOffer>
      */
     public function searchHotels(array $params): array
@@ -214,12 +214,12 @@ final class EurositeApiClient
 
         return [
             'product_code' => trim((string) ($details->ProductCode ?? $productCode)),
-            'name'         => trim((string) ($details->ProductName ?? $details->Name ?? '')),
-            'description'  => trim((string) ($details->Description ?? '')),
-            'category'     => (int) (string) ($details->ProductCategory ?? 0),
-            'latitude'     => trim((string) ($details->Latitude ?? '')),
-            'longitude'    => trim((string) ($details->Longitude ?? '')),
-            'pictures'     => $pictures,
+            'name' => trim((string) ($details->ProductName ?? $details->Name ?? '')),
+            'description' => trim((string) ($details->Description ?? '')),
+            'category' => (int) (string) ($details->ProductCategory ?? 0),
+            'latitude' => trim((string) ($details->Latitude ?? '')),
+            'longitude' => trim((string) ($details->Longitude ?? '')),
+            'pictures' => $pictures,
         ];
     }
 
@@ -229,9 +229,9 @@ final class EurositeApiClient
      * getProductInfo cache use this to skip re-fetching fresh entries.
      *
      * @param array<string, mixed> $p {
-     *   country_code, city_code, product_code, product_type?,
-     *   last_update_date (Y-m-d), last_update_time (H:i:s)
-     * }
+     *                                country_code, city_code, product_code, product_type?,
+     *                                last_update_date (Y-m-d), last_update_time (H:i:s)
+     *                                }
      */
     public function isProductInfoUpdatable(array $p): bool
     {
@@ -254,9 +254,9 @@ final class EurositeApiClient
      * offer (Type 2 = meals, 7 = transport, 6 = other).
      *
      * @param array<string, mixed> $p {
-     *   country_code, city_code, product_code, variant_id, check_in,
-     *   check_out, language?, tourop_code?
-     * }
+     *                                country_code, city_code, product_code, variant_id, check_in,
+     *                                check_out, language?, tourop_code?
+     *                                }
      * @return list<array{type: int, type_name: string, code: string, name: string, has_price: bool, provider: string}>
      */
     public function getHotelServiceTypes(array $p): array
@@ -278,12 +278,12 @@ final class EurositeApiClient
         $out = [];
         foreach ($details->Services->Service ?? [] as $s) {
             $out[] = [
-                'type'      => (int) (string) ($s->Type ?? 0),
+                'type' => (int) (string) ($s->Type ?? 0),
                 'type_name' => trim((string) ($s->TypeName ?? '')),
-                'code'      => trim((string) ($s->Code ?? '')),
-                'name'      => trim((string) ($s->Name ?? '')),
+                'code' => trim((string) ($s->Code ?? '')),
+                'name' => trim((string) ($s->Name ?? '')),
                 'has_price' => strtolower(trim((string) ($s->HasPrice ?? ''))) === 'true',
-                'provider'  => trim((string) ($s->Provider ?? '')),
+                'provider' => trim((string) ($s->Provider ?? '')),
             ];
         }
 
@@ -295,10 +295,10 @@ final class EurositeApiClient
      * offer/occupancy.
      *
      * @param array<string, mixed> $p {
-     *   currency?, language?, service_type, service_code, country_code,
-     *   city_code, product_code, variant_id, check_in, check_out,
-     *   tourop_code?, pax:list<array{type, name, child_age?}>
-     * }
+     *                                currency?, language?, service_type, service_code, country_code,
+     *                                city_code, product_code, variant_id, check_in, check_out,
+     *                                tourop_code?, pax:list<array{type, name, child_age?}>
+     *                                }
      * @return list<array{type: string, code: string, name: string, price: float, gross: float, net: float, commission: float, currency: string}>
      */
     public function getHotelServicePrices(array $p): array
@@ -336,14 +336,14 @@ final class EurositeApiClient
         $out = [];
         foreach ($details->Services->Service ?? [] as $s) {
             $out[] = [
-                'type'       => trim((string) ($s->Type ?? '')),
-                'code'       => trim((string) ($s->Code ?? '')),
-                'name'       => trim((string) ($s->Name ?? '')),
-                'price'      => (float) (string) ($s->Price ?? 0),
-                'gross'      => (float) (string) ($s->Gross ?? 0),
-                'net'        => (float) (string) ($s->NET ?? 0),
+                'type' => trim((string) ($s->Type ?? '')),
+                'code' => trim((string) ($s->Code ?? '')),
+                'name' => trim((string) ($s->Name ?? '')),
+                'price' => (float) (string) ($s->Price ?? 0),
+                'gross' => (float) (string) ($s->Gross ?? 0),
+                'net' => (float) (string) ($s->NET ?? 0),
                 'commission' => (float) (string) ($s->Commission ?? 0),
-                'currency'   => trim((string) ($s['CurrencyCode'] ?? '')) ?: (self::str($p['currency'] ?? '') ?: 'EUR'),
+                'currency' => trim((string) ($s['CurrencyCode'] ?? '')) ?: (self::str($p['currency'] ?? '') ?: 'EUR'),
             ];
         }
 
@@ -356,10 +356,10 @@ final class EurositeApiClient
      * payload reuses the AddBooking BookingItems shape.
      *
      * @param array<string, mixed> $p {
-     *   currency?, country_code, city_code, product_code, variant_id,
-     *   check_in, check_out, tourop_code?,
-     *   rooms:list<array{code, adults, children:int[], pax?:list<array{type,name,child_age?}>}>
-     * }
+     *                                currency?, country_code, city_code, product_code, variant_id,
+     *                                check_in, check_out, tourop_code?,
+     *                                rooms:list<array{code, adults, children:int[], pax?:list<array{type,name,child_age?}>}>
+     *                                }
      * @return list<array{type: string, from_date: string, to_date: string, value: float, is_percent: bool}>
      */
     public function getItemFees(array $p): array
@@ -423,10 +423,10 @@ final class EurositeApiClient
         foreach ($details->xpath('.//Fee') ?: [] as $fee) {
             $value = $fee->Value ?? null;
             $out[] = [
-                'type'       => trim((string) ($fee['Type'] ?? 'cancellation')),
-                'from_date'  => trim((string) ($fee->FromDate ?? '')),
-                'to_date'    => trim((string) ($fee->ToDate ?? '')),
-                'value'      => (float) (string) ($value ?? 0),
+                'type' => trim((string) ($fee['Type'] ?? 'cancellation')),
+                'from_date' => trim((string) ($fee->FromDate ?? '')),
+                'to_date' => trim((string) ($fee->ToDate ?? '')),
+                'value' => (float) (string) ($value ?? 0),
                 'is_percent' => strtolower(trim((string) ($value['Procent'] ?? 'false'))) === 'true',
             ];
         }
@@ -463,17 +463,17 @@ final class EurositeApiClient
             foreach ($item->Fees->Fee ?? [] as $fee) {
                 $price = $fee->Price ?? null;
                 $fees[] = [
-                    'type'      => trim((string) ($fee['Type'] ?? 'cancellation')),
+                    'type' => trim((string) ($fee['Type'] ?? 'cancellation')),
                     'from_date' => trim((string) ($fee->FromDate ?? '')),
-                    'to_date'   => trim((string) ($fee->ToDate ?? '')),
-                    'price'     => (float) (string) ($price ?? 0),
-                    'currency'  => trim((string) ($price['CurrencyCode'] ?? 'EUR')),
+                    'to_date' => trim((string) ($fee->ToDate ?? '')),
+                    'price' => (float) (string) ($price ?? 0),
+                    'currency' => trim((string) ($price['CurrencyCode'] ?? 'EUR')),
                 ];
             }
             $items[] = [
                 'item_client_id' => trim((string) ($item->ItemClientId ?? '')),
-                'item_ref'       => trim((string) ($item->ItemReference ?? '')),
-                'fees'           => $fees,
+                'item_ref' => trim((string) ($item->ItemReference ?? '')),
+                'fees' => $fees,
             ];
         }
 
@@ -486,12 +486,12 @@ final class EurositeApiClient
      * AddBookingRequest — create a hotel booking.
      *
      * @param array<string, mixed> $booking {
-     *   currency?, booking_name, client_id, country_code, city_code,
-     *   product_code, variant_id, check_in, check_out, language?,
-     *   booking_agent?, booking_client?,
-     *   rooms:list<array{code, adults, children:int[],
-     *     pax:list<array{type,name,gender?,dob?,child_age?}>}>
-     * }
+     *                                      currency?, booking_name, client_id, country_code, city_code,
+     *                                      product_code, variant_id, check_in, check_out, language?,
+     *                                      booking_agent?, booking_client?,
+     *                                      rooms:list<array{code, adults, children:int[],
+     *                                      pax:list<array{type,name,gender?,dob?,child_age?}>}>
+     *                                      }
      * @return array{ok: bool, api_ref: string, client_ref: string, error: string, raw: string}
      */
     public function addBooking(array $booking): array
@@ -514,11 +514,11 @@ final class EurositeApiClient
         $error = $apiRef === '' ? $this->parser->errorMessage($raw) : '';
 
         return [
-            'ok'         => $apiRef !== '',
-            'api_ref'    => $apiRef,
+            'ok' => $apiRef !== '',
+            'api_ref' => $apiRef,
             'client_ref' => $clientRef,
-            'error'      => $error,
-            'raw'        => $raw,
+            'error' => $error,
+            'raw' => $raw,
         ];
     }
 
@@ -540,8 +540,8 @@ final class EurositeApiClient
 
         return [
             'references' => $refs,
-            'status'     => trim((string) ($details->Status ?? $details->BookingItems->BookingItem->Status ?? '')),
-            'raw_xml'    => $details->asXML() ?: '',
+            'status' => trim((string) ($details->Status ?? $details->BookingItems->BookingItem->Status ?? '')),
+            'raw_xml' => $details->asXML() ?: '',
         ];
     }
 
@@ -581,9 +581,9 @@ final class EurositeApiClient
      * Send + return the unwrapped <ResponseDetails> child.
      *
      * @throws EurositeApiException on the server's error envelope (its
-     *   ResponseDetails child is <Errors> — e.g. the -1000 auth refusal) or an
-     *   empty/unparseable body, so an API failure is never mistaken for an
-     *   empty catalog / no results.
+     *                              ResponseDetails child is <Errors> — e.g. the -1000 auth refusal) or an
+     *                              empty/unparseable body, so an API failure is never mistaken for an
+     *                              empty catalog / no results.
      */
     private function call(string $requestType, string $detailsXml): \SimpleXMLElement
     {
@@ -723,19 +723,19 @@ final class EurositeApiClient
         $rooms = [];
         foreach ($offer->BookingRoomTypes->Room ?? [] as $r) {
             $rooms[] = [
-                'code'      => trim((string) ($r['Code'] ?? '')),
-                'gcode'     => trim((string) ($r['GCode'] ?? '')),
-                'name'      => trim((string) $r),
-                'quantity'  => trim((string) ($r['Quantity'] ?? '1')),
-                'price'     => trim((string) ($r['ServicePrice'] ?? '')),
+                'code' => trim((string) ($r['Code'] ?? '')),
+                'gcode' => trim((string) ($r['GCode'] ?? '')),
+                'name' => trim((string) $r),
+                'quantity' => trim((string) ($r['Quantity'] ?? '1')),
+                'price' => trim((string) ($r['ServicePrice'] ?? '')),
             ];
         }
         $meals = [];
         foreach ($offer->Meals->Meal ?? [] as $m) {
             $meals[] = [
-                'type'  => trim((string) ($m['Type'] ?? '')),
-                'code'  => trim((string) ($m['Code'] ?? '')),
-                'name'  => trim((string) $m),
+                'type' => trim((string) ($m['Type'] ?? '')),
+                'code' => trim((string) ($m['Code'] ?? '')),
+                'name' => trim((string) $m),
                 'price' => trim((string) ($m['ServicePrice'] ?? '')),
             ];
         }

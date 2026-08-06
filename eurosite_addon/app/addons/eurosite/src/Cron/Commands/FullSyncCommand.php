@@ -18,12 +18,12 @@ use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 final class FullSyncCommand extends AbstractSyncCommand
 {
     private const SEQUENCE = [
-        'countries'  => CountriesSyncCommand::class,
+        'countries' => CountriesSyncCommand::class,
         'own_cities' => OwnCitiesSyncCommand::class,
-        'cities'     => CitiesSyncCommand::class,
-        'hotels'     => HotelsSyncCommand::class,
+        'cities' => CitiesSyncCommand::class,
+        'hotels' => HotelsSyncCommand::class,
         'room_types' => RoomTypesSyncCommand::class,
-        'tags'       => TagsSyncCommand::class,
+        'tags' => TagsSyncCommand::class,
     ];
 
     #[\Override]

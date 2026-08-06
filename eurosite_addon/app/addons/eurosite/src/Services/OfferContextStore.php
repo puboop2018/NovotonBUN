@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Tygh\Addons\Eurosite\Services;
 
 use Tygh\Addons\Eurosite\Dto\HotelOffer;
-use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
+use Tygh\Addons\Eurosite\Helpers\SessionAccessor;
 
 /**
  * Server-side snapshot of what a search offer said, keyed by a digest —
@@ -27,7 +27,7 @@ final class OfferContextStore
     /**
      * @param list<HotelOffer> $offers
      * @param array{adults: int, children_ages: list<int>} $occupancy
-     * @return array<string, string> spl_object_id-ish map: offer index => key
+     * @return array<int, string> map: offer index => snapshot key
      */
     public static function remember(array $offers, array $occupancy): array
     {
@@ -40,23 +40,23 @@ final class OfferContextStore
                 'product_code' => $offer->productCode,
                 'product_name' => $offer->productName,
                 'country_code' => $offer->countryCode,
-                'city_code'    => $offer->cityCode,
-                'city_name'    => $offer->cityName,
-                'check_in'     => $offer->checkIn,
-                'check_out'    => $offer->checkOut,
-                'variant_id'   => $offer->variantId,
-                'series_id'    => $offer->seriesId,
-                'price'        => $offer->price,
-                'currency'     => $offer->currency,
-                'offer_type'   => $offer->offerType,
+                'city_code' => $offer->cityCode,
+                'city_name' => $offer->cityName,
+                'check_in' => $offer->checkIn,
+                'check_out' => $offer->checkOut,
+                'variant_id' => $offer->variantId,
+                'series_id' => $offer->seriesId,
+                'price' => $offer->price,
+                'currency' => $offer->currency,
+                'offer_type' => $offer->offerType,
                 'availability' => $offer->availability,
-                'rooms'        => $offer->rooms,
-                'meals'        => $offer->meals,
-                'adults'       => TypeCoerce::toInt($occupancy['adults'] ?? 2),
-                'children_ages' => array_values(array_map('intval', (array) ($occupancy['children_ages'] ?? []))),
+                'rooms' => $offer->rooms,
+                'meals' => $offer->meals,
+                'adults' => $occupancy['adults'],
+                'children_ages' => $occupancy['children_ages'],
             ];
         }
-        \Tygh\Tygh::$app['session'][self::SESSION_KEY] = $snapshots;
+        SessionAccessor::setArray(self::SESSION_KEY, $snapshots);
 
         return $keys;
     }
@@ -66,10 +66,13 @@ final class OfferContextStore
      */
     public static function get(string $key): ?array
     {
-        $all = \Tygh\Tygh::$app['session'][self::SESSION_KEY] ?? [];
-        $snapshot = is_array($all) || $all instanceof \ArrayAccess ? ($all[$key] ?? null) : null;
+        $snapshot = SessionAccessor::getArray(self::SESSION_KEY)[$key] ?? null;
+        if (!is_array($snapshot) || $snapshot === []) {
+            return null;
+        }
 
-        return is_array($snapshot) && $snapshot !== [] ? $snapshot : null;
+        /** @var array<string, mixed> $snapshot */
+        return $snapshot;
     }
 
     public static function keyFor(HotelOffer $offer): string
