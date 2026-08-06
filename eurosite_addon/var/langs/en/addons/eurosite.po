@@ -244,6 +244,66 @@ msgctxt "Languages::eurosite.no_cities"
 msgid "No cities found."
 msgstr "No cities found."
 
+msgctxt "Languages::eurosite.countries"
+msgid "Countries"
+msgstr "Countries"
+
+msgctxt "Languages::eurosite.cities"
+msgid "Cities"
+msgstr "Cities"
+
+msgctxt "Languages::eurosite.own_offer_cities"
+msgid "Own-offer cities"
+msgstr "Own-offer cities"
+
+msgctxt "Languages::eurosite.search_destinations"
+msgid "Search country or city..."
+msgstr "Search country or city..."
+
+msgctxt "Languages::eurosite.show_whitelisted_only"
+msgid "Show only whitelisted"
+msgstr "Show only whitelisted"
+
+msgctxt "Languages::eurosite.shown"
+msgid "shown"
+msgstr "shown"
+
+msgctxt "Languages::eurosite.select_all_cities"
+msgid "Select all cities"
+msgstr "Select all cities"
+
+msgctxt "Languages::eurosite.all_cities_included"
+msgid "ALL CITIES"
+msgstr "ALL CITIES"
+
+msgctxt "Languages::eurosite.selected"
+msgid "selected"
+msgstr "selected"
+
+msgctxt "Languages::eurosite.whitelist_summary"
+msgid "Whitelist summary"
+msgstr "Whitelist summary"
+
+msgctxt "Languages::eurosite.whitelisted_countries"
+msgid "Whitelisted countries"
+msgstr "Whitelisted countries"
+
+msgctxt "Languages::eurosite.whitelisted_cities"
+msgid "Whitelisted cities"
+msgstr "Whitelisted cities"
+
+msgctxt "Languages::eurosite.save_whitelist"
+msgid "Save whitelist"
+msgstr "Save whitelist"
+
+msgctxt "Languages::eurosite.remove_all"
+msgid "Remove all"
+msgstr "Remove all"
+
+msgctxt "Languages::eurosite.confirm_remove_all"
+msgid "Remove all whitelisted destinations? Click Save to persist."
+msgstr "Remove all whitelisted destinations? Click Save to persist."
+
 msgctxt "Languages::eurosite.request_failed"
 msgid "Request failed."
 msgstr "Request failed."

@@ -100,6 +100,25 @@ class CityRepository
         return array_values(array_map(static fn ($v): string => TypeCoerce::toString($v), is_array($rows) ? $rows : []));
     }
 
+    /**
+     * Name lookup for the whitelist search box; carries the country name so
+     * the result line can read "Mamaia — Romania".
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function search(string $query, int $limit = 20): array
+    {
+        return self::asRowList(db_get_array(
+            'SELECT c.city_code, c.name, c.country_code, c.is_own, co.name AS country_name
+             FROM ?:eurosite_cities AS c
+             LEFT JOIN ?:eurosite_countries AS co ON co.country_code = c.country_code
+             WHERE c.name LIKE ?l
+             ORDER BY c.is_own DESC, c.name LIMIT ?i',
+            "%{$query}%",
+            $limit,
+        ));
+    }
+
     public function count(bool $ownOnly = false): int
     {
         return TypeCoerce::toInt(db_get_field(
