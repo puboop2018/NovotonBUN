@@ -158,6 +158,44 @@ if ($mode === 'get_cities') {
     exit;
 }
 
+if ($mode === 'search_destinations') {
+    // AJAX for the whitelist select2 box: countries + cities by name, from
+    // the synced catalogs. Results carry enough context for the picker to
+    // jump to (and check) the right row.
+    $query = trim(RequestCoerce::string($_REQUEST, 'q'));
+    $results = [];
+    if (mb_strlen($query) >= 2) {
+        foreach (Container::countries()->search($query) as $row) {
+            $cc = TypeCoerce::toString($row['country_code'] ?? '');
+            $results[] = [
+                'id'           => 'country:' . $cc,
+                'type'         => 'country',
+                'country_code' => $cc,
+                'city_code'    => '',
+                'text'         => TypeCoerce::toString($row['name'] ?? '') . ' (' . $cc . ')',
+            ];
+        }
+        foreach (Container::cities()->search($query) as $row) {
+            $cc = TypeCoerce::toString($row['country_code'] ?? '');
+            $city = TypeCoerce::toString($row['city_code'] ?? '');
+            $own = TypeCoerce::toString($row['is_own'] ?? 'N') === 'Y';
+            $results[] = [
+                'id'           => 'city:' . $cc . ':' . $city,
+                'type'         => 'city',
+                'country_code' => $cc,
+                'city_code'    => $city,
+                'is_own'       => $own,
+                'text'         => TypeCoerce::toString($row['name'] ?? '')
+                    . ' — ' . TypeCoerce::toString($row['country_name'] ?? $cc)
+                    . ($own ? ' ★' : ''),
+            ];
+        }
+    }
+    header('Content-Type: application/json');
+    echo json_encode(['success' => true, 'results' => $results]);
+    exit;
+}
+
 if ($mode === 'whitelist') {
     $countries = Container::countries()->findAll();
     $entries = Container::whitelist()->findAll();
@@ -182,6 +220,9 @@ if ($mode === 'whitelist') {
     $view->assign('eurosite_whitelist_map', $whitelistMap);
     $view->assign('eurosite_whitelist_json', json_encode($whitelistMap));
     $view->assign('eurosite_countries_synced', $countries !== []);
+    $view->assign('eurosite_wl_country_count', count($countries));
+    $view->assign('eurosite_wl_city_count', Container::cities()->count());
+    $view->assign('eurosite_wl_own_city_count', Container::cities()->count(true));
 
     return;
 }

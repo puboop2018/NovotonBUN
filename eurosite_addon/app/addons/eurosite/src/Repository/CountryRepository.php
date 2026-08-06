@@ -59,6 +59,23 @@ class CountryRepository
         return TypeCoerce::toInt(db_get_field('SELECT COUNT(*) FROM ?:eurosite_countries'));
     }
 
+    /**
+     * Name/code lookup for the whitelist search box.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function search(string $query, int $limit = 10): array
+    {
+        return self::asRowList(db_get_array(
+            'SELECT country_code, name FROM ?:eurosite_countries
+             WHERE name LIKE ?l OR country_code LIKE ?l
+             ORDER BY name LIMIT ?i',
+            "%{$query}%",
+            "%{$query}%",
+            $limit,
+        ));
+    }
+
     public function getLastSyncedAt(): string
     {
         return TypeCoerce::toString(db_get_field('SELECT MAX(last_synced_at) FROM ?:eurosite_countries'));

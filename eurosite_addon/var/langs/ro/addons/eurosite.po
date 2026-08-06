@@ -244,6 +244,66 @@ msgctxt "Languages::eurosite.no_cities"
 msgid "No cities found."
 msgstr "Niciun oraș găsit."
 
+msgctxt "Languages::eurosite.countries"
+msgid "Countries"
+msgstr "Țări"
+
+msgctxt "Languages::eurosite.cities"
+msgid "Cities"
+msgstr "Orașe"
+
+msgctxt "Languages::eurosite.own_offer_cities"
+msgid "Own-offer cities"
+msgstr "Orașe cu oferte proprii"
+
+msgctxt "Languages::eurosite.search_destinations"
+msgid "Search country or city..."
+msgstr "Caută țară sau oraș..."
+
+msgctxt "Languages::eurosite.show_whitelisted_only"
+msgid "Show only whitelisted"
+msgstr "Afișează doar destinațiile selectate"
+
+msgctxt "Languages::eurosite.shown"
+msgid "shown"
+msgstr "afișate"
+
+msgctxt "Languages::eurosite.select_all_cities"
+msgid "Select all cities"
+msgstr "Selectează toate orașele"
+
+msgctxt "Languages::eurosite.all_cities_included"
+msgid "ALL CITIES"
+msgstr "TOATE ORAȘELE"
+
+msgctxt "Languages::eurosite.selected"
+msgid "selected"
+msgstr "selectate"
+
+msgctxt "Languages::eurosite.whitelist_summary"
+msgid "Whitelist summary"
+msgstr "Sumar destinații"
+
+msgctxt "Languages::eurosite.whitelisted_countries"
+msgid "Whitelisted countries"
+msgstr "Țări selectate"
+
+msgctxt "Languages::eurosite.whitelisted_cities"
+msgid "Whitelisted cities"
+msgstr "Orașe selectate"
+
+msgctxt "Languages::eurosite.save_whitelist"
+msgid "Save whitelist"
+msgstr "Salvează lista"
+
+msgctxt "Languages::eurosite.remove_all"
+msgid "Remove all"
+msgstr "Elimină tot"
+
+msgctxt "Languages::eurosite.confirm_remove_all"
+msgid "Remove all whitelisted destinations? Click Save to persist."
+msgstr "Eliminați toate destinațiile selectate? Apăsați Salvează pentru a persista."
+
 msgctxt "Languages::eurosite.request_failed"
 msgid "Request failed."
 msgstr "Cererea a eșuat."

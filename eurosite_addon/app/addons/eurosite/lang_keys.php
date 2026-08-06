@@ -166,6 +166,66 @@ return [
         'en' => 'No cities found.',
         'ro' => 'Niciun oraș găsit.',
     ],
+    'eurosite.countries' => [
+        'en' => 'Countries',
+        'ro' => 'Țări',
+    ],
+    'eurosite.cities' => [
+        'en' => 'Cities',
+        'ro' => 'Orașe',
+    ],
+    'eurosite.own_offer_cities' => [
+        'en' => 'Own-offer cities',
+        'ro' => 'Orașe cu oferte proprii',
+    ],
+    'eurosite.search_destinations' => [
+        'en' => 'Search country or city...',
+        'ro' => 'Caută țară sau oraș...',
+    ],
+    'eurosite.show_whitelisted_only' => [
+        'en' => 'Show only whitelisted',
+        'ro' => 'Afișează doar destinațiile selectate',
+    ],
+    'eurosite.shown' => [
+        'en' => 'shown',
+        'ro' => 'afișate',
+    ],
+    'eurosite.select_all_cities' => [
+        'en' => 'Select all cities',
+        'ro' => 'Selectează toate orașele',
+    ],
+    'eurosite.all_cities_included' => [
+        'en' => 'ALL CITIES',
+        'ro' => 'TOATE ORAȘELE',
+    ],
+    'eurosite.selected' => [
+        'en' => 'selected',
+        'ro' => 'selectate',
+    ],
+    'eurosite.whitelist_summary' => [
+        'en' => 'Whitelist summary',
+        'ro' => 'Sumar destinații',
+    ],
+    'eurosite.whitelisted_countries' => [
+        'en' => 'Whitelisted countries',
+        'ro' => 'Țări selectate',
+    ],
+    'eurosite.whitelisted_cities' => [
+        'en' => 'Whitelisted cities',
+        'ro' => 'Orașe selectate',
+    ],
+    'eurosite.save_whitelist' => [
+        'en' => 'Save whitelist',
+        'ro' => 'Salvează lista',
+    ],
+    'eurosite.remove_all' => [
+        'en' => 'Remove all',
+        'ro' => 'Elimină tot',
+    ],
+    'eurosite.confirm_remove_all' => [
+        'en' => 'Remove all whitelisted destinations? Click Save to persist.',
+        'ro' => 'Eliminați toate destinațiile selectate? Apăsați Salvează pentru a persista.',
+    ],
     'eurosite.request_failed' => [
         'en' => 'Request failed.',
         'ro' => 'Cererea a eșuat.',
