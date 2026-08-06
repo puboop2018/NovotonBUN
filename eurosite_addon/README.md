@@ -1,19 +1,31 @@
-# `eurosite_addon/` — Eurosite Holidays provider addon (MVP)
+# `eurosite_addon/` — Eurosite Touring provider addon (MVP)
 
 A new CS-Cart provider addon (id **`eurosite`**) for the **Eurosite** XML web
 service — a distinct Touroperator platform, a sibling to the existing
 `novoton_holidays` and `sphinx_holidays` providers. Built from
 `Documentation/Specificatii_API_Eurosite.pdf`.
 
-> **Status: MVP / work-in-progress.** The API protocol layer is complete,
-> unit-tested, and **live-verified against the real endpoint (2026-08-04)
-> with account credentials**: every static-data service answers (86
-> countries, 358 RO cities (~21,700 across all countries), 116 own-offer cities, 22 room types, own hotels
-> with room lists; the tag catalog is currently empty). The
-> storefront/cart/admin surfaces and CI-gate wiring are the documented next
-> steps (see *Graduation* below). The addon is not yet wired into the repo's
-> PHPStan/cs-fixer/CI paths — it lives in its own top-level folder on purpose
-> so it can mature without destabilizing the green branch.
+> **Status: feature-complete provider addon (Cazari individuale vertical).**
+> The API protocol layer is live-verified (2026-08-04, account credentials:
+> 86 countries, 358 RO cities of ~21,700 total, 116 own-offer cities, 22
+> room types; tag catalog empty). On top of it the addon now ships: DB
+> persistence for all six static catalogs + cron sync (CLI + HTTP), a
+> sphinx-style destination whitelist, an admin dashboard, the unified
+> travel_bookings grid integration (mirror dual-write, status callbacks,
+> cancel/refresh-fees actions), a destination-driven storefront search with
+> the shared travel_core booking engine, the "Condiții de Anulare și Plată"
+> modal (live getItemFees), a guest booking form (TGender/DOB pax data),
+> and the cart→order→AddBookingRequest pipeline on a hidden carrier
+> product. Placeholder pages cover the Pachete/Transport/Circuite modules.
+>
+> **Known items:** (1) live search verified working end-to-end 2026-08-05
+> (239 Mamaia offers; getItemFees accepts placeholder pax names — the terms
+> modal contract holds) — but the service had a full outage on 2026-08-04
+> (every search reset at ~6.6s while static data answered), so treat it as
+> potentially intermittent; `dev/eurosite/search_diagnose.php` generates an
+> evidence report (EN+RO, timestamps + RequestIds) to send the operator if
+> it recurs. (2) The addon is deliberately not yet wired into the repo's
+> PHPStan/cs-fixer/CI paths (final graduation step).
 
 ```
 eurosite_addon/
@@ -36,7 +48,7 @@ eurosite_addon/
     │   └── Services/
     │       ├── ConfigProvider.php        settings getters (extends travel_core AbstractConfigProvider)
     │       └── Container.php             composition root (wires the API stack)
-    └── tests/Unit/                       22 tests, 94 assertions (envelope, static data, search, booking, normalizer)
+    └── tests/Unit/                       30 tests, 138 assertions (envelope, static data, search, booking, normalizer)
 ```
 
 ## The Eurosite protocol
@@ -124,7 +136,7 @@ search/booking payloads.
 ```bash
 cd eurosite_addon/app/addons/eurosite
 composer install                 # once, for phpunit
-vendor/bin/phpunit               # 22 tests, 94 assertions
+vendor/bin/phpunit               # 30 tests, 138 assertions
 ```
 
 The tests inject a fake transport (`EurositeTransportInterface`) that captures
@@ -134,17 +146,17 @@ network. The code is PHPStan level-10 clean and PSR-12 formatted.
 
 ## Graduation (next steps, in order)
 
-1. ~~**Install & smoke-test** against the real endpoint~~ — **done 2026-08-04**
-   with account credentials: all six static-data services answer (the
-   `dev/eurosite/` probes cover each one; see `dev/eurosite/README.md`).
-   `ErrorId -1000` means bad credentials, not a blocked IP. Search/booking
-   smoke tests against a real product are the remaining live checks.
-2. **Storefront**: a `TravelProviderRegistry` hotel-product provider + a search
-   controller/template, reusing the shared travel_core search UI.
-3. **Cart + order pipeline**: `BookingRepository` (the `eurosite_bookings`
-   table is already in `addon.xml`), a `place_order_post` hook body in
-   `src/Hooks` delegating from `func.php`, and the shared `TravelBookingMirror`.
-4. **Admin**: bookings grid via the shared travel_core admin surfaces.
+1. ~~Install & smoke-test static data~~ — done 2026-08-04 (all six services
+   answer live; `dev/eurosite/` probes cover each one).
+2. ~~Persistence + cron~~ — done: 8 tables, 9 cron modes (CLI `cron.php` +
+   `eurosite_cron.run`), sync log, dashboard quick actions
+   (`Documentation/CRON_JOBS.txt` has the schedule).
+3. ~~Whitelist, admin, bookings grid, storefront search + booking pipeline~~ —
+   done (see Status above).
+4. **Live search/booking smoke test** — search + getItemFees verified live
+   2026-08-05 (see Status); the remaining piece is a full search → book →
+   cancel cycle on the docker store (AddBookingRequest against a real
+   offer, then CancelBookingRequest cleanup).
 5. **Wire into the CI gates**: add the addon's `src`/`controllers`/`func.php`
    to `phpstan.neon`, `.php-cs-fixer.dist.php`, the CI `php -l` step, and a
    PHPUnit coverage job — the same treatment novoton/sphinx get.

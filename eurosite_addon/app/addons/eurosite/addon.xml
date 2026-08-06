@@ -10,7 +10,7 @@
     <supplier_link>https://vacantelitoral.ro</supplier_link>
     <default_language>en</default_language>
     <dependencies>travel_core</dependencies>
-    <!-- Eurosite Holidays: hotel & package booking integration with the
+    <!-- Eurosite Touring: hotel & package booking integration with the
          Eurosite XML web service (a Touroperator platform, distinct from
          Novoton and Sphinx). MVP: static data + hotel search + product
          details + add/get/cancel booking. Requires PHP 8.3+ and travel_core.
@@ -105,6 +105,27 @@
                         <default_value>Y</default_value>
                         <variants/>
                     </item>
+                    <!-- Shown in the "Conditii de Anulare si Plata" modal: the
+                         Eurosite API exposes no payment schedule pre-booking,
+                         so the store authors these lines (one per line). -->
+                    <item id="payment_terms_text">
+                        <type>textarea</type>
+                        <default_value>Avans 30% la confirmarea rezervării.
+Diferența de 70% cu 21 de zile înainte de check-in.</default_value>
+                        <variants/>
+                    </item>
+
+                    <!-- ── Cron ── -->
+                    <item id="cron_header">
+                        <type>header</type>
+                        <variants/>
+                    </item>
+                    <!-- Shared secret for eurosite_cron.run / cron.php. -->
+                    <item id="cron_access_key">
+                        <type>password</type>
+                        <default_value>1234</default_value>
+                        <variants/>
+                    </item>
 
                     <!-- ── Resilience ── -->
                     <item id="resilience_header">
@@ -152,22 +173,169 @@
                 `variant_id`      VARCHAR(64)  NOT NULL DEFAULT '' COMMENT 'PackageVariantId from the offer',
                 `check_in`        DATE         DEFAULT NULL,
                 `check_out`       DATE         DEFAULT NULL,
+                `nights`          SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+                `adults`          TINYINT UNSIGNED NOT NULL DEFAULT 2,
+                `children`        TINYINT UNSIGNED NOT NULL DEFAULT 0,
+                `children_ages`   VARCHAR(100) NOT NULL DEFAULT '',
+                `num_rooms`       TINYINT UNSIGNED NOT NULL DEFAULT 1,
+                `rooms_data`      JSON         DEFAULT NULL,
+                `room_type`       VARCHAR(255) NOT NULL DEFAULT '',
+                `board_id`        VARCHAR(32)  NOT NULL DEFAULT '' COMMENT 'meal/board service code',
+                `meal_name`       VARCHAR(255) NOT NULL DEFAULT '',
+                `series_id`       VARCHAR(32)  NOT NULL DEFAULT '' COMMENT 'SeriesId from the offer',
+                `guest_name`      VARCHAR(500) NOT NULL DEFAULT '',
+                `guest_email`     VARCHAR(255) NOT NULL DEFAULT '',
+                `guest_phone`     VARCHAR(100) NOT NULL DEFAULT '',
                 `currency`        VARCHAR(4)   NOT NULL DEFAULT 'EUR',
                 `total_price`     DECIMAL(12,2) NOT NULL DEFAULT 0.00,
                 `guests_json`     JSON         DEFAULT NULL,
                 `status`          VARCHAR(24)  NOT NULL DEFAULT 'pending',
+                `cancellation_fees_json` JSON  DEFAULT NULL COMMENT 'getBookingFees snapshot',
                 `api_request`     MEDIUMTEXT   DEFAULT NULL,
                 `api_response`    MEDIUMTEXT   DEFAULT NULL,
                 `created_at`      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                `updated_at`      DATETIME     DEFAULT NULL,
                 PRIMARY KEY (`booking_id`),
                 KEY `idx_order` (`order_id`),
                 KEY `idx_session` (`session_id`),
                 KEY `idx_client_ref` (`client_ref`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
         </item>
+
+        <!-- ── Static-data catalogs (synced from the 6 "Date statice" services) ── -->
+        <item for="install">
+            CREATE TABLE IF NOT EXISTS `?:eurosite_countries` (
+                `country_code`   VARCHAR(4)   NOT NULL,
+                `name`           VARCHAR(255) NOT NULL DEFAULT '',
+                `last_synced_at` DATETIME     DEFAULT NULL,
+                PRIMARY KEY (`country_code`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        </item>
+        <item for="install">
+            CREATE TABLE IF NOT EXISTS `?:eurosite_cities` (
+                `city_code`      VARCHAR(16)  NOT NULL,
+                `country_code`   VARCHAR(4)   NOT NULL DEFAULT '',
+                `name`           VARCHAR(255) NOT NULL DEFAULT '',
+                `is_own`         ENUM('Y','N') NOT NULL DEFAULT 'N' COMMENT 'appears in getOwnCityResponse',
+                `last_synced_at` DATETIME     DEFAULT NULL,
+                PRIMARY KEY (`city_code`),
+                KEY `idx_country` (`country_code`),
+                KEY `idx_own` (`is_own`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        </item>
+        <item for="install">
+            CREATE TABLE IF NOT EXISTS `?:eurosite_hotels` (
+                `tourop_code`    VARCHAR(8)   NOT NULL COMMENT 'live rows report LA',
+                `product_code`   VARCHAR(16)  NOT NULL,
+                `name`           VARCHAR(255) NOT NULL DEFAULT '',
+                `city_code`      VARCHAR(16)  NOT NULL DEFAULT '',
+                `country_code`   VARCHAR(4)   NOT NULL DEFAULT '',
+                `rooms_json`     JSON         DEFAULT NULL COMMENT 'room code => name map',
+                `category`       TINYINT UNSIGNED NOT NULL DEFAULT 0,
+                `product_id`     INT UNSIGNED DEFAULT NULL COMMENT 'future CS-Cart product link',
+                `sync_status`    ENUM('active','inactive') NOT NULL DEFAULT 'active',
+                `last_synced_at` DATETIME     DEFAULT NULL,
+                PRIMARY KEY (`tourop_code`, `product_code`),
+                KEY `idx_city` (`city_code`),
+                KEY `idx_country` (`country_code`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        </item>
+        <item for="install">
+            CREATE TABLE IF NOT EXISTS `?:eurosite_room_types` (
+                `code`           VARCHAR(16)  NOT NULL,
+                `name`           VARCHAR(255) NOT NULL DEFAULT '',
+                `last_synced_at` DATETIME     DEFAULT NULL,
+                PRIMARY KEY (`code`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        </item>
+        <item for="install">
+            CREATE TABLE IF NOT EXISTS `?:eurosite_tags` (
+                `tag_code`       VARCHAR(32)  NOT NULL,
+                `name`           VARCHAR(255) NOT NULL DEFAULT '',
+                `last_synced_at` DATETIME     DEFAULT NULL,
+                PRIMARY KEY (`tag_code`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        </item>
+        <item for="install">
+            CREATE TABLE IF NOT EXISTS `?:eurosite_destination_whitelist` (
+                `id`             INT UNSIGNED NOT NULL AUTO_INCREMENT,
+                `country_code`   VARCHAR(4)   NOT NULL,
+                `city_code`      VARCHAR(16)  NOT NULL DEFAULT '' COMMENT 'empty = country-level row',
+                `selection_type` ENUM('all','specific') NOT NULL DEFAULT 'specific',
+                `created_at`     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (`id`),
+                UNIQUE KEY `uk_dest` (`country_code`, `city_code`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        </item>
+        <item for="install">
+            CREATE TABLE IF NOT EXISTS `?:eurosite_sync_log` (
+                `log_id`        INT UNSIGNED NOT NULL AUTO_INCREMENT,
+                `sync_type`     VARCHAR(50)  NOT NULL COMMENT 'countries, cities, hotels, full, ...',
+                `status`        ENUM('started','completed','failed') NOT NULL,
+                `items_total`   INT UNSIGNED NOT NULL DEFAULT 0,
+                `items_synced`  INT UNSIGNED NOT NULL DEFAULT 0,
+                `items_failed`  INT UNSIGNED NOT NULL DEFAULT 0,
+                `error_message` TEXT         DEFAULT NULL,
+                `sync_mode`     VARCHAR(20)  NOT NULL DEFAULT 'full',
+                `duration_ms`   INT UNSIGNED DEFAULT NULL,
+                `started_at`    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                `completed_at`  DATETIME     DEFAULT NULL,
+                PRIMARY KEY (`log_id`),
+                KEY `idx_type_status` (`sync_type`, `status`),
+                KEY `idx_started` (`started_at`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        </item>
+        <!-- The spec mandates an own cache for getProductInfoRequest
+             ("Pentru limitarea traficului recomandam existenta unui cache
+             dinamic propriu pentru aceste detalii"). -->
+        <item for="install">
+            CREATE TABLE IF NOT EXISTS `?:eurosite_product_info_cache` (
+                `tourop_code`     VARCHAR(8)   NOT NULL,
+                `product_code`    VARCHAR(16)  NOT NULL,
+                `country_code`    VARCHAR(4)   NOT NULL DEFAULT '',
+                `city_code`       VARCHAR(16)  NOT NULL DEFAULT '',
+                `payload_json`    JSON         DEFAULT NULL,
+                `description`     TEXT         DEFAULT NULL,
+                `pictures_json`   JSON         DEFAULT NULL,
+                `fetched_at`      DATETIME     DEFAULT NULL,
+                `api_last_update` DATETIME     DEFAULT NULL,
+                PRIMARY KEY (`tourop_code`, `product_code`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        </item>
+
+        <!-- Clean up on uninstall, the same way the sibling addons do: drop
+             the addon's own table and its language values. Without these the
+             table and labels survive an uninstall as orphans. -->
+        <item for="uninstall">DROP TABLE IF EXISTS `?:eurosite_bookings`</item>
+        <item for="uninstall">DROP TABLE IF EXISTS `?:eurosite_countries`</item>
+        <item for="uninstall">DROP TABLE IF EXISTS `?:eurosite_cities`</item>
+        <item for="uninstall">DROP TABLE IF EXISTS `?:eurosite_hotels`</item>
+        <item for="uninstall">DROP TABLE IF EXISTS `?:eurosite_room_types`</item>
+        <item for="uninstall">DROP TABLE IF EXISTS `?:eurosite_tags`</item>
+        <item for="uninstall">DROP TABLE IF EXISTS `?:eurosite_destination_whitelist`</item>
+        <item for="uninstall">DROP TABLE IF EXISTS `?:eurosite_sync_log`</item>
+        <item for="uninstall">DROP TABLE IF EXISTS `?:eurosite_product_info_cache`</item>
+        <!-- This addon's labels ship as .po msgctxt keys (Addons::name::eurosite,
+             SettingsOptions::eurosite::api_url, …), NOT the dot-prefixed
+             "<addon>.%" keys the lang_keys.php-based siblings clean up — so
+             match those namespaces instead. -->
+        <item for="uninstall">DELETE FROM ?:language_values WHERE name LIKE 'Addons::%::eurosite'</item>
+        <item for="uninstall">DELETE FROM ?:language_values WHERE name LIKE 'Settings%::eurosite::%'</item>
+        <item for="uninstall">DELETE FROM ?:language_values WHERE name LIKE 'eurosite.%'</item>
+        <!-- Remove the seeded storefront menu items (parent 'eurosite' + the
+             four eurosite_booking.* children) and their descriptions. -->
+        <item for="uninstall">DELETE sdd FROM ?:static_data_descriptions sdd JOIN ?:static_data sd ON sd.param_id = sdd.param_id WHERE sd.section = 'A' AND (sd.param LIKE 'index.php?dispatch=eurosite_booking%' OR sd.param = 'eurosite')</item>
+        <item for="uninstall">DELETE FROM ?:static_data WHERE section = 'A' AND (param LIKE 'index.php?dispatch=eurosite_booking%' OR param = 'eurosite')</item>
     </queries>
 
-    <uninstall>
-        <remove_files>app/addons/eurosite</remove_files>
-    </uninstall>
+    <functions>
+        <item for="install">fn_eurosite_post_install</item>
+    </functions>
+
+    <!-- No <uninstall><remove_files>: none of the sibling addons declare one,
+         and in the dev store app/addons/eurosite is a SYMLINK into the repo
+         (docker/fullstore/link-addons.sh) — CS-Cart's recursive removal walks
+         into symlinked directories, so an uninstall would delete the addon's
+         source from the working tree. CS-Cart drops the addon's own files on
+         a real uninstall anyway. -->
 </addon>

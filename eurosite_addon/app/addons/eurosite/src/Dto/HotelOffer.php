@@ -16,7 +16,8 @@ namespace Tygh\Addons\Eurosite\Dto;
  *   first_image: string, latitude: string, longitude: string,
  *   currency: string, offer_type: string, availability: string,
  *   check_in: string, check_out: string, price: float, gross: float,
- *   net: float, commission: float, variant_id: string, grila: string,
+ *   net: float, commission: float, variant_id: string, series_id: string,
+ *   grila: string,
  *   rooms: list<array<string, string>>, meals: list<array<string, string>>
  * }
  */
@@ -50,6 +51,7 @@ final class HotelOffer
         public readonly string $grila,
         public readonly array $rooms = [],
         public readonly array $meals = [],
+        public readonly string $seriesId = '',
     ) {
     }
 
@@ -79,6 +81,7 @@ final class HotelOffer
             'net'          => $this->net,
             'commission'   => $this->commission,
             'variant_id'   => $this->variantId,
+            'series_id'    => $this->seriesId,
             'grila'        => $this->grila,
             'rooms'        => $this->rooms,
             'meals'        => $this->meals,

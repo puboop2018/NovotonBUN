@@ -216,6 +216,25 @@ export default function BookingEngine({ config }) {
             params.set('children_ages', allAges.join(','));
         }
 
+        // Merge provider extra params (JSON map on the mount element's
+        // data-extra-params) — read at SEARCH time so controls outside the
+        // engine (eurosite country/city selects) stay live. Additive: mounts
+        // without the attribute behave exactly as before.
+        const mountEl = config.mountEl;
+        if (mountEl && mountEl.dataset && mountEl.dataset.extraParams) {
+            try {
+                const extra = JSON.parse(mountEl.dataset.extraParams);
+                Object.keys(extra).forEach(key => {
+                    const value = extra[key];
+                    if (value !== null && value !== undefined && value !== '') {
+                        params.set(key, value);
+                    }
+                });
+            } catch (e) {
+                // malformed extra params are ignored
+            }
+        }
+
         return base + '?' + params.toString();
     }, [checkIn, checkOut, rooms, mode, hotelId, productId, searchQuery, searchDispatch, provider, totalAdults, totalChildren]);
 

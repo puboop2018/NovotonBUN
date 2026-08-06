@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 /**
- * Eurosite Holidays — addon bootstrap.
+ * Eurosite Touring — addon bootstrap.
  *
  * Location: app/addons/eurosite/init.php
  */
@@ -35,14 +35,64 @@ spl_autoload_register(static function (string $class): void {
     }
 });
 
-// Register with the shared travel-provider registry so Eurosite participates in
-// the cross-provider feature-mapping / normalization pipeline (guarded against
-// travel_core not being loaded). MVP registers the normalizer only; the
-// booking-admin / hotel-product / status-sync providers are follow-ups.
+// Schema self-heal for installed stores (admin area only; stamp-gated so the
+// catalog reads + conditional DDL run once per deployed SchemaMigrator.php,
+// then every request pays a single ?:storage_data read). Dev stores symlink
+// the addon and never rerun addon.xml — this is how new tables/columns land.
+if (defined('AREA') && AREA === 'A' && function_exists('fn_eurosite_ensure_schema')) {
+    $__eu_heal_fp = (string) @md5_file(__DIR__ . '/src/Install/SchemaMigrator.php');
+    if (!function_exists('fn_travel_core_self_heal_due')
+        || fn_travel_core_self_heal_due('eurosite_schema', $__eu_heal_fp)
+    ) {
+        if (function_exists('fn_travel_core_self_heal_guard')) {
+            // Never let a heal 503 the admin — see fn_travel_core_self_heal_guard.
+            fn_travel_core_self_heal_guard('eurosite_schema', 'fn_eurosite_ensure_schema');
+        } else {
+            fn_eurosite_ensure_schema();
+        }
+        if (function_exists('fn_travel_core_self_heal_stamp')) {
+            fn_travel_core_self_heal_stamp('eurosite_schema', $__eu_heal_fp);
+        }
+    }
+    unset($__eu_heal_fp);
+}
+
+// Register with the shared travel-provider registry: the normalizer (feature
+// mapping / normalization pipeline), the booking-admin provider + status
+// callbacks (unified travel_bookings grid), and the hotel-product provider
+// (hotel-id ownership; Eurosite has no CS-Cart products yet, so product
+// resolution intentionally answers null). Guarded against travel_core not
+// being loaded.
 if (class_exists(\Tygh\Addons\TravelCore\Services\TravelProviderRegistry::class)) {
     \Tygh\Addons\TravelCore\Services\TravelProviderRegistry::register(
         'eurosite',
         'Eurosite',
         new \Tygh\Addons\Eurosite\Api\EurositeNormalizer(),
     );
+    \Tygh\Addons\TravelCore\Services\TravelProviderRegistry::setBookingAdminProvider(
+        'eurosite',
+        new \Tygh\Addons\Eurosite\Services\BookingAdminProvider(),
+    );
+    \Tygh\Addons\TravelCore\Services\TravelProviderRegistry::setHotelProductProvider(
+        'eurosite',
+        new \Tygh\Addons\Eurosite\Providers\EurositeHotelProductProvider(),
+    );
+    \Tygh\Addons\TravelCore\Services\TravelProviderRegistry::setStatusCallbacks(
+        'eurosite',
+        static function (): array {
+            return (new \Tygh\Addons\Eurosite\Services\BookingStatusService())->syncAll();
+        },
+        static function (int $bookingId): array {
+            return (new \Tygh\Addons\Eurosite\Services\BookingStatusService())->checkSingle($bookingId);
+        },
+    );
 }
+
+// Order-pipeline hooks (bodies in func.php).
+fn_register_hooks(
+    'pre_place_order',            // price-tamper guard on eurosite cart lines
+    'place_order_post',           // link + submit bookings to the Eurosite API
+    'user_login_post',            // claim guest bookings by session
+    'create_user_post',           // claim bookings for new registrations
+    'travel_link_order_bookings', // travel_core reconcile sweep
+);

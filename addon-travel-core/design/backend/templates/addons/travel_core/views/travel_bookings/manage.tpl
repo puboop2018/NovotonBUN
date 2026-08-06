@@ -149,6 +149,8 @@
                         <span class="label label-info">Novoton</span>
                     {elseif $booking.provider == 'sphinx'}
                         <span class="label label-success">Sphinx</span>
+                    {elseif $booking.provider == 'eurosite'}
+                        <span class="label label-warning">Eurosite</span>
                     {else}
                         <span class="label">{$booking.provider|escape:html}</span>
                     {/if}

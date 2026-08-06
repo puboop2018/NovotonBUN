@@ -798,3 +798,34 @@ Cache files:
 
 
 ================================================================================
+
+================================================================================
+EUROSITE TOURING (addon id: eurosite)
+================================================================================
+
+Entry points (interchangeable):
+  CLI:  php app/addons/eurosite/cron.php access_key=KEY mode=<mode>
+  HTTP: index.php?dispatch=eurosite_cron.run&access_key=KEY&cron_mode=<mode>
+  (access key = addon setting "cron_access_key"; note HTTP uses cron_mode)
+
+Modes:
+  full          all static catalogs in dependency order (countries,
+                own_cities, cities, hotels, room_types, tags)
+  countries     country catalog (86 rows live)
+  own_cities    cities with own offers (marks is_own='Y'; 116 rows live)
+  cities        city catalogs for whitelisted/own-offer countries (&country=RO)
+  hotels        own hotels + rooms per whitelisted/own-offer city (&city=ROMM)
+  room_types    room-type catalog (22 rows live)
+  tags          offer-tag catalog (currently empty — success at 0 rows)
+  product_info  product-details cache warmer (&limit=100, &full=1)
+  cleanup       sync-log trim + orphaned product-info cache rows
+
+Suggested schedule (crontab, UTC):
+  0 2 * * *    mode=full          # nightly catalogs
+  30 2 * * *   mode=product_info  # warm details cache after catalogs
+  0 4 * * 0    mode=cleanup       # weekly housekeeping
+
+Sync logs: database table cscart_eurosite_sync_log (dashboard: Eurosite
+Touring > Dashboard). Locks: var/cache/eurosite_cron_<mode>.lock.
+Whitelist gating: catalog syncs fail hard with "No sync targets configured"
+until Eurosite > Destination whitelist has entries (or own_cities ran once).

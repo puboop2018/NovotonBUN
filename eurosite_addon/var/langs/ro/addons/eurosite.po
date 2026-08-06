@@ -5,8 +5,8 @@ msgstr "Project-Id-Version: cs-cart-latest"
 "Language: ro_RO"
 
 msgctxt "Addons::name::eurosite"
-msgid "Eurosite Holidays"
-msgstr "Eurosite Holidays"
+msgid "Eurosite Touring"
+msgstr "Eurosite Touring"
 
 msgctxt "Addons::description::eurosite"
 msgid "Integration with the Eurosite XML web service (touringit.ro platform) for hotel search and bookings. Static data, availability + price search, product details and add/get/cancel booking."
@@ -64,6 +64,18 @@ msgctxt "SettingsTooltips::eurosite::allow_insecure_api"
 msgid "Permit sending API credentials over unencrypted HTTP (dev only). Disable once the API URL uses https:// — connections then hard-fail rather than leak credentials in plaintext."
 msgstr "Permite trimiterea credențialelor API prin HTTP necriptat (doar pentru dezvoltare). Dezactivați când adresa API folosește https:// — conexiunile vor eșua în loc să expună credențialele în clar."
 
+msgctxt "SettingsOptions::eurosite::cron_header"
+msgid "Cron"
+msgstr "Cron"
+
+msgctxt "SettingsOptions::eurosite::cron_access_key"
+msgid "Cron access key"
+msgstr "Cheie de acces cron"
+
+msgctxt "SettingsTooltips::eurosite::cron_access_key"
+msgid "Shared secret for the sync cron endpoints (index.php?dispatch=eurosite_cron.run&access_key=KEY&cron_mode=... and app/addons/eurosite/cron.php). Change it from the default before going live."
+msgstr "Secret partajat pentru endpoint-urile cron de sincronizare (index.php?dispatch=eurosite_cron.run&access_key=KEY&cron_mode=... și app/addons/eurosite/cron.php). Schimbați valoarea implicită înainte de producție."
+
 msgctxt "SettingsOptions::eurosite::resilience_header"
 msgid "Resilience"
 msgstr "Reziliență"
@@ -83,3 +95,307 @@ msgstr "Prag circuit breaker"
 msgctxt "SettingsOptions::eurosite::circuit_breaker_timeout"
 msgid "Circuit breaker cooldown (s)"
 msgstr "Cooldown circuit breaker (s)"
+
+msgctxt "Languages::eurosite.addon_name"
+msgid "Eurosite Touring"
+msgstr "Eurosite Touring"
+
+msgctxt "Languages::eurosite.dashboard"
+msgid "Dashboard"
+msgstr "Panou de control"
+
+msgctxt "Languages::eurosite.dashboard_title"
+msgid "Eurosite Touring"
+msgstr "Eurosite Touring"
+
+msgctxt "Languages::eurosite.bookings"
+msgid "Bookings"
+msgstr "Rezervări"
+
+msgctxt "Languages::eurosite.destination_whitelist"
+msgid "Destination whitelist"
+msgstr "Listă destinații active"
+
+msgctxt "Languages::eurosite.api_connection"
+msgid "API connection"
+msgstr "Conexiune API"
+
+msgctxt "Languages::eurosite.api_not_configured"
+msgid "Eurosite API credentials are not configured — enter them in the addon settings. All catalogs and searches will fail with error -1000 until then."
+msgstr "Credențialele API Eurosite nu sunt configurate — introduceți-le în setările addon-ului. Toate cataloagele și căutările vor eșua cu eroarea -1000 până atunci."
+
+msgctxt "Languages::eurosite.api_user"
+msgid "API user"
+msgstr "Utilizator API"
+
+msgctxt "Languages::eurosite.test_connection"
+msgid "Test API connection"
+msgstr "Testează conexiunea API"
+
+msgctxt "Languages::eurosite.addon_settings"
+msgid "Addon settings"
+msgstr "Setări addon"
+
+msgctxt "Languages::eurosite.catalogs"
+msgid "Static-data catalogs"
+msgstr "Cataloage de date statice"
+
+msgctxt "Languages::eurosite.catalog"
+msgid "Catalog"
+msgstr "Catalog"
+
+msgctxt "Languages::eurosite.rows"
+msgid "Rows"
+msgstr "Rânduri"
+
+msgctxt "Languages::eurosite.last_sync"
+msgid "Last sync"
+msgstr "Ultima sincronizare"
+
+msgctxt "Languages::eurosite.never_synced"
+msgid "never"
+msgstr "niciodată"
+
+msgctxt "Languages::eurosite.sync_now"
+msgid "Sync now"
+msgstr "Sincronizează acum"
+
+msgctxt "Languages::eurosite.sync_full"
+msgid "Run full sync"
+msgstr "Rulează sincronizarea completă"
+
+msgctxt "Languages::eurosite.sync_full_confirm"
+msgid "Run the full static-data sync now? This makes many API calls."
+msgstr "Rulați acum sincronizarea completă a datelor statice? Se fac multe apeluri API."
+
+msgctxt "Languages::eurosite.seed_menu"
+msgid "Seed storefront menu"
+msgstr "Creează meniul din storefront"
+
+msgctxt "Languages::eurosite.recent_bookings"
+msgid "Recent bookings"
+msgstr "Rezervări recente"
+
+msgctxt "Languages::eurosite.all_bookings"
+msgid "All Eurosite bookings"
+msgstr "Toate rezervările Eurosite"
+
+msgctxt "Languages::eurosite.no_bookings"
+msgid "No bookings yet."
+msgstr "Nicio rezervare încă."
+
+msgctxt "Languages::eurosite.hotel"
+msgid "Hotel"
+msgstr "Hotel"
+
+msgctxt "Languages::eurosite.check_in"
+msgid "Check-in"
+msgstr "Check-in"
+
+msgctxt "Languages::eurosite.total"
+msgid "Total"
+msgstr "Total"
+
+msgctxt "Languages::eurosite.status"
+msgid "Status"
+msgstr "Status"
+
+msgctxt "Languages::eurosite.order"
+msgid "Order"
+msgstr "Comandă"
+
+msgctxt "Languages::eurosite.created"
+msgid "Created"
+msgstr "Creat"
+
+msgctxt "Languages::eurosite.cron_jobs"
+msgid "Cron jobs"
+msgstr "Joburi cron"
+
+msgctxt "Languages::eurosite.cron_hint"
+msgid "Schedule these from the server crontab / cPanel. CLI equivalent:"
+msgstr "Programați aceste joburi din crontab / cPanel. Echivalent CLI:"
+
+msgctxt "Languages::eurosite.open"
+msgid "Open"
+msgstr "Deschide"
+
+msgctxt "Languages::eurosite.whitelist_title"
+msgid "Eurosite — Destination whitelist"
+msgstr "Eurosite — Listă destinații active"
+
+msgctxt "Languages::eurosite.whitelist_hint"
+msgid "Only whitelisted destinations are synced and searchable on the storefront. Tick a country to include all of its cities, or expand it and pick specific cities."
+msgstr "Doar destinațiile active sunt sincronizate și căutabile în storefront. Bifați o țară pentru toate orașele ei sau expandați și alegeți orașe specifice."
+
+msgctxt "Languages::eurosite.whitelist_needs_countries"
+msgid "The country catalog has not been synced yet — run the 'countries' sync from the dashboard first. City lists fall back to live API calls."
+msgstr "Catalogul de țări nu a fost încă sincronizat — rulați mai întâi sincronizarea \"countries\" din panou. Listele de orașe se încarcă direct din API."
+
+msgctxt "Languages::eurosite.pick_cities"
+msgid "pick specific cities"
+msgstr "alege orașe specifice"
+
+msgctxt "Languages::eurosite.cities_selected"
+msgid "cities"
+msgstr "orașe"
+
+msgctxt "Languages::eurosite.no_cities"
+msgid "No cities found."
+msgstr "Niciun oraș găsit."
+
+msgctxt "Languages::eurosite.back_to_dashboard"
+msgid "Back to dashboard"
+msgstr "Înapoi la panou"
+
+msgctxt "Languages::eurosite.country"
+msgid "Country"
+msgstr "Țara"
+
+msgctxt "Languages::eurosite.city"
+msgid "City / resort"
+msgstr "Oraș / stațiune"
+
+msgctxt "Languages::eurosite.pick_country"
+msgid "— country —"
+msgstr "— țara —"
+
+msgctxt "Languages::eurosite.pick_city"
+msgid "— city —"
+msgstr "— orașul —"
+
+msgctxt "Languages::eurosite.no_destinations_configured"
+msgid "No destinations are enabled yet. Please check back soon."
+msgstr "Nicio destinație activă momentan. Reveniți în curând."
+
+msgctxt "Languages::eurosite.destination_not_available"
+msgid "This destination is not available for booking."
+msgstr "Această destinație nu este disponibilă pentru rezervare."
+
+msgctxt "Languages::eurosite.search_failed"
+msgid "The Eurosite search service did not answer. Please try again later."
+msgstr "Serviciul de căutare Eurosite nu a răspuns. Încercați din nou mai târziu."
+
+msgctxt "Languages::eurosite.no_offers_found"
+msgid "No offers found for the selected destination and dates. Try different dates."
+msgstr "Nu am găsit oferte pentru destinația și perioada selectate. Încercați alte date."
+
+msgctxt "Languages::eurosite.cancellation_and_payment_terms"
+msgid "Condiții de Anulare și Plată"
+msgstr "Condiții de Anulare și Plată"
+
+msgctxt "Languages::eurosite.book_now"
+msgid "Rezervă"
+msgstr "Rezervă"
+
+msgctxt "Languages::eurosite.payment_terms"
+msgid "Termeni de plată"
+msgstr "Termeni de plată"
+
+msgctxt "Languages::eurosite.cancellation_terms"
+msgid "Condiții de anulare"
+msgstr "Condiții de anulare"
+
+msgctxt "Languages::eurosite.fees_confirmed_at_booking"
+msgid "Condițiile de anulare vor fi confirmate la rezervare."
+msgstr "Condițiile de anulare vor fi confirmate la rezervare."
+
+msgctxt "Languages::eurosite.module_packages"
+msgid "Pachete Touroperator"
+msgstr "Pachete Touroperator"
+
+msgctxt "Languages::eurosite.module_transport"
+msgid "Transport Touroperator"
+msgstr "Transport Touroperator"
+
+msgctxt "Languages::eurosite.module_circuits"
+msgid "Circuite Touroperator"
+msgstr "Circuite Touroperator"
+
+msgctxt "Languages::eurosite.module_coming_soon"
+msgid "This Eurosite module is coming soon."
+msgstr "Acest modul Eurosite va fi disponibil în curând."
+
+msgctxt "Languages::eurosite.module_try_hotels"
+msgid "Search hotel stays instead"
+msgstr "Caută sejururi hoteliere"
+
+msgctxt "Languages::eurosite.offer_expired"
+msgid "The selected offer has expired — please search again."
+msgstr "Oferta selectată a expirat — vă rugăm să căutați din nou."
+
+msgctxt "Languages::eurosite.guests"
+msgid "Guests"
+msgstr "Turiști"
+
+msgctxt "Languages::eurosite.adult"
+msgid "Adult"
+msgstr "Adult"
+
+msgctxt "Languages::eurosite.adults"
+msgid "adulți"
+msgstr "adulți"
+
+msgctxt "Languages::eurosite.child"
+msgid "Child"
+msgstr "Copil"
+
+msgctxt "Languages::eurosite.children"
+msgid "copii"
+msgstr "copii"
+
+msgctxt "Languages::eurosite.years"
+msgid "years"
+msgstr "ani"
+
+msgctxt "Languages::eurosite.first_name"
+msgid "First name"
+msgstr "Prenume"
+
+msgctxt "Languages::eurosite.last_name"
+msgid "Last name"
+msgstr "Nume"
+
+msgctxt "Languages::eurosite.date_of_birth"
+msgid "Date of birth"
+msgstr "Data nașterii"
+
+msgctxt "Languages::eurosite.gender_male"
+msgid "M"
+msgstr "M"
+
+msgctxt "Languages::eurosite.gender_female"
+msgid "F"
+msgstr "F"
+
+msgctxt "Languages::eurosite.contact"
+msgid "Contact"
+msgstr "Contact"
+
+msgctxt "Languages::eurosite.continue_to_checkout"
+msgid "Continuă spre checkout"
+msgstr "Continuă spre checkout"
+
+msgctxt "Languages::eurosite.your_stay"
+msgid "Sejurul tău"
+msgstr "Sejurul tău"
+
+msgctxt "Languages::eurosite.on_request_note"
+msgid "Disponibilitate la cerere — rezervarea se confirmă ulterior."
+msgstr "Disponibilitate la cerere — rezervarea se confirmă ulterior."
+
+msgctxt "Languages::eurosite.guests_invalid"
+msgid "Please fill in every guest (children need a date of birth)."
+msgstr "Completați datele fiecărui turist (copiii au nevoie de data nașterii)."
+
+msgctxt "Languages::eurosite.contact_invalid"
+msgid "Please provide a valid e-mail address and phone number."
+msgstr "Introduceți o adresă de e-mail validă și un număr de telefon."
+
+msgctxt "Languages::eurosite.carrier_missing"
+msgid "Booking checkout is not fully configured yet — please contact us to finish this reservation."
+msgstr "Finalizarea rezervării nu este configurată complet — contactați-ne pentru a încheia rezervarea."
+
+msgctxt "Languages::eurosite.added_to_cart"
+msgid "Your stay was added to the cart — complete checkout to confirm the reservation."
+msgstr "Sejurul a fost adăugat în coș — finalizați comanda pentru a confirma rezervarea."
