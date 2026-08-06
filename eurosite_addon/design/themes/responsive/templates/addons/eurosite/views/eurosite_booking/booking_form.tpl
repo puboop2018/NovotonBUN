@@ -22,7 +22,9 @@
 
             <h3>{__("eurosite.guests", ["[default]" => "Guests"])}</h3>
 
-            {section name=adult loop=$eurosite_adults start=1 max=$eurosite_adults}
+            {* loop is EXCLUSIVE upper bound: start=1 loop=N+1 → N adults
+               (start=1 loop=N would silently drop the last adult) *}
+            {section name=adult loop=$eurosite_adults+1 start=1}
                 {$i = $smarty.section.adult.index}
                 <div class="guest-entry guest-entry-adult">
                     <div class="travel-guest-label">{__("eurosite.adult", ["[default]" => "Adult"])} {$i}</div>
