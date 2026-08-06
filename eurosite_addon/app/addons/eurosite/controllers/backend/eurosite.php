@@ -29,6 +29,13 @@ if (!defined('BOOTSTRAP')) {
 /** @var \Smarty $view */
 $view = Tygh::$app['view'];
 
+// The dashboard is a first-class entry point for schema-dependent reads —
+// apply any pending deltas before touching the eurosite tables (per-request
+// guarded; also covers stores whose init-time heal was stamped early).
+if (function_exists('fn_eurosite_ensure_schema')) {
+    fn_eurosite_ensure_schema();
+}
+
 // ─── POST handlers ───
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -180,59 +187,86 @@ if ($mode === 'whitelist') {
 }
 
 if ($mode === 'manage' || empty($mode)) {
-    $syncLog = Container::syncLog();
-
+    // Never 503 the dashboard: any data failure (missing table on a store
+    // whose heal has not run yet, DB hiccough) degrades to an error banner
+    // on an otherwise-rendered page, so the admin sees WHAT is wrong.
     $counts = [
-        'countries'  => Container::countries()->count(),
-        'cities'     => Container::cities()->count(),
-        'own_cities' => Container::cities()->count(true),
-        'hotels'     => Container::hotels()->count(),
-        'room_types' => Container::roomTypes()->count(),
-        'tags'       => Container::tags()->count(),
-        'cache'      => Container::productInfoCache()->count(),
-        'whitelist'  => Container::whitelist()->count(),
-        'bookings'   => Container::bookings()->count(),
+        'countries' => 0, 'cities' => 0, 'own_cities' => 0, 'hotels' => 0,
+        'room_types' => 0, 'tags' => 0, 'cache' => 0, 'whitelist' => 0, 'bookings' => 0,
     ];
-
-    // Pre-format for Smarty 5 (modifiers throw inside the admin capture).
     $lastSyncs = [];
-    foreach ($syncLog->getLastPerType() as $type => $row) {
-        $lastSyncs[$type] = [
-            'status'     => TypeCoerce::toString($row['status'] ?? ''),
-            'synced'     => TypeCoerce::toInt($row['items_synced'] ?? 0),
-            'total'      => TypeCoerce::toInt($row['items_total'] ?? 0),
-            'started_at' => TypeCoerce::toString($row['started_at'] ?? ''),
-            'duration_s' => round(TypeCoerce::toFloat($row['duration_ms'] ?? 0) / 1000, 1),
-            'error'      => TypeCoerce::toString($row['error_message'] ?? ''),
+    $recentBookings = [];
+    try {
+        $syncLog = Container::syncLog();
+
+        $counts = [
+            'countries'  => Container::countries()->count(),
+            'cities'     => Container::cities()->count(),
+            'own_cities' => Container::cities()->count(true),
+            'hotels'     => Container::hotels()->count(),
+            'room_types' => Container::roomTypes()->count(),
+            'tags'       => Container::tags()->count(),
+            'cache'      => Container::productInfoCache()->count(),
+            'whitelist'  => Container::whitelist()->count(),
+            'bookings'   => Container::bookings()->count(),
         ];
+
+        // Pre-format for Smarty 5 (modifiers throw inside the admin capture).
+        foreach ($syncLog->getLastPerType() as $type => $row) {
+            $lastSyncs[$type] = [
+                'status'     => TypeCoerce::toString($row['status'] ?? ''),
+                'synced'     => TypeCoerce::toInt($row['items_synced'] ?? 0),
+                'total'      => TypeCoerce::toInt($row['items_total'] ?? 0),
+                'started_at' => TypeCoerce::toString($row['started_at'] ?? ''),
+                'duration_s' => round(TypeCoerce::toFloat($row['duration_ms'] ?? 0) / 1000, 1),
+                'error'      => TypeCoerce::toString($row['error_message'] ?? ''),
+            ];
+        }
+
+        foreach (Container::bookings()->getRecent(10) as $row) {
+            $recentBookings[] = [
+                'booking_id'  => TypeCoerce::toInt($row['booking_id'] ?? 0),
+                'hotel_name'  => TypeCoerce::toString($row['hotel_name'] ?? ''),
+                'check_in'    => TypeCoerce::toString($row['check_in'] ?? ''),
+                'status'      => TypeCoerce::toString($row['status'] ?? ''),
+                'total'       => number_format(TypeCoerce::toFloat($row['total_price'] ?? 0), 2)
+                    . ' ' . TypeCoerce::toString($row['currency'] ?? 'EUR'),
+                'order_id'    => TypeCoerce::toInt($row['order_id'] ?? 0),
+                'created_at'  => TypeCoerce::toString($row['created_at'] ?? ''),
+            ];
+        }
+    } catch (\Throwable $e) {
+        fn_set_notification('E', __('error'), 'Eurosite dashboard data unavailable: ' . $e->getMessage());
+        fn_log_event('general', 'runtime', ['message' => 'Eurosite dashboard error: ' . $e->getMessage()]);
     }
 
-    $recentBookings = [];
-    foreach (Container::bookings()->getRecent(10) as $row) {
-        $recentBookings[] = [
-            'booking_id'  => TypeCoerce::toInt($row['booking_id'] ?? 0),
-            'hotel_name'  => TypeCoerce::toString($row['hotel_name'] ?? ''),
-            'check_in'    => TypeCoerce::toString($row['check_in'] ?? ''),
-            'status'      => TypeCoerce::toString($row['status'] ?? ''),
-            'total'       => number_format(TypeCoerce::toFloat($row['total_price'] ?? 0), 2)
-                . ' ' . TypeCoerce::toString($row['currency'] ?? 'EUR'),
-            'order_id'    => TypeCoerce::toInt($row['order_id'] ?? 0),
-            'created_at'  => TypeCoerce::toString($row['created_at'] ?? ''),
+    $syncModes = CronDispatcher::getAvailableModes();
+
+    // One prepared row per catalog (the template stays expression-free —
+    // Smarty-5 array literals in {foreach} were a 503 risk).
+    $catalogRows = [];
+    foreach (['countries', 'cities', 'own_cities', 'hotels', 'room_types', 'tags', 'product_info'] as $catalog) {
+        $countKey = $catalog === 'product_info' ? 'cache' : $catalog;
+        $catalogRows[] = [
+            'key'      => $catalog,
+            'count'    => $counts[$countKey] ?? 0,
+            'last'     => $lastSyncs[$catalog] ?? null,
+            'syncable' => isset($syncModes[$catalog]),
         ];
     }
 
     $cronKey = ConfigProvider::getCronAccessKey();
     $baseUrl = TypeCoerce::toString(\Tygh\Registry::get('config.http_location')) . '/';
     $cronUrls = [];
-    foreach (array_keys(CronDispatcher::getAvailableModes()) as $m) {
+    foreach (array_keys($syncModes) as $m) {
         $cronUrls[$m] = $baseUrl . "index.php?dispatch=eurosite_cron.run&access_key={$cronKey}&cron_mode={$m}";
     }
 
     $apiUser = ConfigProvider::getApiUser();
     $view->assign('eurosite_counts', $counts);
-    $view->assign('eurosite_last_syncs', $lastSyncs);
+    $view->assign('eurosite_catalog_rows', $catalogRows);
     $view->assign('eurosite_recent_bookings', $recentBookings);
-    $view->assign('eurosite_sync_modes', CronDispatcher::getAvailableModes());
+    $view->assign('eurosite_sync_modes', $syncModes);
     $view->assign('eurosite_cron_urls', $cronUrls);
     $view->assign('eurosite_cron_key', $cronKey);
     $view->assign('eurosite_api_url', ConfigProvider::getApiUrl());

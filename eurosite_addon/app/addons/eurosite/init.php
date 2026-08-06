@@ -57,6 +57,20 @@ if (defined('AREA') && AREA === 'A' && function_exists('fn_eurosite_ensure_schem
     unset($__eu_heal_fp);
 }
 
+// Language self-heal: UPSERT lang_keys.php into ?:language_values whenever
+// the source fingerprint changes (novoton pattern, all areas). Admin menu
+// labels and storefront strings must not depend on the install-time .po
+// import — a linked dev store may never have run it.
+if (function_exists('fn_travel_core_heal_language_keys') && function_exists('fn_eurosite_language_variables')) {
+    fn_travel_core_self_heal_guard('eurosite_langs', static function (): void {
+        fn_travel_core_heal_language_keys(
+            'eurosite',
+            'fn_eurosite_language_variables',
+            fn_eurosite_language_seed_hash(),
+        );
+    });
+}
+
 // Register with the shared travel-provider registry: the normalizer (feature
 // mapping / normalization pipeline), the booking-admin provider + status
 // callbacks (unified travel_bookings grid), and the hotel-product provider

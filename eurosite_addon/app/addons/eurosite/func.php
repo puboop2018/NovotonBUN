@@ -42,6 +42,36 @@ function fn_eurosite_ensure_schema(): void
     \Tygh\Addons\Eurosite\Install\SchemaMigrator::ensure(fn_eurosite_table_prefix());
 }
 
+/**
+ * The runtime language keys (lang_keys.php) for the init.php self-heal —
+ * CS-Cart imports .po files only at install time, so labels added later
+ * would render raw ("_eurosite.dashboard") without this.
+ *
+ * @return array<string, array<string, string>> key => [lang_code => value]
+ */
+function fn_eurosite_language_variables(): array
+{
+    $keysFile = __DIR__ . '/lang_keys.php';
+    /** @var array<string, array<string, string>> $vars */
+    $vars = file_exists($keysFile) ? require $keysFile : [];
+
+    return $vars;
+}
+
+/**
+ * Fingerprint of the language sources (stat-based — runs on every request).
+ */
+function fn_eurosite_language_seed_hash(): string
+{
+    $parts = [];
+    foreach ([__DIR__ . '/addon.xml', __DIR__ . '/lang_keys.php'] as $file) {
+        $stat = @stat($file);
+        $parts[] = $file . '|' . (is_array($stat) ? $stat['size'] . '|' . $stat['mtime'] : 'absent');
+    }
+
+    return md5(implode(';', $parts));
+}
+
 // ── Order pipeline hooks (registered in init.php) ────────────────────────────
 
 /**

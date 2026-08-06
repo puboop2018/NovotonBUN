@@ -39,31 +39,24 @@
             </tr>
         </thead>
         <tbody>
-            {foreach from=["countries" => $eurosite_counts.countries,
-                           "cities" => $eurosite_counts.cities,
-                           "own_cities" => $eurosite_counts.own_cities,
-                           "hotels" => $eurosite_counts.hotels,
-                           "room_types" => $eurosite_counts.room_types,
-                           "tags" => $eurosite_counts.tags,
-                           "product_info" => $eurosite_counts.cache] key=catalog item=count}
-                {assign var="last" value=$eurosite_last_syncs.$catalog}
+            {foreach from=$eurosite_catalog_rows item=row}
                 <tr>
-                    <td><code>{$catalog}</code></td>
-                    <td>{$count}</td>
+                    <td><code>{$row.key}</code></td>
+                    <td>{$row.count}</td>
                     <td>
-                        {if $last}
-                            <span class="label {if $last.status == 'completed'}label-success{elseif $last.status == 'failed'}label-important{else}label-warning{/if}">{$last.status}</span>
-                            {$last.synced}/{$last.total} &middot; {$last.started_at} ({$last.duration_s}s)
-                            {if $last.error}<div class="text-error">{$last.error|escape:html|truncate:120}</div>{/if}
+                        {if $row.last}
+                            <span class="label {if $row.last.status == 'completed'}label-success{elseif $row.last.status == 'failed'}label-important{else}label-warning{/if}">{$row.last.status}</span>
+                            {$row.last.synced}/{$row.last.total} &middot; {$row.last.started_at} ({$row.last.duration_s}s)
+                            {if $row.last.error}<div class="text-error">{$row.last.error|escape:html|truncate:120}</div>{/if}
                         {else}
                             <span class="muted">{__("eurosite.never_synced", ["[default]" => "never"])}</span>
                         {/if}
                     </td>
                     <td>
-                        {if $eurosite_sync_modes.$catalog}
+                        {if $row.syncable}
                             <form action="{""|fn_url}" method="post" style="display:inline;">
                                 <input type="hidden" name="dispatch" value="eurosite.run_sync" />
-                                <input type="hidden" name="sync_type" value="{$catalog}" />
+                                <input type="hidden" name="sync_type" value="{$row.key}" />
                                 <button type="submit" class="btn btn-micro" {if !$eurosite_is_configured}disabled{/if}>
                                     <i class="icon-refresh"></i> {__("eurosite.sync_now", ["[default]" => "Sync now"])}
                                 </button>
