@@ -30,7 +30,7 @@ abstract class AbstractSyncCommand extends BaseCommand
      * Run $work bracketed by sync-log start/complete rows.
      *
      * @param callable(): array<string, mixed> $work Returns stats
-     *        (total/synced/failed/skipped/error...)
+     *                                               (total/synced/failed/skipped/error...)
      * @return array<string, mixed>
      */
     protected function runLogged(string $syncType, callable $work): array
@@ -58,7 +58,7 @@ abstract class AbstractSyncCommand extends BaseCommand
             return $this->wrapResult(['success' => $status === 'completed'] + $stats);
         } catch (\Throwable $e) {
             $log->complete($logId, 'failed', [
-                'error'       => $e->getMessage(),
+                'error' => $e->getMessage(),
                 'duration_ms' => (int) round($this->getDuration() * 1000),
             ]);
             $this->output("[{$syncType}] FAILED: " . $e->getMessage());

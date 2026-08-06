@@ -374,6 +374,50 @@ jobs:
           }
           echo "OK: coverage >= floor."
 
+  # ── PHPUnit (eurosite suite) ──
+  phpunit-eurosite:
+    name: PHPUnit (eurosite)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: eurosite_addon/app/addons/eurosite
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: simplexml, curl, mbstring
+          coverage: pcov
+          tools: composer:v2
+
+      - name: Install addon dependencies
+        run: composer install --no-progress --no-interaction
+
+      - name: Run PHPUnit (with coverage)
+        run: vendor/bin/phpunit --colors=always --coverage-text=coverage.txt --coverage-clover=coverage.xml
+
+      # ── Coverage floor (same ratchet as the other suites). Floor =
+      # measured coverage at introduction (34.56% on 2026-08-06) minus a
+      # small margin. Raise the floor as coverage grows — never lower it to
+      # make a PR pass; write the missing tests instead.
+      - name: Enforce coverage floor
+        run: |
+          floor=33.0
+          pct=$(python3 -c "
+          import xml.etree.ElementTree as ET
+          m = ET.parse('coverage.xml').getroot().find('./project/metrics')
+          total = int(m.get('statements')); covered = int(m.get('coveredstatements'))
+          print(f'{covered / total * 100:.2f}' if total else '0.00')
+          ")
+          echo "eurosite line coverage: ${pct}% (floor: ${floor}%)"
+          awk -v p="$pct" -v f="$floor" 'BEGIN { exit !(p+0 < f+0) }' && {
+            echo "::error::Line coverage ${pct}% fell below the ${floor}% floor — add tests for the code this PR touches."
+            exit 1
+          }
+          echo "OK: coverage >= floor."
+
   # ── php -l syntax check on all PHP files ──
   lint:
     name: PHP Lint
@@ -394,6 +438,7 @@ jobs:
                addon-travel-core/app/addons/travel_core \
                addon-sphinx-holidays/app/addons/sphinx_holidays \
                addon-fgo-invoicing/app/addons/fgo_invoicing \
+               eurosite_addon/app/addons/eurosite \
                -path '*/vendor' -prune -o -name '*.php' -print0 | xargs -0 -n 50 php -l
 
   # ── ESLint + Vitest (frontend JS / JSX) ──
@@ -440,6 +485,7 @@ jobs:
       - phpunit-travel-core
       - phpunit-sphinx
       - phpunit-fgo
+      - phpunit-eurosite
       - lint
       - eslint
     runs-on: ubuntu-latest

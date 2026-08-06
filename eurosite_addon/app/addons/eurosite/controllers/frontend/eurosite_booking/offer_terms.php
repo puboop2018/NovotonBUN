@@ -19,6 +19,7 @@ use Tygh\Addons\Eurosite\Services\ConfigProvider;
 use Tygh\Addons\Eurosite\Services\Container;
 use Tygh\Addons\Eurosite\Services\OfferContextStore;
 use Tygh\Addons\TravelCore\Helpers\RequestCoerce;
+use Tygh\Addons\TravelCore\Helpers\TypeCoerce;
 
 if (!defined('BOOTSTRAP')) {
     exit('Access denied');
@@ -40,28 +41,28 @@ $paymentLines = array_values(array_filter(array_map(
 ), static fn (string $line): bool => $line !== ''));
 
 try {
-    $hotelRow = Container::hotels()->findByProductCode((string) $snapshot['product_code']);
-    $tourop = $hotelRow !== null ? (string) ($hotelRow['tourop_code'] ?? '') : '';
+    $hotelRow = Container::hotels()->findByProductCode(TypeCoerce::toString($snapshot['product_code']));
+    $tourop = $hotelRow !== null ? TypeCoerce::toString($hotelRow['tourop_code'] ?? '') : '';
 
     $roomCode = '';
-    $rooms = is_array($snapshot['rooms'] ?? null) ? $snapshot['rooms'] : [];
+    $rooms = TypeCoerce::toRowList($snapshot['rooms'] ?? null);
     if ($rooms !== []) {
-        $roomCode = (string) ($rooms[0]['code'] ?? '');
+        $roomCode = TypeCoerce::toString($rooms[0]['code'] ?? '');
     }
 
     $fees = Container::getApi()->getItemFees([
-        'currency'     => (string) $snapshot['currency'],
-        'country_code' => (string) $snapshot['country_code'],
-        'city_code'    => (string) $snapshot['city_code'],
-        'product_code' => (string) $snapshot['product_code'],
-        'variant_id'   => (string) $snapshot['variant_id'],
-        'check_in'     => (string) $snapshot['check_in'],
-        'check_out'    => (string) $snapshot['check_out'],
+        'currency'     => TypeCoerce::toString($snapshot['currency']),
+        'country_code' => TypeCoerce::toString($snapshot['country_code']),
+        'city_code'    => TypeCoerce::toString($snapshot['city_code']),
+        'product_code' => TypeCoerce::toString($snapshot['product_code']),
+        'variant_id'   => TypeCoerce::toString($snapshot['variant_id']),
+        'check_in'     => TypeCoerce::toString($snapshot['check_in']),
+        'check_out'    => TypeCoerce::toString($snapshot['check_out']),
         'tourop_code'  => $tourop,
         'rooms'        => [[
             'code'     => $roomCode,
-            'adults'   => (int) ($snapshot['adults'] ?? 2),
-            'children' => (array) ($snapshot['children_ages'] ?? []),
+            'adults'   => TypeCoerce::toInt($snapshot['adults'] ?? 2),
+            'children' => TypeCoerce::toIntList($snapshot['children_ages'] ?? []),
         ]],
     ]);
 
@@ -72,7 +73,7 @@ try {
             'to'    => (string) $fee['to_date'],
             'value' => $fee['is_percent']
                 ? rtrim(rtrim(number_format($fee['value'], 2), '0'), '.') . '%'
-                : number_format($fee['value'], 2) . ' ' . (string) $snapshot['currency'],
+                : number_format($fee['value'], 2) . ' ' . TypeCoerce::toString($snapshot['currency']),
         ];
     }
 

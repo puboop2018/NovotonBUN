@@ -88,7 +88,7 @@ if ($invalid || count($guests) !== $expectedGuests) {
 
 $guestEmail = trim(RequestCoerce::string($_REQUEST, 'guest_email'));
 $guestPhone = trim(RequestCoerce::string($_REQUEST, 'guest_phone'));
-if (!filter_var($guestEmail, FILTER_VALIDATE_EMAIL) || $guestPhone === '') {
+if (filter_var($guestEmail, FILTER_VALIDATE_EMAIL) === false || $guestPhone === '') {
     fn_set_notification('E', __('error'), __('eurosite.contact_invalid', [
         '[default]' => 'Please provide a valid e-mail address and phone number.',
     ]));
@@ -113,12 +113,13 @@ if ($carrierId <= 0) {
 $checkIn = TypeCoerce::toString($snapshot['check_in']);
 $checkOut = TypeCoerce::toString($snapshot['check_out']);
 $nights = max(0, (int) round((strtotime($checkOut) - strtotime($checkIn)) / 86400));
-$rooms = is_array($snapshot['rooms'] ?? null) ? $snapshot['rooms'] : [];
-$meals = is_array($snapshot['meals'] ?? null) ? $snapshot['meals'] : [];
-$childrenAges = array_values(array_map('intval', (array) ($snapshot['children_ages'] ?? [])));
+$rooms = TypeCoerce::toRowList($snapshot['rooms'] ?? null);
+$meals = TypeCoerce::toRowList($snapshot['meals'] ?? null);
+$childrenAges = TypeCoerce::toIntList($snapshot['children_ages'] ?? []);
 $sessionId = function_exists('session_id') ? (string) session_id() : '';
-$auth = Tygh::$app['session']['auth'] ?? [];
-$userId = TypeCoerce::toInt(is_array($auth) || $auth instanceof \ArrayAccess ? ($auth['user_id'] ?? 0) : 0);
+$session = Tygh::$app['session'];
+$auth = (is_array($session) || $session instanceof \ArrayAccess) ? TypeCoerce::toStringMap($session['auth'] ?? []) : [];
+$userId = TypeCoerce::toInt($auth['user_id'] ?? 0);
 $clientRef = 'ES' . strtoupper(substr(md5(uniqid((string) mt_rand(), true)), 0, 10));
 
 $bookingId = Container::bookings()->create([
@@ -160,7 +161,12 @@ $coefficient = TypeCoerce::toFloat(db_get_field(
 ));
 $cartPrice = $coefficient > 0 ? round($eurPrice * $coefficient, 2) : $eurPrice;
 
-$cart = &Tygh::$app['session']['cart'];
+/** @var array<string, mixed> $session_ref */
+$session_ref = &Tygh::$app['session'];
+$cart = &$session_ref['cart'];
+if (!is_array($cart)) {
+    $cart = [];
+}
 if (!isset($cart['products']) || !is_array($cart['products'])) {
     $cart['products'] = [];
 }
@@ -184,8 +190,7 @@ $cart['products'][$cartId] = [
     ],
 ];
 
-$authArray = is_array($auth) ? $auth : [];
-fn_calculate_cart_content($cart, $authArray);
+fn_calculate_cart_content($cart, $auth);
 fn_save_cart_content($cart, $userId);
 
 fn_set_notification('N', __('notice'), __('eurosite.added_to_cart', [

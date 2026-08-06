@@ -244,6 +244,10 @@ msgctxt "Languages::eurosite.no_cities"
 msgid "No cities found."
 msgstr "Niciun oraș găsit."
 
+msgctxt "Languages::eurosite.request_failed"
+msgid "Request failed."
+msgstr "Cererea a eșuat."
+
 msgctxt "Languages::eurosite.back_to_dashboard"
 msgid "Back to dashboard"
 msgstr "Înapoi la panou"

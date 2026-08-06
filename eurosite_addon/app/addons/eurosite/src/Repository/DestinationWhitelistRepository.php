@@ -40,9 +40,9 @@ class DestinationWhitelistRepository
         $rows = db_get_fields('SELECT DISTINCT country_code FROM ?:eurosite_destination_whitelist');
 
         return array_values(array_filter(array_map(
-            static fn ($v) => trim(TypeCoerce::toString($v)),
+            static fn ($v): string => trim(TypeCoerce::toString($v)),
             is_array($rows) ? $rows : [],
-        ), static fn (string $v) => $v !== ''));
+        ), static fn (string $v): bool => $v !== ''));
     }
 
     /**
@@ -67,9 +67,9 @@ class DestinationWhitelistRepository
             );
 
         return array_values(array_filter(array_map(
-            static fn ($v) => trim(TypeCoerce::toString($v)),
+            static fn ($v): string => trim(TypeCoerce::toString($v)),
             is_array($rows) ? $rows : [],
-        ), static fn (string $v) => $v !== ''));
+        ), static fn (string $v): bool => $v !== ''));
     }
 
     public function isCityAllowed(string $countryCode, string $cityCode): bool
@@ -88,7 +88,7 @@ class DestinationWhitelistRepository
         try {
             db_query('DELETE FROM ?:eurosite_destination_whitelist');
             foreach ($entries as $e) {
-                $country = trim(TypeCoerce::toString($e['country_code'] ?? ''));
+                $country = trim(TypeCoerce::toString($e['country_code']));
                 if ($country === '') {
                     continue;
                 }

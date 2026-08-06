@@ -31,19 +31,19 @@ class HotelRepository
             $tuples = [];
             $params = [];
             foreach ($chunk as $h) {
-                $code = trim(TypeCoerce::toString($h['code'] ?? ''));
+                $code = trim(TypeCoerce::toString($h['code']));
                 if ($code === '') {
                     continue;
                 }
                 $tuples[] = '(?s, ?s, ?s, ?s, ?s, ?s, ?s)';
                 array_push(
                     $params,
-                    trim(TypeCoerce::toString($h['tourop'] ?? '')),
+                    trim(TypeCoerce::toString($h['tourop'])),
                     $code,
-                    TypeCoerce::toString($h['name'] ?? ''),
-                    trim(TypeCoerce::toString($h['city_code'] ?? '')),
+                    TypeCoerce::toString($h['name']),
+                    trim(TypeCoerce::toString($h['city_code'])),
                     $countryCode,
-                    (string) json_encode($h['rooms'] ?? [], JSON_UNESCAPED_UNICODE),
+                    (string) json_encode($h['rooms'], JSON_UNESCAPED_UNICODE),
                     $now,
                 );
             }
@@ -80,6 +80,9 @@ class HotelRepository
         ));
     }
 
+    /**
+     * @return array<string, mixed>|null
+     */
     public function findByProductCode(string $productCode): ?array
     {
         $row = self::asRow(db_get_row(
@@ -104,9 +107,9 @@ class HotelRepository
         );
 
         return array_values(array_filter(array_map(
-            static fn ($v) => trim(TypeCoerce::toString($v)),
+            static fn ($v): string => trim(TypeCoerce::toString($v)),
             is_array($rows) ? $rows : [],
-        ), static fn (string $v) => $v !== ''));
+        ), static fn (string $v): bool => $v !== ''));
     }
 
     public function count(): int

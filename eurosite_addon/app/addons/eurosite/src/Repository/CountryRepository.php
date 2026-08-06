@@ -26,12 +26,12 @@ class CountryRepository
         $tuples = [];
         $params = [];
         foreach ($countries as $c) {
-            $code = trim(TypeCoerce::toString($c['code'] ?? ''));
+            $code = trim(TypeCoerce::toString($c['code']));
             if ($code === '') {
                 continue;
             }
             $tuples[] = '(?s, ?s, ?s)';
-            array_push($params, $code, TypeCoerce::toString($c['name'] ?? ''), $now);
+            array_push($params, $code, TypeCoerce::toString($c['name']), $now);
         }
         if ($tuples === []) {
             return 0;

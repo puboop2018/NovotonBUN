@@ -16,6 +16,9 @@ class ProductInfoCacheRepository
 {
     use RowNarrowingTrait;
 
+    /**
+     * @return array<string, mixed>|null
+     */
     public function get(string $touropCode, string $productCode): ?array
     {
         $row = self::asRow(db_get_row(

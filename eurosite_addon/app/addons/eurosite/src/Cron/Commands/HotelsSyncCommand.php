@@ -58,10 +58,10 @@ final class HotelsSyncCommand extends AbstractSyncCommand
             }
 
             return [
-                'total'  => $total,
+                'total' => $total,
                 'synced' => $synced,
                 'failed' => count($errors),
-                'error'  => implode('; ', array_slice($errors, 0, 5)),
+                'error' => implode('; ', array_slice($errors, 0, 5)),
             ];
         });
     }

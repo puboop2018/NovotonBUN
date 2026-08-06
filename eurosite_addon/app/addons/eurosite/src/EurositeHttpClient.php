@@ -93,11 +93,11 @@ final class EurositeHttpClient implements EurositeTransportInterface
             }
             curl_setopt_array($ch, [
                 CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_POST           => true,
-                CURLOPT_POSTFIELDS     => $xml,
-                CURLOPT_HTTPHEADER     => ['Content-Type: text/xml; charset=UTF-8', 'Accept: text/xml'],
+                CURLOPT_POST => true,
+                CURLOPT_POSTFIELDS => $xml,
+                CURLOPT_HTTPHEADER => ['Content-Type: text/xml; charset=UTF-8', 'Accept: text/xml'],
                 CURLOPT_CONNECTTIMEOUT => 15,
-                CURLOPT_TIMEOUT        => $this->timeout,
+                CURLOPT_TIMEOUT => $this->timeout,
                 CURLOPT_SSL_VERIFYPEER => !$this->allowInsecure,
                 CURLOPT_SSL_VERIFYHOST => $this->allowInsecure ? 0 : 2,
             ]);

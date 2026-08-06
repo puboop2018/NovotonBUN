@@ -29,7 +29,7 @@ class EurositeBookingRepository
      */
     public function create(array $data): int
     {
-        $data['created_at'] = $data['created_at'] ?? date('Y-m-d H:i:s');
+        $data['created_at'] ??= date('Y-m-d H:i:s');
         db_query('INSERT INTO ?:eurosite_bookings ?e', $data);
         $bookingId = TypeCoerce::toInt(db_get_field('SELECT LAST_INSERT_ID()'));
         $this->mirror->upsert($bookingId, $this->toMirrorData($data));
@@ -56,6 +56,9 @@ class EurositeBookingRepository
         $this->update($bookingId, $update);
     }
 
+    /**
+     * @return array<string, mixed>|null
+     */
     public function findById(int $bookingId): ?array
     {
         $row = self::asRow(db_get_row('SELECT * FROM ?:eurosite_bookings WHERE booking_id = ?i', $bookingId));

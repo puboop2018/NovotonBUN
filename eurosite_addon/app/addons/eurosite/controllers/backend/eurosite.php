@@ -249,7 +249,7 @@ if ($mode === 'manage' || empty($mode)) {
         $countKey = $catalog === 'product_info' ? 'cache' : $catalog;
         $catalogRows[] = [
             'key'      => $catalog,
-            'count'    => $counts[$countKey] ?? 0,
+            'count'    => $counts[$countKey],
             'last'     => $lastSyncs[$catalog] ?? null,
             'syncable' => isset($syncModes[$catalog]),
         ];
