@@ -5,11 +5,24 @@
     <priority>120</priority>
     <position>10</position>
     <status>active</status>
-    <has_icon>Y</has_icon>
+    <has_icon>N</has_icon>
     <supplier>VacanteLitoral.ro</supplier>
     <supplier_link>https://vacantelitoral.ro</supplier_link>
     <default_language>en</default_language>
-    <!-- FGO Invoicing: Romanian e-invoicing via api.fgo.ro. Requires PHP 8.3+. -->
+    <!-- FGO Invoicing: Romanian e-invoicing via api.fgo.ro. Requires PHP 8.3+.
+
+         NOTE ON <name> ELEMENTS BELOW:
+         CS-Cart's XmlScheme3::_getSettingItem() resolves a setting's label as
+             isset($po['SettingsOptions::fgo_invoicing::<id>'])
+                 ? <that .po value>
+                 : (string) $xml_node->name
+         and _getVariants() does the same with (string) $variant->name.
+         If var/langs/<lang>/addons/fgo_invoicing.po is missing or unreadable on
+         the target shop, the .po branch misses and the label becomes an EMPTY
+         STRING — the whole settings form renders with blank labels.
+         The <name> children below are that hard fallback, so labels always
+         render even with no language pack deployed. The .po still wins when
+         present and is what supplies non-English translations. -->
 
     <authors>
         <author>
@@ -42,23 +55,28 @@
     <settings layout="separate">
         <sections>
             <section id="general">
+                <name>General Settings</name>
                 <items>
                     <!-- API credentials -->
                     <item id="credentials_header">
+                        <name>API Credentials</name>
                         <type>header</type>
                         <variants/>
                     </item>
                     <item id="client_code">
+                        <name>Client code (CodUnic / CIF)</name>
                         <type>input</type>
                         <default_value></default_value>
                         <variants/>
                     </item>
                     <item id="private_key">
+                        <name>FGO private API key</name>
                         <type>password</type>
                         <default_value></default_value>
                         <variants/>
                     </item>
                     <item id="sandbox">
+                        <name>Use sandbox (api-testuat.fgo.ro)</name>
                         <type>checkbox</type>
                         <default_value>Y</default_value>
                         <variants/>
@@ -66,55 +84,62 @@
 
                     <!-- Trigger / Behaviour -->
                     <item id="behaviour_header">
+                        <name>Trigger &amp; Behaviour</name>
                         <type>header</type>
                         <variants/>
                     </item>
                     <item id="api_call">
+                        <name>Issue invoice on</name>
                         <type>selectbox</type>
                         <default_value>onPayment</default_value>
                         <variants>
-                            <item id="onOrder"></item>
-                            <item id="onPayment"></item>
-                            <item id="onCompleted"></item>
-                            <item id="manual"></item>
+                            <item id="onOrder"><name>Place order</name></item>
+                            <item id="onPayment"><name>Payment confirmed</name></item>
+                            <item id="onCompleted"><name>Order completed</name></item>
+                            <item id="manual"><name>Manual only</name></item>
                         </variants>
                     </item>
                     <item id="invoice_type">
+                        <name>Document type</name>
                         <type>selectbox</type>
                         <default_value>Factura</default_value>
                         <variants>
-                            <item id="Factura"></item>
-                            <item id="Proforma"></item>
-                            <item id="Aviz"></item>
-                            <item id="T"></item>
-                            <item id="S"></item>
-                            <item id="U"></item>
-                            <item id="H"></item>
-                            <item id="n"></item>
-                            <item id="X"></item>
-                            <item id="M"></item>
-                            <item id="Y"></item>
-                            <item id="D"></item>
-                            <item id="d"></item>
-                            <item id="L"></item>
+                            <item id="Factura"><name>Factura (invoice)</name></item>
+                            <item id="Proforma"><name>Proforma</name></item>
+                            <item id="Aviz"><name>Aviz (delivery note)</name></item>
+                            <item id="T"><name>Special document type T</name></item>
+                            <item id="S"><name>Special document type S</name></item>
+                            <item id="U"><name>Special document type U</name></item>
+                            <item id="H"><name>Special document type H</name></item>
+                            <item id="n"><name>Special document type n</name></item>
+                            <item id="X"><name>Special document type X</name></item>
+                            <item id="M"><name>Special document type M</name></item>
+                            <item id="Y"><name>Special document type Y</name></item>
+                            <item id="D"><name>Special document type D</name></item>
+                            <item id="d"><name>Special document type d</name></item>
+                            <item id="L"><name>Special document type L</name></item>
                         </variants>
                     </item>
                     <item id="invoice_series">
+                        <name>Invoice series</name>
                         <type>input</type>
                         <default_value></default_value>
                         <variants/>
                     </item>
                     <item id="verify_duplicate">
+                        <name>Ask FGO to deduplicate (VerificareDuplicat)</name>
                         <type>checkbox</type>
                         <default_value>Y</default_value>
                         <variants/>
                     </item>
                     <item id="auto_email_pdf">
+                        <name>Email the PDF link to the customer after issuance</name>
                         <type>checkbox</type>
                         <default_value>Y</default_value>
                         <variants/>
                     </item>
                     <item id="min_call_interval_ms">
+                        <name>Minimum interval between FGO calls (ms)</name>
                         <type>input</type>
                         <default_value>1000</default_value>
                         <variants/>
@@ -122,20 +147,24 @@
 
                     <!-- Customer / VAT -->
                     <item id="customer_header">
+                        <name>Customer / VAT</name>
                         <type>header</type>
                         <variants/>
                     </item>
                     <item id="sanitize_vat">
+                        <name>Validate Romanian CIF (ValideazaCodUnicRo)</name>
                         <type>checkbox</type>
                         <default_value>N</default_value>
                         <variants/>
                     </item>
                     <item id="client_vat_required">
+                        <name>Require CIF for company customers at checkout</name>
                         <type>checkbox</type>
                         <default_value>N</default_value>
                         <variants/>
                     </item>
                     <item id="client_cnp_required">
+                        <name>Require CNP for individuals at checkout</name>
                         <type>checkbox</type>
                         <default_value>N</default_value>
                         <variants/>
@@ -143,50 +172,58 @@
 
                     <!-- Lines / Codes -->
                     <item id="lines_header">
+                        <name>Invoice Lines &amp; Codes</name>
                         <type>header</type>
                         <variants/>
                     </item>
                     <item id="article_id_field">
+                        <name>Article identifier (CodArticol)</name>
                         <type>selectbox</type>
                         <default_value>sku</default_value>
                         <variants>
-                            <item id="none"></item>
-                            <item id="sku"></item>
-                            <item id="ean13"></item>
-                            <item id="isbn"></item>
-                            <item id="upc"></item>
+                            <item id="none"><name>None</name></item>
+                            <item id="sku"><name>SKU (product code)</name></item>
+                            <item id="ean13"><name>EAN-13</name></item>
+                            <item id="isbn"><name>ISBN</name></item>
+                            <item id="upc"><name>UPC</name></item>
                         </variants>
                     </item>
                     <item id="product_description">
+                        <name>Append SKU to line description</name>
                         <type>checkbox</type>
                         <default_value>N</default_value>
                         <variants/>
                     </item>
                     <item id="additional_info">
+                        <name>Add CS-Cart order number to invoice notes</name>
                         <type>checkbox</type>
                         <default_value>Y</default_value>
                         <variants/>
                     </item>
                     <item id="shipping_tax_vat">
+                        <name>Shipping VAT handling</name>
                         <type>selectbox</type>
                         <default_value>vat_not_included</default_value>
                         <variants>
-                            <item id="vat_included"></item>
-                            <item id="vat_not_included"></item>
-                            <item id="vat_zero"></item>
+                            <item id="vat_included"><name>Tax-inclusive (PretTotal)</name></item>
+                            <item id="vat_not_included"><name>Net unit price (PretUnitar)</name></item>
+                            <item id="vat_zero"><name>Zero VAT</name></item>
                         </variants>
                     </item>
                     <item id="shipping_code">
+                        <name>Shipping article code</name>
                         <type>input</type>
                         <default_value>SHIPPING</default_value>
                         <variants/>
                     </item>
                     <item id="discount_code">
+                        <name>Discount article code</name>
                         <type>input</type>
                         <default_value>DISCOUNT</default_value>
                         <variants/>
                     </item>
                     <item id="administration_code">
+                        <name>Warehouse code (CodGestiune)</name>
                         <type>input</type>
                         <default_value></default_value>
                         <variants/>
@@ -194,30 +231,36 @@
 
                     <!-- Resilience / Diagnostics -->
                     <item id="resilience_header">
+                        <name>Resilience &amp; Diagnostics</name>
                         <type>header</type>
                         <variants/>
                     </item>
                     <item id="api_max_retries">
+                        <name>HTTP retry attempts</name>
                         <type>input</type>
                         <default_value>2</default_value>
                         <variants/>
                     </item>
                     <item id="api_retry_delay_ms">
+                        <name>Initial retry delay (ms)</name>
                         <type>input</type>
                         <default_value>500</default_value>
                         <variants/>
                     </item>
                     <item id="api_cb_threshold">
+                        <name>Circuit breaker open threshold</name>
                         <type>input</type>
                         <default_value>5</default_value>
                         <variants/>
                     </item>
                     <item id="api_cb_timeout">
+                        <name>Circuit breaker open timeout (s)</name>
                         <type>input</type>
                         <default_value>60</default_value>
                         <variants/>
                     </item>
                     <item id="debug_logging">
+                        <name>Debug logging</name>
                         <type>checkbox</type>
                         <default_value>Y</default_value>
                         <variants/>
@@ -291,12 +334,12 @@
         <!-- Trigger -->
         <item lang="en" id="fgo_invoicing.api_call"><![CDATA[Issue invoice on]]></item>
         <item lang="ro" id="fgo_invoicing.api_call"><![CDATA[Emite factura la]]></item>
-        <!-- Variant labels (Place order / Payment confirmed / etc.) live in the .po
-             file under SettingsVariants::fgo_invoicing::api_call::<id>. They are
-             intentionally NOT in <language_variables>: CS-Cart's getLanguageValues
-             explodes dotted ids into a nested array, and putting
-             `fgo_invoicing.api_call.onOrder` here while `fgo_invoicing.api_call`
-             already exists as a string crashes uninstall with
+        <!-- Variant labels live in <settings>/<variants>/<item>/<name> above and in
+             the .po under SettingsVariants::fgo_invoicing::<setting>::<variant>.
+             They are intentionally NOT here: CS-Cart's getLanguageValues explodes
+             dotted ids into a nested array, so a two-level id like
+             `fgo_invoicing.api_call.onOrder` collides with the string stored at
+             `fgo_invoicing.api_call` and crashes uninstall with
              array_merge(string, array). -->
         <item lang="en" id="fgo_invoicing.invoice_type"><![CDATA[Document type]]></item>
         <item lang="ro" id="fgo_invoicing.invoice_type"><![CDATA[Tip document]]></item>
@@ -322,12 +365,10 @@
         <item lang="ro" id="fgo_invoicing.article_id_field"><![CDATA[Identificator articol (CodArticol)]]></item>
         <item lang="en" id="fgo_invoicing.product_description"><![CDATA[Append SKU to line description]]></item>
         <item lang="ro" id="fgo_invoicing.product_description"><![CDATA[Adaugă SKU la descrierea liniei]]></item>
-        <item lang="en" id="fgo_invoicing.additional_info"><![CDATA[Add CS-Cart order # to invoice notes]]></item>
+        <item lang="en" id="fgo_invoicing.additional_info"><![CDATA[Add CS-Cart order number to invoice notes]]></item>
         <item lang="ro" id="fgo_invoicing.additional_info"><![CDATA[Adaugă numărul comenzii CS-Cart la observații]]></item>
         <item lang="en" id="fgo_invoicing.shipping_tax_vat"><![CDATA[Shipping VAT handling]]></item>
         <item lang="ro" id="fgo_invoicing.shipping_tax_vat"><![CDATA[Tratare TVA transport]]></item>
-        <!-- shipping_tax_vat variant labels (Tax-inclusive / Net unit price / Zero VAT)
-             live only in the .po; see comment above for why nested dotted ids crash. -->
         <item lang="en" id="fgo_invoicing.shipping_code"><![CDATA[Shipping article code]]></item>
         <item lang="ro" id="fgo_invoicing.shipping_code"><![CDATA[Cod articol transport]]></item>
         <item lang="en" id="fgo_invoicing.discount_code"><![CDATA[Discount article code]]></item>

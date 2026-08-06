@@ -34,6 +34,36 @@ spl_autoload_register(static function (string $class): void {
 
 require_once __DIR__ . '/hooks.php';
 
+// Self-heal language keys. CS-Cart imports addon language variables only at
+// INSTALL time, so a store installed while the .po was missing or unparseable
+// renders every settings label blank and every admin string as a raw key, and
+// no amount of fixing the files afterwards repairs it on its own.
+//
+// Routed through travel_core's healer when that addon is present, so we
+// inherit its stamp throttle and per-language read-back verification. fgo is
+// horizontal and must also install without travel_core, hence function_exists
+// rather than a hard <dependencies> edge — see LanguageSeeder's docblock for
+// what still protects us on a travel_core-less store.
+//
+// No AREA gate (the e-mail strings are needed on the storefront too) and
+// guarded, because a throw inside fn_init_addons() is a 503 everywhere.
+if (
+    function_exists('fn_travel_core_heal_language_keys')
+    && function_exists('fn_travel_core_self_heal_guard')
+    && function_exists('fn_fgo_invoicing_language_variables')
+) {
+    fn_travel_core_self_heal_guard('fgo_invoicing_langs', static function (): void {
+        fn_travel_core_heal_language_keys(
+            'fgo_invoicing',
+            'fn_fgo_invoicing_language_variables',
+            fn_fgo_invoicing_language_seed_hash(),
+            static function (array $vars): void {
+                \Tygh\Addons\FgoInvoicing\Install\LanguageSeeder::mirrorSettingsDescriptions($vars);
+            },
+        );
+    });
+}
+
 fn_register_hooks(
     'place_order_post',
     'change_order_status',
