@@ -166,6 +166,10 @@ return [
         'en' => 'No cities found.',
         'ro' => 'Niciun oraș găsit.',
     ],
+    'eurosite.request_failed' => [
+        'en' => 'Request failed.',
+        'ro' => 'Cererea a eșuat.',
+    ],
     'eurosite.back_to_dashboard' => [
         'en' => 'Back to dashboard',
         'ro' => 'Înapoi la panou',
